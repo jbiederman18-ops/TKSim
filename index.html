@@ -296,11 +296,14 @@ function autoTraits(w){const rnd=seeded(w.id+'|'+w.name);const inTag=typeof S!==
   heatm:w.al==='h'&&w.mic>=70?3.5:w.al==='h'?1:.3,mouth:w.mic>=85?6:w.mic>=78?3:w.mic>=70?.6:0,crowd:w.al==='f'&&w.pop>=78?3.5:w.al==='f'?.6:0};
  const out=[];for(let n=0;n<2;n++){const c=Object.entries(wt).filter(([k,v])=>v>0&&!out.includes(k)&&!(k==='monster'&&out.includes('under'))&&!(k==='under'&&out.includes('monster')));const tot=c.reduce((s,x)=>s+x[1],0);let r=rnd()*tot;for(const [k,v] of c){r-=v;if(r<=0){out.push(k);break}}}
  return out}
+function dataUpdate(st){if(!st||!st.w||(st.dataV||1)>=DATA_V)return;let n=0;
+ RAW.trim().split('\n').forEach(l=>{const x=mkW(l.trim());if(!st.w[x.id]){if(OUT[x.id])x.inj=OUT[x.id];st.w[x.id]=x;n++}});
+ st.dataV=DATA_V;if(n)st.news.push({w:st.week,t:`🆕 Roster update (${DATA_AS_OF}): ${n} new arrivals joined free agency.`})}
 function ensureTraits(st){if(!st||!st.w)return;Object.values(st.w).forEach(w=>{if(!Array.isArray(w.tr))w.tr=autoTraits(w)})}
 // name|gender|style|align|ring|mic|pop|potential(optional)
 const RAW=`Will Ospreay|M|fl|f|97|80|92|99
 Kenny Omega|M|te|f|94|80|90
-Jon Moxley|M|br|h|88|90|90
+Jon Moxley|M|br|h|88|90|91
 Claudio Castagnoli|M|pw|h|90|62|72
 PAC|M|fl|h|89|72|70
 Wheeler Yuta|M|te|h|80|55|55|88
@@ -312,11 +315,11 @@ Kofi Kingston|M|fl|f|84|82|78
 Austin Creed|M|sh|f|80|86|75
 Darby Allin|M|fl|f|86|75|86|89
 Steven Borden|M|pw|f|55|45|50|88
-Kyle Fletcher|M|te|h|91|70|78|97
-Kevin Knight|M|fl|h|84|68|68|94
-Konosuke Takeshita|M|pw|h|93|65|78|96
+Kyle Fletcher|M|te|h|91|72|80|97
+Kevin Knight|M|fl|h|85|68|74|94
+Konosuke Takeshita|M|pw|f|93|65|78|96
 Kazuchika Okada|M|te|h|92|70|84
-Andrade El Ídolo|M|fl|h|87|60|70
+Andrade El Ídolo|M|fl|f|87|60|72
 Daniel Garcia|M|te|f|82|72|66|90
 Mark Davis|M|pw|h|80|55|55|84
 Jack Perry|M|fl|h|80|72|70|88
@@ -337,8 +340,7 @@ Roderick Strong|M|te|h|85|58|58
 Adam Cole|M|sh|h|82|88|82
 Mark Briscoe|M|br|f|84|75|72
 Tommaso Ciampa|M|br|h|84|80|68
-Samoa Joe|M|pw|h|82|88|80
-Powerhouse Hobbs|M|pw|f|76|62|64|82
+Samoa Joe|M|pw|f|82|88|80
 Hook|M|br|f|72|55|66|82
 Myron Reed|M|fl|f|78|58|45|86
 Wardlow|M|pw|f|76|70|72|84
@@ -353,14 +355,32 @@ Eddie Kingston|M|br|f|76|92|76
 Bryan Keith|M|br|h|80|60|48|86
 Big Bill|M|pw|h|68|60|50|76
 Lio Rush|M|fl|f|83|70|58
+Mike Bailey|M|fl|f|89|65|74|92
+Francesco Akira|M|fl|f|84|55|55|90
+Bobby Lashley|M|pw|h|84|70|80
+Shelton Benjamin|M|te|h|84|60|62
+Místico|M|fl|f|88|55|74|90
+Tomohiro Ishii|M|br|f|84|50|68
+Brian Cage|M|pw|h|80|55|58
+Ace Austin|M|fl|h|80|62|56|86
+Juice Robinson|M|br|h|78|74|58
+Austin Gunn|M|sh|h|72|68|58|78
+Colten Gunn|M|br|h|72|60|56|78
+David Finlay|M|br|h|82|62|60|86
+Clark Connors|M|br|h|76|55|50|82
+Bishop Kaun|M|pw|h|74|50|48|80
+Toa Liona|M|pw|h|74|50|50|80
+Dezmond Xavier|M|fl|f|80|55|48|86
+Kota Ibushi|M|fl|f|84|55|72
+Hologram|M|fl|f|80|40|60|90
 Mercedes Moné|F|sh|h|88|88|92
-Thekla|F|br|h|80|78|72|90
+Thekla|F|br|h|82|78|78|90
 Willow Nightingale|F|pw|f|84|82|80
 Jamie Hayter|F|br|f|86|80|84
 Alex Windsor|F|te|f|80|70|60|88
 Megan Bayne|F|pw|h|78|55|64|88
 Lena Kross|F|pw|h|70|55|55|84
-Persephone|F|te|f|72|55|55|86
+Persephone|F|te|f|74|58|62|86
 Maya World|F|sh|f|68|70|55|84
 Harley Cameron|F|sh|f|66|85|70|80
 Toni Storm|F|sh|f|84|92|90
@@ -378,7 +398,12 @@ Billie Starkz|F|fl|h|72|60|52|90
 Thunder Rosa|F|br|f|80|75|66
 Serena Deeb|F|te|h|86|65|55
 Penelope Ford|F|fl|h|72|60|58
-Tay Melo|F|br|h|68|60|54`;
+Britt Baker|F|te|h|80|88|82
+Dani Luna|F|pw|f|76|55|52|86
+Hyan|F|te|f|70|55|50|82
+Deonna Purrazzo|F|te|h|80|68|60
+Yuka Sakazaki|F|fl|f|80|55|62
+Taya Valkyrie|F|br|h|76|70|60`;
 const TITLES=[
 ['world','AEW World','singles','M',['will-ospreay'],90],
 ['wworld',"Women's World",'singles','F',['mercedes-mone'],88],
@@ -391,8 +416,10 @@ const TITLES=[
 ['wtag',"Women's Tag Team",'tag','F',['jamie-hayter','alex-windsor'],60],
 ['trios','World Trios','trios','M',['swerve-strickland','kofi-kingston','austin-creed'],60]];
 const TEAMS=[
-['Death Riders','faction',['jon-moxley','claudio-castagnoli','pac','wheeler-yuta','marina-shafir']],
-['Don Callis Family','faction',['kyle-fletcher','kevin-knight','konosuke-takeshita','josh-alexander','hechicero']],
+['Death Riders','faction',['jon-moxley','claudio-castagnoli','pac','wheeler-yuta','marina-shafir','daniel-garcia','gabe-kidd']],
+['Don Callis Family','faction',['kyle-fletcher','kevin-knight','kazuchika-okada','josh-alexander','hechicero','mark-davis','lance-archer','brian-cage','wardlow']],
+['United Empire','faction',['will-ospreay','mike-bailey','francesco-akira']],
+['Fletcher & Knight','team',['kyle-fletcher','kevin-knight']],
 ['The Young Bucks','team',['matt-jackson','nick-jackson']],
 ['FTR','team',['cash-wheeler','dax-harwood']],
 ['Brodido','team',['brody-king','bandido']],
@@ -401,11 +428,20 @@ const TEAMS=[
 ['Brawling Birds','team',['jamie-hayter','alex-windsor']],
 ['Divine Dominion','team',['megan-bayne','lena-kross']],
 ['Triangle of Madness','faction',['thekla','julia-hart','skye-blue']],
-['Babes of Wrath','team',['harley-cameron','willow-nightingale']],
-['Paragon','faction',['adam-cole','kyle-o-reilly','roderick-strong']],
+['Sisters of Sin','team',['julia-hart','skye-blue']],
+['Harley & Statlander','team',['harley-cameron','kris-statlander']],
+['The Conglomeration','faction',['orange-cassidy','kyle-o-reilly','roderick-strong','tomohiro-ishii','willow-nightingale','mark-briscoe','hologram']],
+['Bang Bang Gang','faction',['jay-white','juice-robinson','austin-gunn','colten-gunn','ace-austin']],
+['The Gunns','team',['austin-gunn','colten-gunn']],
+['The Dogs','faction',['gabe-kidd','david-finlay','clark-connors']],
+['The Demand','faction',['ricochet','bishop-kaun','toa-liona']],
+['The Hurt Syndicate','team',['bobby-lashley','shelton-benjamin']],
+['The Opps','faction',['samoa-joe','katsuyori-shibata','hook']],
 ['Allin & Borden','team',['darby-allin','steven-borden']],
 ['Cage & Copeland','team',['christian-cage','adam-copeland']]];
-const FEUDS=[['will-ospreay','jon-moxley',50],['mercedes-mone','thekla',55],['matt-jackson','dax-harwood',45],['nick-jackson','cash-wheeler',45],['andrade-el-idolo','pac',30],['darby-allin','kyle-fletcher',35],['steven-borden','kevin-knight',30],['kazuchika-okada','konosuke-takeshita',30],['jamie-hayter','megan-bayne',40],['alex-windsor','lena-kross',40],['swerve-strickland','hangman-adam-page',35],['willow-nightingale','thekla',30]];
+const FEUDS=[['mercedes-mone','thekla',70],['swerve-strickland','hangman-adam-page',55],['matt-jackson','dax-harwood',50],['nick-jackson','cash-wheeler',50],['matt-jackson','christian-cage',45],['nick-jackson','adam-copeland',40],['kevin-knight','steven-borden',50],['darby-allin','kyle-fletcher',45],['kyle-fletcher','matt-jackson',30],['andrade-el-idolo','pac',45],['kazuchika-okada','tommaso-ciampa',40],['samoa-joe','jack-perry',50],['jamie-hayter','megan-bayne',45],['alex-windsor','lena-kross',45],['jay-white','jon-moxley',35],['juice-robinson','david-finlay',35],['mike-bailey','gabe-kidd',30],['will-ospreay','claudio-castagnoli',30],['will-ospreay','jon-moxley',20],['willow-nightingale','thekla',30],['persephone','dani-luna',25],['persephone','hyan',25],['kris-statlander','julia-hart',30],['queen-aminata','skye-blue',30],['ricochet','swerve-strickland',30]];
+const OUT={'toni-storm':14,'adam-cole':12,'mark-briscoe':8,'steven-borden':6,'kota-ibushi':10,'hologram':6,'anna-jay':6,'penelope-ford':6,'maya-world':4,'riho':4,'serena-deeb':4,'harley-cameron':2,'wardlow':2};
+const DATA_V=2,DATA_AS_OF='AEW All Out, Sept 26, 2026';
 const FIRST_M=['Jaxon','Rico','Dante','Colt','Mateo','Kai','Axel','Tristan','Vance','Zeke'],FIRST_F=['Nova','Raven','Sadie','Lux','Jade','Aria','Kenzie','Roxy','Stella','Vega'],LAST=['Vale','Steele','Cruz','Blackwood','Kane','Rivers','Stone','Hayes','Voss','Maddox'];
 
 /* ===================== PROMOS ===================== */
@@ -696,9 +732,9 @@ function newGame(gm,rival,diff){
  TEAMS.forEach(([n,type,m])=>S.teams.push({id:'t'+(S.nid++),n,type,m:m.filter(id=>S.w[id])}));
  ensureTraits(S);
  FEUDS.forEach(([a,b,h])=>{if(S.w[a]&&S.w[b])S.heat[key(a,b)]=h});
- if(S.w.wardlow)S.w.wardlow.inj=4;
+ for(const id in OUT)if(S.w[id])S.w[id].inj=OUT[id];S.dataV=DATA_V;
  for(let i=0;i<2;i++){const g=i?'F':'M';const r=makeRookie(pick(g==='M'?FIRST_M:FIRST_F)+' '+pick(LAST),g,pick(Object.keys(STYLE_N)),pick(['f','h']),'bluechip');r.own='ai';r.con=52;S.w[r.id]=r}
- news('🎤 A new era begins. Draft your roster and win the fan war on the road to All In.');
+ news(`🎤 A new era begins. Rosters, champions and injuries are current as of ${DATA_AS_OF}. Draft your roster and win the fan war on the road to All In.`);
  save();
 }
 function startDraft(){S.phase='draft';S.draft={round:1,pick:0,first:Math.random()<.5?'p':'ai',rounds:22,log:[]};save()}
@@ -901,7 +937,7 @@ function endWeek(notes){
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function load(){try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){return null}}
 function exportSave(){const blob=new Blob([JSON.stringify(Object.assign({},S,{__img:IMG}))],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`all-elite-gm-s${S.season}-w${S.week}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);toast('Save file exported.')}
-function importSave(){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.w||!d.titles||!d.phase)throw 0;if(d.__img){IMG=d.__img;delete d.__img;saveImg()}S=d;ensureTraits(S);save();loadRepoPhotos();closeModal();tab='home';render();toast('Save loaded.')}catch(e){toast('That file is not a valid save.')}};r.readAsText(f)};i.click()}
+function importSave(){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.w||!d.titles||!d.phase)throw 0;if(d.__img){IMG=d.__img;delete d.__img;saveImg()}S=d;dataUpdate(S);ensureTraits(S);save();loadRepoPhotos();closeModal();tab='home';render();toast('Save loaded.')}catch(e){toast('That file is not a valid save.')}};r.readAsText(f)};i.click()}
 function resetGame(){if(!confirm('Start a new game? Your current save on this device will be replaced. Export it first if you want to keep it.'))return;try{localStorage.removeItem(KEY)}catch(e){}S=null;closeModal();render()}
 
 /* ===================== UI ===================== */
@@ -1210,7 +1246,7 @@ function nextSeason(){S.season++;S.week=1;S.showIdx=0;S.phase='season';S.hourWin
 
 if(typeof document!=='undefined'&&document.getElementById('app')){
  if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
- S=load();if(S&&(!S.w||!S.phase))S=null;ensureTraits(S);loadImg();
+ S=load();if(S&&(!S.w||!S.phase))S=null;dataUpdate(S);ensureTraits(S);loadImg();
  $('#modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!PS&&!ME)closeModal()});
  document.addEventListener('paste',async e=>{if(!QP||!S)return;const f=[...(e.clipboardData&&e.clipboardData.items||[])].find(x=>x.type.startsWith('image/'));if(!f)return;e.preventDefault();const id=QP.ids[QP.i];try{if(await setPhotoFrom(id,{blob:f.getAsFile()})){toast(`📸 Photo added for ${S.w[id].name}.`);quickOk()}}catch(err){toast("That picture couldn't be opened.")}});
  loadRepoPhotos();
