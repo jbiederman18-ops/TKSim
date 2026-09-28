@@ -333,7 +333,7 @@ nav.tabs button.on{text-shadow:none}nav.tabs button.on svg{filter:none}nav.tabs 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v27';
+const APP_VERSION='v28';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -365,6 +365,10 @@ function autoTraits(w){const rnd=seeded(w.id+'|'+w.name);const inTag=typeof S!==
 function feudInit(st){if(!st||st.fs)return;st.fs={};st.mh=st.mh||{};const now=(st.season-1)*SEASON+st.week;for(const k in st.heat)if(st.heat[k]>=20)st.fs[k]={start:now,paid:false,stale:false}}
 function showMigrate(){if(S&&S.phase==='season'&&!S.fa){S.fa={};marketTick(undefined,true)}if(!S||S.fullShow)return;S.fullShow=true;S.showIdx=0;if(S.phase==='season'&&S.card)S.card={p:emptyCard(curShow().ppv),ai:null}}
 function dataUpdate(st){if(!st||!st.w||(st.dataV||1)>=DATA_V)return;let n=0;
+ REMOVED.forEach(id=>{if(!st.w[id])return;delete st.w[id];(st.teams||[]).forEach(t=>t.m=t.m.filter(x=>x!==id));Object.values(st.titles||{}).forEach(t=>{if(t.holders.includes(id))t.holders=[]});
+  ['heat','chem','mh','ph','fs'].forEach(k=>{if(st[k])for(const x in st[k])if(x.split('|').includes(id))delete st[k][x]});if(st.fa)delete st.fa[id];st.training=(st.training||[]).filter(t=>t.id!==id);st.promises=(st.promises||[]).filter(p=>p.a!==id&&p.b!==id);
+  if(st.crisis&&(st.crisis.a===id||st.crisis.b===id))st.crisis=null;
+  if(st.card)['p','ai'].forEach(b=>(st.card[b]||[]).forEach(sl=>{if(sl.d&&((sl.d.sides&&sl.d.sides.flat().includes(id))||sl.d.a===id||sl.d.b===id||sl.d.c===id))sl.d=null}))});
  RAW.trim().split('\n').forEach(l=>{const x=mkW(l.trim());if(!st.w[x.id]){if(OUT[x.id])x.inj=OUT[x.id];st.w[x.id]=x;n++}});
  st.dataV=DATA_V;if(n)st.news.push({w:st.week,t:`🆕 Roster update (${DATA_AS_OF}): ${n} new arrivals joined free agency.`})}
 function ensureTraits(st){if(!st||!st.w)return;Object.values(st.w).forEach(w=>{if(!Array.isArray(w.tr))w.tr=autoTraits(w)})}
@@ -421,7 +425,6 @@ Katsuyori Shibata|M|br|f|80|55|62
 Jay White|M|sh|h|84|86|72
 Eddie Kingston|M|br|f|76|92|76
 Bryan Keith|M|br|h|80|60|48|86
-Big Bill|M|pw|h|68|60|50|76
 Lio Rush|M|fl|f|83|70|58
 Mike Bailey|M|fl|f|89|65|74|92
 Francesco Akira|M|fl|f|84|55|55|90
@@ -595,7 +598,8 @@ const TEAMS=[
 ['Cage & Copeland','team',['christian-cage','adam-copeland']]];
 const FEUDS=[['mercedes-mone','thekla',70],['swerve-strickland','hangman-adam-page',55],['matt-jackson','dax-harwood',50],['nick-jackson','cash-wheeler',50],['matt-jackson','christian-cage',45],['nick-jackson','adam-copeland',40],['kevin-knight','steven-borden',50],['darby-allin','kyle-fletcher',45],['kyle-fletcher','matt-jackson',30],['andrade-el-idolo','pac',45],['kazuchika-okada','tommaso-ciampa',40],['samoa-joe','jack-perry',50],['jamie-hayter','megan-bayne',45],['alex-windsor','lena-kross',45],['jay-white','jon-moxley',35],['juice-robinson','david-finlay',35],['mike-bailey','gabe-kidd',30],['will-ospreay','claudio-castagnoli',30],['will-ospreay','jon-moxley',20],['willow-nightingale','thekla',30],['persephone','dani-luna',25],['persephone','hyan',25],['kris-statlander','julia-hart',30],['queen-aminata','skye-blue',30],['ricochet','swerve-strickland',30]];
 const OUT={'toni-storm':14,'adam-cole':12,'mark-briscoe':8,'steven-borden':6,'kota-ibushi':10,'hologram':6,'anna-jay':6,'penelope-ford':6,'maya-world':4,'riho':4,'serena-deeb':4,'harley-cameron':2,'wardlow':2};
-const DATA_V=3,DATA_AS_OF='AEW All Out, Sept 26, 2026';
+const REMOVED=['big-bill'];
+const DATA_V=4,DATA_AS_OF='AEW All Out, Sept 26, 2026';
 const FIRST_M=['Jaxon','Rico','Dante','Colt','Mateo','Kai','Axel','Tristan','Vance','Zeke'],FIRST_F=['Nova','Raven','Sadie','Lux','Jade','Aria','Kenzie','Roxy','Stella','Vega'],LAST=['Vale','Steele','Cruz','Blackwood','Kane','Rivers','Stone','Hayes','Voss','Maddox'];
 
 /* ===================== PROMOS ===================== */

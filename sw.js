@@ -1,5 +1,5 @@
 // Tony Khan Simulator — offline support. Bump VERSION whenever you upload a new index.html.
-const VERSION = 'aegm-v27';
+const VERSION = 'aegm-v28';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
