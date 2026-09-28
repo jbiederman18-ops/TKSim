@@ -693,10 +693,15 @@ function loadRepoPhotos(){if(typeof fetch==='undefined')return;fetch('photos/man
 function face(w){return w?`<span class="fav">${portrait(w)}</span>`:''}
 function wcard(w,o){o=o||{};return `<button class="wc t${ovr(w)>=88?1:ovr(w)>=78?2:3} ${isChamp(w.id)?'champ':''} ${o.sel?'sel':''}" onclick="${o.on!=null?o.on:`showW('${w.id}')`}"><div class="pic">${portrait(w)}</div><i class="al ${w.al==='f'?'fc':'hl'}"></i><span class="o">${ovr(w)}</span><span class="ic">${icons(w).trim()}</span>${(w.tr||[]).length?`<span class="trt">${w.tr.map(t=>TRAITS[t]?`<i title="${TRAITS[t].n}">${TRAITS[t].i}</i>`:'').join('')}</span>`:''}${w.cw&&!w.own?'<span class="cwb">NEW</span>':''}<div class="nm"><b>${esc(w.name)}</b><div class="ms">${[['RNG',w.ring,w.pot],['MIC',w.mic,w.potM],['POP',w.pop]].map(([l,v,pt])=>`<div><small>${l}</small><em>${Math.round(v)}</em><u><i style="width:${clamp(v,0,100)}%"></i>${pt!=null&&pt-v>=3?`<s style="left:${clamp(pt,0,100)}%"></s>`:''}</u></div>`).join('')}</div><span>${o.info!=null?o.info:`<i class="${w.al==='f'?'face':'heel'}">${w.al==='f'?'Face':'Heel'}</i> · ${STYLE_N[w.st]}${w.rookie?' · 🌱':''}`}</span></div></button>`}
 function emptySlot(on,label){return `<button class="wc empty" onclick="${on}"><span>+</span><small>${label||'Add'}</small></button>`}
-function fileToPhoto(f,isUrl){return new Promise((res,rej)=>{const img=new Image();if(isUrl)img.crossOrigin='anonymous';const u=isUrl?f:URL.createObjectURL(f);
+/* iOS Safari can drop a detached <input type=file> while the picker is open, so keep it in the DOM. */
+let FIN=null;
+function fileInput(){if(FIN)FIN.remove();const i=document.createElement('input');i.type='file';i.style.cssText='position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0';document.body.appendChild(i);FIN=i;return i}
+async function bitmapToPhoto(blob){const bm=await createImageBitmap(blob);const W=240,H=320,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');const sc=Math.max(W/bm.width,H/bm.height);const dw=bm.width*sc,dh=bm.height*sc;x.drawImage(bm,(W-dw)/2,(H-dh)*.2,dw,dh);bm.close&&bm.close();return c.toDataURL('image/jpeg',.7)}
+function fileToPhoto(f,isUrl){if(!isUrl&&typeof createImageBitmap==='function')return fileToPhoto0(f,false).catch(()=>bitmapToPhoto(f));return fileToPhoto0(f,isUrl)}
+function fileToPhoto0(f,isUrl){return new Promise((res,rej)=>{const img=new Image();if(isUrl)img.crossOrigin='anonymous';const u=isUrl?f:URL.createObjectURL(f);
  img.onload=()=>{const W=240,H=320,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');const sc=Math.max(W/img.width,H/img.height);const dw=img.width*sc,dh=img.height*sc;x.drawImage(img,(W-dw)/2,(H-dh)*.2,dw,dh);if(!isUrl)URL.revokeObjectURL(u);try{res(c.toDataURL('image/jpeg',.7))}catch(e){rej(e)}};
  img.onerror=()=>{if(!isUrl)URL.revokeObjectURL(u);rej()};img.src=u})}
-function addPhoto(id){const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=async()=>{const f=i.files[0];if(!f)return;
+function addPhoto(id){const i=fileInput();i.accept='image/*';i.onchange=async()=>{const f=i.files[0];if(!f)return;
  try{const old=IMG[id];IMG[id]=await fileToPhoto(f);if(!saveImg()){if(old)IMG[id]=old;else delete IMG[id]}}catch(e){toast("That image couldn't be opened.")}showW(id);render()};i.click()}
 /* ---------- Photo Studio ---------- */
 let UNQ=[];
@@ -708,7 +713,7 @@ function matchFile(name){const f='-'+slug(name.replace(/\.[^.]+$/,'').replace(/(
  if(best)return best;
  const toks=f.split('-').filter(x=>x.length>=4);let hits=Object.values(S.w).filter(w=>{const t=slug(w.name).split('-');return toks.some(k=>k===t[t.length-1])});if(!hits.length)hits=Object.values(S.w).filter(w=>{const t=slug(w.name).split('-');return toks.some(k=>k===t[0])});
  return hits.length===1?hits[0]:null}
-function bulkPhotos(){const i=document.createElement('input');i.type='file';i.accept='image/*';i.multiple=true;i.onchange=async()=>{const fs=[...i.files];if(!fs.length)return;
+function bulkPhotos(){const i=fileInput();i.accept='image/*';i.multiple=true;i.onchange=async()=>{const fs=[...i.files];if(!fs.length)return;
  openModal(`<div class="h mhd">Importing…</div><p class="muted">Processing ${fs.length} photo${fs.length>1?'s':''}.</p>`);let ok=0,bad=0;UNQ=[];const backup=Object.assign({},IMG);
  for(const f of fs){let url;try{url=await fileToPhoto(f)}catch(e){bad++;continue}const w=matchFile(f.name);if(w){IMG[w.id]=url;ok++}else UNQ.push({name:f.name,url})}
  if(!saveImg()){IMG=backup;return openModal(`<div class="h mhd">Storage full</div><p class="muted">Your device ran out of space for photos. Try importing fewer at a time.</p><button class="btn" onclick="openStudio()">Back to Photo Studio</button>`)}
@@ -757,11 +762,11 @@ function renderQuick(){if(!QP)return;while(QP.i<QP.ids.length&&(!S.w[QP.ids[QP.i
  <button class="btn ghost" onclick="QP=null;openStudio()">Done</button>`)}
 function quickOk(){QP.done++;QP.i++;renderQuick()}
 function quickPaste(){if(!QP)return;pastePhoto(QP.ids[QP.i],quickOk)}
-function quickFile(){const id=QP.ids[QP.i];const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=async()=>{const f=i.files[0];if(!f)return;try{if(await setPhotoFrom(id,{blob:f})){toast(`📸 Photo added for ${S.w[id].name}.`);quickOk()}}catch(e){toast("That image couldn't be opened.")}};i.click()}
-function studioAdd(id){const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=async()=>{const f=i.files[0];if(!f)return;try{const old=IMG[id];IMG[id]=await fileToPhoto(f);if(!saveImg()){if(old)IMG[id]=old;else delete IMG[id]}else toast(`Photo added for ${S.w[id].name}.`)}catch(e){toast("That image couldn't be opened.")}render();openStudio()};i.click()}
+function quickFile(){const id=QP.ids[QP.i];const i=fileInput();i.accept='image/*';i.onchange=async()=>{const f=i.files[0];if(!f)return;try{if(await setPhotoFrom(id,{blob:f})){toast(`📸 Photo added for ${S.w[id].name}.`);quickOk()}}catch(e){toast("That image couldn't be opened.")}};i.click()}
+function studioAdd(id){const i=fileInput();i.accept='image/*';i.onchange=async()=>{const f=i.files[0];if(!f)return;try{const old=IMG[id];IMG[id]=await fileToPhoto(f);if(!saveImg()){if(old)IMG[id]=old;else delete IMG[id]}else toast(`Photo added for ${S.w[id].name}.`)}catch(e){toast("That image couldn't be opened.")}render();openStudio()};i.click()}
 function exportPhotos(){const n=Object.keys(IMG).length;if(!n)return toast('No photos to export yet.');const names={};Object.keys(IMG).forEach(id=>{if(S.w[id])names[id]=S.w[id].name});
  const blob=new Blob([JSON.stringify({type:'all-elite-gm-photos',v:1,names,img:IMG})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`tony-khan-sim-photos-${n}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);toast(`Exported ${n} photos.`)}
-function importPhotos(){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);const src=d.img||d.__img;if(!src)throw 0;
+function importPhotos(){const i=fileInput();i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);const src=d.img||d.__img;if(!src)throw 0;
  const backup=Object.assign({},IMG);let n=0;for(const id in src){let tid=S.w[id]?id:null;if(!tid&&d.names&&d.names[id]){const w=Object.values(S.w).find(x=>x.name===d.names[id]);if(w)tid=w.id}if(tid&&typeof src[id]==='string'&&src[id].startsWith('data:image/')){IMG[tid]=src[id];n++}}
  if(!saveImg()){IMG=backup;return toast('Not enough storage for that pack.')}render();toast(`Imported ${n} photos.`);openStudio()}catch(e){toast("That file isn't a photo pack.")}};r.readAsText(f)};i.click()}
 function delPhoto(id){delete IMG[id];saveImg();showW(id);render()}
@@ -1188,7 +1193,7 @@ function crisisChoose(i){const c=S.crisis;const C=CRISES[c.k];const x=crisisCtx(
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function load(){try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){return null}}
 function exportSave(){const blob=new Blob([JSON.stringify(Object.assign({},S,{__img:IMG}))],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`tony-khan-sim-s${S.season}-w${S.week}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);toast('Save file exported.')}
-function importSave(){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.w||!d.titles||!d.phase)throw 0;if(d.__img){IMG=d.__img;delete d.__img;saveImg()}S=d;dataUpdate(S);ensureTraits(S);feudInit(S);showMigrate();save();loadRepoPhotos();closeModal();tab='home';render();toast('Save loaded.')}catch(e){toast('That file is not a valid save.')}};r.readAsText(f)};i.click()}
+function importSave(){const i=fileInput();i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.w||!d.titles||!d.phase)throw 0;if(d.__img){IMG=d.__img;delete d.__img;saveImg()}S=d;dataUpdate(S);ensureTraits(S);feudInit(S);showMigrate();save();loadRepoPhotos();closeModal();tab='home';render();toast('Save loaded.')}catch(e){toast('That file is not a valid save.')}};r.readAsText(f)};i.click()}
 function resetGame(){if(!confirm('Start a new game? Your current save on this device will be replaced. Export it first if you want to keep it.'))return;try{localStorage.removeItem(KEY)}catch(e){}S=null;closeModal();render()}
 
 /* ===================== UI ===================== */
