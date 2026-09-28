@@ -1,0 +1,48 @@
+rules_version = '2';
+// Tony Khan Simulator online leagues.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function seatKey(code, seat) {
+      return get(/databases/$(database)/documents/games/$(code)/seats/$(seat)).data.key;
+    }
+
+    match /games/{code} {
+      // Anyone signed in to the app who knows the code can see the league.
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+        && request.resource.data.host == request.auth.uid
+        && request.resource.data.guest == null;
+
+      allow update: if signedIn() && (
+        // a GM in this league taking their turn (seats stay put)
+        (request.auth.uid in [resource.data.host, resource.data.guest]
+          && request.resource.data.host == resource.data.host
+          && request.resource.data.guest == resource.data.guest)
+        // a friend taking the open seat
+        || (resource.data.guest == null
+          && request.resource.data.guest == request.auth.uid
+          && request.resource.data.host == resource.data.host)
+        // moving your own seat to a new device with its private seat code
+        || (request.resource.data.host == request.auth.uid
+          && request.resource.data.guest == resource.data.guest
+          && request.resource.data.claim == seatKey(code, 'host'))
+        || (request.resource.data.guest == request.auth.uid
+          && request.resource.data.host == resource.data.host
+          && request.resource.data.claim == seatKey(code, 'guest'))
+      );
+
+      // Private seat codes: written by the seat's owner, never readable by the app.
+      match /seats/{seat} {
+        allow create, update: if signedIn() && (seat == 'host' || seat == 'guest')
+          && get(/databases/$(database)/documents/games/$(code)).data[seat] == request.auth.uid;
+      }
+
+      // Each device's push token; only the Cloud Function reads these.
+      match /tokens/{uid} {
+        allow read, write: if signedIn() && request.auth.uid == uid;
+      }
+    }
+  }
+}
