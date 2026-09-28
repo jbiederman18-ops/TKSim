@@ -1,6 +1,6 @@
 // Tony Khan Simulator — online leagues (Firebase). The game works without this file; it only adds sync + turn alerts.
 import { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
-  doc, getDocFromServer, setDoc, updateDoc, onSnapshot, serverTimestamp, deleteField, getMessaging, getToken, onMessage, isSupported } from './firebase-sdk.js';
+  doc, getDocFromServer, setDoc, updateDoc, onSnapshot, serverTimestamp, deleteField, runTransaction, getMessaging, getToken, onMessage, isSupported } from './firebase-sdk.js';
 
 const cfg = window.TK_FIREBASE || {};
 const TKO = window.TKO = { configured: false, ready: false };
@@ -86,6 +86,27 @@ if (!cfg.apiKey || !cfg.projectId) {
 
     push(code, fields) {
       return updateDoc(game(code), { ...fields, updated: serverTimestamp() });
+    },
+
+    // ---- cloud saves (solo game + your list of leagues), keyed by a private 12-character sync code ----
+    cloudGet(id) { return timed(getDocFromServer(doc(db, 'saves', id)).then(s => (s.exists() ? s.data() : null)), 12000); },
+    // Only save if nobody else saved since this device last synced (base = the cloud version we last saw).
+    // Runs as a transaction, so it never gets queued offline and blindly replayed over a newer save later.
+    cloudPut(id, data, base) {
+      return timed(runTransaction(db, async tx => {
+        const ref = doc(db, 'saves', id);
+        const cur = await tx.get(ref);
+        if (cur.exists() && (cur.data().rev || 0) > (base || 0) && cur.data().dev !== data.dev) throw new Error('conflict');
+        tx.set(ref, { ...data, updated: serverTimestamp() });
+      }), 15000);
+    },
+    cloudBackup(id, slot, data) { return setDoc(doc(db, 'saves', id, 'backups', 'b' + slot), { ...data, updated: serverTimestamp() }); },
+    async cloudBackups(id, n) {
+      const out = [];
+      for (let i = 0; i < n; i++) {
+        try { const s = await getDocFromServer(doc(db, 'saves', id, 'backups', 'b' + i)); if (s.exists()) out.push(s.data()); } catch (e) { /* offline */ }
+      }
+      return out;
     },
 
     listen(code, cb) {

@@ -17,7 +17,9 @@ Firebase holds the shared league. It's free at this size. Setup takes about 15 m
 6. **Get the push key.** In **Project settings → Cloud Messaging → Web Push certificates**, click **Generate key pair**. Paste the long key into `vapidKey` in `firebase-config.js`.
 7. Commit `firebase-config.js`. These values are safe to publish. Firebase web keys aren't secrets, and the security rules are what protect the leagues.
 
-After that, **Host a league** and **Join a league** work in the game (on the start screen, or in **Office**).
+After that, **Host a league**, **Join a league** and **Cloud save** all work in the game (on the start screen, or in **Office**).
+
+> Already published the rules from an earlier version? Paste the latest `firebase/firestore.rules` again. Cloud saves need the new `saves` section.
 
 ## Part 2: Turn notifications (about 5 minutes)
 
@@ -50,6 +52,15 @@ Notifications are sent by a small Cloud Function in [`firebase/functions`](fireb
 - **Changing phones:** Office → **Other device** shows your private seat code (`CODE-XXXXXXXX`). On the new device, enter it in **Join a league**. You also need this when moving from a Safari tab to the installed app, because they keep separate storage.
 - Your solo game stays separate. Use **Office → Switch to my solo game** to go back and forth.
 - League size is fixed once created. If a friend drops out, their seat waits for them, so pick the size you'll actually play with.
+
+## Cloud save
+
+- **Turning it on:** Office → **Cloud save → Turn on cloud save** gives you a 12-character sync code. On any other device (phone, iPad, computer, or the installed app vs. a Safari tab), go to **Cloud save → I have a sync code** or **☁️ Load my cloud save** on the start screen and enter it.
+- **Saving:** every change saves on the device first, then uploads in the background. Offline play just works. The upload waits until you're back online and never overwrites a newer save from another device.
+- **Conflicts:** if two devices were both played offline, the game asks which one to keep. The other one is saved as a backup.
+- **Leagues:** your online leagues come along too. Opening one on a new device moves your seat there automatically. Turn alerts go to whichever device you used last, so turn them on for each device.
+- **Backups:** the game keeps the last 5 weeks on the device and in the cloud, plus a snapshot whenever something is about to replace your save (loading from the cloud, importing a file, restoring a backup, starting a new game). Office → **Backups** restores any of them.
+- **Not included:** custom photos stay on each device, because they're too big for the cloud. Use **Export Photo Pack / Import Photo Pack** to move them.
 
 ## Updating Firebase later
 

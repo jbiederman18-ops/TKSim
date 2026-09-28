@@ -7,6 +7,15 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/games/$(code)/seats/$(seat)).data.key;
     }
 
+    // Cloud saves. The 12-character sync code is the key: only someone who has it can open the save,
+    // and saves can't be listed or searched.
+    match /saves/{id} {
+      allow get, create, update: if signedIn() && id.size() == 12;
+      match /backups/{slot} {
+        allow get, create, update: if signedIn() && id.size() == 12 && slot in ['b0', 'b1', 'b2', 'b3', 'b4'];
+      }
+    }
+
     match /games/{code} {
       function uidsBefore() { return resource.data.uids; }
       function uidsAfter() { return request.resource.data.uids; }

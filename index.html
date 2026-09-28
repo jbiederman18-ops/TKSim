@@ -335,7 +335,7 @@ nav.tabs button.on{text-shadow:none}nav.tabs button.on svg{filter:none}nav.tabs 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v33';
+const APP_VERSION='v34';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -1391,7 +1391,7 @@ function autoPromo(brand,ex){ex=ex||new Set();const r=Object.values(S.w).filter(
  runAutoPromo(p,brand);return p}
 
 /* ===================== AIRING ===================== */
-function airShow(){if(ON())return mpAirWeek();const out=airPair();S.showIdx=0;endWeek(out.notes);if(S.phase==='season')freshCards();S.last=out;save();return out}
+function airShow(){if(ON())return mpAirWeek();const out=airPair();S.showIdx=0;endWeek(out.notes);if(S.phase==='season')freshCards();S.last=out;save();localBackup();return out}
 /* air one head-to-head matchup (or one GM's bye-week show) */
 function airPair(){
  const show=curShow();const ctx={ppv:show.ppv,allin:show.ppv&&S.week===SEASON,name:show.name};const bye=ON()&&!S._view.opp;
@@ -1544,11 +1544,11 @@ function crisisChoose(i){if(mpLocked())return;const c=S.crisis;const C=CRISES[c.
 /* ===================== PERSISTENCE ===================== */
 function saveKey(){return ON()&&LMP?'tksim_game_'+LMP.code:KEY}
 function saveLocal(){try{localStorage.setItem(saveKey(),JSON.stringify(S))}catch(e){}}
-function save(){saveLocal();if(ON()&&S.online.turn==='p')mpSoon()}
+function save(){saveLocal();if(!ON()){touchSolo();cloudSoon()}else if(S.online.turn==='p')mpSoon()}
 function load(){try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){return null}}
 function exportSave(){const blob=new Blob([JSON.stringify(Object.assign({},S,{__img:IMG}))],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`tony-khan-sim-s${S.season}-w${S.week}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);toast('Save file exported.')}
-function importSave(){const i=fileInput();i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.w||!d.titles||!d.phase)throw 0;if(d.__img){IMG=d.__img;delete d.__img;saveImg()}S=d;dataUpdate(S);ensureTraits(S);feudInit(S);showMigrate();save();loadRepoPhotos();closeModal();tab='home';render();toast('Save loaded.')}catch(e){toast('That file is not a valid save.')}};r.readAsText(f)};i.click()}
-function resetGame(){if(ON())return mpLeave();if(!confirm('Start a new game? Your current save on this device will be replaced. Export it first if you want to keep it.'))return;try{localStorage.removeItem(KEY)}catch(e){}S=null;closeModal();render()}
+function importSave(){const i=fileInput();i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.w||!d.titles||!d.phase)throw 0;localBackup('Before importing a file');if(d.__img){IMG=d.__img;delete d.__img;saveImg()}S=d;dataUpdate(S);ensureTraits(S);feudInit(S);showMigrate();save();loadRepoPhotos();closeModal();tab='home';render();toast('Save loaded.')}catch(e){toast('That file is not a valid save.')}};r.readAsText(f)};i.click()}
+function resetGame(){if(ON())return mpLeave();if(!confirm(`Start a new game? Your current save is kept under Backups${cloudCfg()?' and the new game will replace it in the cloud':''}.`))return;localBackup('Before starting a new game');try{localStorage.removeItem(KEY)}catch(e){}S=null;closeModal();render()}
 
 /* ===================== UI ===================== */
 const sv=p=>`<svg viewBox="0 0 24 24">${p}</svg>`;
@@ -1599,7 +1599,7 @@ function setupView(){return `<div class="hero"><div class="kicker"><i></i>Tony K
 <div class="card"><label>Your GM name</label><input id="gmName" maxlength="24" placeholder="Your name">
 <label>Rival GM name</label><input id="rvName" maxlength="24" value="The Rival Office">
 <label>Difficulty</label><select id="diff"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select>
-<button class="btn mt" onclick="startGame()">Start new game</button><button class="btn sec" onclick="importSave()">Load a save file</button></div>
+<button class="btn mt" onclick="startGame()">Start new game</button><button class="btn sec" onclick="importSave()">Load a save file</button><button class="btn sec" onclick="cloudLinkForm()">☁️ Load my cloud save</button></div>
 ${mpSetupCard()}<p class="muted center">Works offline. Progress saves automatically on this device.</p>`}
 function startGame(){const g=($('#gmName').value||'').trim()||'You';const r=($('#rvName').value||'').trim()||'The Rival Office';newGame(g,r,$('#diff').value);tab='home';render();loadRepoPhotos()}
 let CF=null;
@@ -1847,6 +1847,7 @@ const HOWTO=`<p><b>Match ratings</b> blend in-ring skill (the best worker in the
 <p><b>Feuds</b> start and grow from matches and promos: great matches, face vs heel, title matches and messy finishes build the most heat, and the results call it out when a rivalry is brewing (20), becomes a full-blown feud (45) or a blood feud (75). Don't overdo it — running the same match again within a month costs up to 1¼★ and barely builds heat, and a feud that goes 8 weeks without a PPV payoff goes stale. Feuds also cool off when ignored. PPVs weigh heat much more heavily, so build rivalries on TV and pay them off on PPV. A PPV match cools the feud down.</p>
 <p><b>Promos</b> play out as short scenes. Each choice tests mic skill, in-ring ability, popularity or luck. Promos between two wrestlers build feud heat. A <b>Contract Signing</b> books that match on your next PPV card (with a stipulation if you add one); a callout where you <b>lay down a challenge</b> promises the match for next week or the next PPV — your pick. While a match is promised, booking either wrestler against the other's stablemates or tag partners (🔗 proxy war) and trading promos where they take turns leading (↔️ back-and-forth) builds the feud without fatigue. Running the promised singles match early gives it away and halves the payoff. Deliver and it pays off; skip it and you lose fans and morale. Putting the same two in promos week after week brings diminishing returns. Match events work the same way — faces fly and rally the crowd, heels rake eyes and put their feet on the ropes, and some events only happen in face vs heel, face vs face or heel vs heel matches. Each promo deals fresh options: faces get crowd-pleasing moves and heels get dirty tricks (😇/😈 — playing to character gives slightly better odds), and the scene changes depending on whether it's face vs heel, heel vs heel or face vs face.</p>
 <p><b>Development:</b> wrestlers improve toward their potential by working matches (faster against better opponents) and by Performance Center training. Unused talent loses morale; overworked talent gets hurt.</p>
+<p><b>Cloud save &amp; backups:</b> turn on cloud save in the Office to back up automatically and continue on any device with your sync code. Everything still saves on the device first, so offline play just works and syncs later. The game also keeps automatic backups of your last few weeks (Office → Backups).</p>
 <p><b>Fans:</b> each week you book all of Dynamite while the rival books Collision. Your show earns or loses fans based on its rating (the main event counts most), with a bonus for beating the rival's show. PPVs swing far more fans, and All In counts double. The most fans after All In wins.</p>`;
 function officeView(){const inc=Math.round(S.fans.p/2000+220),pay=payroll('p');const exp=ownList('p').filter(w=>w.con<=6).sort((a,b)=>a.con-b.con);
  const tr=S.training.map(t=>S.w[t.id]?`<div class="row sb" style="margin-bottom:6px"><span>${esc(S.w[t.id].name)} · ${t.f==='ring'?'In-ring':'Mic'}</span><button class="mini" onclick="untrain('${t.id}')">Remove</button></div>`:'').join('');
@@ -1858,7 +1859,7 @@ function officeView(){const inc=Math.round(S.fans.p/2000+220),pay=payroll('p');c
  <div class="card"><div class="h small">Tag teams & factions</div>${myTeams.map(t=>`<div class="row sb" style="margin-bottom:8px"><span><b>${esc(t.n)}</b><br><span class="muted">${t.type==='team'?'Tag team':'Faction'} · ${t.m.map(id=>esc(S.w[id].name)).join(', ')}</span></span><button class="mini" onclick="delTeam('${t.id}')">Disband</button></div>`).join('')||'<div class="muted">No teams made up only of your wrestlers.</div>'}<div class="muted mt">Teammates get a chemistry boost in tag and trios matches.</div><button class="btn sec" onclick="openTeam()">+ New team or faction</button></div>
  <button class="btn sec" onclick="rf='fa';go('roster')">Browse free agents</button>
  <div class="card mt"><div class="h small">Photo Studio</div><p class="muted" style="margin-top:0">${Object.values(S.w).filter(hasPhoto).length} of ${Object.keys(S.w).length} wrestlers have photos. Bulk-import pictures, work through the checklist, or share a photo pack with friends.</p><button class="btn" onclick="openStudio()">📷 Open Photo Studio</button></div>
- ${mpOfficeCard()}
+ ${cloudCard()}${mpOfficeCard()}
  <div class="card mt"><div class="h small">Save</div><p class="muted" style="margin-top:0">Progress saves automatically on this device. Export a file to back it up or move it to another device.</p><div class="row"><button class="btn sec" onclick="exportSave()">Export</button>${ON()?'':'<button class="btn sec" onclick="importSave()">Import</button>'}</div>${ON()?'':'<button class="btn ghost danger" onclick="resetGame()">Start a new game</button>'}</div>
  <details class="card"><summary class="h small">How it all works</summary>${HOWTO}</details>`}
 function openTeam(){if(mpLocked())return;const l=ownList('p').sort((a,b)=>a.name.localeCompare(b.name));openModal(`<div class="h mhd">New team or faction</div><label>Name</label><input id="tmName" maxlength="30" placeholder="e.g. The Elite Guard"><label>Type</label><select id="tmType"><option value="team">Tag team (2–3)</option><option value="faction">Faction (2–6)</option></select><label>Members</label>${l.map(w=>`<label style="display:flex;gap:10px;align-items:center;text-transform:none;font-size:15px;color:var(--text);letter-spacing:0"><input type="checkbox" value="${w.id}" class="tmc" style="width:auto"> ${esc(w.name)}</label>`).join('')}<button class="btn mt" onclick="saveTeam()">Create</button><button class="btn ghost" onclick="closeModal()">Cancel</button>`)}
@@ -1878,8 +1879,8 @@ function nextSeason(){if(mpLocked())return;S.season++;S.week=1;S.showIdx=0;S.pha
 /* ===================== ONLINE LEAGUE: turns, sync, invites ===================== */
 const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 function mpGames(){try{return JSON.parse(LS.get('tksim_games')||'[]')}catch(e){return []}}
-function mpLabel(){if(!S||!ON())return '';const others=localSeats().filter(k=>k!=='p').map(k=>S.names&&S.names[k]).filter(Boolean);return nSeats()===2?`${S.gm} vs ${others[0]||'?'}`:`${S.gm}'s ${nSeats()}-GM league`}
-function mpRemember(){if(!LMP)return;const l=mpGames().filter(g=>g.code!==LMP.code);l.unshift({code:LMP.code,me:LMP.me,key:LMP.key,label:mpLabel()});LS.set('tksim_games',JSON.stringify(l.slice(0,12)))}
+function mpLabel(){if(!S||!ON())return '';const others=localSeats().filter(k=>k!=='p').map(k=>S.names&&S.names[k]).filter(Boolean);return nSeats()===2?`${S.gm} vs ${others[0]||'open seat'}`:`${S.gm}'s ${nSeats()}-GM league`}
+function mpRemember(){if(!LMP)return;const l=mpGames().filter(g=>g.code!==LMP.code);const was=LS.get('tksim_games');l.unshift({code:LMP.code,me:LMP.me,key:LMP.key,label:mpLabel()});LS.set('tksim_games',JSON.stringify(l.slice(0,12)));if(LS.get('tksim_games')!==was)cloudSoon()}
 function mpSeenKey(){return 'tksim_seen_'+(LMP?LMP.code:'')}
 function mpMarkSeen(){if(S&&S.last)LS.set(mpSeenKey(),(S.last.season||S.season)*100+S.last.week)}
 function mpUnseen(){return !!(S&&S.last&&(S.last.season||S.season)*100+S.last.week>+(LS.get(mpSeenKey())||0))}
@@ -1892,24 +1893,32 @@ function mpSoon(){if(MP_HOLD)return;clearTimeout(mpT);mpT=setTimeout(()=>mpPush(
 /* upload the shared world; msg is what the next GM's notification says */
 function mpPush(msg){clearTimeout(mpT);if(!ON()||!LMP)return;const o=S.online;o.rev=(o.rev||0)+1;if(msg)o.msg=msg;saveLocal();mpRemember();
  if(!window.TKO||!TKO.ready){MP_PENDING=true;return}MP_PENDING=false;
- TKO.push(LMP.code,{state:JSON.stringify(canonState()),rev:o.rev,turn:canonKey(o.turn),msg:o.msg||'',week:S.week,season:S.season,phase:S.phase}).catch(e=>{console.warn('push failed',e);toast('Saved on this device — it will sync when you reconnect.')})}
+ const f={state:JSON.stringify(canonState()),rev:o.rev,turn:canonKey(o.turn),msg:o.msg||'',week:S.week,season:S.season,phase:S.phase},code=LMP.code,key=LMP.key;
+ TKO.push(code,f).catch(e=>{console.warn('push failed',e);/* this seat was last used on another device: take it back, then retry */TKO.claim(code,key).then(()=>TKO.push(code,f)).catch(()=>toast('Saved on this device — it will sync when you reconnect.'))})}
 function mpPass(msg,to){S.online.turn=to;mpPush(msg)}
 function mpApplyNames(names){if(!names||!LMP||!S._view)return;S.names=S.names||{};for(const k in names)if(names[k])S.names[localKey(k)]=names[k];S.gm=S.names.p||S.gm;S.rival=S._view.opp?(S.names.ai||'Waiting for a GM'):'Bye week'}
 function mpLoad(stateStr,names){const st=JSON.parse(stateStr);delete st._view;viewFor(st,LMP.me);S=st;dataUpdate(S);ensureTraits(S);feudInit(S);mpApplyNames(names)}
 /* a new copy of the world arrived from another GM */
+let MP_WANT=false;
 function mpIncoming(d){if(!d||!LMP||!S||!ON())return;const wasMine=myTurn();let changed=false;
+ /* opened on this device, but the seat was last used on another one (e.g. via cloud save): take it back quietly */
+ if(MP_WANT){MP_WANT=false;if(d.uids&&TKO.uid&&d.uids[LMP.me]&&d.uids[LMP.me]!==TKO.uid&&LMP.key)TKO.claim(LMP.code,LMP.key).catch(()=>{})}
  if(d.state&&(d.rev||0)>(S.online.rev||0)){try{mpLoad(d.state,d.names)}catch(e){console.warn(e);return}changed=true;
-  if(d.uids&&window.TKO&&TKO.uid&&d.uids[LMP.me]&&d.uids[LMP.me]!==TKO.uid)toast('This seat moved to another device.')}
+}
  else{const before=JSON.stringify(S.names);mpApplyNames(d.names);if(JSON.stringify(S.names)!==before)changed=true}
  if(!changed)return;saveLocal();mpRemember();
  if(PS||ME||ED||PE||CE)return; /* don't yank a screen out from under someone mid-edit */
  render();
  if(!wasMine&&myTurn()){toast(`🔔 Your turn, ${S.gm}!`);if(S.phase!=='draft'&&mpUnseen()){mpMarkSeen();showResults()}}}
-function mpConnect(){if(!ON()||!LMP||!mpAvail())return;if(MP_UNSUB){MP_UNSUB();MP_UNSUB=null}
+function mpConnect(){if(!ON()||!LMP||!mpAvail())return;if(MP_UNSUB){MP_UNSUB();MP_UNSUB=null}MP_WANT=true;
  MP_UNSUB=TKO.listen(LMP.code,mpIncoming);if(MP_PENDING)mpPush()}
 function mpOpen(code){const g=mpGames().find(x=>x.code===code);if(!g)return;if(S&&!ON())saveLocal();
- const s=LS.get('tksim_game_'+code);if(!s)return toast('That league is not saved on this device.');LMP={code:g.code,me:g.me,key:g.key};LS.set('tksim_active',JSON.stringify(LMP));
+ const s=LS.get('tksim_game_'+code);if(!s)return mpFetch(g);LMP={code:g.code,me:g.me,key:g.key};LS.set('tksim_active',JSON.stringify(LMP));
  S=JSON.parse(s);dataUpdate(S);ensureTraits(S);feudInit(S);closeModal();tab='home';ANIM=true;render();mpConnect();if(mpUnseen()&&S.phase!=='draft'){mpMarkSeen();showResults()}}
+/* a league you play on another device (found through cloud save): bring it to this one */
+async function mpFetch(g){if(!mpAvail()||!g.key)return toast('Open this league on the device you joined it from, or use its seat code.');toast('Bringing your league to this device…');
+ try{const r=await TKO.claim(g.code,g.key);LMP={code:g.code,me:r.seat,key:g.key};mpLoad(r.data.state,r.data.names);saveLocal();LS.set('tksim_active',JSON.stringify(LMP));mpRemember();closeModal();tab='home';ANIM=true;render();mpConnect()}
+ catch(e){console.warn(e);toast(navigator.onLine?"Couldn't open that league here.":'You need a connection to bring a league to a new device.')}}
 function mpSolo(){if(MP_UNSUB){MP_UNSUB();MP_UNSUB=null}if(ON())saveLocal();LMP=null;LS.del('tksim_active');S=load();if(S){dataUpdate(S);ensureTraits(S);feudInit(S);showMigrate()}closeModal();tab='home';ANIM=true;render()}
 function mpLeave(){if(!confirm(`Remove this league from this device? The other GMs keep playing; you can rejoin later with your seat code (${LMP.code}-${LMP.key}).`))return;
  LS.del('tksim_game_'+LMP.code);LS.set('tksim_games',JSON.stringify(mpGames().filter(g=>g.code!==LMP.code)));mpSolo()}
@@ -2010,13 +2019,111 @@ function mpOverView(){const l=localSeats().slice().sort((a,b)=>S.fans[b]-S.fans[
  ${mvp?`<div class="mt"><span class="muted">Your breakout star</span><br><b>${esc(mvp.name)}</b> (+${Math.round(mvp.pop-mvp.pop0)} popularity)</div>`:''}</div>
  <button class="btn" ${myTurn()?'':'disabled'} onclick="nextSeason()">Start Season ${S.season+1}</button><p class="muted center">Rosters, titles, feuds, contracts and development all carry over.</p>`}
 
+/* ===================== CLOUD SAVE & BACKUPS =====================
+ Your solo save (and your list of online leagues) can live in the cloud under a private sync code.
+ Every change still saves on the device first, so the game never waits on the internet; the cloud copy
+ catches up in the background (queued while offline). Local and cloud backups are kept automatically. */
+const CLOUD_BK=5;
+function devId(){let d=LS.get('tksim_dev');if(!d){d=newCode(10);LS.set('tksim_dev',d)}return d}
+function cloudCfg(){try{return JSON.parse(LS.get('tksim_cloud')||'null')}catch(e){return null}}
+function cloudSet(c){if(c)LS.set('tksim_cloud',JSON.stringify(c));else LS.del('tksim_cloud')}
+function cloudOn(){return !!(cloudCfg()&&mpAvail()&&TKO.cloudPut)}
+function fmtCode(id){return id.replace(/(.{4})(?=.)/g,'$1-')}
+function saveLabel(st){return st&&st.w?`${st.gm||'You'} · Season ${st.season}, ${st.phase==='season'||st.phase==='over'?'Week '+Math.min(st.week,SEASON):st.phase==='draft'?'draft':'setup'}`:'No solo game'}
+function whenTxt2(t){if(!t)return 'never';const d=new Date(t),n=new Date();return d.toDateString()===n.toDateString()?d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):d.toLocaleDateString([],{month:'short',day:'numeric'})+' '+d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}
+/* the solo save as it sits on this device (works even while an online league is open) */
+function soloState(){if(S&&!ON())return S;try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){return null}}
+function soloMeta(){try{return JSON.parse(LS.get('tksim_meta')||'{}')}catch(e){return {}}}
+function touchSolo(){const m=soloMeta();m.at=Date.now();LS.set('tksim_meta',JSON.stringify(m))}
+
+/* ---- automatic local backups (last 5 weeks + a snapshot before anything replaces your save) ---- */
+function localBackups(){try{return JSON.parse(LS.get('tksim_bk')||'[]')}catch(e){return []}}
+function localBackup(why,st){st=st||soloState();if(!st||!st.w)return;const l=localBackups();const tag=`${st.season}-${st.week}`;
+ const rest=l.filter(b=>!(b.tag===tag&&!b.why&&!why));rest.unshift({tag,why:why||'',at:Date.now(),label:saveLabel(st),data:JSON.stringify(st)});
+ const keep=[];let auto=0,manual=0;for(const b of rest){if(b.why?manual++<3:auto++<CLOUD_BK)keep.push(b)}
+ for(let n=keep.length;n>0;n--){try{LS.set('tksim_bk',JSON.stringify(keep.slice(0,n)));return}catch(e){}}}
+
+/* ---- cloud sync ---- */
+let CL_T=null,CL_BUSY=false,CL_STATUS='';
+function cloudSoon(){if(!cloudOn())return;clearTimeout(CL_T);CL_T=setTimeout(cloudPush,2500)}
+function cloudPayload(){const st=soloState(),m=soloMeta();return {state:st?JSON.stringify(st):'',label:saveLabel(st),at:m.at||Date.now(),rev:(m.rev||0),dev:devId(),leagues:JSON.stringify(mpGames())}}
+/* writes are queued by Firebase while offline and sent later, so don't wait on them forever */
+async function cloudPush(){clearTimeout(CL_T);const c=cloudCfg();if(!c||!cloudOn())return;
+ const base=c.rev||0;const p=cloudPayload();p.rev=base+1;c.pending=true;cloudSet(c);CL_STATUS='syncing';let ok=0;
+ try{await TKO.cloudPut(c.id,p,base);ok=1}catch(e){if(String(e&&e.message).includes('conflict')){CL_STATUS='';return cloudCheck()}console.warn('cloud save failed',e)}
+ const c2=cloudCfg();if(ok&&c2&&c2.id===c.id){c2.rev=p.rev;c2.at=p.at;c2.pending=false;c2.synced=Date.now();
+  /* weekly cloud backup (5 rotating slots) */
+  const st=soloState();const bk=st&&st.w&&`${st.season}-${st.week}`;if(bk&&c2.lastBk!==bk){c2.lastBk=bk;c2.bkn=((c2.bkn||0)+1)%CLOUD_BK;TKO.cloudBackup(c2.id,c2.bkn,{state:p.state,label:p.label,at:p.at}).catch(()=>{})}
+  cloudSet(c2);CL_STATUS=''}else CL_STATUS='offline';
+ if(tab==='office'&&$('#modal').classList.contains('hidden')&&S)render()}
+function mergeLeagues(json){let l=[];try{l=JSON.parse(json||'[]')}catch(e){}if(!l.length)return;const mine=mpGames();l.forEach(g=>{if(!mine.some(x=>x.code===g.code))mine.push(g)});LS.set('tksim_games',JSON.stringify(mine.slice(0,12)))}
+/* check the cloud when the game opens or comes back to the foreground */
+async function cloudCheck(manual){const c=cloudCfg();if(!c||!cloudOn()||CL_BUSY)return;CL_BUSY=true;
+ try{const d=await TKO.cloudGet(c.id);if(!d){if(manual)toast('Cloud save not found — uploading this device’s copy.');CL_BUSY=false;return cloudPush()}
+  mergeLeagues(d.leagues);if(d.dev===devId()&&(d.rev||0)>(c.rev||0)){c.rev=d.rev;cloudSet(c)}const m=soloMeta();const localDirty=!!c.pending||(m.at||0)>(c.synced||0);const cloudNewer=(d.rev||0)>(c.rev||0)&&d.dev!==devId();
+  if(cloudNewer&&localDirty&&soloState()&&d.state)return cloudConflict(d);
+  if(cloudNewer&&d.state){applyCloud(d,false);toast(`☁️ Loaded your latest save from the cloud (${d.label}).`)}
+  else if(localDirty||(d.rev||0)<(c.rev||0))await cloudPush();
+  else if(manual)toast('☁️ Everything is synced.');
+  const c2=cloudCfg();if(c2){c2.synced=Date.now();cloudSet(c2)}CL_STATUS=''}
+ catch(e){CL_STATUS='offline';if(manual)toast('You’re offline — your save is safe on this device and will sync later.')}
+ finally{CL_BUSY=false;if(tab==='office'&&$('#modal').classList.contains('hidden')&&S)render()}}
+function applyCloud(d,backupFirst){const cur=soloState();if(cur&&backupFirst!==false)localBackup('Before loading the cloud save',cur);else if(cur)localBackup('Replaced by cloud save',cur);
+ const st=JSON.parse(d.state);try{localStorage.setItem(KEY,d.state)}catch(e){}LS.set('tksim_meta',JSON.stringify({at:d.at,rev:d.rev}));
+ const c=cloudCfg();if(c){c.rev=d.rev;c.at=d.at;c.pending=false;c.synced=Date.now();cloudSet(c)}
+ if(!ON()&&!(PS||ME||ED||PE||CE)){S=st;dataUpdate(S);ensureTraits(S);feudInit(S);showMigrate();closeModal();tab='home';ANIM=true;render();loadRepoPhotos()}}
+let CL_PEND=null;
+function cloudConflict(d){CL_PEND=d;CL_BUSY=false;const here=soloState();
+ openModal(`<div class="h mhd">Two different saves</div><p>This device and the cloud were both played since they last synced. Which one do you want to keep playing?</p>
+ <button class="choice" onclick="cloudResolve('here')"><span class="key"><span>A</span></span><div><b>This device</b> — ${esc(saveLabel(here))}</div><div class="muted tiny">Saved ${whenTxt2(soloMeta().at)}</div></button>
+ <button class="choice" onclick="cloudResolve('cloud')"><span class="key"><span>B</span></span><div><b>Cloud</b> — ${esc(d.label)}</div><div class="muted tiny">Saved ${whenTxt2(d.at)} on another device</div></button>
+ <p class="muted tiny">The one you don't pick is kept as a backup (Office → Cloud save → Backups).</p>`)}
+async function cloudResolve(which){const d=CL_PEND;CL_PEND=null;closeModal();if(!d)return;
+ if(which==='cloud'){applyCloud(d,true);toast('☁️ Switched to the cloud save. This device’s version is in Backups.')}
+ else{localBackup('Cloud version (not kept)',JSON.parse(d.state));const c=cloudCfg();if(c){c.rev=Math.max(c.rev||0,d.rev||0);cloudSet(c)}await cloudPush();toast('Kept this device’s save and uploaded it.')}}
+
+/* ---- turning it on / linking another device ---- */
+async function cloudEnable(){if(!mpAvail())return mpNeedSetup();const id=newCode(12);cloudSet({id,rev:0});touchSolo();CL_STATUS='syncing';render();
+ try{await cloudPush();const c=cloudCfg();if(c&&c.pending)throw new Error('offline');cloudShowCode(true)}catch(e){toast('Cloud save is on — it will upload when you’re back online.');render()}}
+function cloudShowCode(first){const c=cloudCfg();if(!c)return;openModal(`<div class="h mhd">${first?'Cloud save is on ☁️':'Your sync code'}</div><p>Your save now backs up automatically. To play on another phone, tablet or computer, open the game there, go to <b>Cloud save</b> and enter this code:</p><div class="mpcode" style="font-size:24px;letter-spacing:3px">${fmtCode(c.id)}</div><p class="muted">Keep it somewhere safe — it's the key to your save. Anyone with it can load and change it.</p><button class="btn" onclick="cloudCopy()">Copy code</button><button class="btn ghost" onclick="closeModal()">Done</button>`)}
+async function cloudCopy(){const c=cloudCfg();try{await navigator.clipboard.writeText(fmtCode(c.id));toast('Code copied.')}catch(e){toast(fmtCode(c.id))}}
+function cloudLinkForm(){if(!mpAvail())return mpNeedSetup();openModal(`<div class="h mhd">Load a cloud save</div><p class="muted">Enter the sync code from your other device. ${soloState()?"Your current save on this device is kept as a backup first.":''}</p>
+ <label>Sync code</label><input id="clCode" maxlength="20" autocapitalize="characters" placeholder="ABCD-EFGH-JKLM" style="text-transform:uppercase;letter-spacing:2px">
+ <button class="btn mt" id="clGo" onclick="cloudLink()">Load my save</button><button class="btn ghost" onclick="closeModal()">Cancel</button>`)}
+async function cloudLink(){const id=($('#clCode').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(id.length!==12)return toast('Sync codes have 12 letters and numbers.');const b=$('#clGo');b.disabled=true;b.textContent='Loading…';
+ try{const d=await TKO.cloudGet(id);if(!d)throw new Error('nosave');cloudSet({id,rev:d.rev||0,synced:Date.now()});mergeLeagues(d.leagues);
+  if(d.state){if(ON())mpSolo();applyCloud(d,true);toast(`☁️ Loaded ${d.label}. This device now syncs too.`)}else{closeModal();render();toast('Linked. Your online leagues are listed under Online league.')}}
+ catch(e){console.warn(e);b.disabled=false;b.textContent='Load my save';toast(String(e.message).includes('nosave')?'No cloud save with that code.':navigator.onLine?"Couldn't load it — check the code.":'You need a connection to load a cloud save.')}}
+function cloudOff(){if(!confirm('Stop syncing this device? Your cloud save stays put, and you can reconnect any time with your sync code.'))return;cloudSet(null);render();toast('Cloud save is off on this device.')}
+
+/* ---- backups ---- */
+async function openBackups(){const loc=localBackups();let cl=[];const c=cloudCfg();
+ const row=(b,src,i)=>`<div class="row sb" style="margin:8px 0;gap:10px"><span><b>${esc(b.label)}</b><br><span class="muted tiny">${src==='cloud'?'☁️ Cloud':'📱 This device'} · ${whenTxt2(b.at)}${b.why?' · '+esc(b.why):''}</span></span><button class="mini" onclick="restoreBackup('${src}',${i})">Restore</button></div>`;
+ const draw=()=>openModal(`<div class="row sb"><div class="h mhd" style="margin:0">Backups</div><button class="mini" onclick="closeModal()">Close</button></div><p class="muted">Backups are made automatically every week, and whenever something is about to replace your save. Restoring keeps your current save as a backup too.</p>
+  <div class="card">${loc.length?loc.map((b,i)=>row(b,'local',i)).join(''):'<div class="muted">No backups on this device yet.</div>'}</div>${c?`<div class="card">${cl.length?cl.map((b,i)=>row(b,'cloud',i)).join(''):`<div class="muted">${navigator.onLine?'Loading cloud backups…':'Cloud backups need a connection.'}</div>`}</div>`:''}`);
+ draw();if(c&&cloudOn()){try{cl=(await TKO.cloudBackups(c.id,CLOUD_BK)).sort((a,b)=>b.at-a.at);window._clbk=cl;draw()}catch(e){}}}
+function restoreBackup(src,i){const b=src==='cloud'?(window._clbk||[])[i]:localBackups()[i];if(!b)return;if(!confirm(`Restore ${b.label}? Your current save is kept as a backup.`))return;
+ const cur=soloState();if(cur)localBackup('Before restoring a backup',cur);const st=JSON.parse(b.data||b.state);if(ON())mpSolo();
+ S=st;dataUpdate(S);ensureTraits(S);feudInit(S);showMigrate();touchSolo();saveLocal();cloudSoon();closeModal();tab='home';ANIM=true;render();toast('Backup restored.')}
+
+/* ---- Office card ---- */
+function cloudCard(){const c=cloudCfg();
+ if(!c)return `<div class="card mt"><div class="h small">Cloud save</div><p class="muted" style="margin-top:0">Back up your save automatically and pick up on any device — phone, tablet or computer. You can still play offline; it syncs when you're back online.</p><button class="btn" onclick="cloudEnable()">☁️ Turn on cloud save</button><button class="btn sec" onclick="cloudLinkForm()">I have a sync code</button><button class="btn ghost" onclick="openBackups()">Backups on this device</button></div>`;
+ const st=CL_STATUS==='syncing'?'Syncing…':c.pending||CL_STATUS==='offline'?'⏳ Waiting to sync — saved on this device':`✓ Synced ${whenTxt2(c.synced)}`;
+ return `<div class="card mt"><div class="h small">Cloud save ☁️</div><div class="row sb" style="margin-bottom:6px"><span class="muted">${st}</span><button class="mini" onclick="cloudCheck(true)">Sync now</button></div>
+ <div class="muted tiny">Sync code · ${fmtCode(c.id)}</div>
+ <div class="row"><button class="btn sec" onclick="cloudShowCode()">Use on another device</button><button class="btn sec" onclick="openBackups()">Backups</button></div>
+ <button class="btn ghost" onclick="cloudOff()">Stop syncing this device</button></div>`}
+
 if(typeof document!=='undefined'&&document.getElementById('app')){
  if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
  {const q=new URLSearchParams(location.search).get('game');if(q&&mpGames().some(g=>g.code===q))LS.set('tksim_active',JSON.stringify(mpGames().find(g=>g.code===q)));
   if(q)history.replaceState(null,'',location.pathname);
   try{const a=JSON.parse(LS.get('tksim_active')||'null');const g=a&&LS.get('tksim_game_'+a.code);if(g){LMP={code:a.code,me:a.me,key:a.key};S=JSON.parse(g)}}catch(e){LMP=null}}
  if(!LMP)S=load();if(S&&(!S.w||!S.phase))S=null;dataUpdate(S);ensureTraits(S);feudInit(S);if(!ON())showMigrate();if(S)saveLocal();loadImg();
- window.addEventListener('tko-ready',()=>{mpConnect();render()});if(window.TKO)setTimeout(mpConnect,0);
+ window.addEventListener('tko-ready',()=>{mpConnect();cloudCheck();render()});if(window.TKO)setTimeout(()=>{mpConnect();cloudCheck()},0);
+ let lastCk=Date.now();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Date.now()-lastCk>20000){lastCk=Date.now();cloudCheck();if(ON())mpConnect()}else if(document.visibilityState==='hidden'&&CL_T){cloudPush()}});
+ window.addEventListener('online',()=>{if(cloudCfg()&&cloudCfg().pending)cloudPush()});
  if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{const c=e.data&&e.data.tksim==='open'&&e.data.code;if(c&&(!LMP||LMP.code!==c))mpOpen(c)});
  $('#modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!PS&&!ME)closeModal()});
  document.addEventListener('paste',async e=>{if(!QP||!S)return;const f=[...(e.clipboardData&&e.clipboardData.items||[])].find(x=>x.type.startsWith('image/'));if(!f)return;e.preventDefault();const id=QP.ids[QP.i];try{if(await setPhotoFrom(id,{blob:f.getAsFile()})){toast(`📸 Photo added for ${S.w[id].name}.`);quickOk()}}catch(err){toast("That picture couldn't be opened.")}});
