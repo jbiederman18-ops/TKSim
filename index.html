@@ -187,8 +187,8 @@ nav.tabs:after{top:100%;background:#050506}
 .res-hd{text-align:center;margin-bottom:12px}
 .res-hd .showname{font-size:48px}
 .score{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin:6px 0 14px;text-align:center}
-.score div{background:rgba(0,0,0,.4);border:1px solid #33353d;padding:10px 6px;clip-path:var(--cut)}
-.score div.me{border-color:var(--gold);background:linear-gradient(180deg,rgba(216,180,73,.18),rgba(0,0,0,.4))}
+.score>div{background:rgba(0,0,0,.4);border:1px solid #33353d;padding:10px 6px;clip-path:var(--cut)}
+.score>div.me{border-color:var(--gold);background:linear-gradient(180deg,rgba(216,180,73,.18),rgba(0,0,0,.4))}
 .score span{display:block;font:700 13px 'BC';letter-spacing:.12em;text-transform:uppercase;color:#bdb6a6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .score .stars{font-size:22px}
 .score i{font:900 italic 22px 'BC';color:var(--red)}
@@ -315,7 +315,7 @@ nav.tabs button.on{text-shadow:none}nav.tabs button.on svg{filter:none}nav.tabs 
 .choice .key{background:linear-gradient(180deg,#ecd494,#c19a4c)}
 .outcome.ok{background:linear-gradient(90deg,rgba(101,201,143,.17),rgba(101,201,143,.04))}
 .outcome.no{background:linear-gradient(90deg,rgba(226,117,108,.17),rgba(226,117,108,.04))}
-.score div.me{background:linear-gradient(180deg,rgba(207,171,85,.14),rgba(0,0,0,.35))}
+.score>div.me{background:linear-gradient(180deg,rgba(207,171,85,.14),rgba(0,0,0,.35))}
 .wc.t1:before{box-shadow:inset 0 0 0 2px #dfc07a,inset 0 0 12px rgba(232,207,142,.15)}
 .wc.t2:before{box-shadow:inset 0 0 0 2px #b4bcc6}
 .wc.t3:before{box-shadow:inset 0 0 0 2px #9a6c45}
@@ -323,6 +323,9 @@ nav.tabs button.on{text-shadow:none}nav.tabs button.on svg{filter:none}nav.tabs 
 .wc.champ .o{background:linear-gradient(180deg,#ecd494,#c19a4c)}
 .wc.sel{outline-color:var(--gold2)}
 .why.up{color:var(--good);background:rgba(101,201,143,.11)}.why.dn{color:var(--bad);background:rgba(226,117,108,.11)}
+.wc .nm b.ln{font-size:13.5px}.wc .nm b.xl{font-size:11.5px;letter-spacing:0}
+@media(min-width:700px){nav.tabs{padding-left:calc(50% - 320px);padding-right:calc(50% - 320px)}}
+#upd{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:31;display:flex;gap:10px;align-items:center;background:linear-gradient(180deg,#26272d,#15161a);box-shadow:inset 0 0 0 1px var(--gold);padding:8px 8px 8px 16px;font-size:14px;font-weight:600;white-space:nowrap;clip-path:var(--slant)}
 .mpbar{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;margin-bottom:12px;border:1px solid var(--line);background:linear-gradient(180deg,var(--st1),var(--st2));font-size:14px;line-height:1.35}.mpbar.on{border-color:var(--gold3);box-shadow:0 0 18px rgba(216,180,73,.22)}.mpbar b{color:var(--gold2)}.mpcode{font-family:'BC','Barlow Condensed',monospace;font-size:34px;font-weight:800;letter-spacing:5px;color:var(--gold2);text-align:center;margin:10px 0 4px;user-select:all}
 </style>
 </head>
@@ -335,7 +338,7 @@ nav.tabs button.on{text-shadow:none}nav.tabs button.on svg{filter:none}nav.tabs 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v34';
+const APP_VERSION='v35';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -1022,7 +1025,7 @@ function loadRepoPhotos(){if(typeof fetch==='undefined')return;fetch('photos/man
  REPO=map;if(S)render();
  if(navigator.onLine!==false)Object.values(map).reduce((pr,u)=>pr.then(()=>fetch(u).catch(()=>{})),Promise.resolve())}).catch(()=>{})}
 function face(w){return w?`<span class="fav">${portrait(w)}</span>`:''}
-function wcard(w,o){o=o||{};return `<button class="wc t${ovr(w)>=88?1:ovr(w)>=78?2:3} ${isChamp(w.id)?'champ':''} ${o.sel?'sel':''}" onclick="${o.on!=null?o.on:`showW('${w.id}')`}"><div class="pic">${portrait(w)}</div><i class="al ${w.al==='f'?'fc':'hl'}"></i><span class="o">${ovr(w)}</span><span class="ic">${icons(w).trim()}</span>${(w.tr||[]).length?`<span class="trt">${w.tr.map(t=>TRAITS[t]?`<i title="${TRAITS[t].n}">${TRAITS[t].i}</i>`:'').join('')}</span>`:''}${w.cw&&!w.own?'<span class="cwb">NEW</span>':''}<div class="nm"><b>${esc(w.name)}</b><div class="ms">${[['RNG',w.ring,w.pot],['MIC',w.mic,w.potM],['POP',w.pop]].map(([l,v,pt])=>`<div><small>${l}</small><em>${Math.round(v)}</em><u><i style="width:${clamp(v,0,100)}%"></i>${pt!=null&&pt-v>=3?`<s style="left:${clamp(pt,0,100)}%"></s>`:''}</u></div>`).join('')}</div><span>${o.info!=null?o.info:`<i class="${w.al==='f'?'face':'heel'}">${w.al==='f'?'Face':'Heel'}</i> · ${STYLE_N[w.st]}${w.rookie?' · 🌱':''}`}</span></div></button>`}
+function wcard(w,o){o=o||{};return `<button class="wc t${ovr(w)>=88?1:ovr(w)>=78?2:3} ${isChamp(w.id)?'champ':''} ${o.sel?'sel':''}" onclick="${o.on!=null?o.on:`showW('${w.id}')`}"><div class="pic">${portrait(w)}</div><i class="al ${w.al==='f'?'fc':'hl'}"></i><span class="o">${ovr(w)}</span><span class="ic">${icons(w).trim()}</span>${(w.tr||[]).length?`<span class="trt">${w.tr.map(t=>TRAITS[t]?`<i title="${TRAITS[t].n}">${TRAITS[t].i}</i>`:'').join('')}</span>`:''}${w.cw&&!w.own?'<span class="cwb">NEW</span>':''}<div class="nm"><b class="${w.name.length>14?'xl':w.name.length>12?'ln':''}">${esc(w.name)}</b><div class="ms">${[['RNG',w.ring,w.pot],['MIC',w.mic,w.potM],['POP',w.pop]].map(([l,v,pt])=>`<div><small>${l}</small><em>${Math.round(v)}</em><u><i style="width:${clamp(v,0,100)}%"></i>${pt!=null&&pt-v>=3?`<s style="left:${clamp(pt,0,100)}%"></s>`:''}</u></div>`).join('')}</div><span>${o.info!=null?o.info:`<i class="${w.al==='f'?'face':'heel'}">${w.al==='f'?'Face':'Heel'}</i> · ${STYLE_N[w.st]}${w.rookie?' · 🌱':''}`}</span></div></button>`}
 function emptySlot(on,label){return `<button class="wc empty" onclick="${on}"><span>+</span><small>${label||'Add'}</small></button>`}
 /* iOS Safari can drop a detached <input type=file> while the picker is open, so keep it in the DOM. */
 let FIN=null;
@@ -1538,16 +1541,21 @@ function openCrisis(){const c=S.crisis;if(!c)return;if(!CRISES[c.k])c.k='talent'
  openModal(`<div class="muted"><span class="live-tag" style="${C.good?'background:var(--good)':''}">${C.good?'OPPORTUNITY':'FRONT OFFICE'}</span>Week ${S.week}</div><div class="h mhd mt">${esc(C.t)}</div><div class="duo" style="align-items:center"><span style="font-size:38px;line-height:1">${C.i}</span>${face(x.A)}${x.B?face(x.B):''}</div><p class="scene">${esc(crisisFill(C.text,x))}</p>
  <div class="muted tiny" style="margin-bottom:8px">How do you handle it?</div>${C.ch.map((o,i)=>`<button class="choice" onclick="crisisChoose(${i})"><span class="key"><span>${'ABC'[i]}</span></span><div>${esc(crisisFill(o.t,x))}</div><div class="muted tiny">${esc(crisisFill(o.d,x))}</div></button>`).join('')}
  <p class="muted tiny center" style="margin-top:12px">Randomly generated, fictional storyline event.</p>`)}
-function crisisChoose(i){if(mpLocked())return;const c=S.crisis;const C=CRISES[c.k];const x=crisisCtx();const txt=C.ch[i].fx(x);S.crisis=null;news(`${C.i} ${C.t}: ${txt}`);save();render();
+function crisisChoose(i){if(mpLocked())return;const c=S.crisis;if(!c||!CRISES[c.k])return closeModal();const C=CRISES[c.k];const x=crisisCtx();const txt=C.ch[i].fx(x);S.crisis=null;news(`${C.i} ${C.t}: ${txt}`);save();render();
  openModal(`<div class="h mhd">${esc(C.t)}</div><div class="duo" style="align-items:center"><span style="font-size:38px;line-height:1">${C.i}</span>${face(x.A)}${x.B?face(x.B):''}</div><div class="outcome ok">${esc(txt)}</div><button class="btn" onclick="closeModal()">Back to work</button>`)}
 
 /* ===================== PERSISTENCE ===================== */
 function saveKey(){return ON()&&LMP?'tksim_game_'+LMP.code:KEY}
-function saveLocal(){try{localStorage.setItem(saveKey(),JSON.stringify(S))}catch(e){}}
+let SAVE_WARNED=0;
+function saveLocal(){const k=saveKey(),v=JSON.stringify(S);
+ for(let i=0;i<8;i++){try{localStorage.setItem(k,v);return true}catch(e){
+  /* storage full: make room by dropping the oldest backup, then try again */
+  const l=localBackups();if(!l.length)break;l.pop();try{if(l.length)localStorage.setItem('tksim_bk',JSON.stringify(l));else localStorage.removeItem('tksim_bk')}catch(e2){}}}
+ if(Date.now()-SAVE_WARNED>60000){SAVE_WARNED=Date.now();toast('⚠️ Device storage is full — progress isn\'t saving. Export your save from the Office.')}return false}
 function save(){saveLocal();if(!ON()){touchSolo();cloudSoon()}else if(S.online.turn==='p')mpSoon()}
 function load(){try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){return null}}
 function exportSave(){const blob=new Blob([JSON.stringify(Object.assign({},S,{__img:IMG}))],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`tony-khan-sim-s${S.season}-w${S.week}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);toast('Save file exported.')}
-function importSave(){const i=fileInput();i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.w||!d.titles||!d.phase)throw 0;localBackup('Before importing a file');if(d.__img){IMG=d.__img;delete d.__img;saveImg()}S=d;dataUpdate(S);ensureTraits(S);feudInit(S);showMigrate();save();loadRepoPhotos();closeModal();tab='home';render();toast('Save loaded.')}catch(e){toast('That file is not a valid save.')}};r.readAsText(f)};i.click()}
+function importSave(){const i=fileInput();i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.w||!d.titles||!d.phase)throw 0;localBackup('Before importing a file');if(d.__img){for(const id in d.__img)if(typeof d.__img[id]==='string'&&d.__img[id].startsWith('data:image/'))IMG[id]=d.__img[id];delete d.__img;saveImg()}S=d;dataUpdate(S);ensureTraits(S);feudInit(S);showMigrate();save();loadRepoPhotos();closeModal();tab='home';render();toast('Save loaded.')}catch(e){toast('That file is not a valid save.')}};r.readAsText(f)};i.click()}
 function resetGame(){if(ON())return mpLeave();if(!confirm(`Start a new game? Your current save is kept under Backups${cloudCfg()?' and the new game will replace it in the cloud':''}.`))return;localBackup('Before starting a new game');try{localStorage.removeItem(KEY)}catch(e){}S=null;closeModal();render()}
 
 /* ===================== UI ===================== */
@@ -1575,8 +1583,16 @@ function renderPicker(){openModal(`<div class="row sb"><div class="h mhd" style=
 function pkPick(id){const p=PK;PK=null;p.onPick(id)}
 function pkBack(){const p=PK;PK=null;p.back()}
 function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),2200)}
-function openModal(html,keep){const m=$('#modal');const was=m.classList.contains('hidden');const sh=m.querySelector('.sheet');const st=keep&&sh?sh.scrollTop:0;m.innerHTML=`<div class="sheet ${was?'in':keep?'':'swap'}">${html}</div>`;m.classList.remove('hidden');document.body.classList.add('lock');if(keep)m.querySelector('.sheet').scrollTop=st}
-function closeModal(){const m=$('#modal');m.classList.add('hidden');m.innerHTML='';document.body.classList.remove('lock')}
+let MODAL_AT=0;
+function openModal(html,keep){MODAL_AT=Date.now();const m=$('#modal');const was=m.classList.contains('hidden');const sh=m.querySelector('.sheet');const st=keep&&sh?sh.scrollTop:0;m.innerHTML=`<div class="sheet ${was?'in':keep?'':'swap'}">${html}</div>`;m.classList.remove('hidden');document.body.classList.add('lock');if(keep)m.querySelector('.sheet').scrollTop=st}
+function closeModal(){const m=$('#modal');m.classList.add('hidden');m.innerHTML='';document.body.classList.remove('lock');
+ /* editors are finished once their sheet closes; leaving these set blocked live league updates and cloud loads */
+ ED=PE=CE=PK=CF=QP=null;
+ if(!PS&&!ME&&!LQ)setTimeout(afterIdle,60)}
+/* catch up on anything that arrived while a sheet was open */
+function afterIdle(){if(busy())return;
+ if(MP_DEFER){const was=MP_DEFER.wasMine;MP_DEFER=null;if(S){render();if(!was&&myTurn()){toast(`🔔 Your turn, ${S.gm}!`);if(S.phase!=='draft'&&mpUnseen()){mpMarkSeen();showResults();return}}}}
+ if(CL_DEFER){CL_DEFER=false;cloudCheck()}}
 function go(t){tab=t;ANIM=true;window.scrollTo(0,0);render()}
 const sorter=k=>(a,b)=>k==='ovr'?ovr(b)-ovr(a):b[k]-a[k];
 function chips(v,opts,cur){return `<div class="chips">${opts.map(([k,n])=>`<button class="chip ${k===cur?'on':''}" onclick="${v}='${k}';render()">${n}</button>`).join('')}</div>`}
@@ -1688,23 +1704,24 @@ function bookView(){const sh=curShow();const c=S.card.p;const ready=c.every(sl=>
  const um=unmetPromises(c);return `${poster(sh,`<div class="venue mt" style="color:#e9d9b0">${sh.ppv?'Your full PPV card':'Best show wins the week'}</div>`)}${um.length?`<div class="card warn">${um.map(pr=>`<div>⚠️ Fans were ${pr.kind==='contract'?'contracted':'promised'} <b>${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)}</b> this week. Skip it and you'll lose fans and morale.</div>`).join('')}</div>`:''}${slots}
  ${ON()&&S.online.booked.p?`<div class="card"><b>Card locked in ✓</b><div class="muted">It airs when ${esc(S.rival)} books ${sh.ppv?'theirs':esc(sh.theirs)}.</div></div>`:`<button class="btn live" ${ready&&myTurn()?'':'disabled'} onclick="goLive()">${ON()&&!S.online.booked.ai?'Go live & lock in ▸':'Go live ▸'}</button>`}<p class="muted center">${ready?'':'Fill every slot to go live. '}${esc(S.rival)} books their own ${sh.ppv?'card':'show, '+esc(sh.theirs)}. The best overall show wins the week.${ON()&&!S.online.booked.p&&!S.online.booked.ai?' Your segments play out now; the ratings come in once they book too.':''}</p>`}
 let LQ=null;
-function goLive(){if(mpLocked())return;if(S.crisis)return openCrisis();const c=S.card.p;if(!c.every(sl=>sl.k==='chal'||sl.d))return;const sh=curShow();const nM=c.filter(sl=>sl.k==='match'&&sl.d).length;const items=[];let j=0;
+let LIVE=false;
+function goLive(){if(LIVE||mpLocked())return;if(S.crisis)return openCrisis();const c=S.card.p;if(!c.every(sl=>sl.k==='chal'||sl.d))return;const sh=curShow();const nM=c.filter(sl=>sl.k==='match'&&sl.d).length;const items=[];let j=0;
  c.forEach((sl,i)=>{if(!sl.d)return;
   if(sl.k==='promo'){const p=sl.d;delete p.res;p.played=false;if(S.w[p.a]&&!S.w[p.a].inj&&(!p.b||S.w[p.b]&&!S.w[p.b].inj))items.push({kind:'promo',i})}
   else if(sl.k==='match'){const m=sl.d;delete m.ev;delete m.nc;j++;const main=j===nM;if(Math.random()<(main?.65:.3)){const g=genEvent(m,'p',sh.ppv||main);if(g)items.push({kind:'ev',m,g,n:j,main})}}});
- if(!items.length)return finishLive();LQ={items,k:-1,show:sh.name};liveNext()}
-function liveNext(){PS=null;ME=null;LQ.k++;const it=LQ.items[LQ.k];if(!it){LQ=null;return finishLive()}
+ LIVE=true;if(!items.length)return finishLive();LQ={items,k:-1,show:sh.name};liveNext()}
+function liveNext(){if(!LQ)return;PS=null;ME=null;LQ.k++;const it=LQ.items[LQ.k];if(!it){LQ=null;return finishLive()}
  const last=LQ.k===LQ.items.length-1;
  if(it.kind==='ev'){ME={q:[it],k:0,out:null,show:LQ.show,last};renderME()}
  else{const p=S.card.p[it.i].d;const ctx=promoCtx(p,'p');PS={i:it.i,p,ctx,st:newSt(),beat:0,scene:openScene(p,ctx),out:null,done:false,live:true,last};renderPS()}}
-function finishLive(){ME=null;PS=null;LQ=null;S.card.p.forEach(sl=>{if(sl.k==='promo'&&sl.d&&!sl.d.res)sl.d=null});if(ON())return mpLockCard();airShow();showResults();render()}
+function finishLive(){if(!LIVE)return;LIVE=false;ME=null;PS=null;LQ=null;S.card.p.forEach(sl=>{if(sl.k==='promo'&&sl.d&&!sl.d.res)sl.d=null});if(ON())return mpLockCard();airShow();showResults();render()}
 function renderME(){const it=ME.q[ME.k];const {m,g}=it;const r=g.r;
  const hd=`<div class="muted"><span class="live-tag">LIVE</span>${esc(ME.show)} · Match ${it.n}${it.main?' · Main event':''}</div><div class="h mhd mt">${esc(m.sides.map(sideName).join(' vs '))}</div><div class="duo">${m.sides.flat().map(id=>face(S.w[id])).join('')}</div><p class="scene">${esc(evFill(g.e.text,r))}</p>`;
  if(ME.out){const o=ME.out;return openModal(hd+`<div class="outcome ${o.success?'ok':'no'}">${o.success?'✅':'❌'} ${esc(o.text)}</div>${o.flip?`<div class="note">👑 New winner: ${esc(sideName(m.sides[m.winner]))}</div>`:''}${o.nc?'<div class="note">🚫 The match ends without a winner.</div>':''}<button class="btn" onclick="meNext()">${ME.last?'Finish the show':'Continue the show ▸'}</button>`)}
  const ch=evChoices(g.e,m,r);
  openModal(hd+`<div class="muted tiny" style="margin-bottom:8px">Producers are in your headset — make the call:</div>`+ch.map((c,ci)=>`<button class="choice" onclick="meChoose(${ci})"><span class="key"><span>${'ABC'[ci]}</span></span><div>${esc(evFill(c.t,r))}</div><div class="muted tiny">${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:c.heelA&&r.A.al==='f'?'<span class="heel">😈 Dirty — fans won\'t like it from a face</span> · ':''}${c.always?'✅ Guaranteed':STAT_ICON[c.s]+' · '+oddsWord(evChance(c,r))}${c.flip?' · changes the winner':''}${c.nc?' · no winner':''}</div></button>`).join(''))}
-function meChoose(ci){const it=ME.q[ME.k];const ch=evChoices(it.g.e,it.m,it.g.r);ME.out=evRoll(ch[ci],it.g.r,it.m);renderME()}
-function meNext(){if(LQ)return liveNext();ME.out=null;ME.k++;if(ME.k>=ME.q.length)finishLive();else renderME()}
+function meChoose(ci){if(!ME||ME.out)return;const it=ME.q[ME.k];const ch=evChoices(it.g.e,it.m,it.g.r);ME.out=evRoll(ch[ci],it.g.r,it.m);renderME()}
+function meNext(){if(!ME)return;if(LQ)return liveNext();ME.out=null;ME.k++;if(ME.k>=ME.q.length)finishLive();else renderME()}
 function avForMatch(i){const used=usedIn('p',i);return ownList('p').filter(w=>!w.inj&&!used.has(w.id)).sort((a,b)=>ovr(b)-ovr(a))}
 function openMatch(i){if(mpLocked())return;const sl=S.card.p[i];ED={i,m:sl.d?JSON.parse(JSON.stringify(sl.d)):{type:'singles',stip:'std',sides:[[''],['']],winner:0,title:''}};renderMatchEd(false)}
 function mInfo(w,si){const opp=ED.m.sides.filter((s,i)=>i!==si).flat().filter(Boolean).map(i=>S.w[i]);if(!opp.length)return `${gridInfo(w,'ovr')}${w.fat>=50?' · 🔋'+Math.round(w.fat):''}`;const h=Math.max(...opp.map(o=>heatOf(w.id,o.id)));const c=opp.reduce((a,o)=>a+chemOpp(w,o),0)/opp.length;const rm=Math.max(...opp.map(o=>recentMeets(w.id,o.id).length));const px=opp.some(o=>pendingPromises().some(pr=>[[pr.a,pr.b],[pr.b,pr.a]].some(([me,foe])=>o.id===me&&w.id!==foe&&inTeam(w.id,foe))));return `${px?'🔗 Proxy · ':''}${rm?'😴 Rematch · ':''}${h?'🔥'+Math.round(h)+' · ':''}${chemWord(c)} chem ${c>0?'+':''}${Math.round(c)}`}
@@ -1769,8 +1786,8 @@ function renderPS(){const {scene,ctx}=PS;
  const hd=`${PS.live?`<div class="muted"><span class="live-tag">LIVE</span>${esc(LQ?LQ.show:'')} · Promo</div>`:''}<div class="h mhd${PS.live?' mt':''}">${PT[PS.p.type].n} — ${PS.beat?'The twist':'On air'}</div><div class="duo">${face(ctx.A)}${face(ctx.B)}${PS.beat&&ctx.X&&/\{X\}/.test(scene.text)?face(ctx.X):''}</div><p class="scene">${esc(fill(scene.text,ctx))}</p>`;
  if(PS.out)return openModal(hd+`<div class="outcome ${PS.out.success?'ok':'no'}">${PS.out.success?'✅':'❌'} ${esc(PS.out.text)}</div><button class="btn" onclick="psNext()">Continue</button>`);
  openModal(hd+scene.ch.map((c,ci)=>`<button class="choice" onclick="psChoose(${ci})"><span class="key"><span>${'ABC'[ci]}</span></span><div>${esc(fill(c.t,ctx))}</div><div class="muted tiny">${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:''}${STAT_ICON[c.s]} · ${oddsWord(chance(c,ctx))}${c.turn?' · 🔄 turns them':''}${c.ch?' · 🎯 sets up a match':''}${c.stp?' · adds a stipulation':''}</div></button>`).join(''))}
-function psChoose(ci){PS.out=roll(PS.scene.ch[ci],PS.ctx,PS.st);renderPS()}
-function psNext(){PS.out=null;if(PS.beat===0){PS.beat=1;PS.scene=pickTwist(PS.p,PS.ctx)}else{finalizePromo(PS.p,PS.ctx,PS.st);PS.done=true}renderPS()}
+function psChoose(ci){if(!PS||PS.out||PS.done)return;PS.out=roll(PS.scene.ch[ci],PS.ctx,PS.st);renderPS()}
+function psNext(){if(!PS||!PS.out)return;PS.out=null;if(PS.beat===0){PS.beat=1;PS.scene=pickTwist(PS.p,PS.ctx)}else{finalizePromo(PS.p,PS.ctx,PS.st);PS.done=true}renderPS()}
 function lockPromo(){S.card.p[PS.i].d=PS.p;PS=null;save();closeModal();render()}
 
 function openChal(i){if(mpLocked())return;const sl=S.card.p[i];CE={i,title:sl.d?sl.d.title:'',c:sl.d?sl.d.c:''};renderChal()}
@@ -1863,7 +1880,7 @@ function officeView(){const inc=Math.round(S.fans.p/2000+220),pay=payroll('p');c
  <div class="card mt"><div class="h small">Save</div><p class="muted" style="margin-top:0">Progress saves automatically on this device. Export a file to back it up or move it to another device.</p><div class="row"><button class="btn sec" onclick="exportSave()">Export</button>${ON()?'':'<button class="btn sec" onclick="importSave()">Import</button>'}</div>${ON()?'':'<button class="btn ghost danger" onclick="resetGame()">Start a new game</button>'}</div>
  <details class="card"><summary class="h small">How it all works</summary>${HOWTO}</details>`}
 function openTeam(){if(mpLocked())return;const l=ownList('p').sort((a,b)=>a.name.localeCompare(b.name));openModal(`<div class="h mhd">New team or faction</div><label>Name</label><input id="tmName" maxlength="30" placeholder="e.g. The Elite Guard"><label>Type</label><select id="tmType"><option value="team">Tag team (2–3)</option><option value="faction">Faction (2–6)</option></select><label>Members</label>${l.map(w=>`<label style="display:flex;gap:10px;align-items:center;text-transform:none;font-size:15px;color:var(--text);letter-spacing:0"><input type="checkbox" value="${w.id}" class="tmc" style="width:auto"> ${esc(w.name)}</label>`).join('')}<button class="btn mt" onclick="saveTeam()">Create</button><button class="btn ghost" onclick="closeModal()">Cancel</button>`)}
-function saveTeam(){const n=($('#tmName').value||'').trim();const type=$('#tmType').value;const m=[...document.querySelectorAll('.tmc:checked')].map(x=>x.value);
+function saveTeam(){if(mpLocked())return;const n=($('#tmName').value||'').trim();const type=$('#tmType').value;const m=[...document.querySelectorAll('.tmc:checked')].map(x=>x.value);
  if(!n)return toast('Give it a name.');if(m.length<2||(type==='team'&&m.length>3)||m.length>6)return toast(type==='team'?'Pick 2–3 members.':'Pick 2–6 members.');
  S.teams.push({id:'t'+(S.nid++),n,type,m});news(`🤝 ${n} has formed: ${m.map(id=>S.w[id].name).join(', ')}.`);save();closeModal();render()}
 function delTeam(id){if(mpLocked())return;const t=S.teams.find(x=>x.id===id);if(!t||!confirm(`Disband ${t.n}?`))return;S.teams=S.teams.filter(x=>x.id!==id);news(`💔 ${t.n} has disbanded.`);save();render()}
@@ -1880,7 +1897,7 @@ function nextSeason(){if(mpLocked())return;S.season++;S.week=1;S.showIdx=0;S.pha
 const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 function mpGames(){try{return JSON.parse(LS.get('tksim_games')||'[]')}catch(e){return []}}
 function mpLabel(){if(!S||!ON())return '';const others=localSeats().filter(k=>k!=='p').map(k=>S.names&&S.names[k]).filter(Boolean);return nSeats()===2?`${S.gm} vs ${others[0]||'open seat'}`:`${S.gm}'s ${nSeats()}-GM league`}
-function mpRemember(){if(!LMP)return;const l=mpGames().filter(g=>g.code!==LMP.code);const was=LS.get('tksim_games');l.unshift({code:LMP.code,me:LMP.me,key:LMP.key,label:mpLabel()});LS.set('tksim_games',JSON.stringify(l.slice(0,12)));if(LS.get('tksim_games')!==was)cloudSoon()}
+function mpRemember(){if(!LMP)return;{const g=mpGone();if(g.includes(LMP.code))LS.set('tksim_gone',JSON.stringify(g.filter(c=>c!==LMP.code)))}const l=mpGames().filter(g=>g.code!==LMP.code);const was=LS.get('tksim_games');l.unshift({code:LMP.code,me:LMP.me,key:LMP.key,label:mpLabel()});LS.set('tksim_games',JSON.stringify(l.slice(0,12)));if(LS.get('tksim_games')!==was)cloudSoon()}
 function mpSeenKey(){return 'tksim_seen_'+(LMP?LMP.code:'')}
 function mpMarkSeen(){if(S&&S.last)LS.set(mpSeenKey(),(S.last.season||S.season)*100+S.last.week)}
 function mpUnseen(){return !!(S&&S.last&&(S.last.season||S.season)*100+S.last.week>+(LS.get(mpSeenKey())||0))}
@@ -1894,12 +1911,12 @@ function mpSoon(){if(MP_HOLD)return;clearTimeout(mpT);mpT=setTimeout(()=>mpPush(
 function mpPush(msg){clearTimeout(mpT);if(!ON()||!LMP)return;const o=S.online;o.rev=(o.rev||0)+1;if(msg)o.msg=msg;saveLocal();mpRemember();
  if(!window.TKO||!TKO.ready){MP_PENDING=true;return}MP_PENDING=false;
  const f={state:JSON.stringify(canonState()),rev:o.rev,turn:canonKey(o.turn),msg:o.msg||'',week:S.week,season:S.season,phase:S.phase},code=LMP.code,key=LMP.key;
- TKO.push(code,f).catch(e=>{console.warn('push failed',e);/* this seat was last used on another device: take it back, then retry */TKO.claim(code,key).then(()=>TKO.push(code,f)).catch(()=>toast('Saved on this device — it will sync when you reconnect.'))})}
+ TKO.push(code,f).catch(e=>{console.warn('push failed',e);/* this seat was last used on another device: take it back, then retry */TKO.claim(code,key).then(()=>TKO.push(code,f)).catch(()=>{MP_PENDING=true;toast('Saved on this device — it will sync when you reconnect.')})})}
 function mpPass(msg,to){S.online.turn=to;mpPush(msg)}
 function mpApplyNames(names){if(!names||!LMP||!S._view)return;S.names=S.names||{};for(const k in names)if(names[k])S.names[localKey(k)]=names[k];S.gm=S.names.p||S.gm;S.rival=S._view.opp?(S.names.ai||'Waiting for a GM'):'Bye week'}
 function mpLoad(stateStr,names){const st=JSON.parse(stateStr);delete st._view;viewFor(st,LMP.me);S=st;dataUpdate(S);ensureTraits(S);feudInit(S);mpApplyNames(names)}
 /* a new copy of the world arrived from another GM */
-let MP_WANT=false;
+let MP_WANT=false,MP_DEFER=null;
 function mpIncoming(d){if(!d||!LMP||!S||!ON())return;const wasMine=myTurn();let changed=false;
  /* opened on this device, but the seat was last used on another one (e.g. via cloud save): take it back quietly */
  if(MP_WANT){MP_WANT=false;if(d.uids&&TKO.uid&&d.uids[LMP.me]&&d.uids[LMP.me]!==TKO.uid&&LMP.key)TKO.claim(LMP.code,LMP.key).catch(()=>{})}
@@ -1907,7 +1924,7 @@ function mpIncoming(d){if(!d||!LMP||!S||!ON())return;const wasMine=myTurn();let 
 }
  else{const before=JSON.stringify(S.names);mpApplyNames(d.names);if(JSON.stringify(S.names)!==before)changed=true}
  if(!changed)return;saveLocal();mpRemember();
- if(PS||ME||ED||PE||CE)return; /* don't yank a screen out from under someone mid-edit */
+ if(busy()){if(!MP_DEFER)MP_DEFER={wasMine};return} /* don't yank a screen out from under someone mid-edit — catch up when it closes */
  render();
  if(!wasMine&&myTurn()){toast(`🔔 Your turn, ${S.gm}!`);if(S.phase!=='draft'&&mpUnseen()){mpMarkSeen();showResults()}}}
 function mpConnect(){if(!ON()||!LMP||!mpAvail())return;if(MP_UNSUB){MP_UNSUB();MP_UNSUB=null}MP_WANT=true;
@@ -1921,7 +1938,7 @@ async function mpFetch(g){if(!mpAvail()||!g.key)return toast('Open this league o
  catch(e){console.warn(e);toast(navigator.onLine?"Couldn't open that league here.":'You need a connection to bring a league to a new device.')}}
 function mpSolo(){if(MP_UNSUB){MP_UNSUB();MP_UNSUB=null}if(ON())saveLocal();LMP=null;LS.del('tksim_active');S=load();if(S){dataUpdate(S);ensureTraits(S);feudInit(S);showMigrate()}closeModal();tab='home';ANIM=true;render()}
 function mpLeave(){if(!confirm(`Remove this league from this device? The other GMs keep playing; you can rejoin later with your seat code (${LMP.code}-${LMP.key}).`))return;
- LS.del('tksim_game_'+LMP.code);LS.set('tksim_games',JSON.stringify(mpGames().filter(g=>g.code!==LMP.code)));mpSolo()}
+ LS.del('tksim_game_'+LMP.code);LS.set('tksim_games',JSON.stringify(mpGames().filter(g=>g.code!==LMP.code)));LS.set('tksim_gone',JSON.stringify(mpGone().filter(c=>c!==LMP.code).concat([LMP.code]).slice(-30)));cloudSoon();mpSolo()}
 
 /* ---- turn steps ---- */
 function rookiesDone(){if(!ON()){startDraft();render();return}if(mpLocked())return;const o=S.online;o.rk.p=true;
@@ -2048,19 +2065,34 @@ let CL_T=null,CL_BUSY=false,CL_STATUS='';
 function cloudSoon(){if(!cloudOn())return;clearTimeout(CL_T);CL_T=setTimeout(cloudPush,2500)}
 function cloudPayload(){const st=soloState(),m=soloMeta();return {state:st?JSON.stringify(st):'',label:saveLabel(st),at:m.at||Date.now(),rev:(m.rev||0),dev:devId(),leagues:JSON.stringify(mpGames())}}
 /* writes are queued by Firebase while offline and sent later, so don't wait on them forever */
-async function cloudPush(){clearTimeout(CL_T);const c=cloudCfg();if(!c||!cloudOn())return;
- const base=c.rev||0;const p=cloudPayload();p.rev=base+1;c.pending=true;cloudSet(c);CL_STATUS='syncing';let ok=0;
- try{await TKO.cloudPut(c.id,p,base);ok=1}catch(e){if(String(e&&e.message).includes('conflict')){CL_STATUS='';return cloudCheck()}console.warn('cloud save failed',e)}
- const c2=cloudCfg();if(ok&&c2&&c2.id===c.id){c2.rev=p.rev;c2.at=p.at;c2.pending=false;c2.synced=Date.now();
+/* one upload at a time: a second request while one is in flight just runs again afterwards */
+let CL_PUSHING=null,CL_AGAIN=false;
+function cloudPush(){if(CL_PUSHING){CL_AGAIN=true;return CL_PUSHING}
+ CL_PUSHING=cloudPush0().finally(()=>{CL_PUSHING=null;if(CL_AGAIN){CL_AGAIN=false;cloudPush()}});return CL_PUSHING}
+async function cloudPush0(){clearTimeout(CL_T);const c=cloudCfg();if(!c||!cloudOn())return;
+ const base=c.rev||0;const p=cloudPayload();p.rev=base+1;const at0=soloMeta().at||0;c.pending=true;cloudSet(c);CL_STATUS='syncing';let ok=0;
+ try{const r=await TKO.cloudPut(c.id,p,base);if(typeof r==='number')p.rev=r;ok=1}catch(e){if(String(e&&e.message).includes('conflict')){CL_STATUS='';if(!CL_BUSY)setTimeout(()=>cloudCheck(),0);return}console.warn('cloud save failed',e)}
+ const c2=cloudCfg();if(ok&&c2&&c2.id===c.id){c2.rev=Math.max(p.rev,c2.rev||0);c2.at=p.at;c2.synced=Date.now();
+  /* anything saved while the upload was in flight still needs to go up */
+  c2.pending=(soloMeta().at||0)>at0;if(c2.pending)CL_AGAIN=true;
   /* weekly cloud backup (5 rotating slots) */
   const st=soloState();const bk=st&&st.w&&`${st.season}-${st.week}`;if(bk&&c2.lastBk!==bk){c2.lastBk=bk;c2.bkn=((c2.bkn||0)+1)%CLOUD_BK;TKO.cloudBackup(c2.id,c2.bkn,{state:p.state,label:p.label,at:p.at}).catch(()=>{})}
   cloudSet(c2);CL_STATUS=''}else CL_STATUS='offline';
  if(tab==='office'&&$('#modal').classList.contains('hidden')&&S)render()}
-function mergeLeagues(json){let l=[];try{l=JSON.parse(json||'[]')}catch(e){}if(!l.length)return;const mine=mpGames();l.forEach(g=>{if(!mine.some(x=>x.code===g.code))mine.push(g)});LS.set('tksim_games',JSON.stringify(mine.slice(0,12)))}
+/* leagues removed on this device stay removed, even though the cloud list still has them */
+function mpGone(){try{return JSON.parse(LS.get('tksim_gone')||'[]')}catch(e){return []}}
+function mergeLeagues(json){let l=[];try{l=JSON.parse(json||'[]')}catch(e){}if(!l.length)return;const mine=mpGames(),gone=mpGone();l.forEach(g=>{if(g&&g.code&&!gone.includes(g.code)&&!mine.some(x=>x.code===g.code))mine.push(g)});LS.set('tksim_games',JSON.stringify(mine.slice(0,12)))}
 /* check the cloud when the game opens or comes back to the foreground */
+/* something on screen that a save swap would pull out from under the player */
+function busy(){return !!(PS||ME||LQ||ED||PE||CE||PK||CF||QP)||!$('#modal').classList.contains('hidden')}
+let CL_DEFER=false;
 async function cloudCheck(manual){const c=cloudCfg();if(!c||!cloudOn()||CL_BUSY)return;CL_BUSY=true;
  try{const d=await TKO.cloudGet(c.id);if(!d){if(manual)toast('Cloud save not found — uploading this device’s copy.');CL_BUSY=false;return cloudPush()}
   mergeLeagues(d.leagues);if(d.dev===devId()&&(d.rev||0)>(c.rev||0)){c.rev=d.rev;cloudSet(c)}const m=soloMeta();const localDirty=!!c.pending||(m.at||0)>(c.synced||0);const cloudNewer=(d.rev||0)>(c.rev||0)&&d.dev!==devId();
+  /* the other device only changed its league list: take its version number and carry on */
+  if(cloudNewer&&!d.state){c.rev=d.rev;cloudSet(c);if(localDirty)await cloudPush();CL_STATUS='';return}
+  /* mid-show or mid-edit: don't swap saves now — try again when the screen closes */
+  if(cloudNewer&&!ON()&&busy()&&!manual){CL_DEFER=true;return}
   if(cloudNewer&&localDirty&&soloState()&&d.state)return cloudConflict(d);
   if(cloudNewer&&d.state){applyCloud(d,false);toast(`☁️ Loaded your latest save from the cloud (${d.label}).`)}
   else if(localDirty||(d.rev||0)<(c.rev||0))await cloudPush();
@@ -2068,10 +2100,10 @@ async function cloudCheck(manual){const c=cloudCfg();if(!c||!cloudOn()||CL_BUSY)
   const c2=cloudCfg();if(c2){c2.synced=Date.now();cloudSet(c2)}CL_STATUS=''}
  catch(e){CL_STATUS='offline';if(manual)toast('You’re offline — your save is safe on this device and will sync later.')}
  finally{CL_BUSY=false;if(tab==='office'&&$('#modal').classList.contains('hidden')&&S)render()}}
-function applyCloud(d,backupFirst){const cur=soloState();if(cur&&backupFirst!==false)localBackup('Before loading the cloud save',cur);else if(cur)localBackup('Replaced by cloud save',cur);
+function applyCloud(d,backupFirst){if(!ON()&&(PS||ME||LQ||ED||PE||CE)){CL_DEFER=true;return}const cur=soloState();if(cur&&backupFirst!==false)localBackup('Before loading the cloud save',cur);else if(cur)localBackup('Replaced by cloud save',cur);
  const st=JSON.parse(d.state);try{localStorage.setItem(KEY,d.state)}catch(e){}LS.set('tksim_meta',JSON.stringify({at:d.at,rev:d.rev}));
  const c=cloudCfg();if(c){c.rev=d.rev;c.at=d.at;c.pending=false;c.synced=Date.now();cloudSet(c)}
- if(!ON()&&!(PS||ME||ED||PE||CE)){S=st;dataUpdate(S);ensureTraits(S);feudInit(S);showMigrate();closeModal();tab='home';ANIM=true;render();loadRepoPhotos()}}
+ if(!ON()){S=st;dataUpdate(S);ensureTraits(S);feudInit(S);showMigrate();closeModal();tab='home';ANIM=true;render();loadRepoPhotos()}}
 let CL_PEND=null;
 function cloudConflict(d){CL_PEND=d;CL_BUSY=false;const here=soloState();
  openModal(`<div class="h mhd">Two different saves</div><p>This device and the cloud were both played since they last synced. Which one do you want to keep playing?</p>
@@ -2122,10 +2154,17 @@ if(typeof document!=='undefined'&&document.getElementById('app')){
   try{const a=JSON.parse(LS.get('tksim_active')||'null');const g=a&&LS.get('tksim_game_'+a.code);if(g){LMP={code:a.code,me:a.me,key:a.key};S=JSON.parse(g)}}catch(e){LMP=null}}
  if(!LMP)S=load();if(S&&(!S.w||!S.phase))S=null;dataUpdate(S);ensureTraits(S);feudInit(S);if(!ON())showMigrate();if(S)saveLocal();loadImg();
  window.addEventListener('tko-ready',()=>{mpConnect();cloudCheck();render()});if(window.TKO)setTimeout(()=>{mpConnect();cloudCheck()},0);
- let lastCk=Date.now();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Date.now()-lastCk>20000){lastCk=Date.now();cloudCheck();if(ON())mpConnect()}else if(document.visibilityState==='hidden'&&CL_T){cloudPush()}});
- window.addEventListener('online',()=>{if(cloudCfg()&&cloudCfg().pending)cloudPush()});
+ let lastCk=Date.now();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Date.now()-lastCk>20000){lastCk=Date.now();cloudCheck();if(ON())mpConnect()}else if(document.visibilityState==='hidden')flush()});
+ window.addEventListener('online',()=>{if(cloudCfg()&&cloudCfg().pending)cloudPush();if(ON()&&MP_PENDING)mpPush()});
+ /* leaving the app: send anything still waiting on its timer right away */
+ const flush=()=>{if(mpT&&ON()&&myTurn())mpPush();if(CL_T)cloudPush()};window.addEventListener('pagehide',flush);
+ /* a new version finished installing in the background: offer a one-tap reload instead of making people close the app */
+ if('serviceWorker' in navigator&&navigator.serviceWorker.controller){let shown=false;window.updNow=()=>{flush();setTimeout(()=>location.reload(),400)};
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(shown)return;shown=true;const d=document.createElement('div');d.id='upd';d.innerHTML='New version ready <button class="mini" onclick="updNow()">Update</button>';document.body.appendChild(d)})}
  if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{const c=e.data&&e.data.tksim==='open'&&e.data.code;if(c&&(!LMP||LMP.code!==c))mpOpen(c)});
  $('#modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!PS&&!ME)closeModal()});
+ /* a fast double tap shouldn't also hit whatever button appears under the finger on the next screen */
+ $('#modal').addEventListener('click',e=>{if(Date.now()-MODAL_AT<260&&e.target.closest&&e.target.closest('button,a,.choice')){e.stopPropagation();e.preventDefault()}},true);
  document.addEventListener('paste',async e=>{if(!QP||!S)return;const f=[...(e.clipboardData&&e.clipboardData.items||[])].find(x=>x.type.startsWith('image/'));if(!f)return;e.preventDefault();const id=QP.ids[QP.i];try{if(await setPhotoFrom(id,{blob:f.getAsFile()})){toast(`📸 Photo added for ${S.w[id].name}.`);quickOk()}}catch(err){toast("That picture couldn't be opened.")}});
  loadRepoPhotos();
  render();

@@ -92,12 +92,21 @@ if (!cfg.apiKey || !cfg.projectId) {
     cloudGet(id) { return timed(getDocFromServer(doc(db, 'saves', id)).then(s => (s.exists() ? s.data() : null)), 12000); },
     // Only save if nobody else saved since this device last synced (base = the cloud version we last saw).
     // Runs as a transaction, so it never gets queued offline and blindly replayed over a newer save later.
+    // The new version number is worked out inside the transaction so it only ever goes up, even if an earlier
+    // upload from this device finished after it timed out here. Resolves with the version that was saved.
     cloudPut(id, data, base) {
       return timed(runTransaction(db, async tx => {
         const ref = doc(db, 'saves', id);
         const cur = await tx.get(ref);
-        if (cur.exists() && (cur.data().rev || 0) > (base || 0) && cur.data().dev !== data.dev) throw new Error('conflict');
-        tx.set(ref, { ...data, updated: serverTimestamp() });
+        const c = cur.exists() ? cur.data() : null;
+        const curRev = (c && c.rev) || 0;
+        if (c && curRev > (base || 0) && c.dev !== data.dev) throw new Error('conflict');
+        const rev = Math.max(curRev, base || 0) + 1;
+        // A device with no solo game only syncs its league list; never blank out a save that exists.
+        const out = { ...data, rev, updated: serverTimestamp() };
+        if (!out.state && c && c.state) { out.state = c.state; out.label = c.label; }
+        tx.set(ref, out);
+        return rev;
       }), 15000);
     },
     cloudBackup(id, slot, data) { return setDoc(doc(db, 'saves', id, 'backups', 'b' + slot), { ...data, updated: serverTimestamp() }); },

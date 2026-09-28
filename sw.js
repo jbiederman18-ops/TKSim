@@ -1,5 +1,5 @@
 // Tony Khan Simulator — offline support. Bump VERSION whenever you upload a new index.html.
-const VERSION = 'aegm-v34';
+const VERSION = 'aegm-v35';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png',
   './online.js', './firebase-sdk.js', './firebase-config.js'];
 
@@ -29,14 +29,19 @@ self.addEventListener('fetch', e => {
     }).catch(() => cache.match(e.request, { ignoreSearch: true }).then(r => r || new Response(fresh, { headers: { 'Content-Type': type } })))));
     return;
   }
-  e.respondWith(caches.open(VERSION).then(async cache => {
-    const cached = await cache.match(e.request, { ignoreSearch: true }) ||
-                   (e.request.mode === 'navigate' ? await cache.match('./index.html') : undefined);
-    const network = fetch(e.request).then(res => {
-      if (res.ok) cache.put(e.request, res.clone());
-      return res;
-    }).catch(() => cached);
-    return cached || network;
+  // Pages are stored under one key (./index.html) so ?game=CODE links don't pile up copies in the cache.
+  const nav = e.request.mode === 'navigate';
+  const key = nav ? './index.html' : e.request;
+  const cacheP = caches.open(VERSION);
+  const network = cacheP.then(cache => fetch(e.request).then(res => {
+    if (res.ok && res.type === 'basic') return cache.put(key, res.clone()).then(() => res, () => res);
+    return res;
+  }));
+  // Keep the service worker alive until the background refresh has been written to the cache.
+  e.waitUntil(network.catch(() => {}));
+  e.respondWith(cacheP.then(async cache => {
+    const cached = await cache.match(key, { ignoreSearch: true });
+    return cached || network.catch(() => new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } }));
   }));
 });
 
