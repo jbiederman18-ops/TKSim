@@ -721,7 +721,7 @@ function assignUnq(){openPicker({title:'Who is this?',sort:'nophoto',pool:()=>Ob
 let SF='missing';
 function openStudio(){const all=Object.values(S.w);const have=all.filter(hasPhoto).length;let l=all.filter(w=>SF==='all'||(SF==='missing'?!hasPhoto(w):w.own==='p'&&!hasPhoto(w)));l.sort((a,b)=>b.pop-a.pop);
  openModal(`<div class="h mhd">Photo Studio</div><div class="row sb"><span class="muted">${have} of ${all.length} wrestlers have photos</span><b class="gold">${Math.round(have/all.length*100)}%</b></div><div class="bar"><i style="width:${have/all.length*100}%"></i></div>
- <button class="btn mt" onclick="openQuick()">⚡ Quick photo mode</button><p class="muted tiny" style="margin:6px 0 0">The fastest way on a phone: search, copy the picture, paste — no saving or renaming. Jumps to the next wrestler automatically.</p>
+ <button class="btn mt" onclick="openQuick('missing')">⚡ Quick photo mode</button><p class="muted tiny" style="margin:6px 0 0">The fastest way on a phone: search, copy the picture, paste — no saving or renaming. Jumps to the next wrestler automatically. Switch to <b>Everyone</b> inside it to replace existing photos too.</p>
  <button class="btn sec mt" onclick="bulkPhotos()">📷 Bulk import photos</button>
  <details class="card mt"><summary class="h small" style="margin:0">How bulk import works</summary><p>Save photos named after each wrestler — like <b>will-ospreay.jpg</b>, <b>Mercedes Mone.png</b> or <b>adam_page.jpg</b> — then select them all at once. The game matches each file by its name and crops it to card size. Anything it can't match, you can assign by tapping the right card.</p><p>Use <b>🔍 Find</b> below to open an image search for a wrestler, save the picture to your phone with their name, and repeat. Then import them all in one go.</p><p><b>Shared photos:</b> drop pictures named after each wrestler into the <b>photos</b> folder of the game's GitHub repo. They're cropped automatically and show up on every device and every new save — no importing, and they don't use up this device's storage. A photo added here in the game always takes priority.</p></details>
  <div class="row"><button class="btn sec" onclick="exportPhotos()">Export photo pack</button><button class="btn sec" onclick="importPhotos()">Import photo pack</button></div>
@@ -741,11 +741,14 @@ async function pastePhoto(id,after){let src;try{src=await clipImage()}catch(e){t
  catch(e){toast(src.url?"That's a link, not the picture. Long-press the image itself and choose Copy.":"That picture couldn't be opened.")}}
 let QP=null;
 function photoSearch(w){return 'https://www.google.com/search?tbm=isch&q='+encodeURIComponent(w.cw?w.name+' wrestler':w.name+' site:allelitewrestling.com')}
-function openQuick(){const l=Object.values(S.w).filter(w=>!hasPhoto(w)).sort((a,b)=>((b.own==='p')-(a.own==='p'))||b.pop-a.pop);if(!l.length)return toast('Everyone has a photo! 🎉');QP={ids:l.map(w=>w.id),i:0,done:0};renderQuick()}
-function renderQuick(){if(!QP)return;while(QP.i<QP.ids.length&&(!S.w[QP.ids[QP.i]]||hasPhoto(S.w[QP.ids[QP.i]])))QP.i++;
+let QM='missing';
+function openQuick(mode){QM=mode||QM;const l=Object.values(S.w).filter(w=>QM==='all'?true:QM==='mine'?w.own==='p':!hasPhoto(w)).sort((a,b)=>((b.own==='p')-(a.own==='p'))||b.pop-a.pop);
+ if(!l.length){if(QM==='missing')return toast('Everyone has a photo! 🎉');return toast('Nobody to show.')}QP={ids:l.map(w=>w.id),i:0,done:0,mode:QM};renderQuick()}
+function renderQuick(){if(!QP)return;while(QP.i<QP.ids.length&&(!S.w[QP.ids[QP.i]]||(QP.mode==='missing'&&hasPhoto(S.w[QP.ids[QP.i]]))))QP.i++;
  if(QP.i>=QP.ids.length){const d=QP.done;QP=null;openStudio();toast(`All done — ${d} photo${d===1?'':'s'} added.`);return}
  const w=S.w[QP.ids[QP.i]];const left=QP.ids.length-QP.i;
  openModal(`<div class="row sb"><div class="h mhd" style="margin:0">Quick photos</div><span class="muted">${left} to go${QP.done?` · ${QP.done} added`:''}</span></div>
+ <div class="chips mt">${[['missing','Missing photos'],['mine','My roster'],['all','Everyone']].map(([k,n])=>`<button class="chip ${QP.mode===k?'on':''}" onclick="openQuick('${k}')">${n}</button>`).join('')}</div>${hasPhoto(w)?'<div class="muted tiny" style="margin-top:6px">Has a photo — pasting replaces it. Tap Skip to keep it.</div>':''}
  <div class="bar mt"><i style="width:${QP.i/QP.ids.length*100}%"></i></div>
  <div class="qp"><div class="wd-pic">${portrait(w)}</div><div style="min-width:0"><div class="h wd-n">${esc(w.name)}</div><div class="muted">${w.own==='p'?'Your roster':w.own==='ai'?esc(S.rival):'Free agent'} · ${STYLE_N[w.st]}</div>
  <ol class="qsteps"><li>Tap <b>Search</b> (official AEW roster photos come up first)</li><li>Long-press a picture → <b>Copy</b></li><li>Come back and tap <b>Paste</b></li></ol></div></div>
