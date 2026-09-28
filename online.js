@@ -118,6 +118,43 @@ if (!cfg.apiKey || !cfg.projectId) {
       return out;
     },
 
+    // Office → Test connection: walks through each piece of the Firebase setup and reports the first thing that's wrong.
+    async diagnose() {
+      const out = [];
+      const step = (ok, name, detail) => out.push({ ok, name, detail });
+      step(true, 'Settings file', `Project ${cfg.projectId}`);
+      if (!navigator.onLine) { step(false, 'Internet', 'This device is offline.'); return out; }
+      let uid;
+      try {
+        uid = auth.currentUser ? auth.currentUser.uid : (await timed(signInAnonymously(auth), 12000)).user.uid;
+        step(true, 'Sign-in', 'Anonymous sign-in works.');
+      } catch (e) {
+        const c = String(e && (e.code || e.message));
+        step(false, 'Sign-in', c.includes('operation-not-allowed') || c.includes('admin-restricted') ? 'Anonymous sign-in is switched off. Firebase console → Authentication → Sign-in method → Anonymous → Enable.'
+          : c.includes('api-key') ? 'The apiKey in firebase-config.js is not valid for this project.'
+          : c.includes('network-request-failed') ? 'Could not reach Firebase from this network. Check the connection (or an ad/content blocker) and try again.'
+          : c.includes('timeout') ? 'Firebase did not answer. Check the connection and try again.' : 'Sign-in failed: ' + c);
+        return out;
+      }
+      try {
+        // A random sync code that doesn't exist: the rules allow reading it, so "not found" means everything is wired up.
+        await timed(getDocFromServer(doc(db, 'saves', 'ZZTEST' + Math.random().toString(36).slice(2, 8).toUpperCase().padEnd(6, 'Z'))), 12000);
+        step(true, 'Database & rules', 'Firestore is set up and the security rules are published.');
+      } catch (e) {
+        const c = String(e && (e.code || e.message));
+        step(false, 'Database & rules', c.includes('permission-denied') ? 'Firestore refused the read. Paste firebase/firestore.rules into Firestore → Rules and click Publish.'
+          : c.includes('not-found') || c.includes('failed-precondition') ? 'No Firestore database yet. Firebase console → Build → Firestore Database → Create database.'
+          : c.includes('timeout') || c.includes('unavailable') ? 'Firestore did not answer. Check the connection and try again.' : 'Database check failed: ' + c);
+        return out;
+      }
+      let push = false;
+      try { push = !!cfg.vapidKey && await isSupported(); } catch (e) {}
+      step(!!cfg.vapidKey, 'Turn alerts', !cfg.vapidKey ? 'No vapidKey in firebase-config.js, so turn alerts are off.'
+        : push ? 'Push key found. Alerts also need the Cloud Function deployed (ONLINE-SETUP.md, Part 2).'
+        : 'Push key found, but this browser can\'t receive push alerts. On iPhone, use the Home Screen app.');
+      return out;
+    },
+
     listen(code, cb) {
       return onSnapshot(game(code), s => { if (s.exists()) cb(s.data()); }, e => console.warn('listen failed', e));
     },

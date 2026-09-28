@@ -406,7 +406,7 @@ body.tv .card .h.small{font-size:clamp(17px,1.4vw,26px)}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v36';
+const APP_VERSION='v37';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -2210,14 +2210,21 @@ function restoreBackup(src,i){const b=src==='cloud'?(window._clbk||[])[i]:localB
  const cur=soloState();if(cur)localBackup('Before restoring a backup',cur);const st=JSON.parse(b.data||b.state);if(ON())mpSolo();
  S=st;dataUpdate(S);ensureTraits(S);feudInit(S);showMigrate();touchSolo();saveLocal();cloudSoon();closeModal();tab='home';ANIM=true;render();toast('Backup restored.')}
 
+/* ---- Office → Test connection ---- */
+async function fbTest(){
+ const show=(rows,busyTxt)=>openModal(`<div class="h mhd">Firebase check</div>${busyTxt?`<p class="muted">${busyTxt}</p>`:''}<div class="card">${rows.map(r=>`<div style="margin:8px 0"><b class="${r.ok?'good':'bad'}">${r.ok?'✅':'❌'} ${esc(r.name)}</b><div class="muted tiny">${esc(r.detail)}</div></div>`).join('')}</div>${!busyTxt?`<p class="muted">${rows.every(r=>r.ok)?'Everything is connected. Online leagues and cloud save are ready.':'Fix the first ❌ above, then run the check again.'}</p><button class="btn" onclick="fbTest()">Run again</button>`:''}<button class="btn ghost" onclick="closeModal()">Close</button>`);
+ if(!window.TK_FIREBASE||!TK_FIREBASE.apiKey||!TK_FIREBASE.projectId)return show([{ok:false,name:'Settings file',detail:"firebase-config.js didn't load or is empty. Check it for typos (every line inside the { } needs a comma; only one }; at the end)."}]);
+ if(!window.TKO||!TKO.configured||!TKO.diagnose)return show([{ok:true,name:'Settings file',detail:'Loaded.'},{ok:false,name:'Firebase library',detail:"The online module didn't start. Reload the page while online and try again."}]);
+ show([{ok:true,name:'Settings file',detail:'Project '+TK_FIREBASE.projectId}],'Checking sign-in and the database…');
+ try{show(await TKO.diagnose())}catch(e){show([{ok:false,name:'Check',detail:String(e&&e.message||e)}])}}
 /* ---- Office card ---- */
 function cloudCard(){const c=cloudCfg();
- if(!c)return `<div class="card mt"><div class="h small">Cloud save</div><p class="muted" style="margin-top:0">Back up your save automatically and pick up on any device — phone, tablet or computer. You can still play offline; it syncs when you're back online.</p><button class="btn" onclick="cloudEnable()">☁️ Turn on cloud save</button><button class="btn sec" onclick="cloudLinkForm()">I have a sync code</button><button class="btn ghost" onclick="openBackups()">Backups on this device</button></div>`;
+ if(!c)return `<div class="card mt"><div class="h small">Cloud save</div><p class="muted" style="margin-top:0">Back up your save automatically and pick up on any device — phone, tablet or computer. You can still play offline; it syncs when you're back online.</p><button class="btn" onclick="cloudEnable()">☁️ Turn on cloud save</button><button class="btn sec" onclick="cloudLinkForm()">I have a sync code</button><button class="btn ghost" onclick="openBackups()">Backups on this device</button><button class="btn ghost" onclick="fbTest()">🔌 Test connection</button></div>`;
  const st=CL_STATUS==='syncing'?'Syncing…':c.pending||CL_STATUS==='offline'?'⏳ Waiting to sync — saved on this device':`✓ Synced ${whenTxt2(c.synced)}`;
  return `<div class="card mt"><div class="h small">Cloud save ☁️</div><div class="row sb" style="margin-bottom:6px"><span class="muted">${st}</span><button class="mini" onclick="cloudCheck(true)">Sync now</button></div>
  <div class="muted tiny">Sync code · ${fmtCode(c.id)}</div>
  <div class="row"><button class="btn sec" onclick="cloudShowCode()">Use on another device</button><button class="btn sec" onclick="openBackups()">Backups</button></div>
- <button class="btn ghost" onclick="cloudOff()">Stop syncing this device</button></div>`}
+ <button class="btn ghost" onclick="fbTest()">🔌 Test connection</button><button class="btn ghost" onclick="cloudOff()">Stop syncing this device</button></div>`}
 
 if(typeof document!=='undefined'&&document.getElementById('app')){
  if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
