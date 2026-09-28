@@ -1,4 +1,4 @@
-# All Elite GM
+# Tony Khan Simulator
 
 A wrestling general-manager game: draft, book Dynamite and Collision, and win the fan war on the road to All In. Works fully offline once installed.
 
