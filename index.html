@@ -166,6 +166,10 @@ nav.tabs:after{top:100%;background:#050506}
 .sheet:before{content:"";position:absolute;top:8px;left:50%;width:44px;height:4px;margin-left:-22px;background:#3b3d45;border-radius:2px}
 .sheet.in{animation:sheetin .32s cubic-bezier(.2,.8,.2,1)}
 .sheet.swap{animation:fadein .18s}
+/* iOS Safari: fixed elements stop above the floating address bar. Let pop-ups run to the true bottom
+   of the screen (100lvh) and pad the content by the bar's height so everything can scroll clear of it. */
+@supports (height:100lvh){#modal{bottom:auto;height:100lvh}
+ .sheet{max-height:calc(100lvh - 7dvh);padding-bottom:calc(24px + env(safe-area-inset-bottom) + 100lvh - 100dvh)}}
 .mhd{font-size:30px;line-height:1;font-weight:900;font-style:italic;text-transform:uppercase;margin:4px 0 8px;background:linear-gradient(180deg,#fff7d6,#e9c258 60%,#b98a26);-webkit-background-clip:text;background-clip:text;color:transparent}
 .wd-n{font-size:30px;line-height:1}
 .scene{font-size:18px;line-height:1.5;margin:10px 0 16px;font-weight:600}
