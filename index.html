@@ -307,7 +307,7 @@ function autoTraits(w){const rnd=seeded(w.id+'|'+w.name);const inTag=typeof S!==
  const out=[];for(let n=0;n<2;n++){const c=Object.entries(wt).filter(([k,v])=>v>0&&!out.includes(k)&&!(k==='monster'&&out.includes('under'))&&!(k==='under'&&out.includes('monster')));const tot=c.reduce((s,x)=>s+x[1],0);let r=rnd()*tot;for(const [k,v] of c){r-=v;if(r<=0){out.push(k);break}}}
  return out}
 function feudInit(st){if(!st||st.fs)return;st.fs={};st.mh=st.mh||{};const now=(st.season-1)*SEASON+st.week;for(const k in st.heat)if(st.heat[k]>=20)st.fs[k]={start:now,paid:false,stale:false}}
-function showMigrate(){if(!S||S.fullShow)return;S.fullShow=true;S.showIdx=0;if(S.phase==='season'&&S.card)S.card={p:emptyCard(curShow().ppv),ai:null}}
+function showMigrate(){if(S&&S.phase==='season'&&!S.fa){S.fa={};marketTick(undefined,true)}if(!S||S.fullShow)return;S.fullShow=true;S.showIdx=0;if(S.phase==='season'&&S.card)S.card={p:emptyCard(curShow().ppv),ai:null}}
 function dataUpdate(st){if(!st||!st.w||(st.dataV||1)>=DATA_V)return;let n=0;
  RAW.trim().split('\n').forEach(l=>{const x=mkW(l.trim());if(!st.w[x.id]){if(OUT[x.id])x.inj=OUT[x.id];st.w[x.id]=x;n++}});
  st.dataV=DATA_V;if(n)st.news.push({w:st.week,t:`🆕 Roster update (${DATA_AS_OF}): ${n} new arrivals joined free agency.`})}
@@ -789,7 +789,7 @@ function draftPick(id,brand){const d=S.draft,w=S.w[id];if(!w||w.own)return;w.own
 function finishDraft(){S.phase='season';
  Object.values(S.w).forEach(w=>{if(!w.own)w.con=0;w.pop0=w.pop});
  Object.values(S.titles).forEach(t=>{if(!t.holders.length)return;const os=t.holders.map(h=>S.w[h].own);if(os.some(o=>!o)||os.some(o=>o!==os[0])){t.holders=[];news(`🏆 The ${t.n} title is vacant — the draft split up the champions.`)}});
- S.card=newCard();news('📋 The draft is complete. Week 1 is here!')}
+ S.card=newCard();news('📋 The draft is complete. Week 1 is here!');S.fa={};marketTick(undefined,true)}
 
 /* ===================== SHOWS ===================== */
 function nextPPVAfter(w){for(let x=w+1;x<=SEASON;x++)if(PPVS[x])return {w:x,n:PPVS[x]};return null}
@@ -1017,7 +1017,19 @@ function airShow(){
  S.showIdx=0;endWeek(out.notes);
  if(S.phase==='season')S.card=newCard();
  S.last=out;save();return out}
-function leave(w,msg,notes){news(msg);notes.push(msg);w.own=null;w.con=0;w.mor=60;S.training=S.training.filter(t=>t.id!==w.id)}
+function leave(w,msg,notes){news(msg);notes.push(msg);w.own=null;w.con=0;w.mor=60;S.training=S.training.filter(t=>t.id!==w.id);if(S.fa)S.fa[w.id]=AW()+RI(2,4)}
+/* ---- rotating free-agent market ---- */
+const FA_SIZE=8;
+function onMarket(w){return !!w&&!w.own&&(w.cw||S.phase!=='season'&&S.phase!=='over'||!S.fa||(S.fa[w.id]||0)>=AW())}
+function faLeft(w){return S.fa&&S.fa[w.id]?S.fa[w.id]-AW()+1:0}
+function marketTick(notes,first){if(!S.fa)S.fa={};const now=AW();
+ for(const id in S.fa){const w=S.w[id];if(!w||w.own||S.fa[id]<now)delete S.fa[id]}
+ const live=Object.keys(S.fa).filter(id=>!S.w[id].cw).length;const need=Math.max(0,FA_SIZE-live);
+ const off=shuffle(Object.values(S.w).filter(w=>!w.own&&!w.cw&&!S.fa[w.id]));
+ const add=[];if(need){const star=off.filter(w=>w.pop>=70).sort((a,b)=>b.pop-a.pop)[0];if(star&&Math.random()<.5)add.push(star);
+  for(const w of off){if(add.length>=need)break;if(!add.includes(w))add.push(w)}}
+ add.forEach(w=>S.fa[w.id]=now+RI(1,3));
+ if(add.length&&notes!==null){const n=`🆕 Free agency: ${add.map(w=>w.name).join(', ')} ${add.length>1?'hit':'hits'} the market${first?'':' this week'}.`;news(n);if(notes)notes.push(n)}}
 function endWeek(notes){
  const wk=S.week;const T=new Set(S.touched);
  S.training=S.training.filter(t=>S.w[t.id]&&S.w[t.id].own==='p');
@@ -1044,10 +1056,11 @@ function endWeek(notes){
  ['p','ai'].forEach(b=>{const inc=Math.round(S.fans[b]/2000+220),pay=payroll(b);S.money[b]+=inc-pay;
   if(b==='p'&&S.money.p<0){notes.push('💸 You are in the red — morale is slipping.');ownList('p').forEach(w=>w.mor=clamp(w.mor-2,0,100))}});
  const aiN=ownList('ai').length;
- if(aiN<18||(aiN<26&&Math.random()<.3)){const fa=Object.values(S.w).filter(w=>!w.own&&!w.inj&&!w.cw).sort((a,b)=>val(b)-val(a));const pickFa=aiN<18?fa.sort((a,b)=>sal(a)-sal(b))[0]:fa[0];
+ if(aiN<18||(aiN<26&&Math.random()<.3)){const fa=Object.values(S.w).filter(w=>!w.own&&!w.inj&&!w.cw&&onMarket(w)).sort((a,b)=>val(b)-val(a));const pickFa=aiN<18?fa.sort((a,b)=>sal(a)-sal(b))[0]:fa[0];
   if(pickFa){const c=sal(pickFa)*6;if(S.money.ai>=c*(aiN<18?1:1.5)){S.money.ai-=c;pickFa.own='ai';pickFa.con=RI(20,40);pickFa.mor=75;const n=`✍️ ${S.rival} signed free agent ${pickFa.name}.`;news(n);notes.push(n)}}}
  S.week++;
- if(S.week>SEASON){S.phase='over';news(`🏁 Season ${S.season} is over!`)}}
+ if(S.week>SEASON){S.phase='over';news(`🏁 Season ${S.season} is over!`)}
+ else marketTick(notes);}
 
 /* ===================== PERSISTENCE ===================== */
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
@@ -1169,6 +1182,7 @@ function homeView(){const sh=curShow();const np=nextPPV();const pp=S.fans.p/(S.f
  const inj=mine.filter(w=>w.inj);if(inj.length)al.push(`🚑 Injured: ${inj.map(w=>esc(w.name)).join(', ')}`);
  const sad=mine.filter(w=>w.mor<30&&!w.inj);if(sad.length)al.push(`😠 Unhappy (need TV time): ${sad.slice(0,4).map(w=>esc(w.name)).join(', ')}${sad.length>4?'…':''}`);
  const tired=mine.filter(w=>w.fat>=60);if(tired.length)al.push(`🔋 Worn down (injury risk): ${tired.map(w=>esc(w.name)).join(', ')}`);
+ {const n=Object.values(S.w).filter(w=>!w.own&&!w.cw&&onMarket(w));const last=n.filter(w=>faLeft(w)<=1);if(n.length)al.push(`🆕 ${n.length} free agents on the market${last.length?` · last chance: ${last.slice(0,3).map(w=>esc(w.name)).join(', ')}`:''} — <a href="#" onclick="rf='fa';go('roster');return false" style="color:var(--gold2)">browse</a>`)}
  const fs=feudList('p').slice(0,5);
  const held=Object.values(S.titles).filter(t=>t.holders.length&&S.w[t.holders[0]]&&S.w[t.holders[0]].own==='p').length;
  return `${poster(sh,`<div class="venue mt" style="color:#e9d9b0">${sh.ppv?`You and ${esc(S.rival)} each book a full PPV card — 5 matches + an optional title challenge`:`You book all of <b>Dynamite</b> · ${esc(S.rival)} books <b>Collision</b> — head to head in the ratings`}</div><button class="btn mt" onclick="go('book')">Book the show ▸</button>${np&&!sh.ppv?`<div class="venue mt">Next PPV: <b>${np.n}</b> · ${np.in===0?'this Saturday':`in ${np.in} week${np.in>1?'s':''}`}</div>`:''}`)}
@@ -1290,7 +1304,12 @@ function showResults(){const o=S.last;if(!o)return;
  <button class="btn" onclick="closeModal();go('home')">Continue</button>`)}
 
 function gridInfo(w,k){const lab={pot:'Pot',mor:'Morale',fat:'Fatigue'}[k];const al=`<i class="${w.al==='f'?'face':'heel'}">${w.al==='f'?'Face':'Heel'}</i>`;return lab?`${lab} ${Math.round(w[k])} · ${STYLE_N[w.st]}`:`${al} · ${STYLE_N[w.st]}${w.rookie?' · 🌱':''}`}
-function rosterView(){let l=Object.values(S.w).filter(w=>rf==='mine'?w.own==='p':rf==='rival'?w.own==='ai':rf==='fa'?!w.own:true);l.sort(sorter(rs));
+function faView(){const all=Object.values(S.w).filter(w=>!w.own);const on=all.filter(onMarket).sort(sorter(rs));const off=all.filter(w=>!onMarket(w)).sort(sorter(rs));
+ return `${chips('rf',[['mine','Mine'],['rival','Rival'],['fa','Free agents'],['all','All']],rf)}<div class="mt">${chips('rs',[['ovr','Overall'],['pop','Popularity'],['ring','In-ring'],['mic','Mic'],['pot','Potential']],rs)}</div>
+ <div class="card mt"><div class="h small">On the market · ${on.length}</div><div class="muted" style="margin-top:-4px">Free agents rotate weekly. Sign them before their window closes — ${esc(S.rival)} is shopping too.</div></div>
+ <div class="cgrid">${on.map(w=>wcard(w,{info:w.cw?'Created · always available':`⏳ ${faLeft(w)<=1?'Last week':faLeft(w)+' wks left'} · ${money(signCost(w))}`})).join('')||'<p class="muted">Nobody right now.</p>'}</div>
+ ${off.length?`<details class="card mt"><summary class="h small" style="margin:0">Off the market · ${off.length}</summary><p class="muted">Unsigned, but not taking offers right now. They may turn up in a future week.</p><div class="cgrid">${off.map(w=>wcard(w,{info:'Unavailable'})).join('')}</div></details>`:''}`}
+function rosterView(){if(rf==='fa'&&S.phase==='season')return faView();let l=Object.values(S.w).filter(w=>rf==='mine'?w.own==='p':rf==='rival'?w.own==='ai':rf==='fa'?!w.own:true);l.sort(sorter(rs));
  return `${chips('rf',[['mine','Mine'],['rival','Rival'],['fa','Free agents'],['all','All']],rf)}<div class="mt">${chips('rs',[['ovr','Overall'],['pop','Popularity'],['ring','In-ring'],['mic','Mic'],['pot','Potential'],['mor','Morale'],['fat','Fatigue']],rs)}</div>
  <div class="muted mt">${l.length} wrestlers${rf==='mine'?` · ${cnt(l)} · Payroll ${money(payroll('p'))}/wk`:''}</div><div class="cgrid mt">${l.map(w=>wcard(w,{info:gridInfo(w,rs)})).join('')}</div>`}
 function showW(id){const w=S.w[id];if(!w)return;const own=w.own==='p';const ts=titlesOf(id).map(t=>t.n);
@@ -1300,7 +1319,8 @@ function showW(id){const w=S.w[id];if(!w)return;const own=w.own==='p';const ts=t
  let acts='';
  if(S.phase==='draft'){if(!w.own&&onClock()==='p')acts=`<button class="btn" onclick="pDraft('${id}')">Draft ${esc(w.name)}</button>`}
  else if(own){acts=`<div class="row mt"><button class="btn sec" onclick="train('${id}','ring')">${tr&&tr.f==='ring'?'✓ ':''}Train ring</button><button class="btn sec" onclick="train('${id}','mic')">${tr&&tr.f==='mic'?'✓ ':''}Train mic</button></div>${w.con<=8?`<button class="btn" onclick="resign('${id}')">Re-sign 26 weeks · ${money(resignCost(w))}</button>`:''}<button class="btn ghost danger" onclick="release('${id}')">Release</button>`}
- else if(!w.own&&S.phase==='season')acts=`<button class="btn" onclick="sign('${id}')">Sign · ${money(signCost(w))}</button>${w.fee?`<div class="muted center tiny">Includes a ${money(w.fee)} development fee for this rookie.</div>`:''}${w.inj?'<div class="muted center">Currently injured.</div>':''}`;
+ else if(!w.own&&S.phase==='season'&&!onMarket(w))acts=`<div class="card" style="margin-top:12px"><b>Not on the market</b><div class="muted">${esc(w.name)} is unsigned but not taking offers right now. Free agents rotate every week — check back.</div></div>`;
+ else if(!w.own&&S.phase==='season')acts=`${!w.cw&&faLeft(w)?`<div class="gold center" style="margin-top:10px">⏳ On the market ${faLeft(w)<=1?'— <b>last week</b> to sign':'for '+faLeft(w)+' more weeks'}</div>`:''}<button class="btn" onclick="sign('${id}')">Sign · ${money(signCost(w))}</button>${w.fee?`<div class="muted center tiny">Includes a ${money(w.fee)} development fee for this rookie.</div>`:''}${w.inj?'<div class="muted center">Currently injured.</div>':''}`;
  if(w.cw&&!w.own)acts+=`<div class="row mt"><button class="btn sec" onclick="openCreate('${id}')">✏️ Edit</button><button class="btn sec danger" onclick="delCreated('${id}')">Delete</button></div>`;
  openModal(`<div class="wd-top"><div class="wd-pic">${portrait(w)}</div><div style="min-width:0"><div class="h wd-n">${esc(w.name)}</div><div class="muted">${w.g==='M'?"Men's":"Women's"} division · ${STYLE_N[w.st]} · <span class="${w.al==='f'?'face':'heel'}">${w.al==='f'?'Face':'Heel'}</span> · ${w.own==='p'?esc(S.gm):w.own==='ai'?esc(S.rival):'Free agent'}${w.rookie?' · <span class="rk">ROOKIE</span>':''}</div>
  ${ts.length?`<div class="gold mt">🏆 ${ts.join(', ')} Champion</div>`:''}${w.inj?`<div class="err">🚑 Injured — out ${w.inj} more week${w.inj>1?'s':''}</div>`:''}${teams.length?`<div class="muted mt">Teams: ${esc(teams.join(', '))}</div>`:''}</div></div>
@@ -1324,7 +1344,7 @@ function matchGuide(w){const fit=styleFit(w.st);
  return h}
 function train(id,f){const t=S.training.find(x=>x.id===id);if(t){if(t.f===f)S.training=S.training.filter(x=>x.id!==id);else t.f=f}else{if(S.training.length>=2){toast('The Performance Center has 2 slots. Remove someone in the Office first.');return}S.training.push({id,f})}save();showW(id);render()}
 function untrain(id){S.training=S.training.filter(x=>x.id!==id);save();render()}
-function sign(id){const w=S.w[id];const c=signCost(w);if(S.money.p<c)return toast('Not enough money.');if(ownList('p').length>=30)return toast('Your roster is full (30).');S.money.p-=c;w.own='p';w.con=26;w.mor=80;w.fee=0;news(`✍️ ${S.gm} signed free agent ${w.name}.`);save();closeModal();render();toast(`${w.name} signed!`)}
+function sign(id){const w=S.w[id];if(!onMarket(w))return toast(`${w.name} isn't on the market right now.`);const c=signCost(w);if(S.money.p<c)return toast('Not enough money.');if(ownList('p').length>=30)return toast('Your roster is full (30).');S.money.p-=c;w.own='p';w.con=26;w.mor=80;w.fee=0;news(`✍️ ${S.gm} signed free agent ${w.name}.`);save();closeModal();render();toast(`${w.name} signed!`)}
 function resign(id){const w=S.w[id];const c=resignCost(w);if(S.money.p<c)return toast('Not enough money.');S.money.p-=c;w.con+=26;w.mor=clamp(w.mor+10,0,100);save();closeModal();render();toast(`${w.name} re-signed through ${w.con} more weeks.`)}
 function release(id){const w=S.w[id];if(!confirm(`Release ${w.name}?`))return;const n=[];leave(w,`👋 ${S.gm} released ${w.name}.`,n);Object.values(S.titles).forEach(t=>{if(t.holders.includes(id)){t.holders=[];news(`🏆 The ${t.n} title has been vacated.`)}});save();closeModal();render()}
 
@@ -1332,7 +1352,8 @@ function titlesView(){return `<p class="muted">Titles stay with whichever brand 
  return `<div class="card belt"><div class="row sb"><div class="h">${t.n}</div><span class="badge ${o==='p'?'you':o==='ai'?'riv':'vac'}">${o==='p'?'YOU':o==='ai'?'RIVAL':'VACANT'}</span></div><div class="champ">${hs.length?`<span class="frow">${hs.map(w=>face(w)).join('')}<span>${hs.map(w=>`<span onclick="showW('${w.id}')">${esc(w.name)}</span>`).join(' & ')}</span></span>`:'<span class="muted">Vacant — book a match for it</span>'}</div><div class="muted">${t.g==='M'?"Men's":"Women's"} ${t.kind==='singles'?'singles':t.kind==='tag'?'tag team':'trios'}${hs.length?` · ${t.since?'won W'+t.since:'reigning champion'}`:''} · last defense ${t.last?'W'+t.last:'—'}</div>${statBar('Prestige',t.prestige)}</div>`}).join('')}
 const HOWTO=`<p><b>Match ratings</b> blend in-ring skill (the best worker in the match helps carry the rest), popularity, chemistry (styles that mesh — high-flyers vs powerhouses, technicians vs technicians — plus face vs heel and history together), feud heat, stipulation fit, title prestige and fatigue.</p>
 <p><b>Traits</b> (the round badges on each card) add chemistry and bonuses on top of style — e.g. a Monster vs an Underdog is +4, a Storyteller adds +1 with anyone. Open any wrestler to see their best opponents and tag partners on your roster with the reasons, or tap <b>Why?</b> under a match's projected rating.</p>
-<p><b>Created wrestlers</b> go into the free-agent pool. Draft them or sign them any week from Free Agents; the rival never signs them. Rookies carry a one-time development fee when signed (free if drafted).</p>
+<p><b>Free agency</b> rotates: after the draft only about 8 unsigned wrestlers are on the market at once, each for a few weeks, with new names arriving every week (and anyone released or out of contract going straight onto it). The rival signs from the same market.</p>
+<p><b>Created wrestlers</b> go into the free-agent pool and are always available to you. Draft them or sign them any week from Free Agents; the rival never signs them. Rookies carry a one-time development fee when signed (free if drafted).</p>
 <p><b>Feuds</b> start and grow from matches and promos: great matches, face vs heel, title matches and messy finishes build the most heat, and the results call it out when a rivalry is brewing (20), becomes a full-blown feud (45) or a blood feud (75). Don't overdo it — running the same match again within a month costs up to 1¼★ and barely builds heat, and a feud that goes 8 weeks without a PPV payoff goes stale. Feuds also cool off when ignored. PPVs weigh heat much more heavily, so build rivalries on TV and pay them off on PPV. A PPV match cools the feud down.</p>
 <p><b>Promos</b> play out as short scenes. Each choice tests mic skill, in-ring ability, popularity or luck. Promos between two wrestlers build feud heat. A <b>Contract Signing</b> books that match on your next PPV card (with a stipulation if you add one); a callout where you <b>lay down a challenge</b> promises the match for next week or the next PPV — your pick. While a match is promised, booking either wrestler against the other's stablemates or tag partners (🔗 proxy war) and trading promos where they take turns leading (↔️ back-and-forth) builds the feud without fatigue. Running the promised singles match early gives it away and halves the payoff. Deliver and it pays off; skip it and you lose fans and morale. Putting the same two in promos week after week brings diminishing returns.</p>
 <p><b>Development:</b> wrestlers improve toward their potential by working matches (faster against better opponents) and by Performance Center training. Unused talent loses morale; overworked talent gets hurt.</p>
@@ -1361,7 +1382,7 @@ function overView(){const win=S.fans.p>=S.fans.ai;const mine=ownList('p');const 
  ${S.best?`<div class="mt"><span class="muted">Match of the year</span><br>${esc(S.best.t)} <span class="stars">${stars(S.best.s)}</span> <span class="muted">(${esc(S.best.show)}, W${S.best.w})</span></div>`:''}
  ${mvp?`<div class="mt"><span class="muted">Breakout star</span><br><b>${esc(mvp.name)}</b> (+${Math.round(mvp.pop-mvp.pop0)} popularity)</div>`:''}${top?`<div class="mt"><span class="muted">Top star</span><br><b>${esc(top.name)}</b></div>`:''}</div>
  <button class="btn" onclick="nextSeason()">Start Season ${S.season+1}</button><p class="muted center">Rosters, titles, feuds, contracts and development all carry over.</p>`}
-function nextSeason(){S.season++;S.week=1;S.showIdx=0;S.phase='season';S.hourWins={p:0,ai:0};S.best=null;S.promises=[];Object.values(S.w).forEach(w=>w.pop0=w.pop);S.card=newCard();news(`🎉 Season ${S.season} begins. Next stop: All In.`);save();go('home')}
+function nextSeason(){S.season++;S.week=1;S.showIdx=0;S.phase='season';S.hourWins={p:0,ai:0};S.best=null;S.promises=[];S.fa={};marketTick(undefined,true);Object.values(S.w).forEach(w=>w.pop0=w.pop);S.card=newCard();news(`🎉 Season ${S.season} begins. Next stop: All In.`);save();go('home')}
 
 if(typeof document!=='undefined'&&document.getElementById('app')){
  if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
