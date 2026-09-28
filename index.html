@@ -726,7 +726,7 @@ function openStudio(){const all=Object.values(S.w);const have=all.filter(hasPhot
  <details class="card mt"><summary class="h small" style="margin:0">How bulk import works</summary><p>Save photos named after each wrestler — like <b>will-ospreay.jpg</b>, <b>Mercedes Mone.png</b> or <b>adam_page.jpg</b> — then select them all at once. The game matches each file by its name and crops it to card size. Anything it can't match, you can assign by tapping the right card.</p><p>Use <b>🔍 Find</b> below to open an image search for a wrestler, save the picture to your phone with their name, and repeat. Then import them all in one go.</p><p><b>Shared photos:</b> drop pictures named after each wrestler into the <b>photos</b> folder of the game's GitHub repo. They're cropped automatically and show up on every device and every new save — no importing, and they don't use up this device's storage. A photo added here in the game always takes priority.</p></details>
  <div class="row"><button class="btn sec" onclick="exportPhotos()">Export photo pack</button><button class="btn sec" onclick="importPhotos()">Import photo pack</button></div>
  <div class="h small mt">Checklist</div><div class="chips">${[['missing','Missing'],['mine','My roster · missing'],['all','Everyone']].map(([k,n])=>`<button class="chip ${SF===k?'on':''}" onclick="SF='${k}';openStudio()">${n}</button>`).join('')}</div>
- <div class="mt">${l.length?l.map(w=>`<div class="prow">${face(w)}<div class="wl"><div class="wn">${esc(w.name)}</div><div class="muted tiny">${w.own==='p'?'Your roster':w.own==='ai'?esc(S.rival):'Free agent'}${IMG[w.id]?' · ✅ Has photo':repoPhoto(w)?' · ✅ Shared photo':''}</div></div>${w.rookie?'':`<a class="mini" href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(w.name+' AEW')}" target="_blank" rel="noopener">🔍 Find</a>`}<button class="mini" onclick="studioAdd('${w.id}')">📷</button></div>`).join(''):'<p class="muted center">Everyone here has a photo. 🎉</p>'}</div>
+ <div class="mt">${l.length?l.map(w=>`<div class="prow">${face(w)}<div class="wl"><div class="wn">${esc(w.name)}</div><div class="muted tiny">${w.own==='p'?'Your roster':w.own==='ai'?esc(S.rival):'Free agent'}${IMG[w.id]?' · ✅ Has photo':repoPhoto(w)?' · ✅ Shared photo':''}</div></div>${w.rookie?'':`<a class="mini" href="${photoSearch(w)}" target="_blank" rel="noopener">🔍 Find</a>`}<button class="mini" onclick="studioAdd('${w.id}')">📷</button></div>`).join(''):'<p class="muted center">Everyone here has a photo. 🎉</p>'}</div>
  <button class="btn ghost" onclick="closeModal()">Close</button>`,true)}
 async function clipImage(){
  if(!navigator.clipboard||!navigator.clipboard.read)throw 'unsupported';
@@ -740,6 +740,7 @@ async function pastePhoto(id,after){let src;try{src=await clipImage()}catch(e){t
  try{if(await setPhotoFrom(id,src)){toast(`📸 Photo added for ${S.w[id].name}.`);if(after)after(true)}}
  catch(e){toast(src.url?"That's a link, not the picture. Long-press the image itself and choose Copy.":"That picture couldn't be opened.")}}
 let QP=null;
+function photoSearch(w){return 'https://www.google.com/search?tbm=isch&q='+encodeURIComponent(w.cw?w.name+' wrestler':w.name+' site:allelitewrestling.com')}
 function openQuick(){const l=Object.values(S.w).filter(w=>!hasPhoto(w)).sort((a,b)=>((b.own==='p')-(a.own==='p'))||b.pop-a.pop);if(!l.length)return toast('Everyone has a photo! 🎉');QP={ids:l.map(w=>w.id),i:0,done:0};renderQuick()}
 function renderQuick(){if(!QP)return;while(QP.i<QP.ids.length&&(!S.w[QP.ids[QP.i]]||hasPhoto(S.w[QP.ids[QP.i]])))QP.i++;
  if(QP.i>=QP.ids.length){const d=QP.done;QP=null;openStudio();toast(`All done — ${d} photo${d===1?'':'s'} added.`);return}
@@ -747,8 +748,8 @@ function renderQuick(){if(!QP)return;while(QP.i<QP.ids.length&&(!S.w[QP.ids[QP.i
  openModal(`<div class="row sb"><div class="h mhd" style="margin:0">Quick photos</div><span class="muted">${left} to go${QP.done?` · ${QP.done} added`:''}</span></div>
  <div class="bar mt"><i style="width:${QP.i/QP.ids.length*100}%"></i></div>
  <div class="qp"><div class="wd-pic">${portrait(w)}</div><div style="min-width:0"><div class="h wd-n">${esc(w.name)}</div><div class="muted">${w.own==='p'?'Your roster':w.own==='ai'?esc(S.rival):'Free agent'} · ${STYLE_N[w.st]}</div>
- <ol class="qsteps"><li>Tap <b>Search</b></li><li>Long-press a picture → <b>Copy</b></li><li>Come back and tap <b>Paste</b></li></ol></div></div>
- <div class="row"><a class="btn sec" href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(w.name+(w.cw?' wrestler':' AEW'))}" target="_blank" rel="noopener">🔍 Search</a><button class="btn" onclick="quickPaste()">📋 Paste</button></div>
+ <ol class="qsteps"><li>Tap <b>Search</b> (official AEW roster photos come up first)</li><li>Long-press a picture → <b>Copy</b></li><li>Come back and tap <b>Paste</b></li></ol></div></div>
+ <div class="row"><a class="btn sec" href="${photoSearch(w)}" target="_blank" rel="noopener">🔍 Search</a><button class="btn" onclick="quickPaste()">📋 Paste</button></div>
  <div class="row" style="margin-top:8px"><button class="btn sec" onclick="quickFile()">🖼️ From Photos</button><button class="btn sec" onclick="QP.i++;renderQuick()">Skip →</button></div>
  <button class="btn ghost" onclick="QP=null;openStudio()">Done</button>`)}
 function quickOk(){QP.done++;QP.i++;renderQuick()}
