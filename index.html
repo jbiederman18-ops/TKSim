@@ -335,7 +335,7 @@ nav.tabs button.on{text-shadow:none}nav.tabs button.on svg{filter:none}nav.tabs 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v31';
+const APP_VERSION='v32';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -804,41 +804,106 @@ const MEV=[
 {id:'ref',w:3,text:'The referee takes a stray elbow and crumples to the mat! {B} has {A} pinned — but nobody is there to count.',ch:[
  {t:'A second referee sprints down to count',s:'luck',st:.25,ok:'The crowd counts along — 1… 2… a thrilling near-fall!',no:'The backup ref is too slow and the moment fizzles.'},
  {t:'{X} runs in and levels {B} with a chair',need:'X',s:'luck',d:.05,st:.5,hx:'B',heat:14,ok:'Chaos! {X} vanishes into the crowd before the ref comes to.',no:'Officials cut {X} off on the ramp. Messy.'},
- {t:'{A} goes low while the ref is down',s:'ring',d:.1,st:.5,heat:10,heelA:1,ok:'The cheapest of cheap shots — and it works.',no:'{B} blocks it and the crowd roars.'}]},
+ {t:'{A} goes low while the ref is down',s:'ring',d:.1,st:.5,heat:10,heelA:1,ok:'The cheapest of cheap shots — and it works.',no:'{B} blocks it and the crowd roars.'},
+ {t:'{A} goes to the top rope while waiting for the ref',s:'ring',d:.15,st:.5,fat:6,ok:'The ref comes to just in time to count the pin. Huge.',no:'Nobody is there to count it. What a waste.'},
+ {al:'f',t:'{A} revives the referee and keeps it clean',s:'pop',d:.05,st:.25,popA:2,ok:'Sportsmanship! The crowd cheers {A} for doing it the right way.',no:'By the time the ref is up, the moment has passed.'},
+ {al:'h',t:'{A} pulls the tights on a roll-up as the ref comes to',s:'luck',d:.05,st:.25,heat:12,ok:'Three! {A} steals it with a handful of tights.',no:'The ref spots the hand and breaks the count.'},
+ {al:'h',vs:'f',t:'{A} rips off a turnbuckle pad while the ref is out',s:'luck',d:.05,st:.25,heat:10,ok:'Exposed steel — and {B} finds it face-first.',no:'{B} reverses and {A} eats the steel instead.'}]},
 {id:'chair',w:3,text:'{B} slides a steel chair into the ring.',ch:[
  {t:'{A} kicks it away and hits the finisher',s:'ring',d:.05,st:.25,popA:2,ok:'Poetic justice. The crowd loves it.',no:'The spot is sloppy and the finish falls flat.'},
  {t:"{A} uses it behind the referee's back",s:'luck',d:.1,st:.5,heat:10,heelA:1,ok:'Nobody saw it — except 10,000 fans.',no:'The ref turns around at the worst moment. Awkward.'},
- {t:'The ref catches it — throw the match out',dq:1,always:1,st:-.25,heat:18,nc:1,ok:'No contest! Both wrestlers are furious. This feud just got hotter.'}]},
+ {t:'The ref catches it — throw the match out',dq:1,always:1,st:-.25,heat:18,nc:1,ok:'No contest! Both wrestlers are furious. This feud just got hotter.'},
+ {t:'They fight over the chair until it goes flying',s:'ring',d:.1,st:.5,fat:5,heat:8,ok:'A wild tug-of-war that ends with {A} on top.',no:'The chair spot looks clumsy.'},
+ {al:'f',t:'{A} tosses the chair out and dares {B} to fight fair',s:'pop',d:.05,st:.25,popA:2,heat:6,ok:'"Fight me like a man!" The fans are fired up.',no:'{B} takes advantage of the distraction.'},
+ {al:'h',t:'{A} stashes the chair under the ring for later',s:'luck',d:0,st:.25,heat:8,ok:'Smart and sneaky. It will come in handy another night.',no:'The camera catches it and the crowd tells the ref.'},
+ {al:'h',vs:'h',t:'The ref confiscates it and {B} throws a tantrum',always:1,st:.25,heat:6,ok:'{B} melts down, and {A} capitalizes with a cheap shot.'}]},
 {id:'hurt',w:1.5,text:'{B} lands awkwardly and is clutching their knee. The referee throws up the X.',ch:[
  {t:'Call an audible and take it home now',always:1,st:-.5,ok:'Smart call. {B} walks out under their own power.'},
- {t:'Let {B} push through',s:'luck',d:.25,st:.5,popB:3,failInj:'B',ok:'A gutsy, heroic performance. The fans are in awe.',no:"{B} can't continue — it looks serious."}]},
+ {t:'Let {B} push through',s:'luck',d:.25,st:.5,popB:3,failInj:'B',ok:'A gutsy, heroic performance. The fans are in awe.',no:"{B} can't continue — it looks serious."},
+ {t:'The doctor checks {B} at ringside while {A} waits',always:1,st:0,ok:'{B} is cleared to continue, and they finish strong.'},
+ {al:'f',t:'{A} checks on {B} before finishing the match',always:1,st:.25,popA:2,ok:'A classy moment the fans won\'t forget.'},
+ {al:'h',t:'{A} goes straight for the bad knee',s:'ring',d:.05,st:.25,heat:15,ok:'Cruel and calculated. {B} taps in agony.',no:'{B} fires up out of pure spite.'}]},
 {id:'dead',w:2,text:'A long rest hold has the crowd sitting on their hands.',ch:[
  {t:'Go to a big spot off the top rope',s:'ring',d:.2,st:.5,fat:8,ok:'The building explodes!',no:'A nasty botch. Everyone winces.'},
  {t:'Play to the crowd with a comedy spot',s:'mic',d:.1,st:.25,popA:1,ok:'The crowd is laughing and back in it.',no:'The joke lands with a thud.'},
- {t:'Stay the course',always:1,st:0,ok:'It picks back up, eventually.'}]},
+ {t:'Stay the course',always:1,st:0,ok:'It picks back up, eventually.'},
+ {t:'Trade hard strikes in the middle of the ring',s:'ring',d:.1,st:.5,fat:5,heat:6,ok:'Chop! Chop! Chop! The crowd "WOOOs" along.',no:'The strikes look soft.'},
+ {al:'f',t:'Get the crowd clapping to rally {A}',s:'pop',d:.05,st:.5,popA:1,ok:'The clapping builds and {A} fights to their feet.',no:'Only a few fans join in.'},
+ {al:'h',t:'{A} mocks the crowd for being so quiet',s:'mic',d:.1,st:.25,popA:1,ok:'Now they\'re loud — and furious.',no:'They stay quiet. That\'s worse.'}]},
 {id:'runin',w:3,need:'X',text:"{X}'s music hits in the middle of the match!",ch:[
  {t:'{X} attacks {B}',s:'luck',st:.25,hx:'B',heat:15,ok:'{X} lays out {B} and the crowd erupts.',no:'{B} sees it coming and fights {X} off.'},
  {t:'Swerve! {X} costs {A} the match',always:1,st:.25,flip:1,hx:'A',heat:18,ok:'{B} steals it! {A} is livid — and {X} is smiling.'},
- {t:'Security cuts {X} off at the ramp',always:1,st:0,hx:'A',heat:6,ok:'The seed is planted for another day.'}]},
+ {t:'Security cuts {X} off at the ramp',always:1,st:0,hx:'A',heat:6,ok:'The seed is planted for another day.'},
+ {al:'f',t:'{A} wipes out {X} with a dive to the floor',s:'ring',d:.15,st:.5,hx:'A',heat:10,popA:2,fat:5,ok:'{A} takes out {X}, then finishes {B}. Huge pop!',no:'{A} crashes into the barricade.'},
+ {al:'h',t:'{X} holds {B} while {A} hits the finisher',s:'luck',d:.05,st:.25,hx:'B',heat:16,ok:'Two-on-one and a cheap three count. The boos are deafening.',no:'{B} escapes and {A} flattens {X} by mistake.'}]},
 {id:'finish',w:3,big:1,text:'Near-fall after near-fall. The whole building is on its feet. How does it end?',ch:[
  {t:'One more false finish',s:'ring',d:.15,st:.75,fat:6,ok:'Kickout at 2.99! Then the finish. Incredible.',no:'They go to the well once too often and the crowd deflates.'},
  {t:'{A} hits the finisher clean',always:1,st:.25,popA:2,ok:'1… 2… 3. Decisive.'},
- {t:'Swerve! {B} steals a roll-up',always:1,st:.25,flip:1,heat:12,ok:'{B} steals it! Nobody saw that coming.'}]},
+ {t:'Swerve! {B} steals a roll-up',always:1,st:.25,flip:1,heat:12,ok:'{B} steals it! Nobody saw that coming.'},
+ {t:'They trade finishers until one stays down',s:'ring',d:.2,st:.75,fat:8,ok:'An all-time finishing stretch.',no:'They run out of gas and it gets sloppy.'},
+ {al:'f',t:'{A} fires up for a comeback flurry',s:'pop',d:.1,st:.75,popA:3,ok:'Hope spot, comeback, finisher — the crowd loses its mind.',no:'The comeback gets cut off too many times.'},
+ {al:'h',t:'{A} puts their feet on the ropes for leverage',s:'luck',d:.05,st:.25,heat:14,ok:'Three! The fans are screaming at the ref.',no:'The ref sees the feet and stops the count.'},
+ {vs:'h',t:'{B} tries a cheap roll-up — {A} reverses it',s:'ring',d:.1,st:.5,popA:2,heat:10,ok:'Hoisted by their own petard! {A} wins.',no:'The reversal is botched.'}]},
 {id:'floor',w:2,text:'The action spills to the floor and into the crowd.',ch:[
  {t:'Brawl up into the stands',s:'ring',d:.15,st:.5,fat:8,ok:'Fans scatter as they trade shots in the seats.',no:"It's hard to see anything on camera."},
  {t:'Double countout',dq:1,always:1,st:-.25,heat:20,nc:1,ok:"Neither makes it back. This isn't over."},
- {t:'Get it back in the ring',always:1,st:0,ok:'Back to business.'}]},
+ {t:'Get it back in the ring',always:1,st:0,ok:'Back to business.'},
+ {t:'A brawl up the entrance ramp',s:'ring',d:.1,st:.5,fat:6,heat:8,ok:'They fight all the way to the stage and back.',no:'It drags on too long.'},
+ {al:'f',t:'{A} dives off the top rope onto {B} on the floor',s:'ring',d:.15,st:.5,fat:6,popA:2,ok:'"THIS IS AWESOME!" chants fill the arena.',no:'{B} moves and {A} crashes hard.'},
+ {al:'h',t:'{A} rams {B} into the steel steps',s:'ring',d:.05,st:.25,heat:12,ok:'A sickening thud. {A} smirks.',no:'{B} blocks it and {A} hits the steps instead.'}]},
 {id:'miscomm',w:3,need:'A2',text:'{A2} swings at {B} — and accidentally nails their own partner {A}!',ch:[
  {t:'They shake it off and win together',s:'luck',st:.25,chemT:1,ok:'A quick apology and a double-team finisher. Crisis averted.',no:'The tension lingers all the way to the finish.'},
- {t:'Tease a breakup',s:'mic',d:.05,st:.5,heatT:15,chemT:-2,ok:'{A} shoves {A2} after the bell. Trouble in paradise…',no:'The tease is so subtle nobody notices.'}]},
+ {t:'Tease a breakup',s:'mic',d:.05,st:.5,heatT:15,chemT:-2,ok:'{A} shoves {A2} after the bell. Trouble in paradise…',no:'The tease is so subtle nobody notices.'},
+ {al:'f',t:'{A} and {A2} hug it out in the middle of the ring',s:'pop',d:0,st:.25,chemT:2,ok:'The crowd cheers the reunion. They\'re closer than ever.',no:'The hug is awkward. Very awkward.'},
+ {al:'h',t:'{A} slaps {A2} and demands they get it together',s:'mic',d:.1,st:.25,heatT:10,chemT:-1,ok:'Harsh, but it works — for now.',no:'{A2} glares back. This isn\'t over.'}]},
 {id:'invade',w:1,need:'Y',text:'{Y} from {RIVAL} hops the barricade and storms the ring!',ch:[
  {t:'Everyone fights {Y} off',s:'ring',d:.05,st:.25,hy:'A',heat:15,ok:'{Y} is sent packing. The brand war is on.',no:'{Y} escapes after landing a few shots.'},
  {t:'{Y} lays out {A} and poses',always:1,st:.25,hy:'A',heat:22,popA:-1,ok:'{Y} stands tall. War has been declared.'},
- {t:'Ignore it and finish the match',always:1,st:0,ok:'Security handles it. The match goes on.'}]},
+ {t:'Ignore it and finish the match',always:1,st:0,ok:'Security handles it. The match goes on.'},
+ {al:'f',t:'{A} dives through the ropes onto {Y}',s:'ring',d:.1,st:.5,hy:'A',heat:14,popA:2,ok:'{A} defends the brand! Huge pop.',no:'{Y} catches {A} and throws them into the barricade.'},
+ {al:'h',t:'{A} hides behind the ref and lets {Y} deal with {B}',s:'luck',d:0,st:.25,hy:'B',heat:14,ok:'{Y} takes out {B}, and {A} strolls over for the pin.',no:'{Y} goes after {A} instead.'}]},
 {id:'belt',w:3,title:1,text:'While the ref checks on a fallen wrestler, {B} grabs the {T} title belt.',ch:[
  {t:'Belt shot! {B} steals the win',always:1,flip:1,st:.25,heat:18,ok:'{B} cracks {A} with the gold and steals it!'},
  {t:'The ref snatches the belt away',s:'luck',st:.25,heat:8,ok:'Order is restored — for now.',no:'The ref fumbles it and the moment gets confusing.'},
- {t:'{A} ducks and hits the finisher',s:'ring',d:.1,st:.5,popA:2,ok:'The belt goes flying and {A} gets the win.',no:'The ducking spot looks rehearsed.'}]}];
+ {t:'{A} ducks and hits the finisher',s:'ring',d:.1,st:.5,popA:2,ok:'The belt goes flying and {A} gets the win.',no:'The ducking spot looks rehearsed.'},
+ {al:'f',t:'{A} wrestles the belt away and hands it to the ref',s:'ring',d:.05,st:.25,popA:2,heat:8,ok:'Doing it the right way — and winning anyway.',no:'The handoff gives {B} time to recover.'},
+ {al:'h',t:'{A} grabs the belt first and nails {B} with it',s:'luck',d:.1,st:.5,heat:14,ok:'{A} wins with the belt they were fighting for. Dastardly.',no:'The ref turns around and catches it all.'}]},
+{id:'rally',w:2,al:'f',text:'The crowd rallies behind {A} with a deafening chant.',ch:[
+ {t:'Feed off the crowd and fire up',s:'pop',d:.05,st:.5,popA:2,ok:'{A} is unstoppable with the crowd behind them.',no:'{B} cuts the comeback off with a cheap shot.'},
+ {t:'Hit a signature move to pop the crowd',s:'ring',d:.1,st:.5,ok:'The place comes unglued.',no:'The move is slightly off.'},
+ {t:'Stay composed and wrestle smart',always:1,st:.25,ok:'Calm, efficient and effective.'},
+ {t:'Fly off the top rope for the crowd',s:'ring',d:.2,st:.75,fat:6,popA:1,ok:'An unforgettable moment.',no:'{B} gets the knees up.'}]},
+{id:'cheat',w:2,al:'h',text:'The ref is distracted by the commotion on the apron.',ch:[
+ {t:'Rake {B}\'s eyes',s:'luck',d:0,st:.25,heat:10,ok:'Dirty, quick and effective.',no:'The ref turns around in time. Busted.'},
+ {t:'Slip on brass knuckles',s:'luck',d:.1,st:.5,heat:14,ok:'Lights out for {B}.',no:'The knuckles clatter to the mat and the ref sees everything.'},
+ {t:'Use the ropes for leverage on a pin',s:'ring',d:.05,st:.25,heat:10,ok:'1… 2… 3. Nobody saw it — except everyone.',no:'The ref kicks the hand off the rope.'},
+ {t:'Spit water in {B}\'s face',s:'luck',d:.05,st:.25,heat:12,ok:'Disgusting. The crowd is outraged.',no:'{B} ducks and the ref gets drenched.'}]},
+{id:'boos',w:1.5,al:'h',text:'The crowd is chanting "{A} sucks!" at the top of their lungs.',ch:[
+ {t:'Stop mid-match to argue with a fan',s:'mic',d:.1,st:.25,popA:1,ok:'The crowd hates it — which means it works.',no:'{B} capitalizes on the distraction.'},
+ {t:'Take it out on {B}',s:'ring',d:.05,st:.5,heat:10,ok:'{A} channels the hate into a beating.',no:'{A} gets sloppy in their anger.'},
+ {t:'Conduct the chant from the top rope',s:'mic',d:.15,st:.5,popA:1,ok:'A heel masterpiece. The boos double.',no:'{B} knocks them off the top.'}]},
+{id:'hope',w:2,vs:'f',text:'{B} is fighting from underneath — the crowd is begging for a comeback.',ch:[
+ {t:'{A} cuts the comeback off cold',s:'ring',d:.1,st:.5,heat:10,ok:'The air goes out of the building.',no:'{A} misses and {B} builds momentum.'},
+ {t:'Let {B} make the big comeback before {A} wins',s:'ring',d:.15,st:.75,popB:2,fat:5,ok:'A rollercoaster finish. Everyone wins, even the loser.',no:'The comeback is short-lived.'},
+ {t:'Swerve! {B} completes the comeback and wins',always:1,st:.5,flip:1,popB:3,ok:'The fairy tale comes true! The crowd erupts.'}]},
+{id:'stall',w:1.5,vs:'h',text:'{B} keeps arguing with the referee to buy time.',ch:[
+ {t:'{A} waits patiently, then strikes',s:'ring',d:.05,st:.25,ok:'The patience pays off.',no:'{B} buys enough time to recover.'},
+ {t:'{A} rolls {B} up while they\'re distracted',s:'luck',d:.05,st:.25,popA:2,heat:8,ok:'Caught napping! 1… 2… 3.',no:'{B} kicks out in shock.'},
+ {al:'h',t:'{A} joins in yelling at the ref',s:'mic',d:.1,st:.25,heat:6,ok:'Two heels berating a ref. The crowd is fuming.',no:'The ref ejects {A}\'s manager instead.'},
+ {al:'f',t:'{A} gets the crowd to count {B} down',s:'pop',d:.05,st:.5,popA:1,ok:'"FIVE! FOUR! THREE!" {B} scrambles back.',no:'The count fizzles.'}]},
+{id:'respect',w:1.5,al:'f',vs:'f',text:'Two fan favorites, battered and exhausted. The crowd is on its feet applauding.',ch:[
+ {t:'Trade strikes from their knees',s:'ring',d:.1,st:.5,fat:5,ok:'A slugfest that ends with both on their feet.',no:'They\'re too tired to sell it.'},
+ {t:'Shake hands mid-match, then go at it again',s:'pop',d:.05,st:.5,popA:1,popB:1,ok:'Respect — and then war. Beautiful.',no:'It kills the momentum.'},
+ {t:'{A} ends it with a flash pin',always:1,st:.25,ok:'A quick finish between two equals.'}]},
+{id:'villains',w:1.5,al:'h',vs:'h',text:'Two villains, and neither will stop cheating. The ref has lost control.',ch:[
+ {t:'Both go for low blows at the same time',s:'luck',d:0,st:.5,heat:12,ok:'A double low blow! The crowd howls with laughter.',no:'They both miss. Embarrassing.'},
+ {t:'{A} out-cheats {B} with a foreign object',s:'luck',d:.1,st:.5,heat:14,ok:'The better cheater wins.',no:'{B} out-cheats them back.'},
+ {t:'Double DQ — the ref has had enough',dq:1,always:1,st:-.25,nc:1,heat:16,ok:'Nobody wins, and neither is happy about it.'}]},
+{id:'top',w:2,text:'{A} climbs to the top rope with {B} down on the mat.',ch:[
+ {t:'The highest-risk move in their arsenal',s:'ring',d:.2,st:.75,fat:6,ok:'They nail it! The crowd can\'t believe it.',no:'{A} overshoots and crashes.'},
+ {t:'Play it safe and climb back down',always:1,st:0,ok:'The crowd groans, but {A} wins anyway.'},
+ {al:'f',t:'Point to the fans, then fly',s:'pop',d:.15,st:.75,popA:2,fat:6,ok:'A picture-perfect moment for the highlight reel.',no:'{B} rolls away at the last second.'},
+ {al:'h',t:'Taunt the crowd from the top',s:'mic',d:.1,st:.25,popA:1,ok:'The boos peak just as {A} comes crashing down on {B}.',no:'{B} gets up and crotches {A} on the top rope.'}]}];
 function evRoles(m,brand){const win=m.sides[m.winner];const los=m.sides.filter((s,i)=>i!==m.winner);const Bs=pick(los);
  const A=S.w[pick(win)],B=S.w[pick(Bs)];const A2=win.length>1?S.w[win.find(x=>x!==A.id)]:null;
  const used=new Set();(S.card[brand]||[]).forEach(sl=>{if(!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(i=>used.add(i));if(sl.k==='promo'){used.add(sl.d.a);if(sl.d.b)used.add(sl.d.b)}});
@@ -847,9 +912,12 @@ function evRoles(m,brand){const win=m.sides[m.winner];const los=m.sides.filter((
  return {A,B,A2,X:xs.length?xs[0][0]:null,Y:ys.length?pick(ys):null,T:m.title?S.titles[m.title].n:'',RIVAL:brand==='p'?S.rival:S.gm,loseIdx:m.sides.indexOf(Bs)}}
 function evFill(t,r){return t.replace(/\{(A2|A|B|X|Y|T|RIVAL)\}/g,(_,k)=>k==='T'||k==='RIVAL'?r[k]:(r[k]?r[k].name:''))}
 function genEvent(m,brand,big){const r=evRoles(m,brand);const bigM=big||!!m.title||heatOf(r.A.id,r.B.id)>=30;
- const opts=MEV.filter(e=>(!e.need||r[e.need])&&(!e.title||m.title)&&(!e.big||bigM));if(!opts.length)return null;
- let x=Math.random()*opts.reduce((a,e)=>a+e.w,0);for(const e of opts){x-=e.w;if(x<=0)return {e,r}}return {e:opts[0],r}}
-function evChoices(e,m,r){const std=!m.stip||m.stip==='std'||m.stip==='sub';return e.ch.filter(c=>(!c.need||r[c.need])&&(!c.dq||std))}
+ const opts=MEV.filter(e=>(!e.need||r[e.need])&&(!e.title||m.title)&&(!e.big||bigM)&&okFor(e,r));if(!opts.length)return null;
+ const e=wpick(opts,x=>x.w*(seenP('ev:'+x.id)?.4:1)*(x.al||x.vs?1.3:1));const ch=dealEv(e,m,r);if(brand==='p')noteP(['ev:'+e.id,...ch.map(c=>c.t)]);return {e:Object.assign({},e,{ch}),r}}
+function evChoices(e,m,r){const std=!m.stip||m.stip==='std'||m.stip==='sub';return e.ch.filter(c=>(!c.need||r[c.need])&&(!c.dq||std)&&okFor(c,r))}
+/* deal 3 options: always one guaranteed-safe call when the event has one, plus a face/heel option when available */
+function dealEv(e,m,r){const el=evChoices(e,m,r);if(el.length<=3)return el;const safe=el.filter(c=>c.always&&!c.flip&&!c.nc);const keep=safe.length?pick(safe):null;
+ const dealt=dealChoices(el.map(c=>c===keep?Object.assign({},c,{key:1}):c),r,3);return el.filter(c=>dealt.some(d=>d.t===c.t))}
 function evChance(c,r){return c.always?1:chance(c,{A:r.A})}
 function evRoll(c,r,m){const ev=m.ev||(m.ev={stars:0,heat:[],pop:[],chem:[],inj:[],fat:[],notes:[]});const ok=Math.random()<evChance(c,r);
  const who=k=>k==='B'?r.B:r.A;const H=(a,b,h)=>{if(a&&b&&h)ev.heat.push([a.id,b.id,Math.round(h)])};
@@ -1607,7 +1675,7 @@ function renderME(){const it=ME.q[ME.k];const {m,g}=it;const r=g.r;
  const hd=`<div class="muted"><span class="live-tag">LIVE</span>${esc(ME.show)} · Match ${it.n}${it.main?' · Main event':''}</div><div class="h mhd mt">${esc(m.sides.map(sideName).join(' vs '))}</div><div class="duo">${m.sides.flat().map(id=>face(S.w[id])).join('')}</div><p class="scene">${esc(evFill(g.e.text,r))}</p>`;
  if(ME.out){const o=ME.out;return openModal(hd+`<div class="outcome ${o.success?'ok':'no'}">${o.success?'✅':'❌'} ${esc(o.text)}</div>${o.flip?`<div class="note">👑 New winner: ${esc(sideName(m.sides[m.winner]))}</div>`:''}${o.nc?'<div class="note">🚫 The match ends without a winner.</div>':''}<button class="btn" onclick="meNext()">${ME.last?'Finish the show':'Continue the show ▸'}</button>`)}
  const ch=evChoices(g.e,m,r);
- openModal(hd+`<div class="muted tiny" style="margin-bottom:8px">Producers are in your headset — make the call:</div>`+ch.map((c,ci)=>`<button class="choice" onclick="meChoose(${ci})"><span class="key"><span>${'ABC'[ci]}</span></span><div>${esc(evFill(c.t,r))}</div><div class="muted tiny">${c.always?'✅ Guaranteed':STAT_ICON[c.s]+' · '+oddsWord(evChance(c,r))}${c.flip?' · changes the winner':''}${c.nc?' · no winner':''}</div></button>`).join(''))}
+ openModal(hd+`<div class="muted tiny" style="margin-bottom:8px">Producers are in your headset — make the call:</div>`+ch.map((c,ci)=>`<button class="choice" onclick="meChoose(${ci})"><span class="key"><span>${'ABC'[ci]}</span></span><div>${esc(evFill(c.t,r))}</div><div class="muted tiny">${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:c.heelA&&r.A.al==='f'?'<span class="heel">😈 Dirty — fans won\'t like it from a face</span> · ':''}${c.always?'✅ Guaranteed':STAT_ICON[c.s]+' · '+oddsWord(evChance(c,r))}${c.flip?' · changes the winner':''}${c.nc?' · no winner':''}</div></button>`).join(''))}
 function meChoose(ci){const it=ME.q[ME.k];const ch=evChoices(it.g.e,it.m,it.g.r);ME.out=evRoll(ch[ci],it.g.r,it.m);renderME()}
 function meNext(){if(LQ)return liveNext();ME.out=null;ME.k++;if(ME.k>=ME.q.length)finishLive();else renderME()}
 function avForMatch(i){const used=usedIn('p',i);return ownList('p').filter(w=>!w.inj&&!used.has(w.id)).sort((a,b)=>ovr(b)-ovr(a))}
@@ -1750,7 +1818,7 @@ const HOWTO=`<p><b>Match ratings</b> blend in-ring skill (the best worker in the
 <p><b>Free agency</b> rotates: after the draft only about 8 unsigned wrestlers are on the market at once, each for a few weeks, with new names arriving every week (and anyone released or out of contract going straight onto it). The rival signs from the same market.</p>
 <p><b>Created wrestlers</b> go into the free-agent pool and are always available to you. Draft them or sign them any week from Free Agents; the rival never signs them. Rookies carry a one-time development fee when signed (free if drafted).</p>
 <p><b>Feuds</b> start and grow from matches and promos: great matches, face vs heel, title matches and messy finishes build the most heat, and the results call it out when a rivalry is brewing (20), becomes a full-blown feud (45) or a blood feud (75). Don't overdo it — running the same match again within a month costs up to 1¼★ and barely builds heat, and a feud that goes 8 weeks without a PPV payoff goes stale. Feuds also cool off when ignored. PPVs weigh heat much more heavily, so build rivalries on TV and pay them off on PPV. A PPV match cools the feud down.</p>
-<p><b>Promos</b> play out as short scenes. Each choice tests mic skill, in-ring ability, popularity or luck. Promos between two wrestlers build feud heat. A <b>Contract Signing</b> books that match on your next PPV card (with a stipulation if you add one); a callout where you <b>lay down a challenge</b> promises the match for next week or the next PPV — your pick. While a match is promised, booking either wrestler against the other's stablemates or tag partners (🔗 proxy war) and trading promos where they take turns leading (↔️ back-and-forth) builds the feud without fatigue. Running the promised singles match early gives it away and halves the payoff. Deliver and it pays off; skip it and you lose fans and morale. Putting the same two in promos week after week brings diminishing returns. Each promo deals fresh options: faces get crowd-pleasing moves and heels get dirty tricks (😇/😈 — playing to character gives slightly better odds), and the scene changes depending on whether it's face vs heel, heel vs heel or face vs face.</p>
+<p><b>Promos</b> play out as short scenes. Each choice tests mic skill, in-ring ability, popularity or luck. Promos between two wrestlers build feud heat. A <b>Contract Signing</b> books that match on your next PPV card (with a stipulation if you add one); a callout where you <b>lay down a challenge</b> promises the match for next week or the next PPV — your pick. While a match is promised, booking either wrestler against the other's stablemates or tag partners (🔗 proxy war) and trading promos where they take turns leading (↔️ back-and-forth) builds the feud without fatigue. Running the promised singles match early gives it away and halves the payoff. Deliver and it pays off; skip it and you lose fans and morale. Putting the same two in promos week after week brings diminishing returns. Match events work the same way — faces fly and rally the crowd, heels rake eyes and put their feet on the ropes, and some events only happen in face vs heel, face vs face or heel vs heel matches. Each promo deals fresh options: faces get crowd-pleasing moves and heels get dirty tricks (😇/😈 — playing to character gives slightly better odds), and the scene changes depending on whether it's face vs heel, heel vs heel or face vs face.</p>
 <p><b>Development:</b> wrestlers improve toward their potential by working matches (faster against better opponents) and by Performance Center training. Unused talent loses morale; overworked talent gets hurt.</p>
 <p><b>Fans:</b> each week you book all of Dynamite while the rival books Collision. Your show earns or loses fans based on its rating (the main event counts most), with a bonus for beating the rival's show. PPVs swing far more fans, and All In counts double. The most fans after All In wins.</p>`;
 function officeView(){const inc=Math.round(S.fans.p/2000+220),pay=payroll('p');const exp=ownList('p').filter(w=>w.con<=6).sort((a,b)=>a.con-b.con);
