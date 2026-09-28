@@ -269,6 +269,60 @@ input[type=range]{width:100%;accent-color:var(--gold);padding:0;margin:4px 0 0;b
 .live-tag:before{content:"";width:6px;height:6px;border-radius:50%;background:#fff;animation:livedot 1s infinite}
 .list .w{display:flex;align-items:center;gap:10px;padding:11px 2px;border-bottom:1px solid #1f1f1f}
 .ovr{font-size:24px;color:var(--gold2)}
+
+/* ===== Calm theme: muted, low-glare, still premium ===== */
+:root{--gold:#bfa062;--gold2:#d8c393;--gold3:#8a7240;--red:#b8453c;--red2:#6e211c;--ember:#c7743f;--text:#e2ddd2;--mut:#8e8a82;--face:#7aa9cf;--heel:#cf7a73;--good:#74b891;--bad:#d07b72;--line:#26282e}
+body{background:linear-gradient(180deg,#111114 0%,#0b0b0d 60%,#08080a 100%)}
+header.top{box-shadow:0 1px 0 rgba(191,160,98,.22),0 6px 18px rgba(0,0,0,.5)}
+header.top:after{height:1px;background:linear-gradient(90deg,rgba(191,160,98,.55),rgba(191,160,98,.1) 70%,transparent)}
+.logo,.showname,.showcard.col .showname,.hero-t,.mhd{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--gold2);filter:none}
+.showcard.col .showname{color:#dcb7ad}
+.logo2{background:#9a3a33;color:#f1e6dc}
+.hudc{background:#17181c;border-top-color:#2a2c32;color:#cfc9bd}
+.hudc b{color:var(--gold2)}
+nav.tabs:before{height:1px;background:linear-gradient(90deg,transparent,rgba(191,160,98,.45) 30%,rgba(191,160,98,.45) 70%,transparent)}
+nav.tabs button.on{text-shadow:none}nav.tabs button.on svg{filter:none}nav.tabs button.on:before{box-shadow:none;background:var(--gold)}
+.small:before{background:var(--red)}
+.showcard{background:var(--grain),radial-gradient(70% 90% at 85% 0%,rgba(199,116,63,.18),transparent 60%),linear-gradient(160deg,#1c1612 0%,#110e0c 55%,#0a0a0b 100%);border-color:#2f2a24}
+.showcard.col{background:var(--grain),radial-gradient(70% 90% at 90% 0%,rgba(184,69,60,.2),transparent 60%),linear-gradient(160deg,#1c1312 0%,#110c0c 55%,#0a0a0b 100%);border-color:#34231f}
+.showcard.ppv{background:var(--grain),radial-gradient(80% 90% at 50% -10%,rgba(216,195,147,.18),transparent 60%),linear-gradient(170deg,#211c12 0%,#12100b 60%,#0a0a0b 100%);border-color:#5a4b2e}
+.kicker i{box-shadow:none;animation:none;background:var(--red)}
+.venue b{color:#ece6da}
+.tile svg{filter:none;stroke:var(--gold)}
+.tile:after{background:linear-gradient(90deg,rgba(191,160,98,.6),transparent)}
+.btn{color:#17130b;background:linear-gradient(180deg,#d3b87d,#b99b5c);box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
+.btn:after{display:none}
+.btn:active{filter:brightness(1.05)}
+.btn.sec{color:var(--text);background:#1c1d22;box-shadow:inset 0 0 0 1px rgba(191,160,98,.22)}
+.btn.live{color:#f3e9e2;background:linear-gradient(180deg,#b14a40,#8f3730);animation:none;text-shadow:none}
+.mini{background:#221e15;box-shadow:inset 0 0 0 1px rgba(191,160,98,.55)}
+.chip.on{background:#c7ab6f;color:#16120a}
+.chip{color:#9a958b}
+.bar>i{background:linear-gradient(90deg,var(--gold3),var(--gold));box-shadow:none}
+.bar>b{background:#d8d2c6;box-shadow:none}
+.bar.fat>i{background:linear-gradient(90deg,#5f9a78,#c09a52,#b8453c)}
+.bar.heat>i{background:linear-gradient(90deg,#6e211c,var(--red),var(--ember))}
+.war>i{background:linear-gradient(90deg,#7d6536,#cdb57f)}
+.war>i:after{background:#e2ddd2;box-shadow:none}
+.slot .num{background:#b99b5c;color:#16120a}
+.slot.done{background:var(--grunge),linear-gradient(90deg,rgba(191,160,98,.07),transparent 50%),linear-gradient(180deg,#18191d,#111215)}
+.stars{text-shadow:none}
+.badge.you{background:#c7ab6f}
+.card.belt{background:var(--grain),radial-gradient(90% 120% at 50% 0%,rgba(216,195,147,.07),transparent 60%),linear-gradient(180deg,#18160f,#0f0e0b);border-color:#3a3122}
+.card.warn{background:linear-gradient(180deg,#1f1611,#15100c);border-color:#4d3322}
+.sheet{background:var(--grunge),linear-gradient(180deg,#16171b 0%,#0e0f12 100%);border-top-color:rgba(191,160,98,.6)}
+.choice{background:#15161a;border-color:#2e2a22}
+.choice .key{background:#c7ab6f}
+.outcome.ok{background:linear-gradient(90deg,rgba(116,184,145,.14),rgba(116,184,145,.03))}
+.outcome.no{background:linear-gradient(90deg,rgba(208,123,114,.14),rgba(208,123,114,.03))}
+.score div.me{background:linear-gradient(180deg,rgba(191,160,98,.1),rgba(0,0,0,.3))}
+.wc.t1:before{box-shadow:inset 0 0 0 2px #cdb27a}
+.wc.t2:before{box-shadow:inset 0 0 0 2px #9ea6b0}
+.wc.t3:before{box-shadow:inset 0 0 0 2px #8a6444}
+.wc.t1:after{display:none}
+.wc.champ .o{background:#c7ab6f}
+.wc.sel{outline-color:var(--gold)}
+.why.up{color:var(--good);background:rgba(116,184,145,.1)}.why.dn{color:var(--bad);background:rgba(208,123,114,.1)}
 </style>
 </head>
 <body>
@@ -624,7 +678,7 @@ function saveImg(){const cur=IMG;(IMGREADY||Promise.resolve()).then(async()=>{
   const puts=Object.entries(cur).filter(([k,v])=>PSAVED[k]!==v),dels=Object.keys(PSAVED).filter(k=>!(k in cur));if(!puts.length&&!dels.length)return;
   try{await idbWrite(puts,dels);puts.forEach(([k,v])=>PSAVED[k]=v);dels.forEach(k=>delete PSAVED[k])}catch(e){toast("Couldn't save that photo — device storage is full.")}});
  return true}
-const SCOL={fl:['#29b6ff','#08243f'],te:['#a98bff','#1f1245'],br:['#ff5b4d','#3d0b0b'],pw:['#ffa733','#3f1f03'],sh:['#ff5fcf','#3a0b33']};
+const SCOL={fl:['#4c7fa3','#0d1b27'],te:['#7a6ea6','#171327'],br:['#a55a50','#231211'],pw:['#a8804b','#23180c'],sh:['#9c5c86','#221321']};
 function initials(n){return n.normalize('NFD').replace(/[^A-Za-z ]/g,'').split(' ').filter(Boolean).map(x=>x[0]).join('').slice(0,2).toUpperCase()}
 function portrait(w){if(IMG[w.id])return `<img src="${IMG[w.id]}" alt="">`;const rp=repoPhoto(w);if(rp)return `<img src="${rp}" alt="" loading="lazy">`;const c=SCOL[w.st]||SCOL.sh;const sw=w.st==='pw'?42:w.st==='fl'?30:35;const f=w.g==='F';
  return `<svg viewBox="0 0 120 160" preserveAspectRatio="xMidYMid slice"><defs><radialGradient id="pg-${w.st}" cx="50%" cy="30%" r="80%"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></radialGradient></defs><rect width="120" height="160" fill="url(#pg-${w.st})"/><path d="M-20 130 L140 20 M-20 152 L140 42" stroke="#f3d77a" stroke-opacity=".16" stroke-width="7"/><text x="60" y="64" text-anchor="middle" font-family="Impact,Arial Black,sans-serif" font-size="60" fill="#fff" fill-opacity=".2">${initials(w.name)}</text><g fill="#070707" fill-opacity=".88">${f?'<path d="M60 52c-17 0-25 13-25 28 0 12-3 22-7 32h64c-4-10-7-20-7-32 0-15-8-28-25-28z"/>':''}<circle cx="60" cy="${f?77:75}" r="${f?17:19}"/><path d="M${60-sw} 162C${60-sw} 120 ${60-sw*.55} 102 60 101C${60+sw*.55} 102 ${60+sw} 120 ${60+sw} 162Z"/></g></svg>`}
