@@ -595,8 +595,22 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 let S=null;
 let IMG={},PK=null,ME=null;
-function loadImg(){try{IMG=JSON.parse(localStorage.getItem(KEY+'_img')||'{}')||{}}catch(e){IMG={}}}
-function saveImg(){try{localStorage.setItem(KEY+'_img',JSON.stringify(IMG));return true}catch(e){toast('Device storage is full — try fewer photos.');return false}}
+/* Photos live in IndexedDB (hundreds of MB) instead of localStorage (~5 MB, shared with the save). */
+let PDB=null,PSAVED={},IMGREADY=null;
+function idb(){if(PDB)return PDB;PDB=new Promise((res,rej)=>{if(typeof indexedDB==='undefined')return rej('no idb');const r=indexedDB.open('allelitegm',1);r.onupgradeneeded=()=>r.result.createObjectStore('img');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});return PDB}
+function idbAll(){return idb().then(db=>new Promise((res,rej)=>{const o={};const t=db.transaction('img','readonly');const c=t.objectStore('img').openCursor();c.onsuccess=()=>{const k=c.result;if(k){o[k.key]=k.value;k.continue()}else res(o)};c.onerror=()=>rej(c.error)}))}
+function idbWrite(puts,dels){return idb().then(db=>new Promise((res,rej)=>{const t=db.transaction('img','readwrite');const st=t.objectStore('img');puts.forEach(([k,v])=>st.put(v,k));dels.forEach(k=>st.delete(k));t.oncomplete=()=>res();t.onerror=t.onabort=()=>rej(t.error)}))}
+function loadImg(){IMGREADY=(async()=>{let fromLS={};try{fromLS=JSON.parse(localStorage.getItem(KEY+'_img')||'{}')||{}}catch(e){}
+ try{const db=await idbAll();const n=Object.keys(fromLS).length;
+  if(n){const puts=Object.entries(fromLS).filter(([k])=>!db[k]);await idbWrite(puts,[]);puts.forEach(([k,v])=>db[k]=v);try{localStorage.removeItem(KEY+'_img')}catch(e){}}
+  IMG=db;PSAVED=Object.assign({},db);try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+ }catch(e){IMG=fromLS;PSAVED=null}
+ if(S)render()})();return IMGREADY}
+function saveImg(){const cur=IMG;(IMGREADY||Promise.resolve()).then(async()=>{
+  if(PSAVED===null){try{localStorage.setItem(KEY+'_img',JSON.stringify(cur))}catch(e){toast('Device storage is full — remove some photos.')}return}
+  const puts=Object.entries(cur).filter(([k,v])=>PSAVED[k]!==v),dels=Object.keys(PSAVED).filter(k=>!(k in cur));if(!puts.length&&!dels.length)return;
+  try{await idbWrite(puts,dels);puts.forEach(([k,v])=>PSAVED[k]=v);dels.forEach(k=>delete PSAVED[k])}catch(e){toast("Couldn't save that photo — device storage is full.")}});
+ return true}
 const SCOL={fl:['#29b6ff','#08243f'],te:['#a98bff','#1f1245'],br:['#ff5b4d','#3d0b0b'],pw:['#ffa733','#3f1f03'],sh:['#ff5fcf','#3a0b33']};
 function initials(n){return n.normalize('NFD').replace(/[^A-Za-z ]/g,'').split(' ').filter(Boolean).map(x=>x[0]).join('').slice(0,2).toUpperCase()}
 function portrait(w){if(IMG[w.id])return `<img src="${IMG[w.id]}" alt="">`;const rp=repoPhoto(w);if(rp)return `<img src="${rp}" alt="" loading="lazy">`;const c=SCOL[w.st]||SCOL.sh;const sw=w.st==='pw'?42:w.st==='fl'?30:35;const f=w.g==='F';

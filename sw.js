@@ -1,5 +1,5 @@
 // All Elite GM — offline support. Bump VERSION whenever you upload a new index.html.
-const VERSION = 'aegm-v5';
+const VERSION = 'aegm-v6';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
