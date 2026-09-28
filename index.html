@@ -306,6 +306,8 @@ function autoTraits(w){const rnd=seeded(w.id+'|'+w.name);const inTag=typeof S!==
   heatm:w.al==='h'&&w.mic>=70?3.5:w.al==='h'?1:.3,mouth:w.mic>=85?6:w.mic>=78?3:w.mic>=70?.6:0,crowd:w.al==='f'&&w.pop>=78?3.5:w.al==='f'?.6:0};
  const out=[];for(let n=0;n<2;n++){const c=Object.entries(wt).filter(([k,v])=>v>0&&!out.includes(k)&&!(k==='monster'&&out.includes('under'))&&!(k==='under'&&out.includes('monster')));const tot=c.reduce((s,x)=>s+x[1],0);let r=rnd()*tot;for(const [k,v] of c){r-=v;if(r<=0){out.push(k);break}}}
  return out}
+function feudInit(st){if(!st||st.fs)return;st.fs={};st.mh=st.mh||{};const now=(st.season-1)*SEASON+st.week;for(const k in st.heat)if(st.heat[k]>=20)st.fs[k]={start:now,paid:false,stale:false}}
+function showMigrate(){if(!S||S.fullShow)return;S.fullShow=true;S.showIdx=0;if(S.phase==='season'&&S.card)S.card={p:emptyCard(curShow().ppv),ai:null}}
 function dataUpdate(st){if(!st||!st.w||(st.dataV||1)>=DATA_V)return;let n=0;
  RAW.trim().split('\n').forEach(l=>{const x=mkW(l.trim());if(!st.w[x.id]){if(OUT[x.id])x.inj=OUT[x.id];st.w[x.id]=x;n++}});
  st.dataV=DATA_V;if(n)st.news.push({w:st.week,t:`🆕 Roster update (${DATA_AS_OF}): ${n} new arrivals joined free agency.`})}
@@ -720,6 +722,19 @@ const isChamp=id=>titlesOf(id).length>0;
 const signCost=w=>sal(w)*6+(w.fee||0);
 const resignCost=w=>sal(w)*4*(w.mor<30?2:1);
 function addHeat(h,a){h=h||0;return clamp(h+a*(1-h/115),0,100)}
+/* ---- feud engine ---- */
+const AW=()=>(S.season-1)*SEASON+S.week;
+function recentMeets(a,b){const l=(S.mh&&S.mh[key(a,b)])||[];const now=AW();return l.filter(w=>w<now&&now-w<=4)}
+function feudOf(a,b){return S.fs&&S.fs[key(a,b)]}
+function isStale(a,b){const f=feudOf(a,b);return !!(f&&f.stale)}
+const FTIER=[[20,'🔥 Rivalry brewing'],[45,'🔥🔥 Full-blown feud'],[75,'🔥🔥🔥 BLOOD FEUD']];
+function heatTier(h){let t=-1;FTIER.forEach(([v],i)=>{if(h>=v)t=i});return t}
+function bumpHeat(a,b,amt,notes,why){if(!S.fs)S.fs={};const k=key(a,b);const before=S.heat[k]||0;S.heat[k]=addHeat(before,amt);touch(k);const after=S.heat[k];
+ const t0=heatTier(before),t1=heatTier(after);const A=S.w[a],B=S.w[b];
+ if(t1>=0&&!S.fs[k])S.fs[k]={start:AW(),paid:false,stale:false};
+ if(t1>t0&&A&&B){const n=`${FTIER[t1][1]}: ${A.name} vs ${B.name}${why?' — '+why:''}`;notes.push(n);if(A.own==='p'||B.own==='p')news(n)}
+ return after-before}
+const fracTxt=x=>{const w=Math.floor(x+1e-9),r=x-w;const f=r>=.74?'¾':r>=.49?'½':r>=.24?'¼':'';return (w?w:'')+f||'0'};
 function touch(k){if(!S.touched.includes(k))S.touched.push(k)}
 function news(t){S.news.push({w:S.week,t});if(S.news.length>80)S.news.shift()}
 function inTeam(a,b){let v=0;for(const t of S.teams){if(t.m.includes(a)&&t.m.includes(b))v=Math.max(v,t.type==='team'?6:4)}return v}
@@ -755,7 +770,7 @@ function newGame(gm,rival,diff){
  TITLES.forEach(([id,n,kind,g,h,pr])=>S.titles[id]={id,n,kind,g,holders:h.slice(),prestige:pr,since:0,last:0});
  TEAMS.forEach(([n,type,m])=>S.teams.push({id:'t'+(S.nid++),n,type,m:m.filter(id=>S.w[id])}));
  ensureTraits(S);
- FEUDS.forEach(([a,b,h])=>{if(S.w[a]&&S.w[b])S.heat[key(a,b)]=h});
+ FEUDS.forEach(([a,b,h])=>{if(S.w[a]&&S.w[b])S.heat[key(a,b)]=h});S.fullShow=true;feudInit(S);
  for(const id in OUT)if(S.w[id])S.w[id].inj=OUT[id];S.dataV=DATA_V;
  for(let i=0;i<2;i++){const g=i?'F':'M';const r=makeRookie(pick(g==='M'?FIRST_M:FIRST_F)+' '+pick(LAST),g,pick(Object.keys(STYLE_N)),pick(['f','h']),'bluechip');r.own='ai';r.con=52;S.w[r.id]=r}
  news(`🎤 A new era begins. Rosters, champions and injuries are current as of ${DATA_AS_OF}. Draft your roster and win the fan war on the road to All In.`);
@@ -777,8 +792,9 @@ function finishDraft(){S.phase='season';
  S.card={p:emptyCard(curShow().ppv),ai:null};news('📋 The draft is complete. Week 1 is here!')}
 
 /* ===================== SHOWS ===================== */
-function curShow(){const ppv=S.showIdx===1&&PPVS[S.week];if(ppv)return {name:PPVS[S.week],ppv:true,pHour:0};const dyn=S.showIdx===0;const pFirst=(S.week%2===1)===dyn;return {name:dyn?'Dynamite':'Collision',ppv:false,pHour:pFirst?1:2}}
-function emptyCard(ppv){return ppv?[{k:'match',d:null},{k:'match',d:null},{k:'match',d:null},{k:'chal',d:null}]:[{k:'match',d:null},{k:'match',d:null},{k:'promo',d:null}]}
+function curShow(){if(PPVS[S.week])return {name:PPVS[S.week],ppv:true,mine:PPVS[S.week],theirs:PPVS[S.week]};return {name:'Dynamite',ppv:false,mine:'Dynamite',theirs:'Collision'}}
+const CARD_TV=['match','promo','match','match','promo','match'],CARD_PPV=['match','match','match','match','match','chal'];
+function emptyCard(ppv){return (ppv?CARD_PPV:CARD_TV).map(k=>({k,d:null}))}
 function usedIn(brand,except){const s=new Set();(S.card[brand]||[]).forEach((sl,i)=>{if(i===except||!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(id=>id&&s.add(id));if(sl.k==='chal'&&sl.d.c)s.add(sl.d.c)});return s}
 function validMatch(m){const f=m.sides.flat();return f.length&&f.every(id=>id&&S.w[id])&&new Set(f).size===f.length&&m.winner>=0&&m.winner<m.sides.length}
 function kindOk(kind,type){return kind==='singles'?['singles','triple','four'].includes(type):kind==='tag'?type==='tag':type==='trios'}
@@ -791,15 +807,19 @@ function rateMatch(m,ctx){ctx=ctx||{};
  let oc=0,on=0,hs=0,tc=0,tn=0;
  for(let i=0;i<sides.length;i++)for(let j=i+1;j<sides.length;j++)for(const a of sides[i])for(const b of sides[j]){oc+=chemOpp(a,b);hs+=heatOf(a.id,b.id);on++}
  for(const s of sides)for(let i=0;i<s.length;i++)for(let j=i+1;j<s.length;j++){tc+=chemTeam(s[i],s[j]);tn++}
- const chem=(on?oc/on:0)+(tn?tc/tn*.6:0);const heat=on?hs/on:0;
+ const chem=(on?oc/on:0)+(tn?tc/tn*.6:0);let heat=on?hs/on:0;
+ let pen=0,penWhy='',stale=false;const now=AW();
+ for(let i=0;i<sides.length;i++)for(let j=i+1;j<sides.length;j++)for(const a of sides[i])for(const b of sides[j]){const rm=(ctx.ppv&&heatOf(a.id,b.id)>=45)?[]:recentMeets(a.id,b.id);if(rm.length){const last=Math.max(...rm);const p=(now-last<=1?.5:.25)+.25*(rm.length-1);if(p>pen){pen=Math.min(1.25,p);penWhy=`${a.name} vs ${b.name} ${rm.length>1?rm.length+' times in the last month':now-last<=1?'just last week':(now-last)+' weeks ago'}`}}if(isStale(a.id,b.id))stale=true}
+ if(stale)heat*=.5;
  const st=STIPS[m.stip||'std'];const stipB=mean(w=>st.b[w.st]||0)+((m.stip||'std')!=='std'&&heat>=50?3:0);
  const t=m.title?S.titles[m.title]:null;const titleB=t?t.prestige*.05:0;
  const multi=m.type==='triple'||m.type==='four';const typeB=multi?mean(w=>w.st==='fl'?3:0):0;
  const traitB=mean(w=>(ctx.ppv&&hasT(w,'bigm')?3:0)+((multi||(m.stip||'std')==='ladder')&&hasT(w,'dare')?4:0));
  let score=ring*.5+pop*.2+chem+traitB+heat*(ctx.ppv?.25:.15)+stipB+titleB+typeB-mean(w=>w.fat)*.1+(ctx.ppv?4:0)+(ctx.allin?4:0);
  const toS=x=>clamp(Math.round((x-42)/9*4)/4,.25,5);const lo=toS(score-3),hi=toS(score+3);
+ score-=pen*2.25;
  if(!ctx.preview)score+=R(-3,3);
- return {stars:toS(score),lo,hi,heat,chem}}
+ return {stars:toS(score),lo:toS(score-3),hi:toS(score+3),heat,chem,pen,penWhy,stale}}
 function matchText(m){if(m.nc)return m.sides.map(sideName).join(' vs ')+' — No contest';const win=m.sides[m.winner];return `${sideName(win)} def. ${m.sides.filter((s,i)=>i!==m.winner).map(sideName).join(', ')}`}
 function matchSub(m){return MT[m.type].n+((m.stip||'std')!=='std'?' · '+STIPS[m.stip].n:'')+(m.title?' · '+S.titles[m.title].n+' title':'')}
 function vsLine(m){return m.sides.map(s=>s.every(Boolean)?sideName(s):'TBD').join(' vs ')}
@@ -812,7 +832,26 @@ function applyMatch(m,res,ctx,notes){
   w.mor=clamp(w.mor,0,100);
   const gap=w.pot-w.ring;if(gap>0)w.ring=Math.min(w.pot,w.ring+gap*.035*(.5+res.stars/4)*(gap>20?1.4:1)+(maxRing>w.ring+5?.3:.1));
   {const g=(res.stars-3)*.8+(m.nc?0:won?.8:-.3)+(ctx.ppv&&won?1.5:0);w.pop=clamp(w.pop+(g>0?g*(1-w.pop/110)*(hasT(w,'crowd')?1.3:1):g),1,100)}});
- for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j]){const k=key(a,b);S.heat[k]=addHeat(S.heat[k],(4+(res.stars>=4?3:0))*(hasT(S.w[a],'heatm')||hasT(S.w[b],'heatm')?1.3:1));if(ctx.ppv)S.heat[k]=Math.round(S.heat[k]*.5);touch(k);S.chem[k]=clamp((S.chem[k]||0)+(res.stars>=3.75?.5:res.stars<2?-1:.15),-5,6)}
+ if(!S.mh)S.mh={};const said=new Set();const pa=m.sides[0][0],pb=m.sides[1]&&m.sides[1][0];const hk=pb?key(pa,pb):null;const h0=hk?(S.heat[hk]||0):0;const n0=notes.length;
+ for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j]){const k=key(a,b);const A=S.w[a],B=S.w[b];
+  const first=!(S.mh[k]&&S.mh[k].length);
+  let g=3+Math.max(0,res.stars-2.5)*2.5;const why=[];
+  if(A.al!==B.al){g*=1.4}else g*=.75;
+  if(m.title){g+=3;why.push('title on the line')}
+  if(m.nc){g+=4;why.push('no clean finish')}
+  if(m.ev&&m.ev.notes&&m.ev.notes.length)g+=2;
+  if(res.stars>=4)why.push(`after a ${stars(res.stars)} match`);
+  if(hasT(A,'heatm')||hasT(B,'heatm'))g*=1.3;
+  if(res.pen){g*=.35}
+  if(isStale(a,b))g*=.4;
+  if(!ctx.ppv)bumpHeat(a,b,g,said.has(k)?[]:notes,why.join(', ')||(first?'their first encounter':'the rivalry grows'));
+  else{const f=S.fs&&S.fs[k];if((S.heat[k]||0)>=35&&f&&!f.paid&&!said.has('pay')){f.paid=true;const n=`💥 Feud payoff: ${A.name} vs ${B.name} delivered on the big stage.`;notes.push(n);news(n);said.add('pay')}
+   S.heat[k]=Math.round((S.heat[k]||0)*.5);touch(k)}
+  said.add(k);
+  S.mh[k]=((S.mh[k]||[]).concat([AW()])).slice(-6);
+  S.chem[k]=clamp((S.chem[k]||0)+(res.stars>=3.75?.5:res.stars<2?-1:.15),-5,6)}
+ if(hk&&!ctx.ppv&&S.w[pa].own==='p'&&notes.length===n0){const h1=S.heat[hk]||0;const d=Math.round(h1-h0);const A=S.w[pa],B=S.w[pb];
+  if(d>=1)notes.push(`📈 ${A.name} vs ${B.name} heat ${Math.round(h0)} → ${Math.round(h1)}${res.pen?' (rematch — it barely moved)':h0<1?' — something may be starting here':h1>=20?'':' — keep building it'}`)}
  for(const s of m.sides)for(let i=0;i<s.length;i++)for(let j=i+1;j<s.length;j++){const k=key(s[i],s[j]);S.chem[k]=clamp((S.chem[k]||0)+.4,-5,6)}
  all.forEach(id=>{const w=S.w[id];const p=(Math.max(0,w.fat-55)/250+.004)*st.inj*(hasT(w,'iron')?.4:1)*(hasT(w,'dare')?1.4:1);if(Math.random()<p){w.inj=RI(2,6);const n=`🚑 ${w.name} was injured and will miss ${w.inj} weeks.`;notes.push(n);news(n)}});
  if(m.title&&S.titles[m.title]&&m.nc){notes.push(`🏆 No contest — the ${S.titles[m.title].n} title stays put.`)}
@@ -843,13 +882,13 @@ function aiChoose(ch,ctx){let best=ch[0],bv=-1e9;ch.forEach(c=>{if(c.turn&&Math.
 function runAutoPromo(p,brand){const ctx=promoCtx(p,brand);const st=newSt();roll(aiChoose(openScene(p).ch,ctx),ctx,st);roll(aiChoose(pickTwist(p,ctx).ch,ctx),ctx,st);finalizePromo(p,ctx,st)}
 function applyPromo(p,notes){const r=p.res;const A=S.w[p.a];if(!A||!r)return;
  [p.a,p.b].filter(Boolean).forEach((id,i)=>{const w=S.w[id];if(!w)return;{const g=r.pop*(i?.6:1)*.7;w.pop=clamp(w.pop+(g>0?g*(1-w.pop/110):g),1,100)}if(w.mic<w.potM)w.mic=Math.min(w.potM,w.mic+(w.potM-w.mic)*.05+.15);w.mor=clamp(w.mor+2,0,100);w.last=S.week});
- if(p.b&&S.w[p.b]){const k=key(p.a,p.b);if(r.heat>0){S.heat[k]=addHeat(S.heat[k],r.heat*(hasT(A,'heatm')||hasT(S.w[p.b],'heatm')?1.3:1));touch(k)}if(r.chem)S.chem[k]=clamp((S.chem[k]||0)+r.chem*.5,-5,6)}
- if(r.x&&r.hx>0&&S.w[r.x]){const k=key(p.a,r.x);S.heat[k]=addHeat(S.heat[k],r.hx*(hasT(A,'heatm')?1.3:1));touch(k);notes.push(`🔥 New rivalry brewing: ${A.name} vs ${S.w[r.x].name}`)}
+ if(p.b&&S.w[p.b]){const k=key(p.a,p.b);if(r.heat>0){bumpHeat(p.a,p.b,r.heat*(hasT(A,'heatm')||hasT(S.w[p.b],'heatm')?1.3:1)*(isStale(p.a,p.b)?.4:1),notes,'after a heated '+PT[p.type].n.toLowerCase())}if(r.chem)S.chem[k]=clamp((S.chem[k]||0)+r.chem*.5,-5,6)}
+ if(r.x&&r.hx>0&&S.w[r.x]){const k=key(p.a,r.x);if(!bumpHeat(p.a,r.x,r.hx*(hasT(A,'heatm')?1.3:1),notes,'after an interruption')||heatTier(S.heat[k])<0)notes.push(`👀 Seeds planted: ${A.name} and ${S.w[r.x].name} have words`)}
  if(r.turn){A.al=A.al==='f'?'h':'f';const n=`🔄 ${A.name} has turned ${A.al==='f'?'FACE':'HEEL'}!`;notes.push(n);news(n)}}
 
 /* ===================== AI BOOKER ===================== */
 function autoBook(brand,show,extUsed){
- const used=new Set(extUsed||[]);const card=[];const nM=show.ppv?3:2;
+ const used=new Set(extUsed||[]);const card=[];const nM=show.ppv?5:4;
  const roster=()=>Object.values(S.w).filter(w=>w.own===brand&&w.inj===0&&!used.has(w.id));
  const fresh=()=>{const r=roster();const f=r.filter(w=>w.fat<70);return f.length>=4?f:r};
  const mk=(type,sides,title)=>{const m={type,stip:'std',sides,winner:0,title:title||''};
@@ -864,29 +903,32 @@ function autoBook(brand,show,extUsed){
  const tl=shuffle(Object.values(S.titles).filter(t=>t.holders.length&&t.holders.every(h=>S.w[h]&&S.w[h].own===brand&&S.w[h].inj===0)&&(show.ppv||S.week-t.last>=3||Math.random()<.25)));
  const vac=Object.values(S.titles).filter(t=>!t.holders.length&&Math.random()<(show.ppv?.9:.5));
  for(const t of vac){if(card.length>=nM-1)break;const per=t.kind==='singles'?1:t.kind==='tag'?2:3;const pool=fresh().filter(w=>w.g===t.g&&(per>1||!titlesOf(w.id).some(x=>x.kind==='singles')));let sides=null;
-  if(per===1){const top=pool.sort((a,b)=>b.pop-a.pop).slice(0,6);if(top.length>=2){const a=top[0];const b=top.slice(1).sort((x,y)=>chemOpp(a,y)-chemOpp(a,x))[0];sides=[[a.id],[b.id]]}}
+  if(per===1){const top=pool.sort((a,b)=>b.pop-a.pop).slice(0,6);if(top.length>=2){const a=top[0];const b=top.slice(1).sort((x,y)=>(chemOpp(a,y)-recentMeets(a.id,y.id).length*20)-(chemOpp(a,x)-recentMeets(a.id,x.id).length*20))[0];sides=[[a.id],[b.id]]}}
   else{const u=teamUnits(pool,per).filter(a=>a.every(id=>S.w[id].g===t.g));const two=[];for(const a of shuffle(u)){if(!two.length||!a.some(id=>two[0].includes(id)))two.push(a);if(two.length===2)break}
    if(two.length===2)sides=two;else if(pool.length>=per*2){const ps=pool.sort((a,b)=>b.pop-a.pop).slice(0,per*2).map(w=>w.id);sides=[ps.slice(0,per),ps.slice(per)]}}
   if(sides&&!sides.flat().some(id=>used.has(id)))mk(per===1?'singles':per===2?'tag':'trios',sides,t.id)}
  for(const t of tl){if(card.length>=nM)break;if(t.holders.some(h=>used.has(h)))continue;
   const per=t.kind==='singles'?1:t.kind==='tag'?2:3;const pool=fresh().filter(w=>w.g===t.g&&!t.holders.includes(w.id)&&(per>1||!titlesOf(w.id).some(x=>x.kind==='singles')));let opp=null;
-  if(per===1){let bv=-1e9;pool.forEach(w=>{const v=heatOf(w.id,t.holders[0])*1.5+w.pop+R(0,10);if(v>bv){bv=v;opp=[w.id]}})}
-  else{const u=teamUnits(pool,per,t.holders).filter(a=>a.every(id=>S.w[id].g===t.g));if(u.length)opp=pick(u);else if(pool.length>=per)opp=pool.sort((a,b)=>b.pop-a.pop).slice(0,per).map(w=>w.id)}
+  if(per===1){let bv=-1e9;pool.forEach(w=>{const rm=recentMeets(w.id,t.holders[0]).length;const v=heatOf(w.id,t.holders[0])*1.5*(isStale(w.id,t.holders[0])?.3:1)+w.pop+R(0,10)-(show.ppv&&heatOf(w.id,t.holders[0])>=45?0:rm*40);if(v>bv){bv=v;opp=[w.id]}})}
+  else{const u=teamUnits(pool,per,t.holders).filter(a=>a.every(id=>S.w[id].g===t.g));const fr=u.filter(a=>!a.some(id=>t.holders.some(h=>recentMeets(id,h).length)));if(fr.length)opp=pick(fr);else if(u.length)opp=pick(u);else if(pool.length>=per)opp=pool.sort((a,b)=>b.pop-a.pop).slice(0,per).map(w=>w.id)}
   if(opp&&opp.length===per)mk(per===1?'singles':per===2?'tag':'trios',[t.holders.slice(),opp],t.id)}
  let guard=0;
  while(card.length<nM&&guard++<12){const pool=fresh();
   if(Math.random()<.3){const u=teamUnits(pool,2).filter(a=>S.w[a[0]].g===S.w[a[1]].g);const pair=[];for(const a of shuffle(u)){if(!pair.length)pair.push(a);else if(S.w[a[0]].g===S.w[pair[0][0]].g&&!a.some(id=>pair[0].includes(id))){pair.push(a);break}}
-   if(pair.length===2){mk('tag',pair);continue}}
+   if(pair.length===2&&!pair[0].some(a=>pair[1].some(b=>recentMeets(a,b).length))){mk('tag',pair);continue}}
   const top=pool.slice().sort((a,b)=>b.pop-a.pop).slice(0,14);let bp=null,bv=-1e9;
-  for(let i=0;i<top.length;i++)for(let j=i+1;j<top.length;j++){const a=top[i],b=top[j];if(a.g!==b.g||inTeam(a.id,b.id))continue;const v=heatOf(a.id,b.id)*1.3+chemOpp(a,b)*1.5+(a.pop+b.pop)/2+R(0,15);if(v>bv){bv=v;bp=[a,b]}}
+  for(let i=0;i<top.length;i++)for(let j=i+1;j<top.length;j++){const a=top[i],b=top[j];if(a.g!==b.g||inTeam(a.id,b.id))continue;const v=heatOf(a.id,b.id)*1.3*(isStale(a.id,b.id)?.3:1)+chemOpp(a,b)*1.5+(a.pop+b.pop)/2+R(0,15)-(show.ppv&&heatOf(a.id,b.id)>=45?0:recentMeets(a.id,b.id).length*60);if(v>bv){bv=v;bp=[a,b]}}
   if(!bp)break;mk('singles',[[bp[0].id],[bp[1].id]])}
- if(show.ppv)card.push({k:'chal',d:autoChal(brand,used)});else card.push({k:'promo',d:autoPromo(brand)});
- return card}
+ const ms=card.slice().reverse();/* strongest-built (title) matches first in the list -> put them last as main events */
+ if(show.ppv){ms.push({k:'chal',d:autoChal(brand,used)});return ms}
+ const p1=autoPromo(brand,new Set()),p2=autoPromo(brand,new Set([p1&&p1.a,p1&&p1.b].filter(Boolean)));
+ const out=[];let mi=0;CARD_TV.forEach(k=>{if(k==='match'){if(ms[mi])out.push(ms[mi++])}else out.push({k:'promo',d:k==='promo'&&out.filter(x=>x.k==='promo').length===0?p1:p2})});
+ while(mi<ms.length)out.push(ms[mi++]);return out}
 function autoChal(brand,used){if(Math.random()>.6)return null;const other=brand==='p'?'ai':'p';
  const ts=Object.values(S.titles).filter(t=>t.kind==='singles'&&t.holders.length&&S.w[t.holders[0]].own===other&&!S.w[t.holders[0]].inj).sort((a,b)=>b.prestige-a.prestige);
  for(const t of ts){const c=Object.values(S.w).filter(w=>w.own===brand&&!w.inj&&w.g===t.g&&!used.has(w.id)&&!isChamp(w.id)).sort((a,b)=>(b.pop+b.ring)-(a.pop+a.ring))[0];if(c)return {title:t.id,c:c.id}}return null}
-function autoPromo(brand){const r=Object.values(S.w).filter(w=>w.own===brand&&w.inj===0);if(!r.length)return null;
- let bp=null,bv=0;for(const k in S.heat){const [a,b]=k.split('|');const A=S.w[a],B=S.w[b];if(A&&B&&A.own===brand&&B.own===brand&&!A.inj&&!B.inj&&S.heat[k]>bv){bv=S.heat[k];bp=[A,B]}}
+function autoPromo(brand,ex){ex=ex||new Set();const r=Object.values(S.w).filter(w=>w.own===brand&&w.inj===0&&!ex.has(w.id));if(!r.length)return null;
+ let bp=null,bv=0;for(const k in S.heat){const [a,b]=k.split('|');const A=S.w[a],B=S.w[b];if(A&&B&&A.own===brand&&B.own===brand&&!A.inj&&!B.inj&&!ex.has(a)&&!ex.has(b)&&S.heat[k]>bv){bv=S.heat[k];bp=[A,B]}}
  let p;
  if(bp&&Math.random()<.8){const [A,B]=bp.sort((x,y)=>y.mic-x.mic);const soon=PPVS[S.week]||PPVS[S.week+1];p={type:soon&&bv>35&&Math.random()<.5?'contract':pick(['callout','attack','interview','vignette']),a:A.id,b:B.id}}
  else{const top=r.sort((a,b)=>b.pop+b.mic-a.pop-a.mic)[RI(0,Math.min(3,r.length-1))];
@@ -897,17 +939,17 @@ function autoPromo(brand){const r=Object.values(S.w).filter(w=>w.own===brand&&w.
 /* ===================== AIRING ===================== */
 function airShow(){
  const show=curShow();const ctx={ppv:show.ppv,allin:show.ppv&&S.week===SEASON,name:show.name};
- if(!S.card.ai)S.card.ai=autoBook('ai',show,show.ppv?[]:null);
+ if(!S.card.ai)S.card.ai=autoBook('ai',show,null);
  {const ams=S.card.ai.filter(sl=>sl.k==='match'&&sl.d&&validMatch(sl.d));ams.forEach((sl,j)=>{if(sl.d.ev)return;const main=j===ams.length-1;if(Math.random()<(main?.45:.3)){const g=genEvent(sl.d,'ai',show.ppv||main);if(g)evRoll(aiEv(evChoices(g.e,sl.d,g.r),g.r),g.r,sl.d)}})}
- const out={title:show.name,week:S.week,ppv:show.ppv,blocks:[],notes:[],fans:{},ratings:{}};
+ const out={title:show.ppv?show.name:'Dynamite vs Collision',week:S.week,ppv:show.ppv,blocks:[],notes:[],fans:{},ratings:{}};
  const adj=b=>b==='ai'?({easy:-.25,normal:0,hard:.25}[S.diff]||0):0;
- const order=show.ppv?['p','ai']:(show.pHour===1?['p','ai']:['ai','p']);
+ const order=['p','ai'];
  const vals={p:[],ai:[]};
  order.forEach((b,bi)=>{const segs=[];
   S.card[b].forEach(sl=>{if(!sl.d)return;
-   if(sl.k==='match'){const m=sl.d;if(!validMatch(m)||m.sides.flat().some(id=>S.w[id].inj))return;const res=rateMatch(m,ctx);res.stars=clamp(res.stars+adj(b)+(m.ev?m.ev.stars:0),.25,5);const notes=m.ev?m.ev.notes.slice():[];const txt=matchText(m);applyMatch(m,res,ctx,notes);if(m.ev)applyEv(m.ev,notes);segs.push({txt,sub:matchSub(m),stars:res.stars,notes});vals[b].push(res.stars)}
+   if(sl.k==='match'){const m=sl.d;if(!validMatch(m)||m.sides.flat().some(id=>S.w[id].inj))return;const res=rateMatch(m,ctx);res.stars=clamp(res.stars+adj(b)+(m.ev?m.ev.stars:0),.25,5);const notes=m.ev?m.ev.notes.slice():[];if(res.pen)notes.push(`😴 Rematch fatigue: fans saw ${res.penWhy} (−${fracTxt(res.pen)}★)`);if(res.stale)notes.push('🥱 This feud has gone stale — the crowd is losing interest.');const txt=matchText(m);applyMatch(m,res,ctx,notes);if(m.ev)applyEv(m.ev,notes);segs.push({txt,sub:matchSub(m),stars:res.stars,notes});vals[b].push(res.stars)}
    else if(sl.k==='promo'&&sl.d.res){const p=sl.d;const notes=[];const st=clamp(p.res.stars+adj(b),.5,5);applyPromo(p,notes);segs.push({txt:S.w[p.a].name+(p.b&&S.w[p.b]?' & '+S.w[p.b].name:''),sub:PT[p.type].n,stars:st,notes});vals[b].push(st)}});
-  out.blocks.push({brand:b,label:show.ppv?`${b==='p'?S.gm:S.rival}'s card`:`Hour ${bi+1} — ${b==='p'?S.gm:S.rival}`,segs})});
+  out.blocks.push({brand:b,label:show.ppv?`${b==='p'?S.gm:S.rival}'s card`:`${b==='p'?'Dynamite':'Collision'} — ${b==='p'?S.gm:S.rival}`,segs})});
  const extra={p:0,ai:0};
  if(show.ppv){const segs=[];
   ['p','ai'].forEach(b=>{const sl=S.card[b].find(x=>x.k==='chal');const c=sl&&sl.d;if(!c)return;const t=S.titles[c.title];const ch=S.w[c.c];
@@ -918,17 +960,16 @@ function airShow(){
    extra[S.w[m.sides[m.winner][0]].own]+=8000;vals.p.push(res.stars);vals.ai.push(res.stars);
    segs.push({txt,sub:`Title challenge issued by ${b==='p'?S.gm:S.rival}`,stars:res.stars,notes})});
   if(segs.length)out.blocks.push({brand:'x',label:'Interpromotional title challenges',segs})}
- const W=[.3,.4,.3];const rt={};
- ['p','ai'].forEach(b=>{const v=vals[b];if(!v.length){rt[b]=.5;return}if(show.ppv)rt[b]=avg(v);else{let s=0,ws=0;v.forEach((x,i)=>{const w=W[i]||.3;s+=x*w;ws+=w});rt[b]=s/ws}});
+ const rt={};
+ ['p','ai'].forEach(b=>{const v=vals[b];if(!v.length){rt[b]=.5;return}let s=0,ws=0;v.forEach((x,i)=>{const w=i===v.length-1?1.6:1;s+=x*w;ws+=w});rt[b]=s/ws});
  out.blocks.forEach(bl=>{if(bl.brand!=='x')bl.rating=rt[bl.brand]});
  ['p','ai'].forEach(b=>{const r=rt[b];let d;const o=b==='p'?'ai':'p';
   if(show.ppv){d=Math.round((r-2.8)*20000*(ctx.allin?2:1))+extra[b];S.money[b]+=Math.round(S.fans[b]/1000)}
-  else{d=Math.round((r-2.5)*6000+(r>=4?3000:0));if(r>rt[o])d+=2000}
+  else{d=Math.round((r-2.5)*12000+(r>=4?6000:0));if(r>rt[o])d+=4000}
   const before=S.fans[b];S.fans[b]=Math.max(50000,S.fans[b]+d);out.fans[b]=S.fans[b]-before;out.ratings[b]=r});
  if(!show.ppv){const hw=rt.p>=rt.ai?'p':'ai';S.hourWins[hw]++;out.hourWin=hw}
  S.history.push({s:S.season,w:S.week,show:show.name,p:+rt.p.toFixed(2),ai:+rt.ai.toFixed(2)});
- S.showIdx++;
- if(S.showIdx>1){S.showIdx=0;endWeek(out.notes)}
+ S.showIdx=0;endWeek(out.notes);
  if(S.phase==='season')S.card={p:emptyCard(curShow().ppv),ai:null};
  S.last=out;save();return out}
 function leave(w,msg,notes){news(msg);notes.push(msg);w.own=null;w.con=0;w.mor=60;S.training=S.training.filter(t=>t.id!==w.id)}
@@ -948,7 +989,13 @@ function endWeek(notes){
  Object.values(S.titles).forEach(t=>{if(!t.holders.length)return;
   if(t.holders.some(h=>!S.w[h]||!S.w[h].own||S.w[h].inj>=4)||new Set(t.holders.map(h=>S.w[h]&&S.w[h].own)).size>1){const n=`🏆 The ${t.n} title has been vacated.`;t.holders=[];news(n);notes.push(n)}
   else if(wk-t.last>4)t.prestige=Math.max(10,t.prestige-2)});
- for(const k in S.heat){if(!T.has(k))S.heat[k]-=3;if(S.heat[k]<=0)delete S.heat[k]}S.touched=[];
+ if(!S.fs)S.fs={};
+ for(const k in S.heat){const f=S.fs[k];
+  if(f&&!f.paid&&!f.stale&&AW()-f.start>=8&&S.heat[k]>=20){f.stale=true;const [a,b]=k.split('|');if(S.w[a]&&S.w[b]&&(S.w[a].own==='p'||S.w[b].own==='p')){const n=`🥱 ${S.w[a].name} vs ${S.w[b].name} has dragged on for ${AW()-f.start} weeks without a PPV payoff — fans are tuning out.`;notes.push(n);news(n)}}
+  if(!T.has(k))S.heat[k]-=3;if(f&&f.stale)S.heat[k]-=4;
+  if(S.heat[k]<=0){delete S.heat[k];delete S.fs[k]}}
+ for(const k in S.fs)if(!S.heat[k])delete S.fs[k];
+ S.touched=[];
  ['p','ai'].forEach(b=>{const inc=Math.round(S.fans[b]/2000+220),pay=payroll(b);S.money[b]+=inc-pay;
   if(b==='p'&&S.money.p<0){notes.push('💸 You are in the red — morale is slipping.');ownList('p').forEach(w=>w.mor=clamp(w.mor-2,0,100))}});
  const aiN=ownList('ai').length;
@@ -961,7 +1008,7 @@ function endWeek(notes){
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function load(){try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){return null}}
 function exportSave(){const blob=new Blob([JSON.stringify(Object.assign({},S,{__img:IMG}))],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`tony-khan-sim-s${S.season}-w${S.week}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);toast('Save file exported.')}
-function importSave(){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.w||!d.titles||!d.phase)throw 0;if(d.__img){IMG=d.__img;delete d.__img;saveImg()}S=d;dataUpdate(S);ensureTraits(S);save();loadRepoPhotos();closeModal();tab='home';render();toast('Save loaded.')}catch(e){toast('That file is not a valid save.')}};r.readAsText(f)};i.click()}
+function importSave(){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.w||!d.titles||!d.phase)throw 0;if(d.__img){IMG=d.__img;delete d.__img;saveImg()}S=d;dataUpdate(S);ensureTraits(S);feudInit(S);showMigrate();save();loadRepoPhotos();closeModal();tab='home';render();toast('Save loaded.')}catch(e){toast('That file is not a valid save.')}};r.readAsText(f)};i.click()}
 function resetGame(){if(!confirm('Start a new game? Your current save on this device will be replaced. Export it first if you want to keep it.'))return;try{localStorage.removeItem(KEY)}catch(e){}S=null;closeModal();render()}
 
 /* ===================== UI ===================== */
@@ -971,9 +1018,9 @@ roster:sv('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-4 3.2-6 6.5-6s6 2 
 titles:sv('<path d="M2 9h4l2-3h8l2 3h4v6h-4l-2 3H8l-2-3H2z"/><circle cx="12" cy="12" r="2.6"/>'),office:sv('<rect x="3" y="7" width="18" height="13" rx="1.5"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 13h18"/>'),
 star:sv('<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>')};
 const VENUES=[['Heritage Bank Center','Cincinnati, OH'],['Nationwide Arena','Columbus, OH'],['Rocket Arena','Cleveland, OH'],['Gainbridge Fieldhouse','Indianapolis, IN'],['KFC Yum! Center','Louisville, KY'],['Little Caesars Arena','Detroit, MI'],['PPG Paints Arena','Pittsburgh, PA'],['Bridgestone Arena','Nashville, TN'],['Enterprise Center','St. Louis, MO'],['NOW Arena','Hoffman Estates, IL']];
-function venueOf(){return VENUES[((S.season-1)*3+(S.week-1)*2+S.showIdx)%VENUES.length]}
+function venueOf(){return VENUES[((S.season-1)*3+(S.week-1))%VENUES.length]}
 function poster(sh,inner){const v=venueOf();const cls=sh.ppv?'ppv':sh.name==='Collision'?'col':'dyn';
- return `<div class="card showcard ${cls}"><div class="wm">${esc(sh.ppv?sh.name:v[1].split(',')[0])}</div><div class="kicker"><i></i>${sh.ppv?'Pay-per-view · Week '+S.week+' of '+SEASON:`Week ${S.week} of ${SEASON} · ${sh.name==='Dynamite'?'Wednesday':'Saturday'} night`}</div><div class="showname">${esc(sh.name)}</div><div class="venue">${sh.ppv?'<b>Live on pay-per-view</b>':`<b>${esc(v[0])}</b> · ${esc(v[1])}`}</div>${inner||''}</div>`}
+ return `<div class="card showcard ${cls}"><div class="wm">${esc(sh.ppv?sh.name:v[1].split(',')[0])}</div><div class="kicker"><i></i>${sh.ppv?'Pay-per-view · Week '+S.week+' of '+SEASON:`Week ${S.week} of ${SEASON} · Ratings war`}</div><div class="showname">${esc(sh.name)}</div>${!sh.ppv&&sh.theirs?`<div class="venue" style="margin-top:-2px">vs <b>${esc(S.rival)}'s ${esc(sh.theirs)}</b></div>`:''}<div class="venue">${sh.ppv?'<b>Live on pay-per-view</b>':`<b>${esc(v[0])}</b> · ${esc(v[1])}`}</div>${inner||''}</div>`}
 function tile(on,icon,t,sub,em){return `<button class="tile" onclick="${on}">${icon}<b>${t}</b><span>${sub}</span><em>${em}</em></button>`}
 let ANIM=true;
 let tab='home',rf='mine',rs='ovr',df='all',ds='ovr',ED=null,PE=null,PS=null,CE=null,aiT=null;
@@ -1079,9 +1126,9 @@ function homeView(){const sh=curShow();const np=nextPPV();const pp=S.fans.p/(S.f
  const tired=mine.filter(w=>w.fat>=60);if(tired.length)al.push(`🔋 Worn down (injury risk): ${tired.map(w=>esc(w.name)).join(', ')}`);
  const fs=feudList('p').slice(0,5);
  const held=Object.values(S.titles).filter(t=>t.holders.length&&S.w[t.holders[0]]&&S.w[t.holders[0]].own==='p').length;
- return `${poster(sh,`<div class="venue mt" style="color:#e9d9b0">${sh.ppv?'Book 3 matches + an optional title challenge':`You book <b>Hour ${sh.pHour}</b> · ${esc(S.rival)} books Hour ${3-sh.pHour}`}</div><button class="btn mt" onclick="go('book')">Book the show ▸</button>${np&&!sh.ppv?`<div class="venue mt">Next PPV: <b>${np.n}</b> · ${np.in===0?'this Saturday':`in ${np.in} week${np.in>1?'s':''}`}</div>`:''}`)}
+ return `${poster(sh,`<div class="venue mt" style="color:#e9d9b0">${sh.ppv?`You and ${esc(S.rival)} each book a full PPV card — 5 matches + an optional title challenge`:`You book all of <b>Dynamite</b> · ${esc(S.rival)} books <b>Collision</b> — head to head in the ratings`}</div><button class="btn mt" onclick="go('book')">Book the show ▸</button>${np&&!sh.ppv?`<div class="venue mt">Next PPV: <b>${np.n}</b> · ${np.in===0?'this Saturday':`in ${np.in} week${np.in>1?'s':''}`}</div>`:''}`)}
  <div class="tiles">${tile("go('roster')",ICON.roster,'Roster',`${mine.length} signed · ${mine.filter(w=>w.inj).length} injured`,mine.length)}${tile("go('titles')",ICON.titles,'Titles',`You hold ${held} of ${Object.keys(S.titles).length}`,held)}${tile("go('office')",ICON.office,'Front Office',`Bank ${money(S.money.p)}`,'$')}${S.last?tile('showResults()',ICON.star,'Last Show',`${esc(S.last.title)} · <span class="stars">${stars(S.last.ratings?S.last.ratings.p:0)}</span>`,'★'):tile("go('office')",ICON.star,'How to Play','Ratings, feuds & fans','?')}</div>
- <div class="card"><div class="h small">Brand war</div><div class="warnames"><div><div class="muted tiny">YOU</div><b class="gold">${esc(S.gm)}</b></div><span class="vsdot">VS</span><div class="r"><div class="muted tiny">RIVAL</div><b>${esc(S.rival)}</b></div></div><div class="war"><i style="width:${pp}%"></i></div><div class="row sb muted"><span><b class="gold">${fmtFans(S.fans.p)}</b> fans</span><span>Hours won ${S.hourWins.p}–${S.hourWins.ai}</span><span>${fmtFans(S.fans.ai)} fans</span></div></div>
+ <div class="card"><div class="h small">Brand war</div><div class="warnames"><div><div class="muted tiny">YOU</div><b class="gold">${esc(S.gm)}</b></div><span class="vsdot">VS</span><div class="r"><div class="muted tiny">RIVAL</div><b>${esc(S.rival)}</b></div></div><div class="war"><i style="width:${pp}%"></i></div><div class="row sb muted"><span><b class="gold">${fmtFans(S.fans.p)}</b> fans</span><span>Ratings wins ${S.hourWins.p}–${S.hourWins.ai}</span><span>${fmtFans(S.fans.ai)} fans</span></div></div>
  ${al.length?`<div class="card warn">${al.map(a=>`<div style="margin:3px 0">${a}</div>`).join('')}</div>`:''}
  <div class="card"><div class="h small">Hottest feuds</div>${fs.length?fs.map(f=>`<div class="feud"><div class="row sb"><span class="frow">${face(f.a)}${face(f.b)}<span>${esc(f.a.name)} vs ${esc(f.b.name)}</span></span><span class="muted">🔥 ${Math.round(f.h)}</span></div><div class="bar heat"><i style="width:${f.h}%"></i></div></div>`).join(''):'<div class="muted">No feuds yet. Put the same wrestlers in promos and matches week after week to build heat, then pay it off at a PPV.</div>'}</div>
  <div class="card"><div class="h small">The Wire</div>${S.news.slice(-15).reverse().map(n=>`<div class="news"><span class="muted">W${n.w}</span> ${esc(n.t)}</div>`).join('')}</div>`}
@@ -1096,10 +1143,10 @@ function bookView(){const sh=curShow();const c=S.card.p;const ready=c.every(sl=>
   if(sl.k==='promo'){if(!sl.d)return `<button class="slot" onclick="openPromo(${i})"><span class="num">${i+1}</span><div class="lbl">Promo segment</div><div class="add">+ Book a promo</div></button>`;
    const p=sl.d;return `<button class="slot done" onclick="openPromo(${i})"><span class="num">${i+1}</span><div class="lbl">Promo · ${PT[p.type].n} · Taped ✓</div><div><b>${esc(S.w[p.a].name)}${p.b?' & '+esc(S.w[p.b].name):''}</b></div><div class="stars">${stars(p.res.stars)}</div></button>`}
   const d=sl.d;return `<button class="slot ${d?'done':''}" onclick="openChal(${i})"><span class="num">${i+1}</span><div class="lbl">Title challenge (optional)</div>${d?`<div><b>${esc(S.w[d.c].name)}</b> challenges for the <b>${esc(S.titles[d.title].n)}</b> title</div>`:'<div class="add">+ Challenge for a title the rival brand holds</div>'}</button>`}).join('');
- return `${poster(sh,`<div class="venue mt" style="color:#e9d9b0">${sh.ppv?'Your half of the card':'Your hour: <b>Hour '+sh.pHour+'</b>'}</div>`)}${slots}
- <button class="btn live" ${ready?'':'disabled'} onclick="goLive()">Go live ▸</button><p class="muted center">${ready?'':'Fill every slot to go live. '}${esc(S.rival)} books the other ${sh.ppv?'half of the card':'hour'}.</p>`}
+ return `${poster(sh,`<div class="venue mt" style="color:#e9d9b0">${sh.ppv?'Your full PPV card':`Your show: <b>Dynamite</b> · ${esc(S.rival)} is booking Collision`}</div>`)}${slots}
+ <button class="btn live" ${ready?'':'disabled'} onclick="goLive()">Go live ▸</button><p class="muted center">${ready?'':'Fill every slot to go live. '}${esc(S.rival)} books their own ${sh.ppv?'card':'show, Collision'}. The best overall show wins the week.</p>`}
 function goLive(){const c=S.card.p;if(!c.every(sl=>sl.k==='chal'||sl.d))return;const sh=curShow();const ms=c.filter(sl=>sl.k==='match'&&sl.d);const q=[];
- ms.forEach((sl,j)=>{const m=sl.d;delete m.ev;delete m.nc;const main=j===ms.length-1;if(Math.random()<(main?.7:.45)){const g=genEvent(m,'p',sh.ppv||main);if(g)q.push({m,g,n:j+1,main})}});
+ ms.forEach((sl,j)=>{const m=sl.d;delete m.ev;delete m.nc;const main=j===ms.length-1;if(Math.random()<(main?.65:.3)){const g=genEvent(m,'p',sh.ppv||main);if(g)q.push({m,g,n:j+1,main})}});
  if(!q.length)return finishLive();ME={q,k:0,out:null,show:sh.name};renderME()}
 function finishLive(){ME=null;airShow();showResults();render()}
 function renderME(){const it=ME.q[ME.k];const {m,g}=it;const r=g.r;
@@ -1111,11 +1158,11 @@ function meChoose(ci){const it=ME.q[ME.k];const ch=evChoices(it.g.e,it.m,it.g.r)
 function meNext(){ME.out=null;ME.k++;if(ME.k>=ME.q.length)finishLive();else renderME()}
 function avForMatch(i){const used=usedIn('p',i);return ownList('p').filter(w=>!w.inj&&!used.has(w.id)).sort((a,b)=>ovr(b)-ovr(a))}
 function openMatch(i){const sl=S.card.p[i];ED={i,m:sl.d?JSON.parse(JSON.stringify(sl.d)):{type:'singles',stip:'std',sides:[[''],['']],winner:0,title:''}};renderMatchEd(false)}
-function mInfo(w,si){const opp=ED.m.sides.filter((s,i)=>i!==si).flat().filter(Boolean).map(i=>S.w[i]);if(!opp.length)return `POP ${Math.round(w.pop)}${w.fat>=50?' · 🔋'+Math.round(w.fat):''}`;const h=Math.max(...opp.map(o=>heatOf(w.id,o.id)));const c=opp.reduce((a,o)=>a+chemOpp(w,o),0)/opp.length;return `${h?'🔥'+Math.round(h)+' · ':''}${chemWord(c)} chem ${c>0?'+':''}${Math.round(c)}`}
+function mInfo(w,si){const opp=ED.m.sides.filter((s,i)=>i!==si).flat().filter(Boolean).map(i=>S.w[i]);if(!opp.length)return `POP ${Math.round(w.pop)}${w.fat>=50?' · 🔋'+Math.round(w.fat):''}`;const h=Math.max(...opp.map(o=>heatOf(w.id,o.id)));const c=opp.reduce((a,o)=>a+chemOpp(w,o),0)/opp.length;const rm=Math.max(...opp.map(o=>recentMeets(w.id,o.id).length));return `${rm?'😴 Rematch · ':''}${h?'🔥'+Math.round(h)+' · ':''}${chemWord(c)} chem ${c>0?'+':''}${Math.round(c)}`}
 function renderMatchEd(keep){const {m}=ED;const sh=curShow();const av=avForMatch(ED.i);
  const flat=m.sides.flat();const complete=flat.every(Boolean);const dup=complete&&new Set(flat).size!==flat.length;
  const et=complete&&!dup?eligibleTitles(m):[];if(m.title&&!et.includes(m.title))m.title='';
- let proj='';if(complete&&!dup){const r=rateMatch(m,{ppv:sh.ppv,allin:sh.ppv&&S.week===SEASON,preview:true});proj=`<div class="proj"><div class="muted">Projected rating</div><div class="stars big">${stars(r.lo)} – ${stars(r.hi)}</div><div class="muted">Chemistry: ${chemWord(r.chem)} · Feud heat: ${Math.round(r.heat)}</div>${whyMatch(m,sh)}</div>`}
+ let proj='';if(complete&&!dup){const r=rateMatch(m,{ppv:sh.ppv,allin:sh.ppv&&S.week===SEASON,preview:true});proj=`<div class="proj"><div class="muted">Projected rating</div><div class="stars big">${stars(r.lo)} – ${stars(r.hi)}</div><div class="muted">Chemistry: ${chemWord(r.chem)} · Feud heat: ${Math.round(r.heat)}</div>${r.pen?`<div class="err" style="margin-top:6px">😴 Rematch fatigue: ${esc(r.penWhy)} (−${fracTxt(r.pen)}★, and it barely builds the feud)</div>`:''}${r.stale?'<div class="err" style="margin-top:6px">🥱 This feud is stale — pay it off at a PPV.</div>':''}${whyMatch(m,sh)}</div>`}
  const per=MT[m.type].per;
  const slot=(si,pi)=>{const w=m.sides[si][pi]&&S.w[m.sides[si][pi]];return w?wcard(w,{on:`edPick(${si},${pi})`,info:mInfo(w,si)}):emptySlot(`edPick(${si},${pi})`)};
  const crown=si=>`<button class="crown ${m.winner===si?'on':''}" onclick="ED.m.winner=${si};renderMatchEd(true)">👑 ${m.winner===si?'Winner':'Make winner'}</button>`;
@@ -1135,6 +1182,8 @@ function whyMatch(m,sh){const ws=m.sides.map(s=>s.map(id=>S.w[id]));let h='';con
  ws.forEach(s=>{for(let i=0;i<s.length;i++)for(let j=i+1;j<s.length;j++){const p=teamParts(s[i],s[j]);if(p.length)h+=`<div class="tiny muted" style="margin-top:6px"><b>${esc(s[i].name)} & ${esc(s[j].name)}</b> (partners)</div><div>${partsHtml(p)}</div>`}});
  const multi=m.type==='triple'||m.type==='four';const tb=[];ws.flat().forEach(w=>{if(sh.ppv&&hasT(w,'bigm'))tb.push({t:`🏟️ ${w.name} Big Match`,v:3});if((multi||m.stip==='ladder')&&hasT(w,'dare'))tb.push({t:`🪂 ${w.name} Daredevil`,v:4})});
  if(tb.length)h+=`<div class="tiny muted" style="margin-top:6px"><b>Trait boosts</b></div><div>${partsHtml(tb)}</div>`;
+ const rr=rateMatch(m,{ppv:sh.ppv,preview:true});const pn=[];if(rr.pen)pn.push({t:`😴 Rematch: ${rr.penWhy}`,v:-rr.pen});if(rr.stale)pn.push({t:'🥱 Stale feud (heat counts half)',v:-1});
+ if(pn.length)h+=`<div class="tiny muted" style="margin-top:6px"><b>Overexposure</b> (stars)</div><div>${pn.map(x=>`<span class="why dn">${esc(x.t)}${x.v!==-1?' −'+fracTxt(-x.v)+'★':''}</span>`).join('')}</div>`;
  return h?`<details class="whyd"><summary>Why?</summary>${h}</details>`:''}
 function edPick(si,pi){const m=ED.m;const cur=m.sides[si][pi];const taken=new Set(m.sides.flat().filter(x=>x&&x!==cur));const fg=m.sides.flat().find(x=>x&&x!==cur);
  const opps=m.sides.filter((s,i)=>i!==si).flat().filter(x=>x&&x!==cur).map(x=>S.w[x]);
@@ -1190,7 +1239,7 @@ function chPick(){openPicker({title:'Choose a challenger',cur:CE.c,g:S.titles[CE
 function showResults(){const o=S.last;if(!o)return;
  openModal(`<div class="res-hd"><div class="kicker"><i></i>Week ${o.week} · Final results</div><div class="showname">${esc(o.title)}</div></div>${o.ratings?`<div class="score"><div class="me"><span>${esc(S.gm)}</span><div class="stars">${stars(o.ratings.p)}</div></div><i>VS</i><div><span>${esc(S.rival)}</span><div class="stars">${stars(o.ratings.ai)}</div></div></div>`:''}
  ${o.blocks.map(b=>`<div class="card ${b.brand==='p'?'mine':'theirs'}"><div class="row sb"><div class="h small" style="margin:0">${esc(b.label)}</div>${b.rating!=null?`<div class="stars">${stars(b.rating)}</div>`:''}</div>${b.segs.length?b.segs.map(s=>`<div class="seg"><div class="muted tiny">${esc(s.sub)}</div><div>${esc(s.txt)}</div><div class="stars">${stars(s.stars)}</div>${s.notes.map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`).join(''):'<div class="muted">Nothing aired.</div>'}</div>`).join('')}
- <div class="card"><div class="h small">Fan impact${o.hourWin?` · ${o.hourWin==='p'?'You':'Rival'} won the hour`:''}</div><div class="row sb"><span>${esc(S.gm)}</span><b class="${o.fans.p>=0?'good':'bad'}">${o.fans.p>=0?'+':''}${o.fans.p.toLocaleString()}</b></div><div class="row sb"><span>${esc(S.rival)}</span><b class="${o.fans.ai>=0?'good':'bad'}">${o.fans.ai>=0?'+':''}${o.fans.ai.toLocaleString()}</b></div></div>
+ <div class="card"><div class="h small">Fan impact${o.hourWin?` · ${o.hourWin==='p'?'You':'Rival'} won the ratings`:''}</div><div class="row sb"><span>${esc(S.gm)}</span><b class="${o.fans.p>=0?'good':'bad'}">${o.fans.p>=0?'+':''}${o.fans.p.toLocaleString()}</b></div><div class="row sb"><span>${esc(S.rival)}</span><b class="${o.fans.ai>=0?'good':'bad'}">${o.fans.ai>=0?'+':''}${o.fans.ai.toLocaleString()}</b></div></div>
  ${o.notes.length?`<div class="card"><div class="h small">Around the league</div>${o.notes.map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`:''}
  <button class="btn" onclick="closeModal();go('home')">Continue</button>`)}
 
@@ -1238,10 +1287,10 @@ function titlesView(){return `<p class="muted">Titles stay with whichever brand 
 const HOWTO=`<p><b>Match ratings</b> blend in-ring skill (the best worker in the match helps carry the rest), popularity, chemistry (styles that mesh — high-flyers vs powerhouses, technicians vs technicians — plus face vs heel and history together), feud heat, stipulation fit, title prestige and fatigue.</p>
 <p><b>Traits</b> (the round badges on each card) add chemistry and bonuses on top of style — e.g. a Monster vs an Underdog is +4, a Storyteller adds +1 with anyone. Open any wrestler to see their best opponents and tag partners on your roster with the reasons, or tap <b>Why?</b> under a match's projected rating.</p>
 <p><b>Created wrestlers</b> go into the free-agent pool. Draft them or sign them any week from Free Agents; the rival never signs them. Rookies carry a one-time development fee when signed (free if drafted).</p>
-<p><b>Feuds</b> heat up through promos and matches between the same wrestlers, and cool off when ignored. PPVs weigh heat much more heavily, so build rivalries on TV and pay them off on PPV. A PPV match cools the feud down.</p>
+<p><b>Feuds</b> start and grow from matches and promos: great matches, face vs heel, title matches and messy finishes build the most heat, and the results call it out when a rivalry is brewing (20), becomes a full-blown feud (45) or a blood feud (75). Don't overdo it — running the same match again within a month costs up to 1¼★ and barely builds heat, and a feud that goes 8 weeks without a PPV payoff goes stale. Feuds also cool off when ignored. PPVs weigh heat much more heavily, so build rivalries on TV and pay them off on PPV. A PPV match cools the feud down.</p>
 <p><b>Promos</b> play out as short scenes. Each choice tests mic skill, in-ring ability, popularity or luck.</p>
 <p><b>Development:</b> wrestlers improve toward their potential by working matches (faster against better opponents) and by Performance Center training. Unused talent loses morale; overworked talent gets hurt.</p>
-<p><b>Fans:</b> each hour you book earns or loses fans based on its rating, with a bonus for beating the rival's hour. PPVs swing far more fans, and All In counts double. The most fans after All In wins.</p>`;
+<p><b>Fans:</b> each week you book all of Dynamite while the rival books Collision. Your show earns or loses fans based on its rating (the main event counts most), with a bonus for beating the rival's show. PPVs swing far more fans, and All In counts double. The most fans after All In wins.</p>`;
 function officeView(){const inc=Math.round(S.fans.p/2000+220),pay=payroll('p');const exp=ownList('p').filter(w=>w.con<=6).sort((a,b)=>a.con-b.con);
  const tr=S.training.map(t=>S.w[t.id]?`<div class="row sb" style="margin-bottom:6px"><span>${esc(S.w[t.id].name)} · ${t.f==='ring'?'In-ring':'Mic'}</span><button class="mini" onclick="untrain('${t.id}')">Remove</button></div>`:'').join('');
  const myTeams=S.teams.filter(t=>t.m.length&&t.m.every(id=>S.w[id]&&S.w[id].own==='p'));
@@ -1262,7 +1311,7 @@ function delTeam(id){const t=S.teams.find(x=>x.id===id);if(!t||!confirm(`Disband
 function overView(){const win=S.fans.p>=S.fans.ai;const mine=ownList('p');const mvp=mine.slice().sort((a,b)=>(b.pop-b.pop0)-(a.pop-a.pop0))[0];const top=mine.slice().sort((a,b)=>ovr(b)-ovr(a))[0];
  const avgR=b=>{const h=S.history.filter(x=>x.s===S.season);return h.length?avg(h.map(x=>x[b])):0};
  return `<div class="card showcard ppv center"><div class="muted">Season ${S.season} complete</div><div class="showname">${win?'You won the fan war!':esc(S.rival)+' wins'}</div><div class="big mt">${fmtFans(S.fans.p)} <span class="muted">vs</span> ${fmtFans(S.fans.ai)}</div></div>
- <div class="card"><div class="row sb"><span>Hours won</span><b>${S.hourWins.p} – ${S.hourWins.ai}</b></div><div class="row sb"><span>Avg rating</span><b><span class="stars">${stars(avgR('p'))}</span> vs <span class="stars">${stars(avgR('ai'))}</span></b></div>
+ <div class="card"><div class="row sb"><span>Ratings wins</span><b>${S.hourWins.p} – ${S.hourWins.ai}</b></div><div class="row sb"><span>Avg rating</span><b><span class="stars">${stars(avgR('p'))}</span> vs <span class="stars">${stars(avgR('ai'))}</span></b></div>
  ${S.best?`<div class="mt"><span class="muted">Match of the year</span><br>${esc(S.best.t)} <span class="stars">${stars(S.best.s)}</span> <span class="muted">(${esc(S.best.show)}, W${S.best.w})</span></div>`:''}
  ${mvp?`<div class="mt"><span class="muted">Breakout star</span><br><b>${esc(mvp.name)}</b> (+${Math.round(mvp.pop-mvp.pop0)} popularity)</div>`:''}${top?`<div class="mt"><span class="muted">Top star</span><br><b>${esc(top.name)}</b></div>`:''}</div>
  <button class="btn" onclick="nextSeason()">Start Season ${S.season+1}</button><p class="muted center">Rosters, titles, feuds, contracts and development all carry over.</p>`}
@@ -1270,7 +1319,7 @@ function nextSeason(){S.season++;S.week=1;S.showIdx=0;S.phase='season';S.hourWin
 
 if(typeof document!=='undefined'&&document.getElementById('app')){
  if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
- S=load();if(S&&(!S.w||!S.phase))S=null;dataUpdate(S);ensureTraits(S);loadImg();
+ S=load();if(S&&(!S.w||!S.phase))S=null;dataUpdate(S);ensureTraits(S);feudInit(S);showMigrate();if(S)save();loadImg();
  $('#modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!PS&&!ME)closeModal()});
  document.addEventListener('paste',async e=>{if(!QP||!S)return;const f=[...(e.clipboardData&&e.clipboardData.items||[])].find(x=>x.type.startsWith('image/'));if(!f)return;e.preventDefault();const id=QP.ids[QP.i];try{if(await setPhotoFrom(id,{blob:f.getAsFile()})){toast(`📸 Photo added for ${S.w[id].name}.`);quickOk()}}catch(err){toast("That picture couldn't be opened.")}});
  loadRepoPhotos();
