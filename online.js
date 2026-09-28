@@ -37,25 +37,34 @@ if (!cfg.apiKey || !cfg.projectId) {
     create(code, data, key) { return timed(this._create(...arguments)); },
     async _create(code, data, key) {
       const uid = await uidReady;
-      const snap = await getDocFromServer(game(code)).catch(e => { throw e; });
+      const snap = await getDocFromServer(game(code));
       if (snap.exists()) throw new Error('taken');
-      await setDoc(game(code), { ...data, host: uid, guest: null, created: serverTimestamp(), updated: serverTimestamp() });
-      await setDoc(doc(db, 'games', code, 'seats', 'host'), { key });
+      const uids = {};
+      for (let i = 0; i < (data.n || 2); i++) uids['s' + i] = i === 0 ? uid : null;
+      await setDoc(game(code), { ...data, uids, created: serverTimestamp(), updated: serverTimestamp() });
+      await setDoc(doc(db, 'games', code, 'seats', 's0'), { key });
     },
 
+    // Take the first open seat in a league (retries if a friend grabs the same seat at the same moment).
     join(code, name, key) { return timed(this._join(...arguments)); },
     async _join(code, name, key) {
       const uid = await uidReady;
-      const snap = await getDocFromServer(game(code));
-      if (!snap.exists()) throw new Error('nogame');
-      const d = snap.data();
-      if (d.host === uid) return { seat: 'host', data: d };
-      if (d.guest === uid) return { seat: 'guest', data: d };
-      if (d.guest) throw new Error('full');
-      await updateDoc(game(code), { guest: uid, 'names.guest': name, updated: serverTimestamp() });
-      await setDoc(doc(db, 'games', code, 'seats', 'guest'), { key });
-      const fresh = await getDocFromServer(game(code));
-      return { seat: 'guest', data: fresh.data(), key };
+      for (let attempt = 0; attempt < 4; attempt++) {
+        const snap = await getDocFromServer(game(code));
+        if (!snap.exists()) throw new Error('nogame');
+        const d = snap.data();
+        const mine = Object.keys(d.uids || {}).find(k => d.uids[k] === uid);
+        if (mine) return { seat: mine, data: d };
+        const open = Object.keys(d.uids || {}).sort().find(k => !d.uids[k]);
+        if (!open) throw new Error('full');
+        try {
+          await updateDoc(game(code), { ['uids.' + open]: uid, ['names.' + open]: name, updated: serverTimestamp() });
+        } catch (e) { continue; }
+        await setDoc(doc(db, 'games', code, 'seats', open), { key });
+        const fresh = await getDocFromServer(game(code));
+        return { seat: open, data: fresh.data(), key };
+      }
+      throw new Error('full');
     },
 
     // Move a seat to this device using its private seat code.
@@ -65,8 +74,8 @@ if (!cfg.apiKey || !cfg.projectId) {
       const snap = await getDocFromServer(game(code));
       if (!snap.exists()) throw new Error('nogame');
       let seat = null;
-      for (const s of ['host', 'guest']) {
-        try { await updateDoc(game(code), { [s]: uid, claim: key, updated: serverTimestamp() }); seat = s; break; } catch (e) { /* wrong seat */ }
+      for (const s of Object.keys(snap.data().uids || {}).sort()) {
+        try { await updateDoc(game(code), { ['uids.' + s]: uid, claim: key, updated: serverTimestamp() }); seat = s; break; } catch (e) { /* not this seat */ }
       }
       if (!seat) throw new Error('badkey');
       await updateDoc(game(code), { claim: deleteField() });

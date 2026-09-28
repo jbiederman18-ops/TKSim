@@ -1,6 +1,6 @@
 # Online leagues: one-time Firebase setup
 
-Online leagues let two people play head-to-head. One GM books Dynamite and the other books Collision, and you take turns whenever you like. The game still works fully offline. A turn taken without a connection is saved on the phone and syncs when it's back online.
+Online leagues let 2–4 friends play together. Each GM runs their own brand (Dynamite, Collision, Rampage, Ring of Honor), and every week you go head-to-head with a different GM. You take turns whenever you like. The game still works fully offline. A turn taken without a connection is saved on the phone and syncs when it's back online.
 
 Firebase holds the shared league. It's free at this size. Setup takes about 15 minutes and only has to be done once. Your friends don't need to do any of this.
 
@@ -21,7 +21,7 @@ After that, **Host a league** and **Join a league** work in the game (on the sta
 
 ## Part 2: Turn notifications (about 5 minutes)
 
-The notification is sent by a small Cloud Function in [`firebase/functions`](firebase/functions). Cloud Functions require Firebase's **Blaze (pay-as-you-go)** plan, which needs a card on file. A two-person league stays far inside the free monthly allowance, so it should cost $0. To be safe, set a budget alert of $1 while upgrading.
+Notifications are sent by a small Cloud Function in [`firebase/functions`](firebase/functions). Cloud Functions require Firebase's **Blaze (pay-as-you-go)** plan, which needs a card on file. A two-person league stays far inside the free monthly allowance, so it should cost $0. To be safe, set a budget alert of $1 while upgrading.
 
 1. In the Firebase console, click **Upgrade** (bottom left) and choose **Blaze**.
 2. On your computer, install [Node.js LTS](https://nodejs.org). Then run these commands in Terminal from the repo folder:
@@ -41,13 +41,15 @@ The notification is sent by a small Cloud Function in [`firebase/functions`](fir
 
 ## How a league plays
 
-- **Host:** start screen or Office → **Host a league** → send the 6-letter code (the **Share invite** button does this).
-- **Friend:** open the game → **Join a league** → enter the code.
-- **Before the draft:** each GM gets a turn to create wrestlers. The draft is a snake draft, and **Auto-draft me** lets the game pick for you whenever you're on the clock.
-- **Each week:** you book your show and go live. Your segments play out right away and your card locks in. When your friend books theirs, the week airs, both of you see the results, and they book the next week. Each turn ends with the other person getting a notification.
-- Promises, the Performance Center and front-office situations are private to each GM. Free agents, titles and feuds are shared.
+- **Host:** start screen or Office → **Host a league** → pick **2, 3 or 4 GMs** → send the 6-letter code (the **Share invite** button does this).
+- **Friends:** open the game → **Join a league** → enter the code. Each friend takes the next open seat.
+- **Before the draft:** each GM gets a turn to create wrestlers, so the draft starts once everyone has joined. The draft is a snake draft in a random order. **Auto-draft me** lets the game pick for you whenever you're on the clock.
+- **Schedule:** it's a round-robin, so you face a different GM each week. With 4 GMs there are two matchups every week. With 3, one GM has a bye: their show still airs and earns fans, just without a head-to-head. Home shows league standings (fans and head-to-head wins).
+- **Each week:** GMs book one at a time. When it's your turn, you book, go live, and pass to the next GM. The last one to book airs the week. Everyone sees every matchup's results, and the order rotates so a different GM goes first next week. You get a notification when it's your turn and when results are in.
+- **Winning:** the most fans after All In wins the league. Promises, the Performance Center and front-office situations are private to each GM. Free agents, titles and feuds are shared.
 - **Changing phones:** Office → **Other device** shows your private seat code (`CODE-XXXXXXXX`). On the new device, enter it in **Join a league**. You also need this when moving from a Safari tab to the installed app, because they keep separate storage.
 - Your solo game stays separate. Use **Office → Switch to my solo game** to go back and forth.
+- League size is fixed once created. If a friend drops out, their seat waits for them, so pick the size you'll actually play with.
 
 ## Updating Firebase later
 

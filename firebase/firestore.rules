@@ -1,5 +1,5 @@
 rules_version = '2';
-// Tony Khan Simulator online leagues.
+// Tony Khan Simulator online leagues (2–4 GMs, seats s0–s3).
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
@@ -8,35 +8,39 @@ service cloud.firestore {
     }
 
     match /games/{code} {
+      function uidsBefore() { return resource.data.uids; }
+      function uidsAfter() { return request.resource.data.uids; }
+      function isMember() { return request.auth.uid in uidsBefore().values(); }
+      function onlySeatChanged(k) { return uidsAfter().diff(uidsBefore()).affectedKeys().hasOnly([k]); }
+      function sameLeague() { return request.resource.data.n == resource.data.n; }
+      // a friend taking an open seat
+      function joins(k) {
+        return k in uidsBefore() && uidsBefore()[k] == null && uidsAfter()[k] == request.auth.uid
+          && onlySeatChanged(k) && !isMember();
+      }
+      // moving your own seat to a new device with its private seat code
+      function claims(k) {
+        return k in uidsBefore() && uidsAfter()[k] == request.auth.uid && onlySeatChanged(k)
+          && request.resource.data.claim == seatKey(code, k);
+      }
+
       // Anyone signed in to the app who knows the code can see the league.
       allow read: if signedIn();
 
       allow create: if signedIn()
-        && request.resource.data.host == request.auth.uid
-        && request.resource.data.guest == null;
+        && request.resource.data.n in [2, 3, 4]
+        && request.resource.data.uids.s0 == request.auth.uid;
 
-      allow update: if signedIn() && (
-        // a GM in this league taking their turn (seats stay put)
-        (request.auth.uid in [resource.data.host, resource.data.guest]
-          && request.resource.data.host == resource.data.host
-          && request.resource.data.guest == resource.data.guest)
-        // a friend taking the open seat
-        || (resource.data.guest == null
-          && request.resource.data.guest == request.auth.uid
-          && request.resource.data.host == resource.data.host)
-        // moving your own seat to a new device with its private seat code
-        || (request.resource.data.host == request.auth.uid
-          && request.resource.data.guest == resource.data.guest
-          && request.resource.data.claim == seatKey(code, 'host'))
-        || (request.resource.data.guest == request.auth.uid
-          && request.resource.data.host == resource.data.host
-          && request.resource.data.claim == seatKey(code, 'guest'))
+      allow update: if signedIn() && sameLeague() && (
+        (isMember() && uidsAfter() == uidsBefore())   // a GM taking their turn
+        || joins('s1') || joins('s2') || joins('s3')
+        || claims('s0') || claims('s1') || claims('s2') || claims('s3')
       );
 
       // Private seat codes: written by the seat's owner, never readable by the app.
       match /seats/{seat} {
-        allow create, update: if signedIn() && (seat == 'host' || seat == 'guest')
-          && get(/databases/$(database)/documents/games/$(code)).data[seat] == request.auth.uid;
+        allow create, update: if signedIn()
+          && get(/databases/$(database)/documents/games/$(code)).data.uids[seat] == request.auth.uid;
       }
 
       // Each device's push token; only the Cloud Function reads these.

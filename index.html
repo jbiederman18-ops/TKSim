@@ -335,7 +335,7 @@ nav.tabs button.on{text-shadow:none}nav.tabs button.on svg{filter:none}nav.tabs 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v32';
+const APP_VERSION='v33';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -944,28 +944,53 @@ const slug=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().re
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 let S=null;
-/* ===================== ONLINE HEAD-TO-HEAD =====================
- An online league is one shared world between two people. On every device you are 'p' and your friend is 'ai'.
- The copy stored online is always from the host's side, so the guest flips it on the way in and out. */
-let LMP=null; /* {code, me:'host'|'guest', key} for the online game open on this device */
+/* ===================== ONLINE LEAGUES (2–4 GMs) =====================
+ An online league is one shared world. The copy stored online labels every GM by seat (s0…s3).
+ On a device the world is seen from one GM's side: you are 'p', this week's opponent is 'ai',
+ and any other GMs keep their seat id. Round-robin pairings change the opponent each week. */
+let LMP=null; /* {code, me:'s0'…'s3', key} for the online game open on this device */
 const ON=()=>!!(S&&S.online);
-const fb=b=>b==='p'?'ai':b==='ai'?'p':b;
-function flipState(st){const sw=o=>{if(o&&typeof o==='object'){const t=o.p;o.p=o.ai;o.ai=t}};
- Object.values(st.w||{}).forEach(w=>{w.own=fb(w.own)});
- sw(st.fans);sw(st.money);sw(st.hourWins);sw(st.card);const g=st.gm;st.gm=st.rival;st.rival=g;
- if(st.draft)st.draft.first=fb(st.draft.first);
- (st.history||[]).forEach(sw);
- if(st.last){const o=st.last;sw(o.fans);sw(o.ratings);if(o.hourWin)o.hourWin=fb(o.hourWin);(o.blocks||[]).forEach(b=>b.brand=fb(b.brand))}
- /* things only one GM sees (Performance Center, promises, front-office situations) live in a stash for the other side */
- const x=st.mpo||(st.mpo={});['training','promises','crisis'].forEach(k=>{const t=st[k];st[k]=x[k];x[k]=t});
- if(!Array.isArray(st.training))st.training=[];if(!Array.isArray(st.promises))st.promises=[];if(st.crisis===undefined)st.crisis=null;
- const o=st.online;if(o){o.turn=fb(o.turn);sw(o.booked);sw(o.auto);sw(o.rk);sw(o.show)}
+const BK=/^(p|ai|s\d)$/;
+const SHOWS=['Dynamite','Collision','Rampage','Ring of Honor'];
+function nSeats(st){return ((st||S).online&&(st||S).online.n)||2}
+function seatIds(st){return Array.from({length:nSeats(st)},(_,i)=>'s'+i)}
+const RR={2:[[['s0','s1']]],3:[[['s0','s1'],['s2',null]],[['s0','s2'],['s1',null]],[['s1','s2'],['s0',null]]],4:[[['s0','s1'],['s2','s3']],[['s0','s2'],['s1','s3']],[['s0','s3'],['s1','s2']]]};
+/* who faces whom in a given week (null = bye week) */
+function pairings(week,n){const R=RR[n]||RR[2];return R[(Math.min(Math.max(week,1),SEASON)-1)%R.length]}
+function oppOf(seat,week,n){for(const [a,b] of pairings(week,n)){if(a===seat)return b;if(b===seat)return a}return null}
+function mapObj(o,f){if(!o||typeof o!=='object'||Array.isArray(o))return o;const n={};for(const k in o)n[BK.test(k)?f(k):k]=o[k];return n}
+function remapKeys(st,f){const rv=v=>typeof v==='string'&&BK.test(v)?f(v):v;
+ Object.values(st.w||{}).forEach(w=>{if(w.own)w.own=rv(w.own)});
+ ['fans','money','hourWins','card','names','priv'].forEach(k=>{if(st[k])st[k]=mapObj(st[k],f)});
+ if(st.history)st.history=st.history.map(h=>mapObj(h,f));
+ const L=st.last;if(L){const one=o=>{o.fans=mapObj(o.fans,f);o.ratings=mapObj(o.ratings,f);if(o.hourWin)o.hourWin=rv(o.hourWin);(o.blocks||[]).forEach(b=>b.brand=rv(b.brand))};if(L.pairs)L.pairs.forEach(one);else one(L)}
+ if(st.draft){if(st.draft.first)st.draft.first=rv(st.draft.first);if(st.draft.order)st.draft.order=st.draft.order.map(rv)}
+ const o=st.online;if(o){if(o.turn)o.turn=rv(o.turn);['booked','auto','rk','show'].forEach(k=>{if(o[k])o[k]=mapObj(o[k],f)});if(o.order)o.order=o.order.map(rv)}
  return st}
-function asOther(fn){flipState(S);try{return fn()}finally{flipState(S)}}
-function bothSides(fn){fn();if(ON())asOther(fn)}
+/* each GM's Performance Center, promises and front-office situations are private to them */
+const PRIV=['training','promises','crisis'];
+function stashPriv(st){st.priv=st.priv||{};const x={};PRIV.forEach(k=>{x[k]=st[k];delete st[k]});st.priv.p=x}
+function liftPriv(st){st.priv=st.priv||{};const x=st.priv.p||{};delete st.priv.p;st.training=Array.isArray(x.training)?x.training:[];st.promises=Array.isArray(x.promises)?x.promises:[];st.crisis=x.crisis||null}
+function toCanon(st){const v=st._view;if(!v)return st;stashPriv(st);remapKeys(st,k=>k==='p'?v.me:k==='ai'?(v.opp||k):k);delete st._view;delete st.gm;delete st.rival;return st}
+function toView(st,me,opp){remapKeys(st,k=>k===me?'p':k===opp?'ai':k);liftPriv(st);st._view={me,opp};const nm=st.names||{};st.gm=nm.p||'You';st.rival=opp?(nm.ai||'Waiting for a GM'):'Bye week';return st}
+function viewFor(st,me){return toView(st,me,oppOf(me,st.week,nSeats(st)))}
+function relocal(){if(!ON()||!S._view)return;const me=S._view.me;toCanon(S);viewFor(S,me)}
+function asPair(x,y,fn){const v=S._view;toCanon(S);toView(S,x,y);try{return fn()}finally{toCanon(S);toView(S,v.me,v.opp)}}
+function asOther(fn){const v=S._view;if(!v||!v.opp)return;return asPair(v.opp,v.me,fn)}
+function allSeats(fn){if(!ON())return fn();seatIds().forEach(k=>asPair(k,oppOf(k,S.week,nSeats()),fn))}
+const bothSides=allSeats;
+function localKey(seat){const v=S._view;return !v?seat:seat===v.me?'p':seat===v.opp?'ai':seat}
+function canonKey(k){const v=S._view;return !v?k:k==='p'?v.me:k==='ai'?v.opp:k}
+function localSeats(){return seatIds().map(localKey)}
+function nameOf(b){if(b==='p')return S.gm;if(b==='ai'&&!ON())return S.rival;return (S.names&&S.names[b])||(ON()?'Open seat':S.rival)}
+function brands(){return ON()?localSeats():['p','ai']}
 function myTurn(){return !ON()||S.online.turn==='p'}
-function mpLocked(){if(!ON()||S.online.turn==='p')return false;toast(S.online.booked&&S.online.booked.p?`Your card is locked in — waiting on ${S.rival}.`:`It's ${S.rival}'s turn. You can look around; changes wait for your turn.`);return true}
-function freshCards(){S.card={p:newCard().p,ai:null};if(ON())asOther(()=>{S.card.p=newCard().p})}
+function mpLocked(){if(!ON()||S.online.turn==='p')return false;const who=nameOf(S.online.turn);toast(S.online.booked&&S.online.booked.p?`Your card is locked in — waiting on ${who}.`:`It's ${who}'s turn. You can look around; changes wait for your turn.`);return true}
+function freshCards(){if(!ON()){S.card={p:newCard().p,ai:null};return}S.card={};allSeats(()=>{S.card.p=newCard().p})}
+function bookingOrder(){const l=localSeats();const i=l.indexOf('p');return l.slice(i).concat(l.slice(0,i))}
+function mpInitSeats(n){const ids=Array.from({length:n},(_,i)=>'s'+i);S.fans={};S.money={};S.hourWins={};ids.forEach(k=>{S.fans[k]=250000;S.money[k]=1000;S.hourWins[k]=0});
+ S.names={s0:S.gm};S.priv={};PRIV.forEach(k=>delete S[k]);delete S.gm;delete S.rival;
+ S.online={n,turn:'s0',rev:0,booked:{},auto:{},rk:{},order:ids.slice(),show:Object.fromEntries(ids.map((k,i)=>[k,SHOWS[i]]))};viewFor(S,'s0')}
 let IMG={},PK=null,ME=null;
 /* Photos live in IndexedDB (hundreds of MB) instead of localStorage (~5 MB, shared with the save). */
 let PDB=null,PSAVED={},IMGREADY=null;
@@ -1141,20 +1166,22 @@ function newGame(gm,rival,diff,online){
  ensureTraits(S);
  FEUDS.forEach(([a,b,h])=>{if(S.w[a]&&S.w[b])S.heat[key(a,b)]=h});S.fullShow=true;feudInit(S);
  for(const id in OUT)if(S.w[id])S.w[id].inj=OUT[id];S.dataV=DATA_V;
- if(online){S.diff='normal';S.online=Object.assign({turn:'p',rev:0,booked:{p:false,ai:false},auto:{p:false,ai:false},rk:{p:false,ai:false},show:{p:'Dynamite',ai:'Collision'}},online)}
+ if(online)S.diff='normal';
  else for(let i=0;i<2;i++){const g=i?'F':'M';const r=makeRookie(pick(g==='M'?FIRST_M:FIRST_F)+' '+pick(LAST),g,pick(Object.keys(STYLE_N)),pick(['f','h']),'bluechip');r.own='ai';r.con=52;S.w[r.id]=r}
+ if(online)mpInitSeats(online.n||2);
  news(`🎤 A new era begins. Rosters, champions and injuries are current as of ${DATA_AS_OF}. Draft your roster and win the fan war on the road to All In.`);
  save();
 }
-function startDraft(){S.phase='draft';S.draft={round:1,pick:0,first:Math.random()<.5?'p':'ai',rounds:22,log:[]};save()}
-function onClock(){const d=S.draft;const o=d.first==='p'?'ai':'p';return (d.pick===0)===(d.round%2===1)?d.first:o}
+function startDraft(){S.phase='draft';const ord=shuffle(brands().slice());S.draft={round:1,pick:0,order:ord,rounds:ord.length>2?18:22,log:[]};save()}
+/* snake draft: order reverses every round */
+function onClock(){const d=S.draft;const o=d.order||(d.order=d.first==='p'?['p','ai']:['ai','p']);return o[d.round%2===1?d.pick:o.length-1-d.pick]}
 function draftChoice(brand){
  const pool=Object.values(S.w).filter(w=>!w.own&&(brand==='p'||ON()||!w.cw));const mine=ownList(brand);
  const wn=mine.filter(w=>w.g==='F').length;const needF=mine.length>=3&&wn/mine.length<.3;
  const cand=needF?pool.filter(w=>w.g==='F'):pool;const list=cand.length?cand:pool;
  let best=null,bv=-1;list.forEach(w=>{const v=w.pop*.5+w.ring*.35+w.mic*.15+(w.pot-w.ring)*.3+(isChamp(w.id)?8:0)+(mine.some(o=>inTeam(o.id,w.id))?6:0)+R(0,10);if(v>bv){bv=v;best=w}});return best}
 function draftPick(id,brand){const d=S.draft,w=S.w[id];if(!w||w.own)return;w.own=brand;w.con=RI(14,40);w.fee=0;
- d.log.unshift(`R${d.round} · ${brand==='p'?S.gm:S.rival}: ${w.name}`);d.pick++;if(d.pick>1){d.pick=0;d.round++}
+ d.log.unshift(`R${d.round} · ${nameOf(brand)}: ${w.name}`);d.pick++;if(d.pick>=(d.order||[1,1]).length){d.pick=0;d.round++}
  if(d.round>d.rounds)finishDraft();save()}
 function finishDraft(){S.phase='season';
  Object.values(S.w).forEach(w=>{if(!w.own)w.con=0;w.pop0=w.pop});
@@ -1364,13 +1391,15 @@ function autoPromo(brand,ex){ex=ex||new Set();const r=Object.values(S.w).filter(
  runAutoPromo(p,brand);return p}
 
 /* ===================== AIRING ===================== */
-function airShow(){
- const show=curShow();const ctx={ppv:show.ppv,allin:show.ppv&&S.week===SEASON,name:show.name};
- if(!S.card.ai)S.card.ai=autoBook('ai',show,null);
+function airShow(){if(ON())return mpAirWeek();const out=airPair();S.showIdx=0;endWeek(out.notes);if(S.phase==='season')freshCards();S.last=out;save();return out}
+/* air one head-to-head matchup (or one GM's bye-week show) */
+function airPair(){
+ const show=curShow();const ctx={ppv:show.ppv,allin:show.ppv&&S.week===SEASON,name:show.name};const bye=ON()&&!S._view.opp;
+ if(!bye&&!S.card.ai)S.card.ai=autoBook('ai',show,null);
  if(!ON()){const ams=S.card.ai.filter(sl=>sl.k==='match'&&sl.d&&validMatch(sl.d));ams.forEach((sl,j)=>{if(sl.d.ev)return;const main=j===ams.length-1;if(Math.random()<(main?.45:.3)){const g=genEvent(sl.d,'ai',show.ppv||main);if(g)evRoll(aiEv(evChoices(g.e,sl.d,g.r),g.r),g.r,sl.d)}})}
- const out={title:show.ppv?show.name:'Dynamite vs Collision',week:S.week,ppv:show.ppv,blocks:[],notes:[],fans:{},ratings:{}};
+ const out={title:show.ppv?show.name:`${showNames().p}${bye?'':' vs '+showNames().ai}`,week:S.week,ppv:show.ppv,blocks:[],notes:[],fans:{},ratings:{}};
  const adj=b=>b==='ai'?({easy:-.25,normal:0,hard:.25}[S.diff]||0):0;
- const order=['p','ai'];
+ const order=bye?['p']:['p','ai'];
  const vals={p:[],ai:[]};
  /* each GM's card is aired from their own side, so promises, proxy wars and promo payoffs work for both people online */
  const airCard=b=>{const segs=[],v=[];
@@ -1379,31 +1408,29 @@ function airShow(){
    else if(sl.k==='promo'&&sl.d.res){const p=sl.d;const notes=[];const st=clamp(p.res.stars+adj(b),.5,5);applyPromo(p,notes);segs.push({txt:S.w[p.a].name+(p.b&&S.w[p.b]?' & '+S.w[p.b].name:''),sub:PT[p.type].n,stars:st,notes});v.push(st)}});
   return {segs,v}};
  order.forEach(b=>{const r=ON()&&b==='ai'?asOther(()=>airCard('p')):airCard(b);vals[b]=r.v;
-  out.blocks.push({brand:b,label:show.ppv?`${b==='p'?S.gm:S.rival}'s card`:`${showNames()[b]} — ${b==='p'?S.gm:S.rival}`,segs:r.segs})});
+  out.blocks.push({brand:b,label:show.ppv?`${nameOf(b)}'s card`:`${showNames()[b]} — ${nameOf(b)}`,segs:r.segs})});
  const extra={p:0,ai:0};
  if(show.ppv){const segs=[];
-  ['p','ai'].forEach(b=>{const sl=S.card[b].find(x=>x.k==='chal');const c=sl&&sl.d;if(!c)return;const t=S.titles[c.title];const ch=S.w[c.c];
+  order.forEach(b=>{const sl=S.card[b].find(x=>x.k==='chal');const c=sl&&sl.d;if(!c)return;const t=S.titles[c.title];const ch=S.w[c.c];
    if(!t||!t.holders.length||!ch||ch.inj||ch.own!==b)return;const h=S.w[t.holders[0]];if(!h||h.inj||h.own===b||!h.own)return;
    const m={type:'singles',stip:'std',sides:[[h.id],[ch.id]],winner:0,title:t.id};
    const sc=w=>w.ring*.4+w.pop*.4+w.mom*2+R(0,25);m.winner=sc(ch)>sc(h)+5?1:0;
    const res=rateMatch(m,ctx);const notes=[];const txt=matchText(m);applyMatch(m,res,ctx,notes);
    extra[S.w[m.sides[m.winner][0]].own]+=8000;vals.p.push(res.stars);vals.ai.push(res.stars);
-   segs.push({txt,sub:`Title challenge issued by ${b==='p'?S.gm:S.rival}`,stars:res.stars,notes})});
+   segs.push({txt,sub:`Title challenge issued by ${nameOf(b)}`,stars:res.stars,notes})});
   if(segs.length)out.blocks.push({brand:'x',label:'Interpromotional title challenges',segs})}
  const rt={};
- ['p','ai'].forEach(b=>{const v=vals[b];if(!v.length){rt[b]=.5;return}let s=0,ws=0;v.forEach((x,i)=>{const w=i===v.length-1?1.6:1;s+=x*w;ws+=w});rt[b]=s/ws});
+ order.forEach(b=>{const v=vals[b];if(!v.length){rt[b]=.5;return}let s=0,ws=0;v.forEach((x,i)=>{const w=i===v.length-1?1.6:1;s+=x*w;ws+=w});rt[b]=s/ws});
  out.blocks.forEach(bl=>{if(bl.brand!=='x')bl.rating=rt[bl.brand]});
- ['p','ai'].forEach(b=>{const r=rt[b];let d;const o=b==='p'?'ai':'p';
+ order.forEach(b=>{const r=rt[b];let d;const o=b==='p'?'ai':'p';
   if(show.ppv){d=Math.round((r-2.8)*20000*(ctx.allin?2:1))+extra[b];S.money[b]+=Math.round(S.fans[b]/1000)}
-  else{d=Math.round((r-2.5)*12000+(r>=4?6000:0));if(r>rt[o])d+=4000}
+  else{d=Math.round((r-2.5)*12000+(r>=4?6000:0));if(rt[o]!=null&&r>rt[o])d+=4000}
   const before=S.fans[b];S.fans[b]=Math.max(50000,S.fans[b]+d);out.fans[b]=S.fans[b]-before;out.ratings[b]=r});
- if(!show.ppv){const hw=rt.p>=rt.ai?'p':'ai';S.hourWins[hw]++;out.hourWin=hw}
+ if(!show.ppv&&!bye){const hw=rt.p>=rt.ai?'p':'ai';S.hourWins[hw]=(S.hourWins[hw]||0)+1;out.hourWin=hw}
  settlePromises(out);
- if(ON()){const t={notes:[],fans:{p:0,ai:0}};asOther(()=>settlePromises(t));out.fans.ai+=t.fans.p;out.notes.push(...t.notes)}
- S.history.push({s:S.season,w:S.week,show:show.name,p:+rt.p.toFixed(2),ai:+rt.ai.toFixed(2)});
- S.showIdx=0;endWeek(out.notes);
- if(S.phase==='season')freshCards();
- S.last=out;save();return out}
+ if(ON()&&!bye){const t={notes:[],fans:{p:0,ai:0}};asOther(()=>settlePromises(t));out.fans.ai+=t.fans.p;out.notes.push(...t.notes)}
+ {const h={s:S.season,w:S.week,show:show.name};order.forEach(b=>h[b]=+rt[b].toFixed(2));S.history.push(h)}
+ return out}
 function leave(w,msg,notes){news(msg);notes.push(msg);w.own=null;w.con=0;w.mor=60;S.training=S.training.filter(t=>t.id!==w.id);if(S.fa)S.fa[w.id]=AW()+RI(2,4)}
 /* ---- rotating free-agent market ---- */
 const FA_SIZE=8;
@@ -1429,7 +1456,7 @@ function endWeek(notes){
  Object.values(S.w).forEach(w=>{if(!w.own)return;
   if(w.con<=0){if(w.own==='ai'&&!ON()){const c=sal(w)*4;if(S.money.ai>=c&&w.mor>25){S.money.ai-=c;w.con=26}else leave(w,`📝 ${w.name} left ${S.rival} and is now a free agent.`,notes)}
    else leave(w,`📝 ${w.name}'s contract expired — they're now a free agent.`,notes)}
-  else if(w.mor<10&&Math.random()<.12)leave(w,`😠 ${w.name} demanded and was granted their release from ${w.own==='p'?S.gm:S.rival}.`,notes)});
+  else if(w.mor<10&&Math.random()<.12)leave(w,`😠 ${w.name} demanded and was granted their release from ${nameOf(w.own)}.`,notes)});
  Object.values(S.titles).forEach(t=>{if(!t.holders.length)return;
   if(t.holders.some(h=>!S.w[h]||!S.w[h].own||S.w[h].inj>=4)||new Set(t.holders.map(h=>S.w[h]&&S.w[h].own)).size>1){const n=`🏆 The ${t.n} title has been vacated.`;t.holders=[];news(n);notes.push(n)}
   else if(wk-t.last>4)t.prestige=Math.max(10,t.prestige-2)});
@@ -1440,8 +1467,8 @@ function endWeek(notes){
   if(S.heat[k]<=0){delete S.heat[k];delete S.fs[k]}}
  for(const k in S.fs)if(!S.heat[k])delete S.fs[k];
  S.touched=[];
- ['p','ai'].forEach(b=>{const inc=Math.round(S.fans[b]/2000+220),pay=payroll(b);S.money[b]+=inc-pay;
-  if(S.money[b]<0&&(b==='p'||ON())){notes.push(ON()?`💸 ${b==='p'?S.gm:S.rival} is in the red — morale is slipping.`:'💸 You are in the red — morale is slipping.');ownList(b).forEach(w=>w.mor=clamp(w.mor-2,0,100))}});
+ brands().forEach(b=>{const inc=Math.round(S.fans[b]/2000+220),pay=payroll(b);S.money[b]+=inc-pay;
+  if(S.money[b]<0&&(b==='p'||ON())){notes.push(ON()?`💸 ${nameOf(b)} is in the red — morale is slipping.`:'💸 You are in the red — morale is slipping.');ownList(b).forEach(w=>w.mor=clamp(w.mor-2,0,100))}});
  const aiN=ownList('ai').length;
  if(!ON()&&(aiN<18||(aiN<26&&Math.random()<.3))){const fa=Object.values(S.w).filter(w=>!w.own&&!w.inj&&!w.cw&&onMarket(w)).sort((a,b)=>val(b)-val(a));const pickFa=aiN<18?fa.sort((a,b)=>sal(a)-sal(b))[0]:fa[0];
   if(pickFa){const c=sal(pickFa)*6;if(S.money.ai>=c*(aiN<18?1:1.5)){S.money.ai-=c;pickFa.own='ai';pickFa.con=RI(20,40);pickFa.mor=75;const n=`✍️ ${S.rival} signed free agent ${pickFa.name}.`;news(n);notes.push(n)}}}
@@ -1532,7 +1559,7 @@ star:sv('<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3
 const VENUES=[['Heritage Bank Center','Cincinnati, OH'],['Nationwide Arena','Columbus, OH'],['Rocket Arena','Cleveland, OH'],['Gainbridge Fieldhouse','Indianapolis, IN'],['KFC Yum! Center','Louisville, KY'],['Little Caesars Arena','Detroit, MI'],['PPG Paints Arena','Pittsburgh, PA'],['Bridgestone Arena','Nashville, TN'],['Enterprise Center','St. Louis, MO'],['NOW Arena','Hoffman Estates, IL']];
 function venueOf(){return VENUES[((S.season-1)*3+(S.week-1))%VENUES.length]}
 function poster(sh,inner){const v=venueOf();const cls=sh.ppv?'ppv':sh.name==='Collision'?'col':'dyn';
- return `<div class="card showcard ${cls}"><div class="wm">${esc(sh.ppv?sh.name:v[1].split(',')[0])}</div><div class="kicker"><i></i>${sh.ppv?'Pay-per-view · Week '+S.week+' of '+SEASON:`Week ${S.week} of ${SEASON} · Ratings war`}</div><div class="showname">${esc(sh.name)}</div>${!sh.ppv&&sh.theirs?`<div class="venue" style="margin-top:-2px">vs <b>${esc(S.rival)}'s ${esc(sh.theirs)}</b></div>`:''}<div class="venue">${sh.ppv?'<b>Live on pay-per-view</b>':`<b>${esc(v[0])}</b> · ${esc(v[1])}`}</div>${inner||''}</div>`}
+ return `<div class="card showcard ${cls}"><div class="wm">${esc(sh.ppv?sh.name:v[1].split(',')[0])}</div><div class="kicker"><i></i>${sh.ppv?'Pay-per-view · Week '+S.week+' of '+SEASON:`Week ${S.week} of ${SEASON} · Ratings war`}</div><div class="showname">${esc(sh.name)}</div>${!sh.ppv&&sh.theirs?`<div class="venue" style="margin-top:-2px">vs <b>${esc(S.rival)}'s ${esc(sh.theirs)}</b></div>`:!sh.ppv&&ON()?'<div class="venue" style="margin-top:-2px"><b>Bye week</b> — no head-to-head</div>':''}<div class="venue">${sh.ppv?'<b>Live on pay-per-view</b>':`<b>${esc(v[0])}</b> · ${esc(v[1])}`}</div>${inner||''}</div>`}
 function tile(on,icon,t,sub,em){return `<button class="tile" onclick="${on}">${icon}<b>${t}</b><span>${sub}</span><em>${em}</em></button>`}
 let ANIM=true;
 let tab='home',rf='mine',rs='ovr',df='all',ds='ovr',ED=null,PE=null,PS=null,CE=null,aiT=null;
@@ -1619,7 +1646,7 @@ function rookieView(){const rs=createdFA();
 function cnt(l){return `${l.filter(w=>w.g==='M').length}M / ${l.filter(w=>w.g==='F').length}W`}
 function draftView(){const d=S.draft;const oc=onClock();
  let pool=Object.values(S.w).filter(w=>!w.own);if(df==='cw')pool=pool.filter(w=>w.cw);else if(df!=='all')pool=pool.filter(w=>w.g===df);pool.sort(sorter(ds));
- return `<div class="card showcard"><div class="muted">The Draft · ${d.rounds} rounds</div><div class="showname">Round ${d.round}</div><div class="${oc==='p'?'gold':'muted'}"><b>${oc==='p'?'🟡 You are on the clock':'⏳ '+esc(S.rival)+' is picking…'}</b></div><div class="muted">You: ${cnt(ownList('p'))} · ${esc(S.rival)}: ${cnt(ownList('ai'))}</div>
+ return `<div class="card showcard"><div class="muted">The Draft · ${d.rounds} rounds</div><div class="showname">Round ${d.round}</div><div class="${oc==='p'?'gold':'muted'}"><b>${oc==='p'?'🟡 You are on the clock':'⏳ '+esc(nameOf(oc))+' is picking…'}</b></div><div class="muted">${brands().map(b=>`${b==='p'?'You':esc(nameOf(b))}: ${cnt(ownList(b))}`).join(' · ')}</div>
  <div class="row mt"><button class="btn sec" ${oc!=='p'?'disabled':''} onclick="autoPick()">Auto-pick</button><button class="btn sec" ${ON()&&oc!=='p'?'disabled':''} onclick="simDraft()">${ON()?'Auto-draft me':'Sim rest'}</button></div><button class="btn sec" onclick="openStudio()">📷 Photo Studio</button></div>
  ${d.log.length?`<div class="card"><div class="h small">Latest picks</div>${d.log.slice(0,4).map(x=>`<div class="muted">${esc(x)}</div>`).join('')}</div>`:''}
  ${chips('df',[['all','All'],['M','Men'],['F','Women'],['cw','🆕 Created']],df)}
@@ -1632,7 +1659,7 @@ function simDraft(){if(mpLocked())return;if(ON()){if(!confirm('Auto-draft the re
 
 function nextPPV(){for(let w=S.week;w<=SEASON;w++)if(PPVS[w])return {n:PPVS[w],in:w-S.week};return null}
 function feudList(b){return Object.entries(S.heat).map(([k,h])=>{const [a,c]=k.split('|');return {a:S.w[a],b:S.w[c],h}}).filter(f=>f.a&&f.b&&f.a.own===b&&f.b.own===b).sort((x,y)=>y.h-x.h)}
-function homeView(){const sh=curShow();const np=nextPPV();const pp=S.fans.p/(S.fans.p+S.fans.ai)*100;const mine=ownList('p');const al=[];
+function homeView(){const sh=curShow();const np=nextPPV();const pp=S.fans.p/(S.fans.p+(S.fans.ai||S.fans.p))*100;const mine=ownList('p');const al=[];
  const exp=mine.filter(w=>w.con<=4);if(exp.length)al.push(`📝 ${exp.length} contract${exp.length>1?'s':''} expiring soon — see Office`);
  const inj=mine.filter(w=>w.inj);if(inj.length)al.push(`🚑 Injured: ${inj.map(w=>esc(w.name)).join(', ')}`);
  const sad=mine.filter(w=>w.mor<30&&!w.inj);if(sad.length)al.push(`😠 Unhappy (need TV time): ${sad.slice(0,4).map(w=>esc(w.name)).join(', ')}${sad.length>4?'…':''}`);
@@ -1641,8 +1668,8 @@ function homeView(){const sh=curShow();const np=nextPPV();const pp=S.fans.p/(S.f
  const fs=feudList('p').slice(0,5);
  const held=Object.values(S.titles).filter(t=>t.holders.length&&S.w[t.holders[0]]&&S.w[t.holders[0]].own==='p').length;
  return `${poster(sh,`<div class="venue mt" style="color:#e9d9b0">${sh.ppv?`Each side books a full card · 5 matches + a title challenge`:`Best show wins the week`}</div><button class="btn mt" onclick="go('book')">${ON()&&S.online.booked.p?'Card locked in ✓':'Book the show ▸'}</button>${np&&!sh.ppv?`<div class="venue mt">Next PPV: <b>${np.n}</b> · ${np.in===0?'this Saturday':`in ${np.in} week${np.in>1?'s':''}`}</div>`:''}`)}
- ${S.crisis&&S.w[S.crisis.a]&&CRISES[S.crisis.k]?`<div class="card warn" onclick="openCrisis()" style="cursor:pointer"><b>${CRISES[S.crisis.k].i} ${CRISES[S.crisis.k].good?'Opportunity':'Front office situation'}: ${esc(CRISES[S.crisis.k].t)}</b><div class="muted">Needs your decision before the next show — tap to handle it.</div></div>`:''}<div class="tiles">${tile("go('roster')",ICON.roster,'Roster',`${mine.length} signed · ${mine.filter(w=>w.inj).length} injured`,mine.length)}${tile("go('titles')",ICON.titles,'Titles',`You hold ${held} of ${Object.keys(S.titles).length}`,held)}${tile("go('office')",ICON.office,'Front Office',`Bank ${money(S.money.p)}`,'$')}${S.last?tile('showResults()',ICON.star,'Last Show',`${S.last.ratings&&!S.last.ppv?(S.last.ratings.p>=S.last.ratings.ai?'Won':'Lost')+' · ':''}<b style="display:inline;font:inherit;color:var(--gold2);margin:0;text-transform:none">${stars(S.last.ratings?S.last.ratings.p:0)}</b>`,'★'):tile("go('office')",ICON.star,'How to Play','Ratings, feuds & fans','?')}</div>
- <div class="card"><div class="h small">Brand war</div><div class="warnames"><div><div class="muted tiny">YOU</div><b class="gold">${esc(S.gm)}</b></div><span class="vsdot">VS</span><div class="r"><div class="muted tiny">${ON()?'FRIEND':'RIVAL'}</div><b>${esc(S.rival)}</b></div></div><div class="war"><i style="width:${pp}%"></i></div><div class="row sb muted"><span><b class="gold">${fmtFans(S.fans.p)}</b> fans</span><span>Ratings wins ${S.hourWins.p}–${S.hourWins.ai}</span><span>${fmtFans(S.fans.ai)} fans</span></div></div>
+ ${S.crisis&&S.w[S.crisis.a]&&CRISES[S.crisis.k]?`<div class="card warn" onclick="openCrisis()" style="cursor:pointer"><b>${CRISES[S.crisis.k].i} ${CRISES[S.crisis.k].good?'Opportunity':'Front office situation'}: ${esc(CRISES[S.crisis.k].t)}</b><div class="muted">Needs your decision before the next show — tap to handle it.</div></div>`:''}<div class="tiles">${tile("go('roster')",ICON.roster,'Roster',`${mine.length} signed · ${mine.filter(w=>w.inj).length} injured`,mine.length)}${tile("go('titles')",ICON.titles,'Titles',`You hold ${held} of ${Object.keys(S.titles).length}`,held)}${tile("go('office')",ICON.office,'Front Office',`Bank ${money(S.money.p)}`,'$')}${S.last?tile('showResults()',ICON.star,'Last Show',(()=>{const L=S.last.pairs?(S.last.pairs.find(p=>p.ratings.p!=null)||{}):S.last;const R=L.ratings||{};return `${R.ai!=null&&!S.last.ppv?(R.p>=R.ai?'Won':'Lost')+' · ':''}<b style="display:inline;font:inherit;color:var(--gold2);margin:0;text-transform:none">${stars(R.p||0)}</b>`})(),'★'):tile("go('office')",ICON.star,'How to Play','Ratings, feuds & fans','?')}</div>
+ ${mpStandings()}${ON()&&!S._view.opp?`<div class="card"><div class="h small">Bye week</div><div class="muted">No head-to-head this week — your show airs on its own. Next week you face <b>${esc(nameOf(localKey(oppOf(S._view.me,S.week+1,nSeats()))||'p'))}</b>.</div></div>`:''}<div class="card" ${ON()&&!S._view.opp?'style="display:none"':''}><div class="h small">${ON()&&nSeats()>2?'This week':'Brand war'}</div><div class="warnames"><div><div class="muted tiny">YOU</div><b class="gold">${esc(S.gm)}</b></div><span class="vsdot">VS</span><div class="r"><div class="muted tiny">${ON()?'FRIEND':'RIVAL'}</div><b>${esc(S.rival)}</b></div></div><div class="war"><i style="width:${pp}%"></i></div><div class="row sb muted"><span><b class="gold">${fmtFans(S.fans.p)}</b> fans</span><span>Ratings wins ${S.hourWins.p||0}–${S.hourWins.ai||0}</span><span>${fmtFans(S.fans.ai||0)} fans</span></div></div>
  ${al.length?`<div class="card warn">${al.map(a=>`<div style="margin:3px 0">${a}</div>`).join('')}</div>`:''}
  ${(S.promises||[]).length?`<div class="card"><div class="h small">Booked &amp; promised</div>${S.promises.slice().sort((a,b)=>a.week-b.week).map(pr=>S.w[pr.a]&&S.w[pr.b]?`<div class="row sb" style="margin:5px 0"><span class="frow">${face(S.w[pr.a])}${face(S.w[pr.b])}<span>${pr.kind==='contract'?'📜':'🎯'} ${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)}${pr.stip&&pr.stip!=='std'?' · '+STIPS[pr.stip].n:''}</span></span><span class="muted tiny">${pr.week===S.week?'<b class="gold">This week</b>':pr.ppv?esc(pr.ppv):'Week '+pr.week}</span></div>`:'').join('')}</div>`:''}<div class="card"><div class="h small">Hottest feuds</div>${fs.length?fs.map(f=>`<div class="feud"><div class="row sb"><span class="frow">${face(f.a)}${face(f.b)}<span>${esc(f.a.name)} vs ${esc(f.b.name)}</span></span><span class="muted">🔥 ${Math.round(f.h)}</span></div><div class="bar heat"><i style="width:${f.h}%"></i></div></div>`).join(''):'<div class="muted">No feuds yet. Put the same wrestlers in promos and matches week after week to build heat, then pay it off at a PPV.</div>'}</div>
  <div class="card"><div class="h small">The Wire</div>${S.news.slice(-15).reverse().map(n=>`<div class="news"><span class="muted">W${n.w}</span> ${esc(n.t)}</div>`).join('')}</div>`}
@@ -1758,7 +1785,7 @@ function renderChal(){const ts=Object.values(S.titles).filter(t=>t.kind==='singl
  ${!ts.length?'<div class="err">The rival brand holds no singles titles right now.</div>':''}${odds}
  <div class="row mt"><button class="btn sec" onclick="S.card.p[CE.i].d=null;save();closeModal();render()">No challenge</button><button class="btn" ${t&&CE.c?'':'disabled'} onclick="S.card.p[CE.i].d={title:CE.title,c:CE.c};save();closeModal();render()">Save</button></div><button class="btn ghost" onclick="closeModal()">Cancel</button>`,true)}
 function chPick(){openPicker({title:'Choose a challenger',cur:CE.c,g:S.titles[CE.title].g,pool:chCands,onPick:id=>{if(id)CE.c=id;renderChal()},back:renderChal})}
-function showResults(){const o=S.last;if(!o)return;
+function showResults(){const o=S.last;if(!o)return;if(o.pairs)return openModal(mpResults(o));
  openModal(`<div class="res-hd"><div class="kicker"><i></i>Week ${o.week} · Final results</div><div class="showname">${esc(o.title)}</div></div>${o.ratings?`<div class="score"><div class="me"><span>${esc(S.gm)}</span><div class="stars">${stars(o.ratings.p)}</div></div><i>VS</i><div><span>${esc(S.rival)}</span><div class="stars">${stars(o.ratings.ai)}</div></div></div>`:''}
  ${o.blocks.map(b=>`<div class="card ${b.brand==='p'?'mine':'theirs'}"><div class="row sb"><div class="h small" style="margin:0">${esc(b.label)}</div>${b.rating!=null?`<div class="stars">${stars(b.rating)}</div>`:''}</div>${b.segs.length?b.segs.map(s=>`<div class="seg"><div class="muted tiny">${esc(s.sub)}</div><div>${esc(s.txt)}</div><div class="stars">${stars(s.stars)}</div>${s.notes.map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`).join(''):'<div class="muted">Nothing aired.</div>'}</div>`).join('')}
  <div class="card"><div class="h small">Fan impact${o.hourWin?` · ${o.hourWin==='p'?'You':'Rival'} won the ratings`:''}</div><div class="row sb"><span>${esc(S.gm)}</span><b class="${o.fans.p>=0?'good':'bad'}">${o.fans.p>=0?'+':''}${o.fans.p.toLocaleString()}</b></div><div class="row sb"><span>${esc(S.rival)}</span><b class="${o.fans.ai>=0?'good':'bad'}">${o.fans.ai>=0?'+':''}${o.fans.ai.toLocaleString()}</b></div></div>
@@ -1811,7 +1838,7 @@ function resign(id){if(mpLocked())return;const w=S.w[id];const c=resignCost(w);i
 function release(id){if(mpLocked())return;const w=S.w[id];if(!confirm(`Release ${w.name}?`))return;const n=[];leave(w,`👋 ${S.gm} released ${w.name}.`,n);Object.values(S.titles).forEach(t=>{if(t.holders.includes(id)){t.holders=[];news(`🏆 The ${t.n} title has been vacated.`)}});save();closeModal();render()}
 
 function titlesView(){return `<p class="muted">Titles stay with whichever brand holds them. The only way to take gold from the rival is a PPV title challenge.</p>`+Object.values(S.titles).map(t=>{const hs=t.holders.map(h=>S.w[h]).filter(Boolean);const o=hs.length?hs[0].own:null;
- return `<div class="card belt"><div class="row sb"><div class="h">${t.n}</div><span class="badge ${o==='p'?'you':o==='ai'?'riv':'vac'}">${o==='p'?'YOU':o==='ai'?(ON()?esc(S.rival).toUpperCase():'RIVAL'):'VACANT'}</span></div><div class="champ">${hs.length?`<span class="frow">${hs.map(w=>face(w)).join('')}<span>${hs.map(w=>`<span onclick="showW('${w.id}')">${esc(w.name)}</span>`).join(' & ')}</span></span>`:'<span class="muted">Vacant — book a match for it</span>'}</div><div class="muted">${t.g==='M'?"Men's":"Women's"} ${t.kind==='singles'?'singles':t.kind==='tag'?'tag team':'trios'}${hs.length?` · ${t.since?'won W'+t.since:'reigning champion'}`:''} · last defense ${t.last?'W'+t.last:'—'}</div>${statBar('Prestige',t.prestige)}</div>`}).join('')}
+ return `<div class="card belt"><div class="row sb"><div class="h">${t.n}</div><span class="badge ${o==='p'?'you':o?'riv':'vac'}">${o==='p'?'YOU':o?(ON()?esc(nameOf(o)).toUpperCase():'RIVAL'):'VACANT'}</span></div><div class="champ">${hs.length?`<span class="frow">${hs.map(w=>face(w)).join('')}<span>${hs.map(w=>`<span onclick="showW('${w.id}')">${esc(w.name)}</span>`).join(' & ')}</span></span>`:'<span class="muted">Vacant — book a match for it</span>'}</div><div class="muted">${t.g==='M'?"Men's":"Women's"} ${t.kind==='singles'?'singles':t.kind==='tag'?'tag team':'trios'}${hs.length?` · ${t.since?'won W'+t.since:'reigning champion'}`:''} · last defense ${t.last?'W'+t.last:'—'}</div>${statBar('Prestige',t.prestige)}</div>`}).join('')}
 const HOWTO=`<p><b>Match ratings</b> blend in-ring skill (the best worker in the match helps carry the rest), popularity, chemistry (styles that mesh — high-flyers vs powerhouses, technicians vs technicians — plus face vs heel and history together), feud heat, stipulation fit, title prestige and fatigue.</p>
 <p><b>Traits</b> (the round badges on each card) add chemistry and bonuses on top of style — e.g. a Monster vs an Underdog is +4, a Storyteller adds +1 with anyone. Open any wrestler to see their best opponents and tag partners on your roster with the reasons, or tap <b>Why?</b> under a match's projected rating.</p>
 <p><b>Front office situations</b> pop up now and then after a show — backstage fights, viral videos, social media trouble, contract demands, travel mishaps, and the occasional viral opportunity. Pick how to handle each one; every option has tradeoffs. These are randomly generated fictional events.</p>
@@ -1839,77 +1866,83 @@ function saveTeam(){const n=($('#tmName').value||'').trim();const type=$('#tmTyp
  if(!n)return toast('Give it a name.');if(m.length<2||(type==='team'&&m.length>3)||m.length>6)return toast(type==='team'?'Pick 2–3 members.':'Pick 2–6 members.');
  S.teams.push({id:'t'+(S.nid++),n,type,m});news(`🤝 ${n} has formed: ${m.map(id=>S.w[id].name).join(', ')}.`);save();closeModal();render()}
 function delTeam(id){if(mpLocked())return;const t=S.teams.find(x=>x.id===id);if(!t||!confirm(`Disband ${t.n}?`))return;S.teams=S.teams.filter(x=>x.id!==id);news(`💔 ${t.n} has disbanded.`);save();render()}
-function overView(){const win=S.fans.p>=S.fans.ai;const mine=ownList('p');const mvp=mine.slice().sort((a,b)=>(b.pop-b.pop0)-(a.pop-a.pop0))[0];const top=mine.slice().sort((a,b)=>ovr(b)-ovr(a))[0];
+function overView(){if(ON()&&nSeats()>2)return mpOverView();const win=S.fans.p>=S.fans.ai;const mine=ownList('p');const mvp=mine.slice().sort((a,b)=>(b.pop-b.pop0)-(a.pop-a.pop0))[0];const top=mine.slice().sort((a,b)=>ovr(b)-ovr(a))[0];
  const avgR=b=>{const h=S.history.filter(x=>x.s===S.season);return h.length?avg(h.map(x=>x[b])):0};
  return `<div class="card showcard ppv center"><div class="muted">Season ${S.season} complete</div><div class="showname">${win?'You won the fan war!':esc(S.rival)+' wins'}</div><div class="big mt">${fmtFans(S.fans.p)} <span class="muted">vs</span> ${fmtFans(S.fans.ai)}</div></div>
  <div class="card"><div class="row sb"><span>Ratings wins</span><b>${S.hourWins.p} – ${S.hourWins.ai}</b></div><div class="row sb"><span>Avg rating</span><b><span class="stars">${stars(avgR('p'))}</span> vs <span class="stars">${stars(avgR('ai'))}</span></b></div>
  ${S.best?`<div class="mt"><span class="muted">Match of the year</span><br>${esc(S.best.t)} <span class="stars">${stars(S.best.s)}</span> <span class="muted">(${esc(S.best.show)}, W${S.best.w})</span></div>`:''}
  ${mvp?`<div class="mt"><span class="muted">Breakout star</span><br><b>${esc(mvp.name)}</b> (+${Math.round(mvp.pop-mvp.pop0)} popularity)</div>`:''}${top?`<div class="mt"><span class="muted">Top star</span><br><b>${esc(top.name)}</b></div>`:''}</div>
  <button class="btn" onclick="nextSeason()">Start Season ${S.season+1}</button><p class="muted center">Rosters, titles, feuds, contracts and development all carry over.</p>`}
-function nextSeason(){if(mpLocked())return;S.season++;S.week=1;S.showIdx=0;S.phase='season';S.hourWins={p:0,ai:0};S.best=null;S.promises=[];if(S.mpo)S.mpo.promises=[];if(ON())S.online.booked={p:false,ai:false};S.fa={};marketTick(undefined,true);Object.values(S.w).forEach(w=>w.pop0=w.pop);freshCards();news(`🎉 Season ${S.season} begins. Next stop: All In.`);save();go('home')}
+function nextSeason(){if(mpLocked())return;S.season++;S.week=1;S.showIdx=0;S.phase='season';for(const k in S.hourWins)S.hourWins[k]=0;S.best=null;S.promises=[];if(S.priv)for(const k in S.priv)if(S.priv[k])S.priv[k].promises=[];if(ON()){relocal();S.online.booked={};S.online.order=bookingOrder()}S.fa={};marketTick(undefined,true);Object.values(S.w).forEach(w=>w.pop0=w.pop);freshCards();news(`🎉 Season ${S.season} begins. Next stop: All In.`);save();go('home')}
 
 /* ===================== ONLINE LEAGUE: turns, sync, invites ===================== */
 const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 function mpGames(){try{return JSON.parse(LS.get('tksim_games')||'[]')}catch(e){return []}}
-function mpRemember(extra){if(!LMP)return;const l=mpGames().filter(g=>g.code!==LMP.code);l.unshift(Object.assign({code:LMP.code,me:LMP.me,key:LMP.key,gm:S?S.gm:'',rival:S?S.rival:''},extra||{}));LS.set('tksim_games',JSON.stringify(l.slice(0,12)))}
+function mpLabel(){if(!S||!ON())return '';const others=localSeats().filter(k=>k!=='p').map(k=>S.names&&S.names[k]).filter(Boolean);return nSeats()===2?`${S.gm} vs ${others[0]||'?'}`:`${S.gm}'s ${nSeats()}-GM league`}
+function mpRemember(){if(!LMP)return;const l=mpGames().filter(g=>g.code!==LMP.code);l.unshift({code:LMP.code,me:LMP.me,key:LMP.key,label:mpLabel()});LS.set('tksim_games',JSON.stringify(l.slice(0,12)))}
 function mpSeenKey(){return 'tksim_seen_'+(LMP?LMP.code:'')}
-function mpMarkSeen(){if(S&&S.last)LS.set(mpSeenKey(),S.season*100+S.last.week)}
-function mpUnseen(){return !!(S&&S.last&&S.season*100+S.last.week>+(LS.get(mpSeenKey())||0))}
+function mpMarkSeen(){if(S&&S.last)LS.set(mpSeenKey(),(S.last.season||S.season)*100+S.last.week)}
+function mpUnseen(){return !!(S&&S.last&&(S.last.season||S.season)*100+S.last.week>+(LS.get(mpSeenKey())||0))}
 function mpAvail(){return !!(window.TKO&&window.TKO.configured)}
-function mpOther(){return LMP&&LMP.me==='host'?'guest':'host'}
 function newCode(n){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';const r=crypto.getRandomValues(new Uint32Array(n));for(let i=0;i<n;i++)s+=A[r[i]%A.length];return s}
-function canonState(){const c=JSON.parse(JSON.stringify(S));return LMP&&LMP.me==='guest'?flipState(c):c}
+function canonState(){return toCanon(JSON.parse(JSON.stringify(S)))}
+function joinedCount(){return Object.values(S.names||{}).filter(Boolean).length}
 let mpT=null,MP_PENDING=false,MP_UNSUB=null,MP_HOLD=false;
 function mpSoon(){if(MP_HOLD)return;clearTimeout(mpT);mpT=setTimeout(()=>mpPush(),1200)}
-/* upload the shared world; msg is what the other player's notification says */
+/* upload the shared world; msg is what the next GM's notification says */
 function mpPush(msg){clearTimeout(mpT);if(!ON()||!LMP)return;const o=S.online;o.rev=(o.rev||0)+1;if(msg)o.msg=msg;saveLocal();mpRemember();
  if(!window.TKO||!TKO.ready){MP_PENDING=true;return}MP_PENDING=false;
- const turn=o.turn==='p'?LMP.me:mpOther();
- TKO.push(LMP.code,{state:JSON.stringify(canonState()),rev:o.rev,turn,msg:o.msg||'',week:S.week,season:S.season,phase:S.phase}).catch(e=>{console.warn('push failed',e);toast('Saved on this device — it will sync when you reconnect.')})}
-function mpPass(msg){S.online.turn='ai';mpPush(msg)}
-function mpApplyNames(names){if(!names||!LMP)return;const me=names[LMP.me],them=names[mpOther()];if(me)S.gm=me;S.rival=them||'Waiting for a friend'}
-/* a new copy of the world arrived from the other player */
+ TKO.push(LMP.code,{state:JSON.stringify(canonState()),rev:o.rev,turn:canonKey(o.turn),msg:o.msg||'',week:S.week,season:S.season,phase:S.phase}).catch(e=>{console.warn('push failed',e);toast('Saved on this device — it will sync when you reconnect.')})}
+function mpPass(msg,to){S.online.turn=to;mpPush(msg)}
+function mpApplyNames(names){if(!names||!LMP||!S._view)return;S.names=S.names||{};for(const k in names)if(names[k])S.names[localKey(k)]=names[k];S.gm=S.names.p||S.gm;S.rival=S._view.opp?(S.names.ai||'Waiting for a GM'):'Bye week'}
+function mpLoad(stateStr,names){const st=JSON.parse(stateStr);delete st._view;viewFor(st,LMP.me);S=st;dataUpdate(S);ensureTraits(S);feudInit(S);mpApplyNames(names)}
+/* a new copy of the world arrived from another GM */
 function mpIncoming(d){if(!d||!LMP||!S||!ON())return;const wasMine=myTurn();let changed=false;
- if(d.state&&(d.rev||0)>(S.online.rev||0)){let st;try{st=JSON.parse(d.state)}catch(e){return}if(LMP.me==='guest')flipState(st);
-  if(LMP.me==='guest'&&d.guest&&window.TKO&&TKO.uid&&d.guest!==TKO.uid){toast('This seat moved to another device.');}
-  S=st;dataUpdate(S);ensureTraits(S);feudInit(S);changed=true}
- const g0=S.gm,r0=S.rival;mpApplyNames(d.names);if(S.gm!==g0||S.rival!==r0)changed=true;
+ if(d.state&&(d.rev||0)>(S.online.rev||0)){try{mpLoad(d.state,d.names)}catch(e){console.warn(e);return}changed=true;
+  if(d.uids&&window.TKO&&TKO.uid&&d.uids[LMP.me]&&d.uids[LMP.me]!==TKO.uid)toast('This seat moved to another device.')}
+ else{const before=JSON.stringify(S.names);mpApplyNames(d.names);if(JSON.stringify(S.names)!==before)changed=true}
  if(!changed)return;saveLocal();mpRemember();
  if(PS||ME||ED||PE||CE)return; /* don't yank a screen out from under someone mid-edit */
  render();
- if(!wasMine&&myTurn()){toast(`🔔 Your turn, ${S.gm}!`);if(S.phase==='season'&&mpUnseen()){mpMarkSeen();showResults()}}}
+ if(!wasMine&&myTurn()){toast(`🔔 Your turn, ${S.gm}!`);if(S.phase!=='draft'&&mpUnseen()){mpMarkSeen();showResults()}}}
 function mpConnect(){if(!ON()||!LMP||!mpAvail())return;if(MP_UNSUB){MP_UNSUB();MP_UNSUB=null}
  MP_UNSUB=TKO.listen(LMP.code,mpIncoming);if(MP_PENDING)mpPush()}
 function mpOpen(code){const g=mpGames().find(x=>x.code===code);if(!g)return;if(S&&!ON())saveLocal();
- const s=LS.get('tksim_game_'+code);if(!s)return toast('That game is not saved on this device.');LMP={code:g.code,me:g.me,key:g.key};LS.set('tksim_active',JSON.stringify(LMP));
+ const s=LS.get('tksim_game_'+code);if(!s)return toast('That league is not saved on this device.');LMP={code:g.code,me:g.me,key:g.key};LS.set('tksim_active',JSON.stringify(LMP));
  S=JSON.parse(s);dataUpdate(S);ensureTraits(S);feudInit(S);closeModal();tab='home';ANIM=true;render();mpConnect();if(mpUnseen()&&S.phase!=='draft'){mpMarkSeen();showResults()}}
 function mpSolo(){if(MP_UNSUB){MP_UNSUB();MP_UNSUB=null}if(ON())saveLocal();LMP=null;LS.del('tksim_active');S=load();if(S){dataUpdate(S);ensureTraits(S);feudInit(S);showMigrate()}closeModal();tab='home';ANIM=true;render()}
-function mpLeave(){if(!confirm(`Remove this online game from this device? ${S.rival} keeps their copy; you can rejoin later with your seat code (${LMP.code}-${LMP.key}).`))return;
+function mpLeave(){if(!confirm(`Remove this league from this device? The other GMs keep playing; you can rejoin later with your seat code (${LMP.code}-${LMP.key}).`))return;
  LS.del('tksim_game_'+LMP.code);LS.set('tksim_games',JSON.stringify(mpGames().filter(g=>g.code!==LMP.code)));mpSolo()}
 
 /* ---- turn steps ---- */
 function rookiesDone(){if(!ON()){startDraft();render();return}if(mpLocked())return;const o=S.online;o.rk.p=true;
- if(!o.rk.ai){mpPass(`${S.gm} is ready for the draft. Your turn to create wrestlers — or skip straight to the draft.`);render();return}
- startDraft();if(onClock()==='p'){mpPush();toast('The draft is on — you pick first!')}else mpPass(`The draft is on and you're on the clock for pick 1!`);render()}
+ const next=localSeats().find(k=>!o.rk[k]);
+ if(next){mpPass(`${S.gm} is ready for the draft. Your turn to create wrestlers — or skip straight to the draft.`,next);render();return}
+ startDraft();const oc=onClock();if(oc==='p'){mpPush();toast('The draft is on — you pick first!')}else mpPass(`The draft is on and you're on the clock for pick 1!`,oc);render()}
 function mpDraftStep(){const o=S.online;
  while(S.phase==='draft'){const oc=onClock();if(!o.auto[oc])break;const c=draftChoice(oc);if(!c){finishDraft();break}draftPick(c.id,oc)}
- if(S.phase==='draft'){if(onClock()==='ai')mpPass(`${S.gm} made their pick — you're on the clock in round ${S.draft.round}.`);else mpPush()}
- else{tab='home';mpPush()}}
+ if(S.phase==='draft'){const oc=onClock();if(oc!=='p')mpPass(`${S.gm} made their pick — you're on the clock in round ${S.draft.round}.`,oc);else mpPush()}
+ else{tab='home';o.booked={};o.order=bookingOrder();mpPush()}}
 function mpLockCard(){const o=S.online;const sh=curShow();o.booked.p=true;
- if(o.booked.ai){airShow();o.booked={p:false,ai:false};mpMarkSeen();mpPush();showResults();render();return}
- const res=S.last&&S.last.week===S.week-1?`Week ${S.last.week} results are in, and `:'';
- mpPass(`${res}${S.gm} has locked in ${sh.ppv?'their '+sh.name+' card':sh.mine} for week ${S.week}. Your turn to book!`);
- render();openModal(`<div class="h mhd">Card locked in ✓</div><p>Your ${esc(sh.ppv?sh.name:sh.mine)} card is saved. The week airs as soon as <b>${esc(S.rival)}</b> books ${sh.ppv?'theirs':esc(sh.theirs)}.</p><p class="muted">${mpAvail()&&TKO.alertsOn&&TKO.alertsOn(LMP.code)?"You'll get a notification when it's your turn again.":'Turn on turn alerts in the Office to get a notification when it is your turn again.'}</p><button class="btn" onclick="closeModal()">Got it</button>`)}
+ const next=(o.order&&o.order.length?o.order:bookingOrder()).find(k=>!o.booked[k]);
+ if(!next){const wk=S.week;airShow();o.booked={};o.order=bookingOrder();mpMarkSeen();mpPush(`Week ${wk} results are in!`);showResults();render();return}
+ const res=S.last&&S.last.week===S.week-1&&o.order[0]==='p'?`Week ${S.last.week} results are in, and `:'';
+ mpPass(`${res}${S.gm} has locked in ${sh.ppv?'their '+sh.name+' card':sh.mine} for week ${S.week}. Your turn to book!`,next);
+ const left=o.order.filter(k=>!o.booked[k]).map(nameOf);
+ render();openModal(`<div class="h mhd">Card locked in ✓</div><p>Your ${esc(sh.ppv?sh.name:sh.mine)} card is saved. The week airs once ${left.length>1?'the rest of the league books':'<b>'+esc(left[0])+'</b> books'}${left.length>1?` (next up: <b>${esc(left[0])}</b>)`:''}.</p><p class="muted">${mpAvail()&&TKO.alertsOn&&TKO.alertsOn(LMP.code)?"You'll get a notification when it's your turn again.":'Turn on turn alerts in the Office to get a notification when it is your turn again.'}</p><button class="btn" onclick="closeModal()">Got it</button>`)}
 
 /* ---- create / join ---- */
 function mpNeedSetup(){openModal(`<div class="h mhd">Online play isn't set up yet</div><p>Online leagues need a free Firebase project. Follow <b>ONLINE-SETUP.md</b> in the game's GitHub repo, paste your settings into <b>firebase-config.js</b>, and this button will light up.</p><button class="btn" onclick="closeModal()">OK</button>`)}
-function mpHostForm(){if(!mpAvail())return mpNeedSetup();openModal(`<div class="h mhd">Host an online league</div><p class="muted">You'll book ${'Dynamite'}; your friend books Collision. You take turns — play whenever you like, even offline, and it syncs when you're back online.</p>
+let MPN=2;
+function mpHostForm(){if(!mpAvail())return mpNeedSetup();openModal(`<div class="h mhd">Host an online league</div><p class="muted">Each GM runs their own brand. Every week you go head-to-head with a different GM, and the most fans after All In wins. Take your turn whenever you like — even offline — and it syncs when you're back online.</p>
  <label>Your GM name</label><input id="mpName" maxlength="24" value="${esc(S&&!ON()?S.gm:LS.get('tksim_name')||'')}" placeholder="Your name">
+ <label>League size</label><div class="chips" id="mpN">${[2,3,4].map(n=>`<button class="chip ${MPN===n?'on':''}" onclick="MPN=${n};document.querySelectorAll('#mpN .chip').forEach((c,i)=>c.classList.toggle('on',i===${n-2}))">${n} GMs</button>`).join('')}</div>
+ <p class="muted tiny">3 GMs: one takes a bye each week and their show airs on its own. The size is fixed once the league starts.</p>
  <button class="btn mt" id="mpGo" onclick="mpHost()">Create league</button><button class="btn ghost" onclick="closeModal()">Cancel</button>`)}
-async function mpHost(){const name=($('#mpName').value||'').trim()||'You';LS.set('tksim_name',name);const b=$('#mpGo');b.disabled=true;b.textContent='Creating…';
+async function mpHost(){const name=($('#mpName').value||'').trim()||'You';LS.set('tksim_name',name);const b=$('#mpGo');b.disabled=true;b.textContent='Creating…';const n=MPN;
  try{if(S&&!ON())saveLocal();const code=newCode(6),key=newCode(8);
-  LMP={code,me:'host',key};MP_HOLD=true;newGame(name,'Waiting for a friend','normal',{});
-  await TKO.create(code,{names:{host:name,guest:''},turn:'host',rev:1,state:JSON.stringify(S),msg:'',week:1,season:1,phase:S.phase,appUrl:location.href.split(/[?#]/)[0]},key);
+  LMP={code,me:'s0',key};MP_HOLD=true;newGame(name,'','normal',{n});
+  const names={s0:name};await TKO.create(code,{n,names,turn:'s0',rev:1,state:JSON.stringify(canonState()),msg:'',week:1,season:1,phase:S.phase,appUrl:location.href.split(/[?#]/)[0]},key);
   MP_HOLD=false;S.online.rev=1;saveLocal();LS.set('tksim_active',JSON.stringify(LMP));mpRemember();tab='home';ANIM=true;render();mpConnect();mpInvite(true)}
  catch(e){console.warn(e);MP_HOLD=false;LMP=null;S=load();b.disabled=false;b.textContent='Create league';toast(navigator.onLine?"Couldn't create the league — check your Firebase setup.":'You need a connection to create a league.')}}
 function mpJoinForm(){if(!mpAvail())return mpNeedSetup();openModal(`<div class="h mhd">Join a league</div><p class="muted">Enter the 6-letter code your friend sent you. Moving your own seat to a new device? Enter your seat code (it has a dash) instead.</p>
@@ -1919,15 +1952,15 @@ function mpJoinForm(){if(!mpAvail())return mpNeedSetup();openModal(`<div class="
 async function mpJoin(){const name=($('#mpName').value||'').trim()||'Friend';LS.set('tksim_name',name);const raw=($('#mpCode').value||'').trim().toUpperCase().replace(/\s+/g,'');
  const [code,claim]=raw.split('-');if(!/^[A-Z0-9]{6}$/.test(code||''))return toast('Codes look like ABC123.');const b=$('#mpGo');b.disabled=true;b.textContent='Joining…';
  try{const key=claim||newCode(8);const r=claim?await TKO.claim(code,claim):await TKO.join(code,name,key);
-  if(S&&!ON())saveLocal();const old=mpGames().find(x=>x.code===code);LMP={code,me:r.seat,key:claim||r.key||(old&&old.key)||key};let st=JSON.parse(r.data.state);if(r.seat==='guest')flipState(st);S=st;dataUpdate(S);ensureTraits(S);feudInit(S);mpApplyNames(r.data.names);
+  if(S&&!ON())saveLocal();const old=mpGames().find(x=>x.code===code);LMP={code,me:r.seat,key:claim||r.key||(old&&old.key)||key};mpLoad(r.data.state,r.data.names);
   saveLocal();LS.set('tksim_active',JSON.stringify(LMP));mpRemember();closeModal();tab='home';ANIM=true;render();mpConnect();
-  toast(r.seat==='host'?'Welcome back, commissioner.':`You're in! You book ${showNames().p}.`);if(!claim&&mpAvail()&&TKO.canAlert())setTimeout(()=>mpAlertsPrompt(),600)}
- catch(e){console.warn(e);b.disabled=false;b.textContent='Join';const m=String(e&&e.message||e);toast(m.includes('nogame')?'No league with that code.':m.includes('full')?'That league already has two GMs.':navigator.onLine?"Couldn't join — double-check the code.":'You need a connection to join.')}}
+  toast(r.seat==='s0'?'Welcome back, commissioner.':`You're in! You book ${showNames().p}.`);if(!claim&&mpAvail()&&TKO.canAlert())setTimeout(()=>mpAlertsPrompt(),600)}
+ catch(e){console.warn(e);b.disabled=false;b.textContent='Join';const m=String(e&&e.message||e);toast(m.includes('nogame')?'No league with that code.':m.includes('full')?'That league is full.':m.includes('badkey')?"That seat code doesn't match.":navigator.onLine?"Couldn't join — double-check the code.":'You need a connection to join.')}}
 function mpInviteText(){return `Join my Tony Khan Simulator league! Open ${location.href.split(/[?#]/)[0]} (add it to your home screen), tap "Join a league" and enter code ${LMP.code}.`}
-function mpInvite(first){openModal(`<div class="h mhd">${first?'League created!':'Invite a friend'}</div><p>Send your friend this code. They open the game, tap <b>Join a league</b>, and enter it.</p><div class="mpcode">${LMP.code}</div>
+function mpInvite(first){const open=nSeats()-joinedCount();openModal(`<div class="h mhd">${first?'League created!':'Invite GMs'}</div><p>Send ${nSeats()>2?'your friends':'your friend'} this code. They open the game, tap <b>Join a league</b>, and enter it.${open>0?` <b>${open}</b> seat${open>1?'s':''} open.`:' The league is full.'}</p><div class="mpcode">${LMP.code}</div>
  <button class="btn" onclick="mpShare()">Share invite</button>${first&&TKO.canAlert()?`<button class="btn sec" onclick="mpAlerts()">🔔 Turn on turn alerts</button>`:''}<button class="btn ghost" onclick="closeModal()">${first?'Start creating wrestlers':'Done'}</button>`)}
 async function mpShare(){const t=mpInviteText();try{if(navigator.share){await navigator.share({text:t});return}}catch(e){return}try{await navigator.clipboard.writeText(t);toast('Invite copied — paste it in a text.')}catch(e){toast('Code: '+LMP.code)}}
-function mpAlertsPrompt(){openModal(`<div class="h mhd">Get a ping on your turn?</div><p>Turn alerts send a notification when ${esc(S.rival)} finishes and it's your move.</p>${/iphone|ipad/i.test(navigator.userAgent)&&!navigator.standalone?'<p class="muted">On iPhone, add the game to your Home Screen first (Share → Add to Home Screen), then turn alerts on from there.</p>':''}<button class="btn" onclick="mpAlerts()">🔔 Turn on turn alerts</button><button class="btn ghost" onclick="closeModal()">Not now</button>`)}
+function mpAlertsPrompt(){openModal(`<div class="h mhd">Get a ping on your turn?</div><p>Turn alerts send a notification when it's your move.</p>${/iphone|ipad/i.test(navigator.userAgent)&&!navigator.standalone?'<p class="muted">On iPhone, add the game to your Home Screen first (Share → Add to Home Screen), then turn alerts on from there.</p>':''}<button class="btn" onclick="mpAlerts()">🔔 Turn on turn alerts</button><button class="btn ghost" onclick="closeModal()">Not now</button>`)}
 async function mpAlerts(){if(!mpAvail())return mpNeedSetup();
  if(/iphone|ipad/i.test(navigator.userAgent)&&!navigator.standalone)return toast('Add the game to your Home Screen first, then turn alerts on from the installed app.');
  try{await TKO.enableAlerts(LMP.code);toast("🔔 Turn alerts are on for this device.");closeModal();render()}
@@ -1935,19 +1968,47 @@ async function mpAlerts(){if(!mpAvail())return mpNeedSetup();
 function mpSeatCode(){openModal(`<div class="h mhd">Play on another device</div><p>On the new device, open the game, tap <b>Join a league</b> and enter this seat code. It moves your seat there (this device stops syncing).</p><div class="mpcode" style="font-size:22px">${LMP.code}-${LMP.key}</div><p class="muted">Keep it private — anyone with it can take over your seat.</p><button class="btn" onclick="closeModal()">Done</button>`)}
 
 /* ---- UI bits ---- */
-function mpBanner(){if(!ON())return '';const o=S.online;const joined=S.rival&&S.rival!=='Waiting for a friend';const alerts=mpAvail()&&TKO.alertsOn(LMP.code);
- const inv=!joined?`<br><a href="#" onclick="mpInvite();return false" style="color:var(--gold2)">Invite code ${LMP.code}</a>`:'';
- if(myTurn()){let what='Your turn';if(S.phase==='rookies')what='Your turn — create wrestlers, then continue';else if(S.phase==='draft')what="You're on the clock";else if(S.phase==='season')what=o.booked.ai?`Your turn — ${esc(S.rival)} has booked. Your show airs the week.`:'Your turn — book your show';else if(S.phase==='over')what='Your turn — start the next season';return `<div class="mpbar on">🟡 <span><b>${what}</b>${inv}</span></div>`}
- return `<div class="mpbar">⏳ <span>${o.booked.p?'Your card is locked in. ':''}Waiting on <b>${esc(joined?S.rival:'a friend to join')}</b>${alerts?' · 🔔 you\'ll be pinged':` · <a href="#" onclick="mpAlerts();return false" style="color:var(--gold2)">turn on alerts</a>`}${inv}</span></div>`}
-function mpSetupCard(){const g=mpGames();return `<div class="card"><div class="h small">Online league</div><p class="muted" style="margin-top:0">Play head-to-head with a friend: you book one brand, they book the other, and you take turns whenever you like. Works offline too — turns sync when you're back online.</p>
- ${g.map(x=>`<button class="btn sec" onclick="mpOpen('${x.code}')">▶ ${esc(x.gm||'You')} vs ${esc(x.rival||'?')} <span class="muted tiny">${x.code}</span></button>`).join('')}
+function mpBanner(){if(!ON())return '';const o=S.online;const open=nSeats()-joinedCount();const alerts=mpAvail()&&TKO.alertsOn(LMP.code);
+ const inv=open>0?`<br><a href="#" onclick="mpInvite();return false" style="color:var(--gold2)">${open} open seat${open>1?'s':''} · invite code ${LMP.code}</a>`:'';
+ if(myTurn()){let what='Your turn';const left=(o.order||[]).filter(k=>!o.booked[k]&&k!=='p');
+  if(S.phase==='rookies')what='Your turn — create wrestlers, then continue';else if(S.phase==='draft')what="You're on the clock";
+  else if(S.phase==='season')what=left.length?'Your turn — book your show':'Your turn — everyone else has booked. Your show airs the week.';else if(S.phase==='over')what='Your turn — start the next season';
+  return `<div class="mpbar on">🟡 <span><b>${what}</b>${inv}</span></div>`}
+ const who=S.names&&S.names[o.turn]?nameOf(o.turn):'a GM to join';
+ return `<div class="mpbar">⏳ <span>${o.booked.p?'Your card is locked in. ':''}Waiting on <b>${esc(who)}</b>${alerts?' · 🔔 you\'ll be pinged':` · <a href="#" onclick="mpAlerts();return false" style="color:var(--gold2)">turn on alerts</a>`}${inv}</span></div>`}
+function mpStandings(){if(!ON()||nSeats()<3)return '';const l=localSeats().slice().sort((a,b)=>S.fans[b]-S.fans[a]);
+ return `<div class="card"><div class="h small">League standings</div>${l.map((k,i)=>`<div class="row sb" style="margin:6px 0"><span>${i+1}. <b class="${k==='p'?'gold':''}">${esc(nameOf(k))}</b> <span class="muted tiny">${esc(showNames()[k]||'')}${k==='ai'?' · this week':''}</span></span><span class="muted">${fmtFans(S.fans[k])} · ${S.hourWins[k]||0} W</span></div>`).join('')}<div class="muted tiny">W = head-to-head ratings wins. Most fans after All In wins the league.</div></div>`}
+function mpSetupCard(){const g=mpGames();return `<div class="card"><div class="h small">Online league</div><p class="muted" style="margin-top:0">Play with 1–3 friends: everyone runs their own brand and you face a different GM each week. Take turns whenever you like — even offline — and it syncs when you're back online.</p>
+ ${g.map(x=>`<button class="btn sec" onclick="mpOpen('${x.code}')">▶ ${esc(x.label||x.code)} <span class="muted tiny">${x.code}</span></button>`).join('')}
  <div class="row"><button class="btn sec" onclick="mpHostForm()">Host a league</button><button class="btn sec" onclick="mpJoinForm()">Join a league</button></div></div>`}
 function mpOfficeCard(){if(!ON())return mpSetupCard();const alerts=mpAvail()&&TKO.alertsOn(LMP.code);const others=mpGames().filter(g=>g.code!==LMP.code);
- return `<div class="card"><div class="h small">Online league · ${LMP.code}</div><p class="muted" style="margin-top:0">${esc(S.gm)} (${esc(showNames().p)}) vs ${esc(S.rival)} (${esc(showNames().ai)}). You're the ${LMP.me==='host'?'host':'guest'} GM.</p>
+ return `<div class="card"><div class="h small">Online league · ${LMP.code}</div>${localSeats().map(k=>`<div class="row sb" style="margin:4px 0"><span><b class="${k==='p'?'gold':''}">${esc(S.names&&S.names[k]?nameOf(k):'Open seat')}</b></span><span class="muted tiny">${esc(showNames()[k]||'')}${k==='p'?' · you':''}</span></div>`).join('')}
  <button class="btn ${alerts?'sec':''}" onclick="mpAlerts()">${alerts?'🔔 Turn alerts on — refresh':'🔔 Turn on turn alerts'}</button>
  <div class="row"><button class="btn sec" onclick="mpInvite()">Invite code</button><button class="btn sec" onclick="mpSeatCode()">Other device</button></div>
- ${others.map(x=>`<button class="btn sec" onclick="mpOpen('${x.code}')">▶ Switch to ${esc(x.gm||'You')} vs ${esc(x.rival||'?')}</button>`).join('')}
+ ${others.map(x=>`<button class="btn sec" onclick="mpOpen('${x.code}')">▶ Switch to ${esc(x.label||x.code)}</button>`).join('')}
  <button class="btn sec" onclick="mpSolo()">Switch to my solo game</button><button class="btn ghost danger" onclick="mpLeave()">Remove this league from this device</button></div>`}
+/* results for a week with several head-to-head matchups (and maybe a bye) */
+function mpResults(o){const mine=o.pairs.find(p=>p.blocks.some(b=>b.brand==='p'))||o.pairs[0];const rest=o.pairs.filter(p=>p!==mine);
+ const pairHd=p=>{const ks=Object.keys(p.ratings);return `<div class="score">${ks.map((k,i)=>`${i?'<i>VS</i>':''}<div class="${k==='p'?'me':''}"><span>${esc(nameOf(k))}</span><div class="stars">${stars(p.ratings[k])}</div></div>`).join('')}</div>`};
+ const fansHd=p=>`<div class="card"><div class="h small">Fan impact${p.hourWin?` · ${esc(nameOf(p.hourWin))} won the ratings`:Object.keys(p.ratings).length===1&&!o.ppv?' · bye week':''}</div>${Object.keys(p.fans).map(k=>`<div class="row sb"><span>${esc(nameOf(k))}</span><b class="${p.fans[k]>=0?'good':'bad'}">${p.fans[k]>=0?'+':''}${p.fans[k].toLocaleString()}</b></div>`).join('')}</div>`;
+ const blocks=p=>p.blocks.map(b=>`<div class="card ${b.brand==='p'?'mine':'theirs'}"><div class="row sb"><div class="h small" style="margin:0">${esc(b.label)}</div>${b.rating!=null?`<div class="stars">${stars(b.rating)}</div>`:''}</div>${b.segs.length?b.segs.map(s=>`<div class="seg"><div class="muted tiny">${esc(s.sub)}</div><div>${esc(s.txt)}</div><div class="stars">${stars(s.stars)}</div>${s.notes.map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`).join(''):'<div class="muted">Nothing aired.</div>'}</div>`).join('');
+ return `<div class="res-hd"><div class="kicker"><i></i>Week ${o.week} · Final results</div><div class="showname">${esc(o.title)}</div></div>${pairHd(mine)}${blocks(mine)}${fansHd(mine)}
+ ${rest.map(p=>`<details class="card"><summary class="h small" style="margin:0">Elsewhere: ${Object.keys(p.ratings).map(k=>`${esc(nameOf(k))} ${stars(p.ratings[k])}`).join(' vs ')}</summary>${blocks(p)}${fansHd(p)}</details>`).join('')}
+ ${o.notes.length?`<div class="card"><div class="h small">Storylines &amp; news</div>${o.notes.map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`:''}
+ <button class="btn" onclick="closeModal();go('home');if(S.crisis)setTimeout(openCrisis,250)">Continue</button>`}
+/* air every matchup this week, then advance the week once */
+function mpAirWeek(){const wk=S.week,show=curShow();const L={week:wk,season:S.season,ppv:show.ppv,title:show.ppv?show.name:`Week ${wk} · ${nSeats()>2?'League night':showNames().p+' vs '+showNames().ai}`,pairs:[],notes:[]};
+ pairings(wk,nSeats()).forEach(([x,y])=>asPair(x,y,()=>{const out=airPair();const f=k=>k==='p'?x:k==='ai'?(y||k):k;
+  L.pairs.push({fans:mapObj(out.fans,f),ratings:mapObj(out.ratings,f),hourWin:out.hourWin?f(out.hourWin):null,blocks:out.blocks.map(b=>Object.assign({},b,{brand:b.brand==='x'?'x':f(b.brand)}))});L.notes.push(...out.notes)}));
+ S.showIdx=0;endWeek(L.notes);relocal();if(S.phase==='season')freshCards();
+ const g=localKey;L.pairs.forEach(p=>{p.fans=mapObj(p.fans,g);p.ratings=mapObj(p.ratings,g);if(p.hourWin)p.hourWin=g(p.hourWin);p.blocks.forEach(b=>{if(b.brand!=='x')b.brand=g(b.brand)})});
+ S.last=L;save();return L}
+function mpOverView(){const l=localSeats().slice().sort((a,b)=>S.fans[b]-S.fans[a]);const top=l[0];const mine=ownList('p');const mvp=mine.slice().sort((a,b)=>(b.pop-b.pop0)-(a.pop-a.pop0))[0];
+ return `<div class="card showcard ppv center"><div class="muted">Season ${S.season} complete</div><div class="showname">${top==='p'?'You won the league!':esc(nameOf(top))+' wins the league'}</div></div>
+ <div class="card"><div class="h small">Final standings</div>${l.map((k,i)=>`<div class="row sb" style="margin:6px 0"><span>${['🥇','🥈','🥉','4.'][i]} <b class="${k==='p'?'gold':''}">${esc(nameOf(k))}</b></span><span>${fmtFans(S.fans[k])} <span class="muted">· ${S.hourWins[k]||0} W</span></span></div>`).join('')}
+ ${S.best?`<div class="mt"><span class="muted">Match of the year</span><br>${esc(S.best.t)} <span class="stars">${stars(S.best.s)}</span> <span class="muted">(${esc(S.best.show)}, W${S.best.w})</span></div>`:''}
+ ${mvp?`<div class="mt"><span class="muted">Your breakout star</span><br><b>${esc(mvp.name)}</b> (+${Math.round(mvp.pop-mvp.pop0)} popularity)</div>`:''}</div>
+ <button class="btn" ${myTurn()?'':'disabled'} onclick="nextSeason()">Start Season ${S.season+1}</button><p class="muted center">Rosters, titles, feuds, contracts and development all carry over.</p>`}
 
 if(typeof document!=='undefined'&&document.getElementById('app')){
  if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
