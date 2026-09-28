@@ -1,7 +1,8 @@
 // Tony Khan Simulator — offline support. Bump VERSION whenever you upload a new index.html.
-const VERSION = 'aegm-v35';
+const VERSION = 'aegm-v36';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png',
-  './online.js', './firebase-sdk.js', './firebase-config.js'];
+  './online.js', './firebase-sdk.js', './firebase-config.js',
+  './party.js', './vendor/peerjs.min.js', './vendor/qrcode.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)));

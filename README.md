@@ -15,10 +15,19 @@ A wrestling general-manager game: draft, book Dynamite and Collision, and win th
 Open it once while online; after that it launches with no connection.
 
 ## Updating the game
-Upload the new `index.html`, then open `sw.js` and bump the version in `VERSION` (e.g. `aegm-v30` → `aegm-v31`) so phones pick up the update. Installed copies update the next time they're opened online (close and reopen the app once).
+Upload the new `index.html`, then open `sw.js` and bump the version in `VERSION` (e.g. `aegm-v36` → `aegm-v37`) so phones pick up the update. Installed copies update the next time they're opened online (close and reopen the app once).
 
 ## Play online with a friend
 Host a league for 2–4 GMs and friends join with a 6-letter code. Everyone runs their own brand, you face a different GM each week, and the most fans after All In wins. Offline turns sync later, and each player gets a notification when it's their move. One-time setup: see [ONLINE-SETUP.md](ONLINE-SETUP.md).
+
+## Party mode (same room, big screen)
+Open the game on the TV (or a laptop plugged into it) and tap **Party mode → Host on this screen**. Everyone else opens the game on their phone, taps **Join a party** and types the 4-letter code on the TV (or scans the QR code).
+
+- 2–4 GMs. Each phone runs its own brand. Everyone creates wrestlers, drafts (picks show up on the TV) and books their show **at the same time**.
+- Tap **Go live** on your phone to play your promos and match calls, and lock in your card. You can unlock it from the banner until everyone else is in.
+- Once everyone is locked in, the TV airs the week and plays each show side by side, segment by segment, then crowns the winner of the night. Phones get their own full results.
+- The TV holds the save. If it reloads, the party picks up where it left off and the phones reconnect on their own. The TV can **Pick for** or **Auto-book** a GM who has wandered off.
+- No setup needed. Devices connect directly to each other. The free PeerJS service only introduces them, so everyone needs an internet connection. Your solo game and online leagues are untouched.
 
 ## Your saves
 Turn on **Office → Cloud save** to back up automatically and continue on any device with your sync code (needs the one-time Firebase setup in [ONLINE-SETUP.md](ONLINE-SETUP.md)). The game also keeps automatic backups of your last few weeks under **Office → Backups**.
