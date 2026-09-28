@@ -333,7 +333,7 @@ nav.tabs button.on{text-shadow:none}nav.tabs button.on svg{filter:none}nav.tabs 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v26';
+const APP_VERSION='v27';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -471,7 +471,84 @@ Dani Luna|F|pw|f|76|55|52|86
 Hyan|F|te|f|70|55|50|82
 Deonna Purrazzo|F|te|h|80|68|60
 Yuka Sakazaki|F|fl|f|80|55|62
-Taya Valkyrie|F|br|h|76|70|60`;
+Taya Valkyrie|F|br|h|76|70|60
+Sammy Guevara|M|fl|h|83|78|72|88
+Jay Lethal|M|te|h|82|80|66
+Dustin Rhodes|M|br|f|74|82|70
+MVP|M|sh|h|60|88|68
+Rush|M|br|h|82|70|66
+Dralístico|M|fl|h|80|50|52|86
+Nick Wayne|M|fl|h|78|58|58|90
+Action Andretti|M|fl|f|80|55|56|86
+Alex Shelley|M|te|f|83|66|60
+Chris Sabin|M|fl|f|80|62|58
+Buddy Matthews|M|br|h|82|60|58
+The Beast Mortos|M|pw|h|76|40|56|84
+Blake Christian|M|fl|f|80|55|54|88
+Lee Moriarty|M|te|h|78|60|52|86
+Anthony Bowens|M|sh|f|72|80|68
+Billy Gunn|M|pw|f|62|72|62
+Tony Nese|M|fl|h|78|62|52
+Rocky Romero|M|te|f|74|72|56
+Trent Beretta|M|te|h|78|66|56
+Angelico|M|te|h|74|40|44
+Evil Uno|M|sh|f|70|74|56
+John Silver|M|br|f|72|74|62
+Alex Reynolds|M|te|f|72|60|50
+Preston Vance|M|pw|f|72|56|50|80
+Matt Sydal|M|fl|f|76|56|50
+Dante Martin|M|fl|f|78|55|56|88
+Darius Martin|M|fl|f|74|55|50|82
+Lee Johnson|M|fl|f|70|60|50|80
+Jake Doyle|M|pw|h|72|50|48|80
+El Clon|M|te|h|76|35|48|82
+Griff Garrison|M|pw|h|66|58|44|78
+Cole Karter|M|sh|h|66|62|44|78
+Luchasaurus|M|pw|h|74|40|58
+Zack Gibson|M|te|h|78|78|54
+James Drake|M|br|h|74|62|48
+Johnny TV|M|sh|h|74|76|60
+Mansoor|M|te|h|70|66|52
+Mason Madden|M|pw|h|66|55|50|78
+Aaron Solo|M|fl|h|66|55|40
+Alec Price|M|fl|f|74|62|50|86
+AR Fox|M|fl|f|78|55|52
+Anthony Henry|M|te|f|72|56|44
+Anthony Ogogo|M|pw|f|64|60|48|74
+Ariya Daivari|M|te|h|70|70|44
+Angelo Parker|M|sh|h|66|70|52
+Carlie Bravo|M|sh|h|60|66|44|76
+Jordan Oliver|M|fl|f|74|55|46|84
+Josh Woods|M|te|h|76|58|48
+Marshall Von Erich|M|pw|f|70|52|52|80
+Ross Von Erich|M|br|f|70|52|52|80
+Matt Menard|M|br|f|60|80|56
+Michael Nakazawa|M|sh|f|50|72|50
+Mike Bennett|M|br|h|70|66|44
+Nick Comoroto|M|pw|h|66|50|44|74
+Ortiz|M|br|h|70|60|48
+Peter Avalon|M|sh|h|58|66|40
+Satnam Singh|M|pw|h|56|40|56|68
+Scorpio Sky|M|te|f|78|66|56
+Serpentico|M|fl|h|62|50|40
+Shane Taylor|M|br|h|76|72|54
+Shawn Dean|M|br|f|64|50|40
+Tommy Billington|M|fl|f|80|55|60|90
+Truth Magnum|M|sh|f|66|60|48|78
+Turbo Floyd|M|sh|f|66|60|48|78
+Zachary Wentz|M|fl|f|74|60|50
+Ruby Soho|F|br|f|76|72|70
+Kamille|F|pw|h|74|55|60|82
+Red Velvet|F|fl|f|70|60|52
+Diamanté|F|br|h|70|55|48
+Cassie Lee|F|sh|f|66|66|54
+Jessie McKay|F|sh|f|66|62|52
+Charlette Renegade|F|fl|f|62|50|42|76
+Robyn Renegade|F|fl|f|62|50|42|76
+Leila Grey|F|sh|h|58|55|44|76
+Mara Sadè|F|sh|f|62|55|46|80
+Rachel Ellering|F|pw|f|70|55|48|80
+Tatevik|F|te|h|58|50|40|74`;
 const TITLES=[
 ['world','AEW World','singles','M',['will-ospreay'],90],
 ['wworld',"Women's World",'singles','F',['mercedes-mone'],88],
@@ -485,7 +562,16 @@ const TITLES=[
 ['trios','World Trios','trios','M',['swerve-strickland','kofi-kingston','austin-creed'],60]];
 const TEAMS=[
 ['Death Riders','faction',['jon-moxley','claudio-castagnoli','pac','wheeler-yuta','marina-shafir','daniel-garcia','gabe-kidd']],
-['Don Callis Family','faction',['kyle-fletcher','kevin-knight','kazuchika-okada','josh-alexander','hechicero','mark-davis','lance-archer','brian-cage','wardlow']],
+['Don Callis Family','faction',['kyle-fletcher','kevin-knight','kazuchika-okada','josh-alexander','hechicero','mark-davis','lance-archer','brian-cage','wardlow','el-clon','jake-doyle','rocky-romero','trent-beretta']],
+['Dark Order','faction',['evil-uno','john-silver','alex-reynolds','preston-vance']],
+['Motor City Machine Guns','team',['alex-shelley','chris-sabin']],
+['Top Flight','team',['dante-martin','darius-martin']],
+['The Outrunners','team',['truth-magnum','turbo-floyd']],
+['MxM Collection','faction',['mansoor','mason-madden','johnny-tv','taya-valkyrie']],
+['The Von Erichs','team',['marshall-von-erich','ross-von-erich']],
+['La Facción Ingobernable','faction',['rush','dralistico','the-beast-mortos']],
+['Premier Athletes','faction',['josh-woods','ariya-daivari','tony-nese']],
+['The Renegade Twins','team',['charlette-renegade','robyn-renegade']],
 ['United Empire','faction',['will-ospreay','mike-bailey','francesco-akira']],
 ['Fletcher & Knight','team',['kyle-fletcher','kevin-knight']],
 ['The Young Bucks','team',['matt-jackson','nick-jackson']],
@@ -509,7 +595,7 @@ const TEAMS=[
 ['Cage & Copeland','team',['christian-cage','adam-copeland']]];
 const FEUDS=[['mercedes-mone','thekla',70],['swerve-strickland','hangman-adam-page',55],['matt-jackson','dax-harwood',50],['nick-jackson','cash-wheeler',50],['matt-jackson','christian-cage',45],['nick-jackson','adam-copeland',40],['kevin-knight','steven-borden',50],['darby-allin','kyle-fletcher',45],['kyle-fletcher','matt-jackson',30],['andrade-el-idolo','pac',45],['kazuchika-okada','tommaso-ciampa',40],['samoa-joe','jack-perry',50],['jamie-hayter','megan-bayne',45],['alex-windsor','lena-kross',45],['jay-white','jon-moxley',35],['juice-robinson','david-finlay',35],['mike-bailey','gabe-kidd',30],['will-ospreay','claudio-castagnoli',30],['will-ospreay','jon-moxley',20],['willow-nightingale','thekla',30],['persephone','dani-luna',25],['persephone','hyan',25],['kris-statlander','julia-hart',30],['queen-aminata','skye-blue',30],['ricochet','swerve-strickland',30]];
 const OUT={'toni-storm':14,'adam-cole':12,'mark-briscoe':8,'steven-borden':6,'kota-ibushi':10,'hologram':6,'anna-jay':6,'penelope-ford':6,'maya-world':4,'riho':4,'serena-deeb':4,'harley-cameron':2,'wardlow':2};
-const DATA_V=2,DATA_AS_OF='AEW All Out, Sept 26, 2026';
+const DATA_V=3,DATA_AS_OF='AEW All Out, Sept 26, 2026';
 const FIRST_M=['Jaxon','Rico','Dante','Colt','Mateo','Kai','Axel','Tristan','Vance','Zeke'],FIRST_F=['Nova','Raven','Sadie','Lux','Jade','Aria','Kenzie','Roxy','Stella','Vega'],LAST=['Vale','Steele','Cruz','Blackwood','Kane','Rivers','Stone','Hayes','Voss','Maddox'];
 
 /* ===================== PROMOS ===================== */
