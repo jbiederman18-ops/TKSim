@@ -111,7 +111,7 @@ function partyStart(){if(!isPartyHost()||S)return;const pl=PARTY.players;if(pl.l
 function partyEnd(){if(!confirm(isPartyHost()?'End the party on this screen? Phones will be disconnected. (The party save is removed from this TV.)':'Leave the party on this phone?'))return;
  if(PARTY){if(!PARTY.host&&PARTY.conn)partySendConn(PARTY.conn,{t:PARTY.seat?'leave':'bye'});try{PARTY.peer&&PARTY.peer.destroy()}catch(e){}clearTimeout(PARTY.retryT);if(PARTY.reveal&&PARTY.reveal.t)clearTimeout(PARTY.reveal.t)}
  LS.del(PARTY_GAME);LS.del(PARTY.host?PARTY_HOST:PARTY_JOIN);PARTY=null;document.body.classList.remove('tv');
- S=load();if(S){dataUpdate(S);ensureTraits(S);feudInit(S);showMigrate()}closeModal();tab='home';ANIM=true;render()}
+ S=load();if(S){dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);showMigrate()}closeModal();tab='home';ANIM=true;render()}
 function partyAutoFor(seat){if(!isPartyHost()||!S)return;const k=localKey(seat),nm=nameOf(k);
  if(S.phase==='draft'){if(onClock()!==k)return;const c=draftChoice(k);if(c)draftPick(c.id,k);return}
  if(S.phase==='season'){if(!confirm(`Auto-book and lock in ${nm}'s show?`))return;
@@ -156,7 +156,7 @@ function partyBeat(){const P=PARTY;if(!P||P.host)return;clearTimeout(P.beatT);
 function partyPhoneMsg(m){const P=PARTY;if(!P||P.host||!m)return;if(m.t==='pong')return;
  if(m.t==='lobby'){P.lobby=m.players||[];if(!S)render();return}
  if(m.t==='err'){const why=m.m==='full'?'That party is full (4 GMs).':m.m==='started'?'That party already started. Join with the same GM name you used before to take your seat back.':'Couldn\'t join that party.';
-  try{P.peer&&P.peer.destroy()}catch(e){}LS.del(PARTY_JOIN);PARTY=null;S=load();if(S){dataUpdate(S);ensureTraits(S);feudInit(S);showMigrate()}render();toast(why);return}
+  try{P.peer&&P.peer.destroy()}catch(e){}LS.del(PARTY_JOIN);PARTY=null;S=load();if(S){dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);showMigrate()}render();toast(why);return}
  if(m.t!=='state')return;
  P.seat=m.seat;
  if(m.ack){P.inflight=false;clearTimeout(P.ackT)}
@@ -210,7 +210,7 @@ function partyNid(){return (S.nid++)+(PARTY&&!PARTY.host&&PARTY.seat?PARTY.seat:
 function partyBoot(){const q=new URLSearchParams(location.search).get('party');
  try{const h=JSON.parse(LS.get(PARTY_HOST)||'null');
   if(h&&h.code){PARTY={host:true,code:h.code,players:(h.players||[]).map(p=>Object.assign({},p,{online:false})),conns:{},hist:{},rev:0,reveal:null,status:'connecting'};
-   LMP=null;S=null;try{const g=localStorage.getItem(PARTY_GAME);if(g){S=JSON.parse(g);PARTY.rev=(S.online&&S.online.rev)||0;ensureTraits(S)}}catch(e){S=null}
+   LMP=null;S=null;try{const g=localStorage.getItem(PARTY_GAME);if(g){S=JSON.parse(g);PARTY.rev=(S.online&&S.online.rev)||0;ensureTraits(S);econMigrate(S)}}catch(e){S=null}
    if(S)PARTY.hist[PARTY.rev]=PJ(canonState());partyHostOpen(true);return true}
   const j=JSON.parse(LS.get(PARTY_JOIN)||'null');
   if(j&&j.code&&(!q||q.toUpperCase()===j.code)){PARTY={host:false,code:j.code,name:j.name,token:j.token,seat:j.seat,rev:j.rev||0,dirty:!!j.dirty,status:'connecting',lobby:[]};
