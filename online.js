@@ -46,8 +46,8 @@ if (!cfg.apiKey || !cfg.projectId) {
     },
 
     // Take the first open seat in a league (retries if a friend grabs the same seat at the same moment).
-    join(code, name, key) { return timed(this._join(...arguments)); },
-    async _join(code, name, key) {
+    join(code, name, key, show) { return timed(this._join(...arguments)); },
+    async _join(code, name, key, show) {
       const uid = await uidReady;
       for (let attempt = 0; attempt < 4; attempt++) {
         const snap = await getDocFromServer(game(code));
@@ -58,7 +58,7 @@ if (!cfg.apiKey || !cfg.projectId) {
         const open = Object.keys(d.uids || {}).sort().find(k => !d.uids[k]);
         if (!open) throw new Error('full');
         try {
-          await updateDoc(game(code), { ['uids.' + open]: uid, ['names.' + open]: name, updated: serverTimestamp() });
+          await updateDoc(game(code), { ['uids.' + open]: uid, ['names.' + open]: name, ['shows.' + open]: show || ['Dynamite', 'Collision', 'Rampage', 'Ring of Honor'][+open.slice(1)] || 'Dynamite', updated: serverTimestamp() });
         } catch (e) { continue; }
         await setDoc(doc(db, 'games', code, 'seats', open), { key });
         const fresh = await getDocFromServer(game(code));

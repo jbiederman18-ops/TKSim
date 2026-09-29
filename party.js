@@ -47,7 +47,7 @@ async function partyHostStart(){closeModal();if(S&&!ON())saveLocal();
  if(typeof MP_UNSUB!=='undefined'&&MP_UNSUB){MP_UNSUB();MP_UNSUB=null}LMP=null;
  PARTY={host:true,code:newCode(4),players:[],conns:{},hist:{},rev:0,reveal:null,status:'connecting'};S=null;
  try{localStorage.removeItem(PARTY_GAME)}catch(e){}partyHostPersist();tab='home';render();partyHostOpen(false)}
-function partyHostPersist(){if(!isPartyHost())return;LS.set(PARTY_HOST,PJ({code:PARTY.code,players:PARTY.players.map(p=>({token:p.token,name:p.name,seat:p.seat}))}))}
+function partyHostPersist(){if(!isPartyHost())return;LS.set(PARTY_HOST,PJ({code:PARTY.code,players:PARTY.players.map(p=>({token:p.token,name:p.name,show:p.show||'',seat:p.seat}))}))}
 async function partyHostOpen(resume){
  try{await partyLoadPeer()}catch(e){PARTY.status='nopeer';render();return}
  if(!PARTY||!PARTY.host)return;
@@ -65,11 +65,11 @@ function partyHostConn(conn){conn.on('data',d=>{try{partyHostMsg(conn,d)}catch(e
  conn.on('error',()=>{})}
 function partySendConn(conn,msg){try{if(conn&&conn.open)conn.send(msg)}catch(e){console.warn('send failed',e)}}
 function partyHostMsg(conn,m){if(!m||!PARTY||!PARTY.host)return;
- if(m.t==='hello'){const name=String(m.name||'GM').slice(0,24).trim()||'GM',tok=String(m.token||'');let p=PARTY.players.find(x=>x.token===tok);
+ if(m.t==='hello'){const name=String(m.name||'GM').slice(0,24).trim()||'GM',show=String(m.show||'').replace(/\s+/g,' ').slice(0,24).trim(),tok=String(m.token||'');let p=PARTY.players.find(x=>x.token===tok);
   if(!p){if(!S){if(PARTY.players.length>=4)return partySendConn(conn,{t:'err',m:'full'});p={token:tok,name,seat:null};PARTY.players.push(p)}
    else{/* a phone that lost its saved seat can take it back by joining with the same GM name */
     p=PARTY.players.find(x=>!x.online&&x.name.toLowerCase()===name.toLowerCase());if(!p)return partySendConn(conn,{t:'err',m:'started'});p.token=tok}}
-  if(!S)p.name=name;p.online=true;const old=PARTY.conns[p.token];if(old&&old!==conn){try{old.close()}catch(e){}}PARTY.conns[p.token]=conn;conn._tok=p.token;partyHostPersist();
+  if(!S){p.name=name;p.show=show}p.online=true;const old=PARTY.conns[p.token];if(old&&old!==conn){try{old.close()}catch(e){}}PARTY.conns[p.token]=conn;conn._tok=p.token;partyHostPersist();
   if(S&&p.seat)partySendState(p,{});else partyLobbyBroadcast();tvRefresh();return}
  if(m.t==='ping')return partySendConn(conn,{t:'pong'});
  const p=PARTY.players.find(x=>x.token===conn._tok);if(!p)return;
@@ -105,7 +105,7 @@ function partyHostSaved(){saveLocal();clearTimeout(PARTY_CT);PARTY_CT=setTimeout
 function partyStart(){if(!isPartyHost()||S)return;const pl=PARTY.players;if(pl.length<2)return toast('You need at least 2 GMs.');
  const n=Math.min(4,pl.length);PARTY.players=pl.slice(0,n);PARTY.players.forEach((p,i)=>p.seat='s'+i);
  newGame(PARTY.players[0].name,'','normal',{n});S.online.party=true;
- PARTY.players.forEach((p,i)=>{S.names[localKey('s'+i)]=p.name});S.gm=S.names.p;
+ PARTY.players.forEach((p,i)=>{S.names[localKey('s'+i)]=p.name;S.online.show[localKey('s'+i)]=cleanShow(p.show,i)});S.gm=S.names.p;
  news(`📺 Party night! ${PARTY.players.map(p=>p.name).join(', ')} are running the brands.`);
  PARTY.hist={};partyHostPersist();partyCommit();render()}
 function partyEnd(){if(!confirm(isPartyHost()?'End the party on this screen? Phones will be disconnected. (The party save is removed from this TV.)':'Leave the party on this phone?'))return;
@@ -122,15 +122,16 @@ async function partyWake(){try{if('wakeLock' in navigator&&document.visibilitySt
 /* ===================== phones ===================== */
 function partyJoinForm(code){openModal(`<div class="h mhd">📺 Join a party</div><p class="muted">Enter the 4-letter code on the TV.</p>
  <label>Your GM name</label><input id="ptName" maxlength="24" value="${esc(LS.get('tksim_name')||(S&&!ON()?S.gm:''))}" placeholder="Your name">
+ <label>Your show's name</label><input id="ptShow" maxlength="24" value="${esc(LS.get('tksim_show')||'')}" placeholder="e.g. Monday Mayhem">
  <label>Party code</label><input id="ptCode" maxlength="4" autocapitalize="characters" value="${esc(code||'')}" placeholder="ABCD" style="text-transform:uppercase;letter-spacing:8px;font-size:26px;text-align:center">
  <button class="btn mt" onclick="partyJoin()">Join</button><button class="btn ghost" onclick="closeModal()">Cancel</button>`)}
 function partyJoin(){const name=($('#ptName').value||'').trim();const code=($('#ptCode').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
- if(!name)return toast('Enter your GM name.');if(code.length!==4)return toast('Party codes have 4 letters.');LS.set('tksim_name',name);
+ if(!name)return toast('Enter your GM name.');if(code.length!==4)return toast('Party codes have 4 letters.');LS.set('tksim_name',name);const show=($('#ptShow').value||'').trim().slice(0,24);if(show)LS.set('tksim_show',show);
  if(S&&!ON())saveLocal();if(typeof MP_UNSUB!=='undefined'&&MP_UNSUB){MP_UNSUB();MP_UNSUB=null}LMP=null;
  let tok=LS.get('tksim_party_token');if(!tok){tok=newCode(12);LS.set('tksim_party_token',tok)}
- PARTY={host:false,code,name,token:tok,seat:null,rev:0,status:'connecting',lobby:[]};S=null;LS.del(PARTY_GAME);partyJoinPersist();
+ PARTY={host:false,code,name,show,token:tok,seat:null,rev:0,status:'connecting',lobby:[]};S=null;LS.del(PARTY_GAME);partyJoinPersist();
  closeModal();tab='home';render();partyConnect()}
-function partyJoinPersist(){if(PARTY&&!PARTY.host)LS.set(PARTY_JOIN,PJ({code:PARTY.code,name:PARTY.name,token:PARTY.token,seat:PARTY.seat,rev:PARTY.rev,dirty:!!PARTY.dirty}))}
+function partyJoinPersist(){if(PARTY&&!PARTY.host)LS.set(PARTY_JOIN,PJ({code:PARTY.code,name:PARTY.name,show:PARTY.show||'',token:PARTY.token,seat:PARTY.seat,rev:PARTY.rev,dirty:!!PARTY.dirty}))}
 async function partyConnect(){if(!PARTY||PARTY.host)return;clearTimeout(PARTY.retryT);
  try{await partyLoadPeer()}catch(e){PARTY.status='nopeer';render();return}
  const P=PARTY;if(PARTY!==P)return;
@@ -145,7 +146,7 @@ async function partyConnect(){if(!PARTY||PARTY.host)return;clearTimeout(PARTY.re
 function partyDial(){const P=PARTY;if(!P||P.host||!P.peer||P.peer.destroyed)return;clearTimeout(P.retryT);
  if(P.conn&&P.conn.open)return;
  const c=P.peer.connect(PEER_PREFIX+P.code,{reliable:true});P.conn=c;
- c.on('open',()=>{if(PARTY!==P)return;P.status='on';P.inflight=false;P.heard=Date.now();c.send({t:'hello',name:P.name,token:P.token});if(P.dirty)partySend();partyPhoneRender();partyBeat()});
+ c.on('open',()=>{if(PARTY!==P)return;P.status='on';P.inflight=false;P.heard=Date.now();c.send({t:'hello',name:P.name,show:P.show||'',token:P.token});if(P.dirty)partySend();partyPhoneRender();partyBeat()});
  c.on('data',m=>{P.heard=Date.now();try{partyPhoneMsg(m)}catch(e){console.warn('party msg',e)}});
  c.on('close',()=>{if(PARTY!==P||(P.conn&&P.conn!==c))return;P.status='off';P.inflight=false;partyPhoneRender();clearTimeout(P.retryT);P.retryT=setTimeout(partyDial,3000)});
  c.on('error',()=>{})}
@@ -213,7 +214,7 @@ function partyBoot(){const q=new URLSearchParams(location.search).get('party');
    LMP=null;S=null;try{const g=localStorage.getItem(PARTY_GAME);if(g){S=JSON.parse(g);PARTY.rev=(S.online&&S.online.rev)||0;ensureTraits(S);econMigrate(S)}}catch(e){S=null}
    if(S)PARTY.hist[PARTY.rev]=PJ(canonState());partyHostOpen(true);return true}
   const j=JSON.parse(LS.get(PARTY_JOIN)||'null');
-  if(j&&j.code&&(!q||q.toUpperCase()===j.code)){PARTY={host:false,code:j.code,name:j.name,token:j.token,seat:j.seat,rev:j.rev||0,dirty:!!j.dirty,status:'connecting',lobby:[]};
+  if(j&&j.code&&(!q||q.toUpperCase()===j.code)){PARTY={host:false,code:j.code,name:j.name,show:j.show||'',token:j.token,seat:j.seat,rev:j.rev||0,dirty:!!j.dirty,status:'connecting',lobby:[]};
    LMP=null;S=null;try{const g=localStorage.getItem(PARTY_GAME);if(g&&j.seat){S=JSON.parse(g);ensureTraits(S)}}catch(e){S=null}
    partyConnect();return true}}catch(e){console.warn('party resume',e);PARTY=null}
  if(q){history.replaceState(null,'',location.pathname);setTimeout(()=>partyJoinForm(q.toUpperCase().slice(0,4)),300)}
@@ -236,7 +237,7 @@ function tvLobby(){const P=PARTY,n=P.players.length;
  return `<div class="tv-lobby"><div class="tv-join"><div class="kicker"><i></i>Party mode · 2–4 GMs</div><div class="hero-t tv-hero">Grab your<br>phones</div>
  <ol class="tv-steps"><li>Open <b>${esc(partyShortUrl())}</b></li><li>Tap <b>Join a party</b></li><li>Enter the code</li></ol><div class="tv-code">${esc(P.code)}</div></div>
  <div class="tv-qr">${tvQR()}<div class="muted center">Or scan to join</div></div></div>
- <div class="tv-players">${[0,1,2,3].map(i=>{const p=P.players[i];return p?`<div class="tv-pl on">${tvDot(p)}<b>${esc(p.name)}</b><span>${['Dynamite','Collision','Rampage','Ring of Honor'][i]}</span></div>`:`<div class="tv-pl"><b>Open seat</b><span>${i<2?'Waiting for a GM…':'Optional'}</span></div>`}).join('')}</div>
+ <div class="tv-players">${[0,1,2,3].map(i=>{const p=P.players[i];return p?`<div class="tv-pl on">${tvDot(p)}<b>${esc(p.name)}</b><span>${esc(cleanShow(p.show,i))}</span></div>`:`<div class="tv-pl"><b>Open seat</b><span>${i<2?'Waiting for a GM…':'Optional'}</span></div>`}).join('')}</div>
  <button class="btn tv-go" ${n>=2?'':'disabled'} onclick="partyStart()">${n>=2?`Start with ${Math.min(4,n)} GMs ▸`:'Waiting for GMs to join…'}</button>`}
 function tvGMs(){return seatIds().map(s=>({seat:s,k:localKey(s),p:tvPlayerBySeat(s)}))}
 function tvRookies(){const o=S.online;const made=Object.values(S.w).filter(w=>w.cw).length;

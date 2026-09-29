@@ -509,7 +509,7 @@ body.tv .card .h.small{font-size:clamp(17px,1.4vw,26px)}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v53';
+const APP_VERSION='v54';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -1131,7 +1131,7 @@ const TWISTS=[
 {when:'any',text:'Pyro goes off early behind {A}.',ch:[{t:'Play it off like it was planned',s:'mic',d:.1,p:3},{t:'Laugh it off with the crowd',s:'pop',d:.05,p:2}]},
 {when:'solo',text:'The crowd starts chanting for someone else entirely.',ch:[{t:'Remind them who\'s actually standing here',s:'mic',d:.1,p:2},{t:'Hit a signature move on thin air to win them back',s:'ring',d:.1,p:3},{al:'h',t:'Mock whoever they\'re chanting for',s:'mic',d:.05,p:2}]}];
 const DEF_OK=['It lands perfectly.','The crowd is right there with them.','That got a huge reaction.'],DEF_NO=['It falls flat.','The crowd isn\'t buying it.','A flubbed line kills the moment.'];
-const STAT_ICON={mic:'🎤 Mic',ring:'💪 In-ring',pop:'⭐ Popularity',luck:'🎲 Luck'};
+const STAT_ICON={mic:'🎤 Mic',ring:'💪 In-ring',pop:'⭐ Popularity',luck:'🎲 Luck',body:'🩹 Their body',rein:'🎧 Getting through to them',ringO:'💪 Ring work'};
 
 const MEV=[
 {id:'ref',w:3,text:'The referee takes a stray elbow and crumples to the mat! {B} has {A} pinned — but nobody is there to count.',ch:[
@@ -1243,7 +1243,7 @@ function evRoles(m,brand){const win=m.sides[m.winner];const los=m.sides.filter((
  const xs=Object.values(S.w).filter(w=>w.own===brand&&!w.inj&&!used.has(w.id)).map(w=>[w,heatOf(w.id,B.id)+heatOf(w.id,A.id)+w.pop/4+Math.random()*20]).sort((a,b)=>b[1]-a[1]);
  const other=brand==='p'?'ai':'p';const ys=Object.values(S.w).filter(w=>w.own===other&&!w.inj).sort((p,q)=>q.pop-p.pop).slice(0,6);
  return {A,B,A2,X:xs.length?xs[0][0]:null,Y:ys.length?pick(ys):null,T:m.title?S.titles[m.title].n:'',RIVAL:brand==='p'?S.rival:S.gm,loseIdx:m.sides.indexOf(Bs)}}
-function evFill(t,r){return t.replace(/\{(A2|A|B|X|Y|T|RIVAL)\}/g,(_,k)=>k==='T'||k==='RIVAL'?r[k]:(r[k]?r[k].name:''))}
+function evFill(t,r){return t.replace(/\{(A2|A|B|X|Y|T|RIVAL|V|O|P)\}/g,(_,k)=>k==='T'||k==='RIVAL'?r[k]:(r[k]?r[k].name:''))}
 function genEvent(m,brand,big){const r=evRoles(m,brand);const bigM=big||!!m.title||heatOf(r.A.id,r.B.id)>=30;
  const opts=MEV.filter(e=>(!e.need||r[e.need])&&(!e.title||m.title)&&(!e.big||bigM)&&okFor(e,r));if(!opts.length)return null;
  const e=wpick(opts,x=>x.w*(seenP('ev:'+x.id)?.4:1)*(x.al||x.vs?1.3:1));const ch=dealEv(e,m,r);if(brand==='p')noteP(['ev:'+e.id,...ch.map(c=>c.t)]);return {e:Object.assign({},e,{ch}),r}}
@@ -1251,8 +1251,8 @@ function evChoices(e,m,r){const std=!!(STIPS[m.stip||'std']||STIPS.std).dq;retur
 /* deal 3 options: always one guaranteed-safe call when the event has one, plus a face/heel option when available */
 function dealEv(e,m,r){const el=evChoices(e,m,r);if(el.length<=3)return el;const safe=el.filter(c=>c.always&&!c.flip&&!c.nc);const keep=safe.length?pick(safe):null;
  const dealt=dealChoices(el.map(c=>c===keep?Object.assign({},c,{key:1}):c),r,3);return el.filter(c=>dealt.some(d=>d.t===c.t))}
-function evChance(c,r){return c.always?1:chance(c,{A:r.A})}
-function evRoll(c,r,m){const ev=m.ev||(m.ev={stars:0,heat:[],pop:[],chem:[],inj:[],fat:[],notes:[]});const ok=Math.random()<evChance(c,r);
+function evChance(c,r){return c.always?1:c.s==='body'?clamp(1-injRisk(r.V),.2,.95):c.s==='rein'?reinOdds(r.V):c.s==='ringO'?clamp(.2+(r.O?r.O.ring:50)/100*.7,.15,.9):chance(c,{A:r.A})}
+function evRoll(c,r,m){const ev=evNew(m);ev.hit=true;const ok=Math.random()<evChance(c,r);
  const who=k=>k==='B'?r.B:r.A;const H=(a,b,h)=>{if(a&&b&&h)ev.heat.push([a.id,b.id,Math.round(h)])};
  const hp=c.hx?[r.X,who(c.hx)]:c.hy?[r.Y,who(c.hy)]:c.heatT?[r.A,r.A2]:[r.A,r.B];const hv=c.heat||c.heatT||0;
  if(c.fat)m.sides.flat().forEach(id=>ev.fat.push([id,c.fat]));
@@ -1265,7 +1265,77 @@ function applyEv(ev,notes){ev.heat.forEach(([a,b,h])=>{if(S.w[a]&&S.w[b]&&a!==b)
  ev.pop.forEach(([id,v])=>{const w=S.w[id];if(w)w.pop=clamp(w.pop+v,1,100)});
  ev.chem.forEach(([a,b,v])=>{const k=key(a,b);S.chem[k]=clamp((S.chem[k]||0)+v,-5,6)});
  ev.fat.forEach(([id,v])=>{const w=S.w[id];if(w)w.fat=clamp(w.fat+v,0,100)});
- ev.inj.forEach(([id,wk])=>{const w=S.w[id];if(w&&!w.inj){w.inj=wk;const n=`🚑 ${w.name} was injured and will miss ${wk} weeks.`;notes.push(n);news(n)}})}
+ ev.inj.forEach(([id,wk])=>{const w=S.w[id];if(w&&!w.inj){w.inj=wk;const n=`🚑 ${w.name} was injured and will miss ${wk} weeks.`;notes.push(n);news(n)}});
+ (ev.mor||[]).forEach(([id,v])=>{const w=S.w[id];if(w)w.mor=clamp(w.mor+v,0,100)});
+ (ev.cash||[]).forEach(([id,v])=>{const w=S.w[id];if(w&&w.own&&S.money&&S.money[w.own]!=null)S.money[w.own]+=v})}
+/* ===================== SITUATIONAL MATCH EVENTS =====================
+ These come from the wrestlers in the match, not from luck. A tired, fragile wrestler can get hurt mid-match;
+ an unhappy one (morale under 30) can go into business for themselves or blow past their time cue and squeeze
+ everything after them on the card. Each one puts a hard call in the GM's headset. */
+const SIT_MOR=30;
+function injRisk(w){return clamp((((w.fat||0)-30)/100*.9+(60-durOf(w))/100*.8+.08)*(hasT(w,'iron')?.5:1),.05,.8)}
+const riskWord=p=>p>=.5?'Very high':p>=.35?'High':p>=.2?'Moderate':'Low';
+const reinOdds=w=>clamp(.3+w.mor/100*1.2-(w.pop>=75?.1:0),.15,.8);
+function evNew(m){const e=m.ev||(m.ev={stars:0,heat:[],pop:[],chem:[],inj:[],fat:[],notes:[]});e.mor=e.mor||[];e.cash=e.cash||[];return e}
+function laterSlots(brand,m){const c=S.card[brand]||[];const i=c.findIndex(sl=>sl.d===m);return i<0?[]:c.slice(i+1)}
+function laterMatches(brand,m){return laterSlots(brand,m).filter(sl=>sl.k==='match'&&sl.d&&validMatch(sl.d)&&!sl.d.sides.flat().some(id=>S.w[id].inj)).map(sl=>sl.d)}
+function laterPromo(brand,m){const l=laterSlots(brand,m).filter(sl=>sl.k==='promo'&&sl.d&&!sl.d.cut&&S.w[sl.d.a]&&!S.w[sl.d.a].inj);return (l.find(sl=>sl.opt)||l[l.length-1]||{}).d||null}
+function squeeze(brand,m,n,who){const l=laterMatches(brand,m).slice(0,n);l.forEach(x=>{const e=evNew(x);e.stars-=.25;e.notes.push(`⏱️ Squeezed for time after ${who} went long (−¼★)`)});return l}
+function giveTime(brand,m,who){const l=laterMatches(brand,m);const x=l[l.length-1];if(!x)return null;const e=evNew(x);e.stars+=.25;e.notes.push(`⏱️ Got extra minutes when ${who} went home early (+¼★)`);return x}
+const SIT={
+ hurt:{texts:['{V} lands awkwardly on the apron and doesn\'t get up. The ref is checking on them — this might be real.','{V} is running on fumes and their body is starting to give out. Every bump looks like it hurts.','{V} clutches their knee after a routine move. The trainer is peeking out from behind the curtain.'],
+  ch:[{t:'Take it home now — go straight to the finish',always:1,st:-.5,ok:'The ref counts three a few minutes early. {V} walks to the back under their own power.',tip:'Shorter, weaker match · no injury risk'},
+   {t:'Let {V} gut it out and finish as planned',s:'body',st:.5,stNo:-1,okfx:{popV:2,morV:4},nofx:{injV:1},ok:'{V} fights through it. The crowd sees a warrior.',no:'Something is badly wrong. The match falls apart and {V} is helped to the back.',tip:'Great match if it holds · {V} gets hurt if it doesn\'t'},
+   {t:'Call an audible — {O} carries the rest of the match',s:'ringO',st:.25,stNo:-.5,ok:'{O} takes over and protects {V} all the way to the finish.',no:'The improvised finish is a mess, but {V} makes it out in one piece.',tip:'Depends on {O}\'s ring work · no injury risk'},
+   {t:'Wave it off — the doctor stops the match',always:1,st:-.75,fx:{nc:1,heat:10,morV:3},ok:'The match is called off. The crowd is stunned — and wants to see it finished.',tip:'No winner · protects {V} · builds heat'}]},
+ gassed:{texts:['{V} is completely gassed. They\'re blowing spots and the crowd is starting to notice.','{V} is sucking wind badly. The big spots planned for the finish look dangerous now.'],
+  ch:[{t:'Slow it down with rest holds',always:1,st:-.25,ok:'It drags, but {V} catches their breath.',tip:'Slower match · safe'},
+   {t:'Push through the big spots anyway',s:'body',st:.5,stNo:-.75,nofx:{injV:1},ok:'{V} finds a second wind and the finish is great.',no:'{V} hits the wall hard — and tweaks something on the way down.',tip:'Could steal the show · injury risk'},
+   {t:'Go home early and give the time to the main event',always:1,st:-.5,need:'MAIN',fx:{give:1},ok:'A quick finish. The main event gets the extra minutes.',tip:'Weaker match · +¼★ to your main event'}]},
+ business:{texts:['{V} isn\'t happy about losing tonight — they\'re no-selling {O}\'s offense and won\'t go down for the finish. The agents in gorilla are panicking.','{V} kicks out of the planned finish and glares at the camera. They\'re going into business for themselves.'],
+  ch:[{t:'Give in — let {V} win',always:1,st:-.25,fx:{flipV:1,morV:15,morO:-8,heat:12},ok:'{V} gets their hand raised. {O} storms to the back furious.',tip:'Changes the winner · {V} happier · {O} unhappy'},
+   {t:'Send an agent to the curtain to rein {V} in',s:'rein',st:0,stNo:-.75,fx:{morV:-5},nofx:{nc:1,heat:18,fatO:8},ok:'{V} gets the message and takes the loss — grudgingly.',no:'{V} ignores the signal. It turns stiff and ugly, and the ref throws the match out.',tip:'Keeps your finish if it works · no contest if it doesn\'t'},
+   {t:'Tell the ref to fast-count {V}',always:1,st:-.5,fx:{morV:-12,heat:8},ok:'1-2-3 before {V} knows what hit them. Nobody in the building buys it.',tip:'Keeps your finish · {V}\'s morale craters'},
+   {t:'Tell {O} to shut {V} down for real',s:'ringO',st:.25,stNo:-.75,okfx:{heat:20,morV:-6},nofx:{injO:1,nc:1,heat:20},ok:'{O} gives {V} a receipt. It\'s ugly, but the finish holds.',no:'It gets out of hand and {O} gets hurt in the scuffle.',tip:'Depends on {O} · {O} could get hurt'}]},
+ overtime:{texts:['{V} is ignoring every time cue. The match is well past its slot and they\'re calling spots on the fly to prove a point.','{V} wants to show management what they\'ve been missing — and they are NOT going home on time.'],
+  ch:[{t:'Let them cook',always:1,st:.5,fx:{ot:2,morV:6},ok:'It\'s a great match — and everything after it pays for it.',tip:'Better match · {OT}'},
+   {t:'Cut {P}\'s promo to make up the time',always:1,st:.5,need:'P',fx:{cut:1,morV:6},ok:'The match gets its time. {P}\'s segment is scrapped.',tip:'Better match · {P}\'s promo won\'t air ({P} unhappy)'},
+   {t:'Signal the ref to take it home right now',s:'rein',st:-.25,stNo:-.5,fx:{morV:-8},nofx:{ot:1},ok:'{V} reluctantly goes to the finish on time.',no:'{V} blows off the signal and goes long anyway.',tip:'Keeps the show on time if it works'},
+   {t:'Go to commercial and let them finish in the break',always:1,st:-.5,fx:{morV:-4},ok:'The finish happens during the ads. Fans online are furious.',tip:'Weaker match · the rest of the show is safe'}]}};
+/* does anyone in this match force a situation? the most pressing one wins; returns an event like genEvent's */
+function sitEvent(m,brand){const all=m.sides.flat().map(id=>S.w[id]);if(!all.length||all.some(w=>!w))return null;const win=m.sides[m.winner]||[];const c=[];
+ all.forEach(w=>{const k=injRisk(w);
+  if(w.fat>=FAT_OK&&k>=.28)c.push({k:'hurt',w,p:clamp(k*1.1,.2,.7),sc:k+.2});else if(w.fat>=FAT_RISK)c.push({k:'gassed',w,p:.35,sc:.3});
+  if(w.mor<SIT_MOR){const p=.2+(SIT_MOR-w.mor)/SIT_MOR*.4;c.push({k:win.includes(w.id)||m.nc?'overtime':Math.random()<.65?'business':'overtime',w,p,sc:.25+(SIT_MOR-w.mor)/60})}});
+ c.sort((a,b)=>b.sc-a.sc);const hit=c.find(x=>Math.random()<x.p);if(!hit)return null;
+ const r=evRoles(m,brand);const V=hit.w;r.V=V;r.brand=brand;const others=all.filter(w=>w!==V);
+ const pool=hit.k==='business'?win.map(id=>S.w[id]):others;r.O=(pool.length?pool:others).slice().sort((a,b)=>b.ring-a.ring)[0]||null;
+ const pr=laterPromo(brand,m);if(pr){r.Pp=pr;r.P=S.w[pr.a]}
+ const lm=laterMatches(brand,m);r.MAIN=lm.length?1:0;r.OT=lm.length?`the next ${Math.min(2,lm.length)>1?'2 matches lose':'match loses'} ¼★ each`:'the show overruns ($25K fee)';
+ const E=SIT[hit.k];const ch=E.ch.filter(x=>(!x.need||r[x.need])&&(!x.s||x.s!=='ringO'||r.O));
+ const info=hit.k==='hurt'||hit.k==='gassed'?`🔋 Stamina ${sta(V)} · 🩹 ${durWord(durOf(V))} · Injury risk <b class="${injRisk(V)>=.35?'bad':''}">${riskWord(injRisk(V))}</b>`:`😠 ${esc(V.name)}'s morale: <b class="bad">${Math.round(V.mor)}</b>`;
+ return {e:{id:'sit:'+hit.k,text:pick(E.texts),ch},r,sit:hit.k,info}}
+function sitTip(c,r){return c.tip?evFill(c.tip,r).replace('{OT}',r.OT||''):''}
+function sitRoll(c,r,m){const ev=evNew(m);const ok=Math.random()<evChance(c,r);const out={success:ok,flip:false,nc:false,extra:[]};
+ const fx=Object.assign({},c.fx||{},(ok?c.okfx:c.nofx)||{});const V=r.V,O=r.O,side=w=>w?m.sides.findIndex(s=>s.includes(w.id)):-1;
+ ev.stars+=ok?(c.st||0):(c.stNo!=null?c.stNo:-Math.max(.25,Math.abs(c.st||0)*.5));
+ if(fx.morV)ev.mor.push([V.id,fx.morV]);if(fx.morO&&O)ev.mor.push([O.id,fx.morO]);if(fx.popV)ev.pop.push([V.id,fx.popV]);
+ if(fx.heat&&O&&side(O)!==side(V))ev.heat.push([V.id,O.id,fx.heat]);if(fx.fatO&&O)ev.fat.push([O.id,fx.fatO]);
+ if(fx.flipV){const i=side(V);if(i>=0&&i!==m.winner){m.winner=i;out.flip=true}}
+ if(fx.nc){m.nc=true;out.nc=true}
+ if(fx.injV){ev.inj.push([V.id,durWeeks(V)+1]);out.extra.push(`🚑 ${V.name} is hurt and will miss time`);
+  const i=side(V);if(!m.nc&&i===m.winner&&m.sides[i].length===1){const j=side(O)>=0&&side(O)!==i?side(O):m.sides.findIndex((s,x)=>x!==i);m.winner=j;out.flip=true;ev.notes.push(`🛑 ${V.name} couldn't continue — referee stoppage`)}}
+ if(fx.injO&&O){ev.inj.push([O.id,durWeeks(O)]);out.extra.push(`🚑 ${O.name} is hurt and will miss time`)}
+ if(fx.ot){const l=squeeze(r.brand,m,fx.ot===1?1:2,V.name);if(l.length)out.extra.push(`⏱️ ${l.length>1?l.length+' later matches get':'The next match gets'} squeezed for time (−¼★ each)`);else{ev.cash.push([V.id,-25]);ev.notes.push('💸 The show overran — $25K overtime fee');out.extra.push('💸 The show overran — $25K overtime fee')}}
+ if(fx.give){const x=giveTime(r.brand,m,V.name);if(x)out.extra.push(`⏱️ Extra minutes for ${vsLine(x)} (+¼★)`)}
+ if(fx.cut&&r.Pp){r.Pp.cut=true;[r.Pp.a,r.Pp.b].filter(Boolean).forEach(id=>ev.mor.push([id,-6]));ev.notes.push(`✂️ ${r.P.name}'s promo was cut to make time`);out.extra.push(`✂️ ${r.P.name}'s promo is cut from the show`)}
+ const text=evFill(ok?c.ok:(c.no||pick(DEF_NO)),r);ev.notes.push(`⚡ ${evFill(c.t,r)} — ${text}`);ev.hit=true;return Object.assign(out,{text})}
+/* the AI GM weighs the expected stars against what could go wrong */
+function aiSit(ch,r){let best=ch[0],bv=-1e9;ch.forEach(c=>{const p=evChance(c,r);const no=c.stNo!=null?c.stNo:-Math.max(.25,Math.abs(c.st||0)*.5);const bad=c.nofx&&(c.nofx.injV||c.nofx.injO)?1:0;
+  const v=p*(c.st||0)+(1-p)*(no-bad*.8)+((c.fx||{}).flipV?-.3:0)+Math.random()*.3;if(v>bv){bv=v;best=c}});return best}
+/* one call per match: a situation the wrestlers force takes priority over a random moment */
+function matchEvent(m,brand,big,rate){const s=sitEvent(m,brand);if(s)return s;return Math.random()<rate?genEvent(m,brand,big):null}
+function runEvAI(g,m){if(g.sit)return sitRoll(aiSit(evChoices(g.e,m,g.r),g.r),g.r,m);return evRoll(aiEv(evChoices(g.e,m,g.r),g.r),g.r,m)}
 /* ===================== HELPERS ===================== */
 const R=(a,b)=>a+Math.random()*(b-a);
 const RI=(a,b)=>Math.floor(R(a,b+1));
@@ -1285,6 +1355,8 @@ let LMP=null; /* {code, me:'s0'…'s3', key} for the online game open on this de
 const ON=()=>!!(S&&S.online);
 const BK=/^(p|ai|s\d)$/;
 const SHOWS=['Dynamite','Collision','Rampage','Ring of Honor'];
+/* each GM names their own weekly show; blank falls back to the classic names by seat */
+function cleanShow(v,i){v=String(v||'').replace(/\s+/g,' ').trim().slice(0,24);return v||SHOWS[i||0]}
 function nSeats(st){return ((st||S).online&&(st||S).online.n)||2}
 function seatIds(st){return Array.from({length:nSeats(st)},(_,i)=>'s'+i)}
 const RR={2:[[['s0','s1']]],3:[[['s0','s1'],['s2',null]],[['s0','s2'],['s1',null]],[['s1','s2'],['s0',null]]],4:[[['s0','s1'],['s2','s3']],[['s0','s2'],['s1','s3']],[['s0','s3'],['s1','s2']]]};
@@ -1889,7 +1961,7 @@ function airShow(){if(ON())return mpAirWeek();const out=airPair();S.showIdx=0;en
 function airPair(){
  const show=curShow();const ctx={ppv:show.ppv,allin:show.ppv&&S.week===SEASON,name:show.name};const bye=ON()&&!S._view.opp;
  if(!bye&&!S.card.ai)S.card.ai=autoBook('ai',show,null);
- if(!ON()){const ams=S.card.ai.filter(sl=>sl.k==='match'&&sl.d&&validMatch(sl.d));ams.forEach((sl,j)=>{if(sl.d.ev)return;const main=j===ams.length-1;if(Math.random()<(main?.45:.3)){const g=genEvent(sl.d,'ai',show.ppv||main);if(g)evRoll(aiEv(evChoices(g.e,sl.d,g.r),g.r),g.r,sl.d)}})}
+ if(!ON()){const ams=S.card.ai.filter(sl=>sl.k==='match'&&sl.d&&validMatch(sl.d));ams.forEach((sl,j)=>{if(sl.d.ev&&sl.d.ev.hit)return;const main=j===ams.length-1;const g=matchEvent(sl.d,'ai',show.ppv||main,main?.45:.3);if(g)runEvAI(g,sl.d)})}
  const out={title:show.ppv?show.name:`${showNames().p}${bye?'':' vs '+showNames().ai}`,week:S.week,ppv:show.ppv,blocks:[],notes:[],fans:{},ratings:{}};
  const adj=b=>b==='ai'&&!ON()?aiq('ai').adj:0;
  const order=bye?['p']:['p','ai'];
@@ -1898,7 +1970,7 @@ function airPair(){
  const airCard=b=>{const segs=[],v=[];
   S.card[b].forEach(sl=>{if(!sl.d)return;
    if(sl.k==='match'){const m=sl.d;if(!validMatch(m)||m.sides.flat().some(id=>S.w[id].inj))return;const res=rateMatch(m,ctx);res.stars=clamp(res.stars+adj(b)+(m.ev?m.ev.stars:0),.25,5);const notes=m.ev?m.ev.notes.slice():[];if(res.pen)notes.push(`😴 Rematch fatigue: fans saw ${res.penWhy} (−${fracTxt(res.pen)}★)`);if(res.stale)notes.push('🥱 This feud has gone stale — the crowd is losing interest.');const txt=matchText(m);applyMatch(m,res,ctx,notes);if(m.ev)applyEv(m.ev,notes);applyRunIn(m,res,notes);segs.push({txt,sub:matchSub(m),stars:res.stars,notes});v.push(res.stars)}
-   else if(sl.k==='promo'&&sl.d.res){const p=sl.d;const notes=[];const st=clamp(p.res.stars+adj(b),.5,5);applyPromo(p,notes);segs.push({txt:S.w[p.a].name+(p.b&&S.w[p.b]?' & '+S.w[p.b].name:''),sub:PT[p.type].n,stars:st,notes});v.push(st)}});
+   else if(sl.k==='promo'&&sl.d.res&&!sl.d.cut){const p=sl.d;const notes=[];const st=clamp(p.res.stars+adj(b),.5,5);applyPromo(p,notes);segs.push({txt:S.w[p.a].name+(p.b&&S.w[p.b]?' & '+S.w[p.b].name:''),sub:PT[p.type].n,stars:st,notes});v.push(st)}});
   return {segs,v}};
  order.forEach(b=>{const r=ON()&&b==='ai'?asOther(()=>airCard('p')):airCard(b);vals[b]=r.v;
   out.blocks.push({brand:b,label:show.ppv?`${nameOf(b)}'s card`:`${showNames()[b]} — ${nameOf(b)}`,segs:r.segs})});
@@ -2277,26 +2349,28 @@ let LQ=null;
 let LIVE=false;
 function goLive(){if(LIVE||mpLocked())return;if(S.crisis)return openCrisis();const c=S.card.p;if(!c.every(sl=>sl.k==='chal'||sl.opt||sl.d))return;const sh=curShow();{const pk=prodOf('p',sh);if(pk!=='std'&&S.money.p-stipCost(c)<prodCost(pk,sh)){S.prod.p='std';save();render();return toast('You can no longer afford that production — switched to Standard.')}}const nM=c.filter(sl=>sl.k==='match'&&sl.d).length;const items=[];let j=0;
  c.forEach((sl,i)=>{if(!sl.d)return;
-  if(sl.k==='promo'){const p=sl.d;delete p.res;p.played=false;if(S.w[p.a]&&!S.w[p.a].inj&&(!p.b||S.w[p.b]&&!S.w[p.b].inj))items.push({kind:'promo',i})}
-  else if(sl.k==='match'){const m=sl.d;delete m.ev;delete m.nc;j++;const main=j===nM;if(Math.random()<(main?.65:.3)){const g=genEvent(m,'p',sh.ppv||main);if(g)items.push({kind:'ev',m,g,n:j,main})}}});
+  if(sl.k==='promo'){const p=sl.d;delete p.res;delete p.cut;p.played=false;if(S.w[p.a]&&!S.w[p.a].inj&&(!p.b||S.w[p.b]&&!S.w[p.b].inj))items.push({kind:'promo',i})}
+  else if(sl.k==='match'){const m=sl.d;delete m.ev;delete m.nc;j++;const main=j===nM;const g=matchEvent(m,'p',sh.ppv||main,main?.65:.3);if(g)items.push({kind:'ev',m,g,n:j,main})}});
  LIVE=true;if(!items.length)return finishLive();LQ={items,k:-1,show:sh.name};liveNext()}
 function liveNext(){if(!LQ)return;PS=null;ME=null;LQ.k++;const it=LQ.items[LQ.k];if(!it){LQ=null;return finishLive()}
+ if(it.kind==='promo'&&S.card.p[it.i].d&&S.card.p[it.i].d.cut)return liveNext();
  const last=LQ.k===LQ.items.length-1;
  if(it.kind==='ev'){ME={q:[it],k:0,out:null,show:LQ.show,last};renderME()}
  else{const p=S.card.p[it.i].d;const ctx=promoCtx(p,'p');PS={i:it.i,p,ctx,st:newSt(),beat:0,scene:openScene(p,ctx),out:null,done:false,live:true,last};renderPS()}}
 function finishLive(){if(!LIVE)return;LIVE=false;ME=null;PS=null;LQ=null;S.card.p.forEach(sl=>{if(sl.k==='promo'&&sl.d&&!sl.d.res)sl.d=null});if(ON())return mpLockCard();airShow();showResults();render()}
 function renderME(){const it=ME.q[ME.k];const {m,g}=it;const r=g.r;
- const hd=`<div class="muted"><span class="live-tag">LIVE</span>${esc(ME.show)} · Match ${it.n}${it.main?' · Main event':''}</div><div class="h mhd mt">${esc(m.sides.map(sideName).join(' vs '))}</div><div class="duo">${m.sides.flat().map(id=>face(S.w[id])).join('')}</div><p class="scene">${esc(evFill(g.e.text,r))}</p>`;
- if(ME.out){const o=ME.out;return openModal(hd+`<div class="outcome ${o.success?'ok':'no'}">${o.success?'✅':'❌'} ${esc(o.text)}</div>${o.flip?`<div class="note">👑 New winner: ${esc(sideName(m.sides[m.winner]))}</div>`:''}${o.nc?'<div class="note">🚫 The match ends without a winner.</div>':''}<button class="btn" onclick="meNext()">${ME.last?'Finish the show':'Continue the show ▸'}</button>`)}
+ const hd=`<div class="muted"><span class="live-tag">LIVE</span>${esc(ME.show)} · Match ${it.n}${it.main?' · Main event':''}</div><div class="h mhd mt">${esc(m.sides.map(sideName).join(' vs '))}</div><div class="duo">${m.sides.flat().map(id=>face(S.w[id])).join('')}</div><p class="scene">${esc(evFill(g.e.text,r))}</p>${g.sit?`<div class="note">${g.info}</div>`:''}`;
+ if(ME.out){const o=ME.out;return openModal(hd+`<div class="outcome ${o.success?'ok':'no'}">${o.success?'✅':'❌'} ${esc(o.text)}</div>${o.flip?`<div class="note">👑 New winner: ${esc(sideName(m.sides[m.winner]))}</div>`:''}${o.nc?'<div class="note">🚫 The match ends without a winner.</div>':''}${(o.extra||[]).map(x=>`<div class="note">${esc(x)}</div>`).join('')}<button class="btn" onclick="meNext()">${ME.last?'Finish the show':'Continue the show ▸'}</button>`)}
  const ch=evChoices(g.e,m,r);
- openModal(hd+`<div class="muted tiny" style="margin-bottom:8px">Producers are in your headset — make the call:</div>`+ch.map((c,ci)=>`<button class="choice" onclick="meChoose(${ci})"><span class="key"><span>${'ABC'[ci]}</span></span><div>${esc(evFill(c.t,r))}</div><div class="muted tiny">${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:c.heelA&&r.A.al==='f'?'<span class="heel">😈 Dirty — fans won\'t like it from a face</span> · ':''}${c.always?'✅ Guaranteed':STAT_ICON[c.s]+' · '+oddsWord(evChance(c,r))}${c.flip?' · changes the winner':''}${c.nc?' · no winner':''}</div></button>`).join(''))}
-function meChoose(ci){if(!ME||ME.out)return;const it=ME.q[ME.k];const ch=evChoices(it.g.e,it.m,it.g.r);ME.out=evRoll(ch[ci],it.g.r,it.m);renderME()}
+ openModal(hd+`<div class="muted tiny" style="margin-bottom:8px">${g.sit?'This one isn\'t in the script. Make the call:':'Producers are in your headset — make the call:'}</div>`+ch.map((c,ci)=>`<button class="choice" onclick="meChoose(${ci})"><span class="key"><span>${'ABCD'[ci]}</span></span><div>${esc(evFill(c.t,r))}</div><div class="muted tiny">${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:c.heelA&&r.A.al==='f'?'<span class="heel">😈 Dirty — fans won\'t like it from a face</span> · ':''}${c.always?'✅ Guaranteed':STAT_ICON[c.s]+' · '+oddsWord(evChance(c,r))}${c.flip?' · changes the winner':''}${c.nc?' · no winner':''}${g.sit&&c.tip?`<br>${esc(sitTip(c,r))}`:''}</div></button>`).join(''))}
+function meChoose(ci){if(!ME||ME.out)return;const it=ME.q[ME.k];const ch=evChoices(it.g.e,it.m,it.g.r);ME.out=it.g.sit?sitRoll(ch[ci],it.g.r,it.m):evRoll(ch[ci],it.g.r,it.m);renderME()}
 function meNext(){if(!ME)return;if(LQ)return liveNext();ME.out=null;ME.k++;if(ME.k>=ME.q.length)finishLive();else renderME()}
 function slotTags(m,ppv){const t=[];let hb=0;for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j])hb=Math.max(hb,heatOf(a,b));
  if(hb>=1){const tr=heatTier(hb);t.push(`<span class="fdt t${tr+1}">🔥 ${Math.round(hb)}${tr>=0?' · '+FTIER[tr][1].replace(/^[🔥 ]+/,''):''}</span>`)}
  const ws=m.sides.map(s=>s.map(id=>S.w[id]).filter(Boolean));const full=ws.filter(s=>s.length);if(full.length>=2){const al=full.map(sideAl);if(!al.includes('x'))t.push(new Set(al).size>1?'<span class="tg good">😇 vs 😈</span>':`<span class="tg bad">${al[0]==='f'?'😇 vs 😇':'😈 vs 😈'}</span>`)}
  const ex=ws.flat().filter(w=>sta(w)-fatGain(w,m,ppv)<100-FAT_RISK);const td=ws.flat().filter(w=>sta(w)<100-FAT_OK);
  if(td.length)t.push(`<span class="tg bad">😮‍💨 Tired: ${td.map(w=>esc(w.name.split(' ').slice(-1)[0])).join(', ')}</span>`);else if(ex.length)t.push(`<span class="tg warnt">🔋 ${ex.map(w=>esc(w.name.split(' ').slice(-1)[0])).join(', ')} will be spent</span>`);
+ {const sad=ws.flat().filter(w=>w.mor<SIT_MOR);if(sad.length)t.push(`<span class="tg warnt">😠 ${sad.map(w=>esc(w.name.split(' ').slice(-1)[0])).join(', ')} may go off-script</span>`)}
  {const r=riOn(m);if(r)t.push(`<span class="tg warnt">${RUNIN[r.k].i} ${esc(r.X.name.split(' ').slice(-1)[0])} runs in</span>`)}
  return t.length?`<div class="tags">${t.join('')}</div>`:''}
 function onCard(a,b){return S.card.p.some(sl=>sl.d&&(sl.k==='match'?(()=>{const si=sl.d.sides.findIndex(s=>s.includes(a)),sj=sl.d.sides.findIndex(s=>s.includes(b));return si>=0&&sj>=0&&si!==sj})():sl.k==='promo'&&[sl.d.a,sl.d.b].includes(a)&&[sl.d.a,sl.d.b].includes(b)))}
@@ -2599,16 +2673,16 @@ function mpPush(msg){clearTimeout(mpT);if(!ON()||!LMP)return;const o=S.online;o.
  const f={state:JSON.stringify(canonState()),rev:o.rev,turn:canonKey(o.turn),msg:o.msg||'',week:S.week,season:S.season,phase:S.phase},code=LMP.code,key=LMP.key;
  TKO.push(code,f).catch(e=>{console.warn('push failed',e);/* this seat was last used on another device: take it back, then retry */TKO.claim(code,key).then(()=>TKO.push(code,f)).catch(()=>{MP_PENDING=true;toast('Saved on this device — it will sync when you reconnect.')})})}
 function mpPass(msg,to){S.online.turn=to;mpPush(msg)}
-function mpApplyNames(names){if(!names||!LMP||!S._view)return;S.names=S.names||{};for(const k in names)if(names[k])S.names[localKey(k)]=names[k];S.gm=S.names.p||S.gm;S.rival=S._view.opp?(S.names.ai||'Waiting for a GM'):'Bye week'}
-function mpLoad(stateStr,names){const st=JSON.parse(stateStr);delete st._view;viewFor(st,LMP.me);S=st;dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);mpApplyNames(names)}
+function mpApplyNames(names,shows){if(!LMP||!S._view)return;if(shows&&S.online){S.online.show=S.online.show||{};for(const k in shows)if(shows[k]&&BK.test(k))S.online.show[localKey(k)]=cleanShow(shows[k])}if(!names)return;S.names=S.names||{};for(const k in names)if(names[k])S.names[localKey(k)]=names[k];S.gm=S.names.p||S.gm;S.rival=S._view.opp?(S.names.ai||'Waiting for a GM'):'Bye week'}
+function mpLoad(stateStr,names,shows){const st=JSON.parse(stateStr);delete st._view;viewFor(st,LMP.me);S=st;dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);mpApplyNames(names,shows)}
 /* a new copy of the world arrived from another GM */
 let MP_WANT=false,MP_DEFER=null;
 function mpIncoming(d){if(!d||!LMP||!S||!ON())return;const wasMine=myTurn();let changed=false;
  /* opened on this device, but the seat was last used on another one (e.g. via cloud save): take it back quietly */
  if(MP_WANT){MP_WANT=false;if(d.uids&&TKO.uid&&d.uids[LMP.me]&&d.uids[LMP.me]!==TKO.uid&&LMP.key)TKO.claim(LMP.code,LMP.key).catch(()=>{})}
- if(d.state&&(d.rev||0)>(S.online.rev||0)){try{mpLoad(d.state,d.names)}catch(e){console.warn(e);return}changed=true;
+ if(d.state&&(d.rev||0)>(S.online.rev||0)){try{mpLoad(d.state,d.names,d.shows)}catch(e){console.warn(e);return}changed=true;
 }
- else{const before=JSON.stringify(S.names);mpApplyNames(d.names);if(JSON.stringify(S.names)!==before)changed=true}
+ else{const before=JSON.stringify([S.names,S.online.show]);mpApplyNames(d.names,d.shows);if(JSON.stringify([S.names,S.online.show])!==before)changed=true}
  if(!changed)return;saveLocal();mpRemember();
  if(busy()){if(!MP_DEFER)MP_DEFER={wasMine};return} /* don't yank a screen out from under someone mid-edit — catch up when it closes */
  render();
@@ -2620,7 +2694,7 @@ function mpOpen(code){const g=mpGames().find(x=>x.code===code);if(!g)return;if(S
  S=JSON.parse(s);dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);closeModal();tab='home';ANIM=true;render();mpConnect();if(mpUnseen()&&S.phase!=='draft'){mpMarkSeen();showResults()}}
 /* a league you play on another device (found through cloud save): bring it to this one */
 async function mpFetch(g){if(!mpAvail()||!g.key)return toast('Open this league on the device you joined it from, or use its seat code.');toast('Bringing your league to this device…');
- try{const r=await TKO.claim(g.code,g.key);LMP={code:g.code,me:r.seat,key:g.key};mpLoad(r.data.state,r.data.names);saveLocal();LS.set('tksim_active',JSON.stringify(LMP));mpRemember();closeModal();tab='home';ANIM=true;render();mpConnect()}
+ try{const r=await TKO.claim(g.code,g.key);LMP={code:g.code,me:r.seat,key:g.key};mpLoad(r.data.state,r.data.names,r.data.shows);saveLocal();LS.set('tksim_active',JSON.stringify(LMP));mpRemember();closeModal();tab='home';ANIM=true;render();mpConnect()}
  catch(e){console.warn(e);toast(navigator.onLine?"Couldn't open that league here.":'You need a connection to bring a league to a new device.')}}
 function mpSolo(){if(MP_UNSUB){MP_UNSUB();MP_UNSUB=null}if(ON())saveLocal();LMP=null;LS.del('tksim_active');S=load();if(S){dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);showMigrate()}closeModal();tab='home';ANIM=true;render()}
 function mpLeave(){if(!confirm(`Remove this league from this device? The other GMs keep playing; you can rejoin later with your seat code (${LMP.code}-${LMP.key}).`))return;
@@ -2648,23 +2722,26 @@ function mpNeedSetup(){openModal(`<div class="h mhd">Online play isn't set up ye
 let MPN=2;
 function mpHostForm(){if(!mpAvail())return mpNeedSetup();openModal(`<div class="h mhd">Host an online league</div><p class="muted">Each GM runs their own brand. Every week you go head-to-head with a different GM, and the most fans after All In wins. Take your turn whenever you like — even offline — and it syncs when you're back online.</p>
  <label>Your GM name</label><input id="mpName" maxlength="24" value="${esc(S&&!ON()?S.gm:LS.get('tksim_name')||'')}" placeholder="Your name">
+ <label>Your show's name</label><input id="mpShow" maxlength="24" value="${esc(LS.get('tksim_show')||'')}" placeholder="e.g. Monday Mayhem">
  <label>League size</label><div class="chips" id="mpN">${[2,3,4].map(n=>`<button class="chip ${MPN===n?'on':''}" onclick="MPN=${n};document.querySelectorAll('#mpN .chip').forEach((c,i)=>c.classList.toggle('on',i===${n-2}))">${n} GMs</button>`).join('')}</div>
  <p class="muted tiny">3 GMs: one takes a bye each week and their show airs on its own. The size is fixed once the league starts.</p>
  <button class="btn mt" id="mpGo" onclick="mpHost()">Create league</button><button class="btn ghost" onclick="closeModal()">Cancel</button>`)}
-async function mpHost(){const name=($('#mpName').value||'').trim()||'You';LS.set('tksim_name',name);const b=$('#mpGo');b.disabled=true;b.textContent='Creating…';const n=MPN;
+async function mpHost(){const name=($('#mpName').value||'').trim()||'You';LS.set('tksim_name',name);const show=cleanShow($('#mpShow').value,0);if($('#mpShow').value.trim())LS.set('tksim_show',show);const b=$('#mpGo');b.disabled=true;b.textContent='Creating…';const n=MPN;
  try{if(S&&!ON())saveLocal();const code=newCode(6),key=newCode(8);
-  LMP={code,me:'s0',key};MP_HOLD=true;newGame(name,'','normal',{n});
-  const names={s0:name};await TKO.create(code,{n,names,turn:canonKey(S.online.turn),rev:1,state:JSON.stringify(canonState()),msg:'',week:1,season:1,phase:S.phase,appUrl:location.href.split(/[?#]/)[0]},key);
+  LMP={code,me:'s0',key};MP_HOLD=true;newGame(name,'','normal',{n});S.online.show.p=show;
+  const names={s0:name},shows={s0:show};await TKO.create(code,{n,names,shows,turn:canonKey(S.online.turn),rev:1,state:JSON.stringify(canonState()),msg:'',week:1,season:1,phase:S.phase,appUrl:location.href.split(/[?#]/)[0]},key);
   MP_HOLD=false;S.online.rev=1;saveLocal();LS.set('tksim_active',JSON.stringify(LMP));mpRemember();tab='home';ANIM=true;render();mpConnect();mpInvite(true)}
  catch(e){console.warn(e);MP_HOLD=false;LMP=null;S=load();b.disabled=false;b.textContent='Create league';toast(navigator.onLine?"Couldn't create the league — check your Firebase setup.":'You need a connection to create a league.')}}
 function mpJoinForm(){if(!mpAvail())return mpNeedSetup();openModal(`<div class="h mhd">Join a league</div><p class="muted">Enter the 6-letter code your friend sent you. Moving your own seat to a new device? Enter your seat code (it has a dash) instead.</p>
  <label>Your GM name</label><input id="mpName" maxlength="24" value="${esc(LS.get('tksim_name')||(S&&!ON()?S.gm:''))}" placeholder="Your name">
+ <label>Your show's name</label><input id="mpShow" maxlength="24" value="${esc(LS.get('tksim_show')||'')}" placeholder="e.g. Monday Mayhem">
+ <p class="muted tiny" style="margin-top:-4px">Only used when you take a new seat — leave it blank for a classic name.</p>
  <label>League code</label><input id="mpCode" maxlength="20" autocapitalize="characters" placeholder="ABC123" style="text-transform:uppercase;letter-spacing:3px">
  <button class="btn mt" id="mpGo" onclick="mpJoin()">Join</button><button class="btn ghost" onclick="closeModal()">Cancel</button>`)}
-async function mpJoin(){const name=($('#mpName').value||'').trim()||'Friend';LS.set('tksim_name',name);const raw=($('#mpCode').value||'').trim().toUpperCase().replace(/\s+/g,'');
+async function mpJoin(){const name=($('#mpName').value||'').trim()||'Friend';LS.set('tksim_name',name);const showIn=($('#mpShow').value||'').trim();if(showIn)LS.set('tksim_show',cleanShow(showIn));const raw=($('#mpCode').value||'').trim().toUpperCase().replace(/\s+/g,'');
  const [code,claim]=raw.split('-');if(!/^[A-Z0-9]{6}$/.test(code||''))return toast('Codes look like ABC123.');const b=$('#mpGo');b.disabled=true;b.textContent='Joining…';
- try{const key=claim||newCode(8);const r=claim?await TKO.claim(code,claim):await TKO.join(code,name,key);
-  if(S&&!ON())saveLocal();const old=mpGames().find(x=>x.code===code);LMP={code,me:r.seat,key:claim||r.key||(old&&old.key)||key};mpLoad(r.data.state,r.data.names);
+ try{const key=claim||newCode(8);const r=claim?await TKO.claim(code,claim):await TKO.join(code,name,key,showIn?cleanShow(showIn):'');
+  if(S&&!ON())saveLocal();const old=mpGames().find(x=>x.code===code);LMP={code,me:r.seat,key:claim||r.key||(old&&old.key)||key};mpLoad(r.data.state,r.data.names,r.data.shows);
   saveLocal();LS.set('tksim_active',JSON.stringify(LMP));mpRemember();closeModal();tab='home';ANIM=true;render();mpConnect();
   toast(r.seat==='s0'?'Welcome back, commissioner.':`You're in! You book ${showNames().p}.`);if(!claim&&mpAvail()&&TKO.canAlert())setTimeout(()=>mpAlertsPrompt(),600)}
  catch(e){console.warn(e);b.disabled=false;b.textContent='Join';const m=String(e&&e.message||e);toast(m.includes('nogame')?'No league with that code.':m.includes('full')?'That league is full.':m.includes('badkey')?"That seat code doesn't match.":navigator.onLine?"Couldn't join — double-check the code.":'You need a connection to join.')}}
@@ -2677,6 +2754,9 @@ async function mpAlerts(){if(!mpAvail())return mpNeedSetup();
  if(/iphone|ipad/i.test(navigator.userAgent)&&!navigator.standalone)return toast('Add the game to your Home Screen first, then turn alerts on from the installed app.');
  try{await TKO.enableAlerts(LMP.code);toast("🔔 Turn alerts are on for this device.");closeModal();render()}
  catch(e){console.warn(e);const m=String(e&&e.message||e);toast(m.includes('denied')?'Notifications are blocked — allow them in your settings.':m.includes('unsupported')?"This browser can't do push notifications.":"Couldn't turn on alerts — try again online.")}}
+function mpShowForm(){if(!ON()||!LMP)return;openModal(`<div class="h mhd">Rename your show</div><p class="muted">Every GM in the league sees the new name right away.</p><label>Show name</label><input id="mpShowNew" maxlength="24" value="${esc(showNames().p||'')}"><button class="btn mt" onclick="mpRenameShow()">Save</button><button class="btn ghost" onclick="closeModal()">Cancel</button>`)}
+function mpRenameShow(){const v=cleanShow($('#mpShowNew').value,+String(LMP.me).slice(1));S.online.show.p=v;LS.set('tksim_show',v);saveLocal();mpRemember();
+ if(mpAvail()&&TKO.ready)TKO.push(LMP.code,{['shows.'+LMP.me]:v}).catch(()=>toast('Saved here — the new name syncs when you reconnect.'));closeModal();render();toast(`You now book ${v}.`)}
 function mpSeatCode(){openModal(`<div class="h mhd">Play on another device</div><p>On the new device, open the game, tap <b>Join a league</b> and enter this seat code. It moves your seat there (this device stops syncing).</p><div class="mpcode" style="font-size:22px">${LMP.code}-${LMP.key}</div><p class="muted">Keep it private — anyone with it can take over your seat.</p><button class="btn" onclick="closeModal()">Done</button>`)}
 
 /* ---- UI bits ---- */
@@ -2694,7 +2774,7 @@ function mpSetupCard(){const g=mpGames();return `<div class="card"><div class="h
  ${g.map(x=>`<button class="btn sec" onclick="mpOpen('${x.code}')">▶ ${esc(x.label||x.code)} <span class="muted tiny">${x.code}</span></button>`).join('')}
  <div class="row"><button class="btn sec" onclick="mpHostForm()">Host a league</button><button class="btn sec" onclick="mpJoinForm()">Join a league</button></div></div>`}
 function mpOfficeCard(){if(PARTY&&ON())return partyOfficeCard();if(!ON())return mpSetupCard()+partySetupCard();const alerts=mpAvail()&&TKO.alertsOn(LMP.code);const others=mpGames().filter(g=>g.code!==LMP.code);
- return `<div class="card"><div class="h small">Online league · ${LMP.code}</div>${localSeats().map(k=>`<div class="row sb" style="margin:4px 0"><span><b class="${k==='p'?'gold':''}">${esc(S.names&&S.names[k]?nameOf(k):'Open seat')}</b></span><span class="muted tiny">${esc(showNames()[k]||'')}${k==='p'?' · you':''}</span></div>`).join('')}
+ return `<div class="card"><div class="h small">Online league · ${LMP.code}</div>${localSeats().map(k=>`<div class="row sb" style="margin:4px 0"><span><b class="${k==='p'?'gold':''}">${esc(S.names&&S.names[k]?nameOf(k):'Open seat')}</b></span><span class="muted tiny">${esc(showNames()[k]||'')}${k==='p'?` · you <button class="mini" onclick="mpShowForm()">Rename</button>`:''}</span></div>`).join('')}
  <button class="btn ${alerts?'sec':''}" onclick="mpAlerts()">${alerts?'🔔 Turn alerts on — refresh':'🔔 Turn on turn alerts'}</button>
  <div class="row"><button class="btn sec" onclick="mpInvite()">Invite code</button><button class="btn sec" onclick="mpSeatCode()">Other device</button></div>
  ${others.map(x=>`<button class="btn sec" onclick="mpOpen('${x.code}')">▶ Switch to ${esc(x.label||x.code)}</button>`).join('')}
