@@ -520,7 +520,7 @@ ol.steps{padding-left:20px;margin:6px 0 10px}ol.steps li{margin:3px 0}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v60';
+const APP_VERSION='v61';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -588,7 +588,10 @@ function feudInit(st){if(!st)return;if(!st.fs){st.fs={};st.mh=st.mh||{};const no
  if(!st.fe2){st.fe2=1;for(const k in st.fs)if(st.fs[k]&&st.fs[k].paid){delete st.fs[k];if(st.heat)delete st.heat[k]}}}
 function endFeud(k){if(S.heat)delete S.heat[k];if(S.fs)delete S.fs[k]}
 function showMigrate(){if(S&&S.phase==='season'&&!S.fa){S.fa={};marketTick(undefined,true)}if(!S||S.fullShow)return;S.fullShow=true;S.showIdx=0;if(S.phase==='season'&&S.card)S.card={p:emptyCard(curShow().ppv),ai:null}}
+/* in-ring corrections for Showmen who are elite workers (v61): applied once to existing saves, on top of any progress since */
+const RING_FIX={'jay-white':4,'adam-cole':4,'orange-cassidy':4,'mercedes-mone':2,'toni-storm':3,'christian-cage':2};
 function dataUpdate(st){if(!st||!st.w||(st.dataV||1)>=DATA_V)return;let n=0;
+ if((st.dataV||1)<6)for(const id in RING_FIX){const w=st.w[id];if(!w)continue;const d=RING_FIX[id];w.ring=Math.min(99,w.ring+d);w.pot=Math.min(99,Math.max((w.pot||0)+d,w.ring))}
  REMOVED.forEach(id=>{if(!st.w[id])return;delete st.w[id];(st.teams||[]).forEach(t=>t.m=t.m.filter(x=>x!==id));Object.values(st.titles||{}).forEach(t=>{if(t.holders.includes(id))t.holders=[]});
   ['heat','chem','mh','ph','fs'].forEach(k=>{if(st[k])for(const x in st[k])if(x.split('|').includes(id))delete st[k][x]});if(st.fa)delete st.fa[id];st.training=(st.training||[]).filter(t=>t.id!==id);st.promises=(st.promises||[]).filter(p=>p.a!==id&&p.b!==id);
   if(st.crisis&&(st.crisis.a===id||st.crisis.b===id))st.crisis=null;
@@ -620,7 +623,7 @@ Daniel Garcia|M|te|f|82|72|66|90
 Mark Davis|M|pw|h|80|55|55|84
 Jack Perry|M|fl|h|80|72|70|88
 Ricochet|M|fl|h|88|78|74
-Christian Cage|M|sh|h|78|95|82
+Christian Cage|M|sh|h|80|95|82
 Adam Copeland|M|br|f|82|90|88
 Cash Wheeler|M|te|h|88|70|74
 Dax Harwood|M|te|h|90|78|76
@@ -630,10 +633,10 @@ Brody King|M|pw|f|83|68|70
 Bandido|M|fl|f|90|55|74|93
 Gabe Kidd|M|br|h|82|70|65|88
 Chris Jericho|M|sh|h|74|94|82
-Orange Cassidy|M|sh|f|82|70|84
+Orange Cassidy|M|sh|f|86|70|84
 Kyle O'Reilly|M|te|f|87|60|66
 Roderick Strong|M|te|h|85|58|58
-Adam Cole|M|sh|h|82|88|82
+Adam Cole|M|sh|h|86|88|82
 Mark Briscoe|M|br|f|84|75|72
 Tommaso Ciampa|M|br|h|84|80|68
 Samoa Joe|M|pw|f|82|88|80
@@ -646,7 +649,7 @@ Komander|M|fl|f|85|45|60|89
 Mascara Dorada|M|fl|f|84|45|52
 Lance Archer|M|pw|h|76|72|58
 Katsuyori Shibata|M|br|f|80|55|62
-Jay White|M|sh|h|84|86|72
+Jay White|M|sh|h|88|86|72
 Eddie Kingston|M|br|f|76|92|76
 Bryan Keith|M|br|h|80|60|48|86
 Lio Rush|M|fl|f|83|70|58
@@ -668,7 +671,7 @@ Toa Liona|M|pw|h|74|50|50|80
 Dezmond Xavier|M|fl|f|80|55|48|86
 Kota Ibushi|M|fl|f|84|55|72
 Hologram|M|fl|f|80|40|60|90
-Mercedes Moné|F|sh|h|88|88|92
+Mercedes Moné|F|sh|h|90|88|92
 Thekla|F|br|h|82|78|78|90
 Willow Nightingale|F|pw|f|84|82|80
 Jamie Hayter|F|br|f|86|80|84
@@ -678,7 +681,7 @@ Lena Kross|F|pw|h|70|55|55|84
 Persephone|F|te|f|74|58|62|86
 Maya World|F|sh|f|68|70|55|84
 Harley Cameron|F|sh|f|66|85|70|80
-Toni Storm|F|sh|f|84|92|90
+Toni Storm|F|sh|f|87|92|90
 Kris Statlander|F|pw|f|86|72|80
 Hikaru Shida|F|te|f|84|60|68
 Julia Hart|F|sh|h|72|70|70|86
@@ -823,7 +826,7 @@ const TEAMS=[
 const FEUDS=[['mercedes-mone','thekla',70],['swerve-strickland','hangman-adam-page',55],['matt-jackson','dax-harwood',50],['nick-jackson','cash-wheeler',50],['matt-jackson','christian-cage',45],['nick-jackson','adam-copeland',40],['kevin-knight','steven-borden',50],['darby-allin','kyle-fletcher',45],['kyle-fletcher','matt-jackson',30],['andrade-el-idolo','pac',45],['kazuchika-okada','tommaso-ciampa',40],['samoa-joe','jack-perry',50],['jamie-hayter','megan-bayne',45],['alex-windsor','lena-kross',45],['jay-white','jon-moxley',35],['juice-robinson','david-finlay',35],['mike-bailey','gabe-kidd',30],['will-ospreay','claudio-castagnoli',30],['will-ospreay','jon-moxley',20],['willow-nightingale','thekla',30],['persephone','dani-luna',25],['persephone','hyan',25],['kris-statlander','julia-hart',30],['queen-aminata','skye-blue',30],['ricochet','swerve-strickland',30]];
 const OUT={'toni-storm':14,'adam-cole':12,'mark-briscoe':8,'steven-borden':6,'kota-ibushi':10,'hologram':6,'anna-jay':6,'penelope-ford':6,'maya-world':4,'riho':4,'serena-deeb':4,'harley-cameron':2,'wardlow':2};
 const REMOVED=['big-bill','powerhouse-hobbs','tay-melo'];
-const DATA_V=5,DATA_AS_OF='AEW All Out, Sept 26, 2026';
+const DATA_V=6,DATA_AS_OF='AEW All Out, Sept 26, 2026';
 /* Durability (1–99): how well a body holds up. Based on each wrestler's real injury history, current to All Out 2026. High = less stamina lost per match and fewer injuries; low = the opposite. name|durability|note */
 const DUR_RAW=`Darby Allin|95|Takes insane bumps and stunts, and almost never misses time
 Jon Moxley|92|Works hurt and keeps showing up — one of the most reliable bodies in wrestling
