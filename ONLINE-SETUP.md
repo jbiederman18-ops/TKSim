@@ -45,7 +45,7 @@ Notifications are sent by a small Cloud Function in [`firebase/functions`](fireb
 
 - **Host:** start screen or Office → **Host a league** → pick **2, 3 or 4 GMs** → send the 6-letter code (the **Share invite** button does this).
 - **Friends:** open the game → **Join a league** → enter the code. Each friend takes the next open seat.
-- **Before the draft:** each GM gets a turn to create wrestlers, so the draft starts once everyone has joined. The draft is a snake draft in a random order. **Auto-draft me** lets the game pick for you whenever you're on the clock.
+- **Before the draft:** each GM gets a turn to create wrestlers, so the draft starts once everyone has joined. The draft goes in turns in a random order, the same order every round. **Auto-draft me** lets the game pick for you whenever you're on the clock.
 - **Schedule:** it's a round-robin, so you face a different GM each week. With 4 GMs there are two matchups every week. With 3, one GM has a bye: their show still airs and earns fans, just without a head-to-head. Home shows league standings (fans and head-to-head wins).
 - **Each week:** GMs book one at a time. When it's your turn, you book, go live, and pass to the next GM. The last one to book airs the week. Everyone sees every matchup's results, and the order rotates so a different GM goes first next week. You get a notification when it's your turn and when results are in.
 - **Winning:** the most fans after All In wins the league. Promises, the Performance Center and front-office situations are private to each GM. Free agents, titles and feuds are shared.

@@ -520,7 +520,7 @@ ol.steps{padding-left:20px;margin:6px 0 10px}ol.steps li{margin:3px 0}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v58';
+const APP_VERSION='v59';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -1617,7 +1617,8 @@ function teamParts(a,b){const p=[];const t=inTeam(a.id,b.id);if(t)p.push({t:t>=6
  if(a.al===b.al)p.push({t:'Same alignment',v:1});if(heatOf(a.id,b.id)>=15)p.push({t:'Feuding partners',v:-3});return p}
 function chemTeam(a,b){return teamParts(a,b).reduce((s,x)=>s+x.v,0)}
 function partsHtml(p){return p.filter(x=>x.v).map(x=>`<span class="why ${x.v>0?'up':'dn'}">${esc(x.t)} ${x.v>0?'+':''}${x.v}</span>`).join('')}
-function styleFit(st){const e=Object.entries(STY[st]).sort((a,b)=>b[1]-a[1]);return {best:e.filter(x=>x[1]>=4).map(x=>STYLE_N[x[0]]),worst:e.filter(x=>x[1]<=1).map(x=>STYLE_N[x[0]])}}
+/* styles with no big pairing (Showman tops out at +2) list their best ones instead of an empty "clicks with" */
+function styleFit(st){const e=Object.entries(STY[st]).sort((a,b)=>b[1]-a[1]);let best=e.filter(x=>x[1]>=4);const strong=best.length>0;if(!strong)best=e.filter(x=>x[1]===e[0][1]&&x[1]>=2);return {strong,best:best.map(x=>STYLE_N[x[0]]),top:best.length?best[best.length-1][1]:0,worst:e.filter(x=>x[1]<=1&&!best.includes(x)).map(x=>STYLE_N[x[0]])}}
 function sideName(side){const t=S.teams.find(t=>t.m.length===side.length&&side.every(id=>t.m.includes(id)));return t?t.n:side.map(id=>S.w[id]?S.w[id].name:'?').join(' & ')}
 function money(k){const s=k<0?'-':'';const a=Math.abs(k);return a>=1000?s+'$'+(a/1000).toFixed(2)+'M':s+'$'+Math.round(a)+'K'}
 function fmtFans(n){return n>=1e6?(n/1e6).toFixed(2)+'M':Math.round(n/1000)+'K'}
@@ -1643,13 +1644,13 @@ function newGame(gm,rival,diff,online){
 }
 function startDraft(){S.phase='draft';const ord=shuffle(brands().slice());S.cap=capFor(ord.length);S.draft={round:1,pick:0,order:ord,rounds:ord.length>2?20:24,log:[],cap:S.cap};save()}
 /* ---- draft salary cap ---- */
-function picksLeft(b){const d=S.draft;if(!d)return 0;const o=d.order||[];const i=o.indexOf(b);if(i<0)return 0;const pos=d.round%2===1?i:o.length-1-i;return Math.max(0,d.rounds-(d.round-1)-(pos<d.pick?1:0))}
+function picksLeft(b){const d=S.draft;if(!d)return 0;const o=d.order||[];const i=o.indexOf(b);if(i<0)return 0;const pos=i;return Math.max(0,d.rounds-(d.round-1)-(pos<d.pick?1:0))}
 function capRoom(b){const d=S.draft;return d&&d.cap?d.cap-payroll(b):Infinity}
 function minAsk(){const l=Object.values(S.w).filter(w=>!w.own&&!w.cw&&!w.rookie).map(mkt);return l.length?Math.min(...l):4}
 /* can this brand take w and still fill every remaining pick with the cheapest wrestler left? */
 function capOk(w,b){const d=S.draft;if(!d||!d.cap)return true;return mkt(w)<=capRoom(b)-Math.max(0,picksLeft(b)-1)*minAsk()}
-/* snake draft: order reverses every round */
-function onClock(){const d=S.draft;const o=d.order||(d.order=d.first==='p'?['p','ai']:['ai','p']);return o[d.round%2===1?d.pick:o.length-1-d.pick]}
+/* straight draft: the same order every round (1-2-3, 1-2-3…) */
+function onClock(){const d=S.draft;const o=d.order||(d.order=d.first==='p'?['p','ai']:['ai','p']);return o[d.pick]}
 /* ===================== SCOUTING: developing talent ===================== */
 const SCOUT_EVERY=4,SCOUT_N=4;
 function genProspect(){const g=Math.random()<.5?'M':'F';const r=Math.random();const tier=r<.2?'gen':r<.55?'bluechip':'prospect';const nm=()=>pick(g==='M'?FIRST_M:FIRST_F)+' '+pick(LAST);let n=nm();for(let i=0;i<8&&Object.values(S.w).some(w=>w.name===n);i++)n=nm();
@@ -2294,7 +2295,7 @@ function renderCreate(){const c=CF;const nm=document.getElementById('cfName');if
  <label>Division</label>${seg('g',[['M','Men'],['F','Women']])}
  <label>Alignment</label>${seg('al',[['f','Face'],['h','Heel']])}
  <label>Style</label>${seg('st',Object.entries(STYLE_N))}
- <div class="muted tiny" style="margin-top:6px">Clicks with: <b class="good">${fit.best.join(', ')||'—'}</b> · Struggles with: <b class="bad">${fit.worst.join(', ')||'—'}</b></div>
+ <div class="muted tiny" style="margin-top:6px">${fit.strong?'Clicks with':'Works best with'}: <b class="good">${fit.best.join(', ')||'—'}${fit.strong||!fit.best.length?'':` (+${fit.top})`}</b> · Struggles with: <b class="bad">${fit.worst.join(', ')||'—'}</b></div>
  <label>Experience</label>${seg('mode',[['rookie','🌱 Rookie'],['custom','⭐ Established']])}
  ${c.mode==='rookie'?`${dd('tier',{title:TIERS[c.tier].n,sub:`Potential ${TIERS[c.tier].pot[0]}–${TIERS[c.tier].pot[1]} · ${money(TIERS[c.tier].cost)} fee`,rerender:renderCreate,opts:Object.entries(TIERS).map(([k,t])=>({t:t.n,right:money(t.cost)+' fee',sub:`Grows toward potential ${t.pot[0]}–${t.pot[1]}.`,on:k===c.tier,pick:()=>cfSet('tier',k)}))})}<div class="muted tiny" style="margin-top:6px">Rookies start raw and grow toward their potential by working matches and training. The fee is paid when you sign them from free agency. For a ready-made prospect, check the Scouting report in the Office.</div>`
   :`<div class="muted tiny" style="margin-top:6px">Set their stats yourself — great for adding real wrestlers who aren't in the game yet.</div>${cfSlider('ring','In-ring',30,99)}${cfSlider('mic','Mic',20,99)}${cfSlider('pop','Popularity',5,99)}${cfSlider('pot','In-ring potential',30,99)}${cfSlider('dur','Durability',10,99)}<div class="muted tiny">Durability: how well their body holds up. Higher means less stamina lost per match and fewer injuries.</div>`}
@@ -2608,7 +2609,7 @@ function showW(id){const w=S.w[id];if(!w)return;const own=w.own==='p';const ts=t
  ${acts}<button class="btn ghost" onclick="closeModal()">Close</button>`)}
 function matchGuide(w){const fit=styleFit(w.st);
  let h=`<div class="h small mt">Traits</div>${(w.tr||[]).map(t=>TRAITS[t]?`<div class="trl"><span class="ti">${TRAITS[t].i}</span><div><b>${TRAITS[t].n}</b><span>${TRAITS[t].d}</span></div></div>`:'').join('')||'<div class="muted">None</div>'}
- <div class="muted mt">As a <b>${STYLE_N[w.st]}</b>, clicks with <b class="good">${fit.best.join(', ')}</b>${fit.worst.length?` · struggles with <b class="bad">${fit.worst.join(', ')}</b>`:''}. Face vs heel adds +4.</div>`;
+ <div class="muted mt">As a <b>${STYLE_N[w.st]}</b>, ${fit.best.length?`${fit.strong?'clicks with':'works best with'} <b class="good">${fit.best.join(', ')}</b>${fit.strong?'':` (+${fit.top})`}`:'has no standout style pairing'}${fit.worst.length?` · struggles with <b class="bad">${fit.worst.join(', ')}</b>`:''}. Face vs heel adds +4.</div>`;
  if(!S||S.phase==='rookies')return h;
  const mine=ownList('p').filter(o=>o.id!==w.id);
  if(!mine.length)return h;
