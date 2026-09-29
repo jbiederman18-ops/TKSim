@@ -509,7 +509,7 @@ body.tv .card .h.small{font-size:clamp(17px,1.4vw,26px)}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v54';
+const APP_VERSION='v55';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -1131,7 +1131,7 @@ const TWISTS=[
 {when:'any',text:'Pyro goes off early behind {A}.',ch:[{t:'Play it off like it was planned',s:'mic',d:.1,p:3},{t:'Laugh it off with the crowd',s:'pop',d:.05,p:2}]},
 {when:'solo',text:'The crowd starts chanting for someone else entirely.',ch:[{t:'Remind them who\'s actually standing here',s:'mic',d:.1,p:2},{t:'Hit a signature move on thin air to win them back',s:'ring',d:.1,p:3},{al:'h',t:'Mock whoever they\'re chanting for',s:'mic',d:.05,p:2}]}];
 const DEF_OK=['It lands perfectly.','The crowd is right there with them.','That got a huge reaction.'],DEF_NO=['It falls flat.','The crowd isn\'t buying it.','A flubbed line kills the moment.'];
-const STAT_ICON={mic:'🎤 Mic',ring:'💪 In-ring',pop:'⭐ Popularity',luck:'🎲 Luck',body:'🩹 Their body',rein:'🎧 Getting through to them',ringO:'💪 Ring work'};
+const STAT_ICON={mic:'🎤 Mic',ring:'💪 In-ring',pop:'⭐ Popularity',luck:'🎲 Luck',body:'🩹 Their body',rein:'🎧 Getting through to them',ringO:'💪 Ring work',grit:'🔥 How bad it is between them'};
 
 const MEV=[
 {id:'ref',w:3,text:'The referee takes a stray elbow and crumples to the mat! {B} has {A} pinned — but nobody is there to count.',ch:[
@@ -1251,7 +1251,7 @@ function evChoices(e,m,r){const std=!!(STIPS[m.stip||'std']||STIPS.std).dq;retur
 /* deal 3 options: always one guaranteed-safe call when the event has one, plus a face/heel option when available */
 function dealEv(e,m,r){const el=evChoices(e,m,r);if(el.length<=3)return el;const safe=el.filter(c=>c.always&&!c.flip&&!c.nc);const keep=safe.length?pick(safe):null;
  const dealt=dealChoices(el.map(c=>c===keep?Object.assign({},c,{key:1}):c),r,3);return el.filter(c=>dealt.some(d=>d.t===c.t))}
-function evChance(c,r){return c.always?1:c.s==='body'?clamp(1-injRisk(r.V),.2,.95):c.s==='rein'?reinOdds(r.V):c.s==='ringO'?clamp(.2+(r.O?r.O.ring:50)/100*.7,.15,.9):chance(c,{A:r.A})}
+function evChance(c,r){return c.always?1:c.s==='body'?clamp(1-injRisk(r.V),.2,.95):c.s==='rein'?reinOdds(r.V):c.s==='ringO'?clamp(.2+(r.O?r.O.ring:50)/100*.7,.15,.9):c.s==='grit'?clamp(.85-beefOf(r.V.id,r.O.id)/200,.3,.8):chance(c,{A:r.A})}
 function evRoll(c,r,m){const ev=evNew(m);ev.hit=true;const ok=Math.random()<evChance(c,r);
  const who=k=>k==='B'?r.B:r.A;const H=(a,b,h)=>{if(a&&b&&h)ev.heat.push([a.id,b.id,Math.round(h)])};
  const hp=c.hx?[r.X,who(c.hx)]:c.hy?[r.Y,who(c.hy)]:c.heatT?[r.A,r.A2]:[r.A,r.B];const hv=c.heat||c.heatT||0;
@@ -1266,6 +1266,7 @@ function applyEv(ev,notes){ev.heat.forEach(([a,b,h])=>{if(S.w[a]&&S.w[b]&&a!==b)
  ev.chem.forEach(([a,b,v])=>{const k=key(a,b);S.chem[k]=clamp((S.chem[k]||0)+v,-5,6)});
  ev.fat.forEach(([id,v])=>{const w=S.w[id];if(w)w.fat=clamp(w.fat+v,0,100)});
  ev.inj.forEach(([id,wk])=>{const w=S.w[id];if(w&&!w.inj){w.inj=wk;const n=`🚑 ${w.name} was injured and will miss ${wk} weeks.`;notes.push(n);news(n)}});
+ (ev.beef||[]).forEach(([a,b,v])=>addBeef(a,b,v));
  (ev.mor||[]).forEach(([id,v])=>{const w=S.w[id];if(w)w.mor=clamp(w.mor+v,0,100)});
  (ev.cash||[]).forEach(([id,v])=>{const w=S.w[id];if(w&&w.own&&S.money&&S.money[w.own]!=null)S.money[w.own]+=v})}
 /* ===================== SITUATIONAL MATCH EVENTS =====================
@@ -1273,10 +1274,17 @@ function applyEv(ev,notes){ev.heat.forEach(([a,b,h])=>{if(S.w[a]&&S.w[b]&&a!==b)
  an unhappy one (morale under 30) can go into business for themselves or blow past their time cue and squeeze
  everything after them on the card. Each one puts a hard call in the GM's headset. */
 const SIT_MOR=30;
+/* ---- real backstage heat (not the storyline kind): rare, slow to fade, and it can boil over when they share a ring ---- */
+const BEEF_MIN=40;
+function beefOf(a,b){return (S&&S.beef&&S.beef[key(a,b)])||0}
+function addBeef(a,b,v){if(!a||!b||a===b)return;S.beef=S.beef||{};const k=key(a,b);const n=clamp((S.beef[k]||0)+v,0,100);if(n<5)delete S.beef[k];else S.beef[k]=Math.round(n)}
+function beefTick(notes){S.beef=S.beef||{};Object.keys(S.beef).forEach(k=>{const [a,b]=k.split('|');addBeef(a,b,S.w[a]&&S.w[b]&&S.w[a].own&&S.w[b].own?-1.5:-5)});
+ if(Math.random()<.03){const pool=Object.values(S.w).filter(w=>w.own&&!w.inj);if(!pool.length)return;const A=wpick(pool,w=>w.mor<40?3:1);const mates=pool.filter(w=>w!==A&&w.own===A.own&&beefOf(A.id,w.id)<BEEF_MIN);if(!mates.length)return;
+  const B=pick(mates);addBeef(A.id,B.id,RI(45,60));const n=`🗞️ Dirt sheets: ${A.name} and ${B.name} reportedly can't stand each other backstage. Careful putting them in a ring together.`;news(n);notes.push(n)}}
 function injRisk(w){return clamp((((w.fat||0)-30)/100*.9+(60-durOf(w))/100*.8+.08)*(hasT(w,'iron')?.5:1),.05,.8)}
 const riskWord=p=>p>=.5?'Very high':p>=.35?'High':p>=.2?'Moderate':'Low';
 const reinOdds=w=>clamp(.3+w.mor/100*1.2-(w.pop>=75?.1:0),.15,.8);
-function evNew(m){const e=m.ev||(m.ev={stars:0,heat:[],pop:[],chem:[],inj:[],fat:[],notes:[]});e.mor=e.mor||[];e.cash=e.cash||[];return e}
+function evNew(m){const e=m.ev||(m.ev={stars:0,heat:[],pop:[],chem:[],inj:[],fat:[],notes:[]});e.mor=e.mor||[];e.cash=e.cash||[];e.beef=e.beef||[];return e}
 function laterSlots(brand,m){const c=S.card[brand]||[];const i=c.findIndex(sl=>sl.d===m);return i<0?[]:c.slice(i+1)}
 function laterMatches(brand,m){return laterSlots(brand,m).filter(sl=>sl.k==='match'&&sl.d&&validMatch(sl.d)&&!sl.d.sides.flat().some(id=>S.w[id].inj)).map(sl=>sl.d)}
 function laterPromo(brand,m){const l=laterSlots(brand,m).filter(sl=>sl.k==='promo'&&sl.d&&!sl.d.cut&&S.w[sl.d.a]&&!S.w[sl.d.a].inj);return (l.find(sl=>sl.opt)||l[l.length-1]||{}).d||null}
@@ -1293,10 +1301,15 @@ const SIT={
    {t:'Push through the big spots anyway',s:'body',st:.5,stNo:-.75,nofx:{injV:1},ok:'{V} finds a second wind and the finish is great.',no:'{V} hits the wall hard — and tweaks something on the way down.',tip:'Could steal the show · injury risk'},
    {t:'Go home early and give the time to the main event',always:1,st:-.5,need:'MAIN',fx:{give:1},ok:'A quick finish. The main event gets the extra minutes.',tip:'Weaker match · +¼★ to your main event'}]},
  business:{texts:['{V} isn\'t happy about losing tonight — they\'re no-selling {O}\'s offense and won\'t go down for the finish. The agents in gorilla are panicking.','{V} kicks out of the planned finish and glares at the camera. They\'re going into business for themselves.'],
-  ch:[{t:'Give in — let {V} win',always:1,st:-.25,fx:{flipV:1,morV:15,morO:-8,heat:12},ok:'{V} gets their hand raised. {O} storms to the back furious.',tip:'Changes the winner · {V} happier · {O} unhappy'},
-   {t:'Send an agent to the curtain to rein {V} in',s:'rein',st:0,stNo:-.75,fx:{morV:-5},nofx:{nc:1,heat:18,fatO:8},ok:'{V} gets the message and takes the loss — grudgingly.',no:'{V} ignores the signal. It turns stiff and ugly, and the ref throws the match out.',tip:'Keeps your finish if it works · no contest if it doesn\'t'},
+  ch:[{t:'Give in — let {V} win',always:1,st:-.25,fx:{flipV:1,morV:15,morO:-8,heat:12,beef:20},ok:'{V} gets their hand raised. {O} storms to the back furious.',tip:'Changes the winner · {V} happier · {O} unhappy'},
+   {t:'Send an agent to the curtain to rein {V} in',s:'rein',st:0,stNo:-.75,fx:{morV:-5},nofx:{nc:1,heat:18,fatO:8,beef:15},ok:'{V} gets the message and takes the loss — grudgingly.',no:'{V} ignores the signal. It turns stiff and ugly, and the ref throws the match out.',tip:'Keeps your finish if it works · no contest if it doesn\'t'},
    {t:'Tell the ref to fast-count {V}',always:1,st:-.5,fx:{morV:-12,heat:8},ok:'1-2-3 before {V} knows what hit them. Nobody in the building buys it.',tip:'Keeps your finish · {V}\'s morale craters'},
-   {t:'Tell {O} to shut {V} down for real',s:'ringO',st:.25,stNo:-.75,okfx:{heat:20,morV:-6},nofx:{injO:1,nc:1,heat:20},ok:'{O} gives {V} a receipt. It\'s ugly, but the finish holds.',no:'It gets out of hand and {O} gets hurt in the scuffle.',tip:'Depends on {O} · {O} could get hurt'}]},
+   {t:'Tell {O} to shut {V} down for real',s:'ringO',st:.25,stNo:-.75,okfx:{heat:20,morV:-6,beef:25},nofx:{injO:1,nc:1,heat:20,beef:25},ok:'{O} gives {V} a receipt. It\'s ugly, but the finish holds.',no:'It gets out of hand and {O} gets hurt in the scuffle.',tip:'Depends on {O} · {O} could get hurt'}]},
+ sabotage:{texts:['{V} and {O} can\'t stand each other for real, and it\'s spilling into the ring. {V} is working stiff and refusing to cooperate.','The locker room knew this pairing was a risk. {V} is going out of their way to make {O} look bad on live TV.','Something is off — {V} just threw a real punch at {O}. The agents in gorilla are on their feet.'],
+  ch:[{t:'Get them to the finish as fast as possible',always:1,st:-.5,fx:{beef:5},ok:'A short, awkward match. Nobody in the back is surprised.',tip:'Weaker match · the real heat lingers'},
+   {t:'Send an agent to the apron to calm {V} down',s:'rein',st:-.25,stNo:-.75,okfx:{beef:-15},nofx:{nc:1,beef:10},ok:'{V} cools off and they get through it like professionals.',no:'{V} won\'t listen. The ref throws it out before it gets worse.',tip:'Can cool things off · no contest if it fails'},
+   {t:'Let them settle it in the ring',s:'grit',st:.75,stNo:-1,okfx:{beef:-25,heat:15},nofx:{injO:1,beef:15},ok:'A stiff, electric fight — the crowd buys every blow, and they shake hands in the back.',no:'It gets ugly for real and {O} gets hurt.',tip:'Could be a classic and clear the air · {O} could get hurt'},
+   {t:'Pull {V} out — referee stoppage',always:1,st:-1,fx:{nc:1,morV:-10,beef:5},ok:'The ref waves it off. The crowd boos the non-finish.',tip:'No winner · protects {O} · {V} unhappy'}]},
  overtime:{texts:['{V} is ignoring every time cue. The match is well past its slot and they\'re calling spots on the fly to prove a point.','{V} wants to show management what they\'ve been missing — and they are NOT going home on time.'],
   ch:[{t:'Let them cook',always:1,st:.5,fx:{ot:2,morV:6},ok:'It\'s a great match — and everything after it pays for it.',tip:'Better match · {OT}'},
    {t:'Cut {P}\'s promo to make up the time',always:1,st:.5,need:'P',fx:{cut:1,morV:6},ok:'The match gets its time. {P}\'s segment is scrapped.',tip:'Better match · {P}\'s promo won\'t air ({P} unhappy)'},
@@ -1307,13 +1320,14 @@ function sitEvent(m,brand){const all=m.sides.flat().map(id=>S.w[id]);if(!all.len
  all.forEach(w=>{const k=injRisk(w);
   if(w.fat>=FAT_OK&&k>=.28)c.push({k:'hurt',w,p:clamp(k*1.1,.2,.7),sc:k+.2});else if(w.fat>=FAT_RISK)c.push({k:'gassed',w,p:.35,sc:.3});
   if(w.mor<SIT_MOR){const p=.2+(SIT_MOR-w.mor)/SIT_MOR*.4;c.push({k:win.includes(w.id)||m.nc?'overtime':Math.random()<.65?'business':'overtime',w,p,sc:.25+(SIT_MOR-w.mor)/60})}});
+ for(let i=0;i<all.length;i++)for(let j=i+1;j<all.length;j++){const bf=beefOf(all[i].id,all[j].id);if(bf>=BEEF_MIN){const [x,y]=all[i].mor<=all[j].mor?[all[i],all[j]]:[all[j],all[i]];c.push({k:'sabotage',w:x,o:y,p:.03+(bf-BEEF_MIN)/60*.09,sc:1})}}
  c.sort((a,b)=>b.sc-a.sc);const hit=c.find(x=>Math.random()<x.p);if(!hit)return null;
  const r=evRoles(m,brand);const V=hit.w;r.V=V;r.brand=brand;const others=all.filter(w=>w!==V);
- const pool=hit.k==='business'?win.map(id=>S.w[id]):others;r.O=(pool.length?pool:others).slice().sort((a,b)=>b.ring-a.ring)[0]||null;
+ const pool=hit.k==='business'?win.map(id=>S.w[id]):others;r.O=hit.o||(pool.length?pool:others).slice().sort((a,b)=>b.ring-a.ring)[0]||null;
  const pr=laterPromo(brand,m);if(pr){r.Pp=pr;r.P=S.w[pr.a]}
  const lm=laterMatches(brand,m);r.MAIN=lm.length?1:0;r.OT=lm.length?`the next ${Math.min(2,lm.length)>1?'2 matches lose':'match loses'} ¼★ each`:'the show overruns ($25K fee)';
  const E=SIT[hit.k];const ch=E.ch.filter(x=>(!x.need||r[x.need])&&(!x.s||x.s!=='ringO'||r.O));
- const info=hit.k==='hurt'||hit.k==='gassed'?`🔋 Stamina ${sta(V)} · 🩹 ${durWord(durOf(V))} · Injury risk <b class="${injRisk(V)>=.35?'bad':''}">${riskWord(injRisk(V))}</b>`:`😠 ${esc(V.name)}'s morale: <b class="bad">${Math.round(V.mor)}</b>`;
+ const info=hit.k==='sabotage'?`☢️ Real backstage heat between ${esc(V.name)} and ${esc(r.O.name)}: <b class="bad">${beefOf(V.id,r.O.id)}</b>`:hit.k==='hurt'||hit.k==='gassed'?`🔋 Stamina ${sta(V)} · 🩹 ${durWord(durOf(V))} · Injury risk <b class="${injRisk(V)>=.35?'bad':''}">${riskWord(injRisk(V))}</b>`:`😠 ${esc(V.name)}'s morale: <b class="bad">${Math.round(V.mor)}</b>`;
  return {e:{id:'sit:'+hit.k,text:pick(E.texts),ch},r,sit:hit.k,info}}
 function sitTip(c,r){return c.tip?evFill(c.tip,r).replace('{OT}',r.OT||''):''}
 function sitRoll(c,r,m){const ev=evNew(m);const ok=Math.random()<evChance(c,r);const out={success:ok,flip:false,nc:false,extra:[]};
@@ -1321,6 +1335,7 @@ function sitRoll(c,r,m){const ev=evNew(m);const ok=Math.random()<evChance(c,r);c
  ev.stars+=ok?(c.st||0):(c.stNo!=null?c.stNo:-Math.max(.25,Math.abs(c.st||0)*.5));
  if(fx.morV)ev.mor.push([V.id,fx.morV]);if(fx.morO&&O)ev.mor.push([O.id,fx.morO]);if(fx.popV)ev.pop.push([V.id,fx.popV]);
  if(fx.heat&&O&&side(O)!==side(V))ev.heat.push([V.id,O.id,fx.heat]);if(fx.fatO&&O)ev.fat.push([O.id,fx.fatO]);
+ if(fx.beef&&O)ev.beef.push([V.id,O.id,fx.beef]);
  if(fx.flipV){const i=side(V);if(i>=0&&i!==m.winner){m.winner=i;out.flip=true}}
  if(fx.nc){m.nc=true;out.nc=true}
  if(fx.injV){ev.inj.push([V.id,durWeeks(V)+1]);out.extra.push(`🚑 ${V.name} is hurt and will miss time`);
@@ -2018,7 +2033,7 @@ function marketTick(notes,first){if(!S.fa)S.fa={};const now=AW();
  add.forEach(w=>S.fa[w.id]=now+RI(1,3));
  if(add.length&&notes!==null){const n=`🆕 Free agency: ${add.map(w=>w.name).join(', ')} ${add.length>1?'hit':'hits'} the market${first?'':' this week'}.`;news(n);if(notes)notes.push(n)}}
 function endWeek(notes){
- const wk=S.week;const T=new Set(S.touched);
+ const wk=S.week;const T=new Set(S.touched);beefTick(notes);
  bothSides(()=>{S.training=S.training.filter(t=>S.w[t.id]&&S.w[t.id].own==='p');
  S.training.forEach(t=>{const w=S.w[t.id];if(w.inj)return;if(t.f==='ring')w.ring=Math.min(Math.max(w.ring,w.pot),w.ring+Math.max(.3,(w.pot-w.ring)*.06));else w.mic=Math.min(Math.max(w.mic,w.potM),w.mic+Math.max(.3,(w.potM-w.mic)*.06));w.fat=clamp(w.fat+6,0,100)})});
  if(!ON())ownList('ai').filter(w=>!w.inj&&w.pot>w.ring).sort((a,b)=>(b.pot-b.ring)-(a.pot-a.ring)).slice(0,2).forEach(w=>w.ring=Math.min(w.pot,w.ring+Math.max(.3,(w.pot-w.ring)*.06)));
@@ -2060,10 +2075,10 @@ const mor=(w,d)=>w.mor=clamp(w.mor+d,0,100),popx=(w,d)=>w.pop=clamp(w.pop+d,1,10
 function fansx(d){S.fans.p=Math.max(50000,S.fans.p+d)}
 const CRISES={
 fight:{t:'Backstage brawl',i:'🥊',need:2,text:'{A} and {B} had to be pulled apart in catering after an argument boiled over. Half the locker room saw it.',ch:[
- {t:'Fine them both and keep them apart',d:'Safe. Both lose morale and their chemistry sours.',fx:c=>{mor(c.A,-10);mor(c.B,-10);S.money.p+=40;S.chem[key(c.A.id,c.B.id)]=clamp((S.chem[key(c.A.id,c.B.id)]||0)-2,-5,6);return `Both are fined $20K. Things calm down, but ${c.A.name} and ${c.B.name} aren't speaking.`}},
- {t:'Turn it into a storyline',d:'Instant feud heat — but it could spill over for real.',fx:c=>{const n=[];bumpHeat(c.A.id,c.B.id,25,n,'a backstage brawl turned storyline');popx(c.A,2);popx(c.B,2);
+ {t:'Fine them both and keep them apart',d:'Both lose morale, their chemistry sours, and the real heat lingers.',fx:c=>{mor(c.A,-10);mor(c.B,-10);S.money.p+=40;S.chem[key(c.A.id,c.B.id)]=clamp((S.chem[key(c.A.id,c.B.id)]||0)-2,-5,6);addBeef(c.A.id,c.B.id,30);return `Both are fined $20K. Things calm down, but ${c.A.name} and ${c.B.name} aren't speaking.`}},
+ {t:'Turn it into a storyline',d:'Instant feud heat — but it could spill over for real.',fx:c=>{const n=[];bumpHeat(c.A.id,c.B.id,25,n,'a backstage brawl turned storyline');popx(c.A,2);popx(c.B,2);addBeef(c.A.id,c.B.id,20);
    if(Math.random()<.35){const v=c.A.ring<c.B.ring?c.A:c.B;v.inj=Math.max(v.inj,2);return `The cameras roll and fans eat it up — but things got too real and ${v.name} is banged up for 2 weeks. ${n.join(' ')}`}return `The cameras "catch" round two. Fans are hooked. ${n.join(' ')}`}},
- {t:'Suspend {A}, the instigator',d:'The locker room respects it. {A} misses 2 weeks.',fx:c=>{susp(c.A,2);mor(c.A,-15);ownList('p').forEach(w=>{if(w!==c.A)mor(w,3)});return `${c.A.name} is suspended for 2 weeks. The rest of the roster appreciates a firm hand.`}}]},
+ {t:'Suspend {A}, the instigator',d:'The locker room respects it. {A} misses 2 weeks.',fx:c=>{susp(c.A,2);addBeef(c.A.id,c.B.id,15);mor(c.A,-15);ownList('p').forEach(w=>{if(w!==c.A)mor(w,3)});return `${c.A.name} is suspended for 2 weeks. The rest of the roster appreciates a firm hand.`}}]},
 fan:{t:'Caught on camera',i:'📱',text:'A fan video of {A} shoving a heckler outside the arena is going viral. The heckler grabbed {A} first, but the clip starts a second too late to show it.',ch:[
  {t:'Issue a public apology',d:'Contained. Small popularity and fan hit.',fx:c=>{popx(c.A,-3);mor(c.A,-5);fansx(-5000);return `${c.A.name} apologizes. The story fades within a few days.`}},
  {t:'Suspend {A} for 2 weeks',d:'Good PR, unhappy wrestler.',fx:c=>{susp(c.A,2);mor(c.A,-20);fansx(3000);return `The suspension plays well publicly. ${c.A.name} is furious.`}},
@@ -2370,6 +2385,7 @@ function slotTags(m,ppv){const t=[];let hb=0;for(let i=0;i<m.sides.length;i++)fo
  const ws=m.sides.map(s=>s.map(id=>S.w[id]).filter(Boolean));const full=ws.filter(s=>s.length);if(full.length>=2){const al=full.map(sideAl);if(!al.includes('x'))t.push(new Set(al).size>1?'<span class="tg good">😇 vs 😈</span>':`<span class="tg bad">${al[0]==='f'?'😇 vs 😇':'😈 vs 😈'}</span>`)}
  const ex=ws.flat().filter(w=>sta(w)-fatGain(w,m,ppv)<100-FAT_RISK);const td=ws.flat().filter(w=>sta(w)<100-FAT_OK);
  if(td.length)t.push(`<span class="tg bad">😮‍💨 Tired: ${td.map(w=>esc(w.name.split(' ').slice(-1)[0])).join(', ')}</span>`);else if(ex.length)t.push(`<span class="tg warnt">🔋 ${ex.map(w=>esc(w.name.split(' ').slice(-1)[0])).join(', ')} will be spent</span>`);
+ {const fl=ws.flat();const bf=[];for(let i=0;i<fl.length;i++)for(let j=i+1;j<fl.length;j++)if(beefOf(fl[i].id,fl[j].id)>=BEEF_MIN)bf.push(fl[i].name.split(' ').slice(-1)[0]+' & '+fl[j].name.split(' ').slice(-1)[0]);if(bf.length)t.push(`<span class="tg bad">☢️ Real heat: ${bf.map(esc).join(', ')}</span>`)}
  {const sad=ws.flat().filter(w=>w.mor<SIT_MOR);if(sad.length)t.push(`<span class="tg warnt">😠 ${sad.map(w=>esc(w.name.split(' ').slice(-1)[0])).join(', ')} may go off-script</span>`)}
  {const r=riOn(m);if(r)t.push(`<span class="tg warnt">${RUNIN[r.k].i} ${esc(r.X.name.split(' ').slice(-1)[0])} runs in</span>`)}
  return t.length?`<div class="tags">${t.join('')}</div>`:''}
