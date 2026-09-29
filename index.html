@@ -146,6 +146,8 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),l
 .stars{color:var(--gold2);letter-spacing:1px;white-space:nowrap;text-shadow:0 0 10px rgba(246,221,142,.45)}
 .stars.big{font-size:30px}
 .dd{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#0b0b0e;color:var(--text);border:1px solid #33353d;border-bottom-color:#4a4c55;padding:10px 12px;text-align:left;cursor:pointer;font-family:'Barlow',sans-serif;clip-path:polygon(0 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%)}
+.rib{margin-top:8px;padding:10px;background:rgba(0,0,0,.35);border:1px solid #3c3320;clip-path:var(--cut)}.ril{margin:10px 0 5px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#bdb6a6}.hp{margin:3px 0;gap:8px;font-size:14px}.hp b{flex:none}
+.dd.sm{padding:7px 10px}.dd.sm .ddv b{font-size:14px}.dd.sm .ddv small{font-size:12px}.tsel{margin-bottom:8px}
 .dd.open{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold);clip-path:none}
 .ddv{min-width:0}.ddv b{display:block;font-size:16px;font-weight:700}.ddv small{display:block;color:var(--mut);font-size:13px;margin-top:1px}
 .ddc{flex:none;width:9px;height:9px;border-right:2px solid var(--gold);border-bottom:2px solid var(--gold);transform:rotate(45deg);margin:-4px 4px 0 0;transition:transform .15s}.dd.open .ddc{transform:rotate(-135deg);margin-top:4px}
@@ -504,7 +506,7 @@ body.tv .card .h.small{font-size:clamp(17px,1.4vw,26px)}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v43';
+const APP_VERSION='v44';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -547,7 +549,7 @@ const TRAITS={
  under:{n:'Underdog',i:'🐶',d:'Fans rally behind them. +4 chemistry against Monsters, +2 against anyone far more popular.'},
  story:{n:'Storyteller',i:'📖',d:'Knows how to structure a match. +1 chemistry with every opponent.'},
  ringg:{n:'Ring General',i:'🧠',d:'Carries lesser workers: +2 chemistry against opponents 10+ points lower in-ring.'},
- dare:{n:'Daredevil',i:'🪂',d:'+4 in Ladder, Triple Threat and 4-Way matches; +2 chemistry with other Daredevils. Gets hurt more often.'},
+ dare:{n:'Daredevil',i:'🪂',d:'+4 in Ladder, Tables, Falls Count Anywhere, Barbed Wire, Stadium Stampede, Triple Threat and 4-Way matches; +2 chemistry with other Daredevils. Gets hurt more often.'},
  tag:{n:'Tag Specialist',i:'🤝',d:'+3 chemistry with any tag or trios partner.'},
  bigm:{n:'Big Match',i:'🏟️',d:'Rises to the occasion: +3 match rating on PPVs.'},
  work:{n:'Workhorse',i:'💪',d:'Builds up 40% less fatigue from matches.'},
@@ -1375,7 +1377,7 @@ function chemOpp(a,b){return chemParts(a,b).reduce((s,x)=>s+x.v,0)}
 function teamParts(a,b){const p=[];const t=inTeam(a.id,b.id);if(t)p.push({t:t>=6?'Established tag team':'Faction mates',v:t});
  const h=(S.chem[key(a.id,b.id)]||0)*.5;if(Math.abs(h)>=.1)p.push({t:'History together',v:Math.round(h*10)/10});
  const ts=(hasT(a,'tag')?3:0)+(hasT(b,'tag')?3:0);if(ts)p.push({t:'Tag Specialist',v:ts});
- if(a.al===b.al)p.push({t:'Same alignment',v:1});return p}
+ if(a.al===b.al)p.push({t:'Same alignment',v:1});if(heatOf(a.id,b.id)>=15)p.push({t:'Feuding partners',v:-3});return p}
 function chemTeam(a,b){return teamParts(a,b).reduce((s,x)=>s+x.v,0)}
 function partsHtml(p){return p.filter(x=>x.v).map(x=>`<span class="why ${x.v>0?'up':'dn'}">${esc(x.t)} ${x.v>0?'+':''}${x.v}</span>`).join('')}
 function styleFit(st){const e=Object.entries(STY[st]).sort((a,b)=>b[1]-a[1]);return {best:e.filter(x=>x[1]>=4).map(x=>STYLE_N[x[0]]),worst:e.filter(x=>x[1]<=1).map(x=>STYLE_N[x[0]])}}
@@ -1471,6 +1473,35 @@ function validMatch(m){const f=m.sides.flat();return f.length&&f.every(id=>id&&S
 function kindOk(kind,type){return kind==='singles'?['singles','triple','four'].includes(type):kind==='tag'?type==='tag':type==='trios'}
 function eligibleTitles(m){const ids=m.sides.flat();if(!ids.length||ids.some(x=>!x))return [];const g=S.w[ids[0]].g;if(ids.some(i=>S.w[i].g!==g))return [];
  return Object.values(S.titles).filter(t=>t.g===g&&kindOk(t.kind,m.type)&&(!t.holders.length||m.sides.some(s=>t.holders.every(h=>s.includes(h))))).map(t=>t.id)}
+/* ===================== RUN-INS ===================== */
+/* m.ri={k,x,t}: x (not in the match) interferes with t (in the match). k: cost | attack | save */
+const RUNIN={cost:{n:'Costs them the match',i:'💥',lab:'Costs the match for',d:'Interferes so they lose. The most heat — but a screwy finish drags a normal-rules match down unless the feud is already hot.'},attack:{n:'Post-match attack',i:'👊',lab:'Attacks',d:'Jumps them after the bell. Solid heat, and the victim takes extra punishment.'},save:{n:'Makes the save',i:'🛡️',lab:'Runs off',d:'Runs someone off after the match. Less heat, but faces get a pop.'}};
+function riOn(m){const ri=m&&m.ri;if(!ri||!ri.x||!ri.t||!RUNIN[ri.k])return null;const X=S.w[ri.x],T=S.w[ri.t];const all=m.sides.flat();
+ if(!X||!T||X.inj||all.includes(ri.x)||!all.includes(ri.t))return null;const o=S.w[all[0]];if(!o||X.own!==o.own)return null;
+ let k=ri.k;if(k==='cost'&&(m.nc||(m.sides[m.winner]||[]).includes(ri.t)))k='attack';return {X,T,k}}
+function riScore(m){const r=riOn(m);if(!r||r.k!=='cost')return 0;const h=heatOf(r.X.id,r.T.id);return h>=30?1:(STIPS[m.stip||'std']||STIPS.std).dq?-1:.5}
+function riRecent(a,b){return ((S.rin||{})[key(a,b)]||[]).filter(w=>w<AW()&&AW()-w<=2).length}
+function riGain(r,stars){let g={cost:12,attack:9,save:8}[r.k]+Math.max(0,stars-2.5)*1.5;g*=r.X.al!==r.T.al?1.3:.7;if(hasT(r.X,'heatm')||hasT(r.T,'heatm'))g*=1.3;if(riRecent(r.X.id,r.T.id))g*=.5;if(isStale(r.X.id,r.T.id))g*=.4;return g}
+function applyRunIn(m,res,notes){const r=riOn(m);
+ if(!r){const X=m.ri&&S.w[m.ri.x];if(X&&X.inj)notes.push(`🚫 ${X.name} couldn't make the run-in — injured.`);return}
+ const {X,T,k}=r;const kk=key(X.id,T.id);if(!S.rin)S.rin={};const g=riGain(r,res.stars),h0=heatOf(X.id,T.id),h1=addHeat(h0,g);
+ const txt=k==='cost'?`💥 Run-in! ${X.name} hits the ring and costs ${T.name} the match`:k==='attack'?`👊 After the bell, ${X.name} jumps ${T.name} and lays them out`:`🛡️ ${X.name} hits the ring and runs off ${T.name}`;
+ notes.push(`${txt}${riRecent(X.id,T.id)?' (again — fans have seen this lately)':''} · heat ${Math.round(h0)} → ${Math.round(h1)}`);
+ bumpHeat(X.id,T.id,g,notes,'after a run-in');S.rin[kk]=((S.rin[kk]||[]).concat([AW()])).slice(-4);
+ X.last=S.week;X.fat=clamp(X.fat+5,0,100);X.mor=clamp(X.mor+3,0,100);
+ const cheer=k==='save'?X.al==='f':(X.al==='h'||T.al==='h');X.pop=clamp(X.pop+(cheer?1:-.5),1,100);
+ if(k==='attack')T.fat=clamp(T.fat+8,0,100);if(k==='cost'){T.mor=clamp(T.mor-4,0,100);T.mom=Math.max(-5,T.mom-1)}}
+/* what heat a booked match will build: opponents, feuding partners and any run-in */
+function heatPlan(m,ppv){const out=[];const all=m.sides.flat();if(!all.length||!all.every(id=>id&&S.w[id]))return out;const r=rateMatch(m,{ppv,preview:true});const st=r.stars;
+ for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j]){const A=S.w[a],B=S.w[b];const h0=heatOf(a,b);
+  if(ppv){if(h0>=1)out.push({A,B,h0,h1:Math.round(h0*.5),kind:'pay'});continue}
+  let g=3+Math.max(0,st-2.5)*2.5;g*=A.al!==B.al?1.4:.75;if(m.title)g+=3;if(hasT(A,'heatm')||hasT(B,'heatm'))g*=1.3;if(r.pen)g*=.35;if(isStale(a,b))g*=.4;out.push({A,B,h0,h1:addHeat(h0,g),kind:'opp'})}
+ m.sides.forEach(s=>{for(let i=0;i<s.length;i++)for(let j=i+1;j<s.length;j++){const h0=heatOf(s[i],s[j]);if(h0>=15)out.push({A:S.w[s[i]],B:S.w[s[j]],h0,h1:addHeat(h0,4+Math.max(0,st-2.5)*1.5),kind:'mates'})}});
+ const ri=riOn(m);if(ri){const h0=heatOf(ri.X.id,ri.T.id);out.push({A:ri.X,B:ri.T,h0,h1:addHeat(h0,riGain(ri,st)),kind:'ri'})}
+ return out}
+function heatPlanHtml(m,ppv){const l=heatPlan(m,ppv);if(!l.length)return '';const ln=w=>esc(w.name.split(' ').slice(-1)[0]);const IC={opp:'⚔️',mates:'🤝',ri:RUNIN[(riOn(m)||{}).k||'cost'].i,pay:'💥'};
+ const top=l.sort((x,y)=>(y.kind==='ri')-(x.kind==='ri')||(y.h1-y.h0)-(x.h1-x.h0)).slice(0,6);
+ return `<div class="mur"><div class="muh">${ppv?'Feud payoffs':'Heat this match builds'}</div>${top.map(x=>`<div class="row sb hp"><span>${IC[x.kind]} ${alSpan(x.A).replace(esc(x.A.name),ln(x.A))} <span class="muted">${x.kind==='mates'?'&amp;':'vs'}</span> ${alSpan(x.B).replace(esc(x.B.name),ln(x.B))}${x.kind==='mates'?' <span class="tiny bad">feuding partners</span>':x.kind==='ri'?' <span class="tiny gold">run-in</span>':''}</span><b class="${x.kind==='pay'?'gold':'good'}">🔥 ${Math.round(x.h0)} → ${Math.round(x.h1)}</b></div>`).join('')}<div class="tiny muted" style="margin-top:4px">${ppv?'Big-stage matches cash in feud heat instead of building it — run-ins still build.':'Everyone on opposite sides builds heat with each other — tag and multi-person matches grow several feuds at once.'}</div></div>`}
 function rateMatch(m,ctx){ctx=ctx||{};
  const sides=m.sides.map(s=>s.map(id=>S.w[id]));const all=sides.flat();const n=all.length;
  const mean=f=>all.reduce((s,w)=>s+f(w),0)/n;
@@ -1488,7 +1519,7 @@ function rateMatch(m,ctx){ctx=ctx||{};
  const traitB=mean(w=>(ctx.ppv&&hasT(w,'bigm')?3:0)+((multi||st.dare)&&hasT(w,'dare')?4:0));
  let score=ring*.5+pop*.2+chem+traitB+heat*(ctx.ppv?.25:.15)+stipB+titleB+typeB-mean(w=>Math.max(0,w.fat-FAT_OK))*.08+(ctx.ppv?4:0)+(ctx.allin?4:0);
  const toS=x=>clamp(Math.round((x-42)/9*4)/4,.25,5);const lo=toS(score-3),hi=toS(score+3);
- score-=pen*2.25;{const pr=promiseOf(m);if(pr&&sides.flat().every(w=>w.own==='p'))score+=(pr.kind==='contract'?1.8:pr.ppv?1.4:.9)*(pr.spoiled?.5:1)}
+ score+=riScore(m);score-=pen*2.25;{const pr=promiseOf(m);if(pr&&sides.flat().every(w=>w.own==='p'))score+=(pr.kind==='contract'?1.8:pr.ppv?1.4:.9)*(pr.spoiled?.5:1)}
  if(!ctx.preview)score+=R(-3,3);
  return {stars:toS(score),lo:toS(score-3),hi:toS(score+3),heat,chem,pen,penWhy,stale,raw:score}}
 function matchText(m){if(m.nc)return m.sides.map(sideName).join(' vs ')+' — No contest';const win=m.sides[m.winner];return `${sideName(win)} def. ${m.sides.filter((s,i)=>i!==m.winner).map(sideName).join(', ')}`}
@@ -1525,6 +1556,13 @@ function applyMatch(m,res,ctx,notes){
   if(m.type==='singles')pendingPromises().forEach(pr=>{if(inMatch(m,pr.a,pr.b)&&!pr.spoiled){pr.spoiled=true;notes.push(`⚠️ You gave away ${S.w[pr.a].name} vs ${S.w[pr.b].name} on free TV before ${whenTxt(pr)} — that payoff will be smaller.`)}})}
  if(hk&&!ctx.ppv&&S.w[pa].own==='p'&&notes.length===n0){const h1=S.heat[hk]||0;const d=Math.round(h1-h0);const A=S.w[pa],B=S.w[pb];
   if(d>=1)notes.push(`📈 ${A.name} vs ${B.name} heat ${Math.round(h0)} → ${Math.round(h1)}${res.pen?' (rematch — it barely moved)':h0<1?' — something may be starting here':h1>=20?'':' — keep building it'}`)}
+ /* feuding partners: forced to team up, the tension builds — and a loss can end in betrayal */
+ for(const s of m.sides)for(let i=0;i<s.length;i++)for(let j=i+1;j<s.length;j++){const a=s[i],b=s[j];const h=heatOf(a,b);if(h<15)continue;const A=S.w[a],B=S.w[b];const lost=!m.nc&&!win.includes(a);
+  let g=4+Math.max(0,res.stars-2.5)*1.5;const snap=lost&&Math.random()<.3+h/250;const mine=A.own==='p';
+  if(snap){const bt=A.al==='h'&&B.al!=='h'?A:B.al==='h'&&A.al!=='h'?B:pick([A,B]);const vic=bt===A?B:A;g+=10;const n=`🤝💥 Betrayal! After the loss, ${bt.name} turns on partner ${vic.name}.`;notes.push(n);if(mine)news(n);
+   if(bt.al==='f'&&Math.random()<.5){bt.al='h';const t=`🔄 ${bt.name} has turned HEEL!`;notes.push(t);news(t)}}
+  else notes.push(`🤝😬 Uneasy partners: ${A.name} and ${B.name} could barely coexist${lost?' — and it cost them':''}.`);
+  bumpHeat(a,b,g,notes,snap?'a betrayal':'an uneasy alliance');S.chem[key(a,b)]=clamp((S.chem[key(a,b)]||0)-.8,-5,6)}
  for(const s of m.sides)for(let i=0;i<s.length;i++)for(let j=i+1;j<s.length;j++){const k=key(s[i],s[j]);S.chem[k]=clamp((S.chem[k]||0)+.4,-5,6)}
  all.forEach(id=>{const w=S.w[id];const p=(Math.max(0,w.fat-55)/250+.004)*st.inj*(hasT(w,'iron')?.4:1)*(hasT(w,'dare')?1.4:1);if(Math.random()<p){w.inj=RI(2,6);const n=`🚑 ${w.name} was injured and will miss ${w.inj} weeks.`;notes.push(n);news(n)}});
  if(m.title&&S.titles[m.title]&&m.nc){notes.push(`🏆 No contest — the ${S.titles[m.title].n} title stays put.`)}
@@ -1620,6 +1658,9 @@ function autoBook(brand,show,extUsed){
   const top=pool.slice().sort((a,b)=>b.pop-a.pop).slice(0,14);let bp=null,bv=-1e9;
   for(let i=0;i<top.length;i++)for(let j=i+1;j<top.length;j++){const a=top[i],b=top[j];if(a.g!==b.g||inTeam(a.id,b.id))continue;const v=heatOf(a.id,b.id)*1.3*(isStale(a.id,b.id)?.3:1)+chemOpp(a,b)*1.5+(a.pop+b.pop)/2+R(0,15)-(Math.max(0,a.fat-FAT_OK)+Math.max(0,b.fat-FAT_OK))*.6-(show.ppv&&heatOf(a.id,b.id)>=45?0:recentMeets(a.id,b.id).length*60);if(v>bv){bv=v;bp=[a,b]}}
   if(!bp)break;mk('singles',[[bp[0].id],[bp[1].id]])}
+ {let n=0;Object.entries(S.heat).filter(([k,h])=>h>=25).sort((a,b)=>b[1]-a[1]).forEach(([k])=>{if(n>=2)return;const [a,b]=k.split('|');const A=S.w[a],B=S.w[b];if(!A||!B||A.own!==brand||B.own!==brand)return;
+  for(const [x,t] of [[b,a],[a,b]]){if(S.w[x].inj)continue;const sl=card.find(c=>c.d&&!c.d.ri&&c.d.sides.flat().includes(t)&&!c.d.sides.flat().includes(x));if(!sl||Math.random()>.35)continue;
+   const lose=!(sl.d.sides[sl.d.winner]||[]).includes(t);sl.d.ri={k:lose&&Math.random()<.6?'cost':S.w[x].al==='f'&&S.w[t].al==='h'?'save':'attack',x,t};n++;break}})}
  const ms=card.slice().reverse();/* strongest-built (title) matches first in the list -> put them last as main events */
  if(show.ppv){ms.push({k:'chal',d:autoChal(brand,used)});return ms}
  const exP=new Set();
@@ -1651,7 +1692,7 @@ function airPair(){
  /* each GM's card is aired from their own side, so promises, proxy wars and promo payoffs work for both people online */
  const airCard=b=>{const segs=[],v=[];
   S.card[b].forEach(sl=>{if(!sl.d)return;
-   if(sl.k==='match'){const m=sl.d;if(!validMatch(m)||m.sides.flat().some(id=>S.w[id].inj))return;const res=rateMatch(m,ctx);res.stars=clamp(res.stars+adj(b)+(m.ev?m.ev.stars:0),.25,5);const notes=m.ev?m.ev.notes.slice():[];if(res.pen)notes.push(`😴 Rematch fatigue: fans saw ${res.penWhy} (−${fracTxt(res.pen)}★)`);if(res.stale)notes.push('🥱 This feud has gone stale — the crowd is losing interest.');const txt=matchText(m);applyMatch(m,res,ctx,notes);if(m.ev)applyEv(m.ev,notes);segs.push({txt,sub:matchSub(m),stars:res.stars,notes});v.push(res.stars)}
+   if(sl.k==='match'){const m=sl.d;if(!validMatch(m)||m.sides.flat().some(id=>S.w[id].inj))return;const res=rateMatch(m,ctx);res.stars=clamp(res.stars+adj(b)+(m.ev?m.ev.stars:0),.25,5);const notes=m.ev?m.ev.notes.slice():[];if(res.pen)notes.push(`😴 Rematch fatigue: fans saw ${res.penWhy} (−${fracTxt(res.pen)}★)`);if(res.stale)notes.push('🥱 This feud has gone stale — the crowd is losing interest.');const txt=matchText(m);applyMatch(m,res,ctx,notes);if(m.ev)applyEv(m.ev,notes);applyRunIn(m,res,notes);segs.push({txt,sub:matchSub(m),stars:res.stars,notes});v.push(res.stars)}
    else if(sl.k==='promo'&&sl.d.res){const p=sl.d;const notes=[];const st=clamp(p.res.stars+adj(b),.5,5);applyPromo(p,notes);segs.push({txt:S.w[p.a].name+(p.b&&S.w[p.b]?' & '+S.w[p.b].name:''),sub:PT[p.type].n,stars:st,notes});v.push(st)}});
   return {segs,v}};
  order.forEach(b=>{const r=ON()&&b==='ai'?asOther(()=>airCard('p')):airCard(b);vals[b]=r.v;
@@ -1885,7 +1926,7 @@ function pkPick(id){const p=PK;PK=null;p.onPick(id)}
 function pkBack(){const p=PK;PK=null;p.back()}
 function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),2200)}
 let MODAL_AT=0;
-function openModal(html,keep){MODAL_AT=Date.now();const m=$('#modal');const was=m.classList.contains('hidden');const sh=m.querySelector('.sheet');const st=keep&&sh?sh.scrollTop:0;m.innerHTML=`<div class="sheet ${was?'in':keep?'':'swap'}"><div class="sbody">${html}</div></div>`;m.classList.remove('hidden');document.body.classList.add('lock');const ns=m.querySelector('.sheet');if(keep)ns.scrollTop=st;sheetScrollFix(ns)}
+function openModal(html,keep){keep=keep||DDKEEP;MODAL_AT=Date.now();const m=$('#modal');const was=m.classList.contains('hidden');const sh=m.querySelector('.sheet');const st=keep&&sh?sh.scrollTop:0;m.innerHTML=`<div class="sheet ${was?'in':keep?'':'swap'}"><div class="sbody">${html}</div></div>`;m.classList.remove('hidden');document.body.classList.add('lock');const ns=m.querySelector('.sheet');if(keep)ns.scrollTop=st;sheetScrollFix(ns)}
 /* iOS WebKit sometimes doesn't treat the sheet as scrollable when its content grows after it opens
    (animation finishing, photos loading, a "Why?" expanding, the picker grid refilling) until it's reopened.
    Whenever the content height changes, briefly toggle overflow so WebKit rebuilds the scroll area. */
@@ -1926,12 +1967,16 @@ function render(){const app=$('#app');
 function setupView(){return `<div class="hero"><div class="kicker"><i></i>Tony Khan Simulator · A wrestling GM sim</div><div class="hero-t">Road to<br>All In</div><p class="muted">Draft a roster against a rival GM, book Dynamite head-to-head against their Collision, build feuds, develop rookies into stars, and win the fan war by All In.</p></div>
 <div class="card"><label>Your GM name</label><input id="gmName" maxlength="24" placeholder="Your name">
 <label>Rival GM name</label><input id="rvName" maxlength="24" value="The Rival Office">
-<label>Difficulty</label><select id="diff"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select>
+<label>Difficulty</label>${diffDD()}
 <button class="btn mt" onclick="startGame()">Start new game</button><button class="btn sec" onclick="importSave()">Load a save file</button><button class="btn sec" onclick="cloudLinkForm()">☁️ Load my cloud save</button></div>
 ${mpSetupCard()}${partySetupCard()}<p class="muted center">Works offline. Progress saves automatically on this device.</p>`}
-function startGame(){const g=($('#gmName').value||'').trim()||'You';const r=($('#rvName').value||'').trim()||'The Rival Office';newGame(g,r,$('#diff').value);tab='home';render();loadRepoPhotos()}
+let SDIFF='normal';
+const DIFFS={easy:['Easy','The rival books a bit weaker (−¼★ a segment).'],normal:['Normal','An even fight for the fans.'],hard:['Hard','The rival books a bit stronger (+¼★ a segment).']};
+function diffDD(){const keepIn=()=>{const g=$('#gmName'),r=$('#rvName');const gv=g&&g.value,rv=r&&r.value;render();const g2=$('#gmName'),r2=$('#rvName');if(g2&&gv!=null)g2.value=gv;if(r2&&rv!=null)r2.value=rv};
+ return dd('diff',{title:DIFFS[SDIFF][0],sub:DIFFS[SDIFF][1],rerender:keepIn,opts:Object.entries(DIFFS).map(([k,[n,d]])=>({t:n,sub:d,on:k===SDIFF,pick:()=>{SDIFF=k;keepIn()}}))})}
+function startGame(){const g=($('#gmName').value||'').trim()||'You';const r=($('#rvName').value||'').trim()||'The Rival Office';newGame(g,r,SDIFF);tab='home';render();loadRepoPhotos()}
 let CF=null;
-function openCreate(id){if(mpLocked())return;const w=id&&S.w[id];
+function openCreate(id){if(mpLocked())return;DDO=null;const w=id&&S.w[id];
  CF=w?{id,name:w.name,g:w.g,al:w.al,st:w.st,mode:w.rookie?'rookie':'custom',tier:w.tier||'bluechip',ring:Math.round(w.ring),mic:Math.round(w.mic),pop:Math.round(w.pop),pot:Math.round(w.pot),tr:(w.tr||[]).slice(),auto:false}
   :{id:null,name:'',g:'M',al:'f',st:'fl',mode:'rookie',tier:'bluechip',ring:75,mic:65,pop:50,pot:82,tr:[],auto:true};renderCreate()}
 function cfSet(k,v){CF[k]=v;if(k==='ring'&&CF.pot<+v)CF.pot=+v;if(k==='pot'&&+v<CF.ring)CF.pot=CF.ring;renderCreate()}
@@ -1948,7 +1993,7 @@ function renderCreate(){const c=CF;const nm=document.getElementById('cfName');if
  <label>Style</label>${seg('st',Object.entries(STYLE_N))}
  <div class="muted tiny" style="margin-top:6px">Clicks with: <b class="good">${fit.best.join(', ')||'—'}</b> · Struggles with: <b class="bad">${fit.worst.join(', ')||'—'}</b></div>
  <label>Experience</label>${seg('mode',[['rookie','🌱 Rookie'],['custom','⭐ Established']])}
- ${c.mode==='rookie'?`<select onchange="cfSet('tier',this.value)">${Object.entries(TIERS).map(([k,t])=>`<option value="${k}" ${k===c.tier?'selected':''}>${t.n} · potential ${t.pot[0]}–${t.pot[1]} · ${money(t.cost)} fee</option>`).join('')}</select><div class="muted tiny" style="margin-top:6px">Rookies start raw and grow toward their potential by working matches and training. The fee is paid only if you sign them as a free agent — drafting them is free.</div>`
+ ${c.mode==='rookie'?`${dd('tier',{title:TIERS[c.tier].n,sub:`Potential ${TIERS[c.tier].pot[0]}–${TIERS[c.tier].pot[1]} · ${money(TIERS[c.tier].cost)} fee`,rerender:renderCreate,opts:Object.entries(TIERS).map(([k,t])=>({t:t.n,right:money(t.cost)+' fee',sub:`Grows toward potential ${t.pot[0]}–${t.pot[1]}.`,on:k===c.tier,pick:()=>cfSet('tier',k)}))})}<div class="muted tiny" style="margin-top:6px">Rookies start raw and grow toward their potential by working matches and training. The fee is paid only if you sign them as a free agent — drafting them is free.</div>`
   :`<div class="muted tiny" style="margin-top:6px">Set their stats yourself — great for adding real wrestlers who aren't in the game yet.</div>${cfSlider('ring','In-ring',30,99)}${cfSlider('mic','Mic',20,99)}${cfSlider('pop','Popularity',5,99)}${cfSlider('pot','In-ring potential',30,99)}`}
  <label>Traits <span class="muted" style="text-transform:none;letter-spacing:0">(pick up to 2)</span></label>
  <button class="chip ${c.auto?'on':''}" onclick="CF.auto=!CF.auto;if(CF.auto)CF.tr=[];renderCreate()" style="margin-bottom:8px">✨ Auto (based on style & stats)</button>
@@ -2047,6 +2092,7 @@ function slotTags(m,ppv){const t=[];let hb=0;for(let i=0;i<m.sides.length;i++)fo
  const ws=m.sides.map(s=>s.map(id=>S.w[id]).filter(Boolean));const full=ws.filter(s=>s.length);if(full.length>=2){const al=full.map(sideAl);if(!al.includes('x'))t.push(new Set(al).size>1?'<span class="tg good">😇 vs 😈</span>':`<span class="tg bad">${al[0]==='f'?'😇 vs 😇':'😈 vs 😈'}</span>`)}
  const ex=ws.flat().filter(w=>sta(w)-fatGain(w,m,ppv)<100-FAT_RISK);const td=ws.flat().filter(w=>sta(w)<100-FAT_OK);
  if(td.length)t.push(`<span class="tg bad">😮‍💨 Tired: ${td.map(w=>esc(w.name.split(' ').slice(-1)[0])).join(', ')}</span>`);else if(ex.length)t.push(`<span class="tg warnt">🔋 ${ex.map(w=>esc(w.name.split(' ').slice(-1)[0])).join(', ')} will be spent</span>`);
+ {const r=riOn(m);if(r)t.push(`<span class="tg warnt">${RUNIN[r.k].i} ${esc(r.X.name.split(' ').slice(-1)[0])} runs in</span>`)}
  return t.length?`<div class="tags">${t.join('')}</div>`:''}
 function onCard(a,b){return S.card.p.some(sl=>sl.d&&(sl.k==='match'?(()=>{const si=sl.d.sides.findIndex(s=>s.includes(a)),sj=sl.d.sides.findIndex(s=>s.includes(b));return si>=0&&sj>=0&&si!==sj})():sl.k==='promo'&&[sl.d.a,sl.d.b].includes(a)&&[sl.d.a,sl.d.b].includes(b)))}
 function feudBoard(){const fs=feudList('p').filter(f=>f.h>=8).slice(0,6);
@@ -2066,7 +2112,7 @@ function lockerRoom(){const used=usedIn('p');const pro=new Set();S.card.p.forEac
  <div class="lrk tiny muted"><span><i class="dot f"></i>Face</span><span><i class="dot h"></i>Heel</span><span><i class="bar3"></i>Stamina</span><span>✓ in a match · 🎤 promo</span></div>
  <div class="lrg">${l.map(w=>{const v=sta(w);const u=used.has(w.id);return `<button class="lr ${u?'on':''} ${w.inj?'out':''}" onclick="showW('${w.id}')">${face(w)}<span class="lrn"><b class="${w.al==='f'?'face':'heel'}">${esc(w.name)}</b><u class="${staCls(v)}"><i style="width:${w.inj?0:v}%"></i></u></span><span class="lrs">${w.inj?(w.susp?'⛔':'🚑'):u?'✓':pro.has(w.id)?'🎤':v<100-FAT_RISK?'🔋':''}</span></button>`}).join('')}</div></details>`}
 function avForMatch(i){const used=usedIn('p',i);return ownList('p').filter(w=>!w.inj&&!used.has(w.id)).sort((a,b)=>ovr(b)-ovr(a))}
-function openMatch(i){if(mpLocked())return;const sl=S.card.p[i];ED={i,dd:null,m:sl.d?JSON.parse(JSON.stringify(sl.d)):{type:'singles',stip:'std',sides:[[''],['']],winner:0,title:''}};renderMatchEd(false)}
+function openMatch(i){if(mpLocked())return;DDO=null;const sl=S.card.p[i];ED={i,dd:null,m:sl.d?JSON.parse(JSON.stringify(sl.d)):{type:'singles',stip:'std',sides:[[''],['']],winner:0,title:''}};renderMatchEd(false)}
 function mInfo(w,si){const opp=ED.m.sides.filter((s,i)=>i!==si).flat().filter(Boolean).map(i=>S.w[i]);if(!opp.length)return `${STYLE_N[w.st]}${w.rookie?' · 🌱':''}`;const c=opp.reduce((a,o)=>a+chemOpp(w,o),0)/opp.length;const rm=Math.max(...opp.map(o=>recentMeets(w.id,o.id).length));const px=opp.some(o=>pendingPromises().some(pr=>[[pr.a,pr.b],[pr.b,pr.a]].some(([me,foe])=>o.id===me&&w.id!==foe&&inTeam(w.id,foe))));return `<em class="chm ${c>=6?'cg':c>=0?'cn':'cb'}">Chem ${c>0?'+':''}${Math.round(c)}</em>${rm?'<em class="chm cb" title="Rematch">😴</em>':''}${px?'<em class="chm cg" title="Proxy war">🔗</em>':''}`}
 function edFeud(w,si){const opp=ED.m.sides.filter((s,i)=>i!==si).flat().filter(Boolean).map(i=>S.w[i]);return opp.length?feudVs(w,opp):hotFeud(w)}
 /* the at-a-glance strip in the match editor: alignment matchup, feud status, stamina cost */
@@ -2077,6 +2123,7 @@ function matchupHtml(m,ppv){const ws=m.sides.map(s=>s.filter(Boolean).map(id=>S.
  h+=`<div class="mur"><div class="muh">Alignment</div><div class="row" style="flex-wrap:wrap;gap:6px">${ws.map(chip).join('<span class="muted tiny">vs</span>')}</div>${verdict?`<div class="tiny" style="margin-top:4px">${verdict}</div>`:''}</div>`;
  if(full.length>=2){let best=null;for(let i=0;i<ws.length;i++)for(let j=i+1;j<ws.length;j++)for(const a of ws[i])for(const b of ws[j]){const fi=feudInfo(a.id,b.id);if(fi&&(!best||fi.h>best.fi.h))best={fi,a,b}}
   h+=`<div class="mur"><div class="muh">Feud</div>${best?`<div class="row sb"><span><b>${best.fi.t>=0?FTIER[best.fi.t][1]:'👀 Seeds planted'}</b> · ${alSpan(best.a)} vs ${alSpan(best.b)}</span><span class="fh t${best.fi.t+1}">🔥 ${Math.round(best.fi.h)}</span></div><div class="bar heat"><i style="width:${best.fi.h}%"></i></div><div class="tiny muted" style="margin-top:4px">${esc(feudTag(best.fi))}${best.fi.age?` · running ${best.fi.age} wk${best.fi.age>1?'s':''}`:''}</div>`:'<div class="tiny muted">No feud here yet — a strong face vs heel match can start one.</div>'}</div>`}
+ if(full.length>=2&&ws.every(s=>s.length===MT[m.type].per))h+=heatPlanHtml(m,ppv);
  const rows=all.map(w=>{const v=sta(w),g=fatGain(w,m,ppv),a=Math.max(0,v-g);return {w,v,a}});const low=rows.filter(r=>r.a<100-FAT_RISK);const tired=rows.filter(r=>r.v<100-FAT_OK);
  h+=`<div class="mur"><div class="muh">Stamina after this match</div><div>${rows.map(r=>`<span class="stc ${staCls(r.a)}">${esc(r.w.name.split(' ').slice(-1)[0])} ${r.v}→${r.a}</span>`).join('')}</div>${tired.length?`<div class="tiny bad" style="margin-top:4px">😮‍💨 ${tired.map(r=>esc(r.w.name)).join(', ')} ${tired.length>1?'are':'is'} already tired — this match will rate lower.</div>`:''}${low.length?`<div class="tiny bad" style="margin-top:2px">🔋 ${low.map(r=>esc(r.w.name)).join(', ')} will be exhausted after this — injury risk climbs. A week off restores ${REC_REST}.</div>`:''}</div>`;
  return `<div class="mu">${h}</div>`}
@@ -2090,12 +2137,13 @@ function renderMatchEd(keep){const {m}=ED;const sh=curShow();const av=avForMatch
  let sides;
  if(per===1)sides=`<div class="vsrow">${m.sides.map((s,si)=>`${si&&m.sides.length===2?'<div class="vs">VS</div>':''}<div class="vscol">${slot(si,0)}${crown(si)}</div>`).join('')}</div>`;
  else sides=m.sides.map((s,si)=>{const u=S.teams.filter(t=>t.m.filter(id=>av.some(w=>w.id===id)).length>=per);
-  return `${si?'<div class="vs">VS</div>':''}<div class="side"><div class="row sb">${u.length?`<select class="tsel" onchange="edTeam(${si},this.value)"><option value="">Quick-pick a team…</option>${u.map(t=>`<option value="${t.id}">${esc(t.n)}</option>`).join('')}</select>`:`<span class="h small" style="margin:0">Side ${si?'B':'A'}</span>`}${crown(si)}</div><div class="trow">${s.map((_,pi)=>slot(si,pi)).join('')}</div></div>`}).join('');
+  return `${si?'<div class="vs">VS</div>':''}<div class="side">${u.length?`<div class="tsel">${dd('team'+si,{title:'Quick-pick a team',sub:`${u.length} available`,cls:'sm',rerender:()=>renderMatchEd(true),opts:u.map(t=>({t:esc(t.n),sub:t.m.filter(id=>av.some(w=>w.id===id)).map(id=>esc(S.w[id].name)).join(', '),right:t.type==='team'?'Tag team':'Faction',pick:()=>edTeam(si,t.id)}))})}</div>`:''}<div class="row sb"><span class="h small" style="margin:0">Side ${si?'B':'A'}</span>${crown(si)}</div><div class="trow">${s.map((_,pi)=>slot(si,pi)).join('')}</div></div>`}).join('');
  openModal(`<div class="h mhd">Book a match</div>
  <div class="chips">${Object.entries(MT).map(([k,t])=>`<button class="chip ${k===m.type?'on':''}" onclick="edType('${k}')">${t.n}</button>`).join('')}</div>
  ${sides}${dup?'<div class="err">Someone is booked twice.</div>':''}${matchupHtml(m,sh.ppv)}
  <label>Stipulation</label>${stipDD(m,sh,complete&&!dup)}
  <label>Championship</label>${titleDD(m,et,sh,complete&&!dup)}
+ <label>Run-in</label>${riSection(m,sh,complete&&!dup)}
  ${(()=>{const card=S.card.p.map((x,j)=>j===ED.i?{k:'match',d:complete?m:null}:x);const um=unmetPromises(card);return um.length?`<div class="err mt">⚠️ ${um.map(pr=>`${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)} was ${pr.kind==='contract'?'contracted':'promised'} for this week`).join('; ')}. Leaving it off the card breaks the promise.</div>`:''})()}${proj}<div class="row mt"><button class="btn sec" onclick="clearSlot()">Clear</button><button class="btn" ${complete&&!dup?'':'disabled'} onclick="saveMatch()">Save</button></div><button class="btn ghost" onclick="closeModal()">Cancel</button>`,keep)}
 function whyMatch(m,sh){const ws=m.sides.map(s=>s.map(id=>S.w[id]));let h='';const pairs=[];
  for(let i=0;i<ws.length;i++)for(let j=i+1;j<ws.length;j++)for(const a of ws[i])for(const b of ws[j])pairs.push([a,b]);
@@ -2106,6 +2154,14 @@ function whyMatch(m,sh){const ws=m.sides.map(s=>s.map(id=>S.w[id]));let h='';con
  const rr=rateMatch(m,{ppv:sh.ppv,preview:true});const pn=[];if(rr.pen)pn.push({t:`😴 Rematch: ${rr.penWhy}`,v:-rr.pen});if(rr.stale)pn.push({t:'🥱 Stale feud (heat counts half)',v:-1});
  if(pn.length)h+=`<div class="tiny muted" style="margin-top:6px"><b>Overexposure</b> (stars)</div><div>${pn.map(x=>`<span class="why dn">${esc(x.t)}${x.v!==-1?' −'+fracTxt(-x.v)+'★':''}</span>`).join('')}</div>`;
  return h?`<details class="whyd"><summary>Why?</summary>${h}</details>`:''}
+/* ---- generic in-game dropdown: dd(id,{title,sub,opts:[{t,sub,right,tags,on,dis,group,pick}],rerender}) ---- */
+const DDR={},DDP={};let DDO=null,DDKEEP=false;
+function dd(id,o){DDR[id]=o.rerender;DDP[id]=o.opts.map(x=>x.pick);
+ const btn=`<button type="button" class="dd ${DDO===id?'open':''}${o.cls?' '+o.cls:''}" onclick="ddTog('${id}')"><span class="ddv"><b>${o.title}</b>${o.sub?`<small>${o.sub}</small>`:''}</span><i class="ddc"></i></button>`;
+ if(DDO!==id)return btn;
+ return btn+`<div class="ddl">${o.opts.map((x,i)=>`${x.group?`<div class="ddg">${x.group}</div>`:''}<button type="button" class="ddo ${x.on?'on':''}" ${x.dis?'disabled':''} onclick="ddPick('${id}',${i})"><div class="ddt"><b>${x.t}</b>${x.right?`<span class="ddp">${x.right}</span>`:''}</div>${x.sub?`<div class="ddd">${x.sub}</div>`:''}${x.tags?`<div class="tags ddm">${x.tags}</div>`:''}</button>`).join('')}${o.foot||''}</div>`}
+function ddTog(id){DDO=DDO===id?null:id;DDKEEP=true;try{DDR[id]&&DDR[id]()}finally{DDKEEP=false}}
+function ddPick(id,i){DDO=null;const f=DDP[id]&&DDP[id][i];DDKEEP=true;try{f&&f()}finally{DDKEEP=false}}
 /* ---- in-game dropdowns for the match editor (stipulation + championship) ---- */
 function edDD(k){ED.dd=ED.dd===k?null:k;renderMatchEd(true)}
 function edSet(k,v){if(k==='stip')ED.m.stip=v;else ED.m.title=v;ED.dd=null;renderMatchEd(true)}
@@ -2126,22 +2182,38 @@ function titleDD(m,et,sh,ok){const T=m.title&&S.titles[m.title];const hold=t=>t.
  const ctx={ppv:sh.ppv,allin:sh.ppv&&S.week===SEASON,preview:true};const star=id=>ok?rateMatch(Object.assign({},m,{title:id}),ctx).raw:null;const base=star('');
  const row=(id,name,sub,extra)=>`<button type="button" class="ddo ${(m.title||'')===id?'on':''}" onclick="edSet('title','${id}')"><div class="ddt"><b>${name}</b>${extra||''}</div><div class="ddd">${sub}</div>${id&&ok?`<div class="tags ddm">${ddDelta(star(id)-base)}</div>`:''}</button>`;
  return head+`<div class="ddl">${row('','Non-title','No belt on the line.')}${et.map(id=>{const t=S.titles[id];return row(id,esc(t.n),esc(hold(t)),`<span class="ddp">Prestige ${Math.round(t.prestige)}</span>`)}).join('')}${et.length?'':`<div class="ddh">${ok?"No championship fits this match — titles need the right division and match type, and the champion has to be in it.":'Pick the wrestlers first — titles need the right division and match type, and the champion has to be in it.'}</div>`}</div>`}
+function riSection(m,sh,ok){if(!ok)return '<div class="muted tiny">Book the match first, then have someone run in to start or build a feud.</div>';
+ const ri=m.ri||null;const k=ri&&RUNIN[ri.k]?ri.k:null;
+ let h=dd('rik',{title:k?RUNIN[k].i+' '+RUNIN[k].n:'No run-in',sub:k?'':'Have someone from your roster interfere to build a feud.',rerender:()=>renderMatchEd(true),opts:[{t:'No run-in',sub:'The match plays out on its own.',on:!k,pick:()=>{delete ED.m.ri;renderMatchEd(true)}},...Object.entries(RUNIN).map(([kk,v])=>({t:v.i+' '+v.n,sub:v.d,on:kk===k,pick:()=>edRiKind(kk)}))]});
+ if(!k)return h;const X=ri.x&&S.w[ri.x];
+ h+=`<div class="rib">${X?`<div class="row sb"><span class="frow">${face(X)}<span><b>${alSpan(X)}</b><br><span class="muted tiny">runs in${usedIn('p',ED.i).has(X.id)?' · also wrestling tonight':''}</span></span></span><button type="button" class="mini" onclick="riPick()">Change</button></div>`:`<button type="button" class="btn sec" style="margin:0" onclick="riPick()">+ Choose who runs in</button>`}`;
+ if(X){const ok2=id=>k!=='cost'||!(m.sides[m.winner]||[]).includes(id);const T=ri.t&&S.w[ri.t];
+  h+=`<div class="ril">${RUNIN[k].lab}</div>`+dd('rit',{title:T?alSpan(T):'Choose who they go after',sub:T?`Heat with ${esc(X.name)}: 🔥 ${Math.round(heatOf(X.id,T.id))}`:'',cls:'sm',rerender:()=>renderMatchEd(true),opts:m.sides.flat().map(id=>{const w=S.w[id];const v=ok2(id);return {t:alSpan(w),sub:v?`Heat with ${esc(X.name)}: 🔥 ${Math.round(heatOf(X.id,id))}`:"On the winning side — they can't cost this one",right:v?'':'🔒',dis:!v,on:id===ri.t,pick:()=>{ED.m.ri.t=id;renderMatchEd(true)}}})});
+  if(T&&!ok2(T.id))h+=`<div class="err" style="margin-top:8px">${esc(T.name)} wins this match — pick someone on the losing side, change the winner, or make it a post-match attack.</div>`;
+  const r=riOn(m);if(r&&r.k===k){const st=rateMatch(m,{ppv:sh.ppv,preview:true}).stars;const h0=heatOf(X.id,r.T.id),h1=addHeat(h0,riGain(r,st));const sc=riScore(m);
+   h+=`<div class="good tiny" style="margin-top:8px">🔥 ${esc(X.name)} vs ${esc(r.T.name)}: ${Math.round(h0)} → ${Math.round(h1)} heat${riRecent(X.id,r.T.id)?' <span class="bad">(half — they did this recently)</span>':''}${X.al===r.T.al?' <span class="bad">(same alignment — builds slowly)</span>':''}</div>${k==='cost'?`<div class="tiny ${sc<0?'bad':'good'}" style="margin-top:3px">${sc>=1?'The feud is hot — fans eat up the interference (+rating).':sc<0?'Screwy finish in a normal-rules match — fans boo the ending (−rating). Hot feuds (30+) or No DQ-style stipulations avoid this.':'No-rules match — interference fits right in (+rating).'}</div>`:''}`}}
+ return h+'</div>'}
+function riBestT(k,x){const m=ED.m;const l=m.sides.flat().filter(id=>id&&(k!=='cost'||!(m.sides[m.winner]||[]).includes(id)));return l.sort((a,b)=>heatOf(x,b)-heatOf(x,a)||(S.w[b].al!==S.w[x].al)-(S.w[a].al!==S.w[x].al))[0]||''}
+function edRiKind(k){const o=ED.m.ri||{};ED.m.ri={k,x:o.x||'',t:o.t||''};const r=ED.m.ri;if(r.x&&(!r.t||(k==='cost'&&(ED.m.sides[ED.m.winner]||[]).includes(r.t))))r.t=riBestT(k,r.x);renderMatchEd(true)}
+function riPick(){const m=ED.m;const parts=m.sides.flat().filter(Boolean);const g=parts.length?S.w[parts[0]].g:'all';
+ openPicker({title:'Who runs in?',cur:m.ri.x,g,sort:'feud',pool:()=>ownList('p').filter(w=>!w.inj&&!parts.includes(w.id)),feud:w=>feudVs(w,parts.map(id=>S.w[id])),info:w=>usedIn('p',ED.i).has(w.id)?'Also wrestling tonight':`${STYLE_N[w.st]}`,
+  onPick:id=>{if(id){ED.m.ri.x=id;const t=ED.m.ri.t;if(!t||!parts.includes(t)||(ED.m.ri.k==='cost'&&(m.sides[m.winner]||[]).includes(t)))ED.m.ri.t=riBestT(ED.m.ri.k,id)}renderMatchEd(false)},back:()=>renderMatchEd(false)})}
 function edPick(si,pi){const m=ED.m;const cur=m.sides[si][pi];const taken=new Set(m.sides.flat().filter(x=>x&&x!==cur));const fg=m.sides.flat().find(x=>x&&x!==cur);
  const opps=m.sides.filter((s,i)=>i!==si).flat().filter(x=>x&&x!==cur).map(x=>S.w[x]);
  openPicker({title:'Choose a wrestler',cur,clear:!!cur,g:fg?S.w[fg].g:'all',sort:opps.length?'chem':'ovr',chem:opps.length?w=>opps.reduce((a,o)=>a+chemOpp(w,o),0)/opps.length:null,pool:()=>avForMatch(ED.i).filter(w=>!taken.has(w.id)),info:w=>mInfo(w,si),feud:w=>opps.length?feudVs(w,opps):hotFeud(w),gain:w=>fatGain(w,m,curShow().ppv),onPick:id=>{m.sides[si][pi]=id;renderMatchEd(false)},back:()=>renderMatchEd(false)})}
 function edType(t){const o=ED.m.sides;ED.m.type=t;if(!stipOk(ED.m.stip||'std',t,curShow().ppv))ED.m.stip='std';ED.m.sides=Array.from({length:MT[t].sides},(_,i)=>Array.from({length:MT[t].per},(_,j)=>(o[i]||[])[j]||''));ED.m.winner=0;ED.m.title='';renderMatchEd(true)}
 function edP(si,pi,v){ED.m.sides[si][pi]=v;renderMatchEd(true)}
 function edTeam(si,tid){const t=S.teams.find(x=>x.id===tid);if(!t)return;const av=avForMatch(ED.i);const mem=t.m.filter(id=>av.some(w=>w.id===id)).slice(0,MT[ED.m.type].per);ED.m.sides[si]=mem;renderMatchEd(true)}
-function saveMatch(){S.card.p[ED.i].d=ED.m;save();closeModal();render()}
+function saveMatch(){const ri=ED.m.ri;if(ri){const all=ED.m.sides.flat();if(!ri.x||!ri.t||!all.includes(ri.t)||all.includes(ri.x))delete ED.m.ri;else if(ri.k==='cost'&&(ED.m.sides[ED.m.winner]||[]).includes(ri.t))return toast(`${S.w[ri.t].name} wins this match — they can't be cost it. Pick a new target or change the winner.`)}S.card.p[ED.i].d=ED.m;save();closeModal();render()}
 function clearSlot(){if(mpLocked())return;S.card.p[ED.i].d=null;save();closeModal();render()}
 
-function openPromo(i){if(mpLocked())return;const sl=S.card.p[i];PE=sl.d?{i,type:sl.d.type,a:sl.d.a,b:sl.d.b||''}:{i,type:'callout',a:'',b:''};renderPromoEd(false)}
+function openPromo(i){if(mpLocked())return;DDO=null;const sl=S.card.p[i];PE=sl.d?{i,type:sl.d.type,a:sl.d.a,b:sl.d.b||''}:{i,type:'callout',a:'',b:''};renderPromoEd(false)}
 function renderPromoEd(keep){const pt=PT[PE.type];
  if(PE.a&&(!S.w[PE.a]||S.w[PE.a].inj||(pt.champ&&!isChamp(PE.a))))PE.a='';if(PE.b===PE.a||(PE.b&&PE.a&&S.w[PE.b].g!==S.w[PE.a].g))PE.b='';
  const ok=PE.a&&(pt.b!=='req'||PE.b);const hasChamp=ownList('p').some(w=>isChamp(w.id)&&!w.inj);
  const slotP=(k,label)=>{const w=PE[k]&&S.w[PE[k]];return `<div class="vscol"><div class="muted tiny center">${label}</div>${w?wcard(w,{on:`prPick('${k}')`,info:`<em class="chm ${w.mic>=85?'cg':w.mic>=70?'cn':'cb'}">🎤 Mic ${Math.round(w.mic)}</em>`,feud:(()=>{const ot=PE[k==='a'?'b':'a'];return ot&&S.w[ot]?feudVs(w,[S.w[ot]]):hotFeud(w)})()}):emptySlot(`prPick('${k}')`,k==='a'?'Add':'Add (optional)')}</div>`};
  openModal(`<div class="h mhd">Book a promo</div>
- <label>Segment</label><select onchange="PE.type=this.value;renderPromoEd(true)">${Object.entries(PT).map(([k,t])=>`<option value="${k}" ${k===PE.type?'selected':''}>${t.n}</option>`).join('')}</select><p class="muted">${pt.d}</p>
+ <label>Segment</label>${dd('ptype',{title:esc(pt.n),sub:esc(pt.d),rerender:()=>renderPromoEd(true),opts:Object.entries(PT).map(([k,t])=>({t:esc(t.n),sub:esc(t.d),on:k===PE.type,pick:()=>{PE.type=k;renderPromoEd(true)}}))})}
  <div class="vsrow">${slotP('a',pt.champ?'Champion':'Lead talent')}<div class="vs">${pt.b==='req'?'VS':'&'}</div>${slotP('b',pt.b==='req'?'Opponent':'Second wrestler')}</div>
  ${PE.a&&PE.b?`<div class="muted mt center">Current feud heat: 🔥 ${Math.round(heatOf(PE.a,PE.b))}</div>${(()=>{const f=promoFatigue({a:PE.a,b:PE.b});return f.pen?`<div class="err center">😴 These two had a promo ${esc(f.why)} — expect −${fracTxt(f.pen)}★ and less heat.</div>`:''})()}`:''}${PE.type==='contract'?(()=>{const np=nextPPVAfter(S.week);return `<div class="muted mt center">📜 ${np?`Books this match for <b>${esc(np.n)}</b>. Skipping it there breaks the promise.`:'No PPV left this season — this signing is just for heat.'}</div>`})():''}
  ${pt.champ&&!hasChamp?'<div class="err">You have no champions right now.</div>':''}
@@ -2165,14 +2237,14 @@ function psChoose(ci){if(!PS||PS.out||PS.done)return;PS.out=roll(PS.scene.ch[ci]
 function psNext(){if(!PS||!PS.out)return;PS.out=null;if(PS.beat===0){PS.beat=1;PS.scene=pickTwist(PS.p,PS.ctx)}else{finalizePromo(PS.p,PS.ctx,PS.st);PS.done=true}renderPS()}
 function lockPromo(){S.card.p[PS.i].d=PS.p;PS=null;save();closeModal();render()}
 
-function openChal(i){if(mpLocked())return;const sl=S.card.p[i];CE={i,title:sl.d?sl.d.title:'',c:sl.d?sl.d.c:''};renderChal()}
+function openChal(i){if(mpLocked())return;DDO=null;const sl=S.card.p[i];CE={i,title:sl.d?sl.d.title:'',c:sl.d?sl.d.c:''};renderChal()}
 function chCands(){const t=S.titles[CE.title];const used=usedIn('p',CE.i);return t?ownList('p').filter(w=>w.g===t.g&&!w.inj&&!used.has(w.id)):[]}
 function renderChal(){const ts=Object.values(S.titles).filter(t=>t.kind==='singles'&&t.holders.length&&S.w[t.holders[0]].own==='ai'&&!S.w[t.holders[0]].inj);
  if(CE.title&&!ts.some(t=>t.id===CE.title))CE.title='';const t=S.titles[CE.title];if(CE.c&&!chCands().some(w=>w.id===CE.c))CE.c='';
  let odds='';const h=t?S.w[t.holders[0]]:null,c=CE.c?S.w[CE.c]:null;
  if(h&&c){const d=(c.ring*.4+c.pop*.4+c.mom*2)-(h.ring*.4+h.pop*.4+h.mom*2)-5;const p=clamp(.5+d/30,.05,.95);odds=`<div class="proj"><div class="big">${Math.round(p*100)}% chance to win</div><div class="muted">You don't pick the winner here — it's a shoot for the gold. Win and the title moves to your brand.</div></div>`}
  openModal(`<div class="h mhd">Title challenge</div><p class="muted">Send one of your wrestlers after a singles title held by ${esc(S.rival)}'s roster. The rival's champion defends on the PPV.</p>
- <label>Title</label><select onchange="CE.title=this.value;renderChal()"><option value="">— choose a title —</option>${ts.map(x=>`<option value="${x.id}" ${x.id===CE.title?'selected':''}>${x.n} (${esc(S.w[x.holders[0]].name)})</option>`).join('')}</select>
+ <label>Title</label>${dd('ctitle',{title:t?esc(t.n):'Choose a title',sub:t?'Champion: '+esc(S.w[t.holders[0]].name):`${ts.length} held by ${esc(S.rival)}`,rerender:renderChal,opts:ts.map(x=>({t:esc(x.n),sub:'Champion: '+esc(S.w[x.holders[0]].name),right:'Prestige '+Math.round(x.prestige),on:x.id===CE.title,pick:()=>{CE.title=x.id;renderChal()}}))})}
  ${h?`<div class="vsrow"><div class="vscol"><div class="muted tiny center">Champion</div>${wcard(h,{on:''})}</div><div class="vs">VS</div><div class="vscol"><div class="muted tiny center">Challenger</div>${c?wcard(c,{on:'chPick()'}):emptySlot('chPick()')}</div></div>`:''}
  ${!ts.length?'<div class="err">The rival brand holds no singles titles right now.</div>':''}${odds}
  <div class="row mt"><button class="btn sec" onclick="S.card.p[CE.i].d=null;save();closeModal();render()">No challenge</button><button class="btn" ${t&&CE.c?'':'disabled'} onclick="S.card.p[CE.i].d={title:CE.title,c:CE.c};save();closeModal();render()">Save</button></div><button class="btn ghost" onclick="closeModal()">Cancel</button>`,true)}
@@ -2236,6 +2308,7 @@ const HOWTO=`<p><b>Match ratings</b> blend in-ring skill (the best worker in the
 <p><b>Stamina</b> (the green-to-red STA bar on each card): a match costs about 16 in singles, less in tag and multi-person matches, more with a rough stipulation or on PPV. Wrestlers who worked a match get 10 back each week; anyone who gets the week off — or only cuts a promo — gets 25 back. Below ${100-FAT_OK} stamina matches start to suffer, and below ${100-FAT_RISK} the injury risk climbs. Rotate your roster and rest your stars before PPVs. Sitting out one week is fine, but two weeks in a row off TV costs morale.</p>
 <p><b>Traits</b> (the round badges on each card) add chemistry and bonuses on top of style — e.g. a Monster vs an Underdog is +4, a Storyteller adds +1 with anyone. Open any wrestler to see their best opponents and tag partners on your roster with the reasons, or tap <b>Why?</b> under a match's projected rating.</p>
 <p><b>Front office situations</b> pop up now and then after a show — backstage fights, viral videos, social media trouble, contract demands, travel mishaps, and the occasional viral opportunity. Pick how to handle each one; every option has tradeoffs. These are randomly generated fictional events.</p>
+<p><b>Building feuds inside matches:</b> everyone on opposite sides of a match builds heat with each other, so tag and multi-person matches grow several feuds at once (the match editor shows exactly how much). Put two feuding wrestlers on the <b>same side</b> and the tension builds — lose, and one may betray the other. Book a <b>run-in</b> to involve someone who isn't in the match: cost them the match (the most heat, but a screwy finish in a normal-rules match unless the feud is already hot), attack them after the bell, or make the save. Doing the same run-in two weeks running builds half as much.</p>
 <p><b>Stipulations</b> are modelled on real AEW match types — from Submission and 2 Out of 3 Falls to Lights Out, Texas Death, Anarchy in the Arena and Blood &amp; Guts. Each suits certain styles, costs money, and wears wrestlers out. The brutal ones pay off big when the feud is red-hot (heat 50+) but fall flat without a real feud behind them. Some are PPV only, and the faction wars need Trios or 8-Man Tag.</p>
 <p><b>Money</b> supports the booking — it doesn't replace it. The draft has a <b>salary cap</b>: stars cost far more than the midcard, so you can't draft an all-star roster (anything left under the cap goes into your bank). Every wrestler's salary is locked in on their contract until they re-sign — and a wrestler who got more popular asks for a raise. Weekly TV money grows with your fanbase, more slowly as you get bigger. <b>Great shows pay</b>: TV shows above 3★ earn ad revenue, and PPV buys scale with both your fans and the show's rating. You can spend on <b>production</b> (a small bump to the show rating) and <b>stipulations</b>, and every PPV has a venue bill. Fall into the red and morale drops; stay there 3 weeks and wrestlers start walking out.</p>
 <p><b>Free agency</b> rotates: after the draft only about 8 unsigned wrestlers are on the market at once, each for a few weeks, with new names arriving every week (and anyone released or out of contract going straight onto it). The rival signs from the same market.</p>
@@ -2259,7 +2332,7 @@ function officeView(){const inc=tvIncome(S.fans.p),pay=payroll('p');const dt=(S.
  ${cloudCard()}${mpOfficeCard()}
  <div class="card mt"><div class="h small">Save</div><p class="muted" style="margin-top:0">Progress saves automatically on this device. Export a file to back it up or move it to another device.</p><div class="row"><button class="btn sec" onclick="exportSave()">Export</button>${ON()?'':'<button class="btn sec" onclick="importSave()">Import</button>'}</div>${ON()?'':'<button class="btn ghost danger" onclick="resetGame()">Start a new game</button>'}</div>
  <details class="card"><summary class="h small">How it all works</summary>${HOWTO}</details>`}
-function openTeam(){if(mpLocked())return;const l=ownList('p').sort((a,b)=>a.name.localeCompare(b.name));openModal(`<div class="h mhd">New team or faction</div><label>Name</label><input id="tmName" maxlength="30" placeholder="e.g. The Elite Guard"><label>Type</label><select id="tmType"><option value="team">Tag team (2–3)</option><option value="faction">Faction (2–6)</option></select><label>Members</label>${l.map(w=>`<label style="display:flex;gap:10px;align-items:center;text-transform:none;font-size:15px;color:var(--text);letter-spacing:0"><input type="checkbox" value="${w.id}" class="tmc" style="width:auto"> ${esc(w.name)}</label>`).join('')}<button class="btn mt" onclick="saveTeam()">Create</button><button class="btn ghost" onclick="closeModal()">Cancel</button>`)}
+function openTeam(){if(mpLocked())return;const l=ownList('p').sort((a,b)=>a.name.localeCompare(b.name));openModal(`<div class="h mhd">New team or faction</div><label>Name</label><input id="tmName" maxlength="30" placeholder="e.g. The Elite Guard"><label>Type</label><input type="hidden" id="tmType" value="team"><div class="chips">${[['team','Tag team (2–3)'],['faction','Faction (2–6)']].map(([v,n],i)=>`<button type="button" class="chip ${i?'':'on'}" onclick="document.getElementById('tmType').value='${v}';this.parentNode.querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',b===this))">${n}</button>`).join('')}</div><label>Members</label>${l.map(w=>`<label style="display:flex;gap:10px;align-items:center;text-transform:none;font-size:15px;color:var(--text);letter-spacing:0"><input type="checkbox" value="${w.id}" class="tmc" style="width:auto"> ${esc(w.name)}</label>`).join('')}<button class="btn mt" onclick="saveTeam()">Create</button><button class="btn ghost" onclick="closeModal()">Cancel</button>`)}
 function saveTeam(){if(mpLocked())return;const n=($('#tmName').value||'').trim();const type=$('#tmType').value;const m=[...document.querySelectorAll('.tmc:checked')].map(x=>x.value);
  if(!n)return toast('Give it a name.');if(m.length<2||(type==='team'&&m.length>3)||m.length>6)return toast(type==='team'?'Pick 2–3 members.':'Pick 2–6 members.');
  S.teams.push({id:'t'+partyNid(),n,type,m});news(`🤝 ${n} has formed: ${m.map(id=>S.w[id].name).join(', ')}.`);save();closeModal();render()}
