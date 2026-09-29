@@ -520,11 +520,12 @@ ol.steps{padding-left:20px;margin:6px 0 10px}ol.steps li{margin:3px 0}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v59';
+const APP_VERSION='v60';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
-const STY={fl:{fl:5,te:4,br:1,pw:7,sh:2},te:{fl:4,te:7,br:3,pw:2,sh:1},br:{fl:1,te:3,br:6,pw:4,sh:2},pw:{fl:7,te:2,br:4,pw:-3,sh:1},sh:{fl:2,te:1,br:2,pw:1,sh:0}};
+/* style chemistry: every style averages about the same across the roster (~+3.6); each has its own best and weakest pairings */
+const STY={fl:{fl:4,te:3,br:2,pw:6,sh:3},te:{fl:3,te:6,br:3,pw:2,sh:4},br:{fl:2,te:3,br:6,pw:4,sh:4},pw:{fl:6,te:2,br:4,pw:0,sh:5},sh:{fl:3,te:4,br:4,pw:5,sh:2}};
 /* stipulations, modelled on real AEW match types.
    b: bonus by wrestler style · inj/f: injury risk and stamina cost · c: cost in $K · hb: extra rating when the feud is hot (heat 50+);
    brutal ones (hb 4+) fall flat without a real feud · dq: normal rules, so DQ finishes can happen · dare: Daredevils shine · mt: allowed match types · ppv: PPV only */
@@ -535,8 +536,8 @@ sub:{n:'Submission',g:'rules',b:{te:7,br:1,fl:-3,pw:-2,sh:-3},inj:1,f:2,c:4,hb:2
 twoof3:{n:'2 Out of 3 Falls',g:'rules',b:{te:5,fl:2,br:1,sh:1},inj:1.1,f:8,c:10,hb:3,dq:1,mt:['singles','tag','trios'],d:'Best of three falls — a long, back-and-forth epic.'},
 tornado:{n:'Tornado Tag',g:'rules',b:{fl:3,br:3,sh:2,te:-1},inj:1.2,f:4,c:6,hb:2,mt:['tag','trios','eight'],d:'Everyone is legal at once. Chaos that suits flyers and brawlers.'},
 iron:{n:'60-Minute Iron Man',g:'rules',b:{te:8,fl:2,sh:-2,br:-1},inj:1.2,f:16,c:20,hb:3,dq:1,ppv:1,mt:['singles'],d:'Most falls in an hour. A marathon for elite technicians — and brutal on stamina.'},
-nodq:{n:'No DQ',g:'hard',b:{br:5,pw:3,sh:2},inj:1.5,f:5,c:8,hb:3,d:'No disqualifications. Weapons and interference are fair game.'},
-falls:{n:'Falls Count Anywhere',g:'hard',b:{br:5,fl:3,sh:3,pw:1},inj:1.5,f:6,c:12,hb:3,dare:1,d:'Pinfalls count anywhere in the building — through the crowd and backstage.'},
+nodq:{n:'No DQ',g:'hard',b:{br:5,pw:3,sh:3},inj:1.5,f:5,c:8,hb:3,d:'No disqualifications. Weapons and interference are fair game.'},
+falls:{n:'Falls Count Anywhere',g:'hard',b:{sh:6,br:5,fl:3,pw:1},inj:1.5,f:6,c:12,hb:3,dare:1,d:'Pinfalls count anywhere in the building — through the crowd and backstage. Showmen love a bigger stage.'},
 street:{n:'Street Fight',g:'hard',b:{br:6,pw:3,sh:1,te:-1},inj:1.6,f:7,c:12,hb:4,d:'Anything goes. Built for brawlers settling a score.'},
 tables:{n:'Tables Match',g:'hard',b:{pw:6,br:3,fl:2,te:-2},inj:1.5,f:6,c:15,hb:3,dare:1,d:'Put your opponent through a table to win. Powerhouses love it.'},
 lights:{n:'Lights Out',g:'hard',b:{br:8,pw:3,sh:2,te:-2},inj:2,f:10,c:15,hb:5,d:'Unsanctioned — it doesn\'t count, so anything goes. The ultimate grudge match.'},
@@ -1601,7 +1602,7 @@ function touch(k){if(!S.touched.includes(k))S.touched.push(k)}
 function news(t){S.news.push({w:S.week,t});if(S.news.length>80)S.news.shift()}
 function inTeam(a,b){let v=0;for(const t of S.teams){if(t.m.includes(a)&&t.m.includes(b))v=Math.max(v,t.type==='team'?6:4)}return v}
 function chemParts(a,b){const p=[];const sv=STY[a.st][b.st];p.push({t:`${STYLE_N[a.st]} vs ${STYLE_N[b.st]}`,v:sv});
- p.push(a.al!==b.al?{t:'Face vs Heel',v:4}:a.al==='f'?(a.ring>=85&&b.ring>=85?{t:'Dream match',v:2}:{t:'Face vs Face',v:0}):{t:'Heel vs Heel',v:-1});
+ p.push(a.al!==b.al?{t:'Face vs Heel',v:4}:a.ring>=85&&b.ring>=85?{t:'Dream match',v:2}:{t:a.al==='f'?'Face vs Face':'Heel vs Heel',v:0});
  const h=S.chem[key(a.id,b.id)]||0;if(Math.abs(h)>=.1)p.push({t:'History together',v:Math.round(h*10)/10});
  if((hasT(a,'monster')&&hasT(b,'under'))||(hasT(a,'under')&&hasT(b,'monster')))p.push({t:'Monster vs Underdog',v:4});
  if(hasT(a,'monster')&&hasT(b,'monster'))p.push({t:'Two Monsters',v:-3});
@@ -1617,7 +1618,7 @@ function teamParts(a,b){const p=[];const t=inTeam(a.id,b.id);if(t)p.push({t:t>=6
  if(a.al===b.al)p.push({t:'Same alignment',v:1});if(heatOf(a.id,b.id)>=15)p.push({t:'Feuding partners',v:-3});return p}
 function chemTeam(a,b){return teamParts(a,b).reduce((s,x)=>s+x.v,0)}
 function partsHtml(p){return p.filter(x=>x.v).map(x=>`<span class="why ${x.v>0?'up':'dn'}">${esc(x.t)} ${x.v>0?'+':''}${x.v}</span>`).join('')}
-/* styles with no big pairing (Showman tops out at +2) list their best ones instead of an empty "clicks with" */
+/* a style with no +4 pairing lists its best ones instead of an empty "clicks with" */
 function styleFit(st){const e=Object.entries(STY[st]).sort((a,b)=>b[1]-a[1]);let best=e.filter(x=>x[1]>=4);const strong=best.length>0;if(!strong)best=e.filter(x=>x[1]===e[0][1]&&x[1]>=2);return {strong,best:best.map(x=>STYLE_N[x[0]]),top:best.length?best[best.length-1][1]:0,worst:e.filter(x=>x[1]<=1&&!best.includes(x)).map(x=>STYLE_N[x[0]])}}
 function sideName(side){const t=S.teams.find(t=>t.m.length===side.length&&side.every(id=>t.m.includes(id)));return t?t.n:side.map(id=>S.w[id]?S.w[id].name:'?').join(' & ')}
 function money(k){const s=k<0?'-':'';const a=Math.abs(k);return a>=1000?s+'$'+(a/1000).toFixed(2)+'M':s+'$'+Math.round(a)+'K'}
@@ -2441,7 +2442,7 @@ function edFeud(w,si){const opp=ED.m.sides.filter((s,i)=>i!==si).flat().filter(B
 function matchupHtml(m,ppv){const ws=m.sides.map(s=>s.filter(Boolean).map(id=>S.w[id]));const all=ws.flat();if(!all.length)return '';let h='';
  const full=ws.filter(s=>s.length);
  const chip=s=>{const a=sideAl(s);return s.length?`<span class="alchip ${a}">${a==='f'?'😇 Face':a==='h'?'😈 Heel':'Mixed'}${s.length>1&&a!=='x'?'s':''}</span>`:'<span class="alchip e">?</span>'};
- let verdict='';if(full.length>=2){const al=full.map(sideAl);if(al.includes('x'))verdict='<span class="muted">Mixed sides — chemistry varies by pairing</span>';else if(new Set(al).size>1)verdict='<span class="good">Face vs heel · +4 chemistry, heat builds faster</span>';else verdict=al[0]==='f'?`<span class="muted">Face vs face · no chemistry penalty (elite workers get a dream-match bonus), but heat builds slowly</span>`:`<span class="bad">Heel vs heel · −1 chemistry, heat builds slowly</span>`}
+ let verdict='';if(full.length>=2){const al=full.map(sideAl);if(al.includes('x'))verdict='<span class="muted">Mixed sides — chemistry varies by pairing</span>';else if(new Set(al).size>1)verdict='<span class="good">Face vs heel · +4 chemistry, heat builds faster</span>';else verdict=`<span class="muted">${al[0]==='f'?'Face vs face':'Heel vs heel'} · no chemistry penalty (elite workers get a dream-match bonus), but heat builds slowly</span>`}
  h+=`<div class="mur"><div class="muh">Alignment</div><div class="row" style="flex-wrap:wrap;gap:6px">${ws.map(chip).join('<span class="muted tiny">vs</span>')}</div>${verdict?`<div class="tiny" style="margin-top:4px">${verdict}</div>`:''}</div>`;
  if(full.length>=2){let best=null;for(let i=0;i<ws.length;i++)for(let j=i+1;j<ws.length;j++)for(const a of ws[i])for(const b of ws[j]){const fi=feudInfo(a.id,b.id);if(fi&&(!best||fi.h>best.fi.h))best={fi,a,b}}
   h+=`<div class="mur"><div class="muh">Feud</div>${best?`<div class="row sb"><span><b>${best.fi.t>=0?FTIER[best.fi.t][1]:'👀 Seeds planted'}</b> · ${alSpan(best.a)} vs ${alSpan(best.b)}</span><span class="fh t${best.fi.t+1}">🔥 ${Math.round(best.fi.h)}</span></div><div class="bar heat"><i style="width:${best.fi.h}%"></i></div><div class="tiny muted" style="margin-top:4px">${esc(feudTag(best.fi))}${best.fi.age?` · running ${best.fi.age} wk${best.fi.age>1?'s':''}`:''}</div>`:'<div class="tiny muted">No feud here yet — a strong face vs heel match can start one.</div>'}</div>`}
