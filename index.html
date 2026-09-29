@@ -166,6 +166,7 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),l
 .prods{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
 .prod{background:#17181c;border:0;box-shadow:inset 0 0 0 1px #34363e;color:var(--text);padding:8px 6px;text-align:center;cursor:pointer;clip-path:var(--cut);display:flex;flex-direction:column;gap:2px;min-width:0}
 .prod b{font-size:14px;line-height:1.1}.prod span{color:var(--gold2);font-weight:700}.prod small{color:var(--mut);font-size:12px}
+.sells{display:flex;flex-direction:column;gap:6px;margin-top:6px}.sell{display:flex;gap:10px;align-items:center;text-align:left;background:#17181c;border:0;box-shadow:inset 0 0 0 1px #34363e;color:var(--text);padding:8px 10px;cursor:pointer;font:inherit}.sell.on{background:linear-gradient(180deg,#3a2f10,#231c08);box-shadow:inset 0 0 0 1px var(--gold)}.sell .si{font-size:20px}.sell .st{flex:1;min-width:0;display:flex;flex-direction:column}.sell .st small{color:var(--mut);font-size:12px}.sell .sv{display:flex;flex-direction:column;align-items:flex-end;white-space:nowrap;font-size:13px}.sell .sv small{font-size:12px}
 .prod.on{background:linear-gradient(180deg,#3a2f10,#231c08);box-shadow:inset 0 0 0 1px var(--gold)}.prod:disabled{opacity:.4;cursor:not-allowed}
 .bill{border-top:1px solid var(--line);padding-top:8px;font-size:14px}.bill .row{margin:3px 0;gap:10px}.bill b{text-align:right}
 .capbox{background:rgba(0,0,0,.35);border:1px solid #3c3320;padding:8px 10px;clip-path:var(--cut)}.capbox .tiny{margin-top:4px}
@@ -520,7 +521,7 @@ ol.steps{padding-left:20px;margin:6px 0 10px}ol.steps li{margin:3px 0}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v62';
+const APP_VERSION='v63';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -1400,7 +1401,7 @@ function oppOf(seat,week,n){for(const [a,b] of pairings(week,n)){if(a===seat)ret
 function mapObj(o,f){if(!o||typeof o!=='object'||Array.isArray(o))return o;const n={};for(const k in o)n[BK.test(k)?f(k):k]=o[k];return n}
 function remapKeys(st,f){const rv=v=>typeof v==='string'&&BK.test(v)?f(v):v;
  Object.values(st.w||{}).forEach(w=>{if(w.own)w.own=rv(w.own)});
- ['fans','money','hourWins','card','names','priv','prod','debt'].forEach(k=>{if(st[k])st[k]=mapObj(st[k],f)});
+ ['fans','money','hourWins','card','names','priv','prod','debt','sell','sold','fin'].forEach(k=>{if(st[k])st[k]=mapObj(st[k],f)});
  if(st.history)st.history=st.history.map(h=>mapObj(h,f));
  const L=st.last;if(L){const one=o=>{o.fans=mapObj(o.fans,f);o.ratings=mapObj(o.ratings,f);if(o.cash)o.cash=mapObj(o.cash,f);if(o.hourWin)o.hourWin=rv(o.hourWin);(o.blocks||[]).forEach(b=>b.brand=rv(b.brand))};if(L.pairs)L.pairs.forEach(one);else one(L)}
  if(st.draft){if(st.draft.first)st.draft.first=rv(st.draft.first);if(st.draft.order)st.draft.order=st.draft.order.map(rv)}
@@ -1425,7 +1426,7 @@ function nameOf(b){if(b==='p')return S.gm;if(b==='ai'&&!ON())return S.rival;retu
 function brands(){return ON()?localSeats():['p','ai']}
 function myTurn(){if(PARTY&&ON())return partyMyTurn();return !ON()||S.online.turn==='p'}
 function mpLocked(){if(PARTY&&ON())return partyLocked();if(!ON()||S.online.turn==='p')return false;const who=nameOf(S.online.turn);toast(S.online.booked&&S.online.booked.p?`Your card is locked in — waiting on ${who}.`:`It's ${who}'s turn. You can look around; changes wait for your turn.`);return true}
-function freshCards(){S.prod={};if(!ON()){S.card={p:newCard().p,ai:null};return}S.card={};allSeats(()=>{S.card.p=newCard().p})}
+function freshCards(){S.prod={};S.sell={};if(!ON()){S.card={p:newCard().p,ai:null};return}S.card={};allSeats(()=>{S.card.p=newCard().p})}
 function bookingOrder(){const l=localSeats();const i=l.indexOf('p');return l.slice(i).concat(l.slice(0,i))}
 function mpInitSeats(n){const ids=Array.from({length:n},(_,i)=>'s'+i);S.fans={};S.money={};S.hourWins={};ids.forEach(k=>{S.fans[k]=250000;S.money[k]=1000;S.hourWins[k]=0});
  S.names={s0:S.gm};S.priv={};PRIV.forEach(k=>delete S[k]);delete S.gm;delete S.rival;
@@ -1566,10 +1567,37 @@ const resignCost=w=>askSal(w)*4*(w.mor<30?2:1);
 /* the weekly salary cap for the draft: most GMs can't afford an all-star roster */
 function capFor(n){n=n||brands().length;const r=n>2?20:24;const top=Object.values(S.w).filter(w=>!w.cw).map(mkt).sort((a,b)=>b-a).slice(0,n*r);return Math.round(top.reduce((a,b)=>a+b,0)/n*.85)}
 function econCap(){if(!S.cap)S.cap=capFor();return S.cap}
-/* TV money grows with the fanbase, but more slowly the bigger you get */
-function tvIncome(f){return Math.round(econCap()*.95*(.6+.4*Math.sqrt(Math.max(50000,f)/250000)))}
+/* ---- revenue (all in $K). The TV deal is steady and grows with fans (more slowly the bigger you get).
+ Tickets follow your buzz (last 3 shows), merch follows your stars and tonight's show, ads follow tonight's rating.
+ A competent 3½★ show roughly covers a full payroll; great shows make real money and bad ones lose it. */
+const fanF=f=>.6+.4*Math.sqrt(Math.max(50000,f)/250000);
+function tvIncome(f){return Math.round(econCap()*.58*fanF(f))}
 /* PPV buys: bigger fanbases buy more, and better shows sell a lot more */
-function ppvGross(f,r,allin){return Math.round(tvIncome(f)*(.15+.12*r)*(allin?1.5:1))}
+function ppvGross(f,r,allin){return Math.round(econCap()*.95*fanF(f)*(.15+.12*r)*(allin?1.5:1))}
+function buzzOf(b){const h=(S.history||[]).filter(x=>x[b]!=null).slice(-3);return h.length?h.reduce((a,x)=>a+x[b],0)/h.length:3}
+function starPower(b){const l=ownList(b).map(w=>w.pop).sort((x,y)=>y-x).slice(0,6);const t=Object.values(S.titles).filter(t=>t.holders.length&&t.holders.every(id=>S.w[id]&&S.w[id].own===b)).length;return clamp((l.length?l.reduce((a,x)=>a+x,0)/l.length:40)/70+t*.04,.5,1.7)}
+function tixRev(b,ppv){return Math.round(econCap()*.18*fanF(S.fans[b])*(.1+.26*buzzOf(b))*(ppv?1.3:1))}
+function merchRev(b,r,ppv){return Math.round(econCap()*.11*starPower(b)*(.3+.2*r)*(ppv?1.2:1))}
+function adRev(b,r){return Math.round(econCap()*.12*fanF(S.fans[b])*Math.pow(Math.max(0,r)/3.5,2))}
+const HOUR_BONUS=()=>Math.round(econCap()*.03);
+function weekEst(b,r){r=r==null?3.5:r;return tvIncome(S.fans[b])+tixRev(b,false)+merchRev(b,r,false)+adRev(b,r)}
+/* ---- selling out: quick money that costs fans. Every sell-out stacks backlash; it fades a week at a time when you stop. */
+const SELL={spons:{n:'Sponsored segments',i:'🏷️',d:'"This match is brought to you by…" all night long.',fan:.012,tv:1,ppv:1},
+ tix:{n:'Hike ticket prices',i:'🎟️',d:'+60% ticket money. The fans priced out remember it.',fan:.015,tv:1,ppv:1},
+ merch:{n:'Merch blitz',i:'👕',d:'Limited drops and VIP bundles: +70% merch.',fan:.008,tv:1,ppv:1},
+ ads:{n:'Extra ad breaks',i:'📺',d:'+60% ad money, but constant breaks cost the show ¼★.',fan:0,tv:1},
+ shill:{n:'Sportsbook sponsor',i:'🎰',d:'Big money from a betting partner plastered on the apron. Fans hate it.',fan:.035,tv:1,ppv:1}};
+function sellOf(b,show){if(b==='ai'&&!ON()){const m=S.money.ai,cap=econCap();return m<0?['spons','merch','tix']:m<cap*.3?['spons','merch']:[]}return ((S.sell&&S.sell[b])||[]).filter(k=>SELL[k]&&SELL[k][show.ppv?'ppv':'tv'])}
+function sellCash(k,c){const cap=econCap();return k==='spons'?Math.round(cap*.08):k==='tix'?Math.round(c.tix*.6):k==='merch'?Math.round(c.merch*.7):k==='ads'?Math.round(c.ad*.6):k==='shill'?Math.round(cap*.22):0}
+const backlash=b=>1+.3*Math.min(6,(S.sold&&S.sold[b])||0);
+function sellFans(k,b){return Math.round((S.fans[b]||0)*SELL[k].fan*backlash(b))}
+/* everything a show earns and costs; payroll and the TV deal settle at the end of the week */
+function showRevenue(b,c,r,show,ctx,out){c.tix=tixRev(b,show.ppv);c.merch=merchRev(b,r,show.ppv);c.ad=show.ppv?0:adRev(b,r)+(out.hourWin===b?HOUR_BONUS():0);
+ c.spons=0;c.sellFans=0;const sl=c.sell||[];sl.forEach(k=>{c.spons+=sellCash(k,c);c.sellFans+=sellFans(k,b)});
+ if(c.sellFans){const before=S.fans[b];S.fans[b]=Math.max(50000,S.fans[b]-c.sellFans);out.fans[b]+=S.fans[b]-before;
+  if(b==='p'||ON())out.notes.push(`💰 ${ON()?nameOf(b)+' sold':'You sold'} out — ${sl.map(k=>SELL[k].n.toLowerCase()).join(', ')}: +${money(c.spons)}, −${c.sellFans.toLocaleString()} fans${backlash(b)>1?' (fans have noticed a pattern)':''}.`)}
+ if(!S.sold)S.sold={};S.sold[b]=sl.length?(S.sold[b]||0)+sl.length:Math.max(0,(S.sold[b]||0)-1);
+ c.net=c.tix+c.merch+c.ad+c.gate+c.spons-c.bill-c.prod-c.stip;S.money[b]+=c.net}
 function stipCost(card){return (card||[]).reduce((a,sl)=>a+(sl&&sl.k==='match'&&sl.d&&validMatch(sl.d)?STIP_COST[sl.d.stip||'std']||0:0),0)}
 function prodOf(b,show){const k=S.prod&&S.prod[b];if(k&&PROD[k])return k;if(b==='ai'&&!ON())return aiProd(b,show);return 'std'}
 function aiProd(b,show){const m=(S.money[b]||0)/econCap()/aiq(b).prod;if(show.ppv)return m>5?'max':m>2?'plus':'std';return m>6?'max':m>3.2?'plus':'std'}
@@ -2034,7 +2062,7 @@ function airPair(){
  order.forEach(b=>{const v=vals[b];if(!v.length){rt[b]=.5;return}let s=0,ws=0;v.forEach((x,i)=>{const w=i===v.length-1?1.6:1;s+=x*w;ws+=w});rt[b]=s/ws});
  out.cash={};
  order.forEach(b=>{const pk=prodOf(b,show);if(vals[b].length&&PROD[pk].b)rt[b]=clamp(rt[b]+PROD[pk].b,0,5);
-  const c={prod:prodCost(pk,show),pk,stip:stipCost(S.card[b]),gate:0,bill:0,ad:0};
+  const c={prod:prodCost(pk,show),pk,stip:stipCost(S.card[b]),gate:0,bill:0,ad:0,sell:sellOf(b,show)};if(c.sell.includes('ads')&&vals[b].length)rt[b]=clamp(rt[b]-.25,0,5);
   /* PPV buys scale with the fanbase AND how good the show was; the venue bill comes out of it */
   if(show.ppv){c.gate=ppvGross(S.fans[b],rt[b],ctx.allin);c.bill=ctx.allin?ALLIN_BILL:PPV_BILL}
   out.cash[b]=c});
@@ -2044,8 +2072,8 @@ function airPair(){
   else{d=Math.round((r-2.5)*12000+(r>=4?6000:0));if(rt[o]!=null&&r>rt[o])d+=4000}
   const before=S.fans[b];S.fans[b]=Math.max(50000,S.fans[b]+d);out.fans[b]=S.fans[b]-before;out.ratings[b]=r});
  if(!show.ppv&&!bye){const hw=rt.p>=rt.ai?'p':'ai';S.hourWins[hw]=(S.hourWins[hw]||0)+1;out.hourWin=hw}
- /* sponsors pay for good TV: ad revenue for anything above 3★, plus a bonus for winning the ratings */
- order.forEach(b=>{const c=out.cash[b];if(!show.ppv)c.ad=Math.max(0,Math.round((rt[b]-3)*20))+(out.hourWin===b?10:0);c.net=c.gate-c.bill+c.ad-c.prod-c.stip;S.money[b]+=c.net});
+ /* tickets, merch and ads follow the show; sell-outs cash in and cost fans */
+ order.forEach(b=>showRevenue(b,out.cash[b],rt[b],show,ctx,out));
  settlePromises(out);
  if(ON()&&!bye){const t={notes:[],fans:{p:0,ai:0}};asOther(()=>settlePromises(t));out.fans.ai+=t.fans.p;out.notes.push(...t.notes)}
  {const h={s:S.season,w:S.week,show:show.name};order.forEach(b=>h[b]=+rt[b].toFixed(2));S.history.push(h)}
@@ -2087,7 +2115,7 @@ function endWeek(notes){
  for(const k in S.fs)if(!S.heat[k])delete S.fs[k];
  S.touched=[];
  if(!S.debt)S.debt={};
- brands().forEach(b=>{const inc=tvIncome(S.fans[b]),pay=payroll(b);S.money[b]+=inc-pay;
+ brands().forEach(b=>{const inc=tvIncome(S.fans[b]),pay=payroll(b);S.money[b]+=inc-pay;if(!S.fin)S.fin={};S.fin[b]={tv:inc,pay};
   if(S.money[b]>=0){S.debt[b]=0;return}
   /* in the red: morale sinks, and after a few weeks unpaid wrestlers start walking out */
   const wk=S.debt[b]=(S.debt[b]||0)+1;const me=b==='p'||ON();ownList(b).forEach(w=>w.mor=clamp(w.mor-(wk>=3?4:2),0,100));
@@ -2095,7 +2123,7 @@ function endWeek(notes){
   if(wk>=3&&Math.random()<.45){const c=ownList(b).filter(w=>w.mor<60&&!isChamp(w.id)).sort((x,y)=>sal(y)-sal(x))[0];if(c)leave(c,`💸 ${c.name} walked out on ${nameOf(b)} over missed paychecks.`,me?notes:[])}});
  const aiN=ownList('ai').length;
  if(!ON()&&(aiN<20||(aiN<28&&Math.random()<.3))){const fa=Object.values(S.w).filter(w=>!w.own&&!w.inj&&!w.cw&&onMarket(w)).sort((a,b)=>val(b)-val(a));const pickFa=aiN<20?fa.sort((a,b)=>mkt(a)-mkt(b))[0]:fa[0];
-  if(pickFa){const c=signCost(pickFa);if(S.money.ai>=c*(aiN<20?1:1.5)&&(aiN<20||payroll('ai')+mkt(pickFa)<=tvIncome(S.fans.ai)*1.05*aiq('ai').fa)){S.money.ai-=c;pickFa.sal=mkt(pickFa);pickFa.own='ai';pickFa.con=RI(20,40);pickFa.mor=75;const n=`✍️ ${S.rival} signed free agent ${pickFa.name}.`;news(n);notes.push(n)}}}
+  if(pickFa){const c=signCost(pickFa);if(S.money.ai>=c*(aiN<20?1:1.5)&&(aiN<20||payroll('ai')+mkt(pickFa)<=weekEst('ai')*aiq('ai').fa)){S.money.ai-=c;pickFa.sal=mkt(pickFa);pickFa.own='ai';pickFa.con=RI(20,40);pickFa.mor=75;const n=`✍️ ${S.rival} signed free agent ${pickFa.name}.`;news(n);notes.push(n)}}}
  S.week++;mystTick(notes);
  if(S.week>SEASON){S.phase='over';news(`🏁 Season ${S.season} is over!`)}
  else{marketTick(notes);crisisTick(notes);bothSides(()=>scoutTick());aiScout(notes)}}
@@ -2389,7 +2417,11 @@ function prodCard(sh){const k=prodOf('p',sh);const sc=stipCost(S.card.p);const b
  return `<div class="card"><div class="row sb"><div class="h small" style="margin:0">Production</div><span class="muted tiny">Bank <b class="${bank<0?'bad':'gold'}">${money(bank)}</b></span></div>
  <div class="prods">${Object.entries(PROD).map(([id,p])=>{const c=prodCost(id,sh);const ok=id==='std'||bank-sc>=c;return `<button class="prod ${k===id?'on':''}" ${ok?'':'disabled'} onclick="setProd('${id}')"><b>${p.n}</b><span>${c?money(c):'Free'}</span><small>${p.b?'+'+p.b+'★ show':'No boost'}</small></button>`}).join('')}</div>
  <div class="muted tiny" style="margin-top:8px">${esc(PROD[k].d)}</div>
- <div class="bill mt"><div class="row sb"><span>Stipulations</span><b>${sc?'−'+money(sc):'$0K'}</b></div><div class="row sb"><span>Production</span><b>${pc?'−'+money(pc):'$0K'}</b></div>${sh.ppv?`<div class="row sb"><span>Venue bill</span><b>−${money(S.week===SEASON?ALLIN_BILL:PPV_BILL)}</b></div><div class="row sb"><span>PPV buys <span class="muted tiny">(at 3½★ — better shows sell more)</span></span><b class="good">~+${money(est)}</b></div>`:`<div class="row sb"><span>Ad revenue</span><b class="good">+$20K per ★ above 3 · +$10K for winning the night</b></div>`}</div></div>`}
+ <div class="bill mt"><div class="row sb"><span>Stipulations</span><b>${sc?'−'+money(sc):'$0K'}</b></div><div class="row sb"><span>Production</span><b>${pc?'−'+money(pc):'$0K'}</b></div>${sh.ppv?`<div class="row sb"><span>Venue bill</span><b>−${money(S.week===SEASON?ALLIN_BILL:PPV_BILL)}</b></div><div class="row sb"><span>PPV buys <span class="muted tiny">(at 3½★ — better shows sell more)</span></span><b class="good">~+${money(est)}</b></div>`:`<div class="row sb"><span>Ads <span class="muted tiny">(at 3½★ — better shows earn more)</span></span><b class="good">~+${money(adRev('p',3.5))}</b></div>`}<div class="row sb"><span>Tickets <span class="muted tiny">(buzz ${fracTxt(Math.round(buzzOf('p')*4)/4)}★)</span></span><b class="good">+${money(tixRev('p',sh.ppv))}</b></div><div class="row sb"><span>Merch <span class="muted tiny">(at 3½★)</span></span><b class="good">~+${money(merchRev('p',3.5,sh.ppv))}</b></div></div>${sellCard(sh)}</div>`}
+function sellCard(sh){const on=(S.sell&&S.sell.p)||[];const est={tix:tixRev('p',sh.ppv),merch:merchRev('p',3.5,sh.ppv),ad:adRev('p',3.5)};const bl=backlash('p');
+ const l=Object.entries(SELL).filter(([k,o])=>o[sh.ppv?'ppv':'tv']);
+ return `<div class="h small mt" style="font-size:15px">Sell out <span class="muted tiny" style="text-transform:none;letter-spacing:0">— optional, for quick cash</span></div><div class="sells">${l.map(([k,o])=>`<button class="sell ${on.includes(k)?'on':''}" onclick="setSell('${k}')"><span class="si">${o.i}</span><span class="st"><b>${o.n}</b><small>${esc(o.d)}</small></span><span class="sv"><b class="good">+${money(sellCash(k,est))}</b><small class="bad">${o.fan?'−'+sellFans(k,'p').toLocaleString()+' fans':'−¼★'}</small></span></button>`).join('')}</div>${bl>1?`<div class="muted tiny" style="margin-top:6px">Fans have noticed a pattern: sell-outs cost ${Math.round((bl-1)*100)}% more fans right now.</div>`:''}`}
+function setSell(k){if(mpLocked()||(ON()&&S.online.booked.p))return;if(!S.sell)S.sell={};const l=S.sell.p=(S.sell.p||[]).slice();const i=l.indexOf(k);if(i>=0)l.splice(i,1);else l.push(k);save();render()}
 function setProd(id){if(mpLocked()||(ON()&&S.online.booked.p))return;const sh=curShow();if(id!=='std'&&S.money.p-stipCost(S.card.p)<prodCost(id,sh))return toast("You can't afford that production tonight.");if(!S.prod)S.prod={};S.prod.p=id;save();render()}
 let LQ=null;
 let LIVE=false;
@@ -2659,7 +2691,7 @@ const HOWTO=`<p><b>Match ratings</b> blend in-ring skill (the best worker in the
 <p><b>Ending feuds:</b> book a hot feud (35+ heat) against each other on a PPV to <b>blow it off</b> — the feud is over, both wrestlers get a morale boost and the winner gets the last word (a no-contest leaves it unsettled). A feud that isn't working can be dropped early: tap it and choose <b>Cut your losses</b>. It ends at once, but you lose fans (fewer if it had already gone stale), both wrestlers lose a little morale and popularity, and any match you promised between them is cancelled.</p>
 <p><b>Building feuds inside matches:</b> everyone on opposite sides of a match builds heat with each other, so tag and multi-person matches grow several feuds at once (the match editor shows exactly how much). Put two feuding wrestlers on the <b>same side</b> and the tension builds — lose, and one may betray the other. Book a <b>run-in</b> to involve someone who isn't in the match: cost them the match (the most heat, but a screwy finish in a normal-rules match unless the feud is already hot), attack them after the bell, or make the save. Doing the same run-in two weeks running builds half as much.</p>
 <p><b>Stipulations</b> are modelled on real AEW match types — from Submission and 2 Out of 3 Falls to Lights Out, Texas Death, Anarchy in the Arena and Blood &amp; Guts. Each suits certain styles, costs money, and wears wrestlers out. The brutal ones pay off big when the feud is red-hot (heat 50+) but fall flat without a real feud behind them. Some are PPV only, and the faction wars need Trios or 8-Man Tag.</p>
-<p><b>Money</b> supports the booking — it doesn't replace it. The draft has a <b>salary cap</b>: stars cost far more than the midcard, so you can't draft an all-star roster (anything left under the cap goes into your bank). Every wrestler's salary is locked in on their contract until they re-sign — and a wrestler who got more popular asks for a raise. Weekly TV money grows with your fanbase, more slowly as you get bigger. <b>Great shows pay</b>: TV shows above 3★ earn ad revenue, and PPV buys scale with both your fans and the show's rating. You can spend on <b>production</b> (a small bump to the show rating) and <b>stipulations</b>, and every PPV has a venue bill. Fall into the red and morale drops; stay there 3 weeks and wrestlers start walking out.</p>
+<p><b>Money</b> supports the booking — it doesn't replace it. The draft has a <b>salary cap</b>: stars cost far more than the midcard, so you can't draft an all-star roster (anything left under the cap goes into your bank). Every wrestler's salary is locked in on their contract until they re-sign — and a wrestler who got more popular asks for a raise. Money comes from four places: a <b>TV deal</b> that grows with your fanbase (more slowly as you get bigger), <b>tickets</b> that follow your buzz from recent shows, <b>merch</b> that follows your stars and the show, and <b>ads</b> that follow the rating. PPVs add buys and a bigger gate. <b>Great shows pay</b>: a 3½★ week roughly covers a full payroll, 4½★ weeks make real money and bad shows lose it. Need cash fast? <b>Sell out</b> — sponsored segments, pricier tickets, merch blitzes, extra ad breaks or a sportsbook sponsor — but each one costs fans, and doing it often makes fans angrier. You can spend on <b>production</b> (a small bump to the show rating) and <b>stipulations</b>, and every PPV has a venue bill. Fall into the red and morale drops; stay there 3 weeks and wrestlers start walking out.</p>
 <p><b>Developing talent:</b> the draft is real wrestlers only. During the season, open the <b>Scouting report</b> in the Office to hand-pick a prospect — Prospect, Blue-Chip or Generational — on a cheap 52-week developmental deal. The board refreshes every few weeks, and the rival scouts too (more often, and better, on Hard). You can still design your own prospect or star; they wait in free agency until you sign them.</p>
 <p><b>Free agency</b> rotates: after the draft only about 8 unsigned wrestlers are on the market at once, each for a few weeks, with new names arriving every week (and anyone released or out of contract going straight onto it). The rival signs from the same market.</p>
 <p><b>Created wrestlers</b> go into the free-agent pool and are always available to you. Draft them or sign them any week from Free Agents; the rival never signs them. Rookies carry a one-time development fee when signed (free if drafted).</p>
@@ -2675,7 +2707,7 @@ function aiScout(notes){if(ON())return;const q=aiq();const aiN=ownList('ai').len
 function officeView(){const inc=tvIncome(S.fans.p),pay=payroll('p');const dt=(S.debt&&S.debt.p)||0;const exp=ownList('p').filter(w=>w.con<=6).sort((a,b)=>a.con-b.con);
  const tr=S.training.map(t=>S.w[t.id]?`<div class="row sb" style="margin-bottom:6px"><span>${esc(S.w[t.id].name)} · ${t.f==='ring'?'In-ring':'Mic'}</span><button class="mini" onclick="untrain('${t.id}')">Remove</button></div>`:'').join('');
  const myTeams=S.teams.filter(t=>t.m.length&&t.m.every(id=>S.w[id]&&S.w[id].own==='p'));
- return `<div class="card"><div class="h small">Finances</div><div class="grid2" style="margin-top:0"><div><span class="muted">Bank</span><br><b>${money(S.money.p)}</b></div><div><span class="muted">Weekly net</span><br><b class="${inc-pay>=0?'good':'bad'}">${inc-pay>=0?'+':''}${money(inc-pay)}</b></div><div><span class="muted">TV income</span><br>${money(inc)}/wk</div><div><span class="muted">Payroll</span><br>${money(pay)}/wk</div></div>${S.money.p<0?`<div class="err mt">💸 In the red${dt?` for ${dt} week${dt>1?'s':''}`:''}. Morale drops every week, you can't sign or re-sign anyone, and after 3 weeks unhappy wrestlers start walking out.</div>`:''}<div class="muted mt">Money follows great shows: every ★ above 3 on TV earns ad revenue, and PPV buys grow with both your fanbase and the show rating. TV money grows with fans, but more slowly as you get bigger — so a bloated payroll will catch up with you.</div></div>
+ return `${finCard()}
  <div class="card"><div class="h small">Contracts expiring</div>${exp.length?exp.map(w=>`<div class="row sb" style="margin-bottom:6px"><span onclick="showW('${w.id}')">${esc(w.name)} · <b class="${w.con<=2?'bad':''}">${w.con} wk</b>${w.mor<30?' 😠':''}</span><button class="mini" onclick="resign('${w.id}')">Re-sign ${money(resignCost(w))}${askSal(w)>sal(w)?` · ${money(askSal(w))}/wk`:''}</button></div>`).join(''):'<div class="muted">None in the next 6 weeks.</div>'}<div class="muted mt">Re-signing costs 4 weeks of the new salary. Wrestlers ask for their current market value (never a pay cut) — so a breakout star gets a raise — and unhappy wrestlers ask for more and double the signing fee.</div></div>
  <div class="card"><div class="h small">Performance Center (${S.training.length}/2)</div>${tr||'<div class="muted">Open a wrestler on your roster and tap Train. They improve every week they stay here.</div>'}</div>
  <div class="card"><div class="h small">Developing talent</div><p class="muted" style="margin-top:0">Hand-pick a prospect from the scouting report — ${S.scout&&S.scout.l.length?`${S.scout.l.length} on the board, refreshing in ${scoutLeft()} week${scoutLeft()>1?'s':''}`:'new names every few weeks'}. They sign a cheap 52-week developmental deal and grow with matches and training.</p><button class="btn" onclick="openScout()">🔎 Scouting report</button></div>
@@ -2686,6 +2718,15 @@ function officeView(){const inc=tvIncome(S.fans.p),pay=payroll('p');const dt=(S.
  ${cloudCard()}${mpOfficeCard()}
  <div class="card mt"><div class="h small">Save</div><p class="muted" style="margin-top:0">Progress saves automatically on this device. Export a file to back it up or move it to another device.</p><div class="row"><button class="btn sec" onclick="exportSave()">Export</button>${ON()?'':'<button class="btn sec" onclick="importSave()">Import</button>'}</div>${ON()?'':'<button class="btn ghost danger" onclick="resetGame()">Start a new game</button>'}</div>
  <details class="card"><summary class="h small">How it all works</summary>${HOWTO}</details>`}
+function finCard(){const pay=payroll('p'),dt=(S.debt&&S.debt.p)||0,bz=buzzOf('p'),sp=starPower('p');const tv=tvIncome(S.fans.p),tx=tixRev('p',false),me=merchRev('p',3.5,false),ad=adRev('p',3.5);
+ const at=r=>weekEst('p',r)-pay;const sg=v=>`<b class="${v>=0?'good':'bad'}">${v>=0?'+':'−'}${money(Math.abs(v))}</b>`;const bs=S.sold&&S.sold.p||0;
+ const row=(l,v,sub)=>`<div class="row sb"><span>${l}${sub?` <span class="muted tiny">${sub}</span>`:''}</span><b class="${v>=0?'good':'bad'}">${v>=0?'+':'−'}${money(Math.abs(v))}</b></div>`;
+ return `<div class="card"><div class="h small">Finances</div><div class="grid2" style="margin-top:0"><div><span class="muted">Bank</span><br><b>${money(S.money.p)}</b></div><div><span class="muted">Payroll</span><br>${money(pay)}/wk</div></div>
+ <div class="h small mt" style="font-size:15px">A typical TV week</div><div class="bill">${row('TV deal',tv,'grows with fans')}${row('Tickets',tx,`buzz from your last 3 shows: ${fracTxt(Math.round(bz*4)/4)}★`)}${row('Merch',me,`star power ×${sp.toFixed(2)} · at 3½★`)}${row('Ads',ad,'at 3½★')}${row('Payroll',-pay)}
+ <div class="row sb" style="border-top:1px solid var(--line);padding-top:6px;margin-top:6px"><span>Net at 3½★</span>${sg(at(3.5))}</div><div class="row sb"><span class="muted">at 2½★ / 4½★</span><span>${sg(at(2.5))} / ${sg(at(4.5))}</span></div></div>
+ ${bs?`<div class="card warn mt" style="padding:8px">💰 Fans have noticed you selling out — the next sell-out costs ${Math.round((backlash('p')-1)*100)}% more fans. It fades a week at a time when you stop.</div>`:''}
+ ${S.money.p<0?`<div class="err mt">💸 In the red${dt?` for ${dt} week${dt>1?'s':''}`:''}. Morale drops every week, you can't sign or re-sign anyone, and after 3 weeks unhappy wrestlers start walking out.</div>`:''}
+ <div class="muted mt">Great shows pay: tickets follow your buzz, merch follows your stars and the show, and ads follow the rating (plus a bonus for winning the night). PPVs add buys and a bigger gate. Production, stipulations and the PPV venue come out of each show; payroll and the TV deal settle at the end of the week. Need cash fast? <b>Sell out</b> on the Book screen — at the cost of fans.</div></div>`}
 function openTeam(){if(mpLocked())return;const l=ownList('p').sort((a,b)=>a.name.localeCompare(b.name));openModal(`<div class="h mhd">New team or faction</div><label>Name</label><input id="tmName" maxlength="30" placeholder="e.g. The Elite Guard"><label>Type</label><input type="hidden" id="tmType" value="team"><div class="chips">${[['team','Tag team (2–3)'],['faction','Faction (2–6)']].map(([v,n],i)=>`<button type="button" class="chip ${i?'':'on'}" onclick="document.getElementById('tmType').value='${v}';this.parentNode.querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',b===this))">${n}</button>`).join('')}</div><label>Members</label>${l.map(w=>`<label style="display:flex;gap:10px;align-items:center;text-transform:none;font-size:15px;color:var(--text);letter-spacing:0"><input type="checkbox" value="${w.id}" class="tmc" style="width:auto"> ${esc(w.name)}</label>`).join('')}<button class="btn mt" onclick="saveTeam()">Create</button><button class="btn ghost" onclick="closeModal()">Cancel</button>`)}
 function saveTeam(){if(mpLocked())return;const n=($('#tmName').value||'').trim();const type=$('#tmType').value;const m=[...document.querySelectorAll('.tmc:checked')].map(x=>x.value);
  if(!n)return toast('Give it a name.');if(m.length<2||(type==='team'&&m.length>3)||m.length>6)return toast(type==='team'?'Pick 2–3 members.':'Pick 2–6 members.');
@@ -2828,7 +2869,7 @@ function mpOfficeCard(){if(PARTY&&ON())return partyOfficeCard();if(!ON())return 
  <button class="btn sec" onclick="mpSolo()">Switch to my solo game</button><button class="btn ghost danger" onclick="mpLeave()">Remove this league from this device</button></div>`}
 /* results for a week with several head-to-head matchups (and maybe a bye) */
 function cashCard(c){if(!c)return '';const row=(l,v,good)=>v?`<div class="row sb"><span>${l}</span><b class="${good?'good':'bad'}">${good?'+':'−'}${money(v)}</b></div>`:'';
- return `<div class="card"><div class="h small">Box office</div><div class="bill" style="border:0;padding:0">${row('PPV buys',c.gate,1)}${row('Venue bill',c.bill)}${row('Ad revenue',c.ad,1)}${row(`Production · ${esc(PROD[c.pk||'std'].n)}`,c.prod)}${row('Stipulations',c.stip)}<div class="row sb" style="border-top:1px solid var(--line);padding-top:6px;margin-top:6px"><span>Show net</span><b class="${c.net>=0?'good':'bad'}">${c.net>=0?'+':'−'}${money(Math.abs(c.net))}</b></div><div class="muted tiny" style="margin-top:4px">TV money and payroll settle at the end of the week — see the Office.</div></div></div>`}
+ return `<div class="card"><div class="h small">Box office</div><div class="bill" style="border:0;padding:0">${row('Tickets',c.tix,1)}${row('Merch',c.merch,1)}${row('Ad revenue',c.ad,1)}${row('PPV buys',c.gate,1)}${row('Sell-outs',c.spons,1)}${row('Venue bill',c.bill)}${row(`Production · ${esc(PROD[c.pk||'std'].n)}`,c.prod)}${row('Stipulations',c.stip)}<div class="row sb" style="border-top:1px solid var(--line);padding-top:6px;margin-top:6px"><span>Show net</span><b class="${c.net>=0?'good':'bad'}">${c.net>=0?'+':'−'}${money(Math.abs(c.net))}</b></div><div class="muted tiny" style="margin-top:4px">The TV deal and payroll settle at the end of the week — see the Office.</div></div></div>`}
 function mpResults(o){const mine=o.pairs.find(p=>p.blocks.some(b=>b.brand==='p'))||o.pairs[0];const rest=o.pairs.filter(p=>p!==mine);
  const pairHd=p=>{const ks=Object.keys(p.ratings);return `<div class="score">${ks.map((k,i)=>`${i?'<i>VS</i>':''}<div class="${k==='p'?'me':''}"><span>${esc(nameOf(k))}</span><div class="stars">${stars(p.ratings[k])}</div></div>`).join('')}</div>`};
  const fansHd=p=>`<div class="card"><div class="h small">Fan impact${p.hourWin?` · ${esc(nameOf(p.hourWin))} won the ratings`:Object.keys(p.ratings).length===1&&!o.ppv?' · bye week':''}</div>${Object.keys(p.fans).map(k=>`<div class="row sb"><span>${esc(nameOf(k))}</span><b class="${p.fans[k]>=0?'good':'bad'}">${p.fans[k]>=0?'+':''}${p.fans[k].toLocaleString()}</b></div>`).join('')}</div>`;
