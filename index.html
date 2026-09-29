@@ -520,7 +520,7 @@ ol.steps{padding-left:20px;margin:6px 0 10px}ol.steps li{margin:3px 0}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v57';
+const APP_VERSION='v58';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -1711,8 +1711,8 @@ function settlePromises(out){duePromises().forEach(pr=>{const A=S.w[pr.a],B=S.w[
  S.promises=(S.promises||[]).filter(x=>x.week>S.week)}
 function showNames(){return (S.online&&S.online.show)||{p:'Dynamite',ai:'Collision'}}
 function curShow(){if(PPVS[S.week])return {name:PPVS[S.week],ppv:true,mine:PPVS[S.week],theirs:PPVS[S.week]};const n=showNames();return {name:n.p,ppv:false,mine:n.p,theirs:n.ai}}
-/* TV: 5 matches + 2 promos, plus an optional bonus promo (the '?' slot). PPV: 7 matches + an optional title challenge. */
-const CARD_TV=['match','promo','match','match','promo','match','promo?','match'],CARD_PPV=['match','match','match','match','match','match','match','chal'];
+/* TV: 4 matches + 2 promos, plus an optional bonus promo (the '?' slot). PPV: 7 matches + an optional title challenge. */
+const CARD_TV=['match','promo','match','promo','match','promo?','match'],CARD_PPV=['match','match','match','match','match','match','match','chal'];
 const cardMatches=ppv=>(ppv?CARD_PPV:CARD_TV).filter(k=>k==='match').length;
 function emptyCard(ppv){return (ppv?CARD_PPV:CARD_TV).map(k=>k.endsWith('?')?{k:k.slice(0,-1),d:null,opt:true}:{k,d:null})}
 /* ---- stamina: matches drain it, a week off (or a promo-only week) restores it ---- */
