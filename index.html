@@ -114,7 +114,7 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),l
 .side select{margin-bottom:6px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .mini{background:linear-gradient(180deg,#3a2f12,#221b09);border:0;box-shadow:inset 0 0 0 1px var(--gold);color:var(--gold2);padding:7px 12px 6px;font-weight:800;font-style:italic;font-size:14px;text-transform:uppercase;letter-spacing:.06em;clip-path:var(--slant);white-space:nowrap;cursor:pointer}
-.chips{display:flex;gap:4px;overflow-x:auto;padding:0 16px 2px;margin:0 -16px;scroll-padding:0 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.chips{display:flex;gap:4px;overflow-x:auto;padding:0 16px 2px;margin:0 -16px;scroll-padding:0 16px;scrollbar-width:none;overscroll-behavior-x:contain;touch-action:pan-x pan-y}
 .chips:after{content:"";flex:0 0 12px}.chip{flex:none}
 .card .chips{padding-left:15px;padding-right:15px;margin:0 -15px;scroll-padding:0 15px}.chips::-webkit-scrollbar{display:none}
 .chip{background:#17181c;border:0;box-shadow:inset 0 0 0 1px #34363e;color:#a9a497;padding:7px 15px 6px;font-size:15px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;clip-path:var(--slant);cursor:pointer}
@@ -164,7 +164,7 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),l
 nav.tabs:after{top:100%;background:#050506}
 #modal{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;background:radial-gradient(100% 70% at 50% 100%,rgba(0,0,0,.6),rgba(0,0,0,.85));animation:fadein .2s}
 #modal.hidden{display:none}
-.sheet{position:relative;width:100%;max-width:640px;max-height:93vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:22px 16px calc(24px + env(safe-area-inset-bottom));background:var(--grunge),radial-gradient(90% 40% at 50% 0%,rgba(255,150,60,.12),transparent 70%),linear-gradient(180deg,#17181d 0%,#0c0d10 100%);border-top:2px solid var(--gold);box-shadow:0 -20px 50px rgba(0,0,0,.8)}
+.sheet{position:relative;width:100%;max-width:640px;max-height:93vh;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:22px 16px calc(24px + env(safe-area-inset-bottom));background:var(--grunge),radial-gradient(90% 40% at 50% 0%,rgba(255,150,60,.12),transparent 70%),linear-gradient(180deg,#17181d 0%,#0c0d10 100%);border-top:2px solid var(--gold);box-shadow:0 -20px 50px rgba(0,0,0,.8)}
 .sheet:before{content:"";position:absolute;top:8px;left:50%;width:44px;height:4px;margin-left:-22px;background:#3b3d45;border-radius:2px}
 .sheet.in{animation:sheetin .32s cubic-bezier(.2,.8,.2,1)}
 .sheet.swap{animation:fadein .18s}
@@ -363,7 +363,7 @@ nav.tabs button.on{text-shadow:none}nav.tabs button.on svg{filter:none}nav.tabs 
 .fb{padding:10px 0 8px}.fb+.fb{border-top:1px solid var(--line)}.fb:first-of-type{margin-top:4px}
 .fb.hot .bar.heat>i{box-shadow:0 0 10px rgba(255,122,46,.6)}
 .fbn{font-weight:700;font-size:14.5px}
-.fbm{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px}
+.fbm{display:flex;justify-content:space-between;align-items:flex-end;gap:8px;margin-top:6px}
 .fbm .mini{padding:6px 9px 5px;font-size:12px}
 .lrd>summary{display:flex;justify-content:space-between;align-items:center;cursor:pointer;list-style:none}.lrd>summary::-webkit-details-marker{display:none}
 .lrd>summary:after{content:"▾";color:var(--gold2);margin-left:8px}.lrd:not([open])>summary:after{content:"▸"}
@@ -379,6 +379,28 @@ nav.tabs button.on{text-shadow:none}nav.tabs button.on svg{filter:none}nav.tabs 
 .lr u.ok i{background:#4fd585}.lr u.mid i{background:#e6b640}.lr u.low i{background:#ff5a52}
 .lr.on{opacity:.45}.lr.out{opacity:.3}.lrs{font-size:12px;flex:none}
 .bar.st-ok>i{background:#3ea36a}.bar.st-mid>i{background:#e0a43a}.bar.st-low>i{background:#e2332b}
+
+/* ===== Card readability pass ===== */
+.chips.wrap{flex-wrap:wrap;overflow:visible;margin:0;padding:0;gap:6px}.chips.wrap:after{display:none}.chips.wrap .chip{padding:7px 12px 6px;font-size:14px}
+.wc .alb{position:absolute;top:6px;right:6px;z-index:2;font:900 italic 11px/1 'BC',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#fff;padding:4px 8px 3px 7px;clip-path:var(--slant)}
+.wc.af .alb{background:linear-gradient(180deg,#5cb8ff,#1c64b3)}.wc.ah .alb{background:linear-gradient(180deg,#ff6a5f,#b01d16)}
+.wc .ic{top:27px;right:7px}.wc .cwb{top:46px}
+.wc .nm mark.alg{display:none}
+.wc .trt{flex-direction:row;top:30px;left:6px;gap:3px}.wc .trt i{width:19px;height:19px;font-size:11px}
+.wc .nm{padding:30px 8px 7px 10px}
+.wc .ms.nb{gap:2px;margin-top:4px}
+.wc .ms.nb em{font-size:15px}.wc .ms em.hi{color:var(--gold2)}.wc .ms em.lo{color:#a9a397}
+.wc .ms em sup{font-size:8px;color:#7ee0a1;margin-left:1px;vertical-align:4px}
+.wc .sta{margin-top:6px;gap:4px}.wc .sta>small{font-size:10px;letter-spacing:0}
+.wc .sta u{height:6px;border-radius:1px}
+.wc .sta em{font-size:12px}
+.wc .fdb{display:flex;align-items:center;gap:5px;margin:0 -8px 6px -10px;padding:4px 8px 3px 10px;font:800 italic 11px/1 'BC',sans-serif;letter-spacing:.04em;text-transform:uppercase;color:#fff;background:linear-gradient(90deg,rgba(168,70,31,.85),rgba(94,26,11,.2))}
+.wc .fdb span{flex:none;display:inline;margin:0;font:inherit;color:inherit}.wc .fdb b{font:inherit;font-weight:700;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wc .fdb.t2{background:linear-gradient(90deg,rgba(226,85,43,.95),rgba(143,23,11,.3))}
+.wc .fdb.t3{background:linear-gradient(90deg,#ff7a2e,rgba(192,29,18,.5));box-shadow:0 0 12px rgba(255,122,46,.5)}
+.wc .nm span.inf{margin-top:5px;display:flex;gap:4px;overflow:hidden;white-space:nowrap}
+.wc .nm span.inf em.chm{font-style:normal;font-weight:800;font-size:10.5px;padding:1px 5px;border-radius:2px;flex:none}
+.chm.cg{color:#4fd585;background:rgba(79,213,133,.14)}.chm.cn{color:#d8d2c4;background:rgba(255,255,255,.08)}.chm.cb{color:#ff8a82;background:rgba(255,90,82,.14)}
 
 /* ===== Party mode: the TV screen ===== */
 body.tv{font-size:clamp(16px,1.25vw,24px)}
@@ -459,7 +481,7 @@ body.tv .card .h.small{font-size:clamp(17px,1.4vw,26px)}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v38';
+const APP_VERSION='v39';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -1146,9 +1168,10 @@ function loadRepoPhotos(){if(typeof fetch==='undefined')return;fetch('photos/man
  REPO=map;if(S)render();
  if(navigator.onLine!==false)Object.values(map).reduce((pr,u)=>pr.then(()=>fetch(u).catch(()=>{})),Promise.resolve())}).catch(()=>{})}
 function face(w){return w?`<span class="fav a${w.al}">${portrait(w)}</span>`:''}
-function wcard(w,o){o=o||{};const fdv=o.feud&&o.feud.h>=1?o.feud:null;const tier=fdv?heatTier(fdv.h):-1;const showSta=w.own&&S&&(S.phase==='season'||S.phase==='over')&&!o.noSta;
- return `<button class="wc t${ovr(w)>=88?1:ovr(w)>=78?2:3} a${w.al} ${tier>=0?'fd':''} ${isChamp(w.id)?'champ':''} ${o.sel?'sel':''}" onclick="${o.on!=null?o.on:`showW('${w.id}')`}"><div class="pic">${portrait(w)}</div><i class="al ${w.al==='f'?'fc':'hl'}"></i><span class="o">${ovr(w)}</span><span class="ic">${icons(w).trim()}</span>${fdv?`<span class="fdr t${tier+1}">🔥${Math.round(fdv.h)}${fdv.o?' '+esc(fdv.o.name.split(' ').slice(-1)[0]):''}</span>`:''}${(w.tr||[]).length?`<span class="trt">${w.tr.map(t=>TRAITS[t]?`<i title="${TRAITS[t].n}">${TRAITS[t].i}</i>`:'').join('')}</span>`:''}${w.cw&&!w.own?'<span class="cwb">NEW</span>':''}<div class="nm"><mark class="alg">${w.al==='f'?'😇 FACE':'😈 HEEL'}</mark><b class="${w.name.length>14?'xl':w.name.length>12?'ln':''}">${esc(w.name)}</b><div class="ms">${[['RNG',w.ring,w.pot],['MIC',w.mic,w.potM],['POP',w.pop]].map(([l,v,pt])=>`<div><small>${l}</small><em>${Math.round(v)}</em><u><i style="width:${clamp(v,0,100)}%"></i>${pt!=null&&pt-v>=3?`<s style="left:${clamp(pt,0,100)}%"></s>`:''}</u></div>`).join('')}</div>${showSta?staRow(w,o.gain):''}<span>${o.info!=null?o.info:`${STYLE_N[w.st]}${w.rookie?' · 🌱':''}`}</span></div></button>`}
-function staRow(w,gain){const v=sta(w);const a=Math.max(0,v-(gain||0));return `<div class="sta ${staCls(gain?a:v)}" title="Stamina"><small>STA</small><u><i style="width:${a}%"></i>${gain?`<s style="left:${a}%;width:${v-a}%"></s>`:''}</u><em>${gain?`${v}<small>→</small>${a}`:v}</em></div>`}
+function wcard(w,o){o=o||{};const fdv=o.feud&&o.feud.h>=1?o.feud:null;const tier=fdv?heatTier(fdv.h):-1;const inSeason=S&&(S.phase==='season'||S.phase==='over');const showSta=w.own&&inSeason&&!o.noSta;const bars=!inSeason;
+ const num=(l,v,pt)=>`<div><small>${l}</small><em class="${v>=85?'hi':v>=75?'':'lo'}">${Math.round(v)}${!bars&&pt!=null&&pt-v>=3?'<sup>▲</sup>':''}</em>${bars?`<u><i style="width:${clamp(v,0,100)}%"></i>${pt!=null&&pt-v>=3?`<s style="left:${clamp(pt,0,100)}%"></s>`:''}</u>`:''}</div>`;
+ return `<button class="wc t${ovr(w)>=88?1:ovr(w)>=78?2:3} a${w.al} ${tier>=0?'fd':''} ${isChamp(w.id)?'champ':''} ${o.sel?'sel':''}" onclick="${o.on!=null?o.on:`showW('${w.id}')`}"><div class="pic">${portrait(w)}</div><i class="al ${w.al==='f'?'fc':'hl'}"></i><span class="o">${ovr(w)}</span><span class="alb">${w.al==='f'?'Face':'Heel'}</span><span class="ic">${icons(w).trim()}</span>${(w.tr||[]).length?`<span class="trt">${w.tr.map(t=>TRAITS[t]?`<i title="${TRAITS[t].n}">${TRAITS[t].i}</i>`:'').join('')}</span>`:''}${w.cw&&!w.own?'<span class="cwb">NEW</span>':''}<div class="nm">${fdv?`<div class="fdb t${tier+1}"><span>🔥 ${Math.round(fdv.h)}</span>${fdv.o?`<b>vs ${esc(fdv.o.name.split(' ').slice(-1)[0])}</b>`:''}</div>`:''}<b class="${w.name.length>14?'xl':w.name.length>12?'ln':''}">${esc(w.name)}</b><div class="ms ${bars?'':'nb'}">${num('RNG',w.ring,w.pot)}${num('MIC',w.mic,w.potM)}${num('POP',w.pop)}</div>${showSta?staRow(w,o.gain):''}<span class="inf">${o.info!=null?o.info:`${STYLE_N[w.st]}${w.rookie?' · 🌱':''}`}</span></div></button>`}
+function staRow(w,gain){const v=sta(w);const a=Math.max(0,v-(gain||0));return `<div class="sta ${staCls(gain?a:v)}" title="Stamina"><small>⚡</small><u><i style="width:${a}%"></i>${gain?`<s style="left:${a}%;width:${v-a}%"></s>`:''}</u><em>${gain?`${v}<small>→</small>${a}`:v}</em></div>`}
 function emptySlot(on,label){return `<button class="wc empty" onclick="${on}"><span>+</span><small>${label||'Add'}</small></button>`}
 /* iOS Safari can drop a detached <input type=file> while the picker is open, so keep it in the DOM. */
 let FIN=null;
@@ -1716,7 +1739,7 @@ const $=s=>document.querySelector(s);
 function openPicker(o){PK=Object.assign({q:'',g:'all',al:'all',sort:'ovr'},o);renderPicker()}
 function pkList(){let l=PK.pool();if(PK.g!=='all')l=l.filter(w=>w.g===PK.g);if(PK.al&&PK.al!=='all')l=l.filter(w=>w.al===PK.al);if(PK.sort==='feud'&&PK.feud){const fh=w=>(PK.feud(w)||{h:0}).h;return l.sort((a,b)=>fh(b)-fh(a)||ovr(b)-ovr(a))}if(PK.q){const q=PK.q.toLowerCase();l=l.filter(w=>w.name.toLowerCase().includes(q))}return PK.sort==='chem'&&PK.chem?l.sort((a,b)=>PK.chem(b)-PK.chem(a)):PK.sort==='fat'?l.sort((a,b)=>a.fat-b.fat||ovr(b)-ovr(a)):PK.sort==='nophoto'?l.sort((a,b)=>hasPhoto(a)-hasPhoto(b)||b.pop-a.pop):l.sort(sorter(PK.sort))}
 function pkGrid(){const l=pkList();return l.length?`<div class="cgrid">${l.map(w=>wcard(w,{on:`pkPick('${w.id}')`,info:PK.info?PK.info(w):null,sel:w.id===PK.cur,feud:PK.feud?PK.feud(w):null,gain:PK.gain?PK.gain(w):0})).join('')}</div>`:'<p class="muted center">No one available.</p>'}
-function pchips(k,opts){return `<div class="chips">${opts.map(([v,n])=>`<button class="chip ${PK[k]===v?'on':''}" onclick="PK.${k}='${v}';renderPicker()">${n}</button>`).join('')}</div>`}
+function pchips(k,opts){return `<div class="chips wrap">${opts.map(([v,n])=>`<button class="chip ${PK[k]===v?'on':''}" onclick="PK.${k}='${v}';renderPicker()">${n}</button>`).join('')}</div>`}
 function renderPicker(){openModal(`<div class="row sb"><div class="h mhd" style="margin:0">${esc(PK.title)}</div><button class="mini" onclick="pkBack()">Back</button></div>
  <input class="mt" placeholder="Search by name…" value="${esc(PK.q)}" oninput="PK.q=this.value;document.getElementById('pkGrid').innerHTML=pkGrid()">
  <div class="mt">${pchips('g',[['all','All'],['M','Men'],['F','Women']])}</div><div class="mt">${pchips('al',[['all','Faces & heels'],['f','😇 Faces'],['h','😈 Heels']])}</div><div class="mt">${pchips('sort',[...(PK.chem?[['chem','Best chemistry']]:[]),...(PK.feud?[['feud','🔥 Hottest feud']]:[]),['ovr','Overall'],['pop','Popularity'],['ring','In-ring'],['mic','Mic'],['fat','⚡ Freshest']])}</div>
@@ -1725,7 +1748,15 @@ function pkPick(id){const p=PK;PK=null;p.onPick(id)}
 function pkBack(){const p=PK;PK=null;p.back()}
 function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),2200)}
 let MODAL_AT=0;
-function openModal(html,keep){MODAL_AT=Date.now();const m=$('#modal');const was=m.classList.contains('hidden');const sh=m.querySelector('.sheet');const st=keep&&sh?sh.scrollTop:0;m.innerHTML=`<div class="sheet ${was?'in':keep?'':'swap'}">${html}</div>`;m.classList.remove('hidden');document.body.classList.add('lock');if(keep)m.querySelector('.sheet').scrollTop=st}
+function openModal(html,keep){MODAL_AT=Date.now();const m=$('#modal');const was=m.classList.contains('hidden');const sh=m.querySelector('.sheet');const st=keep&&sh?sh.scrollTop:0;m.innerHTML=`<div class="sheet ${was?'in':keep?'':'swap'}"><div class="sbody">${html}</div></div>`;m.classList.remove('hidden');document.body.classList.add('lock');const ns=m.querySelector('.sheet');if(keep)ns.scrollTop=st;sheetScrollFix(ns)}
+/* iOS WebKit sometimes doesn't treat the sheet as scrollable when its content grows after it opens
+   (animation finishing, photos loading, a "Why?" expanding, the picker grid refilling) until it's reopened.
+   Whenever the content height changes, briefly toggle overflow so WebKit rebuilds the scroll area. */
+function sheetScrollFix(sh){if(!sh)return;let last=-1,raf=0;
+ const kick=()=>{raf=0;if(!sh.isConnected)return;const h=sh.scrollHeight;if(h===last)return;last=h;const t=sh.scrollTop;sh.style.overflowY='hidden';void sh.offsetHeight;sh.style.overflowY='';sh.scrollTop=t};
+ const soon=()=>{if(!raf)raf=requestAnimationFrame(kick)};
+ sh.addEventListener('animationend',()=>{last=-1;soon()},{once:true});sh.addEventListener('toggle',soon,true);sh.addEventListener('load',soon,true);
+ if(window.ResizeObserver&&sh.firstElementChild){const ro=new ResizeObserver(()=>{if(!sh.isConnected){ro.disconnect();return}soon()});ro.observe(sh.firstElementChild)}}
 function closeModal(){const m=$('#modal');m.classList.add('hidden');m.innerHTML='';document.body.classList.remove('lock');
  /* editors are finished once their sheet closes; leaving these set blocked live league updates and cloud loads */
  ED=PE=CE=PK=CF=QP=null;
@@ -1845,7 +1876,7 @@ function bookView(){const sh=curShow();const c=S.card.p;const ready=c.every(sl=>
   if(sl.k==='promo'){if(!sl.d)return `<button class="slot ${sl.opt?'opt':''}" onclick="openPromo(${i})"><span class="num">${i+1}</span><div class="lbl">${sl.opt?'Bonus promo (optional)':'Promo segment'}</div><div class="add">+ Book a promo${sl.opt?' — or leave it empty':''}</div></button>`;
    const p=sl.d;return `<button class="slot done" onclick="openPromo(${i})"><span class="num">${i+1}</span><div class="lbl">Promo · ${PT[p.type].n}</div><div><b>${alSpan(S.w[p.a])}${p.b&&S.w[p.b]?' <span class="muted">&amp;</span> '+alSpan(S.w[p.b]):''}</b></div>${p.b&&S.w[p.b]&&heatOf(p.a,p.b)>=1?`<div class="tags"><span class="fdt t${heatTier(heatOf(p.a,p.b))+1}">🔥 ${Math.round(heatOf(p.a,p.b))}</span></div>`:''}<div class="muted">🎤 Plays out live when you go live</div></button>`}
   const d=sl.d;return `<button class="slot ${d?'done':''}" onclick="openChal(${i})"><span class="num">${i+1}</span><div class="lbl">Title challenge (optional)</div>${d?`<div><b>${esc(S.w[d.c].name)}</b> challenges for the <b>${esc(S.titles[d.title].n)}</b> title</div>`:'<div class="add">+ Challenge for a title the rival brand holds</div>'}</button>`}).join('');
- const um=unmetPromises(c);return `${poster(sh,`<div class="venue mt" style="color:#e9d9b0">${sh.ppv?'Your full PPV card':'Best show wins the week'}</div>`)}${um.length?`<div class="card warn">${um.map(pr=>`<div>⚠️ Fans were ${pr.kind==='contract'?'contracted':'promised'} <b>${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)}</b> this week. Skip it and you'll lose fans and morale.</div>`).join('')}</div>`:''}${feudBoard()}${slots}${lockerRoom()}
+ const um=unmetPromises(c);return `${poster(sh,`<div class="venue mt" style="color:#e9d9b0">${sh.ppv?'Your full PPV card':'Best show wins the week'}</div>`)}${um.length?`<div class="card warn">${um.map(pr=>`<div>⚠️ Fans were ${pr.kind==='contract'?'contracted':'promised'} <b>${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)}</b> this week. Skip it and you'll lose fans and morale.</div>`).join('')}</div>`:''}${slots}${feudBoard()}${lockerRoom()}
  ${ON()&&S.online.booked.p?`<div class="card"><b>Card locked in ✓</b><div class="muted">It airs when ${esc(S.rival)} books ${sh.ppv?'theirs':esc(sh.theirs)}.</div></div>`:`<button class="btn live" ${ready&&myTurn()?'':'disabled'} onclick="goLive()">${ON()&&!S.online.booked.ai?'Go live & lock in ▸':'Go live ▸'}</button>`}<p class="muted center">${ready?'':'Fill every slot to go live. '}${esc(S.rival)} books their own ${sh.ppv?'card':'show, '+esc(sh.theirs)}. The best overall show wins the week.${ON()&&!S.online.booked.p&&!S.online.booked.ai?' Your segments play out now; the ratings come in once they book too.':''}</p>`}
 let LQ=null;
 let LIVE=false;
@@ -1876,7 +1907,7 @@ function onCard(a,b){return S.card.p.some(sl=>sl.d&&(sl.k==='match'?(()=>{const 
 function feudBoard(){const fs=feudList('p').filter(f=>f.h>=8).slice(0,6);
  const rows=fs.map(f=>{const fi=feudInfo(f.a.id,f.b.id);const on=onCard(f.a.id,f.b.id);const inj=[f.a,f.b].filter(w=>w.inj);const same=f.a.al===f.b.al;
   return `<div class="fb ${fi.t>=2?'hot':''}"><div class="row sb"><span class="frow">${face(f.a)}${face(f.b)}<span class="fbn">${alSpan(f.a)} <span class="muted">vs</span> ${alSpan(f.b)}</span></span><span class="fh t${fi.t+1}">🔥 ${Math.round(f.h)}</span></div><div class="bar heat"><i style="width:${f.h}%"></i></div>
-  <div class="fbm"><span class="tiny"><b>${fi.t>=0?FTIER[fi.t][1]:'👀 Seeds planted'}</b> · ${esc(feudTag(fi))}${same?` · <span class="bad">${f.a.al==='f'?'Face vs face':'Heel vs heel'}</span>`:''}${!on&&recentMeets(f.a.id,f.b.id).length?' · <span class="bad">😴 Wrestled recently — a promo builds it without the rematch penalty</span>':''}${inj.length?` · 🚑 ${inj.map(w=>esc(w.name)).join(', ')} out`:''}</span><span class="row" style="gap:6px;flex:none">${on?'<span class="good tiny"><b>✓ On the card</b></span>':inj.length?'':`<button class="mini" onclick="feudBook('match','${f.a.id}','${f.b.id}')">+ Match</button><button class="mini" onclick="feudBook('promo','${f.a.id}','${f.b.id}')">+ Promo</button>`}</span></div></div>`}).join('');
+  <div class="fbm"><div class="tags" style="margin:0">${fi.t>=0?`<span class="fdt t${fi.t+1}">${FTIER[fi.t][1].replace(/^[🔥 ]+/,'')}</span>`:'<span class="tg">👀 Seeds planted</span>'}${(()=>{const t=feudTag(fi).replace(' · ',' in ').replace(' away','');return t&&fi.t>=0?`<span class="tg ${/⚠️|🥱/.test(t)?'warnt':/💥/.test(t)?'good':''}">${esc(t.replace(/^Pay off at /,'').replace('💥 Pay off at ','💥 ').replace('Goes stale after','Stale after').replace(/ — before .*/,''))}</span>`:''})()}${same?`<span class="tg bad">${f.a.al==='f'?'😇 vs 😇':'😈 vs 😈'}</span>`:''}${!on&&recentMeets(f.a.id,f.b.id).length?'<span class="tg bad">😴 Rematch — use a promo</span>':''}${inj.length?`<span class="tg bad">🚑 ${inj.map(w=>esc(w.name.split(' ').slice(-1)[0])).join(', ')} out</span>`:''}</div><span class="row" style="gap:6px;flex:none">${on?'<span class="good tiny"><b>✓ On the card</b></span>':inj.length?'':`<button class="mini" onclick="feudBook('match','${f.a.id}','${f.b.id}')">+ Match</button><button class="mini" onclick="feudBook('promo','${f.a.id}','${f.b.id}')">+ Promo</button>`}</span></div></div>`}).join('');
  return `<div class="card"><div class="row sb"><div class="h small" style="margin:0">Your feuds</div><span class="muted tiny">${fs.length?'Tap + to put one on tonight’s card':''}</span></div>${rows||'<div class="muted mt">No feuds yet. Put a face and a heel in the ring or on the mic together to start one.</div>'}</div>`}
 function feudBook(kind,a,b){if(mpLocked())return;const c=S.card.p;const i=c.findIndex(sl=>sl.k===kind&&!sl.d);
  if(i<0)return toast(`Every ${kind} slot is full — clear one first.`);
@@ -1891,7 +1922,7 @@ function lockerRoom(){const used=usedIn('p');const pro=new Set();S.card.p.forEac
  <div class="lrg">${l.map(w=>{const v=sta(w);const u=used.has(w.id);return `<button class="lr ${u?'on':''} ${w.inj?'out':''}" onclick="showW('${w.id}')">${face(w)}<span class="lrn"><b class="${w.al==='f'?'face':'heel'}">${esc(w.name)}</b><u class="${staCls(v)}"><i style="width:${w.inj?0:v}%"></i></u></span><span class="lrs">${w.inj?(w.susp?'⛔':'🚑'):u?'✓':pro.has(w.id)?'🎤':v<100-FAT_RISK?'🔋':''}</span></button>`}).join('')}</div></details>`}
 function avForMatch(i){const used=usedIn('p',i);return ownList('p').filter(w=>!w.inj&&!used.has(w.id)).sort((a,b)=>ovr(b)-ovr(a))}
 function openMatch(i){if(mpLocked())return;const sl=S.card.p[i];ED={i,m:sl.d?JSON.parse(JSON.stringify(sl.d)):{type:'singles',stip:'std',sides:[[''],['']],winner:0,title:''}};renderMatchEd(false)}
-function mInfo(w,si){const opp=ED.m.sides.filter((s,i)=>i!==si).flat().filter(Boolean).map(i=>S.w[i]);if(!opp.length)return `${STYLE_N[w.st]}${w.rookie?' · 🌱':''}`;const c=opp.reduce((a,o)=>a+chemOpp(w,o),0)/opp.length;const rm=Math.max(...opp.map(o=>recentMeets(w.id,o.id).length));const px=opp.some(o=>pendingPromises().some(pr=>[[pr.a,pr.b],[pr.b,pr.a]].some(([me,foe])=>o.id===me&&w.id!==foe&&inTeam(w.id,foe))));return `${px?'🔗 Proxy · ':''}${rm?'😴 Rematch · ':''}${chemWord(c)} chem ${c>0?'+':''}${Math.round(c)}`}
+function mInfo(w,si){const opp=ED.m.sides.filter((s,i)=>i!==si).flat().filter(Boolean).map(i=>S.w[i]);if(!opp.length)return `${STYLE_N[w.st]}${w.rookie?' · 🌱':''}`;const c=opp.reduce((a,o)=>a+chemOpp(w,o),0)/opp.length;const rm=Math.max(...opp.map(o=>recentMeets(w.id,o.id).length));const px=opp.some(o=>pendingPromises().some(pr=>[[pr.a,pr.b],[pr.b,pr.a]].some(([me,foe])=>o.id===me&&w.id!==foe&&inTeam(w.id,foe))));return `<em class="chm ${c>=6?'cg':c>=0?'cn':'cb'}">Chem ${c>0?'+':''}${Math.round(c)}</em>${rm?'<em class="chm cb" title="Rematch">😴</em>':''}${px?'<em class="chm cg" title="Proxy war">🔗</em>':''}`}
 function edFeud(w,si){const opp=ED.m.sides.filter((s,i)=>i!==si).flat().filter(Boolean).map(i=>S.w[i]);return opp.length?feudVs(w,opp):hotFeud(w)}
 /* the at-a-glance strip in the match editor: alignment matchup, feud status, stamina cost */
 function matchupHtml(m,ppv){const ws=m.sides.map(s=>s.filter(Boolean).map(id=>S.w[id]));const all=ws.flat();if(!all.length)return '';let h='';
