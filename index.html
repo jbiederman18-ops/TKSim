@@ -927,6 +927,7 @@ interview:{n:'Sit-Down Interview',b:'opt',d:'A quieter segment that rewards mic 
 contract:{n:'Contract Signing',b:'req',d:'Make the match official. These rarely end peacefully — great before a PPV.'},
 rally:{n:'Faction Rally',b:'opt',d:'Show strength with an ally. Builds popularity and team chemistry.'},
 champ:{n:"Champion's Address",b:'opt',champ:true,d:'A champion speaks. Bring out a challenger to build a title feud.'},
+turn:{n:'Heel / Face Turn',b:'opt',turn:true,d:'A guaranteed turn when it airs. Add a second wrestler to turn on them (or save them) for big heat. Your choices decide how well it lands.'},
 vignette:{n:'Backstage Vignette',b:'opt',d:'Low risk, character-building.'}};
 /* Promo scenes. Each scene deals 3 choices from a bigger pool so segments don't repeat.
    al:'f'|'h' = only offered when {A} is a face/heel · vs:'f'|'h' = only when {B} is a face/heel · key:1 = always offered
@@ -1069,6 +1070,23 @@ duo:{texts:['{A} holds the {T} title high — and {B} walks out to stare at it.'
 {al:'f',vs:'h',t:'Tell {B} they\'ll never win this title by cheating',s:'mic',d:.1,h:12,p:2,ok:'The fans are fully behind the champion.',no:'{B} points out a few past "accidents" on {A}\'s record.'},
 {al:'h',t:'Make {B} kneel before the title',s:'mic',d:.15,h:16,p:2,ok:'{B} refuses — and the confrontation boils over.',no:'{B} just laughs. The demand looks silly.'},
 {al:'h',t:'Hide behind the referee and taunt {B}',s:'luck',d:.05,h:12,p:1,ok:'Cowardly champion 101. The crowd is furious.',no:'The ref steps aside and {A} has to run.'}]}},
+turn:{
+solo:{texts:[{al:'f',t:'{A} walks out to a big pop, but something is off. No smile. No high-fives.'},
+ {al:'h',t:'{A} comes out alone, without the usual sneer. The boos slowly fade into curious murmurs.'}],ch:[
+{al:'f',t:'Blame the fans for every loss',s:'mic',d:.1,p:3,ok:'Real, venomous and believable. The cheers curdle into boos.',no:'It feels forced — nobody quite buys it yet.'},
+{al:'f',t:'Slowly take off the old gear and throw it into the crowd',s:'pop',d:.05,p:3,ok:'A chilling image. The new {A} has arrived.',no:'A fan throws it right back.'},
+{al:'f',t:'Announce they\'re done playing nice — and mean it',s:'mic',d:.05,p:2,ok:'Short, cold and effective.',no:'The mic cuts out halfway through.'},
+{al:'h',t:'Apologize to the fans — with feeling',s:'mic',d:.15,p:4,ok:'The building believes every word. A new hero is born.',no:'The fans are skeptical. It\'ll take time.'},
+{al:'h',t:'Tear up their old catchphrase shirt',s:'pop',d:.05,p:3,ok:'A clean break with the past. Huge reaction.',no:'The shirt won\'t rip. Awkward.'},
+{al:'h',t:'Invite a fan into the ring for a hug',s:'luck',d:0,p:2,ok:'Pure feel-good television.',no:'The fan flinches. Old habits.'}]},
+duo:{texts:[{al:'f',t:'{A} comes out to stand beside {B}. The crowd cheers the pair — they have no idea what\'s coming.'},
+ {al:'h',t:'{B} is in trouble in the ring, and {A} is watching from the ramp…'}],ch:[
+{al:'f',t:'Low blow {B} out of nowhere',s:'ring',d:0,h:14,p:2,ok:'Shock and outrage. {A} stands tall over {B}.',no:'{B} sees it coming — but the turn is done.'},
+{al:'f',t:'Hit {B} with a chair and walk off smiling',s:'ring',d:.1,h:18,p:3,ok:'Brutal. Fans are furious — and glued to their screens.',no:'The chair shot is soft, but the message is clear.'},
+{al:'f',t:'Explain, calmly, why {B} was always holding them back',s:'mic',d:.15,h:12,p:3,ok:'Cold and calculated. The betrayal cuts deep.',no:'It rambles — but the damage is done.'},
+{al:'h',t:'Run in and make the save for {B}',s:'ring',d:0,h:4,p:3,c:2,ok:'The building explodes. {A} and {B} stand tall together.',no:'{A} is a step late, but the intent is clear.'},
+{al:'h',t:'Refuse to attack {B} when told to',s:'mic',d:.1,h:6,p:4,ok:'A powerful moment of defiance. The fans chant {A}\'s name.',no:'Muddled — but the crowd gets it.'},
+{al:'h',t:'Shake {B}\'s hand in front of everyone',s:'pop',d:.05,h:2,p:3,c:3,ok:'Respect earned. The fans are all in.',no:'{B} leaves {A} hanging — for now.'}]}},
 vignette:{
 solo:{texts:['The cameras catch {A} backstage.',
  {al:'f',t:'The cameras follow {A} through a day off.'},
@@ -1730,10 +1748,26 @@ function dealChoices(pool,ctx,n){const el=pool.filter(c=>okFor(c,ctx));const out
  const al=rest().filter(c=>c.al||c.vs);if(out.length<n&&al.length)out.push(wpick(al,w));
  while(out.length<n&&rest().length){const used=new Set(out.map(c=>c.s));out.push(wpick(rest(),c=>w(c)*(used.has(c.s)?.45:1)))}
  return shuffle(out)}
+/* the second beat of a turn segment — replaces the random twist so a turn can't be undone mid-scene */
+const TURN_TWIST={solo:{texts:[{al:'f',t:'The fans are chanting {A}\'s old name, begging them to come back.'},{al:'h',t:'Some fans still aren\'t sure. {A} has one more chance to win them over.'}],ch:[
+{al:'f',t:'Flip off the whole building',s:'luck',d:0,p:2,ok:'Pure heat. There\'s no going back.',no:'Half the crowd laughs. Still counts.'},
+{al:'f',t:'Warn the locker room that nobody is safe',s:'mic',d:.1,p:3,x:1,hx:8,ok:'{X} glares from the back — they heard it loud and clear.',no:'Big words, little follow-through.'},
+{al:'f',t:'Leave without another word',s:'pop',d:0,p:1,ok:'Chilling in its simplicity.',no:'It just looks like they got lost.'},
+{al:'h',t:'Promise to earn their trust one match at a time',s:'mic',d:.05,p:3,ok:'Humble and sincere. The fans are in.',no:'Nice words, lukewarm reaction.'},
+{al:'h',t:'Call out their old ally {X}',s:'mic',d:.1,p:2,x:1,hx:10,ok:'{X} storms out — a new rivalry is born.',no:'{X} doesn\'t bite. Yet.'},
+{al:'h',t:'Celebrate with the front row',s:'pop',d:0,p:2,ok:'High-fives all around.',no:'Security stops them at the barricade.'}]},
+duo:{texts:[{al:'f',t:'{B} is still down as {A} heads up the ramp. Security rushes in.'},{al:'h',t:'{B} looks at {A}, unsure whether to trust them.'}],ch:[
+{al:'f',t:'Come back for one more shot at {B}',s:'ring',d:.1,h:10,p:1,ok:'Officials drag {A} away. The fans want blood.',no:'Security gets there first.'},
+{al:'f',t:'Cut a smug promo standing over {B}',s:'mic',d:.1,h:8,p:2,ok:'Every word is a knife.',no:'{B} rolls away before {A} finishes.'},
+{al:'f',t:'Walk out with {B}\'s championship — or their jacket',s:'luck',d:0,h:9,p:1,ok:'The ultimate insult.',no:'They drop it on the ramp. Still hurtful.'},
+{al:'h',t:'Offer {B} a hand up',s:'pop',d:.05,c:3,p:2,ok:'{B} takes it. A new alliance is born.',no:'{B} hesitates. Trust takes time.'},
+{al:'h',t:'Stand guard as {B} recovers',s:'ring',d:0,c:2,p:2,ok:'A protector. The crowd loves it.',no:'Nobody comes back out — anticlimactic.'},
+{al:'h',t:'Tell the crowd why they changed',s:'mic',d:.1,p:4,ok:'Heartfelt and honest. The turn is complete.',no:'A bit much — but it lands with most of them.'}]}};
 function openScene(p,ctx,ai){const sc=SCENES[p.type];const base=p.b?sc.duo:(sc.solo||sc.duo);ctx=ctx||promoCtx(p,'p');
  const texts=(base.texts||[base.text]).map(t=>typeof t==='string'?{t}:t).filter(o=>okFor(o,ctx));
  const tx=wpick(texts,o=>(seenP(o.t)?.2:1)*(o.al||o.vs?2.5:1)).t;const ch=dealChoices(base.ch,ctx,3);if(!ai)noteP([tx,...ch.map(c=>c.t)]);return {text:tx,ch}}
-function pickTwist(p,ctx,ai){const el=TWISTS.filter(t=>(t.when!=='duo'||ctx.B)&&(t.when!=='solo'||!ctx.B)&&okFor(t,ctx));
+function pickTwist(p,ctx,ai){if(p.type==='turn'){const base=p.b?TURN_TWIST.duo:TURN_TWIST.solo;const tx=base.texts.filter(o=>okFor(o,ctx));const ch=dealChoices(base.ch,ctx,3);if(!ai)noteP(ch.map(c=>c.t));return {text:(tx[0]||base.texts[0]).t,ch}}
+ const el=TWISTS.filter(t=>(t.when!=='duo'||ctx.B)&&(t.when!=='solo'||!ctx.B)&&okFor(t,ctx));
  const t=wpick(el,x=>(x.w||1)*(seenP(x.text)?.15:1)*(x.al||x.vs?1.5:1));const ch=dealChoices(t.ch.map(c=>c.al||!t.al||c.turn||c.t.startsWith('Nobody')||c.t.startsWith('Shake it')?c:Object.assign({},c,{al:t.al})),ctx,3);if(!ai)noteP([t.text,...ch.map(c=>c.t)]);return Object.assign({},t,{ch})}
 function newSt(){return {score:0,heat:0,hx:0,pop:0,chem:0,turn:false,log:[]}}
 function chance(c,ctx){const A=ctx.A;const v=c.s==='luck'?60:c.s==='mic'?A.mic+(hasT(A,'mouth')?10:0):c.s==='ring'?A.ring:A.pop;return clamp(.2+v/100*.75-(c.d||0)+(c.al&&c.al===A.al?.06:0),.1,.95)}
@@ -1742,10 +1776,14 @@ function roll(c,ctx,st){const ok=Math.random()<chance(c,ctx);const d=c.d||0;
  if(ok){if(c.ch)st.chal=true;if(c.stp)st.stip=true;st.score+=1+d*4;st.heat+=c.h||0;st.hx+=c.hx||0;st.pop+=c.p||0;st.chem+=c.c||0;if(c.turn)st.turn=true}
  else{st.score-=1;st.heat+=(c.h||0)*.3;st.hx+=(c.hx||0)*.3;st.pop-=1}
  const text=fill(ok?(c.ok||pick(DEF_OK)):(c.no||pick(DEF_NO)),ctx);st.log.push(fill(c.t,ctx)+' — '+text);return {success:ok,text}}
-function finalizePromo(p,ctx,st){const A=ctx.A,B=ctx.B;const mm=w=>w.mic+(hasT(w,'mouth')?8:0);const mic=B?mm(A)*.6+mm(B)*.4:mm(A);const pop=B?(A.pop+B.pop)/2:A.pop;
+function finalizePromo(p,ctx,st){const A=ctx.A,B=ctx.B;if(p.type==='turn')st.turn=true;const mm=w=>w.mic+(hasT(w,'mouth')?8:0);const mic=B?mm(A)*.6+mm(B)*.4:mm(A);const pop=B?(A.pop+B.pop)/2:A.pop;
  const s=(mic*.45+pop*.3)/20+st.score*.35+Math.min(.75,st.heat/40);
  p.res={stars:clamp(Math.round(s*4)/4,.5,5),heat:Math.round(st.heat),hx:Math.round(st.hx),x:ctx.X&&st.hx>0?ctx.X.id:null,pop:Math.round(st.pop*10)/10,chem:st.chem,turn:st.turn,log:st.log,chal:!!st.chal,stip:!!st.stip};p.played=true;
+ if(st.turn&&turnWhip(A)){p.res.whip=turnWhip(A);p.res.stars=clamp(p.res.stars-.75,.5,5);p.res.pop=Math.round((p.res.pop-4)*10)/10}
  const f=promoFatigue(p);if(f.pen){p.res.stars=clamp(p.res.stars-f.pen,.5,5);p.res.fat=f;p.res.heat=Math.round(p.res.heat*f.mul)}else if(f.bf){p.res.bf=f.bf;p.res.heat=Math.round(p.res.heat*1.25)}}
+/* turning again within 8 weeks gives fans whiplash */
+const TURN_CD=8;
+function turnWhip(w){if(!w||w.turnW==null)return 0;const d=AW()-w.turnW;return d<TURN_CD?Math.max(1,d):0}
 function promoRecent(a,b){const l=(S.ph&&S.ph[key(a,b)])||[];const now=AW();return l.filter(w=>w<now&&now-w<=3)}
 function promoFatigue(p){if(!p.b)return {pen:0};const k=key(p.a,p.b);const r=promoRecent(p.a,p.b);let same=0;
  ['p','ai'].forEach(br=>((S.card&&S.card[br])||[]).forEach(sl=>{if(sl.k==='promo'&&sl.d&&sl.d!==p&&sl.d.played&&sl.d.b&&key(sl.d.a,sl.d.b)===k)same++}));
@@ -1766,7 +1804,7 @@ function applyPromo(p,notes){const r=p.res;const A=S.w[p.a];if(!A||!r)return;
  [p.a,p.b].filter(Boolean).forEach((id,i)=>{const w=S.w[id];if(!w)return;{const g=r.pop*(i?.6:1)*.7;w.pop=clamp(w.pop+(g>0?g*(1-w.pop/110):g),1,100)}if(w.mic<w.potM)w.mic=Math.min(w.potM,w.mic+(w.potM-w.mic)*.05+.15);w.mor=clamp(w.mor+2,0,100);w.last=S.week});
  if(p.b&&S.w[p.b]){const k=key(p.a,p.b);if(r.heat>0){bumpHeat(p.a,p.b,r.heat*(hasT(A,'heatm')||hasT(S.w[p.b],'heatm')?1.3:1)*(isStale(p.a,p.b)?.4:1),notes,'after a heated '+PT[p.type].n.toLowerCase())}if(r.chem)S.chem[k]=clamp((S.chem[k]||0)+r.chem*.5,-5,6)}
  if(r.x&&r.hx>0&&S.w[r.x]){const k=key(p.a,r.x);if(!bumpHeat(p.a,r.x,r.hx*(hasT(A,'heatm')?1.3:1),notes,'after an interruption')||heatTier(S.heat[k])<0)notes.push(`👀 Seeds planted: ${A.name} and ${S.w[r.x].name} have words`)}
- if(r.turn){A.al=A.al==='f'?'h':'f';const n=`🔄 ${A.name} has turned ${A.al==='f'?'FACE':'HEEL'}!`;notes.push(n);news(n)}}
+ if(r.turn){A.al=A.al==='f'?'h':'f';A.turnW=AW();const n=`🔄 ${A.name} has turned ${A.al==='f'?'FACE':'HEEL'}!`;notes.push(n);news(n);if(r.whip)notes.push(`😵 Fans have whiplash — ${A.name} only turned ${r.whip} week${r.whip>1?'s':''} ago.`)}}
 
 /* ===================== AI BOOKER ===================== */
 function autoBook(brand,show,extUsed){
@@ -2372,7 +2410,8 @@ function renderPromoEd(keep){const pt=PT[PE.type];
  const slotP=(k,label)=>{const w=PE[k]&&S.w[PE[k]];return `<div class="vscol"><div class="muted tiny center">${label}</div>${w?wcard(w,{on:`prPick('${k}')`,info:`<em class="chm ${w.mic>=85?'cg':w.mic>=70?'cn':'cb'}">🎤 Mic ${Math.round(w.mic)}</em>`,feud:(()=>{const ot=PE[k==='a'?'b':'a'];return ot&&S.w[ot]?feudVs(w,[S.w[ot]]):hotFeud(w)})()}):emptySlot(`prPick('${k}')`,k==='a'?'Add':'Add (optional)')}</div>`};
  openModal(`<div class="h mhd">Book a promo</div>
  <label>Segment</label>${dd('ptype',{title:esc(pt.n),sub:esc(pt.d),rerender:()=>renderPromoEd(true),opts:Object.entries(PT).map(([k,t])=>({t:esc(t.n),sub:esc(t.d),on:k===PE.type,pick:()=>{PE.type=k;renderPromoEd(true)}}))})}
- <div class="vsrow">${slotP('a',pt.champ?'Champion':'Lead talent')}<div class="vs">${pt.b==='req'?'VS':'&'}</div>${slotP('b',pt.b==='req'?'Opponent':'Second wrestler')}</div>
+ <div class="vsrow">${slotP('a',pt.champ?'Champion':pt.turn?'Who turns':'Lead talent')}<div class="vs">${pt.b==='req'?'VS':'&'}</div>${slotP('b',pt.b==='req'?'Opponent':pt.turn?(PE.a&&S.w[PE.a]&&S.w[PE.a].al==='f'?'Turns on (optional)':'Saves (optional)'):'Second wrestler')}</div>
+ ${pt.turn&&PE.a&&S.w[PE.a]?(()=>{const A=S.w[PE.a];const to=A.al==='f'?'HEEL':'FACE';const wh=turnWhip(A);return `<div class="card mt center"><b>🔄 ${esc(A.name)} will turn <span class="${A.al==='f'?'heel':'face'}">${to}</span> when this airs.</b>${wh?`<div class="err">😵 They turned ${wh} week${wh>1?'s':''} ago — fans will have whiplash (−¾★, popularity hit). Wait ${TURN_CD-wh} more week${TURN_CD-wh>1?'s':''} for a clean turn.</div>`:''}</div>`})():''}
  ${PE.a&&PE.b?`<div class="muted mt center">Current feud heat: 🔥 ${Math.round(heatOf(PE.a,PE.b))}</div>${(()=>{const f=promoFatigue({a:PE.a,b:PE.b});return f.pen?`<div class="err center">😴 These two had a promo ${esc(f.why)} — expect −${fracTxt(f.pen)}★ and less heat.</div>`:''})()}`:''}${PE.type==='contract'?(()=>{const np=nextPPVAfter(S.week);return `<div class="muted mt center">📜 ${np?`Books this match for <b>${esc(np.n)}</b>. Skipping it there breaks the promise.`:'No PPV left this season — this signing is just for heat.'}</div>`})():''}
  ${pt.champ&&!hasChamp?'<div class="err">You have no champions right now.</div>':''}
  <p class="muted">This segment plays out live during the show as a short scene — your choices and the wrestler's stats decide how it lands.</p>
@@ -2429,7 +2468,7 @@ function showW(id){const w=S.w[id];if(!w)return;const own=w.own==='p';const ts=t
  const teams=S.teams.filter(t=>t.m.includes(id)).map(t=>t.n);const tr=S.training.find(t=>t.id===id);
  let acts='';
  if(S.phase==='draft'){if(!w.own&&!w.cw&&!w.rookie&&onClock()==='p')acts=capOk(w,'p')?`<button class="btn" onclick="pDraft('${id}')">Draft ${esc(w.name)} · ${money(mkt(w))}/wk</button>`:`<div class="err center">🚫 ${money(mkt(w))}/wk doesn't fit — you have ${money(capRoom('p'))} of cap room for ${picksLeft('p')} picks.</div>`}
- else if(own){acts=`<div class="row mt"><button class="btn sec" onclick="train('${id}','ring')">${tr&&tr.f==='ring'?'✓ ':''}Train ring</button><button class="btn sec" onclick="train('${id}','mic')">${tr&&tr.f==='mic'?'✓ ':''}Train mic</button></div>${w.con<=8?`<button class="btn" onclick="resign('${id}')">Re-sign 26 weeks · ${money(resignCost(w))}${askSal(w)!==sal(w)?` · salary ${money(sal(w))} → ${money(askSal(w))}/wk`:''}</button>`:''}<button class="btn ghost danger" onclick="release('${id}')">Release</button>`}
+ else if(own){acts=`<div class="row mt"><button class="btn sec" onclick="train('${id}','ring')">${tr&&tr.f==='ring'?'✓ ':''}Train ring</button><button class="btn sec" onclick="train('${id}','mic')">${tr&&tr.f==='mic'?'✓ ':''}Train mic</button></div>${w.con<=8?`<button class="btn" onclick="resign('${id}')">Re-sign 26 weeks · ${money(resignCost(w))}${askSal(w)!==sal(w)?` · salary ${money(sal(w))} → ${money(askSal(w))}/wk`:''}</button>`:''}<button class="btn sec" onclick="offTurn('${id}')">🔄 Turn ${w.al==='f'?'heel':'face'} off-screen</button><div class="muted center tiny">Instant, but fans shrug (−4 popularity). For a turn that pays off, book a <b>Heel / Face Turn</b> promo.</div><button class="btn ghost danger" onclick="release('${id}')">Release</button>`}
  else if(!w.own&&S.phase==='season'&&!onMarket(w))acts=`<div class="card" style="margin-top:12px"><b>Not on the market</b><div class="muted">${esc(w.name)} is unsigned but not taking offers right now. Free agents rotate every week — check back.</div></div>`;
  else if(!w.own&&S.phase==='season')acts=`${!w.cw&&faLeft(w)?`<div class="gold center" style="margin-top:10px">⏳ On the market ${faLeft(w)<=1?'— <b>last week</b> to sign':'for '+faLeft(w)+' more weeks'}</div>`:''}<button class="btn" onclick="sign('${id}')">Sign · ${money(signCost(w))}</button>${w.fee?`<div class="muted center tiny">Includes a ${money(w.fee)} development fee for this rookie.</div>`:''}${w.inj?'<div class="muted center">Currently injured.</div>':''}`;
  if(w.cw&&!w.own)acts+=`<div class="row mt"><button class="btn sec" onclick="openCreate('${id}')">✏️ Edit</button><button class="btn sec danger" onclick="delCreated('${id}')">Delete</button></div>`;
@@ -2453,6 +2492,7 @@ function matchGuide(w){const fit=styleFit(w.st);
  const part=mine.map(o=>[o,teamParts(w,o)]).map(([o,p])=>[o,p,p.reduce((a,x)=>a+x.v,0)]).sort((a,b)=>b[2]-a[2]).slice(0,3);
  h+=`<div class="h small mt">Best tag partners</div>${part.map(([o,p])=>row(o,p)).join('')}`;
  return h}
+function offTurn(id){if(mpLocked())return;const w=S.w[id];if(!w||w.own!=='p')return;w.al=w.al==='f'?'h':'f';w.pop=clamp(w.pop-4-(turnWhip(w)?3:0),1,100);w.turnW=AW();news(`🔄 ${w.name} has turned ${w.al==='f'?'FACE':'HEEL'}.`);save();showW(id);render();toast(`${w.name} is now a ${w.al==='f'?'face':'heel'}.`)}
 function train(id,f){if(mpLocked())return;const t=S.training.find(x=>x.id===id);if(t){if(t.f===f)S.training=S.training.filter(x=>x.id!==id);else t.f=f}else{if(S.training.length>=2){toast('The Performance Center has 2 slots. Remove someone in the Office first.');return}S.training.push({id,f})}save();showW(id);render()}
 function untrain(id){if(mpLocked())return;S.training=S.training.filter(x=>x.id!==id);save();render()}
 function sign(id){if(mpLocked())return;const w=S.w[id];if(!onMarket(w))return toast(`${w.name} isn't on the market right now.`);const c=signCost(w);if(S.money.p<c)return toast('Not enough money.');if(ownList('p').length>=30)return toast('Your roster is full (30).');S.money.p-=c;w.sal=mkt(w);w.own='p';w.con=26;w.mor=80;w.fee=0;news(`✍️ ${S.gm} signed free agent ${w.name}.`);save();closeModal();render();toast(`${w.name} signed!`)}
@@ -2464,6 +2504,7 @@ function titlesView(){return `<p class="muted">Titles stay with whichever brand 
 const HOWTO=`<p><b>Match ratings</b> blend in-ring skill (the best worker in the match helps carry the rest), popularity, chemistry (styles that mesh — high-flyers vs powerhouses, technicians vs technicians — plus face vs heel and history together), feud heat, stipulation fit, title prestige and stamina.</p>
 <p><b>Shows</b>: ${cardMatches(false)} matches and 2 promos on weekly TV, plus an optional bonus promo; PPVs are ${cardMatches(true)} matches plus an optional title challenge. The last match is your main event and counts the most.</p>
 <p><b>Stamina</b> (the green-to-red STA bar on each card): a match costs about 16 in singles, less in tag and multi-person matches, more with a rough stipulation or on PPV. Wrestlers who worked a match get 10 back each week; anyone who gets the week off — or only cuts a promo — gets 25 back. Below ${100-FAT_OK} stamina matches start to suffer, and below ${100-FAT_RISK} the injury risk climbs. Rotate your roster and rest your stars before PPVs. Sitting out one week is fine, but two weeks in a row off TV costs morale.</p>
+<p><b>Turning heel or face:</b> book a <b>Heel / Face Turn</b> promo — the turn is guaranteed when it airs. Add a second wrestler and a face can turn on them (big heat) or a heel can make the save (chemistry). Or use <b>Turn off-screen</b> on a wrestler's profile for an instant switch that costs a little popularity. Turning the same wrestler again within 8 weeks gives fans whiplash.</p>
 <p><b>Intergender booking</b> is fully open: anyone can wrestle anyone, form teams, cut promos together, and challenge for any championship — a woman can win the World title and a man can win the Women's title. Title names keep their original division, but the belts go to whoever wins.</p>
 <p><b>Durability</b> (on each wrestler's profile) reflects how well their real-life body holds up, based on their actual injury history. Iron-bodied workers like Darby Allin lose up to ~18% less stamina per match and get hurt far less often; fragile ones like Wardlow drain faster, get injured up to 3.5× as often and stay out longer. Sort your roster by Durability to see who can carry a heavy schedule.</p>
 <p><b>Traits</b> (the round badges on each card) add chemistry and bonuses on top of style — e.g. a Monster vs an Underdog is +4, a Storyteller adds +1 with anyone. Open any wrestler to see their best opponents and tag partners on your roster with the reasons, or tap <b>Why?</b> under a match's projected rating.</p>
