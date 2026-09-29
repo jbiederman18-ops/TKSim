@@ -520,7 +520,7 @@ ol.steps{padding-left:20px;margin:6px 0 10px}ol.steps li{margin:3px 0}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v61';
+const APP_VERSION='v62';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -1128,7 +1128,7 @@ duo:{texts:['The cameras catch {A} bumping into {B} backstage.',
 {al:'h',t:'Steal {B}\'s entrance jacket',s:'luck',d:0,h:10,p:2,ok:'{A} wears it to the ring later. Petty and perfect.',no:'It doesn\'t fit.'}]}}};
 const TWISTS=[
 {when:'any',text:'The crowd erupts into a chant for {A}.',ch:[{t:'Feed off the crowd',s:'pop',d:.05,p:3},{t:'Tell them to shut up',s:'mic',d:.15,p:2,h:3},{t:'Stay focused',s:'luck',d:0,p:1}]},
-{when:'any',x:1,text:'Music hits — {X} is heading to the ring!',ch:[{t:'Get in {X}\'s face',s:'mic',d:.1,hx:12,p:2},{t:'Brawl with {X}',s:'ring',d:.1,hx:16,p:1},{t:'Leave them to it',s:'luck',d:0,hx:4,p:0},{al:'f',t:'Welcome {X} — then warn them to stay out of it',s:'pop',d:.05,hx:8,p:3},{al:'h',t:'Use {X} as a human shield',s:'luck',d:.1,hx:14,p:1,ok:'{X} takes the hit meant for {A}. Now {X} is angry too.'}]},
+{when:'any',x:1,text:'Music hits — {X} is heading to the ring!',ch:[{t:'Get in {X}\'s face',s:'mic',d:.1,hx:12,p:2},{t:'Brawl with {X}',s:'ring',d:.1,hx:16,p:1},{t:'Leave them to it',s:'luck',d:0,hx:4,p:0},{al:'f',t:'Stare {X} down and tell them to wait their turn',s:'pop',d:.05,hx:8,p:3},{al:'h',t:'Use {X} as a human shield',s:'luck',d:.1,hx:14,p:1,ok:'{X} takes the hit meant for {A}. Now {X} is angry too.'}]},
 {when:'any',text:'The mic cuts out mid-sentence.',ch:[{t:'Drop the mic and yell to the crowd',s:'pop',d:.1,p:3},{t:'Grab a new mic and keep going',s:'mic',d:.05,p:2},{al:'h',t:'Scream at the sound tech',s:'mic',d:.05,p:2,ok:'The poor tech hides under the desk. The fans boo.'}]},
 {when:'duo',text:'Security floods the ring to separate {A} and {B}.',ch:[{t:'Fight through security',s:'ring',d:.15,h:12,p:1},{t:'Back off and point at the PPV sign',s:'mic',d:.05,h:6,p:2},{al:'h',t:'Hide behind security and taunt {B}',s:'luck',d:0,h:10,p:1}]},
 {when:'any',w:2,al:'f',text:'Something snaps. For a moment, {A} looks at the booing section and smiles…',ch:[{t:'Turn heel! Turn on the crowd and walk out',s:'mic',d:.2,p:4,h:6,turn:true,ok:'The crowd can\'t believe it. {A} has a whole new edge.'},{t:'Shake it off and stay the hero',s:'luck',d:0,p:1}]},
@@ -1141,7 +1141,7 @@ const TWISTS=[
 {when:'duo',al:'f',vs:'h',text:'{B} reaches into their jacket for something…',ch:[{t:'Snatch it before they can use it',s:'ring',d:.1,h:12,p:3},{t:'Call it out so every fan can see',s:'mic',d:.05,h:8,p:2}]},
 {when:'duo',al:'h',vs:'h',text:'{A} and {B} both try to leave last — neither will be upstaged.',ch:[{t:'Shove {B} aside and take the spotlight',s:'ring',d:.05,h:10,p:2},{t:'Let {B} go, then trash-talk them behind their back',s:'mic',d:.1,h:8,p:2}]},
 {when:'duo',al:'f',vs:'f',text:'The crowd splits down the middle — half for {A}, half for {B}.',ch:[{t:'Play to your half of the crowd',s:'pop',d:.05,h:8,p:3},{t:'Dare {B} to prove who the fans really love',s:'mic',d:.1,h:10,p:2}]},
-{when:'any',text:'The lights go out. When they come back on, a mysterious figure stands on the stage.',ch:[{t:'Challenge the figure',s:'mic',d:.1,p:3},{t:'Pretend it didn\'t happen',s:'luck',d:0,p:1},{t:'Sprint up the ramp after them',s:'ring',d:.1,p:2}]},
+{when:'any',myst:1,w:.3,text:'The lights go out. When they come back on, a mysterious figure stands on the stage.',ch:[{t:'Challenge the figure',s:'mic',d:.1,p:3},{t:'Pretend it didn\'t happen',s:'luck',d:0,p:1},{t:'Sprint up the ramp after them',s:'ring',d:.1,p:2}]},
 {when:'any',text:'The commentary team starts arguing about {A} — loud enough for the fans to hear.',ch:[{t:'Grab a headset and set the record straight',s:'mic',d:.1,p:3},{t:'Ignore it and keep rolling',s:'luck',d:0,p:1}]},
 {when:'any',text:'Pyro goes off early behind {A}.',ch:[{t:'Play it off like it was planned',s:'mic',d:.1,p:3},{t:'Laugh it off with the crowd',s:'pop',d:.05,p:2}]},
 {when:'solo',text:'The crowd starts chanting for someone else entirely.',ch:[{t:'Remind them who\'s actually standing here',s:'mic',d:.1,p:2},{t:'Hit a signature move on thin air to win them back',s:'ring',d:.1,p:3},{al:'h',t:'Mock whoever they\'re chanting for',s:'mic',d:.05,p:2}]}];
@@ -1151,7 +1151,7 @@ const STAT_ICON={mic:'🎤 Mic',ring:'💪 In-ring',pop:'⭐ Popularity',luck:'�
 const MEV=[
 {id:'ref',w:3,text:'The referee takes a stray elbow and crumples to the mat! {B} has {A} pinned — but nobody is there to count.',ch:[
  {t:'A second referee sprints down to count',s:'luck',st:.25,ok:'The crowd counts along — 1… 2… a thrilling near-fall!',no:'The backup ref is too slow and the moment fizzles.'},
- {t:'{X} runs in and levels {B} with a chair',need:'X',s:'luck',d:.05,st:.5,hx:'B',heat:14,ok:'Chaos! {X} vanishes into the crowd before the ref comes to.',no:'Officials cut {X} off on the ramp. Messy.'},
+ {t:'{X} runs in and levels {B} with a chair',need:'X',xh:'B',xa:1,s:'luck',d:.05,st:.5,hx:'B',heat:14,ok:'Chaos! {X} vanishes into the crowd before the ref comes to.',no:'Officials cut {X} off on the ramp. Messy.'},
  {t:'{A} goes low while the ref is down',s:'ring',d:.1,st:.5,heat:10,heelA:1,ok:'The cheapest of cheap shots — and it works.',no:'{B} blocks it and the crowd roars.'},
  {t:'{A} goes to the top rope while waiting for the ref',s:'ring',d:.15,st:.5,fat:6,ok:'The ref comes to just in time to count the pin. Huge.',no:'Nobody is there to count it. What a waste.'},
  {al:'f',t:'{A} revives the referee and keeps it clean',s:'pop',d:.05,st:.25,popA:2,ok:'Sportsmanship! The crowd cheers {A} for doing it the right way.',no:'By the time the ref is up, the moment has passed.'},
@@ -1179,11 +1179,11 @@ const MEV=[
  {al:'f',t:'Get the crowd clapping to rally {A}',s:'pop',d:.05,st:.5,popA:1,ok:'The clapping builds and {A} fights to their feet.',no:'Only a few fans join in.'},
  {al:'h',t:'{A} mocks the crowd for being so quiet',s:'mic',d:.1,st:.25,popA:1,ok:'Now they\'re loud — and furious.',no:'They stay quiet. That\'s worse.'}]},
 {id:'runin',w:3,need:'X',text:"{X}'s music hits in the middle of the match!",ch:[
- {t:'{X} attacks {B}',s:'luck',st:.25,hx:'B',heat:15,ok:'{X} lays out {B} and the crowd erupts.',no:'{B} sees it coming and fights {X} off.'},
- {t:'Swerve! {X} costs {A} the match',always:1,st:.25,flip:1,hx:'A',heat:18,ok:'{B} steals it! {A} is livid — and {X} is smiling.'},
+ {t:'{X} attacks {B}',xh:'B',s:'luck',st:.25,hx:'B',heat:15,ok:'{X} lays out {B} and the crowd erupts.',no:'{B} sees it coming and fights {X} off.'},
+ {t:'Swerve! {X} costs {A} the match',xh:'A',always:1,st:.25,flip:1,hx:'A',heat:18,ok:'{B} steals it! {A} is livid — and {X} is smiling.'},
  {t:'Security cuts {X} off at the ramp',always:1,st:0,hx:'A',heat:6,ok:'The seed is planted for another day.'},
- {al:'f',t:'{A} wipes out {X} with a dive to the floor',s:'ring',d:.15,st:.5,hx:'A',heat:10,popA:2,fat:5,ok:'{A} takes out {X}, then finishes {B}. Huge pop!',no:'{A} crashes into the barricade.'},
- {al:'h',t:'{X} holds {B} while {A} hits the finisher',s:'luck',d:.05,st:.25,hx:'B',heat:16,ok:'Two-on-one and a cheap three count. The boos are deafening.',no:'{B} escapes and {A} flattens {X} by mistake.'}]},
+ {al:'f',xal:'h',t:'{A} wipes out {X} with a dive to the floor',s:'ring',d:.15,st:.5,hx:'A',heat:10,popA:2,fat:5,ok:'{A} takes out {X}, then finishes {B}. Huge pop!',no:'{A} crashes into the barricade.'},
+ {al:'h',xal:'h',t:'{X} holds {B} while {A} hits the finisher',s:'luck',d:.05,st:.25,hx:'B',heat:16,ok:'Two-on-one and a cheap three count. The boos are deafening.',no:'{B} escapes and {A} flattens {X} by mistake.'}]},
 {id:'finish',w:3,big:1,text:'Near-fall after near-fall. The whole building is on its feet. How does it end?',ch:[
  {t:'One more false finish',s:'ring',d:.15,st:.75,fat:6,ok:'Kickout at 2.99! Then the finish. Incredible.',no:'They go to the well once too often and the crowd deflates.'},
  {t:'{A} hits the finisher clean',always:1,st:.25,popA:2,ok:'1… 2… 3. Decisive.'},
@@ -1206,10 +1206,10 @@ const MEV=[
  {al:'h',t:'{A} slaps {A2} and demands they get it together',s:'mic',d:.1,st:.25,heatT:10,chemT:-1,ok:'Harsh, but it works — for now.',no:'{A2} glares back. This isn\'t over.'}]},
 {id:'invade',w:1,need:'Y',text:'{Y} from {RIVAL} hops the barricade and storms the ring!',ch:[
  {t:'Everyone fights {Y} off',s:'ring',d:.05,st:.25,hy:'A',heat:15,ok:'{Y} is sent packing. The brand war is on.',no:'{Y} escapes after landing a few shots.'},
- {t:'{Y} lays out {A} and poses',always:1,st:.25,hy:'A',heat:22,popA:-1,ok:'{Y} stands tall. War has been declared.'},
+ {t:'{Y} lays out {A} and poses',yh:'A',always:1,st:.25,hy:'A',heat:22,popA:-1,ok:'{Y} stands tall. War has been declared.'},
  {t:'Ignore it and finish the match',always:1,st:0,ok:'Security handles it. The match goes on.'},
  {al:'f',t:'{A} dives through the ropes onto {Y}',s:'ring',d:.1,st:.5,hy:'A',heat:14,popA:2,ok:'{A} defends the brand! Huge pop.',no:'{Y} catches {A} and throws them into the barricade.'},
- {al:'h',t:'{A} hides behind the ref and lets {Y} deal with {B}',s:'luck',d:0,st:.25,hy:'B',heat:14,ok:'{Y} takes out {B}, and {A} strolls over for the pin.',no:'{Y} goes after {A} instead.'}]},
+ {al:'h',yh:'B',t:'{A} hides behind the ref and lets {Y} deal with {B}',s:'luck',d:0,st:.25,hy:'B',heat:14,ok:'{Y} takes out {B}, and {A} strolls over for the pin.',no:'{Y} goes after {A} instead.'}]},
 {id:'belt',w:3,title:1,text:'While the ref checks on a fallen wrestler, {B} grabs the {T} title belt.',ch:[
  {t:'Belt shot! {B} steals the win',always:1,flip:1,st:.25,heat:18,ok:'{B} cracks {A} with the gold and steals it!'},
  {t:'The ref snatches the belt away',s:'luck',st:.25,heat:8,ok:'Order is restored — for now.',no:'The ref fumbles it and the moment gets confusing.'},
@@ -1255,14 +1255,18 @@ const MEV=[
 function evRoles(m,brand){const win=m.sides[m.winner];const los=m.sides.filter((s,i)=>i!==m.winner);const Bs=pick(los);
  const A=S.w[pick(win)],B=S.w[pick(Bs)];const A2=win.length>1?S.w[win.find(x=>x!==A.id)]:null;
  const used=new Set();(S.card[brand]||[]).forEach(sl=>{if(!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(i=>used.add(i));if(sl.k==='promo'){used.add(sl.d.a);if(sl.d.b)used.add(sl.d.b)}});
- const xs=Object.values(S.w).filter(w=>w.own===brand&&!w.inj&&!used.has(w.id)).map(w=>[w,heatOf(w.id,B.id)+heatOf(w.id,A.id)+w.pop/4+Math.random()*20]).sort((a,b)=>b[1]-a[1]);
- const other=brand==='p'?'ai':'p';const ys=Object.values(S.w).filter(w=>w.own===other&&!w.inj).sort((p,q)=>q.pop-p.pop).slice(0,6);
+ const anyHeel=A.al==='h'||B.al==='h';
+ const xs=Object.values(S.w).filter(w=>w.own===brand&&!w.inj&&!used.has(w.id)&&(w.al==='h'||anyHeel)).map(w=>[w,heatOf(w.id,B.id)+heatOf(w.id,A.id)+w.pop/4+Math.random()*20]).sort((a,b)=>b[1]-a[1]);
+ const other=brand==='p'?'ai':'p';const ys=Object.values(S.w).filter(w=>w.own===other&&!w.inj&&(w.al==='h'||anyHeel)).sort((p,q)=>q.pop-p.pop).slice(0,6);
  return {A,B,A2,X:xs.length?xs[0][0]:null,Y:ys.length?pick(ys):null,T:m.title?S.titles[m.title].n:'',RIVAL:brand==='p'?S.rival:S.gm,loseIdx:m.sides.indexOf(Bs)}}
 function evFill(t,r){return t.replace(/\{(A2|A|B|X|Y|T|RIVAL|V|O|P)\}/g,(_,k)=>k==='T'||k==='RIVAL'?r[k]:(r[k]?r[k].name:''))}
 function genEvent(m,brand,big){const r=evRoles(m,brand);const bigM=big||!!m.title||heatOf(r.A.id,r.B.id)>=30;
  const opts=MEV.filter(e=>(!e.need||r[e.need])&&(!e.title||m.title)&&(!e.big||bigM)&&okFor(e,r));if(!opts.length)return null;
  const e=wpick(opts,x=>x.w*(seenP('ev:'+x.id)?.4:1)*(x.al||x.vs?1.3:1));const ch=dealEv(e,m,r);if(brand==='p')noteP(['ev:'+e.id,...ch.map(c=>c.t)]);return {e:Object.assign({},e,{ch}),r}}
-function evChoices(e,m,r){const std=!!(STIPS[m.stip||'std']||STIPS.std).dq;return e.ch.filter(c=>(!c.need||r[c.need])&&(!c.dq||std)&&okFor(c,r))}
+/* faces only go after heels; heels go after anyone. xh/yh: who X/Y hits, xa: X is helping A, xal: X must be that alignment */
+const canHit=(x,t)=>!!(x&&t&&(x.al==='h'||t.al==='h'));
+function evChoices(e,m,r){const std=!!(STIPS[m.stip||'std']||STIPS.std).dq;const who=k=>k==='B'?r.B:r.A;
+ return e.ch.filter(c=>(!c.need||r[c.need])&&(!c.dq||std)&&okFor(c,r)&&(!c.xh||canHit(r.X,who(c.xh)))&&(!c.yh||canHit(r.Y,who(c.yh)))&&(!c.xa||r.X&&r.A&&r.X.al===r.A.al)&&(!c.xal||r.X&&r.X.al===c.xal))}
 /* deal 3 options: always one guaranteed-safe call when the event has one, plus a face/heel option when available */
 function dealEv(e,m,r){const el=evChoices(e,m,r);if(el.length<=3)return el;const safe=el.filter(c=>c.always&&!c.flip&&!c.nc);const keep=safe.length?pick(safe):null;
  const dealt=dealChoices(el.map(c=>c===keep?Object.assign({},c,{key:1}):c),r,3);return el.filter(c=>dealt.some(d=>d.t===c.t))}
@@ -1848,7 +1852,8 @@ function applyMatch(m,res,ctx,notes){
 
 /* ===================== PROMO ENGINE ===================== */
 function promoCtx(p,brand){const A=S.w[p.a],B=p.b?S.w[p.b]:null;const t=titlesOf(p.a)[0];const f=S.teams.find(x=>x.m.includes(p.a)&&x.m.length>1);
- const xs=Object.values(S.w).filter(w=>w.own===brand&&!w.inj&&w.id!==p.a&&w.id!==p.b&&!inTeam(w.id,p.a));
+ /* whoever interrupts is on the other side of the face/heel line from the wrestler holding the mic */
+ const xs=Object.values(S.w).filter(w=>w.own===brand&&!w.inj&&w.id!==p.a&&w.id!==p.b&&!inTeam(w.id,p.a)&&w.al!==A.al);
  return {A,B,X:xs.length?pick(xs):null,T:t?t.n:'',F:f?f.n:'their crew'}}
 function fill(s,c){return s.replace(/\{A\}/g,c.A.name).replace(/\{B\}/g,c.B?c.B.name:'').replace(/\{X\}/g,c.X?c.X.name:'').replace(/\{T\}/g,c.T).replace(/\{F\}/g,c.F)}
 /* deal fresh promo options: alignment-specific ones for faces/heels, and recently seen lines come up less often */
@@ -1879,8 +1884,17 @@ function openScene(p,ctx,ai){const sc=SCENES[p.type];const base=p.b?sc.duo:(sc.s
  const texts=(base.texts||[base.text]).map(t=>typeof t==='string'?{t}:t).filter(o=>okFor(o,ctx));
  const tx=wpick(texts,o=>(seenP(o.t)?.2:1)*(o.al||o.vs?2.5:1)).t;const ch=dealChoices(base.ch,ctx,3);if(!ai)noteP([tx,...ch.map(c=>c.t)]);return {text:tx,ch}}
 function pickTwist(p,ctx,ai){if(p.type==='turn'){const base=p.b?TURN_TWIST.duo:TURN_TWIST.solo;const tx=base.texts.filter(o=>okFor(o,ctx));const ch=dealChoices(base.ch,ctx,3);if(!ai)noteP(ch.map(c=>c.t));return {text:(tx[0]||base.texts[0]).t,ch}}
- const el=TWISTS.filter(t=>(t.when!=='duo'||ctx.B)&&(t.when!=='solo'||!ctx.B)&&okFor(t,ctx));
- const t=wpick(el,x=>(x.w||1)*(seenP(x.text)?.15:1)*(x.al||x.vs?1.5:1));const ch=dealChoices(t.ch.map(c=>c.al||!t.al||c.turn||c.t.startsWith('Nobody')||c.t.startsWith('Shake it')?c:Object.assign({},c,{al:t.al})),ctx,3);if(!ai)noteP([t.text,...ch.map(c=>c.t)]);return Object.assign({},t,{ch})}
+ const mx=mystCand(ctx.A);const el=TWISTS.filter(t=>(t.when!=='duo'||ctx.B)&&(t.when!=='solo'||!ctx.B)&&okFor(t,ctx)&&(!t.myst||mx));
+ const t=wpick(el,x=>(x.w||1)*(seenP(x.text)?.15:1)*(x.al||x.vs?1.5:1));const ch=dealChoices(t.ch.map(c=>c.al||!t.al||c.turn||c.t.startsWith('Nobody')||c.t.startsWith('Shake it')?c:Object.assign({},c,{al:t.al})),ctx,3);if(!ai)noteP([t.text,...ch.map(c=>c.t)]);ctx.MYST=t.myst?mx.id:null;return Object.assign({},t,{ch})}
+/* the mysterious figure is a real free agent from the other side of the face/heel line, revealed a week later.
+ One mystery at a time, and not again for 10 weeks after a reveal, so it stays rare. */
+function mystCand(A){if(!A||!S||(S.myst&&S.myst.x)||(S.mystLast&&AW()-S.mystLast<10))return null;
+ const l=Object.values(S.w).filter(w=>!w.own&&!w.cw&&!w.rookie&&!w.inj&&w.al!==A.al&&w.pop>=55).sort((a,b)=>b.pop-a.pop).slice(0,8);return l.length?pick(l):null}
+function mystTick(notes){const m=S.myst;if(!m||!m.x||AW()-m.at<2)return;S.myst=null;S.mystLast=AW();const X=S.w[m.x],A=S.w[m.a];if(!X)return;
+ let n=`🕵️ Mystery solved: the figure on the stage was ${X.name}!`;
+ if(A){n+=` ${X.name} has their sights set on ${A.name}.`;bumpHeat(X.id,A.id,15,notes,'the mystery reveal')}
+ if(!X.own){S.fa=S.fa||{};S.fa[X.id]=Math.max(S.fa[X.id]||0,AW()+2);n+=` They're a free agent — on the market for the next 3 weeks.`}
+ else n+=` They've signed with ${nameOf(X.own)}.`;news(n);notes.push(n)}
 function newSt(){return {score:0,heat:0,hx:0,pop:0,chem:0,turn:false,log:[]}}
 function chance(c,ctx){const A=ctx.A;const v=c.s==='luck'?60:c.s==='mic'?A.mic+(hasT(A,'mouth')?10:0):c.s==='ring'?A.ring:A.pop;return clamp(.2+v/100*.75-(c.d||0)+(c.al&&c.al===A.al?.06:0),.1,.95)}
 function oddsWord(p){return p>=.8?'Safe bet':p>=.6?'Good odds':p>=.4?'Risky':'Long shot'}
@@ -1890,7 +1904,7 @@ function roll(c,ctx,st){const ok=Math.random()<chance(c,ctx);const d=c.d||0;
  const text=fill(ok?(c.ok||pick(DEF_OK)):(c.no||pick(DEF_NO)),ctx);st.log.push(fill(c.t,ctx)+' — '+text);return {success:ok,text}}
 function finalizePromo(p,ctx,st){const A=ctx.A,B=ctx.B;if(p.type==='turn')st.turn=true;const mm=w=>w.mic+(hasT(w,'mouth')?8:0);const mic=B?mm(A)*.6+mm(B)*.4:mm(A);const pop=B?(A.pop+B.pop)/2:A.pop;
  const s=(mic*.45+pop*.3)/20+st.score*.35+Math.min(.75,st.heat/40);
- p.res={stars:clamp(Math.round(s*4)/4,.5,5),heat:Math.round(st.heat),hx:Math.round(st.hx),x:ctx.X&&st.hx>0?ctx.X.id:null,pop:Math.round(st.pop*10)/10,chem:st.chem,turn:st.turn,log:st.log,chal:!!st.chal,stip:!!st.stip};p.played=true;
+ p.res={stars:clamp(Math.round(s*4)/4,.5,5),heat:Math.round(st.heat),hx:Math.round(st.hx),x:ctx.X&&st.hx>0?ctx.X.id:null,myst:ctx.MYST||null,pop:Math.round(st.pop*10)/10,chem:st.chem,turn:st.turn,log:st.log,chal:!!st.chal,stip:!!st.stip};p.played=true;
  if(st.turn&&turnWhip(A)){p.res.whip=turnWhip(A);p.res.stars=clamp(p.res.stars-.75,.5,5);p.res.pop=Math.round((p.res.pop-4)*10)/10}
  const f=promoFatigue(p);if(f.pen){p.res.stars=clamp(p.res.stars-f.pen,.5,5);p.res.fat=f;p.res.heat=Math.round(p.res.heat*f.mul)}else if(f.boost>1){p.res.boost=Math.round((f.boost-1)*100);p.res.streak=f.streak;if(f.bf)p.res.bf=f.bf;p.res.heat=Math.round(p.res.heat*f.boost)}}
 /* turning again within 8 weeks gives fans whiplash */
@@ -1918,6 +1932,7 @@ function promoFatigue(p){if(!p.b)return {pen:0};const k=key(p.a,p.b);const now=A
 function aiChoose(ch,ctx){let best=ch[0],bv=-1e9;ch.forEach(c=>{if(c.turn&&Math.random()>.15)return;const v=chance(c,ctx)*(1+(c.d||0)*4)+((c.h||0)+(c.hx||0))/25+(c.p||0)/5;if(v>bv){bv=v;best=c}});return best}
 function runAutoPromo(p,brand){const ctx=promoCtx(p,brand);const st=newSt();roll(aiChoose(openScene(p,ctx,1).ch,ctx),ctx,st);roll(aiChoose(pickTwist(p,ctx,1).ch,ctx),ctx,st);finalizePromo(p,ctx,st)}
 function applyPromo(p,notes){const r=p.res;const A=S.w[p.a];if(!A||!r)return;
+ if(r.myst&&S.w[r.myst]&&!(S.myst&&S.myst.x)){S.myst={x:r.myst,a:p.a,at:AW()};const n=`🕵️ A mysterious figure appeared during ${A.name}'s promo. Nobody knows who it was — yet.`;news(n);notes.push(n)}
  if(p.b&&S.w[p.b]){const B=S.w[p.b];const k=key(p.a,p.b);if(!S.ph)S.ph={};S.ph[k]=((S.ph[k]||[]).concat([AW()])).slice(-6);if(!S.pht)S.pht={};S.pht[k]=((S.pht[k]||[]).concat([{w:AW(),t:p.type}])).slice(-6);
   if(r.fat)notes.push(`😴 Promo fatigue: ${A.name} and ${B.name} — ${r.fat.why} (−${fracTxt(r.fat.pen)}★, less heat)`);
   if(r.boost&&!r.bf)notes.push(`📺 ${r.streak?`Week ${r.streak+1} of the build`:'Back-and-forth'}: ${A.name} vs ${B.name} keeps rolling (+${r.boost}% heat)`);
@@ -1967,7 +1982,7 @@ function autoBook(brand,show,extUsed){
   for(let i=0;i<top.length;i++)for(let j=i+1;j<top.length;j++){const a=top[i],b=top[j];if(inTeam(a.id,b.id))continue;const v=(a.g!==b.g?-12:0)+heatOf(a.id,b.id)*1.3*(isStale(a.id,b.id)?.3:1)+chemOpp(a,b)*1.5+(a.pop+b.pop)/2+R(0,15)-(Math.max(0,a.fat-FAT_OK)+Math.max(0,b.fat-FAT_OK))*.6-(show.ppv&&heatOf(a.id,b.id)>=45?0:recentMeets(a.id,b.id).length*60);if(v>bv){bv=v;bp=[a,b]}}
   if(!bp)break;mk('singles',[[bp[0].id],[bp[1].id]])}
  {let n=0;Object.entries(S.heat).filter(([k,h])=>h>=25).sort((a,b)=>b[1]-a[1]).forEach(([k])=>{if(n>=2)return;const [a,b]=k.split('|');const A=S.w[a],B=S.w[b];if(!A||!B||A.own!==brand||B.own!==brand)return;
-  for(const [x,t] of [[b,a],[a,b]]){if(S.w[x].inj)continue;const sl=card.find(c=>c.d&&!c.d.ri&&c.d.sides.flat().includes(t)&&!c.d.sides.flat().includes(x));if(!sl||Math.random()>aiq(brand).ri)continue;
+  for(const [x,t] of [[b,a],[a,b]]){if(S.w[x].inj||S.w[x].al==='f'&&S.w[t].al==='f')continue;const sl=card.find(c=>c.d&&!c.d.ri&&c.d.sides.flat().includes(t)&&!c.d.sides.flat().includes(x));if(!sl||Math.random()>aiq(brand).ri)continue;
    const lose=!(sl.d.sides[sl.d.winner]||[]).includes(t);sl.d.ri={k:lose&&Math.random()<.6?'cost':S.w[x].al==='f'&&S.w[t].al==='h'?'save':'attack',x,t};n++;break}})}
  const ms=card.slice().reverse();/* strongest-built (title) matches first in the list -> put them last as main events */
  if(show.ppv){ms.push({k:'chal',d:autoChal(brand,used)});return ms}
@@ -2081,7 +2096,7 @@ function endWeek(notes){
  const aiN=ownList('ai').length;
  if(!ON()&&(aiN<20||(aiN<28&&Math.random()<.3))){const fa=Object.values(S.w).filter(w=>!w.own&&!w.inj&&!w.cw&&onMarket(w)).sort((a,b)=>val(b)-val(a));const pickFa=aiN<20?fa.sort((a,b)=>mkt(a)-mkt(b))[0]:fa[0];
   if(pickFa){const c=signCost(pickFa);if(S.money.ai>=c*(aiN<20?1:1.5)&&(aiN<20||payroll('ai')+mkt(pickFa)<=tvIncome(S.fans.ai)*1.05*aiq('ai').fa)){S.money.ai-=c;pickFa.sal=mkt(pickFa);pickFa.own='ai';pickFa.con=RI(20,40);pickFa.mor=75;const n=`✍️ ${S.rival} signed free agent ${pickFa.name}.`;news(n);notes.push(n)}}}
- S.week++;
+ S.week++;mystTick(notes);
  if(S.week>SEASON){S.phase='over';news(`🏁 Season ${S.season} is over!`)}
  else{marketTick(notes);crisisTick(notes);bothSides(()=>scoutTick());aiScout(notes)}}
 
