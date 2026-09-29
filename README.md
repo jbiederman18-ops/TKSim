@@ -29,6 +29,11 @@ Open the game on the TV (or a laptop plugged into it) and tap **Party mode → H
 - The TV holds the save. If it reloads, the party picks up where it left off and the phones reconnect on their own. The TV can **Pick for** or **Auto-book** a GM who has wandered off.
 - No setup needed. Devices connect directly to each other. The free PeerJS service only introduces them, so everyone needs an internet connection. Your solo game and online leagues are untouched.
 
+## Your games
+Tap **⇄** at the top to see every game on this device — several solo games plus any online leagues — and switch between them. When you have more than one, the game opens on this list (tap outside it to carry on where you left off).
+
+**Move a game to your home-screen app or another device:** in ⇄ Your games, tap **⋯ → Move**. A league gives you its seat code; a solo game makes a one-time move code. Open the game where you want it, tap **⇄ → Receive a game**, and paste the code. Mid-draft is fine. Cloud save follows one solo game at a time — the Office shows which.
+
 ## Your saves
 Turn on **Office → Cloud save** to back up automatically and continue on any device with your sync code (needs the one-time Firebase setup in [ONLINE-SETUP.md](ONLINE-SETUP.md)). The game also keeps automatic backups of your last few weeks under **Office → Backups**.
 
