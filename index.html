@@ -523,7 +523,7 @@ ol.steps{padding-left:20px;margin:6px 0 10px}ol.steps li{margin:3px 0}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v68';
+const APP_VERSION='v69';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -2382,14 +2382,19 @@ function cnt(l){return `${l.filter(w=>w.g==='M').length}M / ${l.filter(w=>w.g===
 function draftView(){const d=S.draft;const oc=onClock();
  let pool=Object.values(S.w).filter(w=>!w.own&&!w.cw&&!w.rookie);if(df!=='all'&&df!=='cw')pool=pool.filter(w=>w.g===df);pool.sort(sorter(ds));
  return `<div class="card showcard"><div class="muted">The Draft · ${d.rounds} rounds</div><div class="showname">Round ${d.round}</div><div class="${oc==='p'?'gold':'muted'}"><b>${oc==='p'?'🟡 You are on the clock':'⏳ '+esc(nameOf(oc))+' is picking…'}</b></div><div class="muted">${brands().map(b=>`${b==='p'?'You':esc(nameOf(b))}: ${cnt(ownList(b))}`).join(' · ')}</div>${d.cap?(()=>{const room=capRoom('p'),pl=picksLeft('p');return `<div class="capbox mt"><div class="row sb"><span>💼 Salary cap <b>${money(d.cap)}</b>/wk</span><span class="${room<pl*minAsk()?'bad':'gold'}"><b>${money(room)}</b> left</span></div><div class="bar"><i style="width:${clamp(payroll('p')/d.cap*100,0,100)}%"></i></div><div class="muted tiny">${pl} pick${pl===1?'':'s'} left · about ${money(pl?room/pl:0)} per pick. Anything left under the cap goes into your bank (×4).</div></div>`})():''}
- <div class="row mt"><button class="btn sec" ${oc!=='p'?'disabled':''} onclick="autoPick()">Auto-pick</button><button class="btn sec" ${ON()&&oc!=='p'?'disabled':''} onclick="simDraft()">${ON()?'Auto-draft me':'Sim rest'}</button></div><button class="btn sec" onclick="openStudio()">📷 Photo Studio</button></div>
+ <div class="row mt"><button class="btn sec" ${oc!=='p'?'disabled':''} onclick="autoPick()">Auto-pick</button><button class="btn sec" onclick="simDraft()">${ON()?(S.online.auto&&S.online.auto.p?'🤖 Stop auto-drafting':'Auto-draft me'):'Sim rest'}</button></div><button class="btn sec" onclick="openStudio()">📷 Photo Studio</button></div>
  ${d.log.length?`<div class="card"><div class="h small">Latest picks</div>${d.log.slice(0,4).map(x=>`<div class="muted">${esc(x)}</div>`).join('')}</div>`:''}
  ${chips('df',[['all','All'],['M','Men'],['F','Women']],df)}
  <div class="mt">${chips('ds',[['ovr','Overall'],['pop','Popularity'],['ring','In-ring'],['mic','Mic'],['pot','Potential'],['sal','Salary']],ds)}</div>
  <p class="muted">Tap a card to see details${oc==='p'?' and draft':''}.</p><div class="cgrid">${pool.map(w=>wcard(w,{info:`${ds==='sal'?'':gridInfo(w,ds)+' · '}<span class="${capOk(w,'p')?'':'bad'}">${capOk(w,'p')?'':'🚫 '}${money(mkt(w))}</span>`})).join('')}</div>`}
 function pDraft(id){if(mpLocked())return;if(onClock()!=='p')return;const w=S.w[id];if(!w||w.cw||w.rookie)return;if(w&&!capOk(w,'p'))return toast(`${w.name} doesn't fit under your cap — you need to save room for your remaining picks.`);draftPick(id,'p');closeModal();if(ON())mpDraftStep();render()}
 function autoPick(){if(mpLocked())return;if(onClock()!=='p')return;const c=draftChoice('p');if(c)pDraft(c.id)}
-function simDraft(){if(mpLocked())return;if(ON()){if(!confirm('Auto-draft the rest of your picks? From now on the game picks for you whenever you are on the clock.'))return;S.online.auto.p=true;mpDraftStep();tab='home';render();return}
+function simDraft(){if(ON()){const o=S.online;o.auto=o.auto||{};
+  /* in a league you can switch auto-draft on or off any time, not just when you're on the clock */
+  if(o.auto.p){o.auto.p=false;saveLocal();mpPush();render();return toast("Auto-draft is off — you'll make your own picks.")}
+  if(!confirm("Auto-draft the rest of your picks? The game picks for you whenever you're on the clock, even with the app closed. You can switch it off any time."))return;
+  o.auto.p=true;if(onClock()==='p'&&myTurn())mpDraftStep();else{saveLocal();mpPush()}tab='home';render();toast('🤖 Auto-draft is on.');return}
+ if(mpLocked())return;
  if(!confirm('Auto-draft the rest of your picks?'))return;while(S.phase==='draft'){const b=onClock();const c=draftChoice(b);if(!c){finishDraft();break}draftPick(c.id,b)}save();tab='home';render()}
 
 function nextPPV(){for(let w=S.week;w<=SEASON;w++)if(PPVS[w])return {n:PPVS[w],in:w-S.week};return null}

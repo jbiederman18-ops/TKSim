@@ -52,11 +52,14 @@ function mpBase(){return MP_BASE&&LMP&&MP_BASE.code===LMP.code?MP_BASE:null}
    this on the phone of whoever goes last. */
 function partyAdvance(st,me){const keep=S,keepTab=typeof tab!=='undefined'?tab:null;let msg='';MP_TX=true;
  try{S=viewFor(st,me);ensureTraits(S);const o=S.online;
-  if(!o.party)return {st:canonState(),msg};
   o.rk=o.rk||{};o.booked=o.booked||{};o.auto=o.auto||{};
-  if(S.phase==='rookies'&&localSeats().every(k=>o.rk[k])){startDraft();o.turn=onClock();msg=`Party night: the draft is on and ${nameOf(o.turn)} picks first!`}
-  if(S.phase==='draft'){let guard=0;while(S.phase==='draft'&&guard++<400){const oc=onClock();if(!o.auto[oc])break;const c=draftChoice(oc);if(!c){finishDraft();break}draftPick(c.id,oc)}
-   if(S.phase==='draft')o.turn=onClock();else{o.booked={};o.order=bookingOrder()}}
+  if(o.party&&S.phase==='rookies'&&localSeats().every(k=>o.rk[k])){startDraft();o.turn=onClock();msg=`Party night: the draft is on and ${nameOf(o.turn)} picks first!`}
+  /* league drafts (party night or not): whoever saves next makes the picks for any GM on auto-draft who's on the
+     clock, so auto-draft keeps going even when that GM's phone is closed */
+  if(S.phase==='draft'&&o.auto[onClock()]){const was=onClock();let guard=0;while(S.phase==='draft'&&guard++<400){const oc=onClock();if(!o.auto[oc])break;const c=draftChoice(oc);if(!c){finishDraft();break}draftPick(c.id,oc)}
+   if(S.phase==='draft'){o.turn=onClock();if(o.turn!==was)msg=`The auto-drafters have picked — you're on the clock in round ${S.draft.round}.`}
+   else{o.booked={};o.order=bookingOrder();o.turn='p';msg='The draft is complete — time to book week 1!'}}
+  if(!o.party)return {st:canonState(),msg};
   if(S.phase==='season'&&localSeats().every(k=>o.booked[k])){o.lv=o.lv||{};
    /* everyone's locked in: GMs go live on the TV one at a time, then the week airs */
    if(!o.live){o.live={order:(o.order&&o.order.length?o.order:bookingOrder()).filter(k=>!o.lv[k])};const n=partyLiveNow();if(n)msg=`🔴 ${nameOf(n)} is live on the TV!`}
