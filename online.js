@@ -88,6 +88,20 @@ if (!cfg.apiKey || !cfg.projectId) {
       return updateDoc(game(code), { ...fields, updated: serverTimestamp() });
     },
 
+    // Save a turn by merging it into whatever is in the league right now (several phones can save at once
+    // on party night). fn gets the league as it is on the server and returns {fields} to write, or
+    // {conflict} to write nothing. Runs as a transaction, so fn may run more than once; it needs a connection.
+    pushMerge(code, fn) {
+      return timed(runTransaction(db, async tx => {
+        const ref = game(code);
+        const snap = await tx.get(ref);
+        if (!snap.exists()) throw new Error('nogame');
+        const r = fn(snap.data());
+        if (r && r.fields) tx.update(ref, { ...r.fields, updated: serverTimestamp() });
+        return r;
+      }), 20000);
+    },
+
     // ---- cloud saves (solo game + your list of leagues), keyed by a private 12-character sync code ----
     cloudGet(id) { return timed(getDocFromServer(doc(db, 'saves', id)).then(s => (s.exists() ? s.data() : null)), 12000); },
     // Only save if nobody else saved since this device last synced (base = the cloud version we last saw).
@@ -155,8 +169,8 @@ if (!cfg.apiKey || !cfg.projectId) {
       return out;
     },
 
-    listen(code, cb) {
-      return onSnapshot(game(code), s => { if (s.exists()) cb(s.data()); }, e => console.warn('listen failed', e));
+    listen(code, cb, missing) {
+      return onSnapshot(game(code), s => { if (s.exists()) cb(s.data()); else if (missing && !s.metadata.fromCache) missing(); }, e => console.warn('listen failed', e));
     },
 
     canAlert() { return 'Notification' in window && 'serviceWorker' in navigator && !!cfg.vapidKey; },
