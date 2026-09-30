@@ -521,7 +521,7 @@ ol.steps{padding-left:20px;margin:6px 0 10px}ol.steps li{margin:3px 0}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v64';
+const APP_VERSION='v65';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -1669,13 +1669,13 @@ function newGame(gm,rival,diff,online){
  TITLES.forEach(([id,n,kind,g,h,pr])=>S.titles[id]={id,n,kind,g,holders:h.slice(),prestige:pr,since:0,last:0});
  TEAMS.forEach(([n,type,m])=>S.teams.push({id:'t'+(S.nid++),n,type,m:m.filter(id=>S.w[id])}));
  ensureTraits(S);
- FEUDS.forEach(([a,b,h])=>{if(S.w[a]&&S.w[b])S.heat[key(a,b)]=h});S.fullShow=true;feudInit(S);
- for(const id in OUT)if(S.w[id])S.w[id].inj=OUT[id];S.dataV=DATA_V;
+ /* a new game is a fresh season of TV: everyone starts healthy and there are no feuds yet (real-life feuds and injuries are not carried in) */
+ S.fullShow=true;feudInit(S);S.dataV=DATA_V;
  if(online)S.diff='normal';
  if(online)mpInitSeats(online.n||2);
  /* the draft is real wrestlers only — developing talent is scouted during the season */
  startDraft();if(online)S.online.turn=onClock();
- news(`🎤 A new era begins. Rosters, champions and injuries are current as of ${DATA_AS_OF}. Draft your roster and win the fan war on the road to All In.`);
+ news(`🎤 A new era begins. Rosters and champions are current as of ${DATA_AS_OF}, and everyone starts the season healthy with a clean slate. Draft your roster and win the fan war on the road to All In.`);
  save();
 }
 function startDraft(){S.phase='draft';const ord=shuffle(brands().slice());S.cap=capFor(ord.length);S.draft={round:1,pick:0,order:ord,rounds:ord.length>2?20:24,log:[],cap:S.cap};save()}

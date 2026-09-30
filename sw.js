@@ -1,5 +1,5 @@
 // Tony Khan Simulator — offline support. Bump VERSION whenever you upload a new index.html (and APP_VERSION in index.html to match — that's the label shown in the game).
-const VERSION = 'aegm-v64';
+const VERSION = 'aegm-v65';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png',
   './online.js', './firebase-sdk.js', './firebase-config.js',
   './party.js', './vendor/peerjs.min.js', './vendor/qrcode.js'];
