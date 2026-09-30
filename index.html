@@ -521,7 +521,15 @@ ol.steps{padding-left:20px;margin:6px 0 10px}ol.steps li{margin:3px 0}
 [data-dg]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none;user-select:none}
 .dg-ghost{position:fixed;left:0;top:0;z-index:9999;pointer-events:none;opacity:.92;box-shadow:0 12px 30px rgba(0,0,0,.6);margin:0!important;transition:none!important}
-.dg-src{opacity:.35!important}
+.dg-src{opacity:.3!important}
+.dg-src.dg-land{opacity:.7!important;outline:2px dashed var(--gold,#e8c35a);outline-offset:-2px;background-color:rgba(232,195,90,.14)!important;filter:saturate(.4)}
+.dg-mv{position:relative;z-index:5;box-shadow:0 8px 22px rgba(0,0,0,.5)}
+.dg-mv.dp-over{outline:none!important;background-color:transparent!important}
+.dn.dg-new{background:rgba(232,195,90,.22);box-shadow:0 0 0 1px rgba(232,195,90,.7);font-style:italic}
+.dn.dp-over{outline:none!important}
+.dg-here{outline:2px dashed var(--gold,#e8c35a)!important;outline-offset:-2px;background-color:rgba(232,195,90,.14)!important}
+.dg-lab{position:fixed;left:0;top:0;z-index:10000;pointer-events:none;max-width:calc(100vw - 16px);padding:6px 10px;border-radius:14px;background:rgba(18,16,12,.94);color:#e9e2d0;font:700 12.5px/1.2 'Barlow',sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid rgba(255,255,255,.12)}
+.dg-lab.on{background:#e8c35a;color:#1b1406;border-color:#e8c35a}
 .dp-over{outline:2px dashed var(--gold,#e8c35a)!important;outline-offset:2px;background-color:rgba(232,195,90,.12)!important}
 .slot{position:relative}
 .slot .grip{position:absolute;right:6px;top:50%;width:14px;height:22px;margin-top:-11px;touch-action:none;cursor:grab;opacity:.55;background:radial-gradient(circle,currentColor 1.4px,transparent 1.6px) 0 0/7px 7px;color:#bdb6a5}
@@ -556,7 +564,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v72';
+const APP_VERSION='v73';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -2541,17 +2549,38 @@ function dgMove(e){if(!DG)return;DG.cx=e.clientX;DG.cy=e.clientY;
 function dgStart(){const el=DG.el;if(!document.body.contains(el)){DG=null;return}const r=el.getBoundingClientRect();DG.on=true;
  const g=el.cloneNode(true);g.removeAttribute('data-dg');g.removeAttribute('data-dp');g.querySelectorAll('[data-dp],[data-dg]').forEach(x=>{x.removeAttribute('data-dp');x.removeAttribute('data-dg')});
  g.classList.add('dg-ghost');const wd=Math.min(r.width,300);g.style.width=wd+'px';if(el.classList.contains('dn'))g.style.width='auto';
- DG.ox=Math.min(DG.x-r.left,wd-10);DG.oy=DG.y-r.top;document.body.appendChild(g);DG.g=g;el.classList.add('dg-src');document.body.classList.add('dragging');
+ DG.ox=Math.min(DG.x-r.left,wd-10);DG.oy=DG.y-r.top;if(el.classList.contains('dn')){DG.ox=r.width/2;DG.oy=r.height+(DG.touch?34:14)}/* names float above the finger so the swap preview stays visible */document.body.appendChild(g);DG.g=g;el.classList.add('dg-src');document.body.classList.add('dragging');
  DG.sc=dgScroller(el);if(navigator.vibrate)try{navigator.vibrate(10)}catch(_){}
+ DG.r0={l:r.left,t:r.top};DG.h0=el.innerHTML;el.style.transition='transform .18s ease';dgCands();
+ const lab=document.createElement('div');lab.className='dg-lab';document.body.appendChild(lab);DG.lab=lab;dgLab(null);
  dgPos();dgOver();const tick=()=>{if(!DG||!DG.on)return;dgAuto();DG.raf=requestAnimationFrame(tick)};DG.raf=requestAnimationFrame(tick)}
-function dgPos(){DG.g.style.transform=`translate(${DG.cx-DG.ox}px,${DG.cy-DG.oy}px) rotate(-1.5deg) scale(1.03)`}
+function dgPos(){DG.g.style.transform=`translate(${DG.cx-DG.ox}px,${DG.cy-DG.oy}px) rotate(-1.5deg) scale(1.03)`;if(DG.lab)DG.lab.style.transform=`translate(${Math.max(8,Math.min(innerWidth-DG.lab.offsetWidth-8,DG.cx-DG.lab.offsetWidth/2))}px,${Math.max(8,DG.cy-DG.oy-38)}px)`}
 function dgScroller(el){for(let p=el.parentElement;p&&p!==document.body;p=p.parentElement){const o=getComputedStyle(p).overflowY;if((o==='auto'||o==='scroll')&&p.scrollHeight>p.clientHeight+2)return p}return null}
 function dgAuto(){const e=60,y=DG.cy;let top=0,bot=innerHeight;if(DG.sc){const r=DG.sc.getBoundingClientRect();top=r.top;bot=r.bottom}
  let v=0;if(y<top+e)v=-Math.ceil((top+e-y)/4);else if(y>bot-e)v=Math.ceil((y-(bot-e))/4);if(!v)return;if(DG.sc)DG.sc.scrollTop+=v;else window.scrollBy(0,v);dgOver()}
-function dgOver(){const t=document.elementFromPoint(DG.cx,DG.cy);let d=t&&t.closest&&t.closest('[data-dp]');if(d&&(d===DG.el||!dgOk(DG.src,d.dataset.dp)))d=null;
- if(DG.over!==d){if(DG.over)DG.over.classList.remove('dp-over');if(d)d.classList.add('dp-over');DG.over=d}}
+function dgCands(){const sel=dgP(DG.src).t==='slot'?'[data-dp^="slot:"]':'[data-dp]';DG.sy=scrollY;DG.st=DG.sc?DG.sc.scrollTop:0;
+ DG.cands=[...document.querySelectorAll(sel)].filter(e=>e!==DG.el&&e.getClientRects().length&&dgOk(DG.src,e.dataset.dp)).map(e=>{const r=e.getBoundingClientRect();return {e,l:r.left,t:r.top,w:r.width,h:r.height}})}
+function dgHit(){const dy=(scrollY-DG.sy)+(DG.sc?DG.sc.scrollTop-DG.st:0);let best=null;
+ for(const c of DG.cands){const t=c.t-dy;if(DG.cx>=c.l&&DG.cx<=c.l+c.w&&DG.cy>=t&&DG.cy<=t+c.h&&(!best||c.w*c.h<best.w*best.h))best=c}return best}
+function dgOver(){const c=dgHit();const d=c?c.e:null;if(DG.over===d)return;if(DG.over)DG.over.classList.remove('dp-over');dgUnprev();DG.over=d;if(d){d.classList.add('dp-over');dgPrev(c)}dgLab(d&&d.dataset.dp)}
+/* live preview of the drop: segments and editor cards trade places, names show the swapped result */
+function dgPrev(c){const t=dgP(DG.src).t,e=c.e;DG.pv={e};
+ if(t==='slot'||t==='ed'||t==='pe'){const dx=DG.r0.l-c.l,dy=DG.r0.t-c.t;e.style.transition='transform .18s ease';e.style.transform=`translate(${dx}px,${dy}px)`;e.classList.add('dg-mv');DG.el.style.transform=`translate(${-dx}px,${-dy}px)`;DG.el.classList.add('dg-land')}
+ else if(e.classList.contains('dn')){DG.pv.h=e.innerHTML;e.innerHTML=t==='lr'?alSpan(S.w[dgP(DG.src).a[0]]):DG.h0;e.classList.add('dg-new');if(t!=='lr'){DG.el.innerHTML=DG.pv.h;DG.el.classList.add('dg-new')}}
+ else e.classList.add('dg-here')}
+function dgUnprev(){const p=DG&&DG.pv;if(!p)return;const e=p.e;e.style.transform='';e.classList.remove('dg-mv','dg-new','dg-here');if(p.h!=null)e.innerHTML=p.h;
+ DG.el.style.transform='';DG.el.classList.remove('dg-land','dg-new');if(DG.h0!=null&&DG.el.innerHTML!==DG.h0)DG.el.innerHTML=DG.h0;DG.pv=null}
+function segLbl(i){const c=S.card.p,sl=c[i];if(!sl)return '';if(sl.k==='promo')return sl.opt?'Bonus promo':'Promo';let n=0;for(let k=0;k<=i;k++)if(c[k].k==='match')n++;return n===c.filter(x=>x.k==='match').length?'Main event':'Match '+n}
+function dgWho(dp){const B=dgP(dp);if(B.t!=='w'&&B.t!=='pw')return null;const d=S.card.p[+B.a[0]].d;const id=B.t==='w'?d.sides[+B.a[1]][+B.a[2]]:d[B.a[1]];return S.w[id]}
+function dgLab(dp){if(!DG||!DG.lab)return;const A=dgP(DG.src);let t;
+ if(!dp)t=A.t==='slot'?'Drop on a segment to trade places':A.t==='ed'||A.t==='pe'?'Drop on a spot to swap':A.t==='lr'?'Drop on a name or an empty slot':'Drop on another wrestler to swap';
+ else{const B=dgP(dp);if(A.t==='slot')t=`Moves to #${+B.a[0]+1} · ${segLbl(+A.a[0])} ⇄ ${segLbl(+B.a[0])}`;
+  else if(A.t==='ed'||A.t==='pe')t='Swap spots';
+  else if(A.t==='lr'&&B.t==='slot')t=`Book ${S.w[A.a[0]].name} in ${segLbl(+B.a[0])}`;
+  else{const w=dgWho(dp),me=A.t==='lr'?S.w[A.a[0]]:dgWho(DG.src);t=A.t==='lr'?`${me.name} replaces ${w.name}`:`${me.name} ⇄ ${w.name}`}}
+ DG.lab.textContent=t;DG.lab.classList.toggle('on',!!dp);dgPos()}
 function dgUp(e){if(!DG)return;clearTimeout(DG.t);if(!DG.on){DG=null;return}e.preventDefault();DG_SUP=Date.now()+450;const s=DG.src,d=DG.over&&DG.over.dataset.dp;dgEnd();if(d)dgDrop(s,d)}
-function dgEnd(){if(!DG)return;clearTimeout(DG.t);cancelAnimationFrame(DG.raf);if(DG.g)DG.g.remove();if(DG.over)DG.over.classList.remove('dp-over');if(DG.el)DG.el.classList.remove('dg-src');document.body.classList.remove('dragging');DG=null}
+function dgEnd(){if(!DG)return;clearTimeout(DG.t);cancelAnimationFrame(DG.raf);dgUnprev();if(DG.el)DG.el.style.transition='';if(DG.lab)DG.lab.remove();if(DG.g)DG.g.remove();if(DG.over)DG.over.classList.remove('dp-over');if(DG.el)DG.el.classList.remove('dg-src');document.body.classList.remove('dragging');DG=null}
 const dgP=s=>{const p=s.split(':');return {t:p[0],a:p.slice(1)}};
 function dgOk(s,d){const A=dgP(s),B=dgP(d);if(s===d)return false;
  if(A.t==='ed')return B.t==='ed';if(A.t==='pe')return B.t==='pe';if(B.t==='ed'||B.t==='pe')return false;
