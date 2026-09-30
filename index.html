@@ -27,7 +27,7 @@
 --slant:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%)}
 *{box-sizing:border-box}
 html,body{margin:0;color:var(--text);font-family:'Barlow',-apple-system,Segoe UI,Roboto,sans-serif;font-weight:500;font-size:15px;line-height:1.4;-webkit-tap-highlight-color:transparent}
-html{background:var(--bg)}
+html{background:var(--bg);touch-action:manipulation}
 body{min-height:100vh;background:radial-gradient(120% 55% at 50% -8%,rgba(255,138,46,.20),transparent 60%),radial-gradient(90% 45% at 105% 0%,rgba(226,51,43,.16),transparent 60%),radial-gradient(80% 60% at 50% 115%,rgba(216,180,73,.08),transparent 60%),linear-gradient(180deg,#121216 0%,#0a0a0c 55%,#060607 100%);background-attachment:fixed}
 body:before{content:none}
 body:after{content:none}
@@ -521,7 +521,7 @@ ol.steps{padding-left:20px;margin:6px 0 10px}ol.steps li{margin:3px 0}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v63';
+const APP_VERSION='v64';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -2303,6 +2303,13 @@ function wRow(w,extra){return `<div class="w" onclick="showW('${w.id}')"><div cl
 function statBar(label,v,pot,cls){return `<div class="stat"><div class="row sb"><span>${label}</span><span>${Math.round(v)}${pot!=null?` <span class="muted">/ ${Math.round(pot)} potential</span>`:''}</span></div><div class="bar ${cls||''}"><i style="width:${clamp(v,0,100)}%"></i>${pot!=null?`<b style="left:${clamp(pot,0,100)}%"></b>`:''}</div></div>`}
 function hdr(){const on=S&&(S.phase==='season'||S.phase==='over');return `<header class="top"><div class="brand"><span class="logo">TONY KHAN</span><span class="logo2">SIM</span><span class="ver">${APP_VERSION}</span></div><div class="hdr-r">${on?`<div class="hud"><span class="hudc">WK <b>${Math.min(S.week,SEASON)}</b></span><span class="hudc"><b>${fmtFans(S.fans.p)}</b> FANS</span><span class="hudc"><b>${money(S.money.p)}</b></span></div>`:''}${PARTY?'':'<button class="gsw" onclick="openGames()" aria-label="Your games" title="Your games">⇄</button>'}</div></header>`}
 function navView(){return `<nav class="tabs">${[['home','Home'],['book','Book'],['roster','Roster'],['titles','Titles'],['office','Office']].map(([k,n])=>`<button class="${tab===k?'on':''}" onclick="go('${k}')">${ICON[k]}${n}</button>`).join('')}</nav>`}
+/* iOS can leave the page's layout viewport out of step with the screen (most often after the on-screen keyboard
+ closes), and then fixed elements like the tab bar ride along with the scroll. Keep the tab bar pinned to the bottom
+ of what's actually on screen, and nudge iOS to resync once the keyboard goes away. */
+function pinNav(){const n=document.querySelector('nav.tabs');const vv=window.visualViewport;if(!n)return;
+ if(!vv||vv.scale>1.01){n.style.transform='';return}const off=Math.round(window.innerHeight-vv.height-vv.offsetTop);n.style.transform=Math.abs(off)>1&&off<window.innerHeight/2?`translateY(${-off}px)`:''}
+if(typeof window!=='undefined'){const vv=window.visualViewport;if(vv){vv.addEventListener('resize',pinNav);vv.addEventListener('scroll',pinNav)}window.addEventListener('scroll',pinNav,{passive:true});window.addEventListener('orientationchange',()=>setTimeout(pinNav,300));
+ document.addEventListener('focusout',e=>{if(!/^(INPUT|TEXTAREA|SELECT)$/.test(e.target&&e.target.tagName||''))return;setTimeout(()=>{if(/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||''))return;window.scrollTo(window.scrollX,window.scrollY);pinNav()},120)})}
 function render(){const app=$('#app');
  if(PARTY&&PARTY.host)return tvRender();document.body.classList.remove('tv');
  if(PARTY&&!S){app.innerHTML=hdr()+`<main class="enter">${partyPhoneLobby()}</main>`;return}
@@ -2312,7 +2319,7 @@ function render(){const app=$('#app');
  else if(S.phase==='draft')body=draftView();
  else if(S.phase==='over'&&(tab==='home'||tab==='book'))body=overView();
  else body=({home:homeView,book:bookView,roster:rosterView,titles:titlesView,office:officeView}[tab]||homeView)();
- app.innerHTML=hdr()+`<main class="${ANIM?'enter':''}">${mpBanner()}${body}</main>`+(S.phase==='season'||S.phase==='over'?navView():'');ANIM=false;
+ app.innerHTML=hdr()+`<main class="${ANIM?'enter':''}">${mpBanner()}${body}</main>`+(S.phase==='season'||S.phase==='over'?navView():'');ANIM=false;pinNav();
  if(!ON()&&S.phase==='draft'&&onClock()==='ai'&&!aiT)aiT=setTimeout(()=>{aiT=null;if(S&&S.phase==='draft'&&onClock()==='ai'){const c=draftChoice('ai');if(c)draftPick(c.id,'ai')}render()},450)}
 
 function setupView(){return `<div class="hero"><div class="kicker"><i></i>Tony Khan Simulator · A wrestling GM sim</div><div class="hero-t">Road to<br>All In</div><p class="muted">Draft a roster against a rival GM, book Dynamite head-to-head against their Collision, build feuds, develop rookies into stars, and win the fan war by All In.</p></div>
