@@ -4,6 +4,9 @@
      books their show at the same time instead of taking turns, and the week airs as soon as the last GM locks in.
    - Any screen can be the TV: open the game there, tap "Show a league on this screen" and enter the league code.
      The TV only watches the league. It shows who's still booking and plays each week's results segment by segment.
+   - Once every card is locked in, the GMs go live one at a time: the TV shows that GM's promo beats and match
+     calls as they happen (choices and all), the GM makes the call on their phone while the room shouts advice,
+     and when the last GM wraps up the week airs.
    - Turn party night off (or just walk away) and the league goes back to taking turns from exactly where it is.
    Because several phones save at the same time, each save is merged into the league as it is right now
    (a 3-way merge against the version that phone started from) inside a Firestore transaction. If two phones
@@ -54,7 +57,10 @@ function partyAdvance(st,me){const keep=S,keepTab=typeof tab!=='undefined'?tab:n
   if(S.phase==='rookies'&&localSeats().every(k=>o.rk[k])){startDraft();o.turn=onClock();msg=`Party night: the draft is on and ${nameOf(o.turn)} picks first!`}
   if(S.phase==='draft'){let guard=0;while(S.phase==='draft'&&guard++<400){const oc=onClock();if(!o.auto[oc])break;const c=draftChoice(oc);if(!c){finishDraft();break}draftPick(c.id,oc)}
    if(S.phase==='draft')o.turn=onClock();else{o.booked={};o.order=bookingOrder()}}
-  if(S.phase==='season'&&localSeats().every(k=>o.booked[k])){const wk=S.week;airShow();o.booked={};o.order=bookingOrder();msg=`Week ${wk} results are in!`}
+  if(S.phase==='season'&&localSeats().every(k=>o.booked[k])){o.lv=o.lv||{};
+   /* everyone's locked in: GMs go live on the TV one at a time, then the week airs */
+   if(!o.live){o.live={order:(o.order&&o.order.length?o.order:bookingOrder()).filter(k=>!o.lv[k])};const n=partyLiveNow();if(n)msg=`🔴 ${nameOf(n)} is live on the TV!`}
+   if(!partyLiveNow()){const wk=S.week;airShow();o.booked={};o.order=bookingOrder();delete o.live;o.lv={};msg=`Week ${wk} results are in!`}}
   return {st:canonState(),msg}}
  finally{S=keep;MP_TX=false;if(keepTab!==null)tab=keepTab}}
 
@@ -108,7 +114,7 @@ function partyAdopt(str,rev,d,quiet){
  mpLoad(str,d&&d.names,d&&d.shows,rev);saveLocal();mpRemember();if(quiet)return;
  render();partyAfterLoad()}
 /* on party night, a phone that just got a new week's results asks whether to watch the TV or open its own */
-function partyAfterLoad(){if(!S.online.party||S.phase==='draft'||!mpUnseen())return false;mpMarkSeen();partyResultsPrompt();return true}
+function partyAfterLoad(){if(!S.online.party)return false;if(partyLivePrompt())return true;if(S.phase==='draft'||!mpUnseen())return false;mpMarkSeen();partyResultsPrompt();return true}
 /* a newer league arrived while we were busy: apply it now if nothing is in the way */
 function partyCatchUp(){if(!MP_HELD||MPX||busy())return;const d=MP_HELD;MP_HELD=null;if(typeof mpIncoming==='function')mpIncoming(d)}
 /* mpIncoming asks this first: should this new copy of the league wait? */
@@ -119,17 +125,38 @@ function mpHoldIncoming(d){
 function partyResultsPrompt(){if(!S||!S.last)return;openModal(`<div class="h mhd">📺 Week ${S.last.week} is on!</div><p>Everyone's locked in. Watch the results play out on the TV, or open your own.</p><button class="btn" onclick="showResults()">See my results</button><button class="btn ghost" onclick="closeModal()">I'm watching the TV</button>`)}
 
 /* ===================== party night on a phone ===================== */
-function partyMyTurn(){const o=S.online||{};if(S.phase==='rookies')return !(o.rk&&o.rk.p);if(S.phase==='draft')return onClock()==='p';if(S.phase==='season')return !(o.booked&&o.booked.p);return true}
-function partyWaiting(){const o=S.online;return localSeats().filter(k=>S.phase==='rookies'?!(o.rk||{})[k]:!(o.booked||{})[k]).map(nameOf)}
+function partyMyTurn(){const o=S.online||{};if(S.phase==='rookies')return !(o.rk&&o.rk.p);if(S.phase==='draft')return onClock()==='p';if(S.phase==='season')return o.live?partyLiveNow()==='p':!(o.booked&&o.booked.p);return true}
+function partyWaiting(){const o=S.online;if(S.phase==='season'&&o.live){const n=partyLiveNow();return n?[nameOf(n)]:[]}return localSeats().filter(k=>S.phase==='rookies'?!(o.rk||{})[k]:!(o.booked||{})[k]).map(nameOf)}
+/* ---- going live on the TV ---- */
+/* whose turn it is to go live (local key), or null */
+function partyLiveNow(st){st=st||S;const o=st.online||{};if(!o.live||!o.party)return null;const lv=o.lv||{};return (o.live.order||[]).find(k=>!lv[k])||null}
+function partyLiveTurn(){return partyOn()&&S.phase==='season'&&partyLiveNow()==='p'}
+/* the Book tab's button: on party night you lock in first and go live later, on the TV */
+function partyBookBtn(ready){if(!partyOn())return null;const o=S.online;
+ if(partyLiveTurn())return `<button class="btn live" onclick="goLive()">🔴 You're live — start your show ▸</button>`;
+ if(o.booked&&o.booked.p){const n=partyLiveNow();return `<div class="card"><b>Card locked in ✓</b><div class="muted">${o.live?(n?`${esc(nameOf(n))} is live on the TV right now.`:'The week is airing.'):"Once everyone's in, each GM goes live on the TV to make their calls — then the week airs."}</div>${o.live?'':`<button class="mini" onclick="partyUnlock()">Unlock</button>`}</div>`}
+ return `<button class="btn live" ${ready?'':'disabled'} onclick="goLive()">Lock in my card ▸</button>`}
+/* a GM finished their live segment */
+function partyLiveDone(){const o=S.online;o.lv=o.lv||{};o.lv.p=true;partyFeed('');closeModal();save();render();
+ const n=(o.live&&o.live.order||[]).find(k=>!o.lv[k]);toast(n?`That's a wrap! ${nameOf(n)} is up next.`:"That's a wrap! The week is airing.")}
+/* mirror what the live GM sees onto the TV (the modal's own HTML, minus private photos) */
+let FEED_T=null,FEED_LAST='';
+function partyFeed(html){if(!ON()||!LMP||!window.TKO||!TKO.ready)return;clearTimeout(FEED_T);
+ html=String(html||'').replace(/<img\b[^>]*src="data:[^"]*"[^>]*>/gi,'').slice(0,90000);
+ const send=()=>{if(html===FEED_LAST)return;FEED_LAST=html;TKO.push(LMP.code,{live:{seat:LMP.me,week:S.week,season:S.season,html,at:Date.now()}}).catch(()=>{})};
+ if(!html)return send();FEED_T=setTimeout(send,150)}
+function partyLivePrompt(){if(!partyLiveTurn()||LIVE)return false;const key=S.season*100+S.week;if(+(LS.get('tksim_livep_'+LMP.code)||0)===key)return false;LS.set('tksim_livep_'+LMP.code,key);
+ openModal(`<div class="h mhd">🔴 You're live!</div><p>It's your turn on the TV. Everyone's watching your promos and match calls play out — you make the calls here.</p><button class="btn live" onclick="closeModal();goLive()">Start my show ▸</button><button class="btn ghost" onclick="closeModal()">Give me a second</button>`);return true}
 function partyLocked(){if(partyMyTurn())return false;
  toast(S.phase==='draft'?`${nameOf(onClock())} is on the clock.`:S.phase==='rookies'?"You're ready — waiting on the others.":'Your card is locked in — eyes on the TV! (Unlock it from the banner to make changes.)');return true}
 function partyLockCard(){const o=S.online;o.booked=o.booked||{};o.booked.p=true;const sh=curShow();const left=partyWaiting();
  save();render();
- openModal(`<div class="h mhd">Locked in ✓</div><p>Your ${esc(sh.ppv?sh.name:sh.mine)} card is in.${left.length?` Waiting on <b>${left.map(esc).join(', ')}</b>.`:' You were the last one — the week is airing!'}</p><p class="muted">When everyone's locked in, the results play out on the TV and on everyone's phone.</p><button class="btn" onclick="closeModal()">Got it</button>`)}
-function partyUnlock(){if(!S||S.phase!=='season'||!partyOn())return;S.online.booked.p=false;save();render();toast('Unlocked — make your changes, then go live again.')}
+ openModal(`<div class="h mhd">Locked in ✓</div><p>Your ${esc(sh.ppv?sh.name:sh.mine)} card is in.${left.length?` Waiting on <b>${left.map(esc).join(', ')}</b>.`:' You were the last one — time to go live!'}</p><p class="muted">When everyone's locked in, each GM goes live on the TV one at a time — the room watches your promos and match calls while you make them here. Then the week airs.</p><button class="btn" onclick="closeModal()">Got it</button>`)}
+function partyUnlock(){if(!S||S.phase!=='season'||!partyOn()||S.online.live)return;S.online.booked.p=false;save();render();toast('Unlocked — make your changes, then go live again.')}
 function partyBanner(){const o=S.online;let t;
  if(S.phase==='rookies')t=o.rk&&o.rk.p?`✅ You're ready — waiting on ${esc(partyWaiting().join(', '))}`:'🟡 Create wrestlers, then continue to the draft';
  else if(S.phase==='draft')t=onClock()==='p'?"🟡 You're on the clock!":`⏳ ${esc(nameOf(onClock()))} is picking`;
+ else if(S.phase==='season'&&o.live){const n=partyLiveNow();t=n==='p'?(LIVE?`🔴 You're live on the TV!${$('#modal').classList.contains('hidden')?` <a href="#" onclick="if(PS)renderPS();else if(ME)renderME();return false" style="color:var(--gold2)">Back to your show</a>`:''}`:`🔴 You're live on the TV! <a href="#" onclick="goLive();return false" style="color:var(--gold2)">Start your show</a>`):n?`📺 ${esc(nameOf(n))} is live on the TV`:'📺 The week is airing'}
  else if(S.phase==='season'){const w=partyWaiting();t=o.booked&&o.booked.p?`✅ Locked in${w.length?' — waiting on '+esc(w.join(', ')):''} · <a href="#" onclick="partyUnlock();return false" style="color:var(--gold2)">Unlock</a>`:`🟡 Book your show${w.length>1?' — still booking: '+esc(w.filter(x=>x!==S.gm).join(', ')):' — everyone else is locked in!'}`}
  else t='🏁 Season over — anyone can start the next one';
  return `<div class="mpbar ${partyMyTurn()?'on':''}">📺 <span><b>${t}</b><br><span class="muted tiny">Party night · league ${esc(LMP.code)}${MP_PENDING?' · 📡 waiting for a connection':''} · <a href="#" onclick="partyToggleForm();return false" style="color:var(--gold2)">end party night</a></span></span></div>`}
@@ -142,11 +169,13 @@ function partyToggleForm(){if(!ON()||!LMP)return;const on=partyOn();
   :`<div class="h mhd">📺 Start party night?</div><p>Everyone in the league books at the same time instead of taking turns, and the week airs as soon as the last GM locks in. It's the same league and save — end party night whenever you like and you're back to taking turns.</p><p class="muted">Put the league on a TV: open the game there, tap <b>Show a league on this screen</b> and enter <b class="gold">${esc(LMP.code)}</b>.</p><button class="btn" onclick="partySet(true)">Start party night</button><button class="btn ghost" onclick="closeModal()">Cancel</button>`)}
 function partySet(on){closeModal();if(!ON()||!LMP)return;if(!mpAvail()||!navigator.onLine)return toast('You need a connection to change party night.');
  const o=S.online;o.party=!!on;o.booked=o.booked||{};o.rk=o.rk||{};
- if(on){news(`📺 Party night! ${localSeats().map(nameOf).join(', ')} are booking together.`);o.msg=''}
+  if(on){news(`📺 Party night! ${localSeats().map(nameOf).join(', ')} are booking together.`);o.msg='';o.lv=Object.assign({},o.booked);delete o.live}
  else{/* back to taking turns: whoever is next in line (and hasn't gone yet) is up */
   if(S.phase==='rookies'){const n=localSeats().find(k=>!o.rk[k]);if(n)o.turn=n}
   else if(S.phase==='draft')o.turn=onClock();
-  else if(S.phase==='season'){const n=(o.order&&o.order.length?o.order:bookingOrder()).find(k=>!o.booked[k]);if(n)o.turn=n}
+  else if(S.phase==='season'){/* only GMs who already went live keep their cards locked; the rest go live on their turn */
+   const done=o.lv||{};o.booked={};for(const k in done)if(done[k])o.booked[k]=true;delete o.live;delete o.lv;
+   const n=(o.order&&o.order.length?o.order:bookingOrder()).find(k=>!o.booked[k]);if(n)o.turn=n}
   news('📺 Party night is over — back to taking turns.');o.msg='Party night is over — back to taking turns. Your turn!'}
  save();mpPush();render();toast(on?'📺 Party night is on!':'Back to taking turns.')}
 
@@ -163,12 +192,14 @@ function tvConnect(){if(!TV)return;if(TV.unsub){TV.unsub();TV.unsub=null}
  TV.unsub=TKO.listen(TV.code,tvIncoming,()=>{if(!TV)return;TV.status='missing';render()});partyWake()}
 function tvIncoming(d){if(!TV||!d||!d.state)return;if((d.rev||0)<TV.rev&&S)return;
  let st;try{st=JSON.parse(d.state)}catch(e){return}delete st._view;viewFor(st,'s0');dataUpdate(st);ensureTraits(st);
- S=st;TV.rev=d.rev||0;TV.status='on';TV.n=d.n||nSeats();
+ S=st;TV.rev=d.rev||0;TV.status='on';TV.n=d.n||nSeats();TV.feed=d.live||null;
  const nm=d.names||{},sh=d.shows||{};S.names=S.names||{};for(const k in nm)if(nm[k])S.names[localKey(k)]=nm[k];S.gm=S.names.p||S.gm;
  if(S.online){S.online.show=S.online.show||{};for(const k in sh)if(sh[k])S.online.show[localKey(k)]=cleanShow(sh[k])}
  const k=S.last?(S.last.season||S.season)*100+S.last.week:0;
  if(TV.seen===null)TV.seen=k;
  else if(k>TV.seen){TV.seen=k;if(TV.reveal&&TV.reveal.t)clearTimeout(TV.reveal.t);TV.reveal={key:S.last.season+'-'+S.last.week,pi:0}}
+ /* a GM started their live segment: that beats replaying last week */
+ if(TV.reveal&&TV.feed&&TV.feed.html&&TV.feed.week===S.week&&S.online&&S.online.live){if(TV.reveal.t)clearTimeout(TV.reveal.t);TV.reveal=null}
  tvRefresh()}
 function tvEnd(){if(!confirm('Take the league off this screen?'))return;tvStop()}
 function tvStop(){if(TV){if(TV.unsub)TV.unsub();if(TV.reveal&&TV.reveal.t)clearTimeout(TV.reveal.t)}TV=null;LS.del(TV_KEY);document.body.classList.remove('tv');
@@ -192,7 +223,7 @@ function tvQR(){try{const q=qrcode(0,'M');q.addData(tvJoinUrl());q.make();return
 function tvRender(){document.body.classList.add('tv');const app=$('#app');
  if(TV.reveal&&S&&S.last){if(document.getElementById('rv')&&TV.reveal.built===TV.reveal.key+':'+TV.reveal.pi)return;app.innerHTML=tvHeader()+`<main class="tv-main">${tvRevealHtml()}</main>`;tvRevealRun();return}
  let body;
- if(!S)body=tvWaiting();else if(Object.values(S.names||{}).filter(Boolean).length<nSeats())body=tvLobby();else if(S.phase==='rookies')body=tvRookies();else if(S.phase==='draft')body=tvDraft();else if(S.phase==='over')body=tvOver();else body=tvWeek();
+ if(!S)body=tvWaiting();else if(Object.values(S.names||{}).filter(Boolean).length<nSeats())body=tvLobby();else if(S.phase==='rookies')body=tvRookies();else if(S.phase==='draft')body=tvDraft();else if(S.phase==='over')body=tvOver();else if(S.online&&S.online.live&&partyLiveNow())body=tvLive();else body=tvWeek();
  app.innerHTML=tvHeader()+`<main class="tv-main">${body}</main>`}
 function tvWaiting(){return `<div class="tv-title center"><div class="kicker"><i></i>League ${esc(TV.code)}</div><div class="hero-t tv-hero">${TV.status==='missing'?'No league<br>found':'Tuning in…'}</div><p class="muted">${TV.status==='missing'?'Double-check the code (Office on any GM\'s phone shows it).':(window.TKO&&TKO.ready?'Connecting to the league.':'Waiting for online play to load. This screen needs an internet connection.')}</p>${TV.status==='missing'?'<button class="btn tv-go" onclick="tvStop();tvForm()">Try another code</button>':''}</div>`}
 function tvPartyTag(){return S.online&&S.online.party?'📺 Party night':'Taking turns'}
@@ -218,6 +249,16 @@ function tvWeek(){const sh=curShow(),o=S.online;const v=venueOf();const party=o.
  <div class="tv-match">${pairs.map(([a,b])=>b?`<div class="tv-pair">${gm(a)}<div class="vs">VS</div>${gm(b)}</div>`:`<div class="tv-pair bye">${gm(a)}<div class="tv-byetag">Bye week — airs solo</div></div>`).join('')}</div>
  <p class="muted center">${party?"Book your show on your phone and go live. When everyone's locked in, the results play here.":'The league is taking turns. Start party night from any GM\'s Office to book together.'}</p></div>
  <div>${tvStandings()}<div class="card"><div class="h small">The Wire</div>${S.news.slice(-6).reverse().map(n=>`<div class="news"><span class="muted">W${n.w}</span> ${esc(n.t)}</div>`).join('')}</div></div></div>`}
+/* a GM is live: show exactly what's on their phone — the scene, the choices, then how the call played out */
+function tvSafe(html){const t=document.createElement('template');t.innerHTML=String(html||'');
+ t.content.querySelectorAll('script,iframe,object,embed,link,meta,style,form,input,textarea,select').forEach(e=>e.remove());
+ t.content.querySelectorAll('*').forEach(e=>{[...e.attributes].forEach(a=>{const n=a.name.toLowerCase(),v=String(a.value).trim().toLowerCase();if(n.startsWith('on')||((n==='href'||n==='src'||n==='xlink:href')&&(v.startsWith('javascript:')||v.startsWith('data:text'))))e.removeAttribute(a.name)})});
+ return t.innerHTML}
+function tvLive(){const o=S.online,now=partyLiveNow(),lv=o.lv||{},f=TV.feed;const sh=curShow();
+ const mine=f&&f.html&&f.seat===canonKey(now)&&f.week===S.week&&f.season===S.season;
+ return `<div class="tv-grid"><div><div class="tv-title"><div class="kicker"><i></i><span class="live-tag">LIVE</span> Week ${S.week} · ${esc(sh.ppv?sh.name:showNames()[now]||'')}</div><div class="hero-t tv-hero tv-clock" style="font-size:clamp(40px,4.6vw,96px)!important">${esc(nameOf(now))}</div></div>
+ ${mine?`<div class="tv-live-sheet">${tvSafe(f.html)}</div>`:`<div class="card center"><div class="big">📱 Waiting for ${esc(nameOf(now))} to start their show…</div><p class="muted">Their promos and match calls show up here as they make them.</p></div>`}</div>
+ <div><div class="card"><div class="h small">Going live tonight</div>${(o.live.order||[]).map(k=>`<div class="tv-row"><b class="${k===now?'gold':''}">${esc(nameOf(k))}</b><span class="muted">${lv[k]?'✅ Done':k===now?'🔴 Live now':'Up next'}</span></div>`).join('')}</div>${tvStandings()}</div></div>`}
 function tvOver(){const l=localSeats().slice().sort((a,b)=>S.fans[b]-S.fans[a]);
  return `<div class="tv-title center"><div class="kicker"><i></i>Season ${S.season} complete</div><div class="hero-t tv-hero">${esc(nameOf(l[0]))}<br>wins!</div></div>${tvStandings()}
  ${S.best?`<div class="card center"><div class="muted">Match of the year</div><div class="big">${esc(S.best.t)} <span class="stars">${stars(S.best.s)}</span></div><div class="muted">${esc(S.best.show)} · Week ${S.best.w}</div></div>`:''}
