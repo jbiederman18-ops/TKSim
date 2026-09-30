@@ -526,11 +526,12 @@ ol.steps{padding-left:20px;margin:6px 0 10px}ol.steps li{margin:3px 0}
 <script src="vendor/qrcode.js" defer></script>
 <script src="party.js"></script>
 <script src="scenarios.js"></script>
+<script src="gimmicks.js"></script>
 <script>
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v70';
+const APP_VERSION='v71';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -1269,6 +1270,18 @@ const MEV=[
 /* the expanded scenario pack (scenarios.js) */
 if(typeof MEV_MORE!=='undefined'){MEV.push(...MEV_MORE);TWISTS.push(...TWISTS_MORE);
  for(const k in SCENES_MORE)for(const sd in SCENES_MORE[k]){const x=SCENES_MORE[k][sd],b=SCENES[k]&&SCENES[k][sd];if(!b)continue;if(x.texts)b.texts=(b.texts||(b.text?[b.text]:[])).concat(x.texts);if(x.ch)b.ch=b.ch.concat(x.ch)}}
+/* silly gimmick prospects (gimmicks.js): each brings its own match moment and promo lines */
+const GIM={};
+if(typeof GIMMICKS!=='undefined'){GIMMICKS.forEach(g=>{GIM[g.k]=g;
+  MEV.push({id:'gim:'+g.k,w:14,gim:g.k,text:g.m.t,ch:g.m.ch.concat([
+   {t:'Commit to the bit',s:'pop',d:.1,st:.5,popA:2,ok:'The crowd has no idea what they just watched, and they loved every second of it.',no:'The bit dies in the middle of the ring. So does the crowd.'},
+   {t:'Drop the gimmick and just wrestle',always:1,st:.25,ok:'Surprisingly solid. The crowd is confused, but impressed.'}])});
+  ['callout','vignette','interview'].forEach(t=>{const b=SCENES[t]&&SCENES[t].solo;if(!b)return;b.texts=(b.texts||[]).concat([{gim:g.k,t:g.p.t}]);b.ch=b.ch.concat(g.p.ch.map(c=>Object.assign({gim:g.k},c)))})});
+ TWISTS.push({when:'any',gim:'*',w:3,text:"The crowd starts chanting for {A} to 'DO THE BIT! DO THE BIT!'",ch:[{t:'Do the bit',s:'pop',d:.05,p:4,ok:'They did the bit. The building shakes.'},{t:'Refuse — make them want it more',s:'mic',d:.1,p:3,ok:'The chant gets even louder. Masterful.'},{t:'Do a completely different bit',s:'luck',d:.1,p:2,ok:'Nobody saw that coming. Somehow it works.'}]})}
+function gimProspect(){const used=new Set(Object.values(S.w).map(w=>w.gim).filter(Boolean));const seen=S.gimSeen||[];
+ let pool=GIMMICKS.filter(g=>!used.has(g.k)&&!seen.includes(g.k));if(!pool.length)pool=GIMMICKS.filter(g=>!used.has(g.k));if(!pool.length)return null;const g=pick(pool);
+ const w=makeRookie(g.n,g.g,g.st,g.al,g.tier);w.gim=g.k;w.bio=g.bio;w.ring=clamp(w.ring+(g.ring||0),20,99);w.mic=clamp(w.mic+(g.mic||0),5,99);w.pop=w.pop0=clamp(w.pop+(g.pop||0),1,100);w.potM=Math.max(w.potM,w.mic);
+ w.tier=g.tier;w.fee=TIERS[g.tier].cost;w.tr=autoTraits(w);S.gimSeen=seen.concat(g.k).slice(-(GIMMICKS.length-3));return w}
 function evRoles(m,brand){const win=m.sides[m.winner];const los=m.sides.filter((s,i)=>i!==m.winner);const Bs=pick(los);
  const A=S.w[pick(win)],B=S.w[pick(Bs)];const A2=win.length>1?S.w[win.find(x=>x!==A.id)]:null;
  const used=new Set();(S.card[brand]||[]).forEach(sl=>{if(!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(i=>used.add(i));if(sl.k==='promo'){used.add(sl.d.a);if(sl.d.b)used.add(sl.d.b)}});
@@ -1722,13 +1735,15 @@ function onClock(){const d=S.draft;const o=d.order||(d.order=d.first==='p'?['p',
 const SCOUT_EVERY=4,SCOUT_N=4;
 function genProspect(){const g=Math.random()<.5?'M':'F';const r=Math.random();const tier=r<.2?'gen':r<.55?'bluechip':'prospect';const nm=()=>pick(g==='M'?FIRST_M:FIRST_F)+' '+pick(LAST);let n=nm();for(let i=0;i<8&&Object.values(S.w).some(w=>w.name===n);i++)n=nm();
  const w=makeRookie(n,g,pick(Object.keys(STYLE_N)),pick(['f','h']),tier);w.tier=tier;w.fee=TIERS[tier].cost;return w}
-function scoutTick(force){if(S.phase!=='season')return;const s=S.scout;if(!force&&s&&AW()-s.at<SCOUT_EVERY&&s.l.length)return;S.scout={at:AW(),l:Array.from({length:SCOUT_N},genProspect)}}
+function scoutTick(force){if(S.phase!=='season')return;const s=S.scout;if(!force&&s&&AW()-s.at<SCOUT_EVERY&&s.l.length)return;S.scout={at:AW(),l:Array.from({length:SCOUT_N},genProspect)};
+ /* now and then the scouts turn up someone… unusual */
+ if(typeof GIMMICKS!=='undefined'&&Math.random()<.6){const g=gimProspect();if(g)S.scout.l[RI(0,S.scout.l.length-1)]=g}}
 function scoutLeft(){const s=S.scout;return s?Math.max(1,SCOUT_EVERY-(AW()-s.at)):SCOUT_EVERY}
 function signProspect(i){if(mpLocked())return;const s=S.scout;const w=s&&s.l[i];if(!w)return;const c=w.fee+mkt(w)*4;if(S.money.p<c)return toast('Not enough money.');if(ownList('p').length>=30)return toast('Your roster is full (30).');
  S.money.p-=c;s.l.splice(i,1);w.id='rk'+partyNid();w.own='p';w.con=52;w.sal=mkt(w);w.mor=85;w.fee=0;S.w[w.id]=w;news(`🌱 ${S.gm} signed developing talent ${w.name} to a 52-week developmental deal.`);save();closeModal();render();toast(`${w.name} signed! Train them in the Performance Center.`)}
 function openScout(){if(!S.scout)scoutTick(true);const s=S.scout;
  openModal(`<div class="h mhd">Scouting report</div><p class="muted" style="margin-top:0">Hand-pick a developing talent. Prospects start raw and grow toward their potential by working matches and training in the Performance Center. The board refreshes in ${scoutLeft()} week${scoutLeft()>1?'s':''} — anyone you pass on signs elsewhere.</p>
- ${s.l.length?s.l.map((w,i)=>{const T=TIERS[w.tier]||TIERS.prospect;const c=w.fee+mkt(w)*4;return `<div class="card scout"><div class="row sb"><span class="frow">${face(w)}<span><b>${alSpan(w)}</b><br><span class="muted tiny">${w.g==='M'?"Men's":"Women's"} · ${STYLE_N[w.st]} · ${w.al==='f'?'Face':'Heel'}</span></span></span><span class="tg ${w.tier==='gen'?'good':w.tier==='bluechip'?'warnt':''}">${T.n}</span></div>
+ ${s.l.length?s.l.map((w,i)=>{const T=TIERS[w.tier]||TIERS.prospect;const c=w.fee+mkt(w)*4;return `<div class="card scout"><div class="row sb"><span class="frow">${face(w)}<span><b>${alSpan(w)}</b><br>${w.bio?`<span class="tiny gold">🎭 ${esc(w.bio)}</span><br>`:''}<span class="muted tiny">${w.g==='M'?"Men's":"Women's"} · ${STYLE_N[w.st]} · ${w.al==='f'?'Face':'Heel'}</span></span></span><span class="tg ${w.tier==='gen'?'good':w.tier==='bluechip'?'warnt':''}">${T.n}</span></div>
   <div class="grid2" style="margin-top:8px"><div><span class="muted tiny">Scout's projection</span><br><b>${T.pot[0]}–${T.pot[1]}</b> potential</div><div><span class="muted tiny">Right now</span><br>RNG ${Math.round(w.ring)} · MIC ${Math.round(w.mic)}</div></div>
   ${(w.tr||[]).length?`<div class="tags" style="margin-top:6px">${w.tr.map(t=>TRAITS[t]?`<span class="tg">${TRAITS[t].i} ${esc(TRAITS[t].n)}</span>`:'').join('')}</div>`:''}
   <button class="btn" style="margin-top:10px" ${S.money.p<c?'disabled':''} onclick="signProspect(${i})">Sign · ${money(c)} <span class="tiny" style="opacity:.8">(${money(w.fee)} fee + 4 wks · ${money(mkt(w))}/wk)</span></button></div>`}).join(''):'<p class="muted center">You signed everyone on this board. New prospects arrive next week.</p>'}
@@ -1926,7 +1941,7 @@ function okFor(o,ctx){const A=ctx.A,B=ctx.B;return (!o.al||o.al===A.al)&&(!o.vs|
  &&(!o.nff||!B||A.al!=='f'||B.al!=='f')&&(!o.sty||styIn(o.sty,A))&&(!o.bsty||styIn(o.bsty,B))&&(!o.nsty||!styIn(o.nsty,A))
  &&(!o.mt||!!ctx.MT&&o.mt.split('|').includes(ctx.MT))&&(!o.stip||stipIn(o.stip,ctx.STIP))
  &&(!o.bd||!!B&&(B.al==='h'||!!ctx.STIP&&!(STIPS[ctx.STIP]||STIPS.std).dq))
- &&(!o.held||!!ctx.T)&&(!o.fac||!!ctx.F&&ctx.F!=='their crew')&&(!o.star||A.pop>=72)&&(!o.und||A.pop<=58)&&(!o.bstar||!!B&&B.pop>=72)}
+ &&(!o.gim||!!A.gim&&(o.gim==='*'||o.gim===A.gim))&&(!o.held||!!ctx.T)&&(!o.fac||!!ctx.F&&ctx.F!=='their crew')&&(!o.star||A.pop>=72)&&(!o.und||A.pop<=58)&&(!o.bstar||!!B&&B.pop>=72)}
 function seenP(t){return !!(S&&S.pseen&&S.pseen.includes(t))}
 function noteP(ts){if(S)S.pseen=(S.pseen||[]).concat(ts).slice(-45)}
 function wpick(l,wf){const tot=l.reduce((a,x)=>a+wf(x),0);let r=Math.random()*tot;for(const x of l){r-=wf(x);if(r<=0)return x}return l[l.length-1]}
@@ -1951,7 +1966,7 @@ duo:{texts:[{al:'f',t:'{B} is still down as {A} heads up the ramp. Security rush
 {al:'h',t:'Tell the crowd why they changed',s:'mic',d:.1,p:4,ok:'Heartfelt and honest. The turn is complete.',no:'A bit much — but it lands with most of them.'}]}};
 function openScene(p,ctx,ai){const sc=SCENES[p.type];const base=p.b?sc.duo:(sc.solo||sc.duo);ctx=ctx||promoCtx(p,'p');
  const texts=(base.texts||[base.text]).map(t=>typeof t==='string'?{t}:t).filter(o=>okFor(o,ctx));
- const tx=wpick(texts,o=>(seenP(o.t)?.2:1)*(o.al||o.vs?2.5:1)).t;const ch=dealChoices(base.ch,ctx,3);if(!ai)noteP([tx,...ch.map(c=>c.t)]);return {text:tx,ch}}
+ const tx=wpick(texts,o=>(seenP(o.t)?.2:1)*(o.al||o.vs?2.5:1)*(o.gim?12:1)).t;const ch=dealChoices(base.ch,ctx,3);if(!ai)noteP([tx,...ch.map(c=>c.t)]);return {text:tx,ch}}
 function pickTwist(p,ctx,ai){if(p.type==='turn'){const base=p.b?TURN_TWIST.duo:TURN_TWIST.solo;const tx=base.texts.filter(o=>okFor(o,ctx));const ch=dealChoices(base.ch,ctx,3);if(!ai)noteP(ch.map(c=>c.t));return {text:(tx[0]||base.texts[0]).t,ch}}
  const mx=mystCand(ctx.A);const el=TWISTS.filter(t=>(t.when!=='duo'||ctx.B)&&(t.when!=='solo'||!ctx.B)&&okFor(t,ctx)&&(!t.myst||mx));
  const t=wpick(el,x=>(x.w||1)*(seenP(x.text)?.15:1)*(x.al||x.vs?1.5:1));const ch=dealChoices(t.ch.map(c=>c.al||!t.al||c.turn||c.t.startsWith('Nobody')||c.t.startsWith('Shake it')?c:Object.assign({},c,{al:t.al})),ctx,3);if(!ai)noteP([t.text,...ch.map(c=>c.t)]);ctx.MYST=t.myst?mx.id:null;return Object.assign({},t,{ch})}
@@ -2724,7 +2739,7 @@ function showW(id){const w=S.w[id];if(!w)return;const own=w.own==='p';const ts=t
  else if(!w.own&&S.phase==='season')acts=`${!w.cw&&faLeft(w)?`<div class="gold center" style="margin-top:10px">⏳ On the market ${faLeft(w)<=1?'— <b>last week</b> to sign':'for '+faLeft(w)+' more weeks'}</div>`:''}<button class="btn" onclick="sign('${id}')">Sign · ${money(signCost(w))}</button>${w.fee?`<div class="muted center tiny">Includes a ${money(w.fee)} development fee for this rookie.</div>`:''}${w.inj?'<div class="muted center">Currently injured.</div>':''}`;
  if(w.cw&&!w.own)acts+=`<div class="row mt"><button class="btn sec" onclick="openCreate('${id}')">✏️ Edit</button><button class="btn sec danger" onclick="delCreated('${id}')">Delete</button></div>`;
  openModal(`<div class="wd-top"><div class="wd-pic">${portrait(w)}</div><div style="min-width:0"><div class="h wd-n">${esc(w.name)}</div><div class="muted">${w.g==='M'?"Men's":"Women's"} division · ${STYLE_N[w.st]} · <span class="${w.al==='f'?'face':'heel'}">${w.al==='f'?'Face':'Heel'}</span> · ${w.own==='p'?esc(S.gm):w.own==='ai'?esc(S.rival):'Free agent'}${w.rookie?' · <span class="rk">ROOKIE</span>':''}</div>
- ${ts.length?`<div class="gold mt">🏆 ${ts.join(', ')} Champion</div>`:''}${w.inj?`<div class="err">${w.susp?'⛔ Suspended':'🚑 Injured'} — out ${w.inj} more week${w.inj>1?'s':''}</div>`:''}${teams.length?`<div class="muted mt">Teams: ${esc(teams.join(', '))}</div>`:''}</div></div>
+ ${w.bio?`<div class="tiny gold mt">🎭 ${esc(w.bio)}</div>`:''}${ts.length?`<div class="gold mt">🏆 ${ts.join(', ')} Champion</div>`:''}${w.inj?`<div class="err">${w.susp?'⛔ Suspended':'🚑 Injured'} — out ${w.inj} more week${w.inj>1?'s':''}</div>`:''}${teams.length?`<div class="muted mt">Teams: ${esc(teams.join(', '))}</div>`:''}</div></div>
  <div class="row mt"><button class="btn sec" onclick="pastePhoto('${id}',()=>showW('${id}'))">📋 Paste photo</button><button class="btn sec" onclick="addPhoto('${id}')">📷 ${hasPhoto(w)?'Change':'Add'} photo</button>${IMG[id]?`<button class="btn sec" onclick="delPhoto('${id}')">Remove photo</button>`:''}</div>
  ${statBar('In-ring',w.ring,w.pot)}${statBar('Mic',w.mic,w.potM)}${statBar('Popularity',w.pop)}${statBar('Morale',w.mor,null,w.mor<30?'bad':'')}${statBar('Stamina',sta(w),null,'st-'+staCls(sta(w)))}${statBar(`Durability · ${durWord(durOf(w))}`,durOf(w),null,'st-'+durCls(durOf(w)))}${durNote(w)?`<div class="tiny muted" style="margin:-2px 0 8px">🩹 ${esc(durNote(w))}</div>`:''}
  <div class="grid2"><div><span class="muted">Record</span><br>${w.w}–${w.l}</div><div><span class="muted">Contract</span><br>${w.own?w.con+' weeks':'—'}</div><div><span class="muted">${w.own?'Salary':'Asking'}</span><br>${money(sal(w))}/wk${w.own&&Math.abs(mkt(w)-sal(w))>=2?`<br><span class="muted tiny">Worth ${money(mkt(w))} now</span>`:''}</div><div><span class="muted">Momentum</span><br>${w.mom>0?'+':''}${w.mom}</div></div>
