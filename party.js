@@ -45,7 +45,9 @@ function noMsg(st){if(st&&st.online)delete st.online.msg;return st}
 /* the league version this device's game is built on (kept in memory; set whenever we load or save the league) */
 let MP_BASE=null,MPX=null,MP_HELD=null,MP_TX=false,MP_OFFLINE_TOLD=0;
 function mpSetBase(rev,str){MP_BASE=LMP?{code:LMP.code,rev,str}:null}
-function mpBase(){return MP_BASE&&LMP&&MP_BASE.code===LMP.code?MP_BASE:null}
+function mpBase(){if(MP_BASE&&LMP&&MP_BASE.code===LMP.code)return MP_BASE;
+ /* after a restart: the version an unsent change was based on was kept on the device */
+ if(LMP){try{const u=JSON.parse(LS.get(mpUnsentKey(LMP.code))||'null');if(u&&u.str)return MP_BASE={code:LMP.code,rev:u.rev,str:u.str}}catch(e){}}return null}
 
 /* move the league along on a scratch copy (inside the save transaction): the draft starts once everyone has
    created wrestlers, and the week airs once everyone is locked in. Only on party night — taking turns does
@@ -83,7 +85,7 @@ async function leaguePush(retried){
  if(!ON()||!LMP||TV)return;
  if(MPX){MPX.again=true;return}
  const L=LMP,code=L.code,me=L.me,base=mpBase(),msg=S.online.msg||'';
- const sent=PJ(canonState());
+ const sent=PJ(canonState()),seq=mpUnsentSeq(code);
  const X=MPX={again:false};let r=null,err=null;
  try{r=await TKO.pushMerge(code,d=>mpMergeTx(d,sent,base,me,msg))}catch(e){err=e}
  MPX=null;
@@ -95,9 +97,10 @@ async function leaguePush(retried){
    MP_PENDING=true;if(Date.now()-MP_OFFLINE_TOLD>30000){MP_OFFLINE_TOLD=Date.now();toast('📡 Saved on this phone — it will sync when the connection is back.')}return}
   return mpPushBlind()}
  if(r&&r.conflict){console.warn('league conflict',r.conflict.slice(0,5));
-  if(r.d&&r.d.state){toast('Someone else got there first — your screen has been refreshed.');if(busy()){mpSetBase(-1,sent);MP_HELD=r.d}else partyAdopt(r.d.state,r.d.rev,r.d)}
+  if(r.d&&r.d.state){mpUnsent(false,code,seq);toast('Someone else got there first — your screen has been refreshed.');if(busy()){mpSetBase(-1,sent);MP_HELD=r.d}else partyAdopt(r.d.state,r.d.rev,r.d)}
   return}
  if(!r||!r.str)return;
+ mpUnsent(false,code,seq);
  const now=PJ(canonState());
  if(now===sent&&!busy()&&!X.again){partyAdopt(r.str,r.rev,r.d)}
  else if(now===sent&&!X.again){/* a sheet is open: don't swap the game out from under it; catch up when it closes */
@@ -109,9 +112,9 @@ async function leaguePush(retried){
   S.online.msg='';mpPush()}
  partyCatchUp()}
 /* offline and not on party night: the old way — queue the write and let Firestore send it when we reconnect */
-function mpPushBlind(){const o=S.online;o.rev=(o.rev||0)+1;const str=PJ(canonState());saveLocal();
+function mpPushBlind(){const o=S.online,seq=mpUnsentSeq(LMP.code);o.rev=(o.rev||0)+1;const str=PJ(canonState());saveLocal();
  const f={state:str,rev:o.rev,turn:canonKey(o.turn),msg:o.msg||'',week:S.week,season:S.season,phase:S.phase},code=LMP.code,key=LMP.key;mpSetBase(o.rev,str);
- TKO.push(code,f).catch(e=>{console.warn('push failed',e);TKO.claim(code,key).then(()=>TKO.push(code,f)).catch(()=>{MP_PENDING=true;toast('Saved on this device — it will sync when you reconnect.')})})}
+ TKO.push(code,f).then(()=>mpUnsent(false,code,seq)).catch(e=>{console.warn('push failed',e);TKO.claim(code,key).then(()=>TKO.push(code,f)).then(()=>mpUnsent(false,code,seq)).catch(()=>{MP_PENDING=true;toast('Saved on this device — it will sync when you reconnect.')})})}
 /* take the league's latest version as this device's game */
 function partyAdopt(str,rev,d,quiet){
  mpLoad(str,d&&d.names,d&&d.shows,rev);saveLocal();mpRemember();if(quiet)return;

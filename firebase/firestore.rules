@@ -14,6 +14,10 @@ service cloud.firestore {
       match /backups/{slot} {
         allow get, create, update: if signedIn() && id.size() == 12 && slot in ['b0', 'b1', 'b2', 'b3', 'b4'];
       }
+      // A cloud copy of each of your other solo games, and the list of them (INDEX000).
+      match /games/{sid} {
+        allow get, create, update: if signedIn() && id.size() == 12 && sid.size() == 8;
+      }
     }
 
     match /games/{code} {

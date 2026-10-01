@@ -123,6 +123,18 @@ if (!cfg.apiKey || !cfg.projectId) {
         return rev;
       }), 15000);
     },
+    // Every other solo game on a device gets its own cloud copy under the same sync code, plus a line in a shared list
+    // (merged field by field, so two devices adding games never overwrite each other). Writes queue up offline.
+    cloudGamePut(id, sid, data) {
+      const meta = { t: data.t || '', sub: data.sub || '', label: data.label || '', at: data.at || Date.now(), game: data.game || '' };
+      return Promise.all([
+        setDoc(doc(db, 'saves', id, 'games', sid), { ...data, updated: serverTimestamp() }),
+        setDoc(doc(db, 'saves', id, 'games', 'INDEX000'), { g: { [sid]: meta } }, { merge: true }),
+      ]);
+    },
+    cloudGameDrop(id, sid) { return setDoc(doc(db, 'saves', id, 'games', 'INDEX000'), { g: { [sid]: { gone: true, at: Date.now() } } }, { merge: true }); },
+    cloudGameList(id) { return timed(getDocFromServer(doc(db, 'saves', id, 'games', 'INDEX000')).then(s => (s.exists() && s.data().g) || {}), 12000); },
+    cloudGameGet(id, sid) { return timed(getDocFromServer(doc(db, 'saves', id, 'games', sid)).then(s => (s.exists() ? s.data() : null)), 12000); },
     cloudBackup(id, slot, data) { return setDoc(doc(db, 'saves', id, 'backups', 'b' + slot), { ...data, updated: serverTimestamp() }); },
     async cloudBackups(id, n) {
       const out = [];
