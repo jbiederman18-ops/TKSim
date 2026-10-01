@@ -8,7 +8,7 @@
 <filter id="glow" filterUnits="userSpaceOnUse" x="0" y="0" width="512" height="512"><feGaussianBlur stdDeviation="16" result="b"/><feColorMatrix in="b" values="1 0 0 0 .6  0 .8 0 0 .35  0 0 .2 0 0  0 0 0 .45 0"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
 <filter id="d"><feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#000" flood-opacity=".75"/></filter>
 </defs>
-<rect width="512" height="512" fill="url(#bg)"/><g transform="translate(256 256) scale(1.04) translate(-256 -225)">
+<rect width="512" height="512" fill="url(#bg)"/><g transform="translate(256 256) scale(.8) translate(-256 -225)">
 <g transform="skewX(-6) translate(16 0)">
 <g filter="url(#glow)">
 <path d="M14 164 H44 M468 164 H498" stroke="url(#g)" stroke-width="20" stroke-linecap="round"/>
