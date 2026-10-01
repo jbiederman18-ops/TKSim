@@ -40,9 +40,12 @@ header.top:before{content:"";position:absolute;left:0;right:0;bottom:100%;height
 header.top{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 16px 9px;padding-top:max(10px,calc(env(safe-area-inset-top) + 14px));background:#09090b;border-bottom:1px solid #000;box-shadow:0 1px 0 rgba(216,180,73,.35),0 8px 24px rgba(0,0,0,.6)}
 header.top:after{content:"";position:absolute;left:0;right:0;bottom:-3px;height:2px;background:linear-gradient(90deg,var(--gold) 0%,var(--red) 55%,transparent 100%)}
 .brand{position:relative;display:flex;align-items:center;gap:6px;white-space:nowrap}
-.ver{position:absolute;left:1px;bottom:-9px;font:600 9px/1 'Barlow',sans-serif;letter-spacing:.08em;color:#6f6b64;pointer-events:none}
-.logo{font-size:25px;font-weight:900;font-style:italic;letter-spacing:.02em;line-height:1;background:linear-gradient(180deg,#fff9df 0%,#f3d77a 38%,#b78a23 52%,#f0cf6d 72%,#fff1bc 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 0 rgba(0,0,0,.8))}
-.logo2{font:900 italic 15px/1 'BC',Impact,sans-serif;color:#fff;background:linear-gradient(180deg,#ff4a3d,#a8130d);padding:4px 8px 3px 6px;clip-path:var(--slant);letter-spacing:.06em}
+.ver{position:absolute;left:5px;bottom:-10px;font:600 9px/1 'Barlow',sans-serif;letter-spacing:.08em;color:#6f6b64;pointer-events:none}
+.logo{font-size:23px;font-weight:900;font-style:italic;letter-spacing:.02em;line-height:.9;padding-right:3px;background:linear-gradient(180deg,#fff9df 0%,#f3d77a 38%,#b78a23 52%,#f0cf6d 72%,#fff1bc 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 0 rgba(0,0,0,.8))}
+.logo2{display:block;margin:3px 0 0 -3px;font:800 italic 9.5px/1 'BC',Impact,sans-serif;color:#fff;background:linear-gradient(180deg,#ff4a3d,#a8130d);padding:2px 9px 2px 9px;clip-path:var(--slant);letter-spacing:.42em;text-align:center}
+.lstack{display:flex;flex-direction:column;align-items:stretch}
+.lmk{position:relative;display:grid;place-items:center;width:38px;height:34px;margin-right:3px;font:900 italic 19px/1 'BC',Impact,sans-serif;letter-spacing:-.02em;color:#17110a;background:linear-gradient(180deg,#f6e6b8 0%,#e3c47c 50%,#b8913f 100%);clip-path:polygon(9px 0,100% 0,calc(100% - 9px) 100%,0 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+.lmk:after{content:"";position:absolute;right:4px;bottom:0;width:13px;height:4px;background:var(--red);clip-path:polygon(3px 0,100% 0,calc(100% - 3px) 100%,0 100%)}
 .hud{display:flex;gap:5px;align-items:center}
 .hudc{font-size:13px;font-weight:700;letter-spacing:.04em;background:linear-gradient(180deg,#22232a,#15161a);border-top:1px solid #34363e;padding:4px 10px;clip-path:var(--slant);color:#e9e4d8;white-space:nowrap}
 .hudc b{color:var(--gold2);font-weight:800}
@@ -56,9 +59,9 @@ main.enter>*:nth-child(2){animation-delay:.05s}main.enter>*:nth-child(3){animati
 @keyframes pulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.22)}}
 @keyframes livedot{0%,100%{opacity:1}50%{opacity:.25}}
 /* nav */
-nav.tabs{position:fixed;bottom:0;left:0;right:0;z-index:6;display:flex;padding:6px 6px calc(6px + env(safe-area-inset-bottom));background:linear-gradient(180deg,#0e0e11,#050506);box-shadow:0 -10px 30px rgba(0,0,0,.7)}
+nav.tabs{position:fixed;bottom:-120px;left:0;right:0;z-index:6;display:flex;padding:6px 6px calc(120px + max(6px,env(safe-area-inset-bottom) - 8px));background:linear-gradient(180deg,#0e0e11,#050506);box-shadow:0 -10px 30px rgba(0,0,0,.7)}
 nav.tabs:before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold) 30%,var(--red) 70%,transparent)}
-nav.tabs button{flex:1;position:relative;background:none;border:0;color:#77736b;padding:7px 0 5px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+nav.tabs button{flex:1;position:relative;background:none;border:0;color:#77736b;padding:7px 0 3px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
 nav.tabs svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 nav.tabs button.on{color:var(--gold2);text-shadow:0 0 12px rgba(246,221,142,.5)}
 nav.tabs button.on svg{filter:drop-shadow(0 0 6px rgba(246,221,142,.55))}
@@ -564,7 +567,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v73';
+const APP_VERSION='v74';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -2396,13 +2399,13 @@ function chips(v,opts,cur){return `<div class="chips">${opts.map(([k,n])=>`<butt
 function icons(w){let s='';if(isChamp(w.id))s+='🏆';if(w.inj)s+=w.susp?'⛔':'🚑';if(w.own&&w.mor<30)s+='😠';if(w.own==='p'&&w.con<=4)s+='📝';if(w.fat>=FAT_RISK)s+='🔋';return s?' '+s:''}
 function wRow(w,extra){return `<div class="w" onclick="showW('${w.id}')"><div class="wl"><div class="wn">${esc(w.name)}${icons(w)}</div><div class="muted">${w.g==='M'?'♂':'♀'} ${STYLE_N[w.st]} · <span class="${w.al==='f'?'face':'heel'}">${w.al==='f'?'Face':'Heel'}</span>${w.rookie?' · <span class="rk">ROOKIE</span>':''}${w.pot-w.ring>=8?' · <span class="gold">▲'+Math.round(w.pot)+'</span>':''}${(w.tr||[]).length?' · '+w.tr.map(t=>TRAITS[t]?TRAITS[t].i:'').join(''):''}</div></div><div class="wr"><div class="ovr">${ovr(w)}</div><div class="muted tiny">POP ${Math.round(w.pop)}</div></div>${extra||''}</div>`}
 function statBar(label,v,pot,cls){return `<div class="stat"><div class="row sb"><span>${label}</span><span>${Math.round(v)}${pot!=null?` <span class="muted">/ ${Math.round(pot)} potential</span>`:''}</span></div><div class="bar ${cls||''}"><i style="width:${clamp(v,0,100)}%"></i>${pot!=null?`<b style="left:${clamp(pot,0,100)}%"></b>`:''}</div></div>`}
-function hdr(){const on=S&&(S.phase==='season'||S.phase==='over');return `<header class="top"><div class="brand"><span class="logo">TONY KHAN</span><span class="logo2">SIM</span><span class="ver">${APP_VERSION}</span></div><div class="hdr-r">${on?`<div class="hud"><span class="hudc">WK <b>${Math.min(S.week,SEASON)}</b></span><span class="hudc"><b>${fmtFans(S.fans.p)}</b> FANS</span><span class="hudc"><b>${money(S.money.p)}</b></span></div>`:''}${TV?'':'<button class="gsw" onclick="openGames()" aria-label="Your games" title="Your games">⇄</button>'}</div></header>`}
+function hdr(){const on=S&&(S.phase==='season'||S.phase==='over');return `<header class="top"><div class="brand" aria-label="Tony Khan Simulator"><span class="lmk" aria-hidden="true">TK</span><span class="lstack"><span class="logo">TONY KHAN</span><span class="logo2">SIMULATOR</span></span><span class="ver">${APP_VERSION}</span></div><div class="hdr-r">${on?`<div class="hud"><span class="hudc">WK <b>${Math.min(S.week,SEASON)}</b></span><span class="hudc"><b>${fmtFans(S.fans.p)}</b> FANS</span><span class="hudc"><b>${money(S.money.p)}</b></span></div>`:''}${TV?'':'<button class="gsw" onclick="openGames()" aria-label="Your games" title="Your games">⇄</button>'}</div></header>`}
 function navView(){return `<nav class="tabs">${[['home','Home'],['book','Book'],['roster','Roster'],['titles','Titles'],['office','Office']].map(([k,n])=>`<button class="${tab===k?'on':''}" onclick="go('${k}')">${ICON[k]}${n}</button>`).join('')}</nav>`}
 /* iOS can leave the page's layout viewport out of step with the screen (most often after the on-screen keyboard
  closes), and then fixed elements like the tab bar ride along with the scroll. Keep the tab bar pinned to the bottom
  of what's actually on screen, and nudge iOS to resync once the keyboard goes away. */
 function pinNav(){const n=document.querySelector('nav.tabs');const vv=window.visualViewport;if(!n)return;
- if(!vv||vv.scale>1.01){n.style.transform='';return}const off=Math.round(window.innerHeight-vv.height-vv.offsetTop);n.style.transform=Math.abs(off)>1&&off<window.innerHeight/2?`translateY(${-off}px)`:''}
+ if(!vv||vv.scale>1.01){n.style.transform='';return}const off=Math.round(window.innerHeight-vv.height-vv.offsetTop);n.style.transform=Math.abs(off)>24&&off<window.innerHeight/2?`translateY(${-off}px)`:''}
 if(typeof window!=='undefined'){const vv=window.visualViewport;if(vv){vv.addEventListener('resize',pinNav);vv.addEventListener('scroll',pinNav)}window.addEventListener('scroll',pinNav,{passive:true});window.addEventListener('orientationchange',()=>setTimeout(pinNav,300));
  document.addEventListener('focusout',e=>{if(!/^(INPUT|TEXTAREA|SELECT)$/.test(e.target&&e.target.tagName||''))return;setTimeout(()=>{if(/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||''))return;window.scrollTo(window.scrollX,window.scrollY);pinNav()},120)})}
 function render(){const app=$('#app');
