@@ -143,8 +143,8 @@ function mandCard(){const md=S.mand&&S.mand.p;if(!md||!MANDS[md.k])return '';con
 function rivalAd(){if(!S.card||!S.card.ai||curShow().ppv)return null;if(ON()&&!(S.online.booked&&S.online.booked.ai))return null;
  const ms=S.card.ai.filter(sl=>sl.k==='match'&&sl.d&&validMatch(sl.d));const me=ms[ms.length-1];if(!me)return null;const r=rateMatch(me.d,{preview:true});return {m:me.d,lo:r.lo,hi:r.hi}}
 function rivalAdHtml(mode){const a=rivalAd();if(!a)return '';const nm=esc(curShow().theirs||'show');
- if(mode==='line')return `<div class="rivalad"><div class="lfr"><span class="lft">Rival ad</span><span class="lfc">${nm}: ${vsLineC(a.m)}</span></div><div class="lfl"></div><div class="lfs">${esc(matchSub(a.m))} · <span class="stars">${stars(a.lo)}–${stars(a.hi)}</span> · top it with your main event for +3K fans</div></div>`;
- return `<div class="card dial"><div class="dk">Across the dial<b>${nm}</b></div><div class="dm"><div class="dv">${vsLineC(a.m)}</div><div class="tiny muted" style="margin-top:3px">${esc(S.rival)}'s main event · ${esc(matchSub(a.m))} · projected <span class="stars">${stars(a.lo)}–${stars(a.hi)}</span>. Top it with your main event to win the main event war (+3K fans).</div></div></div>`}
+ if(mode==='line')return `<div class="rivalad"><div class="lft">Rival ad · ${nm}</div><div class="lfc">${esc(vsLine(a.m))}</div><div class="lfs">${esc(a.m.title&&S.titles[a.m.title]?S.titles[a.m.title].n+' title':MT[a.m.type].n)} · <span class="stars">${stars(a.lo)}–${stars(a.hi)}</span> · beat it for +3K fans</div></div>`;
+ return `<div class="card dial"><div class="dk">Across the dial<b>${nm}</b></div><div class="dm"><div class="dv">${esc(vsLine(a.m))}</div><div class="tiny muted" style="margin-top:3px">${esc(a.m.title&&S.titles[a.m.title]?S.titles[a.m.title].n+' title':MT[a.m.type].n)} · <span class="stars">${stars(a.lo)}–${stars(a.hi)}</span> · beat it for +3K fans</div></div></div>`}
 
 /* ===================== SUGGEST A CARD ===================== */
 /* the GM's assistant books the empty slots — keeps everything you've already booked, promised or entered in a tournament */
