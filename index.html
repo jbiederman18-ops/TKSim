@@ -697,6 +697,20 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 .pickin .pt,.callbar .pt{background:#09090b;color:var(--gold2)}
 .motn{background:none;clip-path:none;padding:0;color:var(--gold2);font-style:normal;letter-spacing:.14em}
 .seg.best{background:linear-gradient(90deg,rgba(216,180,73,.12),transparent 70%);box-shadow:inset 3px 0 0 var(--gold)}
+
+/* live header: who's in it, filling the row; quiet in-theme call prompt */
+.lvsides{position:relative;display:flex;align-items:flex-start;justify-content:space-around;gap:8px;margin:10px 0 12px}
+.lvs{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.lvf{display:flex;justify-content:center}
+.lvf .fav{width:56px;height:56px}
+.lvf .fav+.fav{margin-left:-12px}
+.lvsides.many .lvf .fav,.lvf .fav:nth-child(3){width:44px;height:44px}
+.lvn{font:700 14px/1.2 'Barlow',sans-serif;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lvvs{flex:none;align-self:center;margin-top:-18px;font:900 italic 20px 'BC','Barlow Condensed',sans-serif;color:var(--gold2);text-transform:uppercase}
+.lvhd .lvt{font-size:26px}
+.callq{display:flex;flex-direction:column;gap:2px;margin:2px 0 10px;padding:2px 0 2px 12px;border-left:3px solid var(--gold)}
+.callq b{font:700 12px 'BC','Barlow Condensed',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--gold2)}
+.callq span{font-size:15px;font-weight:600;color:var(--text)}
 </style>
 </head>
 <body>
@@ -713,7 +727,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v87';
+const APP_VERSION='v88';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',22:'Forbidden Door',24:'All In'};
 /* v80: themed TV specials between PPVs — hotter crowds, bigger fan swings, better gates */
@@ -2199,7 +2213,11 @@ function okFor(o,ctx){const A=ctx.A,B=ctx.B;return (!o.al||o.al===A.al)&&(!o.vs|
 function seenP(t){return !!(S&&S.pseen&&S.pseen.includes(t))}
 function noteP(ts){if(S)S.pseen=(S.pseen||[]).concat(ts).slice(-45)}
 function wpick(l,wf){const tot=l.reduce((a,x)=>a+wf(x),0);let r=Math.random()*tot;for(const x of l){r-=wf(x);if(r<=0)return x}return l[l.length-1]}
-function dealChoices(pool,ctx,n){const el=pool.filter(c=>okFor(c,ctx));const out=el.filter(c=>c.key);const w=c=>seenP(c.t)?.2:1;const rest=()=>el.filter(c=>!out.includes(c));
+/* two choices are too alike to deal together if they do the same special thing (add a stipulation) or share most of their words */
+const CH_STOP=new Set('a an the to and of it them their they on in with for at be is are into then up out back over off from as that this every before after'.split(' '));
+function chWords(t){return new Set((t.toLowerCase().replace(/\{[a-z]\}/gi,' ').match(/[a-z']+/g)||[]).filter(x=>!CH_STOP.has(x)))}
+function chNear(a,b){if(a.stp&&b.stp)return true;const x=chWords(a.t),y=chWords(b.t);if(!x.size||!y.size)return false;let i=0;x.forEach(v=>{if(y.has(v))i++});return i/(x.size+y.size-i)>=.5}
+function dealChoices(pool,ctx,n){const el=pool.filter(c=>okFor(c,ctx));const out=el.filter(c=>c.key);const w=c=>seenP(c.t)?.2:1;const rest=()=>el.filter(c=>!out.includes(c)&&!out.some(o=>chNear(o,c)));
  const al=rest().filter(c=>c.al||c.vs);if(out.length<n&&al.length)out.push(wpick(al,w));
  while(out.length<n&&rest().length){const used=new Set(out.map(c=>c.s));out.push(wpick(rest(),c=>w(c)*(used.has(c.s)?.45:1)))}
  return shuffle(out)}
@@ -2975,13 +2993,16 @@ function liveNext(){if(!LQ)return;PS=null;ME=null;LQ.k++;const it=LQ.items[LQ.k]
  else{const p=S.card.p[it.i].d;const ctx=promoCtx(p,'p');PS={i:it.i,p,ctx,st:newSt(),beat:0,scene:openScene(p,ctx),out:null,done:false,live:true,last};renderPS()}}
 function finishLive(){if(!LIVE)return;LIVE=false;ME=null;PS=null;LQ=null;S.card.p.forEach(sl=>{if(sl.k==='promo'&&sl.d&&!sl.d.res)sl.d=null});if(partyOn())return partyLiveDone();if(ON())return mpLockCard();airShow();showResults();render()}
 /* Live show header: broadcast tag, segment label, gold title, the wrestlers involved */
-function liveHd(show,lab,title,faces,tag){return `<div class="lvhd"><div class="spark"></div><div class="ptop"><span class="livebug"><b>${tag||'● Live'}</b>${show?`<span>${esc(show)}</span>`:''}</span><span class="lvl">${lab}</span></div><div class="lvt">${title}</div>${faces?`<div class="duo">${faces}</div>`:''}<div class="lfl"></div></div>`}
-function callBar(t,l){return `<div class="callbar"><span class="pt">${t}</span><span class="pl">${l}</span></div>`}
+function liveHd(show,lab,title,sides,tag,vs){const ss=(sides||[]).map(sd=>sd.filter(Boolean)).filter(sd=>sd.length);
+ const col=sd=>`<div class="lvs"><div class="lvf">${sd.map(w=>face(w)).join('')}</div><div class="lvn">${esc(sd.length>1?sideName(sd.map(w=>w.id)):sd[0].name)}</div></div>`;
+ const row=ss.length?`<div class="lvsides ${ss.length>2?'many':''}">${ss.map(col).join(vs?'<span class="lvvs">vs</span>':'')}</div>`:'';
+ return `<div class="lvhd"><div class="spark"></div><div class="ptop"><span class="livebug"><b>${tag||'● Live'}</b>${show?`<span>${esc(show)}</span>`:''}</span><span class="lvl">${lab}</span></div><div class="lvt">${title}</div>${row}<div class="lfl"></div></div>`}
+function callBar(t,l){return `<div class="callq"><b>${t}</b><span>${l}</span></div>`}
 function renderME(){const it=ME.q[ME.k];const {m,g}=it;const r=g.r;
- const hd=`${liveHd(ME.show,`Match ${it.n}${it.main?' · Main event':''}`,esc(m.sides.map(sideName).join(' vs ')),m.sides.flat().map(id=>face(S.w[id])).join(''))}<p class="scene">${esc(evFill(g.e.text,r))}</p>${g.sit?`<div class="note">${g.info}</div>`:''}`;
+ const hd=`${liveHd(ME.show,`Match ${it.n}${it.main?' · Main event':''}`,esc(m.title&&S.titles[m.title]?S.titles[m.title].n+' title':MT[m.type].n),m.sides.map(sd=>sd.map(id=>S.w[id])),'',true)}<p class="scene">${esc(evFill(g.e.text,r))}</p>${g.sit?`<div class="note">${g.info}</div>`:''}`;
  if(ME.out){const o=ME.out;return openModal(hd+`<div class="outcome ${o.success?'ok':'no'}">${o.success?'✅':'❌'} ${esc(o.text)}</div>${o.flip?`<div class="note">👑 New winner: ${esc(sideName(m.sides[m.winner]))}</div>`:''}${o.nc?'<div class="note">🚫 The match ends without a winner.</div>':''}${(o.extra||[]).map(x=>`<div class="note">${esc(x)}</div>`).join('')}<button class="btn" onclick="meNext()">${ME.last?'Finish the show':'Continue the show ▸'}</button>`)}
  const ch=evChoices(g.e,m,r);
- openModal(hd+(g.sit?callBar('Off script',"This one isn't in the script. Make the call."):callBar('Your call','Producers are in your headset.'))+ch.map((c,ci)=>`<button class="choice" onclick="meChoose(${ci})"><span class="key"><span>${'ABCD'[ci]}</span></span><div>${esc(evFill(c.t,r))}</div><div class="muted tiny">${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:c.heelA&&r.A.al==='f'?'<span class="heel">😈 Dirty — fans won\'t like it from a face</span> · ':''}${c.always?'✅ Guaranteed':STAT_ICON[c.s]+' · '+oddsWord(evChance(c,r))}${c.flip?' · changes the winner':''}${c.nc?' · no winner':''}${g.sit&&c.tip?`<br>${esc(sitTip(c,r))}`:''}</div></button>`).join(''))}
+ openModal(hd+(g.sit?callBar('Off script',"This isn't in the script. What's the call?"):callBar('Your call',"Producers are in your headset. What's the call?"))+ch.map((c,ci)=>`<button class="choice" onclick="meChoose(${ci})"><span class="key"><span>${'ABCD'[ci]}</span></span><div>${esc(evFill(c.t,r))}</div><div class="muted tiny">${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:c.heelA&&r.A.al==='f'?'<span class="heel">😈 Dirty — fans won\'t like it from a face</span> · ':''}${c.always?'✅ Guaranteed':STAT_ICON[c.s]+' · '+oddsWord(evChance(c,r))}${c.flip?' · changes the winner':''}${c.nc?' · no winner':''}${g.sit&&c.tip?`<br>${esc(sitTip(c,r))}`:''}</div></button>`).join(''))}
 function meChoose(ci){if(!ME||ME.out)return;const it=ME.q[ME.k];const ch=evChoices(it.g.e,it.m,it.g.r);ME.out=it.g.sit?sitRoll(ch[ci],it.g.r,it.m):evRoll(ch[ci],it.g.r,it.m);renderME()}
 function meNext(){if(!ME)return;if(LQ)return liveNext();ME.out=null;ME.k++;if(ME.k>=ME.q.length)finishLive();else renderME()}
 function slotTags(m,ppv){const t=[];let hb=0;for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j])hb=Math.max(hb,heatOf(a,b));
@@ -3164,12 +3185,12 @@ function prPick(k){const pt=PT[PE.type];const other=k==='a'?PE.b:PE.a;const ag=P
 function savePromo(){S.card.p[PE.i].d={type:PE.type,a:PE.a,b:PE.b||null};save();closeModal();render()}
 function startPromo(){const p={type:PE.type,a:PE.a,b:PE.b||null};const ctx=promoCtx(p,'p');PS={i:PE.i,p,ctx,st:newSt(),beat:0,scene:openScene(p,ctx),out:null,done:false};renderPS()}
 function renderPS(){const {scene,ctx}=PS;
- if(PS.done){const r=PS.p.res;return openModal(`${liveHd(PS.live&&LQ?LQ.show:'',PT[PS.p.type].n,'Segment complete',face(ctx.A)+(ctx.B?face(ctx.B):''),PS.live?'Final':'Preview')}<div class="stars big center">${stars(r.stars)}</div>${r.log.map(l=>`<p class="log">${esc(l)}</p>`).join('')}
+ if(PS.done){const r=PS.p.res;return openModal(`${liveHd(PS.live&&LQ?LQ.show:'',PT[PS.p.type].n,'Segment complete',[[ctx.A],[ctx.B]],PS.live?'Final':'Preview')}<div class="stars big center">${stars(r.stars)}</div>${r.log.map(l=>`<p class="log">${esc(l)}</p>`).join('')}
   <div class="card"><div class="muted tiny">When the show wraps:</div><div>Popularity ${sgn(r.pop)}</div>${PS.p.b?`<div>Feud heat with ${esc(ctx.B.name)} ${sgn(r.heat)}</div>`:''}${r.x?`<div>🔥 New rivalry with ${esc(S.w[r.x].name)} ${sgn(r.hx)}</div>`:''}${r.chem?`<div>Team chemistry ${sgn(r.chem)}</div>`:''}${r.turn?'<div>🔄 Alignment turn when this airs!</div>':''}${r.fat?`<div class="bad">😴 Promo fatigue: ${esc(r.fat.why)} (−${fracTxt(r.fat.pen)}★, less heat)</div>`:''}${r.boost&&!r.bf?`<div class="good">📺 ${r.streak?`Week ${r.streak+1} of a steady build`:'Back-and-forth'} — +${r.boost}% heat.</div>`:''}${PS.p.type==='contract'&&PS.p.b?(()=>{const np=nextPPVAfter(S.week);return np?`<div class="gold">📜 When this airs, ${esc(ctx.A.name)} vs ${esc(ctx.B.name)}${r.stip?' ('+STIPS[bestStip(ctx.A,ctx.B)].n+')':''} becomes official for ${esc(np.n)} and is pre-booked on that card.</div>`:''})():''}${r.chal&&PS.p.b&&PS.p.type!=='contract'&&S.week<SEASON?(()=>{const np=nextPPVAfter(S.week);const both=np&&np.w>S.week+1;const cf=PS.p.chalFor||'next';return `<div class="gold">🎯 When this airs, ${esc(ctx.A.name)} vs ${esc(ctx.B.name)} is promised for <b>${cf==='ppv'&&np?esc(np.n):PPVS[S.week+1]?esc(PPVS[S.week+1])+' (next week)':'next week'}</b> — deliver it or fans will notice.</div>${both?`<div class="muted tiny" style="margin-top:8px">Set the match for:</div><div class="chips" style="margin-top:4px"><button class="chip ${cf==='next'?'on':''}" onclick="PS.p.chalFor='next';renderPS()">Next week</button><button class="chip ${cf==='ppv'?'on':''}" onclick="PS.p.chalFor='ppv';renderPS()">${esc(np.n)} · in ${np.w-S.week} wks</button></div>${cf==='ppv'?`<div class="muted tiny" style="margin-top:6px">Build it up: pit them against each other's stablemates and trade promos (alternate who leads) until the PPV. Don't give the match away on TV.</div>`:''}`:''}`})():''}${r.bf?`<div class="good">↔️ Back-and-forth promo in the build to ${esc(r.bf)} — +${r.boost}% heat.</div>`:''}</div>
   <button class="btn" onclick="${PS.live?'liveNext()':'lockPromo()'}">${PS.live?(PS.last?'Finish the show':'Continue the show ▸'):'Lock it in'}</button>`)}
- const hd=`${liveHd(PS.live&&LQ?LQ.show:'',`Promo · ${PS.beat?'The twist':'On air'}`,esc(PT[PS.p.type].n),`${face(ctx.A)}${face(ctx.B)}${PS.beat&&ctx.X&&/\{X\}/.test(scene.text)?face(ctx.X):''}`,PS.live?'● Live':'Preview')}<p class="scene">${esc(fill(scene.text,ctx))}</p>`;
+ const hd=`${liveHd(PS.live&&LQ?LQ.show:'',`Promo · ${PS.beat?'The twist':'On air'}`,esc(PT[PS.p.type].n),[[ctx.A],[ctx.B],PS.beat&&ctx.X&&/\{X\}/.test(scene.text)?[ctx.X]:[]],PS.live?'● Live':'Preview')}<p class="scene">${esc(fill(scene.text,ctx))}</p>`;
  if(PS.out)return openModal(hd+`<div class="outcome ${PS.out.success?'ok':'no'}">${PS.out.success?'✅':'❌'} ${esc(PS.out.text)}</div><button class="btn" onclick="psNext()">Continue</button>`);
- openModal(hd+callBar('Your call','Pick the line.')+scene.ch.map((c,ci)=>`<button class="choice" onclick="psChoose(${ci})"><span class="key"><span>${'ABC'[ci]}</span></span><div>${esc(fill(c.t,ctx))}</div><div class="muted tiny">${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:''}${STAT_ICON[c.s]} · ${oddsWord(chance(c,ctx))}${c.turn?' · 🔄 turns them':''}${c.ch?' · 🎯 sets up a match':''}${c.stp?' · adds a stipulation':''}</div></button>`).join(''))}
+ openModal(hd+callBar('Your call',`What does ${esc(ctx.A.name)} do?`)+scene.ch.map((c,ci)=>`<button class="choice" onclick="psChoose(${ci})"><span class="key"><span>${'ABC'[ci]}</span></span><div>${esc(fill(c.t,ctx))}</div><div class="muted tiny">${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:''}${STAT_ICON[c.s]} · ${oddsWord(chance(c,ctx))}${c.turn?' · 🔄 turns them':''}${c.ch?' · 🎯 sets up a match':''}${c.stp?' · adds a stipulation':''}</div></button>`).join(''))}
 function psChoose(ci){if(!PS||PS.out||PS.done)return;PS.out=roll(PS.scene.ch[ci],PS.ctx,PS.st);renderPS()}
 function psNext(){if(!PS||!PS.out)return;PS.out=null;if(PS.beat===0){PS.beat=1;PS.scene=pickTwist(PS.p,PS.ctx)}else{finalizePromo(PS.p,PS.ctx,PS.st);PS.done=true}renderPS()}
 function lockPromo(){S.card.p[PS.i].d=PS.p;PS=null;save();closeModal();render()}

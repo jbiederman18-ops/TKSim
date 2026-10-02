@@ -263,13 +263,10 @@ interview:{solo:{texts:[
  {al:'f',vs:'f',t:"Point out {B}'s one weakness, respectfully",s:'mic',d:.15,h:10,p:2,ok:"A competitive edge creeps in.",no:"{B} shrugs it off."},
  {al:'f',vs:'h',t:"Keep calm while {B} tries to get under their skin",s:'mic',d:.15,h:9,p:3,ok:"{A} stays cool. {B} looks petty.",no:"{A} loses their temper."},
  {al:'h',vs:'f',t:"Tell {B} they're only popular because they're nice",s:'mic',d:.1,h:10,p:2,ok:"The crowd boos. {B} takes it personally.",no:"The insult is weak."},
- {al:'h',t:"Flip the table over at {B}",s:'ring',d:.05,h:14,p:1,ok:"Water and papers everywhere. Chaos.",no:"The table is bolted down."},
  {sty:'te',t:"Explain move by move how the match will go",s:'mic',d:.15,h:9,p:2,ok:"Chillingly specific.",no:"It sounds robotic."}]}},
 contract:{duo:{texts:[
  {al:'f',vs:'h',t:"The contract signing is set up in the ring. {B} is already sitting, smirking."},
  {al:'h',vs:'f',t:"{A} arrives at the contract signing with a lawyer."}],ch:[
- {stp:1,t:"Add a stipulation to the contract",s:'mic',d:.15,h:14,p:3,ok:"The stakes just went up.",no:"The stipulation falls flat."},
- {nff:1,t:"Sign it, then flip the table onto {B}",s:'ring',d:.1,h:18,p:2,ok:"Wood, paper and chaos everywhere.",no:"{B} saw it coming and moved."},
  {al:'f',vs:'f',t:"Sign it and shake hands — may the best one win",s:'pop',d:.05,h:6,p:3,ok:"A classy moment. Everyone wants to see the match.",no:"{B} leaves them hanging."},
  {al:'h',t:"Have the lawyer add fine print",s:'mic',d:.15,h:14,p:2,ok:"{B} signs without reading. Uh oh.",no:"{B} catches the fine print."},
  {al:'f',vs:'h',t:"Refuse to sign until {B} apologizes to the fans",s:'mic',d:.1,h:12,p:3,ok:"{B} squirms. The crowd chants 'SAY IT!'",no:"{B} refuses and walks off."},
@@ -291,8 +288,6 @@ rally:{solo:{texts:[
 champ:{solo:{texts:[
  {al:'f',t:"{A} comes out with the {T} title held high and a proud smile."},
  {al:'h',t:"{A} walks out with the {T} title draped over their shoulder like they own the place."}],ch:[
- {al:'f',t:"Promise to defend it against anyone",s:'mic',d:.1,p:3,ok:"A fighting champion.",no:"Nobody answers."},
- {al:'f',t:"Dedicate the reign to the fans",s:'pop',d:.05,p:3,ok:"The crowd roars.",no:"It sounds rehearsed."},
  {al:'h',t:"Announce they'll only defend it on their terms",s:'mic',d:.1,p:2,ok:"The crowd is furious.",no:"Nobody cares."},
  {al:'h',t:"Rename the title after themselves",s:'mic',d:.15,p:3,ok:"The boos are deafening. Iconic heel move.",no:"Even the crowd laughs."},
  {sty:'te',t:"Promise a title defense that'll be a wrestling clinic",s:'mic',d:.1,p:2,ok:"The purists are excited.",no:"It sounds boring."},
@@ -300,7 +295,6 @@ champ:{solo:{texts:[
  duo:{texts:[{al:'f',vs:'h',t:"The champion {A} is interrupted by the challenger {B}."},{al:'h',vs:'f',t:"{B} marches out and stares at {A}'s title."}],ch:[
  {t:"Hold the belt in {B}'s face",s:'mic',d:.05,h:10,p:2,ok:"A tense stare-down.",no:"{B} knocks it away."},
  {al:'f',t:"Accept the challenge — any time, anywhere",ch:1,s:'mic',d:.05,h:10,p:3,ok:"The crowd erupts. A fighting champion.",no:"The acceptance sounds half-hearted."},
- {al:'h',t:"Make {B} earn a title shot first",s:'mic',d:.1,h:12,p:2,ok:"{B} is furious. The crowd boos.",no:"It sounds cowardly."},
  {al:'f',vs:'f',t:"Hand {B} the belt to hold — then take it back",s:'pop',d:.05,h:8,p:3,ok:"Respectful, with a message.",no:"{B} doesn't want to give it back."}]}},
 vignette:{solo:{texts:[
  {sty:'br',t:"A grainy film shows {A} training in a dingy boxing gym."},
@@ -313,7 +307,6 @@ vignette:{solo:{texts:[
  {sty:'te',t:"Explain a new submission in chilling detail",s:'mic',d:.1,p:2,ok:"Creepy and effective.",no:"Too technical."},
  {sty:'pw',t:"Lift something impossibly heavy",s:'ring',d:.1,p:3,ok:"Unreal strength.",no:"The camera angle ruins it."},
  {sty:'sh',t:"Tease a big announcement",s:'mic',d:.1,p:3,ok:"The fans are dying to know.",no:"It sounds overhyped."},
- {al:'f',t:"Visit a children's hospital",s:'pop',d:0,p:4,ok:"Heartwarming. The fans adore {A}.",no:"It feels staged."},
  {al:'h',t:"Buy out a restaurant so nobody else can eat there",s:'mic',d:.05,p:2,ok:"Petty and hated.",no:"It comes off as boring."}]},
  duo:{texts:[{al:'f',vs:'f',t:"A vignette shows {A} and {B} training together, with a hint of rivalry."},{nff:1,t:"A vignette shows {A} watching tape of {B} in a dark room."}],ch:[
  {nff:1,t:"Circle {B}'s mistakes on a whiteboard",s:'mic',d:.1,h:9,p:2,ok:"Obsessive and scary.",no:"It's hard to read."},
