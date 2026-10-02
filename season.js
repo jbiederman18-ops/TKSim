@@ -133,14 +133,42 @@ function mandCheck(b,inf,rating,show,hourWin,notes){const md=S.mand&&S.mand[b];i
  else if(k==='win2'&&!show.ppv&&hourWin!=null){md.st=hourWin===b?(md.st||0)+1:0;ok=md.st>=2}
  if(ok)mandPay(b,notes,true)}
 /* start of a new week: settle anything that came due, and hand out a new mandate after each PPV */
-function mandTick(notes){if(S.phase!=='season')return;S.mand=S.mand||{};brands().forEach(b=>{const md=S.mand[b];if(md&&!md.done&&S.week>md.due)mandPay(b,notes||[],!!MANDS[md.k].end);
+function mandTick(notes){if(S.phase!=='season')return;weekTick();S.mand=S.mand||{};brands().forEach(b=>{const md=S.mand[b];if(md&&!md.done&&S.week>md.due)mandPay(b,notes||[],!!MANDS[md.k].end);
   const cur=S.mand[b];if(!cur||(cur.done&&(S.week===1||PPVS[S.week-1]))||S.week>cur.due)mandNew(b,notes)})}
 function mandCard(){const md=S.mand&&S.mand.p;if(!md||!MANDS[md.k])return '';const left=md.due-S.week;
  return `<div class="card mand"><div class="row sb"><span class="h small" style="margin:0">📺 Network mandate</span>${md.done?`<b class="${md.done==='ok'?'good':'bad'}">${md.done==='ok'?'✅ Delivered':'❌ Missed'}</b>`:`<span class="muted tiny">${left<=0?'Due tonight':`${left} week${left>1?'s':''} left`}</span>`}</div>
  <div style="margin-top:6px">${MANDS[md.k].i} <b>${esc(MANDS[md.k].n)}</b>${md.done?'':` by ${esc(md.ppv)}`}</div>${md.done?'':`<div class="muted tiny">Reward: ${money(md.cash)} and ${fmtFans(md.fans)} fans. Miss it and you lose 5K fans.${md.k==='win2'&&md.st?` · Streak: ${md.st}`:''}</div>`}</div>`}
 
+/* ===================== WEEKLY MINI-GOALS & CROWD CHANTS (v89) =====================
+ Every week each GM gets one small goal (a little cash and fans, no penalty for missing it), and the crowd starts
+ chanting for someone on the roster — book them that week for a pop. */
+const GOALS={
+ me4:{n:'Get a 4★ main event',i:'🎬',ok:sh=>!sh.ppv,chk:(f,r)=>f.me>=4},
+ title:{n:'Put a title on the line',i:'🏆',ok:(sh,b)=>Object.values(S.titles).some(t=>t.holders.length&&S.w[t.holders[0]]&&S.w[t.holders[0]].own===b),chk:f=>f.title>0},
+ women:{n:"Book a women's match",i:'💃',ok:(sh,b)=>ownList(b).filter(w=>w.g==='F'&&!w.inj).length>=2,chk:f=>f.women>=1},
+ tag:{n:'Book a tag or trios match',i:'🤝',ok:()=>true,chk:f=>f.tag>0},
+ stip:{n:'Book a stipulation match',i:'⛓️',ok:()=>true,chk:f=>f.stip>0},
+ promo:{n:'Land a 3½★ promo',i:'🎤',ok:()=>true,chk:f=>f.pr>=3.5},
+ show:{n:'Put on a 3½★ show',i:'⭐',ok:()=>true,chk:(f,r)=>r>=3.5},
+ floor:{n:'No match under 2½★',i:'🧱',ok:()=>true,chk:f=>f.nm>0&&f.lo>=2.5},
+ rookie:{n:'Give a prospect a 3★ match',i:'🌱',ok:(sh,b)=>ownList(b).some(w=>w.rookie&&!w.inj),chk:f=>f.rk}};
+const goalReward=()=>({cash:Math.round(econCap()*.05/1000)*1000||5000,fans:3000});
+const CHANTS=['“We want {L}!”','“{U}! {U}! {U}!”','“Let’s go {L}!”','“{L} deserves it!”'];
+function weekTick(){if(S.phase!=='season')return;S.goal=S.goal||{};S.chant=S.chant||{};const sh=curShow();const wk=AW();
+ brands().filter(b=>b==='p'||ON()).forEach(b=>{if(!S.goal[b]||S.goal[b].w!==wk){const last=S.goal[b]&&S.goal[b].k;const l=Object.keys(GOALS).filter(k=>k!==last&&GOALS[k].ok(sh,b));if(l.length){const rw=goalReward();S.goal[b]={k:pick(l),w:wk,cash:rw.cash,fans:rw.fans}}}
+  if(!S.chant[b]||S.chant[b].w!==wk){const was=S.chant[b]&&S.chant[b].id;const pool=ownList(b).filter(w=>!w.inj&&w.id!==was&&w.pop<80);if(pool.length){const w=pick(pool);const L=w.name.split(' ').slice(-1)[0];S.chant[b]={id:w.id,w:wk,t:pick(CHANTS).replace('{L}',L).replace(/\{U\}/g,L.toUpperCase())}}}})}
+/* the crowd gets its wish: first segment on the card with the chanted wrestler gets the pop */
+function chantHit(b,ids){const c=S.chant&&S.chant[b];if(!c||c.w!==AW()||c.hit||!ids.includes(c.id))return null;const w=S.w[c.id];if(!w)return null;
+ c.hit=true;w.pop=clamp(w.pop+2,1,100);w.mor=clamp(w.mor+5,0,100);return `📣 The crowd got its wish — ${w.name}! The place comes unglued (+¼★, +2 popularity, +2K fans).`}
+function goalCheck(b,inf,rating,show,notes){const g=S.goal&&S.goal[b];if(!g||g.w!==AW()||g.done||!GOALS[g.k])return;
+ if(!GOALS[g.k].chk(inf,rating,show))return;g.done=true;S.money[b]+=g.cash;S.fans[b]+=g.fans;
+ if(b==='p'||ON())notes.push(`🎯 ${ON()?nameOf(b)+': ':''}Weekly goal hit — ${GOALS[g.k].n} (+${money(g.cash)}, +${fmtFans(g.fans)} fans).`)}
+function weekGoalsCard(){if(S.phase!=='season')return '';if(!S.goal||!S.goal.p||S.goal.p.w!==AW()||!S.chant||!S.chant.p||S.chant.p.w!==AW())weekTick();
+ const g=S.goal&&S.goal.p,c=S.chant&&S.chant.p;const cw=c&&S.w[c.id];if(!(g&&GOALS[g.k])&&!cw)return '';
+ return `<div class="card wkg">${g&&GOALS[g.k]?`<div class="row sb"><span><span class="tiny muted">🎯 This week's goal</span><br><b>${GOALS[g.k].i} ${esc(GOALS[g.k].n)}</b></span><span class="tiny ${g.done?'good':'muted'}" style="text-align:right">${g.done?'✅ Done':`+${money(g.cash)}<br>+${fmtFans(g.fans)} fans`}</span></div>`:''}${cw?`<div class="row sb wkc" onclick="showW('${cw.id}')"><span><span class="tiny muted">📣 The crowd is chanting</span><br><b>${esc(c.t)}</b></span><span class="tiny muted" style="text-align:right">Book ${esc(cw.name.split(' ').slice(-1)[0])}<br>for a pop</span></div>`:''}</div>`}
+
 /* ===================== ADVERTISED MAIN EVENT & THE MAIN EVENT WAR ===================== */
-function rivalAd(){if(!S.card||!S.card.ai||curShow().ppv)return null;if(ON()&&!(S.online.booked&&S.online.booked.ai))return null;
+function rivalAd(){if(!ON()||!S.card||!S.card.ai||curShow().ppv)return null;if(ON()&&!(S.online.booked&&S.online.booked.ai))return null;
  const ms=S.card.ai.filter(sl=>sl.k==='match'&&sl.d&&validMatch(sl.d));const me=ms[ms.length-1];if(!me)return null;const r=rateMatch(me.d,{preview:true});return {m:me.d,lo:r.lo,hi:r.hi}}
 function rivalAdHtml(mode){const a=rivalAd();if(!a)return '';const nm=esc(curShow().theirs||'show');
  if(mode==='line')return `<div class="rivalad"><div class="lft">Rival ad · ${nm}</div><div class="lfc">${esc(vsLine(a.m))}</div><div class="lfs">${esc(a.m.title&&S.titles[a.m.title]?S.titles[a.m.title].n+' title':MT[a.m.type].n)} · <span class="stars">${stars(a.lo)}–${stars(a.hi)}</span> · beat it for +3K fans</div></div>`;
