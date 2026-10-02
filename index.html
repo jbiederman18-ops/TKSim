@@ -766,7 +766,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v93';
+const APP_VERSION='v94';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',22:'Forbidden Door',24:'All In'};
 /* v80: themed TV specials between PPVs — hotter crowds, bigger fan swings, better gates */
@@ -3897,6 +3897,8 @@ if(typeof document!=='undefined'&&document.getElementById('app')){
  tvBoot();loadImg();
  window.addEventListener('tko-ready',()=>{mpConnect();tvConnect();cloudCheck();render()});if(window.TKO)setTimeout(()=>{mpConnect();tvConnect();cloudCheck()},0);
  let lastCk=Date.now();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&TV)partyWake();if(document.visibilityState==='visible'&&Date.now()-lastCk>20000){lastCk=Date.now();cloudCheck();if(ON())mpConnect()}else if(document.visibilityState==='hidden')flush()});
+ /* slow or patchy connections often never fire 'online': keep nudging anything still waiting to sync while the app is open */
+ setInterval(()=>{if(!navigator.onLine||document.visibilityState!=='visible'||!window.TKO||!TKO.ready)return;if(cloudCfg()&&cloudCfg().pending&&!CL_PUSHING)cloudPush();if(ON()&&MP_PENDING&&!MPX&&!mpT)mpPush(S.online&&S.online.msg)},60000);
  window.addEventListener('online',()=>{if(cloudCfg()&&cloudCfg().pending)cloudPush();if(ON()&&(MP_PENDING||mpHasUnsent()))mpPush(S.online&&S.online.msg)});
  /* leaving the app: send anything still waiting on its timer right away */
  const flush=()=>{if(mpT&&ON())mpPush();if(CL_T)cloudPush();if(CG_T)cgActive()};window.addEventListener('pagehide',flush);

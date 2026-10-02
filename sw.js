@@ -1,5 +1,5 @@
 // Tony Khan Simulator — offline support. Bump VERSION whenever you upload a new index.html (and APP_VERSION in index.html to match — that's the label shown in the game).
-const VERSION = 'aegm-v93';
+const VERSION = 'aegm-v94';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './icon-maskable-512.png',
   './online.js', './firebase-sdk.js', './firebase-config.js',
   './party.js', './scenarios.js', './gimmicks.js', './season.js', './vendor/qrcode.js'];
@@ -20,14 +20,23 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;
-  // The photo list and the Firebase settings are checked online first so changes show up right away.
+  // The photo list and the Firebase settings open instantly from the cache too (firebase-config.js blocks the page
+  // while it loads, so waiting on a slow connection here froze the whole launch). A fresh copy is fetched in the
+  // background every launch, so a change still shows up on the next open. Only the very first visit waits on the network.
   const fresh = url.pathname.endsWith('/photos/manifest.json') ? '{}' : url.pathname.endsWith('/firebase-config.js') ? '' : null;
   if (fresh !== null) {
     const type = fresh ? 'application/json' : 'text/javascript';
-    e.respondWith(caches.open(VERSION).then(cache => fetch(e.request).then(res => {
-      if (res.ok) cache.put(e.request, res.clone());
+    const fallback = () => new Response(fresh, { headers: { 'Content-Type': type } });
+    const cacheP = caches.open(VERSION);
+    const network = cacheP.then(cache => fetch(e.request, { cache: 'no-cache' }).then(res => {
+      if (res.ok) return cache.put(url.pathname, res.clone()).then(() => res, () => res);
       return res;
-    }).catch(() => cache.match(e.request, { ignoreSearch: true }).then(r => r || new Response(fresh, { headers: { 'Content-Type': type } })))));
+    }));
+    e.waitUntil(network.catch(() => {}));
+    e.respondWith(cacheP.then(async cache => {
+      const cached = await cache.match(url.pathname) || await cache.match(e.request, { ignoreSearch: true });
+      return cached || network.catch(() => fallback());
+    }));
     return;
   }
   // Pages are stored under one key (./index.html) so ?game=CODE links don't pile up copies in the cache.
