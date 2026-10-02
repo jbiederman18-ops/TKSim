@@ -279,7 +279,7 @@ input[type=range]{width:100%;accent-color:var(--gold);padding:0;margin:4px 0 0;b
 .wc.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;background:repeating-linear-gradient(135deg,#131418 0 8px,#101114 8px 16px);color:var(--gold)}
 .wc.empty:before{box-shadow:inset 0 0 0 1.5px #6a5720}
 .wc.empty span{font:900 38px/1 'BC',sans-serif}.wc.empty small{color:var(--mut);text-transform:uppercase;font:700 12px 'BC';letter-spacing:.14em;margin-top:4px}
-.vsrow{display:flex;gap:8px;align-items:center;margin-top:12px}
+.vsrow{display:flex;gap:8px;align-items:center;margin-top:12px}.vsrow.many{flex-wrap:wrap}.vsrow.many .vscol{flex:1 1 30%}.vsrow.many .vs{display:none}
 .vscol{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
 .vs{font:900 italic 30px/1 'BC',Impact,sans-serif;text-align:center;margin:4px 0;background:linear-gradient(180deg,#ff8a6a,#e2332b 55%,#8f0f0b);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 0 #000)}
 .trow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
@@ -562,13 +562,17 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 <script src="party.js"></script>
 <script src="scenarios.js"></script>
 <script src="gimmicks.js"></script>
+<script src="season.js"></script>
 <script>
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v79';
+const APP_VERSION='v80';
 const SEASON=24;
-const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',24:'All In'};
+const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',22:'Forbidden Door',24:'All In'};
+/* v80: themed TV specials between PPVs — hotter crowds, bigger fan swings, better gates */
+const SPECIALS={5:'Fright Night',9:'Winter Is Coming',13:'Grand Slam',17:'Spring BreakThru'};
+const FD_WEEK=22;
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
 /* style chemistry: every style averages about the same across the roster (~+3.6); each has its own best and weakest pairings */
 const STY={fl:{fl:4,te:3,br:2,pw:6,sh:3},te:{fl:3,te:6,br:3,pw:2,sh:4},br:{fl:2,te:3,br:6,pw:4,sh:4},pw:{fl:6,te:2,br:4,pw:0,sh:5},sh:{fl:3,te:4,br:4,pw:5,sh:2}};
@@ -599,11 +603,11 @@ anarchy:{n:'Anarchy in the Arena',g:'big',b:{br:6,sh:4,pw:3,fl:2,te:-2},inj:1.8,
 stampede:{n:'Stadium Stampede',g:'big',b:{sh:6,br:5,pw:2,fl:2},inj:1.6,f:10,c:120,hb:3,ppv:1,dare:1,mt:['trios','eight'],d:'A cinematic brawl all over the stadium. Showmen love the spotlight.'},
 bng:{n:'Blood & Guts',g:'big',b:{br:8,pw:5,sh:1,fl:-1,te:-2},inj:2.2,f:14,c:150,hb:6,mt:['trios','eight'],d:'Two rings inside a double cage — a TV spectacle for factions at war.'}};
 const stipOk=(k,type,ppv)=>{const s=STIPS[k];return !!s&&(!s.ppv||ppv)&&(!s.mt||s.mt.includes(type))};
-const MT={singles:{n:'Singles',sides:2,per:1},tag:{n:'Tag Team',sides:2,per:2},trios:{n:'Trios',sides:2,per:3},triple:{n:'Triple Threat',sides:3,per:1},four:{n:'Fatal 4-Way',sides:4,per:1},eight:{n:'8-Man Tag',sides:2,per:4}};
+const MT={singles:{n:'Singles',sides:2,per:1},tag:{n:'Tag Team',sides:2,per:2},trios:{n:'Trios',sides:2,per:3},triple:{n:'Triple Threat',sides:3,per:1},four:{n:'Fatal 4-Way',sides:4,per:1},eight:{n:'8-Man Tag',sides:2,per:4},gauntlet:{n:'Casino Gauntlet',sides:6,per:1}};
 /* ---- economy: production upgrades, stipulation costs and PPV venue bills (all in $K) ---- */
 const PROD={std:{n:'Standard',tv:0,ppv:0,b:0,d:'The usual show. No extra cost.'},plus:{n:'Pyro & video',tv:30,ppv:75,b:.1,d:'Pyro, entrance videos and hype packages. A small bump to the show rating.'},max:{n:'Full spectacle',tv:75,ppv:180,b:.2,d:'Everything: pyro, LED stage, live band, celebrity cameos. A bigger bump — but it can\'t save a bad card.'}};
 /* how the rival GM plays at each difficulty: segment edge, draft judgement, run-ins, spending and scouting */
-const AIQ={easy:{adj:-.25,noise:20,ri:.2,prod:1.6,fa:.9,scout:.06,stip:.6,tier:'any'},normal:{adj:0,noise:10,ri:.35,prod:1,fa:1,scout:.1,stip:1,tier:'any'},hard:{adj:.25,noise:4,ri:.5,prod:.7,fa:1.12,scout:.14,stip:1.3,tier:'top'}};
+const AIQ={easy:{adj:-.15,smart:0,noise:20,ri:.2,prod:1.6,fa:.9,scout:.06,stip:.6,tier:'any'},normal:{adj:0,smart:.5,noise:10,ri:.35,prod:1,fa:1,scout:.1,stip:1,tier:'any'},hard:{adj:0,smart:1,noise:4,ri:.5,prod:.7,fa:1.12,scout:.14,stip:1.3,tier:'top'}};
 function aiq(b){return b&&(b!=='ai'||ON())?AIQ.normal:AIQ[(S&&S.diff)||'normal']||AIQ.normal}
 const STIP_COST=Object.fromEntries(Object.entries(STIPS).map(([k,v])=>[k,v.c||0]));
 const PPV_BILL=100,ALLIN_BILL=175;
@@ -1465,7 +1469,7 @@ function oppOf(seat,week,n){for(const [a,b] of pairings(week,n)){if(a===seat)ret
 function mapObj(o,f){if(!o||typeof o!=='object'||Array.isArray(o))return o;const n={};for(const k in o)n[BK.test(k)?f(k):k]=o[k];return n}
 function remapKeys(st,f){const rv=v=>typeof v==='string'&&BK.test(v)?f(v):v;
  Object.values(st.w||{}).forEach(w=>{if(w.own)w.own=rv(w.own)});
- ['fans','money','hourWins','card','names','priv','prod','debt','sell','sold','fin'].forEach(k=>{if(st[k])st[k]=mapObj(st[k],f)});
+ ['fans','fans0','money','hourWins','card','names','priv','prod','debt','sell','sold','fin','mand','tour'].forEach(k=>{if(st[k])st[k]=mapObj(st[k],f)});
  if(st.history)st.history=st.history.map(h=>mapObj(h,f));
  const L=st.last;if(L){const one=o=>{o.fans=mapObj(o.fans,f);o.ratings=mapObj(o.ratings,f);if(o.cash)o.cash=mapObj(o.cash,f);if(o.hourWin)o.hourWin=rv(o.hourWin);(o.blocks||[]).forEach(b=>b.brand=rv(b.brand))};if(L.pairs)L.pairs.forEach(one);else one(L)}
  if(st.draft){if(st.draft.first)st.draft.first=rv(st.draft.first);if(st.draft.order)st.draft.order=st.draft.order.map(rv)}
@@ -1490,7 +1494,7 @@ function nameOf(b){if(b==='p')return S.gm;if(b==='ai'&&!ON())return S.rival;retu
 function brands(){return ON()?localSeats():['p','ai']}
 function myTurn(){if(partyOn())return partyMyTurn();return !ON()||S.online.turn==='p'}
 function mpLocked(){if(partyOn())return partyLocked();if(!ON()||S.online.turn==='p')return false;const who=nameOf(S.online.turn);toast(S.online.booked&&S.online.booked.p?`Your card is locked in — waiting on ${who}.`:`It's ${who}'s turn. You can look around; changes wait for your turn.`);return true}
-function freshCards(){S.prod={};S.sell={};if(!ON()){S.card={p:newCard().p,ai:null};return}S.card={};allSeats(()=>{S.card.p=newCard().p})}
+function freshCards(){S.prod={};S.sell={};if(!ON()){S.card={p:newCard().p,ai:null};/* the rival books early and advertises its main event (Forbidden Door waits for your dream matches) */if(S.phase==='season'&&S.week!==FD_WEEK)try{S.card.ai=autoBook('ai',curShow(),null)}catch(e){S.card.ai=null}return}S.card={};allSeats(()=>{S.card.p=newCard().p})}
 function bookingOrder(){const l=localSeats();const i=l.indexOf('p');return l.slice(i).concat(l.slice(0,i))}
 function mpInitSeats(n){const ids=Array.from({length:n},(_,i)=>'s'+i);S.fans={};S.money={};S.hourWins={};ids.forEach(k=>{S.fans[k]=250000;S.money[k]=1000;S.hourWins[k]=0});
  S.names={s0:S.gm};S.priv={};PRIV.forEach(k=>delete S[k]);delete S.gm;delete S.rival;
@@ -1656,7 +1660,7 @@ function sellCash(k,c){const cap=econCap();return k==='spons'?Math.round(cap*.08
 const backlash=b=>1+.3*Math.min(6,(S.sold&&S.sold[b])||0);
 function sellFans(k,b){return Math.round((S.fans[b]||0)*SELL[k].fan*backlash(b))}
 /* everything a show earns and costs; payroll and the TV deal settle at the end of the week */
-function showRevenue(b,c,r,show,ctx,out){c.tix=tixRev(b,show.ppv);c.merch=merchRev(b,r,show.ppv);c.ad=show.ppv?0:adRev(b,r)+(out.hourWin===b?HOUR_BONUS():0);
+function showRevenue(b,c,r,show,ctx,out){c.tix=Math.round(tixRev(b,show.ppv)*(show.special?1.25:1));c.merch=merchRev(b,r,show.ppv);c.ad=show.ppv?0:adRev(b,r)+(out.hourWin===b?HOUR_BONUS():0);
  c.spons=0;c.sellFans=0;const sl=c.sell||[];sl.forEach(k=>{c.spons+=sellCash(k,c);c.sellFans+=sellFans(k,b)});
  if(c.sellFans){const before=S.fans[b];S.fans[b]=Math.max(50000,S.fans[b]-c.sellFans);out.fans[b]+=S.fans[b]-before;
   if(b==='p'||ON())out.notes.push(`💰 ${ON()?nameOf(b)+' sold':'You sold'} out — ${sl.map(k=>SELL[k].n.toLowerCase()).join(', ')}: +${money(c.spons)}, −${c.sellFans.toLocaleString()} fans${backlash(b)>1?' (fans have noticed a pattern)':''}.`)}
@@ -1797,7 +1801,7 @@ function finishDraft(){S.phase='season';bothSides(()=>scoutTick(true));
  if(S.draft&&S.draft.cap)brands().forEach(b=>{const left=S.draft.cap-payroll(b);if(left>0){const bonus=Math.round(left*4);S.money[b]+=bonus;news(`💼 ${nameOf(b)} came in ${money(left)}/wk under the cap — ${money(bonus)} goes into the bank.`)}});
  Object.values(S.w).forEach(w=>{if(!w.own)w.con=0;w.pop0=w.pop});
  Object.values(S.titles).forEach(t=>{if(!t.holders.length)return;const os=t.holders.map(h=>S.w[h].own);if(os.some(o=>!o)||os.some(o=>o!==os[0])){t.holders=[];news(`🏆 The ${t.n} title is vacant — the draft split up the champions.`)}});
- freshCards();news('📋 The draft is complete. Week 1 is here!');S.fa={};marketTick(undefined,true)}
+ seasonStart();freshCards();news('📋 The draft is complete. Week 1 is here!');S.fa={};marketTick(undefined,true);mandTick()}
 
 /* ===================== SHOWS ===================== */
 function nextPPVAfter(w){for(let x=w+1;x<=SEASON;x++)if(PPVS[x])return {w:x,n:PPVS[x]};return null}
@@ -1816,9 +1820,18 @@ function inMatch(m,a,b){return m&&m.sides&&m.sides.some(s=>s.includes(a))&&m.sid
 function promiseOf(m){return duePromises().find(pr=>inMatch(m,pr.a,pr.b))}
 function unmetPromises(card){return duePromises().filter(pr=>!card.some(sl=>sl.k==='match'&&sl.d&&inMatch(sl.d,pr.a,pr.b)))}
 function newCard(){const ppv=!!(PPVS[S.week]);const c=emptyCard(ppv);const slots=c.map((sl,i)=>sl.k==='match'?i:-1).filter(i=>i>=0);let f=0,bk=slots.length-1;
- duePromises().sort((x,y)=>(x.kind==='contract'?2:x.ppv?1:0)-(y.kind==='contract'?2:y.ppv?1:0)).forEach(pr=>{const A=S.w[pr.a],B=S.w[pr.b];if(!A||!B||A.own!=='p'||B.own!=='p'||f>bk)return;
-  const m={type:'singles',stip:pr.stip||'std',sides:[[pr.a],[pr.b]],winner:0,title:''};const et=eligibleTitles(m).filter(t=>S.titles[t].kind==='singles'&&S.titles[t].holders.length);if(et.length)m.title=et[0];
-  const i=(pr.kind==='contract'||pr.ppv)?slots[bk--]:slots[f++];c[i].d=m});
+ /* an earned title shot follows the belt: it's against whoever holds it now — or, if it left the brand, it becomes the PPV title challenge */
+ const chs=c.find(sl=>sl.k==='chal');
+ duePromises().filter(pr=>pr.kind==='shot').forEach(pr=>{const t=S.titles[pr.title];const h=t&&t.holders[0]&&S.w[t.holders[0]];
+  if(h&&h.own==='p'&&h.id!==pr.a)pr.b=h.id;else{pr.void=1;if(h&&h.own&&h.own!=='p'&&chs&&!chs.d&&S.w[pr.a]&&S.w[pr.a].own==='p')chs.d={title:t.id,c:pr.a}}});
+ if(S.promises)S.promises=S.promises.filter(pr=>!pr.void);
+ const used=new Set();
+ duePromises().sort((x,y)=>(x.kind==='contract'||x.kind==='shot'?2:x.ppv?1:0)-(y.kind==='contract'||y.kind==='shot'?2:y.ppv?1:0)).forEach(pr=>{const A=S.w[pr.a],B=S.w[pr.b];if(!A||!B||A.own!=='p'||B.own!=='p'||f>bk||used.has(pr.a)||used.has(pr.b))return;
+  const m={type:'singles',stip:pr.stip||'std',sides:[[pr.a],[pr.b]],winner:0,title:''};const et=eligibleTitles(m).filter(t=>S.titles[t].kind==='singles'&&S.titles[t].holders.length);if(pr.title&&et.includes(pr.title))m.title=pr.title;else if(et.length)m.title=et[0];
+  const i=(pr.kind==='contract'||pr.kind==='shot'||pr.ppv)?slots[bk--]:slots[f++];c[i].d=m;used.add(pr.a);used.add(pr.b)});
+ /* tournament matches are locked onto the card: you decide who advances */
+ tourDue('p',used,[]).forEach(m=>{if(f>bk)return;const i=slots[bk--];c[i].d=m;m.sides.flat().forEach(id=>used.add(id))});
+ if(S.week===SEASON&&chs&&!chs.d)for(const k in TOURS){const t=tourState('p',k);const pz=S.titles[TOURS[k].prize];const w=t.chal&&S.w[t.chal];if(w&&w.own==='p'&&!used.has(w.id)&&pz&&pz.holders.length&&S.w[pz.holders[0]].own!=='p'){chs.d={title:pz.id,c:w.id};break}}
  return {p:c,ai:null}}
 function settlePromises(out){duePromises().forEach(pr=>{const A=S.w[pr.a],B=S.w[pr.b];if(!A||!B)return;const what=pr.kind==='contract'?'contracted':'promised';
   const kept=S.card.p.some(sl=>sl.k==='match'&&sl.d&&validMatch(sl.d)&&inMatch(sl.d,pr.a,pr.b)&&!sl.d.sides.flat().some(id=>S.w[id].inj));
@@ -1828,18 +1841,20 @@ function settlePromises(out){duePromises().forEach(pr=>{const A=S.w[pr.a],B=S.w[
    const n=`💔 Broken promise: fans were ${what} ${A.name} vs ${B.name} and didn't get it (−${fmtFans(fl)} fans, morale down).`;out.notes.push(n);news(n)}});
  S.promises=(S.promises||[]).filter(x=>x.week>S.week)}
 function showNames(){return (S.online&&S.online.show)||{p:'Dynamite',ai:'Collision'}}
-function curShow(){if(PPVS[S.week])return {name:PPVS[S.week],ppv:true,mine:PPVS[S.week],theirs:PPVS[S.week]};const n=showNames();return {name:n.p,ppv:false,mine:n.p,theirs:n.ai}}
+function curShow(){if(PPVS[S.week])return {name:PPVS[S.week],ppv:true,mine:PPVS[S.week],theirs:PPVS[S.week],fd:S.week===FD_WEEK};const n=showNames();return {name:n.p,ppv:false,mine:n.p,theirs:n.ai,special:SPECIALS[S.week]||null}}
 /* TV: 4 matches + 2 promos, plus an optional bonus promo (the '?' slot). PPV: 7 matches + an optional title challenge. */
-const CARD_TV=['match','promo','match','promo','match','promo?','match'],CARD_PPV=['match','match','match','match','match','match','match','chal'];
-const cardMatches=ppv=>(ppv?CARD_PPV:CARD_TV).filter(k=>k==='match').length;
-function emptyCard(ppv){return (ppv?CARD_PPV:CARD_TV).map(k=>k.endsWith('?')?{k:k.slice(0,-1),d:null,opt:true}:{k,d:null})}
+const CARD_TV=['match','promo','match','promo','match','promo?','match'],CARD_PPV=['match','match','match','match','match','match','match','chal'],CARD_FD=['match','match','xo?','match','match','xo?','match','chal'];
+const cardOf=ppv=>ppv?(S&&S.week===FD_WEEK?CARD_FD:CARD_PPV):CARD_TV;
+const cardMatches=ppv=>cardOf(ppv).filter(k=>k==='match').length;
+function emptyCard(ppv){return cardOf(ppv).map(k=>k.endsWith('?')?{k:k.slice(0,-1),d:null,opt:true}:{k,d:null})}
+const fixedK=sl=>!!sl&&(sl.k==='chal'||sl.k==='xo');
 /* ---- stamina: matches drain it, a week off (or a promo-only week) restores it ---- */
-const FAT_MT={singles:16,triple:14,four:12,tag:11,trios:10,eight:9},FAT_OK=35,FAT_RISK=55,REC_WORK=10,REC_REST=25;
+const FAT_MT={singles:16,triple:14,four:12,tag:11,trios:10,eight:9,gauntlet:10},FAT_OK=35,FAT_RISK=55,REC_WORK=10,REC_REST=25;
 const sta=w=>Math.round(clamp(100-w.fat,0,100));
 const staCls=v=>v>=100-FAT_OK?'ok':v>=100-FAT_RISK?'mid':'low';
 const staWord=v=>v>=100-FAT_OK?'Fresh':v>=100-FAT_RISK?'Tired':'Exhausted';
 function fatGain(w,m,ppv){return Math.round(((FAT_MT[m.type]||14)+((STIPS[m.stip||'std']||{}).f||0)+(ppv?4:0))*(hasT(w,'work')?.6:1)*durFat(w))}
-function usedIn(brand,except){const s=new Set();(S.card[brand]||[]).forEach((sl,i)=>{if(i===except||!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(id=>id&&s.add(id));if(sl.k==='chal'&&sl.d.c)s.add(sl.d.c)});return s}
+function usedIn(brand,except){const s=new Set();(S.card[brand]||[]).forEach((sl,i)=>{if(i===except||!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(id=>id&&s.add(id));if(sl.k==='chal'&&sl.d.c)s.add(sl.d.c);if(sl.k==='xo'&&sl.d.a)s.add(sl.d.a)});return s}
 function validMatch(m){const f=m.sides.flat();return f.length&&f.every(id=>id&&S.w[id])&&new Set(f).size===f.length&&m.winner>=0&&m.winner<m.sides.length}
 function kindOk(kind,type){return kind==='singles'?['singles','triple','four'].includes(type):kind==='tag'?type==='tag':type==='trios'}
 function eligibleTitles(m){const ids=m.sides.flat();if(!ids.length||ids.some(x=>!x))return [];
@@ -1872,8 +1887,8 @@ function applyRunIn(m,res,notes){const r=riOn(m);
 /* what heat a booked match will build: opponents, feuding partners and any run-in */
 function heatPlan(m,ppv){const out=[];const all=m.sides.flat();if(!all.length||!all.every(id=>id&&S.w[id]))return out;const r=rateMatch(m,{ppv,preview:true});const st=r.stars;
  for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j]){const A=S.w[a],B=S.w[b];const h0=heatOf(a,b);
-  if(ppv){if(h0>=1)out.push({A,B,h0,h1:h0>=35?0:Math.round(h0*.5),kind:'pay',end:h0>=35});continue}
-  let g=3+Math.max(0,st-2.5)*2.5;g*=A.al!==B.al?1.4:.75;if(m.title)g+=3;if(hasT(A,'heatm')||hasT(B,'heatm'))g*=1.3;if(r.pen)g*=.35;if(isStale(a,b))g*=.4;out.push({A,B,h0,h1:addHeat(h0,g),kind:'opp'})}
+  if(ppv){const dirty=['cheat','dq','co'].includes(finOf(m));if(h0>=1)out.push({A,B,h0,h1:h0>=35?(dirty?Math.round(h0*.75):0):Math.round(h0*.5),kind:'pay',end:h0>=35&&!dirty});continue}
+  let g=3+Math.max(0,st-2.5)*2.5;g*=A.al!==B.al?1.4:.75;if(m.title)g+=3;if(hasT(A,'heatm')||hasT(B,'heatm'))g*=1.3;if(r.pen)g*=.35;if(isStale(a,b))g*=.4;g*=FIN_HEAT[finOf(m)];if(m.type==='gauntlet')g*=.3;out.push({A,B,h0,h1:addHeat(h0,g),kind:'opp'})}
  m.sides.forEach(s=>{for(let i=0;i<s.length;i++)for(let j=i+1;j<s.length;j++){const h0=heatOf(s[i],s[j]);if(h0>=15)out.push({A:S.w[s[i]],B:S.w[s[j]],h0,h1:addHeat(h0,4+Math.max(0,st-2.5)*1.5),kind:'mates'})}});
  const ri=riOn(m);if(ri){const h0=heatOf(ri.X.id,ri.T.id);out.push({A:ri.X,B:ri.T,h0,h1:addHeat(h0,riGain(ri,st)),kind:'ri'})}
  return out}
@@ -1899,25 +1914,66 @@ function rateMatch(m,ctx){ctx=ctx||{};
  if(stale)heat*=.5;
  const sk=m.stip||'std',st=STIPS[sk]||STIPS.std;const stipB=mean(w=>st.b[w.st]||0)+(sk!=='std'&&heat>=50?(st.hb==null?3:st.hb):0)-((st.hb||0)>=4&&heat<15?(st.hb-2):0);
  const t=m.title?S.titles[m.title]:null;const titleB=t?t.prestige*.05:0;
- const multi=m.type==='triple'||m.type==='four';const typeB=multi?mean(w=>w.st==='fl'?3:0):0;
+ const multi=m.type==='triple'||m.type==='four'||m.type==='gauntlet';const typeB=multi?mean(w=>w.st==='fl'?3:0):0;
  const traitB=mean(w=>(ctx.ppv&&hasT(w,'bigm')?3:0)+((multi||st.dare)&&hasT(w,'dare')?4:0));
  let score=ring*.5+pop*.2+chem+traitB+heat*(ctx.ppv?.25:.15)+stipB+titleB+typeB-mean(w=>Math.max(0,w.fat-FAT_OK))*.08+(ctx.ppv?4:0)+(ctx.allin?4:0);
+ /* v80: hot streaks get the crowd invested, the finish shapes how the match lands, and specials/tournaments raise the stakes */
+ const momB=mean(w=>w.mom||0)*.15;const finB=finScore(m,heat,ctx);score+=momB+finB+(ctx.special?1:0)+(m.tour?1.5:0)+(m.type==='gauntlet'?-2:0)+(m.xo?3:0);
  const toS=x=>clamp(Math.round((x-42)/9*4)/4,.25,5);const lo=toS(score-3),hi=toS(score+3);
  score+=riScore(m);score-=pen*2.25;{const pr=promiseOf(m);if(pr&&sides.flat().every(w=>w.own==='p'))score+=(pr.kind==='contract'?1.8:pr.ppv?1.4:.9)*(pr.spoiled?.5:1)}
  if(!ctx.preview)score+=R(-3,3);
- return {stars:toS(score),lo:toS(score-3),hi:toS(score+3),heat,chem,pen,penWhy,stale,raw:score}}
-function matchText(m){if(m.nc)return m.sides.map(sideName).join(' vs ')+' — No contest';const win=m.sides[m.winner];return `${sideName(win)} def. ${m.sides.filter((s,i)=>i!==m.winner).map(sideName).join(', ')}`}
-function matchSub(m){return MT[m.type].n+((m.stip||'std')!=='std'&&STIPS[m.stip]?' · '+STIPS[m.stip].n:'')+(m.title?' · '+S.titles[m.title].n+' title':'')}
+ return {stars:toS(score),lo:toS(score-3),hi:toS(score+3),heat,chem,pen,penWhy,stale,raw:score,momB,finB}}
+/* ===================== FINISHES (v80) =====================
+ How the match ends matters as much as who wins. Clean wins settle feuds; heel shenanigans build heat but leave the loser
+ protected; an upset roll-up makes the underdog; DQs and count-outs build the most heat — and titles never change hands on them. */
+const FINS={
+ clean:{n:'Clean finish',i:'✅',d:'A decisive win. The only way to truly settle a feud on PPV.'},
+ cheat:{n:'Heel shenanigans',i:'😈',d:'Feet on the ropes, a low blow, a distracted ref. Builds extra heat and protects the loser — but fans want a payoff eventually.'},
+ upset:{n:'Upset roll-up',i:'⚡',d:'Out of nowhere! The underdog steals it. A big boost for the winner, and the loser stays protected.'},
+ dq:{n:'Disqualification',i:'🟥',d:'The most heat of all, but a cheap ending unless the feud is already hot. Titles don\'t change hands on a DQ.'},
+ co:{n:'Count-out',i:'🚪',d:'Someone can\'t beat the ten count. Builds heat and protects the loser. Titles don\'t change hands on a count-out.'}};
+const FIN_HEAT={clean:1,cheat:1.35,upset:1.2,dq:1.5,co:1.3};
+function finWhy(m,k){if(k==='clean')return '';const win=(m.sides[m.winner]||[]).map(id=>S.w[id]).filter(Boolean);const los=m.sides.filter((s,i)=>i!==m.winner).flat().map(id=>S.w[id]).filter(Boolean);if(!win.length||!los.length)return 'Pick the wrestlers first';
+ if(m.type==='gauntlet'||m.tour&&(k==='dq'||k==='co'))return m.type==='gauntlet'?'A gauntlet needs a clean winner':'Tournament matches need a winner who can advance';
+ if(k==='cheat'&&!win.some(w=>w.al==='h'))return 'Only a heel winner can cheat to win';
+ if(k==='upset'&&avg(win.map(w=>w.pop))>Math.max(...los.map(w=>w.pop))-8)return 'The winner has to be the clear underdog (8+ less popular)';
+ if((k==='dq'||k==='co')&&(m.sides.length!==2))return 'Only in a match with two sides';
+ if(k==='dq'&&!(STIPS[m.stip||'std']||STIPS.std).dq)return 'No disqualifications in this stipulation';
+ return ''}
+function finOf(m){const k=m&&m.fin;return k&&FINS[k]&&!finWhy(m,k)?k:'clean'}
+function finScore(m,heat,ctx){const k=finOf(m);const hot=heat>=30;const blow=ctx.ppv&&heat>=35;
+ if(k==='clean')return blow?1:0;
+ if(k==='cheat')return blow?-1.5:hot?0:-1;
+ if(k==='upset')return m.sides[m.winner].some(id=>hasT(S.w[id],'under'))?.5:-.5;
+ if(k==='dq')return blow?-2:hot?-.5:-2;
+ return blow?-2:hot?-.5:-1.5}
+function finText(m){const k=finOf(m);return k==='dq'?' by DQ':k==='co'?' by count-out':k==='upset'?' (upset)':k==='cheat'?' (with help)':''}
+function matchText(m){if(m.nc)return m.sides.map(sideName).join(' vs ')+' — No contest';const win=m.sides[m.winner];return `${sideName(win)} def. ${m.sides.filter((s,i)=>i!==m.winner).map(sideName).join(', ')}${finText(m)}`}
+function matchSub(m){return (m.tour&&TOURS[m.tour.k]?TOURS[m.tour.k].n+' · '+m.tour.lab+' · ':'')+MT[m.type].n+((m.stip||'std')!=='std'&&STIPS[m.stip]?' · '+STIPS[m.stip].n:'')+(m.title?' · '+S.titles[m.title].n+' title':'')+(finOf(m)!=='clean'?' · '+FINS[finOf(m)].n:'')}
 function vsLine(m){return m.sides.map(s=>s.every(Boolean)?sideName(s):'TBD').join(' vs ')}
 function applyMatch(m,res,ctx,notes){
  const st=STIPS[m.stip||'std']||STIPS.std;const win=m.nc?[]:m.sides[m.winner];const all=m.sides.flat();
  const maxRing=Math.max(...all.map(i=>S.w[i].ring));
+ const fin=m.nc?'clean':finOf(m);const prot=fin!=='clean';/* a non-clean finish protects the loser */
+ const losers=m.nc?[]:all.filter(id=>!win.includes(id));const losePop=losers.length?Math.max(...losers.map(id=>S.w[id].pop)):0;
+ const mine=b=>b==='p'||ON()&&b;
  all.forEach(id=>{const w=S.w[id];const won=win.includes(id);
   w.fat=clamp(w.fat+fatGain(w,m,ctx.ppv),0,100);w.last=S.week;w.lm=S.week;
-  if(m.nc){w.mor+=2}else if(won){w.w++;w.mor+=5;w.mom=Math.min(5,w.mom+1)}else{w.l++;w.mom=Math.max(-5,w.mom-1)}
+  if(m.nc){w.mor+=2}else if(won){w.w++;w.mor+=5;w.mom=Math.min(5,w.mom+1);w.strk=Math.max(0,w.strk||0)+1}
+  else{w.l++;if(!prot){w.mom=Math.max(-5,w.mom-1);w.strk=Math.min(0,w.strk||0)-1}}
   w.mor=clamp(w.mor,0,100);
   const gap=w.pot-w.ring;if(gap>0)w.ring=Math.min(w.pot,w.ring+gap*.035*(.5+res.stars/4)*(gap>20?1.4:1)+(maxRing>w.ring+5?.3:.1));
-  {const g=(res.stars-3)*.8+(m.nc?0:won?.8:-.3)+(ctx.ppv&&won?1.5:0);w.pop=clamp(w.pop+(g>0?g*(1-w.pop/110)*(hasT(w,'crowd')?1.3:1):g),1,100)}});
+  /* the rub: beating someone bigger than you makes you. A win over someone far below you does little. */
+  let rub=0;if(won&&!m.nc&&m.type!=='gauntlet')rub=clamp((losePop-w.pop)/10,0,3)*({clean:1,upset:1.4,cheat:.6,dq:.4,co:.4}[fin]);
+  {const g=(res.stars-3)*.8+(m.nc?0:won?.5+rub:prot?0:-.3)+(ctx.ppv&&won?1.5:0);w.pop=clamp(w.pop+(g>0?g*(1-w.pop/110)*(hasT(w,'crowd')?1.3:1):g),1,100)}
+  if(rub>=1.2&&mine(w.own))notes.push(`📈 The rub: ${w.name} gains big by beating ${S.w[losers.slice().sort((a,b)=>S.w[b].pop-S.w[a].pop)[0]].name}${fin==='upset'?' — what an upset!':''}`);
+  /* losing too often costs credibility — unless they're enhancement talent, or the finish protected them */
+  if(!won&&!m.nc&&!prot&&(w.strk||0)<=-4&&w.pop>=45){w.pop=clamp(w.pop-.6,1,100);w.mor=clamp(w.mor-2,0,100);if(mine(w.own)&&(w.strk===-4||w.strk%3===0))notes.push(`📉 ${w.name} has lost ${-w.strk} straight — fans are starting to stop believing in them.`)}
+  if(won&&(w.strk||0)>=5&&w.strk%5===0&&mine(w.own))notes.push(`🔥 ${w.name} is on a ${w.strk}-match winning streak — the crowd is all the way behind it.`);
+  /* card position: the main event is where stars are made, and top stars notice when they're buried in the opener */
+  if(w.lme==null)w.lme=AW();
+  if(ctx.pos==='me'){w.lme=AW();w.mor=clamp(w.mor+3,0,100);if(res.stars>=3.5)w.pop=clamp(w.pop+.5,1,100)}
+  else if(w.pop>=85&&w.own&&AW()-w.lme>=8){w.mor=clamp(w.mor-3,0,100);if(mine(w.own)&&(!w.mec||AW()-w.mec>=4)){w.mec=AW();notes.push(`😤 ${w.name} hasn't main-evented a show in ${AW()-w.lme} weeks and is starting to grumble backstage about their spot.`)}}});
  if(!S.mh)S.mh={};const said=new Set();const pa=m.sides[0][0],pb=m.sides[1]&&m.sides[1][0];const hk=pb?key(pa,pb):null;const h0=hk?(S.heat[hk]||0):0;const n0=notes.length;
  for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j]){const k=key(a,b);const A=S.w[a],B=S.w[b];
   const first=!(S.mh[k]&&S.mh[k].length)&&!(S.mhx&&S.mhx[k]&&S.mhx[k].length);
@@ -1930,10 +1986,19 @@ function applyMatch(m,res,ctx,notes){
   if(hasT(A,'heatm')||hasT(B,'heatm'))g*=1.3;
   if(res.pen){g*=.35}
   if(isStale(a,b))g*=.4;
+  if(!m.nc&&fin!=='clean'){g*=FIN_HEAT[fin];if(!said.has(k))why.push(FINS[fin].n.toLowerCase())}
+  if(m.type==='gauntlet')g*=.3;
+  /* 50/50 booking: trading clean wins back and forth cools a feud off */
+  if(m.type==='singles'&&!m.nc){if(!S.h2h)S.h2h={};const l=S.h2h[k]||[];const last=l[l.length-1];const wid=win.includes(a)?a:b;
+   if(fin==='clean'&&last&&last.c&&last.x!==wid&&AW()-last.w<=4){g*=.6;if(!said.has(k)&&mine(A.own))notes.push(`⚖️ Trading wins: ${A.name} and ${B.name} keep beating each other — 50/50 booking is cooling this feud off.`)}
+   S.h2h[k]=l.concat([{w:AW(),x:wid,c:fin==='clean'?1:0}]).slice(-4)}
   if(!ctx.ppv)bumpHeat(a,b,g,said.has(k)?[]:notes,why.join(', ')||(first?'their first encounter':'the rivalry grows'));
   else{const f=S.fs&&S.fs[k];const h=S.heat[k]||0;
+   /* a dirty finish on the big night leaves it unsettled — fans will want a rematch */
+   if(h>=35&&!(f&&f.paid)&&!m.nc&&fin!=='clean'&&fin!=='upset'){S.heat[k]=Math.round(h*.75);if(f){f.start=AW();f.stale=false}fhLog(a,b,{ic:'😈',n:`${FINS[fin].n} at ${ctx.name||'the PPV'} — it isn't settled`,h:S.heat[k]});touch(k);
+    if(!said.has(k))notes.push(`😈 ${FINS[fin].n}! ${A.name} vs ${B.name} isn't settled — fans wanted closure, and the feud rolls on into a new chapter.`)}
    /* the blow-off: a hot feud settled on PPV is over — cleared from the books, with a boost for everyone involved */
-   if(h>=35&&!(f&&f.paid)&&!m.nc){const W=win.includes(a)?A:win.includes(b)?B:null;const n=`💥 Feud blown off: ${A.name} vs ${B.name} delivered on the big stage${W?` — ${W.name} gets the last word`:''}. The feud is over.`;notes.push(n);news(n);
+   else if(h>=35&&!(f&&f.paid)&&!m.nc){const W=win.includes(a)?A:win.includes(b)?B:null;const n=`💥 Feud blown off: ${A.name} vs ${B.name} delivered on the big stage${W?` — ${W.name} gets the last word`:''}. The feud is over.`;notes.push(n);news(n);
     [A,B].forEach(w=>w.mor=clamp(w.mor+6,0,100));if(W)W.pop=clamp(W.pop+2,1,100);fhLog(a,b,{n:`Settled at ${ctx.name||'the PPV'}`});endFeud(k,`Blown off at ${ctx.name||'a PPV'}${W?` — ${W.name} got the last word`:''}`,'💥')}
    else if(h>0){S.heat[k]=Math.round(h*.5);fhLog(a,b,{ic:'📖',n:m.nc&&h>=35?`No clean finish at ${ctx.name||'the PPV'} — a new chapter begins`:`Clashed at ${ctx.name||'the PPV'} before it was hot enough to end — a new chapter begins`,h:S.heat[k]});if(f&&!f.paid){f.start=AW();f.stale=false}if(m.nc&&h>=35)notes.push(`🚫 No clean finish — ${A.name} vs ${B.name} isn't settled yet. A new chapter begins.`);else if(h>=20&&(A.own==='p'||B.own==='p'))notes.push(`📖 ${A.name} vs ${B.name} wasn't hot enough to end it here — the story continues into a new chapter.`);touch(k)}}
   said.add(k);
@@ -1957,8 +2022,16 @@ function applyMatch(m,res,ctx,notes){
   t.prestige=clamp(t.prestige+(res.stars-3)*2,10,100);t.last=S.week;
   /* a vacant title already won earlier tonight (on the other show) — this match wasn't for the belt after all */
   if(cs<0&&t.holders.length&&t.won===AW())notes.push(`🏆 The ${t.n} title was already decided earlier tonight — ${sideName(win)} will have to earn a shot at the new champion${t.holders.length>1?'s':''}.`);
-  else if(cs!==m.winner){const ina=t.inaug;delete t.inaug;t.holders=win.slice();t.since=S.week;t.won=AW();win.forEach(id=>{const w=S.w[id];w.pop=clamp(w.pop+(ina?7:5),1,100);w.mor=clamp(w.mor+8,0,100)});const n=ina?`👑 INAUGURAL ${t.n.toUpperCase()} CHAMPION${win.length>1?'S':''}: ${sideName(win)} make${win.length>1?'':'s'} history!`:`🏆 NEW ${t.n.toUpperCase()} CHAMPION${win.length>1?'S':''}: ${sideName(win)}!`;notes.push(n);news(n)}
-  else notes.push(`🏆 ${sideName(win)} retain${win.length>1?'':'s'} the ${t.n} title.`)}
+  else if(cs!==m.winner&&cs>=0&&(fin==='dq'||fin==='co')){t.def=(t.def||0)+1;notes.push(`🏆 ${sideName(win)} win${win.length>1?'':'s'}${finText(m)} — but titles don't change hands that way. ${sideName(m.sides[cs])} escape${m.sides[cs].length>1?'':'s'} with the ${t.n} title.`)}
+  else if(cs!==m.winner){const ina=t.inaug;delete t.inaug;
+   /* reigns matter: ending a long reign makes the new champ; swapping the belt back and forth cheapens it */
+   const reign=!ina&&t.won!=null&&cs>=0?AW()-t.won:99;const potato=reign<3;const prevDef=t.def||0;
+   const gain=ina?7:potato?2:4+Math.min(3,prevDef);if(potato){t.prestige=clamp(t.prestige-8,10,100)}
+   t.holders=win.slice();t.since=S.week;t.won=AW();t.def=0;win.forEach(id=>{const w=S.w[id];w.pop=clamp(w.pop+gain,1,100);w.mor=clamp(w.mor+8,0,100)});
+   const n=ina?`👑 INAUGURAL ${t.n.toUpperCase()} CHAMPION${win.length>1?'S':''}: ${sideName(win)} make${win.length>1?'':'s'} history!`:`🏆 NEW ${t.n.toUpperCase()} CHAMPION${win.length>1?'S':''}: ${sideName(win)}${prevDef>=3?` — ending a ${prevDef}-defense reign`:''}!`;notes.push(n);news(n);
+   if(potato)notes.push(`🥔 Hot potato: the ${t.n} title changed hands again after only ${reign} week${reign===1?'':'s'}. Fans are starting to think it doesn't mean much (−8 prestige).`)}
+  else{t.def=(t.def||0)+1;if(res.stars>=3)t.prestige=clamp(t.prestige+1,10,100);win.forEach(id=>{const w=S.w[id];w.pop=clamp(w.pop+.5,1,100)});
+   notes.push(`🏆 ${sideName(win)} retain${win.length>1?'':'s'} the ${t.n} title${t.def>1?` — successful defense #${t.def}`:''}.`)}}
  if(!S.best||res.stars>S.best.s)S.best={s:res.stars,t:matchText(m),w:S.week,show:ctx.name||''}}
 
 /* ===================== PROMO ENGINE ===================== */
@@ -2067,19 +2140,34 @@ function applyPromo(p,notes){const r=p.res;const A=S.w[p.a];if(!A||!r)return;
  if(r.turn){A.al=A.al==='f'?'h':'f';A.turnW=AW();const n=`🔄 ${A.name} has turned ${A.al==='f'?'FACE':'HEEL'}!`;notes.push(n);news(n);if(r.whip)notes.push(`😵 Fans have whiplash — ${A.name} only turned ${r.whip} week${r.whip>1?'s':''} ago.`)}}
 
 /* ===================== AI BOOKER ===================== */
-function autoBook(brand,show,extUsed){
- const used=new Set(extUsed||[]);const card=[];const nM=cardMatches(show.ppv);
+function autoBook(brand,show,extUsed,opt){opt=opt||{};
+ const used=new Set(extUsed||[]);const card=[];const nM=cardMatches(show.ppv);const q=aiq(brand);const smart=opt.smart!=null?opt.smart:(q.smart||0);
+ const np=nextPPV();const prePPV=!show.ppv&&np&&np.in===1;
+ /* smarter bookers rest their tired top stars the week before a PPV */
+ const rest=new Set();if(prePPV&&smart>=.5)ownList(brand).filter(w=>!w.inj&&w.fat>FAT_OK-10).sort((a,b)=>b.pop-a.pop).slice(0,Math.round(6*smart)).forEach(w=>rest.add(w.id));
  const roster=()=>Object.values(S.w).filter(w=>w.own===brand&&w.inj===0&&!used.has(w.id));
- const fresh=()=>{const r=roster();const f=r.filter(w=>w.fat<FAT_RISK);return f.length>=6?f:r};
+ const fresh=()=>{const all=roster();const r=all.filter(w=>!rest.has(w.id));const f=r.filter(w=>w.fat<FAT_RISK);return f.length>=6?f:r.length>=6?r:all};
+ /* how the match ends: heels cheat to win, underdogs steal it, hot feuds get DQs on TV — and blow-offs on PPV end clean */
+ const pickFin=m=>{let h=0,n=0;for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j]){h+=heatOf(a,b);n++}h=n?h/n:0;
+  if(show.ppv&&h>=35&&Math.random()<.5+smart*.5)return 'clean';const o=[];if(!finWhy(m,'upset'))o.push(['upset',.5]);if(!finWhy(m,'cheat')&&h>=15)o.push(['cheat',.35]);if(!show.ppv&&h>=30&&!finWhy(m,'dq'))o.push(['dq',.15]);if(!show.ppv&&h>=30&&!finWhy(m,'co'))o.push(['co',.08]);
+  for(const [k,p] of o)if(Math.random()<p)return k;return 'clean'};
+ const winPick=(m,t)=>{let bs=-1e9;m.sides.forEach((s,i)=>{const ws=s.map(x=>S.w[x]);let v=avg(ws.map(w=>w.pop+(w.mom||0)*3+(w.pot-w.ring)*.3*smart))+R(0,22);
+  if(t&&t.holders.length&&t.holders.every(hh=>s.includes(hh)))v+=6+(t.won!=null&&AW()-t.won<3?25*smart:0);if(v>bs){bs=v;m.winner=i}});m.fin=pickFin(m)};
  const mk=(type,sides,title)=>{const m={type,stip:'std',sides,winner:0,title:title||''};
   const all=sides.flat().map(i=>S.w[i]);let hs=0,hn=0;for(let i=0;i<sides.length;i++)for(let j=i+1;j<sides.length;j++)for(const a of sides[i])for(const b of sides[j]){hs+=heatOf(a,b);hn++}
   const h=hn?hs/hn:0;
-  const rich=(S.money[brand]||0)>250;const sq=aiq(brand).stip;
+  const rich=(S.money[brand]||0)>250;const sq=q.stip;
   if((show.ppv&&h>=45*(2-sq)/1||h>=55&&Math.random()<.3*sq)&&rich){let b='std',bv=1.5;Object.keys(STIPS).filter(o=>o!=='std'&&stipOk(o,type,show.ppv)&&STIPS[o].c<=(S.money[brand]||0)/8).forEach(o=>{const v=avg(all.map(w=>STIPS[o].b[w.st]||0))+(STIPS[o].hb||0)-(STIPS[o].c||0)/20+R(0,2);if(v>bv){bv=v;b=o}});m.stip=b}
   else if(rich&&Math.random()<.08)m.stip='nodq';
-  const t=title?S.titles[title]:null;let bs=-1e9;
-  sides.forEach((s,i)=>{const ws=s.map(x=>S.w[x]);let v=avg(ws.map(w=>w.pop+w.mom*3))+R(0,22);if(t&&t.holders.length&&t.holders.every(hh=>s.includes(hh)))v+=6;if(v>bs){bs=v;m.winner=i}});
-  sides.flat().forEach(i=>used.add(i));card.push({k:'match',d:m})};
+  winPick(m,title?S.titles[title]:null);
+  sides.flat().forEach(i=>used.add(i));card.push({k:'match',d:m});return m};
+ /* an earned title challenge is decided first, so that wrestler is kept free for it */
+ const chal0=show.ppv?autoChal(brand,used):null;if(chal0)used.add(chal0.c);
+ /* tournament matches this brand owes come first */
+ if(!opt.noTour)tourDue(brand,used).forEach(m=>{winPick(m,m.title?S.titles[m.title]:null);if(m.fin==='dq'||m.fin==='co')m.fin='clean';m.sides.flat().forEach(i=>used.add(i));card.push({k:'match',d:m})});
+ /* a title shot the rival earned (Casino Gauntlet or Owen Hart Cup) gets booked when it comes due */
+ if(brand==='ai'&&!ON()){const shots=[];if(S.aiShot&&S.aiShot.week===S.week)shots.push(S.aiShot);if(S.week===SEASON)for(const k in TOURS){const t=tourState(brand,k);if(t.shot)shots.push({a:t.shot,title:TOURS[k].prize})}
+  shots.forEach(x=>{const t=S.titles[x.title];const h=t&&t.holders[0];if(!h||used.has(h)||used.has(x.a)||!S.w[h]||S.w[h].own!==brand||S.w[h].inj||!S.w[x.a]||S.w[x.a].own!==brand||S.w[x.a].inj||card.length>=nM)return;mk('singles',[[h],[x.a]],t.id)})}
  const teamUnits=(pool,per,exclude)=>S.teams.map(tt=>tt.m.filter(id=>pool.some(w=>w.id===id)&&!(exclude||[]).includes(id))).filter(a=>a.length>=per).map(a=>a.slice(0,per));
  const tl=shuffle(Object.values(S.titles).filter(t=>t.holders.length&&t.holders.every(h=>S.w[h]&&S.w[h].own===brand&&S.w[h].inj===0)&&(show.ppv||S.week-t.last>=3||Math.random()<.25)));
  const vac=Object.values(S.titles).filter(t=>!t.holders.length&&Math.random()<(show.ppv?.9:.5));
@@ -2088,7 +2176,7 @@ function autoBook(brand,show,extUsed){
   else{const u=teamUnits(pool,per).filter(a=>a.every(id=>S.w[id].g===t.g));const two=[];for(const a of shuffle(u)){if(!two.length||!a.some(id=>two[0].includes(id)))two.push(a);if(two.length===2)break}
    if(two.length===2)sides=two;else if(pool.length>=per*2){const ps=pool.sort((a,b)=>b.pop-a.pop).slice(0,per*2).map(w=>w.id);sides=[ps.slice(0,per),ps.slice(per)]}}
   if(sides&&!sides.flat().some(id=>used.has(id)))mk(per===1?'singles':per===2?'tag':'trios',sides,t.id)}
- for(const t of tl){if(card.length>=nM)break;if(t.holders.some(h=>used.has(h)))continue;
+ for(const t of tl){if(card.length>=nM)break;if(t.holders.some(h=>used.has(h)||rest.has(h)&&!show.ppv))continue;
   const per=t.kind==='singles'?1:t.kind==='tag'?2:3;const pool=fresh().filter(w=>w.g===t.g&&!t.holders.includes(w.id)&&(per>1||!titlesOf(w.id).some(x=>x.kind==='singles')));let opp=null;
   if(per===1){let bv=-1e9;pool.forEach(w=>{const rm=recentMeets(w.id,t.holders[0]).length;const v=heatOf(w.id,t.holders[0])*1.5*(isStale(w.id,t.holders[0])?.3:1)+w.pop+R(0,10)-(show.ppv&&heatOf(w.id,t.holders[0])>=45?0:rm*40);if(v>bv){bv=v;opp=[w.id]}})}
   else{const u=teamUnits(pool,per,t.holders).filter(a=>a.every(id=>S.w[id].g===t.g));const fr=u.filter(a=>!a.some(id=>t.holders.some(h=>recentMeets(id,h).length)));if(fr.length)opp=pick(fr);else if(u.length)opp=pick(u);else if(pool.length>=per)opp=pool.sort((a,b)=>b.pop-a.pop).slice(0,per).map(w=>w.id)}
@@ -2101,15 +2189,18 @@ function autoBook(brand,show,extUsed){
   for(let i=0;i<top.length;i++)for(let j=i+1;j<top.length;j++){const a=top[i],b=top[j];if(inTeam(a.id,b.id))continue;const v=(a.g!==b.g?-12:0)+heatOf(a.id,b.id)*1.3*(isStale(a.id,b.id)?.3:1)+chemOpp(a,b)*1.5+(a.pop+b.pop)/2+R(0,15)-(Math.max(0,a.fat-FAT_OK)+Math.max(0,b.fat-FAT_OK))*.6-(show.ppv&&heatOf(a.id,b.id)>=45?0:recentMeets(a.id,b.id).length*60);if(v>bv){bv=v;bp=[a,b]}}
   if(!bp)break;mk('singles',[[bp[0].id],[bp[1].id]])}
  {let n=0;Object.entries(S.heat).filter(([k,h])=>h>=25).sort((a,b)=>b[1]-a[1]).forEach(([k])=>{if(n>=2)return;const [a,b]=k.split('|');const A=S.w[a],B=S.w[b];if(!A||!B||A.own!==brand||B.own!==brand)return;
-  for(const [x,t] of [[b,a],[a,b]]){if(S.w[x].inj||S.w[x].al==='f'&&S.w[t].al==='f')continue;const sl=card.find(c=>c.d&&!c.d.ri&&c.d.sides.flat().includes(t)&&!c.d.sides.flat().includes(x));if(!sl||Math.random()>aiq(brand).ri)continue;
+  for(const [x,t] of [[b,a],[a,b]]){if(S.w[x].inj||S.w[x].al==='f'&&S.w[t].al==='f'||rest.has(x))continue;const sl=card.find(c=>c.d&&!c.d.ri&&!(c.d.tour&&c.d.tour.k==='c2')&&c.d.sides.flat().includes(t)&&!c.d.sides.flat().includes(x));if(!sl||Math.random()>q.ri)continue;
    const lose=!(sl.d.sides[sl.d.winner]||[]).includes(t);sl.d.ri={k:lose&&Math.random()<.6?'cost':S.w[x].al==='f'&&S.w[t].al==='h'?'save':'attack',x,t};n++;break}})}
- const ms=card.slice().reverse();/* strongest-built (title) matches first in the list -> put them last as main events */
- if(ms.length>=3)ms.unshift(ms.splice(ms.length-2,1)[0]);/* ...and the next-best match opens the show hot */
- if(show.ppv){ms.push({k:'chal',d:autoChal(brand,used)});return ms}
+ /* running order: the best match goes on last and the next best opens the show hot. Smarter bookers project it; others go by feel. */
+ let ms;if(Math.random()<smart+.25){const sc=new Map(card.map(c=>[c,rateMatch(c.d,{ppv:show.ppv,preview:true}).raw]));ms=card.slice().sort((a,b)=>sc.get(a)-sc.get(b));if(ms.length>=3)ms.unshift(ms.splice(ms.length-2,1)[0])}
+ else{ms=card.slice().reverse();if(ms.length>=3)ms.unshift(ms.splice(ms.length-2,1)[0])}
+ if(show.ppv){const out=[];let mi=0;const xo=S.week===FD_WEEK?xoAuto(brand,new Set(used),2):[];
+  cardOf(true).forEach(k=>{if(k==='match'){if(ms[mi])out.push(ms[mi++])}else if(k==='xo?'){const x=xo.shift();out.push({k:'xo',d:x||null,opt:true})}else if(k==='chal')out.push({k:'chal',d:chal0})});while(mi<ms.length)out.push(ms[mi++]);return out}
  const exP=new Set();
  const out=[];let mi=0;CARD_TV.forEach(k=>{if(k==='match'){if(ms[mi])out.push(ms[mi++])}else{const p=autoPromo(brand,exP);if(p){exP.add(p.a);if(p.b)exP.add(p.b)}const sl={k:'promo',d:p};if(k.endsWith('?'))sl.opt=true;out.push(sl)}});
  while(mi<ms.length)out.push(ms[mi++]);return out}
-function autoChal(brand,used){if(Math.random()>.6)return null;const other=brand==='p'?'ai':'p';
+function autoChal(brand,used){if(S.week===SEASON)for(const k in TOURS){const t=tourState(brand,k);const pz=S.titles[TOURS[k].prize];const c=t.chal&&S.w[t.chal];if(c&&pz&&pz.holders.length&&c.own===brand&&!c.inj&&!used.has(c.id)&&S.w[pz.holders[0]].own!==brand)return {title:pz.id,c:c.id}}
+ if(Math.random()>.6)return null;const other=brand==='p'?'ai':'p';
  const ts=Object.values(S.titles).filter(t=>t.kind==='singles'&&t.holders.length&&S.w[t.holders[0]].own===other&&!S.w[t.holders[0]].inj).sort((a,b)=>b.prestige-a.prestige);
  for(const t of ts){const c=Object.values(S.w).filter(w=>w.own===brand&&!w.inj&&w.g===t.g&&!used.has(w.id)&&!isChamp(w.id)).sort((a,b)=>(b.pop+b.ring)-(a.pop+a.ring))[0];if(c)return {title:t.id,c:c.id}}return null}
 function autoPromo(brand,ex){ex=ex||new Set();const r=Object.values(S.w).filter(w=>w.own===brand&&w.inj===0&&!ex.has(w.id));if(!r.length)return null;
@@ -2125,23 +2216,30 @@ function autoPromo(brand,ex){ex=ex||new Set();const r=Object.values(S.w).filter(
 function airShow(){if(ON())return mpAirWeek();const out=airPair();S.showIdx=0;endWeek(out.notes);if(S.phase==='season')freshCards();S.last=out;save();localBackup();return out}
 /* air one head-to-head matchup (or one GM's bye-week show) */
 function airPair(){
- const show=curShow();const ctx={ppv:show.ppv,allin:show.ppv&&S.week===SEASON,name:show.name};const bye=ON()&&!S._view.opp;
- if(!bye&&!S.card.ai)S.card.ai=autoBook('ai',show,null);
+ const show=curShow();const ctx={ppv:show.ppv,allin:show.ppv&&S.week===SEASON,name:show.special?show.special+' '+show.name:show.name,special:!!show.special};const bye=ON()&&!S._view.opp;
+ if(!bye&&!S.card.ai)S.card.ai=autoBook('ai',show,(S.card.p||[]).filter(sl=>sl.k==='xo'&&sl.d).map(sl=>sl.d.b));
  if(!ON()){const ams=S.card.ai.filter(sl=>sl.k==='match'&&sl.d&&validMatch(sl.d));ams.forEach((sl,j)=>{if(sl.d.ev&&sl.d.ev.hit)return;const main=j===ams.length-1;const g=matchEvent(sl.d,'ai',show.ppv||main,main?.45:.3);if(g)runEvAI(g,sl.d)})}
  const out={title:show.ppv?show.name:`${showNames().p}${bye?'':' vs '+showNames().ai}`,week:S.week,ppv:show.ppv,blocks:[],notes:[],fans:{},ratings:{}};
  const adj=b=>b==='ai'&&!ON()?aiq('ai').adj:0;
  const order=bye?['p']:['p','ai'];
  const vals={p:[],ai:[]};
  /* each GM's card is aired from their own side, so promises, proxy wars and promo payoffs work for both people online */
- const airCard=b=>{const segs=[],v=[],meta=[];let df=0;
-  const debut=(ws,notes)=>{const r=debutPop(ws.filter(w=>w&&w.deb),show.ppv);r.ws.forEach(w=>{delete w.deb;w.pop=clamp(w.pop+1.5,1,100);w.mor=clamp(w.mor+5,0,100)});df+=r.fans;notes.unshift(...r.notes);return r.stars};
-  S.card[b].forEach(sl=>{if(!sl.d)return;
+ const airCard=b=>{const segs=[],v=[],meta=[];let df=0;const inf={women:0,me:0,rk:false,deb:false,newch:false,tagdef:false,sold:sellOf(b,show).length>0};
+  const debut=(ws,notes)=>{const r=debutPop(ws.filter(w=>w&&w.deb),show.ppv);if(r.ws.length)inf.deb=true;r.ws.forEach(w=>{delete w.deb;w.pop=clamp(w.pop+1.5,1,100);w.mor=clamp(w.mor+5,0,100)});df+=r.fans;notes.unshift(...r.notes);return r.stars};
+  const mIdx=S.card[b].map((sl,i)=>sl.k==='match'&&sl.d&&validMatch(sl.d)&&!sl.d.sides.flat().some(id=>S.w[id].inj)?i:-1).filter(i=>i>=0);
+  S.card[b].forEach((sl,si)=>{if(!sl.d)return;
    const shw=show.ppv?show.name:(showNames()[b]||show.name);
-   if(sl.k==='match'){const m=sl.d;if(!validMatch(m)||m.sides.flat().some(id=>S.w[id].inj))return;const res=rateMatch(m,ctx);res.stars=clamp(res.stars+adj(b)+(m.ev?m.ev.stars:0),.25,5);const notes=m.ev?m.ev.notes.slice():[];if(res.pen)notes.push(`😴 Rematch fatigue: fans saw ${res.penWhy} (−${fracTxt(res.pen)}★)`);if(res.stale)notes.push('🥱 This feud has gone stale — the crowd is losing interest.');{const db=debut(m.sides.flat().map(id=>S.w[id]),notes);if(db)res.stars=clamp(res.stars+db,.25,5)}const txt=matchText(m);SEG={t:`${shw} · ${txt} ${stars(res.stars)}`,win:m.nc?[]:(m.sides[m.winner]||[]),sides:m.sides};applyMatch(m,res,ctx,notes);if(m.ev)applyEv(m.ev,notes);applyRunIn(m,res,notes);SEG=null;segs.push({txt,sub:matchSub(m),stars:res.stars,notes});v.push(res.stars);meta.push(segMeta(sl,res.stars))}
-   else if(sl.k==='promo'&&sl.d.res&&!sl.d.cut){const p=sl.d;const notes=[];const st=clamp(p.res.stars+adj(b)+debut([S.w[p.a],p.b&&S.w[p.b]],notes),.5,5);SEG={t:`${shw} · ${PT[p.type].n}: ${S.w[p.a].name}${p.b&&S.w[p.b]?' & '+S.w[p.b].name:''} ${stars(st)}`};applyPromo(p,notes);SEG=null;segs.push({txt:S.w[p.a].name+(p.b&&S.w[p.b]?' & '+S.w[p.b].name:''),sub:PT[p.type].n,stars:st,notes});v.push(st);meta.push(segMeta(sl,st))}});
-  return {segs,v,df,flow:flowScore(meta,show.ppv,b)}};
- const flows={},debF={};
- order.forEach(b=>{const r=ON()&&b==='ai'?asOther(()=>airCard('p')):airCard(b);vals[b]=r.v;flows[b]=r.flow;debF[b]=r.df;
+   if(sl.k==='match'){const m=sl.d;if(!validMatch(m)||m.sides.flat().some(id=>S.w[id].inj))return;const mctx=Object.assign({},ctx,{pos:mIdx.length>=3&&si===mIdx[mIdx.length-1]?'me':mIdx.length>=3&&si===mIdx[0]?'open':'mid'});const res=rateMatch(m,mctx);res.stars=clamp(res.stars+adj(b)+(m.ev?m.ev.stars:0),.25,5);const notes=m.ev?m.ev.notes.slice():[];if(res.pen)notes.push(`😴 Rematch fatigue: fans saw ${res.penWhy} (−${fracTxt(res.pen)}★)`);if(res.stale)notes.push('🥱 This feud has gone stale — the crowd is losing interest.');{const db=debut(m.sides.flat().map(id=>S.w[id]),notes);if(db)res.stars=clamp(res.stars+db,.25,5)}const txt=matchText(m);SEG={t:`${shw} · ${txt} ${stars(res.stars)}`,win:m.nc?[]:(m.sides[m.winner]||[]),sides:m.sides};const th=m.title&&S.titles[m.title]?S.titles[m.title].holders.join('|'):null;applyMatch(m,res,mctx,notes);if(m.ev)applyEv(m.ev,notes);applyRunIn(m,res,notes);if(m.tour)tourResult(b,m,notes);if(m.type==='gauntlet')gauntletPrize(b,m,notes);SEG=null;segs.push({txt,sub:matchSub(m),stars:res.stars,notes});v.push(res.stars);meta.push(segMeta(sl,res.stars));
+    /* what the show delivered, for the network's mandates and the year-end awards */
+    const ws=m.sides.flat().map(id=>S.w[id]);if(ws.some(w=>w.g==='F'))inf.women++;if(si===mIdx[mIdx.length-1])inf.me=res.stars;if(res.stars>=3&&ws.some(w=>w.rookie&&w.own===b))inf.rk=true;
+    if(th!=null){const t=S.titles[m.title];const now=t.holders.join('|');if(now!==th&&t.holders.length&&S.w[t.holders[0]].own===b)inf.newch=true;if(now===th&&t.kind!=='singles'&&!m.nc&&t.holders.length&&S.w[t.holders[0]].own===b)inf.tagdef=true}
+    if(!m.nc&&(m.type==='tag')){const wk=m.sides[m.winner].slice().sort().join('|');S.tagW=S.tagW||{};S.tagW[wk]=(S.tagW[wk]||0)+1}}
+   else if(sl.k==='promo'&&sl.d.res&&!sl.d.cut){const p=sl.d;const notes=[];const st=clamp(p.res.stars+adj(b)+debut([S.w[p.a],p.b&&S.w[p.b]],notes),.5,5);SEG={t:`${shw} · ${PT[p.type].n}: ${S.w[p.a].name}${p.b&&S.w[p.b]?' & '+S.w[p.b].name:''} ${stars(st)}`};applyPromo(p,notes);SEG=null;segs.push({txt:S.w[p.a].name+(p.b&&S.w[p.b]?' & '+S.w[p.b].name:''),sub:PT[p.type].n,stars:st,notes});v.push(st);meta.push(segMeta(sl,st));
+    if(!S.bestP||st>S.bestP.s)S.bestP={s:st,t:`${PT[p.type].n}: ${S.w[p.a].name}${p.b&&S.w[p.b]?' & '+S.w[p.b].name:''} (${shw}, W${S.week})`}}});
+  {const tn=[];tourSweep(b,tn);if(tn.length)out.notes.push(...tn)}
+  return {segs,v,df,inf,flow:flowScore(meta,show.ppv,b)}};
+ const flows={},debF={},infs={};
+ order.forEach(b=>{const r=ON()&&b==='ai'?asOther(()=>airCard('p')):airCard(b);vals[b]=r.v;flows[b]=r.flow;debF[b]=r.df;infs[b]=r.inf;
   out.blocks.push({brand:b,label:show.ppv?`${nameOf(b)}'s card`:`${showNames()[b]} — ${nameOf(b)}`,segs:r.segs,flow:r.flow})});
  const extra={p:0,ai:0};
  if(show.ppv){const segs=[];
@@ -2152,7 +2250,10 @@ function airPair(){
    const res=rateMatch(m,ctx);const notes=[];const txt=matchText(m);applyMatch(m,res,ctx,notes);
    extra[S.w[m.sides[m.winner][0]].own]+=8000;vals.p.push(res.stars);vals.ai.push(res.stars);
    segs.push({txt,sub:`Title challenge issued by ${nameOf(b)}`,stars:res.stars,notes})});
-  if(segs.length)out.blocks.push({brand:'x',label:'Interpromotional title challenges',segs})}
+  if(segs.length)out.blocks.push({brand:'x',label:'Interpromotional title challenges',segs});
+  if(show.fd)airXo(order,ctx,vals,extra,out)}
+ /* the main event war: on TV, whoever's main event was better wins the last quarter-hour */
+ if(!show.ppv&&!bye&&infs.p&&infs.ai&&infs.p.me&&infs.ai.me&&infs.p.me!==infs.ai.me){const w=infs.p.me>infs.ai.me?'p':'ai';extra[w]+=3000;out.notes.push(`🥊 Main event war: ${nameOf(w)}'s main event (${stars(infs[w].me)}) beat ${nameOf(w==='p'?'ai':'p')}'s (${stars(infs[w==='p'?'ai':'p'].me)}) head-to-head in the final quarter-hour (+3K fans).`)}
  const rt={};
  order.forEach(b=>{const v=vals[b];if(!v.length){rt[b]=.5;return}let s=0,ws=0;v.forEach((x,i)=>{const w=i===v.length-1?1.6:1;s+=x*w;ws+=w});rt[b]=clamp(s/ws+(flows[b]?flows[b].mod:0),0,5)});
  out.cash={};
@@ -2164,12 +2265,13 @@ function airPair(){
  out.blocks.forEach(bl=>{if(bl.brand!=='x')bl.rating=rt[bl.brand]});
  order.forEach(b=>{const r=rt[b];let d;const o=b==='p'?'ai':'p';
   if(show.ppv){d=Math.round((r-2.8)*20000*(ctx.allin?2:1))+extra[b]}
-  else{d=Math.round((r-2.5)*12000+(r>=4?6000:0));if(rt[o]!=null&&r>rt[o])d+=4000}
+  else{d=Math.round((r-2.5)*12000+(r>=4?6000:0));if(rt[o]!=null&&r>rt[o])d+=4000;if(show.special)d=Math.round(d*1.5);d+=extra[b]||0}
   d+=debF[b]||0;
   const before=S.fans[b];S.fans[b]=Math.max(50000,S.fans[b]+d);out.fans[b]=S.fans[b]-before;out.ratings[b]=r});
  if(!show.ppv&&!bye){const hw=rt.p>=rt.ai?'p':'ai';S.hourWins[hw]=(S.hourWins[hw]||0)+1;out.hourWin=hw}
  /* tickets, merch and ads follow the show; sell-outs cash in and cost fans */
  order.forEach(b=>showRevenue(b,out.cash[b],rt[b],show,ctx,out));
+ order.forEach(b=>{if(infs[b])mandCheck(b,infs[b],rt[b],show,out.hourWin,out.notes)});
  settlePromises(out);
  if(ON()&&!bye){const t={notes:[],fans:{p:0,ai:0}};asOther(()=>settlePromises(t));out.fans.ai+=t.fans.p;out.notes.push(...t.notes)}
  {const h={s:S.season,w:S.week,show:show.name};order.forEach(b=>h[b]=+rt[b].toFixed(2));S.history.push(h)}
@@ -2222,8 +2324,8 @@ function endWeek(notes){
  if(!ON()&&(aiN<20||(aiN<28&&Math.random()<.3))){const fa=Object.values(S.w).filter(w=>!w.own&&!w.inj&&!w.cw&&onMarket(w)).sort((a,b)=>val(b)-val(a));const pickFa=aiN<20?fa.sort((a,b)=>mkt(a)-mkt(b))[0]:fa[0];
   if(pickFa){const c=signCost(pickFa);if(S.money.ai>=c*(aiN<20?1:1.5)&&(aiN<20||payroll('ai')+mkt(pickFa)<=weekEst('ai')*aiq('ai').fa)){S.money.ai-=c;pickFa.sal=mkt(pickFa);pickFa.own='ai';pickFa.con=RI(20,40);pickFa.mor=75;pickFa.deb=AW();const n=`✍️ ${S.rival} signed free agent ${pickFa.name}.`;news(n);notes.push(n)}}}
  S.week++;mystTick(notes);
- if(S.week>SEASON){S.phase='over';news(`🏁 Season ${S.season} is over!`)}
- else{marketTick(notes);crisisTick(notes);bothSides(()=>scoutTick());aiScout(notes)}}
+ if(S.week>SEASON){S.phase='over';news(`🏁 Season ${S.season} is over!`);S.awards=seasonAwards();S.offs=offseasonPlan()}
+ else{marketTick(notes);crisisTick(notes);bothSides(()=>scoutTick());aiScout(notes);mandTick(notes)}}
 
 /* ===================== FRONT OFFICE CRISES (fictional, randomly generated) ===================== */
 function susp(w,n){w.inj=Math.max(w.inj||0,n);w.susp=true}
@@ -2357,7 +2459,7 @@ star:sv('<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3
 const VENUES=[['Heritage Bank Center','Cincinnati, OH'],['Nationwide Arena','Columbus, OH'],['Rocket Arena','Cleveland, OH'],['Gainbridge Fieldhouse','Indianapolis, IN'],['KFC Yum! Center','Louisville, KY'],['Little Caesars Arena','Detroit, MI'],['PPG Paints Arena','Pittsburgh, PA'],['Bridgestone Arena','Nashville, TN'],['Enterprise Center','St. Louis, MO'],['NOW Arena','Hoffman Estates, IL']];
 function venueOf(){return VENUES[((S.season-1)*3+(S.week-1))%VENUES.length]}
 function poster(sh,inner){const v=venueOf();const cls=sh.ppv?'ppv':sh.name==='Collision'?'col':'dyn';
- return `<div class="card showcard ${cls}"><div class="wm">${esc(sh.ppv?sh.name:v[1].split(',')[0])}</div><div class="kicker"><i></i>${sh.ppv?'Pay-per-view · Week '+S.week+' of '+SEASON:`Week ${S.week} of ${SEASON} · Ratings war`}</div><div class="showname" style="--n:${lw(esc(sh.name))}">${esc(sh.name)}</div>${!sh.ppv&&sh.theirs?`<div class="venue" style="margin-top:-2px">vs <b>${esc(S.rival)}'s ${esc(sh.theirs)}</b></div>`:!sh.ppv&&ON()?'<div class="venue" style="margin-top:-2px"><b>Bye week</b> — no head-to-head</div>':''}<div class="venue">${sh.ppv?'<b>Live on pay-per-view</b>':`<b>${esc(v[0])}</b> · ${esc(v[1])}`}</div>${inner||''}</div>`}
+ return `<div class="card showcard ${cls}"><div class="wm">${esc(sh.ppv?sh.name:v[1].split(',')[0])}</div><div class="kicker"><i></i>${sh.ppv?(sh.fd?'Crossover pay-per-view':'Pay-per-view')+' · Week '+S.week+' of '+SEASON:sh.special?`Week ${S.week} of ${SEASON} · 📺 TV special: ${esc(sh.special)}`:`Week ${S.week} of ${SEASON} · Ratings war`}</div><div class="showname" style="--n:${lw(esc(sh.name))}">${esc(sh.name)}</div>${!sh.ppv&&sh.theirs?`<div class="venue" style="margin-top:-2px">vs <b>${esc(S.rival)}'s ${esc(sh.theirs)}</b></div>`:!sh.ppv&&ON()?'<div class="venue" style="margin-top:-2px"><b>Bye week</b> — no head-to-head</div>':''}<div class="venue">${sh.ppv?'<b>Live on pay-per-view</b>':`<b>${esc(v[0])}</b> · ${esc(v[1])}`}</div>${inner||''}</div>`}
 function tile(on,icon,t,sub,em){return `<button class="tile" onclick="${on}">${icon}<b>${t}</b><span>${sub}</span><em>${em}</em></button>`}
 let ANIM=true;
 let tab='home',rf='mine',rs='ovr',df='all',ds='ovr',ED=null,PE=null,PS=null,CE=null,aiT=null;
@@ -2425,7 +2527,7 @@ function setupView(){return `<div class="hero"><div class="kicker"><i></i>Tony K
 <button class="btn mt" onclick="startGame()">Start new game</button><button class="btn sec" onclick="importSave()">Load a save file</button><button class="btn sec" onclick="cloudLinkForm()">☁️ Load my cloud save</button></div>
 ${shelfList().length?`<button class="btn sec" onclick="openGames()">⇄ Your games (${gamesList().length})</button>`:''}${mpSetupCard()}${partySetupCard()}<p class="muted center">Works offline. Progress saves automatically on this device.</p>`}
 let SDIFF='normal';
-const DIFFS={easy:['Easy','The rival books a bit weaker (−¼★ a segment).'],normal:['Normal','An even fight for the fans.'],hard:['Hard','The rival books a bit stronger (+¼★ a segment).']};
+const DIFFS={easy:['Easy','The rival books sloppily and its shows rate a little lower.'],normal:['Normal','An even fight for the fans.'],hard:['Hard','The rival books like a pro: rests stars before PPVs, builds to payoffs, protects its champions and orders its card for the ratings.']};
 function diffDD(){const keepIn=()=>{const g=$('#gmName'),r=$('#rvName');const gv=g&&g.value,rv=r&&r.value;render();const g2=$('#gmName'),r2=$('#rvName');if(g2&&gv!=null)g2.value=gv;if(r2&&rv!=null)r2.value=rv};
  return dd('diff',{title:DIFFS[SDIFF][0],sub:DIFFS[SDIFF][1],rerender:keepIn,opts:Object.entries(DIFFS).map(([k,[n,d]])=>({t:n,sub:d,on:k===SDIFF,pick:()=>{SDIFF=k;keepIn()}}))})}
 function startGame(){const g=($('#gmName').value||'').trim()||'You';const r=($('#rvName').value||'').trim()||'The Rival Office';newGame(g,r,SDIFF);tab='home';render();loadRepoPhotos()}
@@ -2491,7 +2593,7 @@ function simDraft(){if(ON()){const o=S.online;o.auto=o.auto||{};
 
 function nextPPV(){for(let w=S.week;w<=SEASON;w++)if(PPVS[w])return {n:PPVS[w],in:w-S.week};return null}
 function feudList(b){return Object.entries(S.heat).map(([k,h])=>{const [a,c]=k.split('|');return {a:S.w[a],b:S.w[c],h}}).filter(f=>f.a&&f.b&&f.a.own===b&&f.b.own===b).sort((x,y)=>y.h-x.h)}
-function homeView(){const sh=curShow();const np=nextPPV();const pp=S.fans.p/(S.fans.p+(S.fans.ai||S.fans.p))*100;const mine=ownList('p');const al=[];
+function homeView(){const sh=curShow();const np=nextPPV();const gp=fanGain('p'),ga=fanGain('ai');const pp=clamp(50+(gp-ga)/(Math.abs(gp)+Math.abs(ga)+20000)*50,3,97);const mine=ownList('p');const al=[];
  {const v=inaugList();if(v.length)al.push(`👑 ${v.length} title${v.length>1?'s are':' is'} still vacant — book title matches to crown your inaugural champions. <a href="#" onclick="go('book');return false" style="color:var(--gold2)">Book now</a>`)}
  if(S.money.p<0)al.push(`💸 You're in the red (${money(S.money.p)}) — wrestlers' morale is slipping. See the Office.`);
  const exp=mine.filter(w=>w.con<=4);if(exp.length)al.push(`📝 ${exp.length} contract${exp.length>1?'s':''} expiring soon — see Office`);
@@ -2501,11 +2603,12 @@ function homeView(){const sh=curShow();const np=nextPPV();const pp=S.fans.p/(S.f
  {const n=Object.values(S.w).filter(w=>!w.own&&!w.cw&&onMarket(w));const last=n.filter(w=>faLeft(w)<=1);if(n.length)al.push(`🆕 ${n.length} free agents on the market${last.length?` · last chance: ${last.slice(0,3).map(w=>esc(w.name)).join(', ')}`:''} — <a href="#" onclick="rf='fa';go('roster');return false" style="color:var(--gold2)">browse</a>`)}
  const fs=feudList('p').slice(0,5);
  const held=Object.values(S.titles).filter(t=>t.holders.length&&S.w[t.holders[0]]&&S.w[t.holders[0]].own==='p').length;
- return `${poster(sh,`<div class="venue mt" style="color:#e9d9b0">${sh.ppv?`Each side books a full card · ${cardMatches(true)} matches + a title challenge`:`Best show wins the week`}</div><button class="btn mt" onclick="go('book')">${ON()&&S.online.booked.p?'Card locked in ✓':'Book the show ▸'}</button>${np&&!sh.ppv?`<div class="venue mt">Next PPV: <b>${np.n}</b> · ${np.in===0?'this Saturday':`in ${np.in} week${np.in>1?'s':''}`}</div>`:''}`)}
+ return `${poster(sh,`<div class="venue mt" style="color:#e9d9b0">${sh.ppv?`Each side books a full card · ${cardMatches(true)} matches${sh.fd?' + 2 crossover dream matches':''} + a title challenge`:sh.special?'📺 TV special · hotter crowd, bigger fan swings':`Best show wins the week`}</div><button class="btn mt" onclick="go('book')">${ON()&&S.online.booked.p?'Card locked in ✓':'Book the show ▸'}</button>${np&&!sh.ppv?`<div class="venue mt">Next PPV: <b>${np.n}</b> · ${np.in===0?'this Saturday':`in ${np.in} week${np.in>1?'s':''}`}</div>`:''}`)}
  ${S.crisis&&S.w[S.crisis.a]&&CRISES[S.crisis.k]?`<div class="card warn" onclick="openCrisis()" style="cursor:pointer"><b>${CRISES[S.crisis.k].i} ${CRISES[S.crisis.k].good?'Opportunity':'Front office situation'}: ${esc(CRISES[S.crisis.k].t)}</b><div class="muted">Needs your decision before the next show — tap to handle it.</div></div>`:''}<div class="tiles">${tile("go('roster')",ICON.roster,'Roster',`${mine.length} signed · ${mine.filter(w=>w.inj).length} injured`,mine.length)}${tile("go('titles')",ICON.titles,'Titles',`You hold ${held} of ${Object.keys(S.titles).length}`,held)}${tile("go('office')",ICON.office,'Front Office',`Bank ${money(S.money.p)}`,'$')}${S.last?tile('showResults()',ICON.star,'Last Show',(()=>{const L=S.last.pairs?(S.last.pairs.find(p=>p.ratings.p!=null)||{}):S.last;const R=L.ratings||{};return `${R.ai!=null&&!S.last.ppv?(R.p>=R.ai?'Won':'Lost')+' · ':''}<b style="display:inline;font:inherit;color:var(--gold2);margin:0;text-transform:none">${stars(R.p||0)}</b>`})(),'★'):tile("go('office')",ICON.star,'How to Play','Ratings, feuds & fans','?')}</div>
- ${mpStandings()}${ON()&&!S._view.opp?`<div class="card"><div class="h small">Bye week</div><div class="muted">No head-to-head this week — your show airs on its own. Next week you face <b>${esc(nameOf(localKey(oppOf(S._view.me,S.week+1,nSeats()))||'p'))}</b>.</div></div>`:''}<div class="card" ${ON()&&!S._view.opp?'style="display:none"':''}><div class="h small">${ON()&&nSeats()>2?'This week':'Brand war'}</div><div class="warnames"><div><div class="muted tiny">YOU</div><b class="gold">${esc(S.gm)}</b></div><span class="vsdot">VS</span><div class="r"><div class="muted tiny">${ON()?'FRIEND':'RIVAL'}</div><b>${esc(S.rival)}</b></div></div><div class="war"><i style="width:${pp}%"></i></div><div class="row sb muted"><span><b class="gold">${fmtFans(S.fans.p)}</b> fans</span><span>Ratings wins ${S.hourWins.p||0}–${S.hourWins.ai||0}</span><span>${fmtFans(S.fans.ai||0)} fans</span></div></div>
+ ${mpStandings()}${ON()&&!S._view.opp?`<div class="card"><div class="h small">Bye week</div><div class="muted">No head-to-head this week — your show airs on its own. Next week you face <b>${esc(nameOf(localKey(oppOf(S._view.me,S.week+1,nSeats()))||'p'))}</b>.</div></div>`:''}<div class="card" ${ON()&&!S._view.opp?'style="display:none"':''}><div class="h small">${ON()&&nSeats()>2?'This week':'Brand war'}</div><div class="warnames"><div><div class="muted tiny">YOU</div><b class="gold">${esc(S.gm)}</b></div><span class="vsdot">VS</span><div class="r"><div class="muted tiny">${ON()?'FRIEND':'RIVAL'}</div><b>${esc(S.rival)}</b></div></div><div class="war"><i style="width:${pp}%"></i></div><div class="row sb muted"><span><b class="gold">${gp>=0?'+':''}${fmtFans(gp)}</b> fans</span><span>Ratings wins ${S.hourWins.p||0}–${S.hourWins.ai||0}</span><span>${ga>=0?'+':''}${fmtFans(ga)} fans</span></div><div class="muted tiny center" style="margin-top:4px">Fans gained this season · all-time ${fmtFans(S.fans.p)} vs ${fmtFans(S.fans.ai||0)}</div></div>
  ${al.length?`<div class="card warn">${al.map(a=>`<div style="margin:3px 0">${a}</div>`).join('')}</div>`:''}
- ${(S.promises||[]).length?`<div class="card"><div class="h small">Booked &amp; promised</div>${S.promises.slice().sort((a,b)=>a.week-b.week).map(pr=>S.w[pr.a]&&S.w[pr.b]?`<div class="row sb" style="margin:5px 0"><span class="frow">${face(S.w[pr.a])}${face(S.w[pr.b])}<span>${pr.kind==='contract'?'📜':'🎯'} ${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)}${pr.stip&&pr.stip!=='std'?' · '+STIPS[pr.stip].n:''}</span></span><span class="muted tiny">${pr.week===S.week?'<b class="gold">This week</b>':pr.ppv?esc(pr.ppv):'Week '+pr.week}</span></div>`:'').join('')}</div>`:''}<div class="card"><div class="h small">Hottest feuds</div>${fs.length?fs.map(f=>`<div class="feud" style="cursor:pointer" onclick="openFeud('${f.a.id}','${f.b.id}')"><div class="row sb"><span class="frow">${face(f.a)}${face(f.b)}<span>${esc(f.a.name)} vs ${esc(f.b.name)}</span></span><span class="muted">🔥 ${Math.round(f.h)}</span></div><div class="bar heat"><i style="width:${f.h}%"></i></div></div>`).join(''):'<div class="muted">No feuds yet. Put the same wrestlers in promos and matches week after week to build heat, then pay it off at a PPV.</div>'}</div>
+ ${mandCard()}${rivalAdHtml()}${tourCard('p')}
+ ${(S.promises||[]).length?`<div class="card"><div class="h small">Booked &amp; promised</div>${S.promises.slice().sort((a,b)=>a.week-b.week).map(pr=>S.w[pr.a]&&S.w[pr.b]?`<div class="row sb" style="margin:5px 0"><span class="frow">${face(S.w[pr.a])}${face(S.w[pr.b])}<span>${pr.kind==='contract'?'📜':pr.kind==='shot'?'🎟️':'🎯'} ${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)}${pr.title&&S.titles[pr.title]?' · '+esc(S.titles[pr.title].n)+' title':''}${pr.stip&&pr.stip!=='std'?' · '+STIPS[pr.stip].n:''}</span></span><span class="muted tiny">${pr.week===S.week?'<b class="gold">This week</b>':pr.ppv?esc(pr.ppv):'Week '+pr.week}</span></div>`:'').join('')}</div>`:''}<div class="card"><div class="h small">Hottest feuds</div>${fs.length?fs.map(f=>`<div class="feud" style="cursor:pointer" onclick="openFeud('${f.a.id}','${f.b.id}')"><div class="row sb"><span class="frow">${face(f.a)}${face(f.b)}<span>${esc(f.a.name)} vs ${esc(f.b.name)}</span></span><span class="muted">🔥 ${Math.round(f.h)}</span></div><div class="bar heat"><i style="width:${f.h}%"></i></div></div>`).join(''):'<div class="muted">No feuds yet. Put the same wrestlers in promos and matches week after week to build heat, then pay it off at a PPV.</div>'}</div>
  <div class="card"><div class="h small">The Wire</div>${S.news.slice(-15).reverse().map(n=>`<div class="news"><span class="muted">W${n.w}</span> ${esc(n.t)}</div>`).join('')}</div>`}
 
 /* titles still waiting for their first champion */
@@ -2584,10 +2687,10 @@ function dgLab(dp){if(!DG||!DG.lab)return;const A=dgP(DG.src);let t;
 function dgUp(e){if(!DG)return;clearTimeout(DG.t);if(!DG.on){DG=null;return}e.preventDefault();DG_SUP=Date.now()+450;const s=DG.src,d=DG.over&&DG.over.dataset.dp;dgEnd();if(d)dgDrop(s,d)}
 function dgEnd(){if(!DG)return;clearTimeout(DG.t);cancelAnimationFrame(DG.raf);dgUnprev();if(DG.el)DG.el.style.transition='';if(DG.lab)DG.lab.remove();if(DG.g)DG.g.remove();if(DG.over)DG.over.classList.remove('dp-over');if(DG.el)DG.el.classList.remove('dg-src');document.body.classList.remove('dragging');DG=null}
 const dgP=s=>{const p=s.split(':');return {t:p[0],a:p.slice(1)}};
-function dgOk(s,d){const A=dgP(s),B=dgP(d);if(s===d)return false;
+function dgOk(s,d){const A=dgP(s),B=dgP(d);if(s===d)return false;const tourAt=x=>(x.t==='w'||x.t==='pw')&&S.card.p[+x.a[0]]&&S.card.p[+x.a[0]].d&&S.card.p[+x.a[0]].d.tour;if(tourAt(A)||tourAt(B))return false;
  if(A.t==='ed')return B.t==='ed';if(A.t==='pe')return B.t==='pe';if(B.t==='ed'||B.t==='pe')return false;
- if(A.t==='slot'){const j=B.a[0];return j!==A.a[0]&&S.card.p[+j]&&S.card.p[+j].k!=='chal'}
- if(A.t==='lr')return B.t==='w'||B.t==='pw'||(B.t==='slot'&&S.card.p[+B.a[0]]&&!S.card.p[+B.a[0]].d&&S.card.p[+B.a[0]].k!=='chal');
+ if(A.t==='slot'){const j=B.a[0];return j!==A.a[0]&&S.card.p[+j]&&!fixedK(S.card.p[+j])}
+ if(A.t==='lr')return B.t==='w'||B.t==='pw'||(B.t==='slot'&&S.card.p[+B.a[0]]&&!S.card.p[+B.a[0]].d&&!fixedK(S.card.p[+B.a[0]]));
  return B.t==='w'||B.t==='pw'}
 /* where a wrestler sits on a card: {i, si, pi} in a match or {i, r} in a promo */
 function cpGet(c,p){const d=c[p.i].d;return p.r?d[p.r]:d.sides[p.si][p.pi]}
@@ -2597,7 +2700,7 @@ function dgDrop(s,d){const A=dgP(s),B=dgP(d);
  if(A.t==='ed'){const m=ED.m;const [si,pi]=A.a.map(Number),[sj,pj]=B.a.map(Number);const x=m.sides[si][pi];m.sides[si][pi]=m.sides[sj][pj];m.sides[sj][pj]=x;if(si!==sj&&MT[m.type].per===1)m.winner=m.winner===si?sj:m.winner===sj?si:m.winner;return renderMatchEd(true)}
  if(A.t==='pe'){const x=PE.a;PE.a=PE.b||'';PE.b=x;const pt=PT[PE.type];if(pt.champ&&PE.a&&!isChamp(PE.a)){PE.b=PE.a;PE.a=x;return toast("Only a champion can lead a Champion's Address.")}return renderPromoEd(true)}
  if(mpLocked())return;const card=S.card.p;
- if(A.t==='slot'){const i=+A.a[0],j=+B.a[0];if(i===j||card[i].k==='chal'||card[j].k==='chal')return;const x=card[i];card[i]=card[j];card[j]=x;save();render();return}
+ if(A.t==='slot'){const i=+A.a[0],j=+B.a[0];if(i===j||fixedK(card[i])||fixedK(card[j]))return;const x=card[i];card[i]=card[j];card[j]=x;save();render();return}
  if(A.t==='lr'&&B.t==='slot'){const j=+B.a[0];const sl=card[j];if(sl.d)return;return sl.k==='match'?openMatchWith(j,A.a[0]):openPromoWith(j,A.a[0])}
  const c=JSON.parse(JSON.stringify(card));const pd=cpOf(B);let ps=null,id;
  if(A.t==='lr'){id=A.a[0];const w=S.w[id];if(!w||w.inj)return;
@@ -2610,7 +2713,7 @@ function dgDrop(s,d){const A=dgP(s),B=dgP(d);
  const seen={};for(const [i,sl] of c.entries()){if(!sl.d)continue;
   if(sl.k==='match'){for(const x of sl.d.sides.flat()){if(!x)continue;if(seen[x]!=null)return toast(`${S.w[x].name} would be in two matches.`);seen[x]=i}}
   else if(sl.k==='promo'){const p=sl.d;if(!p.a)return toast('A promo needs someone holding the mic.');if(p.b&&p.a===p.b)return toast(`${S.w[p.a].name} can't be on both sides of the promo.`);if(PT[p.type].champ&&!isChamp(p.a))return toast(`${S.w[p.a].name} isn't a champion — Champion's Address needs one.`);if(PT[p.type].b==='req'&&!p.b)return toast('That promo needs a second wrestler.')}}
- for(const x in seen){const sl=c[seen[x]];if(sl.k==='match'&&c.some(o=>o.k==='chal'&&o.d&&o.d.c===x))return toast(`${S.w[x].name} is already on the card in the title challenge.`)}
+ for(const x in seen){const sl=c[seen[x]];if(sl.k==='match'&&c.some(o=>o.k==='chal'&&o.d&&o.d.c===x))return toast(`${S.w[x].name} is already on the card in the title challenge.`);if(sl.k==='match'&&c.some(o=>o.k==='xo'&&o.d&&o.d.a===x))return toast(`${S.w[x].name} is already on the card in a dream match.`)}
  const msgs=[];[ps,pd].filter(Boolean).forEach(p=>{const sl=c[p.i];if(sl.k!=='match'||!sl.d)return;const m=sl.d;delete m.ev;
   if(m.title&&!eligibleTitles(m).includes(m.title)){msgs.push(`Match ${p.i+1} is no longer for the ${S.titles[m.title].n} title.`);m.title=''}
   if(m.ri){const all=m.sides.flat();if(!all.includes(m.ri.t)||all.includes(m.ri.x)){delete m.ri;msgs.push(`Run-in removed from match ${p.i+1}.`)}}});
@@ -2651,7 +2754,7 @@ function flowWord(m){return m>=.3?'Great flow':m>=.1?'Good flow':m>-.1?'Even':m>
 function flowHtml(f){if(!f||!f.notes||!f.notes.length)return '';return `<div class="flow"><div class="row sb"><span class="muted tiny">SHOW STRUCTURE · ${flowWord(f.mod)}</span><b class="${f.mod>0?'good':f.mod<0?'bad':'muted'}">${f.mod>0?'+':f.mod<0?'−':'±'}${Math.abs(f.mod).toFixed(2)}★</b></div>${f.notes.map(x=>`<div class="fl ${x.d>0?'good':'bad'}">${x.d>0?'+':'−'} ${esc(x.t)}</div>`).join('')}</div>`}
 /* booking-screen preview: projected matches use the middle of their range, promos a rough guess from mic skill */
 function promoEst(p){const A=S.w[p.a],B=p.b&&S.w[p.b];if(!A)return 2;const mm=w=>w.mic+(hasT(w,'mouth')?8:0);const mic=B?mm(A)*.6+mm(B)*.4:mm(A);const pop=B?(A.pop+B.pop)/2:A.pop;return clamp(Math.round(((mic*.45+pop*.3)/20+.6+(B?Math.min(.5,heatOf(A.id,B.id)/60):0))*4)/4,.5,5)}
-function flowCard(sh){const segs=[];S.card.p.forEach(sl=>{if(!sl.d||sl.k==='chal')return;let st;
+function flowCard(sh){const segs=[];S.card.p.forEach(sl=>{if(!sl.d||fixedK(sl))return;let st;
   if(sl.k==='match'){const m=sl.d;if(!validMatch(m))return;const r=rateMatch(m,{ppv:sh.ppv,allin:sh.ppv&&S.week===SEASON,preview:true});st=(r.lo+r.hi)/2}else st=promoEst(sl.d);
   const ids=sl.k==='match'?sl.d.sides.flat():[sl.d.a,sl.d.b];st=clamp(st+Math.min(1,ids.map(id=>S.w[id]).filter(w=>w&&w.deb).reduce((a,w)=>a+debutStars(w,sh.ppv),0)),.25,5);segs.push(segMeta(sl,st))});
  if(segs.length<3)return `<div class="card flowc"><div class="h small" style="margin:0">Show flow</div><div class="muted tiny">Book a few segments to see how the running order will play. Open hot, build through the night and close on your best match.</div></div>`;
@@ -2666,11 +2769,12 @@ function bookView(){const sh=curShow();const c=S.card.p;const ready=c.every(sl=>
    if(!sl.d)return `<button class="slot" ${dgA(i)} onclick="openMatch(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">${lbl}</div><div class="add">+ Book a match</div></button>`;
    const r=rateMatch(sl.d,{ppv:sh.ppv,allin:sh.ppv&&S.week===SEASON,preview:true});
    const pr=promiseOf(sl.d);
-   return `<button class="slot done" ${dgA(i)} onclick="openMatch(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">${lbl}${pr?(pr.kind==='contract'?' · Contracted':' · Promised'):''}</div><div><b>${vsLineD(sl.d,i)}</b></div>${slotTags(sl.d,sh.ppv)}<div class="muted">${esc(matchSub(sl.d))} · Winner: ${esc(sideName(sl.d.sides[sl.d.winner]))}</div><div class="stars">${stars(r.lo)} – ${stars(r.hi)}</div></button>`}
+   return `<button class="slot done" ${dgA(i)} onclick="openMatch(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">${lbl}${sl.d.tour&&TOURS[sl.d.tour.k]?` · ${TOURS[sl.d.tour.k].i} ${esc(TOURS[sl.d.tour.k].n)} ${esc(sl.d.tour.lab)}`:''}${pr?(pr.kind==='contract'?' · Contracted':pr.kind==='shot'?' · Earned title shot':' · Promised'):''}</div><div><b>${sl.d.tour?vsLine(sl.d):vsLineD(sl.d,i)}</b></div>${slotTags(sl.d,sh.ppv)}<div class="muted">${esc(matchSub(sl.d))} · Winner: ${esc(sideName(sl.d.sides[sl.d.winner]))}</div><div class="stars">${stars(r.lo)} – ${stars(r.hi)}</div></button>`}
   if(sl.k==='promo'){if(!sl.d)return `<button class="slot ${sl.opt?'opt':''}" ${dgA(i)} onclick="openPromo(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">${sl.opt?'Bonus promo (optional)':'Promo segment'}</div><div class="add">+ Book a promo${sl.opt?' — or leave it empty':''}</div></button>`;
    const p=sl.d;const pdb=debutTag([S.w[p.a],p.b&&S.w[p.b]].filter(Boolean),sh.ppv);return `<button class="slot done" ${dgA(i)} onclick="openPromo(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">Promo · ${PT[p.type].n}</div><div><b>${dnm(S.w[p.a],`pw:${i}:a`)}${p.b&&S.w[p.b]?' <span class="muted">&amp;</span> '+dnm(S.w[p.b],`pw:${i}:b`):''}</b></div>${(p.b&&S.w[p.b]&&heatOf(p.a,p.b)>=1)||pdb?`<div class="tags">${pdb}${p.b&&S.w[p.b]&&heatOf(p.a,p.b)>=1?`<span class="fdt t${heatTier(heatOf(p.a,p.b))+1}">Heat ${Math.round(heatOf(p.a,p.b))}</span>`:''}</div>`:''}<div class="muted">Plays out live when you go live</div></button>`}
+  if(sl.k==='xo'){const d=sl.d;return `<button class="slot ${d?'done':'opt'}" onclick="openXo(${i})"><span class="num">${i+1}</span><div class="lbl">🚪 Forbidden Door dream match (optional)</div>${d&&S.w[d.a]&&S.w[d.b]?`<div><b>${alSpan(S.w[d.a])} <span class="muted">vs</span> ${alSpan(S.w[d.b])}</b></div><div class="muted">First time ever · ${esc(nameOf(S.w[d.b].own||'ai'))}'s star · the winner is decided in the ring</div>`:`<div class="add">+ Pick one of yours vs one of ${esc(S.rival)}'s</div>`}</button>`}
   const d=sl.d;return `<button class="slot ${d?'done':''}" onclick="openChal(${i})"><span class="num">${i+1}</span><div class="lbl">Title challenge (optional)</div>${d?`<div><b>${esc(S.w[d.c].name)}</b> challenges for the <b>${esc(S.titles[d.title].n)}</b> title</div>`:'<div class="add">+ Challenge for a title the rival brand holds</div>'}</button>`}).join('');
- const um=unmetPromises(c);return `${inaugCard()}${poster(sh,`<div class="venue mt" style="color:#e9d9b0">${sh.ppv?'Your full PPV card':'Best show wins the week'}</div>`)}${um.length?`<div class="card warn">${um.map(pr=>`<div>⚠️ Fans were ${pr.kind==='contract'?'contracted':'promised'} <b>${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)}</b> this week. Skip it and you'll lose fans and morale.</div>`).join('')}</div>`:''}<p class="muted tiny center dghint">Hold and drag a segment to change the running order, or drag a wrestler onto another to swap them. Drag from the locker room to fill a slot.</p>${slots}${flowCard(sh)}${prodCard(sh)}${feudBoard()}${lockerRoom()}
+ const um=unmetPromises(c);return `${inaugCard()}${poster(sh,`<div class="venue mt" style="color:#e9d9b0">${sh.ppv?'Your full PPV card':'Best show wins the week'}</div>`)}${um.length?`<div class="card warn">${um.map(pr=>`<div>⚠️ Fans were ${pr.kind==='contract'?'contracted':'promised'} <b>${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)}</b> this week. Skip it and you'll lose fans and morale.</div>`).join('')}</div>`:''}${mandCard()}${rivalAdHtml()}<div class="row" style="gap:8px">${c.some(sl=>!sl.d&&!sl.opt)||c.some(sl=>!sl.d&&sl.k==='promo')?`<button class="btn sec" style="margin:0" onclick="suggestFill()">✨ Suggest the rest</button>`:''}${c.some(sl=>sl.d&&!(sl.k==='match'&&(sl.d.tour||promiseOf(sl.d))))?`<button class="btn ghost" style="margin:0" onclick="clearCard()">Clear card</button>`:''}</div><p class="muted tiny center dghint">Hold and drag a segment to change the running order, or drag a wrestler onto another to swap them. Drag from the locker room to fill a slot.</p>${slots}${flowCard(sh)}${prodCard(sh)}${feudBoard()}${lockerRoom()}
  ${partyOn()?partyBookBtn(ready):ON()&&S.online.booked.p?`<div class="card"><b>Card locked in ✓</b><div class="muted">It airs when ${esc(S.rival)} books ${sh.ppv?'theirs':esc(sh.theirs)}.</div></div>`:`<button class="btn live" ${ready&&myTurn()?'':'disabled'} onclick="goLive()">${ON()&&!S.online.booked.ai?'Go live & lock in ▸':'Go live ▸'}</button>`}<p class="muted center">${ready?'':'Fill every slot to go live. '}${esc(S.rival)} books their own ${sh.ppv?'card':'show, '+esc(sh.theirs)}. The best overall show wins the week.${ON()&&!S.online.booked.p&&!S.online.booked.ai?' Your segments play out now; the ratings come in once they book too.':''}</p>`}
 function prodCard(sh){const k=prodOf('p',sh);const sc=stipCost(S.card.p);const bank=S.money.p;const pc=prodCost(k,sh);
  const est=sh.ppv?ppvGross(S.fans.p,3.5,S.week===SEASON):0;
@@ -2781,16 +2885,19 @@ function renderMatchEd(keep){const {m}=ED;const sh=curShow();const av=avForMatch
  const slot=(si,pi)=>{const w=m.sides[si][pi]&&S.w[m.sides[si][pi]];const at=`data-dg="ed:${si}:${pi}" data-dp="ed:${si}:${pi}"`;return w?wcard(w,{on:`edPick(${si},${pi})`,info:mInfo(w,si),feud:edFeud(w,si),gain:fatGain(w,m,sh.ppv),attr:at}):emptySlot(`edPick(${si},${pi})`,null,`data-dp="ed:${si}:${pi}"`)};
  const crown=si=>`<button class="crown ${m.winner===si?'on':''}" onclick="ED.m.winner=${si};renderMatchEd(true)">👑 ${m.winner===si?'Winner':'Make winner'}</button>`;
  let sides;
- if(per===1)sides=`<div class="vsrow">${m.sides.map((s,si)=>`${si&&m.sides.length===2?'<div class="vs">VS</div>':''}<div class="vscol">${slot(si,0)}${crown(si)}</div>`).join('')}</div>`;
+ if(per===1)sides=`<div class="vsrow${m.sides.length>4?' many':''}">${m.sides.map((s,si)=>`${si&&m.sides.length===2?'<div class="vs">VS</div>':''}<div class="vscol">${slot(si,0)}${crown(si)}</div>`).join('')}</div>`;
  else sides=m.sides.map((s,si)=>{const u=S.teams.filter(t=>t.m.filter(id=>av.some(w=>w.id===id)).length>=per);
   return `${si?'<div class="vs">VS</div>':''}<div class="side">${u.length?`<div class="tsel">${dd('team'+si,{title:'Quick-pick a team',sub:`${u.length} available`,cls:'sm',rerender:()=>renderMatchEd(true),opts:u.map(t=>({t:esc(t.n),sub:t.m.filter(id=>av.some(w=>w.id===id)).map(id=>esc(S.w[id].name)).join(', '),right:t.type==='team'?'Tag team':'Faction',pick:()=>edTeam(si,t.id)}))})}</div>`:''}<div class="row sb"><span class="h small" style="margin:0">Side ${si?'B':'A'}</span>${crown(si)}</div><div class="trow">${s.map((_,pi)=>slot(si,pi)).join('')}</div></div>`}).join('');
- openModal(`<div class="h mhd">Book a match</div>${ED.auto&&m.sides.flat().includes(ED.auto)?`<div class="note tiny">${esc(S.w[ED.auto].name)} was added as the rival. Tap their card to change it.</div>`:''}
- <div class="chips">${Object.entries(MT).map(([k,t])=>`<button class="chip ${k===m.type?'on':''}" onclick="edType('${k}')">${t.n}</button>`).join('')}</div>
+ const TD=m.tour&&TOURS[m.tour.k];
+ openModal(`<div class="h mhd">${TD?`${TD.i} ${esc(TD.n)} · ${esc(m.tour.lab)}`:'Book a match'}</div>${ED.auto&&m.sides.flat().includes(ED.auto)?`<div class="note tiny">${esc(S.w[ED.auto].name)} was added as the rival. Tap their card to change it.</div>`:''}
+ ${TD?`<div class="note tiny">The bracket is set — you decide who advances${m.tour.k==='c2'?'. Continental Crown rules: no run-ins':''}.</div>`:`<div class="chips">${Object.entries(MT).map(([k,t])=>`<button class="chip ${k===m.type?'on':''}" onclick="edType('${k}')">${t.n}</button>`).join('')}</div>`}
+ ${m.type==='gauntlet'?'<div class="note tiny">🎰 Six enter one at a time. Fans love the spectacle more than the wrestling (−1★ or so), but it builds a little heat between everyone and the winner earns a title shot at the next PPV against your top champion in their division.</div>':''}
  ${sides}${dup?'<div class="err">Someone is booked twice.</div>':''}${matchupHtml(m,sh.ppv)}
  <label>Stipulation</label>${stipDD(m,sh,complete&&!dup)}
  <label>Championship</label>${titleDD(m,et,sh,complete&&!dup)}
- <label>Run-in</label>${riSection(m,sh,complete&&!dup)}
- ${(()=>{const card=S.card.p.map((x,j)=>j===ED.i?{k:'match',d:complete?m:null}:x);const um=unmetPromises(card);return um.length?`<div class="err mt">⚠️ ${um.map(pr=>`${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)} was ${pr.kind==='contract'?'contracted':'promised'} for this week`).join('; ')}. Leaving it off the card breaks the promise.</div>`:''})()}${proj}<div class="row mt"><button class="btn sec" onclick="clearSlot()">Clear</button><button class="btn" ${complete&&!dup?'':'disabled'} onclick="saveMatch()">Save</button></div><button class="btn ghost" onclick="closeModal()">Cancel</button>`,keep)}
+ <label>Finish</label>${finDD(m,sh,complete&&!dup)}
+ ${TD&&m.tour.k==='c2'?'':`<label>Run-in</label>${riSection(m,sh,complete&&!dup)}`}
+ ${(()=>{const card=S.card.p.map((x,j)=>j===ED.i?{k:'match',d:complete?m:null}:x);const um=unmetPromises(card);return um.length?`<div class="err mt">⚠️ ${um.map(pr=>`${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)} was ${pr.kind==='contract'?'contracted':'promised'} for this week`).join('; ')}. Leaving it off the card breaks the promise.</div>`:''})()}${proj}<div class="row mt">${TD?'':'<button class="btn sec" onclick="clearSlot()">Clear</button>'}<button class="btn" ${complete&&!dup?'':'disabled'} onclick="saveMatch()">Save</button></div><button class="btn ghost" onclick="closeModal()">Cancel</button>`,keep)}
 function whyMatch(m,sh){const ws=m.sides.map(s=>s.map(id=>S.w[id]));let h='';const pairs=[];
  for(let i=0;i<ws.length;i++)for(let j=i+1;j<ws.length;j++)for(const a of ws[i])for(const b of ws[j])pairs.push([a,b]);
  pairs.slice(0,4).forEach(([a,b])=>{h+=`<div class="tiny muted" style="margin-top:6px"><b>${esc(a.name)} × ${esc(b.name)}</b></div><div>${partsHtml(chemParts(a,b))}</div>`});
@@ -2828,6 +2935,10 @@ function titleDD(m,et,sh,ok){const T=m.title&&S.titles[m.title];const hold=t=>t.
  const ctx={ppv:sh.ppv,allin:sh.ppv&&S.week===SEASON,preview:true};const star=id=>ok?rateMatch(Object.assign({},m,{title:id}),ctx).raw:null;const base=star('');
  const row=(id,name,sub,extra)=>`<button type="button" class="ddo ${(m.title||'')===id?'on':''}" onclick="edSet('title','${id}')"><div class="ddt"><b>${name}</b>${extra||''}</div><div class="ddd">${sub}</div>${id&&ok?`<div class="tags ddm">${ddDelta(star(id)-base)}</div>`:''}</button>`;
  return head+`<div class="ddl">${row('','Non-title','No belt on the line.')}${et.map(id=>{const t=S.titles[id];return row(id,esc(t.n),esc(hold(t)),`<span class="ddp">Prestige ${Math.round(t.prestige)}</span>`)}).join('')}${et.length?'':`<div class="ddh">${ok?"No championship fits this match — titles need the right match type, and the champion has to be in it.":'Pick the wrestlers first — titles need the right match type, and the champion has to be in it.'}</div>`}</div>`}
+function finDD(m,sh,ok){const k=finOf(m);const ctx={ppv:sh.ppv,allin:sh.ppv&&S.week===SEASON,preview:true};const base=ok?rateMatch(Object.assign({},m,{fin:'clean'}),ctx).raw:0;
+ return dd('fin',{title:FINS[k].i+' '+FINS[k].n,sub:k==='clean'?'Who wins, and how':FINS[k].d,rerender:()=>renderMatchEd(true),opts:Object.entries(FINS).map(([kk,f])=>{const why=ok?finWhy(m,kk):(kk==='clean'?'':'Pick the wrestlers first');
+  const tags=[];if(!why){if(ok&&kk!=='clean')tags.push(ddDelta(rateMatch(Object.assign({},m,{fin:kk}),ctx).raw-base));if(kk!=='clean'&&FIN_HEAT[kk]>1)tags.push(`<span class="tg good">+${Math.round((FIN_HEAT[kk]-1)*100)}% heat</span>`);if(kk!=='clean')tags.push('<span class="tg">🛡️ Loser protected</span>');if((kk==='dq'||kk==='co')&&m.title)tags.push('<span class="tg warnt">🏆 Title can\'t change hands</span>');}
+  return {t:f.i+' '+f.n,sub:why||f.d,dis:!!why,on:kk===k,tags:tags.join(''),pick:()=>{ED.m.fin=kk;renderMatchEd(true)}}})})}
 function riSection(m,sh,ok){if(!ok)return '<div class="muted tiny">Book the match first, then have someone run in to start or build a feud.</div>';
  const ri=m.ri||null;const k=ri&&RUNIN[ri.k]?ri.k:null;
  let h=dd('rik',{title:k?RUNIN[k].i+' '+RUNIN[k].n:'No run-in',sub:k?'':'Have someone from your roster interfere to build a feud.',rerender:()=>renderMatchEd(true),opts:[{t:'No run-in',sub:'The match plays out on its own.',on:!k,pick:()=>{delete ED.m.ri;renderMatchEd(true)}},...Object.entries(RUNIN).map(([kk,v])=>({t:v.i+' '+v.n,sub:v.d,on:kk===k,pick:()=>edRiKind(kk)}))]});
@@ -2846,14 +2957,14 @@ function riBestT(k,x){const m=ED.m;const l=m.sides.flat().filter(id=>id&&(k!=='c
 function edRiKind(k){const o=ED.m.ri||{};ED.m.ri={k,x:o.x||'',t:o.t||'',turn:!!o.turn};const r=ED.m.ri;if(r.x&&(!r.t||(k==='cost'&&(ED.m.sides[ED.m.winner]||[]).includes(r.t))))r.t=riBestT(k,r.x);renderMatchEd(true)}
 function riPick(){const m=ED.m;const parts=m.sides.flat().filter(Boolean);openPicker({title:'Who runs in?',cur:m.ri.x,g:'all',sort:'feud',fl:w=>activeFeuds(w,parts.map(id=>S.w[id])),pool:()=>ownList('p').filter(w=>!w.inj&&!parts.includes(w.id)),feud:w=>feudVs(w,parts.map(id=>S.w[id])),info:w=>usedIn('p',ED.i).has(w.id)?'Also wrestling tonight':`${STYLE_N[w.st]}`,
   onPick:id=>{if(id){ED.m.ri.x=id;const t=ED.m.ri.t;if(!t||!parts.includes(t)||(ED.m.ri.k==='cost'&&(m.sides[m.winner]||[]).includes(t)))ED.m.ri.t=riBestT(ED.m.ri.k,id)}renderMatchEd(false)},back:()=>renderMatchEd(false)})}
-function edPick(si,pi){const m=ED.m;const cur=m.sides[si][pi];const taken=new Set(m.sides.flat().filter(x=>x&&x!==cur));const fg=m.sides.flat().find(x=>x&&x!==cur);
+function edPick(si,pi){const m=ED.m;if(m.tour)return toast('The bracket is set — tap 👑 to choose who advances.');const cur=m.sides[si][pi];const taken=new Set(m.sides.flat().filter(x=>x&&x!==cur));const fg=m.sides.flat().find(x=>x&&x!==cur);
  const opps=m.sides.filter((s,i)=>i!==si).flat().filter(x=>x&&x!==cur).map(x=>S.w[x]);
  openPicker({title:'Choose a wrestler',cur,clear:!!cur,fl:w=>activeFeuds(w,opps.length?opps:null),g:'all',sort:opps.length?'chem':'ovr',chem:opps.length?w=>opps.reduce((a,o)=>a+chemOpp(w,o),0)/opps.length:null,pool:()=>avForMatch(ED.i).filter(w=>!taken.has(w.id)),info:w=>mInfo(w,si),feud:w=>opps.length?feudVs(w,opps):hotFeud(w),gain:w=>fatGain(w,m,curShow().ppv),onPick:id=>{m.sides[si][pi]=id;if(id&&id!==cur)edAutoRival(si,id);renderMatchEd(false)},back:()=>renderMatchEd(false)})}
-function edType(t){const o=ED.m.sides;ED.m.type=t;if(!stipOk(ED.m.stip||'std',t,curShow().ppv))ED.m.stip='std';ED.m.sides=Array.from({length:MT[t].sides},(_,i)=>Array.from({length:MT[t].per},(_,j)=>(o[i]||[])[j]||''));ED.m.winner=0;ED.m.title='';renderMatchEd(true)}
+function edType(t){if(ED.m.tour)return;const o=ED.m.sides;ED.m.type=t;if(!stipOk(ED.m.stip||'std',t,curShow().ppv))ED.m.stip='std';ED.m.sides=Array.from({length:MT[t].sides},(_,i)=>Array.from({length:MT[t].per},(_,j)=>(o[i]||[])[j]||''));ED.m.winner=0;ED.m.title='';renderMatchEd(true)}
 function edP(si,pi,v){ED.m.sides[si][pi]=v;renderMatchEd(true)}
 function edTeam(si,tid){const t=S.teams.find(x=>x.id===tid);if(!t)return;const av=avForMatch(ED.i);const mem=t.m.filter(id=>av.some(w=>w.id===id)).slice(0,MT[ED.m.type].per);ED.m.sides[si]=mem;renderMatchEd(true)}
 function saveMatch(){const ri=ED.m.ri;if(ri){const all=ED.m.sides.flat();if(!ri.x||!ri.t||!all.includes(ri.t)||all.includes(ri.x))delete ED.m.ri;else if(ri.k==='cost'&&(ED.m.sides[ED.m.winner]||[]).includes(ri.t))return toast(`${S.w[ri.t].name} wins this match — they can't be cost it. Pick a new target or change the winner.`)}S.card.p[ED.i].d=ED.m;save();closeModal();render()}
-function clearSlot(){if(mpLocked())return;S.card.p[ED.i].d=null;save();closeModal();render()}
+function clearSlot(){if(mpLocked())return;if(S.card.p[ED.i].d&&S.card.p[ED.i].d.tour)return toast('Tournament matches stay on the card.');S.card.p[ED.i].d=null;save();closeModal();render()}
 
 function openPromo(i){if(mpLocked())return;DDO=null;const sl=S.card.p[i];PE=sl.d?{i,type:sl.d.type,a:sl.d.a,b:sl.d.b||''}:{i,type:'callout',a:'',b:''};renderPromoEd(false)}
 function renderPromoEd(keep){const pt=PT[PE.type];
@@ -2947,7 +3058,7 @@ function matchGuide(w){const fit=styleFit(w.st);
 function offTurn(id){if(mpLocked())return;const w=S.w[id];if(!w||w.own!=='p')return;w.al=w.al==='f'?'h':'f';w.pop=clamp(w.pop-4-(turnWhip(w)?3:0),1,100);w.turnW=AW();news(`🔄 ${w.name} has turned ${w.al==='f'?'FACE':'HEEL'}.`);save();showW(id);render();toast(`${w.name} is now a ${w.al==='f'?'face':'heel'}.`)}
 function train(id,f){if(mpLocked())return;const t=S.training.find(x=>x.id===id);if(t){if(t.f===f)S.training=S.training.filter(x=>x.id!==id);else t.f=f}else{if(S.training.length>=2){toast('The Performance Center has 2 slots. Remove someone in the Office first.');return}S.training.push({id,f})}save();showW(id);render()}
 function untrain(id){if(mpLocked())return;S.training=S.training.filter(x=>x.id!==id);save();render()}
-function sign(id){if(mpLocked())return;const w=S.w[id];if(!onMarket(w))return toast(`${w.name} isn't on the market right now.`);const c=signCost(w);if(S.money.p<c)return toast('Not enough money.');if(ownList('p').length>=30)return toast('Your roster is full (30).');S.money.p-=c;w.sal=mkt(w);w.own='p';w.con=26;w.mor=80;w.fee=0;if(S.phase==='season')w.deb=AW();news(`✍️ ${S.gm} signed free agent ${w.name}.`);save();closeModal();render();toast(w.deb?`${w.name} signed! Put them on a show in the next few weeks for a debut pop.`:`${w.name} signed!`)}
+function sign(id){if(mpLocked())return;const w=S.w[id];if(!onMarket(w))return toast(`${w.name} isn't on the market right now.`);const c=signCost(w);if(S.money.p<c)return toast('Not enough money.');if(ownList('p').length>=30)return toast('Your roster is full (30).');if(bidWar(id))return;S.money.p-=c;w.sal=mkt(w);w.own='p';w.con=26;w.mor=80;w.fee=0;if(S.phase==='season')w.deb=AW();news(`✍️ ${S.gm} signed free agent ${w.name}.`);save();closeModal();render();toast(w.deb?`${w.name} signed! Put them on a show in the next few weeks for a debut pop.`:`${w.name} signed!`)}
 function resign(id){if(mpLocked())return;const w=S.w[id];const c=resignCost(w);if(S.money.p<c)return toast('Not enough money.');const was=sal(w);S.money.p-=c;w.sal=askSal(w);w.con+=26;w.mor=clamp(w.mor+10,0,100);save();closeModal();render();toast(`${w.name} re-signed through ${w.con} more weeks${w.sal>was?` at ${money(w.sal)}/wk`:''}.`)}
 function release(id){if(mpLocked())return;const w=S.w[id];if(!confirm(`Release ${w.name}?`))return;const n=[];leave(w,`👋 ${S.gm} released ${w.name}.`,n);Object.values(S.titles).forEach(t=>{if(t.holders.includes(id)){t.holders=[];news(`🏆 The ${t.n} title has been vacated.`)}});save();closeModal();render()}
 
@@ -2977,7 +3088,19 @@ const HOWTO=`<p><b>Match ratings</b> blend in-ring skill (the best worker in the
 <p><b>Show structure</b> counts toward the show rating, the way AEW's quarter-hour numbers reward it: open hot with a strong segment, keep the middle moving (back-to-back promos and dead spots cost you), build through the second half, and make the main event the best thing on the show. Every show needs something for the women's division if you have one. The Show flow card on the booking screen previews it — hold and drag segments to change the running order.</p>
 <p><b>Debuts:</b> anyone you sign during the season arrives with debut buzz. Their first appearance on your show — match or promo — pops the crowd: the bigger the star, the bigger the bump in stars and fans (a PPV debut is bigger still). Wait more than a few weeks and the buzz wears off.</p>
 <p><b>Quick booking:</b> hold and drag segments to reorder the card, drag one wrestler's name onto another's to swap them between segments, or drag someone from the locker room onto a name or an empty slot. When you add a wrestler to a match or promo, their top rival is added as the opponent automatically — tap to change it.</p>
-<p><b>Fans:</b> each week you book all of Dynamite while the rival books Collision. Your show earns or loses fans based on its rating (the main event counts most), with a bonus for beating the rival's show. PPVs swing far more fans, and All In counts double. The most fans after All In wins.</p>`;
+<p><b>Fans:</b> each week you book all of Dynamite while the rival books Collision. Your show earns or loses fans based on its rating (the main event counts most), with a bonus for beating the rival's show. PPVs swing far more fans, and All In counts double. <b>Each season is won by the fans you gain that season</b> — your all-time fanbase carries over (it still drives TV money, tickets and PPV buys), but next season's fan war starts level.</p>
+<p><b>Finishes:</b> pick how every match ends, not just who wins. ✅ <b>Clean</b> is the only way to truly settle a feud on PPV (a clean blow-off rates higher). 😈 <b>Heel shenanigans</b> (heel winners only) builds 35% more heat and protects the loser, but a cold feud's crowd doesn't buy it, and a dirty finish on a PPV blow-off leaves the feud unsettled. ⚡ <b>Upset roll-up</b> (the winner must be the clear underdog) gives the winner a big boost. 🟥 <b>DQ</b> and 🚪 <b>count-out</b> build the most heat but feel cheap unless the feud is hot, and titles never change hands on them — a classic way for a champion to escape. Any finish that isn't clean protects the loser's momentum.</p>
+<p><b>Who wins matters:</b> beating someone more popular than you gives you <b>the rub</b> (an upset even more so) — beating someone far below you does little. Winning streaks build momentum, and a hot streak gets the crowd invested in a wrestler's matches. Lose four in a row clean and fans stop believing in a star (enhancement talent under 45 popularity is fine). Trading clean wins back and forth within a month is 50/50 booking and cools the feud off.</p>
+<p><b>Title reigns:</b> every successful defense adds to a champion's credibility and the title's prestige, and the wrestler who ends a long reign gets a bigger boost. Swap a belt again within 3 weeks and it's a hot potato: the title loses 8 prestige and the new champ gets little out of it.</p>
+<p><b>Card position:</b> main-eventing boosts morale (and popularity after a great match). Top stars (85+ popularity) who go 8 weeks without a main event start grumbling backstage and lose morale.</p>
+<p><b>The calendar:</b> 7 PPVs — WrestleDream, Full Gear, Worlds End, Revolution, Double or Nothing, Forbidden Door and All In — plus 📺 <b>TV specials</b> (Fright Night, Winter Is Coming, Grand Slam, Spring BreakThru) with hotter crowds, 50% bigger fan swings and better gates. <b>Forbidden Door</b> is a crossover PPV: alongside your card you can sign up to two dream matches between one of your stars and one of the rival's. Neither GM controls both sides, so the winner is decided in the ring, and the winner's brand earns extra fans.</p>
+<p><b>Tournaments</b> run automatically and lock onto your card — you decide who advances. ♾️ The <b>Continental Classic</b> (weeks 8–10) is a round robin for your four best men (3 points a win, no run-ins), and the top two meet at Worlds End for the Continental title if your brand holds it or it's vacant. 🏆 The <b>Owen Hart Cups</b> (men's semi-finals week 17, women's week 18, both finals at Double or Nothing) send the winners to All In with a World title shot — against your champion, or as your title challenge if the rival holds the belt. Injured entrants forfeit.</p>
+<p><b>Casino Gauntlet:</b> a new match type for six. It rates a little lower than a straight wrestling match, but the winner earns a title shot at the next PPV against your top champion in their division.</p>
+<p><b>Network mandates:</b> after each PPV the TV network asks for something specific by the next one — a 4★ main event, two women's matches on one show, a new champion, a debut and so on. Deliver for a cash and fan bonus; miss it and you lose 5K fans. Check the Home or Book screen for your current one.</p>
+<p><b>Head to head:</b> the rival books its show early and advertises its main event on your Home and Book screens. On TV, whoever's main event rates higher wins the main event war (+3K fans). When you sign a big free agent (70+ popularity), the rival may start a <b>bidding war</b>: pay 35% more (and a 20% higher salary) or let them go.</p>
+<p><b>✨ Suggest the rest</b> on the Book screen fills any empty slots with a sensible card — it keeps everything you've already booked, promised or entered in a tournament. <b>Clear card</b> wipes everything else.</p>
+<p><b>Difficulty:</b> no rival gets free stars any more. Hard rivals book like pros — they rest stars before PPVs, order their card for the ratings, protect new champions and pay off feuds cleanly. Easy rivals book sloppily.</p>
+<p><b>The offseason:</b> after All In, the season ends with an awards show (Wrestler and Women's Wrestler of the Year, Breakout Star, Rookie, Tag Team, Feud, Match and Promo of the Year — winners start next season with a boost). Veterans feel Father Time: they lose a little in-ring each year and may retire. Prospects ready for the main roster (60+ in-ring) get called up with debut buzz. Re-sign anyone whose contract is running out before you start the new season.</p>`;
 /* the rival scouts too: harder rivals invest in better prospects more often */
 function aiScout(notes){if(ON())return;const q=aiq();const aiN=ownList('ai').length;if(aiN>=28||Math.random()>q.scout)return;const w=genProspect();if(q.tier==='top'&&w.tier==='prospect'){w.tier='bluechip';w.fee=TIERS.bluechip.cost}
  const c=w.fee+mkt(w)*4;if(S.money.ai<c*3)return;S.money.ai-=c;w.id='rk'+partyNid();w.own='ai';w.con=52;w.sal=mkt(w);w.fee=0;S.w[w.id]=w;const n=`🌱 ${S.rival} signed ${TIERS[w.tier].n.toLowerCase()} prospect ${w.name}.`;news(n);notes.push(n)}
@@ -3009,14 +3132,15 @@ function saveTeam(){if(mpLocked())return;const n=($('#tmName').value||'').trim()
  if(!n)return toast('Give it a name.');if(m.length<2||(type==='team'&&m.length>3)||m.length>6)return toast(type==='team'?'Pick 2–3 members.':'Pick 2–6 members.');
  S.teams.push({id:'t'+partyNid(),n,type,m});news(`🤝 ${n} has formed: ${m.map(id=>S.w[id].name).join(', ')}.`);save();closeModal();render()}
 function delTeam(id){if(mpLocked())return;const t=S.teams.find(x=>x.id===id);if(!t||!confirm(`Disband ${t.n}?`))return;S.teams=S.teams.filter(x=>x.id!==id);news(`💔 ${t.n} has disbanded.`);save();render()}
-function overView(){if(ON()&&nSeats()>2)return mpOverView();const win=S.fans.p>=S.fans.ai;const mine=ownList('p');const mvp=mine.slice().sort((a,b)=>(b.pop-b.pop0)-(a.pop-a.pop0))[0];const top=mine.slice().sort((a,b)=>ovr(b)-ovr(a))[0];
+function overView(){if(ON()&&nSeats()>2)return mpOverView();const win=fanGain('p')>=fanGain('ai');const mine=ownList('p');const mvp=mine.slice().sort((a,b)=>(b.pop-b.pop0)-(a.pop-a.pop0))[0];const top=mine.slice().sort((a,b)=>ovr(b)-ovr(a))[0];
  const avgR=b=>{const h=S.history.filter(x=>x.s===S.season);return h.length?avg(h.map(x=>x[b])):0};
- return `<div class="card showcard ppv center"><div class="muted">Season ${S.season} complete</div><div class="showname" style="--n:${lw(win?'You won the fan war!':esc(S.rival)+' wins')}">${win?'You won the fan war!':esc(S.rival)+' wins'}</div><div class="big mt">${fmtFans(S.fans.p)} <span class="muted">vs</span> ${fmtFans(S.fans.ai)}</div></div>
+ return `<div class="card showcard ppv center"><div class="muted">Season ${S.season} complete</div><div class="showname" style="--n:${lw(win?'You won the fan war!':esc(S.rival)+' wins')}">${win?'You won the fan war!':esc(S.rival)+' wins'}</div><div class="big mt">${fanGain('p')>=0?'+':''}${fmtFans(fanGain('p'))} <span class="muted">vs</span> ${fanGain('ai')>=0?'+':''}${fmtFans(fanGain('ai'))}</div><div class="muted tiny">Fans gained this season · all-time fanbase ${fmtFans(S.fans.p)} vs ${fmtFans(S.fans.ai)}</div></div>
  <div class="card"><div class="row sb"><span>Ratings wins</span><b>${S.hourWins.p} – ${S.hourWins.ai}</b></div><div class="row sb"><span>Avg rating</span><b><span class="stars">${stars(avgR('p'))}</span> vs <span class="stars">${stars(avgR('ai'))}</span></b></div>
  ${S.best?`<div class="mt"><span class="muted">Match of the year</span><br>${esc(S.best.t)} <span class="stars">${stars(S.best.s)}</span> <span class="muted">(${esc(S.best.show)}, W${S.best.w})</span></div>`:''}
  ${mvp?`<div class="mt"><span class="muted">Breakout star</span><br><b>${esc(mvp.name)}</b> (+${Math.round(mvp.pop-mvp.pop0)} popularity)</div>`:''}${top?`<div class="mt"><span class="muted">Top star</span><br><b>${esc(top.name)}</b></div>`:''}</div>
- <button class="btn" onclick="nextSeason()">Start Season ${S.season+1}</button><p class="muted center">Rosters, titles, feuds, contracts and development all carry over.</p>`}
-function nextSeason(){if(mpLocked())return;S.season++;S.week=1;S.showIdx=0;S.phase='season';for(const k in S.hourWins)S.hourWins[k]=0;S.best=null;S.promises=[];if(S.priv)for(const k in S.priv)if(S.priv[k])S.priv[k].promises=[];if(ON()){relocal();S.online.booked={};S.online.order=bookingOrder()}S.fa={};marketTick(undefined,true);Object.values(S.w).forEach(w=>w.pop0=w.pop);freshCards();news(`🎉 Season ${S.season} begins. Next stop: All In.`);save();go('home')}
+ ${awardsHtml()}${offseasonHtml()}
+ <button class="btn" onclick="nextSeason()">Start Season ${S.season+1}</button><p class="muted center">Rosters, titles, feuds, contracts and development all carry over. The fan war starts fresh — next season is won by the fans you gain.</p>`}
+function nextSeason(){if(mpLocked())return;S.season++;S.week=1;S.showIdx=0;S.phase='season';for(const k in S.hourWins)S.hourWins[k]=0;S.best=null;S.promises=[];if(S.priv)for(const k in S.priv)if(S.priv[k])S.priv[k].promises=[];if(ON()){relocal();S.online.booked={};S.online.order=bookingOrder()}S.fa={};marketTick(undefined,true);{const n=[];offseasonApply(n)}seasonStart();freshCards();mandTick();news(`🎉 Season ${S.season} begins. Next stop: All In.`);save();go('home')}
 
 /* ===================== ONLINE LEAGUE: turns, sync, invites ===================== */
 const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
@@ -3141,8 +3265,8 @@ function mpBanner(){if(!ON())return '';if(partyOn())return partyBanner();const o
   return `<div class="mpbar on">🟡 <span><b>${what}</b>${inv}</span></div>`}
  const who=S.names&&S.names[o.turn]?nameOf(o.turn):'a GM to join';
  return `<div class="mpbar">⏳ <span>${o.booked.p?'Your card is locked in. ':''}Waiting on <b>${esc(who)}</b>${alerts?' · 🔔 you\'ll be pinged':` · <a href="#" onclick="mpAlerts();return false" style="color:var(--gold2)">turn on alerts</a>`}${inv}</span></div>`}
-function mpStandings(){if(!ON()||nSeats()<3)return '';const l=localSeats().slice().sort((a,b)=>S.fans[b]-S.fans[a]);
- return `<div class="card"><div class="h small">League standings</div>${l.map((k,i)=>`<div class="row sb" style="margin:6px 0"><span>${i+1}. <b class="${k==='p'?'gold':''}">${esc(nameOf(k))}</b> <span class="muted tiny">${esc(showNames()[k]||'')}${k==='ai'?' · this week':''}</span></span><span class="muted">${fmtFans(S.fans[k])} · ${S.hourWins[k]||0} W</span></div>`).join('')}<div class="muted tiny">W = head-to-head ratings wins. Most fans after All In wins the league.</div></div>`}
+function mpStandings(){if(!ON()||nSeats()<3)return '';const l=localSeats().slice().sort((a,b)=>fanGain(b)-fanGain(a));
+ return `<div class="card"><div class="h small">League standings</div>${l.map((k,i)=>`<div class="row sb" style="margin:6px 0"><span>${i+1}. <b class="${k==='p'?'gold':''}">${esc(nameOf(k))}</b> <span class="muted tiny">${esc(showNames()[k]||'')}${k==='ai'?' · this week':''}</span></span><span class="muted">${fanGain(k)>=0?'+':''}${fmtFans(fanGain(k))} · ${S.hourWins[k]||0} W</span></div>`).join('')}<div class="muted tiny">Fans gained this season · W = head-to-head ratings wins. Most fans gained by All In wins the league.</div></div>`}
 function mpSetupCard(){const g=mpGames();return `<div class="card"><div class="h small">Online league</div><p class="muted" style="margin-top:0">Play with 1–3 friends: everyone runs their own brand and you face a different GM each week. Take turns whenever you like — even offline — and it syncs when you're back online.</p>
  ${g.map(x=>`<button class="btn sec" onclick="mpOpen('${x.code}')">▶ ${esc(x.label||x.code)} <span class="muted tiny">${x.code}</span></button>`).join('')}
  <div class="row"><button class="btn sec" onclick="mpHostForm()">Host a league</button><button class="btn sec" onclick="mpJoinForm()">Join a league</button></div></div>`}
@@ -3170,12 +3294,13 @@ function mpAirWeek(){const wk=S.week,show=curShow();const L={week:wk,season:S.se
  S.showIdx=0;endWeek(L.notes);relocal();if(S.phase==='season')freshCards();
  const g=localKey;L.pairs.forEach(p=>{p.fans=mapObj(p.fans,g);p.ratings=mapObj(p.ratings,g);if(p.cash)p.cash=mapObj(p.cash,g);if(p.hourWin)p.hourWin=g(p.hourWin);p.blocks.forEach(b=>{if(b.brand!=='x')b.brand=g(b.brand)})});
  S.last=L;save();return L}
-function mpOverView(){const l=localSeats().slice().sort((a,b)=>S.fans[b]-S.fans[a]);const top=l[0];const mine=ownList('p');const mvp=mine.slice().sort((a,b)=>(b.pop-b.pop0)-(a.pop-a.pop0))[0];
+function mpOverView(){const l=localSeats().slice().sort((a,b)=>fanGain(b)-fanGain(a));const top=l[0];const mine=ownList('p');const mvp=mine.slice().sort((a,b)=>(b.pop-b.pop0)-(a.pop-a.pop0))[0];
  return `<div class="card showcard ppv center"><div class="muted">Season ${S.season} complete</div><div class="showname" style="--n:${lw(top==='p'?'You won the league!':esc(nameOf(top))+' wins the league')}">${top==='p'?'You won the league!':esc(nameOf(top))+' wins the league'}</div></div>
- <div class="card"><div class="h small">Final standings</div>${l.map((k,i)=>`<div class="row sb" style="margin:6px 0"><span>${['🥇','🥈','🥉','4.'][i]} <b class="${k==='p'?'gold':''}">${esc(nameOf(k))}</b></span><span>${fmtFans(S.fans[k])} <span class="muted">· ${S.hourWins[k]||0} W</span></span></div>`).join('')}
+ <div class="card"><div class="h small">Final standings</div>${l.map((k,i)=>`<div class="row sb" style="margin:6px 0"><span>${['🥇','🥈','🥉','4.'][i]} <b class="${k==='p'?'gold':''}">${esc(nameOf(k))}</b></span><span>+${fmtFans(fanGain(k))} <span class="muted">· ${fmtFans(S.fans[k])} total · ${S.hourWins[k]||0} W</span></span></div>`).join('')}
  ${S.best?`<div class="mt"><span class="muted">Match of the year</span><br>${esc(S.best.t)} <span class="stars">${stars(S.best.s)}</span> <span class="muted">(${esc(S.best.show)}, W${S.best.w})</span></div>`:''}
  ${mvp?`<div class="mt"><span class="muted">Your breakout star</span><br><b>${esc(mvp.name)}</b> (+${Math.round(mvp.pop-mvp.pop0)} popularity)</div>`:''}</div>
- <button class="btn" ${myTurn()?'':'disabled'} onclick="nextSeason()">Start Season ${S.season+1}</button><p class="muted center">Rosters, titles, feuds, contracts and development all carry over.</p>`}
+ ${awardsHtml()}${offseasonHtml()}
+ <button class="btn" ${myTurn()?'':'disabled'} onclick="nextSeason()">Start Season ${S.season+1}</button><p class="muted center">Rosters, titles, feuds, contracts and development all carry over. Each season is won by fans gained that season.</p>`}
 
 /* ===================== CLOUD SAVE & BACKUPS =====================
  Your solo save (and your list of online leagues) can live in the cloud under a private sync code.
@@ -3442,7 +3567,7 @@ if(typeof document!=='undefined'&&document.getElementById('app')){
  {const q=new URLSearchParams(location.search).get('game');BOOT_Q=!!q;if(q&&mpGames().some(g=>g.code===q))LS.set('tksim_active',JSON.stringify(mpGames().find(g=>g.code===q)));
   if(q)history.replaceState(null,'',location.pathname);
   try{const a=JSON.parse(LS.get('tksim_active')||'null');const g=a&&LS.get('tksim_game_'+a.code);if(g){LMP={code:a.code,me:a.me,key:a.key};S=JSON.parse(g)}}catch(e){LMP=null}}
- if(!LMP)S=load();if(S&&(!S.w||!S.phase))S=null;dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);if(!ON())showMigrate();if(S)saveLocal();
+ if(!LMP)S=load();if(S&&(!S.w||!S.phase))S=null;dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);seasonMigrate(S);if(!ON())showMigrate();if(S)saveLocal();
  tvBoot();loadImg();
  window.addEventListener('tko-ready',()=>{mpConnect();tvConnect();cloudCheck();render()});if(window.TKO)setTimeout(()=>{mpConnect();tvConnect();cloudCheck()},0);
  let lastCk=Date.now();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&TV)partyWake();if(document.visibilityState==='visible'&&Date.now()-lastCk>20000){lastCk=Date.now();cloudCheck();if(ON())mpConnect()}else if(document.visibilityState==='hidden')flush()});

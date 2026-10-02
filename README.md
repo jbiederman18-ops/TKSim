@@ -15,7 +15,7 @@ A wrestling general-manager game: draft, book Dynamite and Collision, and win th
 Open it once while online; after that it launches with no connection.
 
 ## Updating the game
-Upload the new `index.html`, then open `sw.js` and bump the version in `VERSION` (e.g. `aegm-v36` → `aegm-v37`) so phones pick up the update. Installed copies update the next time they're opened online (close and reopen the app once).
+Upload the changed files (usually `index.html`, plus any `.js` files that changed, such as `season.js`), then open `sw.js` and bump the version in `VERSION` (e.g. `aegm-v36` → `aegm-v37`) so phones pick up the update. Installed copies update the next time they're opened online (close and reopen the app once).
 
 ## Play online with a friend
 Host a league for 2–4 GMs and friends join with a 6-letter code. Everyone runs their own brand, you face a different GM each week, and the most fans after All In wins. Offline turns sync later, and each player gets a notification when it's their move. One-time setup: see [ONLINE-SETUP.md](ONLINE-SETUP.md).
