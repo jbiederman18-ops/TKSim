@@ -137,7 +137,7 @@ function mandTick(notes){if(S.phase!=='season')return;weekTick();S.mand=S.mand||
   const cur=S.mand[b];if(!cur||(cur.done&&(S.week===1||PPVS[S.week-1]))||S.week>cur.due)mandNew(b,notes)})}
 function mandCard(){const md=S.mand&&S.mand.p;if(!md||!MANDS[md.k])return '';const left=md.due-S.week;
  return `<div class="card mand"><div class="row sb"><span class="h small" style="margin:0">📺 Network mandate</span>${md.done?`<b class="${md.done==='ok'?'good':'bad'}">${md.done==='ok'?'✅ Delivered':'❌ Missed'}</b>`:`<span class="muted tiny">${left<=0?'Due tonight':`${left} week${left>1?'s':''} left`}</span>`}</div>
- <div style="margin-top:6px">${MANDS[md.k].i} <b>${esc(MANDS[md.k].n)}</b>${md.done?'':` by ${esc(md.ppv)}`}</div>${md.done?'':`<div class="muted tiny">Reward: ${money(md.cash)} and ${fmtFans(md.fans)} fans. Miss it and you lose 5K fans.${md.k==='win2'&&md.st?` · Streak: ${md.st}`:''}</div>`}</div>`}
+ <div style="margin-top:6px">${MANDS[md.k].i} <b>${esc(MANDS[md.k].n)}</b>${md.done?'':` by ${esc(md.ppv)}`}</div>${md.done?'':liveLine(mandLive(md),'This card')}${md.done?'':`<div class="muted tiny">Reward: ${money(md.cash)} and ${fmtFans(md.fans)} fans. Miss it and you lose 5K fans.${md.k==='win2'&&md.st?` · Streak: ${md.st}`:''}</div>`}</div>`}
 
 /* ===================== WEEKLY MINI-GOALS & CROWD CHANTS (v89) =====================
  Every week each GM gets one small goal (a little cash and fans, no penalty for missing it), and the crowd starts
@@ -165,7 +165,67 @@ function goalCheck(b,inf,rating,show,notes){const g=S.goal&&S.goal[b];if(!g||g.w
  if(b==='p'||ON())notes.push(`🎯 ${ON()?nameOf(b)+': ':''}Weekly goal hit — ${GOALS[g.k].n} (+${money(g.cash)}, +${fmtFans(g.fans)} fans).`)}
 function weekGoalsCard(){if(S.phase!=='season')return '';if(!S.goal||!S.goal.p||S.goal.p.w!==AW()||!S.chant||!S.chant.p||S.chant.p.w!==AW())weekTick();
  const g=S.goal&&S.goal.p,c=S.chant&&S.chant.p;const cw=c&&S.w[c.id];if(!(g&&GOALS[g.k])&&!cw)return '';
- return `<div class="card wkg">${g&&GOALS[g.k]?`<div class="row sb"><span><span class="tiny muted">🎯 This week's goal</span><br><b>${GOALS[g.k].i} ${esc(GOALS[g.k].n)}</b></span><span class="tiny ${g.done?'good':'muted'}" style="text-align:right">${g.done?'✅ Done':`+${money(g.cash)}<br>+${fmtFans(g.fans)} fans`}</span></div>`:''}${cw?`<div class="row sb wkc" onclick="showW('${cw.id}')"><span><span class="tiny muted">📣 The crowd is chanting</span><br><b>${esc(c.t)}</b></span><span class="tiny muted" style="text-align:right">Book ${esc(cw.name.split(' ').slice(-1)[0])}<br>for a pop</span></div>`:''}</div>`}
+ return `<div class="card wkg">${g&&GOALS[g.k]?`<div class="row sb"><span><span class="tiny muted">🎯 This week's goal</span><br><b>${GOALS[g.k].i} ${esc(GOALS[g.k].n)}</b>${g.done?'':liveLine(goalLive(g.k))}</span><span class="tiny ${g.done?'good':'muted'}" style="text-align:right">${g.done?'✅ Done':`+${money(g.cash)}<br>+${fmtFans(g.fans)} fans`}</span></div>`:''}${cw?`<div class="row sb wkc" onclick="showW('${cw.id}')"><span><span class="tiny muted">📣 The crowd is chanting</span><br><b>${esc(c.t)}</b></span><span class="tiny muted" style="text-align:right">Book ${esc(cw.name.split(' ').slice(-1)[0])}<br>for a pop</span></div>`:''}</div>`}
+
+/* ===================== LIVE GOAL TRACKER (v92) =====================
+ Reads the card as it's booked right now and says whether the weekly goal and the network mandate are on track.
+ Matches use their projected range, promos a guess from mic skill, the show the same weighting the ratings use. */
+function cardProj(){const sh=curShow();const c=(S.card&&S.card.p)||[];const ctx={ppv:sh.ppv,allin:sh.ppv&&S.week===SEASON,preview:true};
+ const P={sh,booked:0,me:null,women:0,title:0,tag:0,stip:0,pr:null,nm:0,loMid:5,loHi:5,rk:0,newch:false,tagdef:false,deb:false,show:null};
+ const ch=S.chant&&S.chant.p&&S.chant.p.w===AW()?S.chant.p.id:null;let chUsed=false;
+ const meSlot=c.map((sl,i)=>sl.k==='match'?i:-1).filter(i=>i>=0).pop();
+ const mids=[],his=[],meta=[];
+ c.forEach((sl,si)=>{if(!sl.d||fixedK(sl))return;
+  if(sl.k==='match'){const m=sl.d;if(!validMatch(m))return;const ids=m.sides.flat();const ws=ids.map(id=>S.w[id]);if(ws.some(w=>w.inj))return;
+   const r=rateMatch(m,ctx);let bump=Math.min(1,ws.filter(w=>w.deb).reduce((a,w)=>a+debutStars(w,sh.ppv),0));if(ch&&!chUsed&&ids.includes(ch)){bump+=.25;chUsed=true}
+   const mid=clamp((r.lo+r.hi)/2+bump,.25,5),hi=clamp(r.hi+bump,.25,5);P.booked++;P.nm++;mids.push(mid);his.push(hi);meta.push(segMeta(sl,mid));
+   if(ws.some(w=>w.g==='F'))P.women++;if(m.title)P.title++;if(m.type==='tag'||m.type==='trios'||m.type==='tag8'||m.sides[0].length>1)P.tag++;if(m.stip&&m.stip!=='std')P.stip++;
+   P.loMid=Math.min(P.loMid,mid);P.loHi=Math.min(P.loHi,hi);if(si===meSlot)P.me={mid,hi,lo:clamp(r.lo+bump,.25,5)};
+   if(ws.some(w=>w.rookie&&w.own==='p'))P.rk=Math.max(P.rk,mid>=3?2:hi>=3?1:0.5);
+   if(ws.some(w=>w.deb&&w.own==='p'))P.deb=true;
+   const t=m.title&&S.titles[m.title];const win=(m.sides[m.winner]||[]).slice().sort().join('|');const f=finOf(m);
+   if(t&&t.holders.length&&win){const held=t.holders.slice().sort().join('|');const wo=S.w[(m.sides[m.winner]||[])[0]];
+    if(win!==held&&f!=='dq'&&f!=='co'&&wo&&wo.own==='p')P.newch=true;
+    if(win===held&&t.kind!=='singles'&&S.w[t.holders[0]]&&S.w[t.holders[0]].own==='p')P.tagdef=true}
+   else if(t&&!t.holders.length&&win){const wo=S.w[(m.sides[m.winner]||[])[0]];if(wo&&wo.own==='p')P.newch=true}}
+  else if(sl.k==='promo'){const p=sl.d;if(!S.w[p.a])return;let st=p.res?p.res.stars:promoEst(p);const ids=[p.a,p.b].filter(Boolean);
+   st+=Math.min(1,ids.map(id=>S.w[id]).filter(w=>w&&w.deb).reduce((a,w)=>a+debutStars(w,sh.ppv),0));if(ch&&!chUsed&&ids.includes(ch)){st+=.25;chUsed=true}
+   st=clamp(st,.5,5);P.booked++;P.pr=Math.max(P.pr||0,st);mids.push(st);his.push(st);meta.push(segMeta(sl,st));
+   if(ids.some(id=>S.w[id]&&S.w[id].deb&&S.w[id].own==='p'))P.deb=true}});
+ if(mids.length){const wavg=v=>{let s=0,ws=0;v.forEach((x,i)=>{const w=i===v.length-1?1.6:1;s+=x*w;ws+=w});return s/ws};
+  const fm=flowScore(meta,sh.ppv,'p').mod;const pk=prodOf('p',sh);const pb=PROD[pk]&&PROD[pk].b||0;
+  P.show={mid:clamp(wavg(mids)+fm+pb,0,5),hi:clamp(wavg(his)+fm+pb,0,5)}}
+ return P}
+/* status: y = on track, m = could go either way, n = not yet, x = doesn't apply this week */
+const LV=(s,t)=>({s,t});
+function starLive(r,th,what){if(!r)return LV('n',`Book ${what} to see a projection`);const tx=`${what[0].toUpperCase()+what.slice(1)} projects ${stars(Math.floor(r.mid*4+1e-6)/4)}`;
+ return r.mid>=th?LV('y',tx):r.hi>=th?LV('m',tx+' — right on the edge'):LV('n',tx)}
+function goalLive(k){const P=cardProj();if(!P.booked)return LV('n','Nothing booked yet');
+ switch(k){
+  case 'me4':return starLive(P.me,4,'your main event');
+  case 'title':return P.title?LV('y','A title is on the line'):LV('n','No title match booked');
+  case 'women':return P.women?LV('y',`${P.women} women's match${P.women>1?'es':''} booked`):LV('n',"No women's match booked");
+  case 'tag':return P.tag?LV('y','Tag/trios match booked'):LV('n','No tag or trios match booked');
+  case 'stip':return P.stip?LV('y','Stipulation match booked'):LV('n','No stipulation match booked');
+  case 'promo':return P.pr==null?LV('n','No promo booked'):P.pr>=3.5?LV('y',`Best promo looks like ${stars(Math.floor(P.pr*4+1e-6)/4)}`):P.pr>=3?LV('m',`Best promo looks like ${stars(Math.floor(P.pr*4+1e-6)/4)} — promos are live, so it's up to you`):LV('n',`Best promo looks like ${stars(Math.floor(P.pr*4+1e-6)/4)}`);
+  case 'show':return starLive(P.show,3.5,'the show');
+  case 'floor':return !P.nm?LV('n','No matches booked'):P.loMid>=2.5?LV('y',`Weakest match projects ${stars(Math.floor(P.loMid*4+1e-6)/4)}`):P.loHi>=2.5?LV('m',`Weakest match projects ${stars(Math.floor(P.loMid*4+1e-6)/4)} — on the edge`):LV('n',`Weakest match projects ${stars(Math.floor(P.loMid*4+1e-6)/4)}`);
+  case 'rookie':return P.rk>=2?LV('y','Your prospect projects 3★+'):P.rk>=1?LV('m','Your prospect is right around 3★'):P.rk?LV('n',"Your prospect's match projects under 3★"):LV('n','No prospect booked')}
+ return LV('x','')}
+function mandLive(md){const P=cardProj();const sh=P.sh;if(!P.booked&&md.k!=='nosell'&&md.k!=='win2')return LV('n','Nothing booked yet');
+ switch(md.k){
+  case 'me4':return sh.ppv?LV('x','Only counts on a TV show'):starLive(P.me,4,'your main event');
+  case 'show4':return starLive(P.show,4,'the show');
+  case 'women2':return P.women>=2?LV('y',`${P.women} women's matches booked`):LV('n',`${P.women} of 2 women's matches booked`);
+  case 'newchamp':return P.newch?LV('y','A new champion gets crowned'):LV('n','No title change booked');
+  case 'debut':return P.deb?LV('y','A new signing debuts'):LV('n','No new signing on the card');
+  case 'tagdef':return P.tagdef?LV('y','Your tag champs retain'):LV('n','No tag/trios title defense booked');
+  case 'rookie':return P.rk>=2?LV('y','Your prospect projects 3★+'):P.rk>=1?LV('m','Your prospect is right around 3★'):LV('n',P.rk?"Your prospect's match projects under 3★":'No prospect booked');
+  case 'nosell':return sellOf('p',sh).length?LV('n',"You've sold out this week — it'll count against you"):LV('y','No sell-outs — keep it that way');
+  case 'win2':return sh.ppv?LV('x','No ratings war on PPV weeks'):LV('m',`Streak ${md.st||0}/2${P.show?` · your show projects ${stars(Math.floor(P.show.mid*4+1e-6)/4)}`:''} — it comes down to the rival`)}
+ return LV('x','')}
+function liveLine(l,pre){if(!l||l.s==='x'&&!l.t)return '';const ic={y:'✅ On track',m:'🤞 Could happen',n:'⏳ Not yet',x:'➖ Not this week'}[l.s];
+ return `<div class="glive ${l.s}"><b>${pre?esc(pre)+': ':''}${ic}</b>${l.t?` · ${esc(l.t)}`:''}</div>`}
 
 /* ===================== ADVERTISED MAIN EVENT & THE MAIN EVENT WAR ===================== */
 function rivalAd(){if(!ON()||!S.card||!S.card.ai||curShow().ppv)return null;if(ON()&&!(S.online.booked&&S.online.booked.ai))return null;

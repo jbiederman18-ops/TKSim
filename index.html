@@ -615,6 +615,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 .lfs{margin-top:5px;font:700 13px/1.3 'BC','Barlow Condensed',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#e8dcc0}
 .ptop .kicker i{display:none}
 .rivalad{margin:2px 0 14px}
+.glive{margin-top:5px;font-size:12px;line-height:1.35;color:var(--mut)}.glive b{font-size:12px!important;font-weight:700}.glive.y b{color:var(--good)}.glive.m b{color:#e6b640}.glive.n b{color:#c9c2b4}.glive.x b{color:var(--mut)}
 .wkg .row+.row{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)}.wkg b{font-size:15px}.wkc{cursor:pointer}.rivalad .lfc{font-size:21px}.rivalad .lfs{color:var(--mut)}
 /* tonight's card */
 .tcard{cursor:pointer}
@@ -765,7 +766,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v91';
+const APP_VERSION='v92';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',22:'Forbidden Door',24:'All In'};
 /* v80: themed TV specials between PPVs — hotter crowds, bigger fan swings, better gates */
@@ -2648,7 +2649,7 @@ function crisisChoose(i){if(mpLocked())return;const c=S.crisis;if(!c||!CRISES[c.
 /* ===================== PERSISTENCE ===================== */
 function saveKey(){return ON()&&LMP?'tksim_game_'+LMP.code:KEY}
 let SAVE_WARNED=0;
-function saveLocal(){if(TV||MP_TX)return true;const k=saveKey(),v=JSON.stringify(S);
+function saveLocal(){if(TV||MP_TX||RESTORING)return true;const k=saveKey(),v=JSON.stringify(S);
  for(let i=0;i<8;i++){try{localStorage.setItem(k,v);return true}catch(e){
   /* storage full: make room by dropping the oldest backup, then try again */
   const l=localBackups();if(!l.length)break;l.pop();try{if(l.length)localStorage.setItem('tksim_bk',JSON.stringify(l));else localStorage.removeItem('tksim_bk')}catch(e2){}}}
@@ -2738,7 +2739,7 @@ function setupView(){return `<div class="hero"><div class="spark"></div><div cla
 <div class="card"><label>Your GM name</label><input id="gmName" maxlength="24" placeholder="Your name">
 <label>Rival GM name</label><input id="rvName" maxlength="24" value="The Rival Office">
 <label>Difficulty</label>${diffDD()}
-<button class="btn mt" onclick="startGame()">Start new game</button><button class="btn sec" onclick="importSave()">Load a save file</button><button class="btn sec" onclick="cloudLinkForm()">☁️ Load my cloud save</button></div>
+<button class="btn mt" onclick="startGame()">Start new game</button><button class="btn sec" onclick="importSave()">Load a save file</button><button class="btn sec" onclick="cloudLinkForm()">☁️ Load my cloud save</button><button class="btn sec" onclick="restoreAll()">♻️ Restore a full backup</button></div>
 ${shelfList().length?`<button class="btn sec" onclick="openGames()">⇄ Your games (${gamesList().length})</button>`:''}${mpSetupCard()}${partySetupCard()}<p class="muted center">Works offline. Progress saves automatically on this device.</p>`}
 let SDIFF='normal';
 const DIFFS={easy:['Easy','The rival books sloppily and its shows rate a little lower.'],normal:['Normal','An even fight for the fans.'],hard:['Hard','The rival books like a pro: rests stars before PPVs, builds to payoffs, protects its champions and orders its card for the ratings.']};
@@ -3346,7 +3347,7 @@ const HOWTO=`<p><b>Match ratings</b> blend in-ring skill (the best worker in the
 <p><b>Tournaments</b> lock onto your card — you decide who advances. Tournament rules are about winning, not good vs evil: face vs face and heel vs heel pairings rate and build heat like face vs heel, and the repetition rule, trading-wins cooling, feud-check warnings and promised-match giveaways don't apply to bracket matches. From three weeks out until the first matches air, tap <b>Pick your field</b> on the Home screen to choose your four entrants (and the seeding for the Owen Hart Cups); if you don't, your four best are entered automatically. ♾️ The <b>Continental Classic</b> (weeks 8–10) is a round robin for your four best men (3 points a win, no run-ins), and the top two meet at Worlds End for the Continental title if your brand holds it or it's vacant. 🏆 The <b>Owen Hart Cups</b> (men's semi-finals week 17, women's week 18, both finals at Double or Nothing) send the winners to All In with a World title shot — against your champion, or as your title challenge if the rival holds the belt. Injured entrants forfeit.</p>
 <p><b>Casino Gauntlet:</b> a new match type for six. It rates a little lower than a straight wrestling match, but the winner earns a title shot at the next PPV against your top champion in their division.</p>
 <p><b>Network mandates:</b> after each PPV the TV network asks for something specific by the next one — a 4★ main event, two women's matches on one show, a new champion, a debut and so on. Deliver for a cash and fan bonus; miss it and you lose 5K fans. Check the Home or Book screen for your current one.</p>
-<p><b>🎯 Weekly goals &amp; 📣 crowd chants:</b> each week the Book screen gives you one small goal (hit it for a little cash and 3K fans — no penalty for missing it), and the crowd starts chanting for someone on your roster. Book them in a match or promo that week and their segment gets +¼★, they gain popularity and you get 2K fans.</p>
+<p><b>🎯 Weekly goals &amp; 📣 crowd chants:</b> each week the Book screen gives you one small goal (hit it for a little cash and 3K fans — no penalty for missing it; a live ✅/🤞/⏳ line tells you if the card you've booked is on track), and the crowd starts chanting for someone on your roster. Book them in a match or promo that week and their segment gets +¼★, they gain popularity and you get 2K fans.</p>
 <p><b>Head to head:</b> in solo play the rival's card stays a surprise until the show airs. On TV, whoever's main event rates higher wins the main event war (+3K fans). When you sign a big free agent (70+ popularity), the rival may start a <b>bidding war</b>: pay 35% more (and a 20% higher salary) or let them go.</p>
 <p><b>✨ Suggest the rest</b> on the Book screen fills any empty slots with a sensible card — it keeps everything you've already booked, promised or entered in a tournament. <b>Clear card</b> wipes everything else.</p>
 <p><b>Difficulty:</b> no rival gets free stars any more. Hard rivals book like pros — they rest stars before PPVs, order their card for the ratings, protect new champions and pay off feuds cleanly. Easy rivals book sloppily.</p>
@@ -3367,7 +3368,7 @@ function officeView(){const inc=tvIncome(S.fans.p),pay=payroll('p');const dt=(S.
  <button class="btn sec" onclick="rf='fa';go('roster')">Browse free agents</button>
  <div class="card mt"><div class="h small">Photo Studio</div><p class="muted" style="margin-top:0">${Object.values(S.w).filter(hasPhoto).length} of ${Object.keys(S.w).length} wrestlers have photos. Bulk-import pictures, work through the checklist, or share a photo pack with friends.</p><button class="btn" onclick="openStudio()">📷 Open Photo Studio</button></div>
  ${cloudCard()}${mpOfficeCard()}
- <div class="card mt"><div class="h small">Save</div><p class="muted" style="margin-top:0">Progress saves automatically on this device. Export a file to back it up or move it to another device.</p><div class="row"><button class="btn sec" onclick="exportSave()">Export</button>${ON()?'':'<button class="btn sec" onclick="importSave()">Import</button>'}</div>${ON()?'':'<button class="btn ghost danger" onclick="resetGame()">Start a new game</button>'}</div>
+ <div class="card mt"><div class="h small">Save</div><p class="muted" style="margin-top:0">Progress saves automatically on this device. Export a file to back it up or move it to another device.</p><div class="row"><button class="btn sec" onclick="exportSave()">Export</button>${ON()?'':'<button class="btn sec" onclick="importSave()">Import</button>'}</div>${ON()?'':'<button class="btn ghost danger" onclick="resetGame()">Start a new game</button>'}</div>${backupCard()}
  <details class="card"><summary class="h small">How it all works</summary>${HOWTO}</details>`}
 function finCard(){const pay=payroll('p'),dt=(S.debt&&S.debt.p)||0,bz=buzzOf('p'),sp=starPower('p');const tv=tvIncome(S.fans.p),tx=tixRev('p',false),me=merchRev('p',3.5,false),ad=adRev('p',3.5);
  const at=r=>weekEst('p',r)-pay;const sg=v=>`<b class="${v>=0?'good':'bad'}">${v>=0?'+':'−'}${money(Math.abs(v))}</b>`;const bs=S.sold&&S.sold.p||0;
@@ -3612,6 +3613,58 @@ async function shelfRecover(){let keys=[];try{keys=await sdbOp('readonly',st=>st
  for(const id of new Set(keys)){if(have.has(id)||id===cur)continue;const v=await shelfGet(id);let st=null;try{st=JSON.parse(v)}catch(e){}if(!st||!st.w)continue;
   try{const l=shelfList();l.push({id,label:saveLabel(st),t:soloTitle(st),sub:stageTxt(st),at:Date.now(),meta:{}});shelfSet(l);found++}catch(e){}}
  if(found)toast(`Found ${found} saved game${found>1?'s':''} — they're in ⇄ Your games.`)}
+/* ===================== BACK UP EVERYTHING ON THIS DEVICE (v92) =====================
+ One file with every solo game (playing + shelved), every league seat, your settings and your photos — so the
+ home-screen app can be deleted and re-added without losing anything. Restoring merges: games already here stay. */
+let RESTORING=false;
+const BK_SKIP=k=>k==='tksim_bk'||k.startsWith('tksim_shelf_');
+async function backupAll(){if(TV)return toast('Exit TV mode first (top right).');
+ try{if(S&&!TV)saveLocal()}catch(e){}
+ const ls={};try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(!k||BK_SKIP(k)||k===KEY+'_img')continue;if(k.startsWith('tksim')||k===KEY)ls[k]=localStorage.getItem(k)}}catch(e){}
+ const shelf={};for(const x of shelfList()){const v=await shelfGet(x.id);if(v)shelf[x.id]=v}
+ try{await IMGREADY}catch(e){}const img=Object.assign({},IMG);
+ const n=gamesList().length,np=Object.keys(img).length;
+ const data=JSON.stringify({type:'tksim-device-backup',v:1,at:Date.now(),app:APP_VERSION,ls,shelf,img});
+ const d=new Date(),nm=`tony-khan-sim-backup-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.json`;
+ const blob=new Blob([data],{type:'application/json'});
+ /* phones: the share sheet's "Save to Files" is the reliable way out of a home-screen app */
+ try{const f=new File([blob],nm,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'Tony Khan Simulator backup'});toast(`Backed up ${n} game${n===1?'':'s'}${np?` and ${np} photos`:''}.`);return}}
+ catch(e){if(e&&e.name==='AbortError')return;}
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nm;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+ toast(`Backed up ${n} game${n===1?'':'s'}${np?` and ${np} photos`:''}.`)}
+function restoreAll(){if(TV)return toast('Exit TV mode first (top right).');const i=fileInput();i.accept='.json,application/json';
+ i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{let d=null;try{d=JSON.parse(r.result)}catch(e){}
+  if(!d||d.type!=='tksim-device-backup'){if(d&&d.w&&d.titles&&d.phase)return toast('That\'s a single-game save — use Load a save file / Import for it.');return toast("That file isn't a Tony Khan Simulator backup.")}
+  restoreAll2(d)};r.readAsText(f)};i.click()}
+async function restoreAll2(d){openModal(`<div class="h mhd">Restoring…</div><p class="muted">Putting your games back on this device.</p>`);
+ const ls=d.ls||{},bShelf=d.shelf||{};let added=0,fail=0;
+ const bMeta=(()=>{try{return JSON.parse(ls.tksim_meta||'{}')}catch(e){return {}}})();
+ const bSolo=(()=>{try{return ls[KEY]?JSON.parse(ls[KEY]):null}catch(e){return null}})();
+ /* the solo game you're playing here: if the backup has a different one, put yours on the shelf first so nothing is overwritten */
+ const cur=soloState();let takeSolo=!!(bSolo&&bSolo.w)&&!shelfList().some(x=>x.id===bMeta.sid);
+ if(takeSolo&&cur&&cur.w){if(soloMeta().sid&&soloMeta().sid===bMeta.sid){takeSolo=(bMeta.at||0)>(soloMeta().at||0)}
+  else{try{await shelveSolo()}catch(e){closeModal();return toast("This device is out of storage — couldn't make room to restore.")}}}
+ if(ON())leaveLeagueView();
+ RESTORING=true;
+ const put=(k,v)=>{try{localStorage.setItem(k,v);return true}catch(e){fail++;return false}};
+ /* shelved solo games */
+ const have=new Set(shelfList().map(x=>x.id));const curSid=takeSolo?bMeta.sid:soloMeta().sid;
+ const bList=(()=>{try{return JSON.parse(ls[SHELF]||'[]')}catch(e){return []}})();
+ for(const id of Object.keys(bShelf)){if(have.has(id)||id===curSid)continue;try{await shelfPut(id,bShelf[id])}catch(e){fail++;continue}
+  let st=null;try{st=JSON.parse(bShelf[id])}catch(e){}const ent=bList.find(x=>x.id===id)||{id,label:saveLabel(st),t:soloTitle(st),sub:stageTxt(st),at:Date.now(),meta:{}};
+  try{const l=shelfList();l.push(ent);shelfSet(l);added++}catch(e){fail++}}
+ /* the solo game that was being played */
+ if(takeSolo){if(put(KEY,ls[KEY])){put('tksim_meta',ls.tksim_meta||'{}');added++}}
+ /* league seats: add any this device doesn't already know */
+ try{const bg=JSON.parse(ls.tksim_games||'[]');const l=mpGames();const codes=new Set(l.map(g=>g.code));bg.forEach(g=>{if(!codes.has(g.code)){l.push(g);added++}});if(bg.length)put('tksim_games',JSON.stringify(l))}catch(e){}
+ /* everything else (league copies, device id, name, alerts, cloud link…) only fills gaps — nothing here is replaced */
+ for(const k of Object.keys(ls)){if(k===KEY||k===SHELF||k==='tksim_games'||k==='tksim_meta'||BK_SKIP(k))continue;if(localStorage.getItem(k)==null)put(k,ls[k])}
+ /* photos */
+ const img=d.img||{};const puts=Object.entries(img).filter(([k,v])=>typeof v==='string'&&v.startsWith('data:image/')&&!IMG[k]);
+ if(puts.length){try{await IMGREADY}catch(e){}puts.forEach(([k,v])=>IMG[k]=v);
+  try{await idbWrite(puts,[]);puts.forEach(([k,v])=>PSAVED&&(PSAVED[k]=v))}catch(e){try{localStorage.setItem(KEY+'_img',JSON.stringify(IMG))}catch(e2){fail++}}}
+ openModal(`<div class="h mhd">${fail?'Restored — mostly':'All restored ✅'}</div><p>${added} game${added===1?'':'s'}${puts.length?` and ${puts.length} photo${puts.length===1?'':'s'}`:''} put back on this device.${fail?` <b>${fail} item${fail===1?'':'s'} didn't fit</b> — this device may be low on storage.`:''}</p><p class="muted tiny">Leagues pick up the latest turns from online the next time you open them.</p><button class="btn" onclick="location.reload()">Open my games</button>`)}
+function backupCard(){return `<div class="card mt"><div class="h small">💾 Back up this device</div><p class="muted" style="margin-top:0">One file with <b>every</b> game on this device — solo games, league seats and photos. Save it to Files before deleting the app, then tap <b>Restore</b> after re-adding it.</p><div class="row"><button class="btn sec" onclick="backupAll()">Back up all games</button><button class="btn sec" onclick="restoreAll()">Restore</button></div></div>`}
 function soloTitle(st){return st&&st.w?`${st.gm||'You'} vs ${st.rival||'The Rival Office'}`:'Solo game'}
 function stageTxt(st){return !st||!st.w?'':st.phase==='draft'?`Season ${st.season} · Draft`:st.phase==='rookies'?`Season ${st.season} · Creating wrestlers`:st.phase==='over'?`Season ${st.season} · Complete`:`Season ${st.season} · Week ${Math.min(st.week,SEASON)}`}
 function gamesList(){const out=[];const cur=soloState();
@@ -3638,7 +3691,9 @@ function openGames(){if(TV)return toast('This screen is showing a league — tap
  ${hero?gameHero(hero):'<div class="lbhero"><div class="lbht">No games yet</div><div class="lbsub">Start one below.</div></div>'}
  ${rest.length?`<div class="lbsec">Your other games <span>${rest.length}</span></div><div class="lblist">${rest.map(gameRow).join('')}</div>`:''}
  <div class="lbsec">New game</div>
- <div class="lbtiles">${tile('🎮','Solo game','You vs the rival office','newSolo()')}${tile('🌐','Host a league','Play friends online','mpHostForm()')}${tile('🔗','Join a league','Got an invite code?','mpJoinForm()')}${tile('📲','Receive a game','Move one from another device','rcvForm()')}</div></div>`)}
+ <div class="lbtiles">${tile('🎮','Solo game','You vs the rival office','newSolo()')}${tile('🌐','Host a league','Play friends online','mpHostForm()')}${tile('🔗','Join a league','Got an invite code?','mpJoinForm()')}${tile('📲','Receive a game','Move one from another device','rcvForm()')}</div>
+ <div class="lbsec">This device</div>
+ <div class="lbtiles">${tile('💾','Back up all','Every game in one file','backupAll()')}${tile('♻️','Restore','From a backup file','restoreAll()')}</div></div>`)}
 function gameMenu(k,id,cur){const g=gamesList().find(x=>x.k===k&&x.id===id);if(!g)return;
  openModal(`<div class="h mhd">${esc(g.t)}</div><p class="muted" style="margin-top:0">${esc(g.sub||'')}</p>
  <button class="btn" onclick="moveGame('${k}','${id}',${cur})">📲 Move to my app or another device</button>
