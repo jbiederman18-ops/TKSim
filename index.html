@@ -557,6 +557,74 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 .flowbar{display:flex;align-items:flex-end;gap:4px;height:50px;margin:10px 0 8px}
 .flowbar i{flex:1;border-radius:2px 2px 0 0;background:#e8c35a;opacity:.85}
 .flowbar i.promo{background:#7aa7ff}
+
+/* ===== Classic Dynamite refresh: the house look plus Dynamite broadcast touches ===== */
+.showcard:not(.ppv){background:radial-gradient(120% 78% at 50% 115%,rgba(255,122,46,.92) 0%,rgba(150,32,10,.72) 26%,rgba(40,12,6,.55) 52%,transparent 76%),linear-gradient(180deg,#121317 0%,#140b08 100%);border-color:#4b2c1a}
+.showcard.col{background:radial-gradient(120% 78% at 50% 115%,rgba(226,51,43,.92) 0%,rgba(120,16,12,.72) 28%,rgba(36,10,10,.55) 52%,transparent 76%),linear-gradient(180deg,#121317 0%,#130909 100%);border-color:#4b2220}
+.showcard .spark{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 13% 52%,#fff1c8 0 1.3px,rgba(255,122,46,.45) 2.2px,transparent 4px),radial-gradient(circle at 79% 36%,#fff1c8 0 1.6px,rgba(255,122,46,.45) 2.6px,transparent 4.5px),radial-gradient(circle at 64% 64%,#fff1c8 0 1.1px,rgba(255,122,46,.45) 2px,transparent 3.6px),radial-gradient(circle at 31% 24%,#fff1c8 0 1.1px,rgba(255,122,46,.4) 2px,transparent 3.6px),radial-gradient(circle at 91% 70%,#fff1c8 0 1.3px,rgba(255,122,46,.45) 2.2px,transparent 4px)}
+.showcard .spark:after{content:"";position:absolute;left:0;right:0;bottom:0;height:42%;background:repeating-linear-gradient(90deg,rgba(246,221,142,.06) 0 2px,transparent 2px 22px)}
+.showcard.ppv .spark{opacity:.6}
+.showcard:not(.col):not(.ppv) .showname{background:linear-gradient(180deg,#fff6d6 0%,var(--gold2) 35%,var(--gold) 65%,var(--gold3) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 rgba(0,0,0,.6)) drop-shadow(0 4px 14px rgba(255,122,46,.45))}
+.ptop{position:relative;display:flex;justify-content:space-between;align-items:center;gap:6px 10px;flex-wrap:wrap}
+.livebug{display:inline-flex;font:800 13px/1 'BC','Barlow Condensed',sans-serif;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.livebug b{background:var(--red);color:#fff;padding:4px 8px;font-weight:800}
+.livebug span{background:rgba(0,0,0,.5);color:#e9e4d8;padding:4px 8px}
+.livebug.wait b{background:#2c2e36;color:var(--gold2)}
+.livefrom{position:relative;margin-top:2px}
+.lfr{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap}
+.lft{flex:none;padding:2px 13px 2px 8px;background:var(--red);color:#fff;font:900 italic 13px/1.25 'BC','Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;clip-path:polygon(0 0,100% 0,86% 100%,0 100%)}
+.lfc{font:900 italic 24px/1 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.02em;color:var(--text)}
+.lfl{height:2px;margin-top:7px;background:linear-gradient(90deg,var(--gold),var(--red) 60%,transparent)}
+.lfs{margin-top:5px;font:700 13px/1.3 'BC','Barlow Condensed',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#e8dcc0}
+.ptop .kicker i{display:none}
+.rivalad{margin:2px 0 14px}.rivalad .lfc{font-size:21px}.rivalad .lfs{color:var(--mut)}
+/* tonight's card */
+.tcard{cursor:pointer}
+.tc{display:flex;flex-direction:column;gap:4px;margin-top:10px}
+.tcr{display:flex;align-items:center;gap:10px;min-height:36px;padding:5px 12px;background:rgba(0,0,0,.28);border-left:3px solid var(--line)}
+.tcr.me{background:rgba(226,51,43,.12);border-left-color:var(--red)}
+.tcr .n{flex:none;width:16px;font:900 italic 18px 'BC','Barlow Condensed',sans-serif;color:var(--gold)}
+.tcr .l{flex:1;min-width:0;font:700 16px/1.1 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.03em}
+.tcr .l small{display:block;margin-top:1px;font:600 11px 'Barlow',sans-serif;letter-spacing:.08em;color:var(--mut)}
+.tcr .t{font-size:12px;font-weight:600;color:var(--mut)}
+/* across the dial */
+.card.dial{display:flex;align-items:stretch;padding:0}
+.dial .dk{flex:none;width:94px;padding:10px;background:rgba(0,0,0,.35);font:700 10px/1.3 'Barlow',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);display:flex;flex-direction:column;justify-content:center}
+.dial .dk b{display:block;margin-top:3px;font:900 italic 19px/1 'BC','Barlow Condensed',sans-serif;letter-spacing:0;color:var(--text)}
+.dial .dm{flex:1;min-width:0;padding:10px 12px}
+.dial .dv{font:900 italic 20px/1.05 'BC','Barlow Condensed',sans-serif;text-transform:uppercase}
+/* booking: main event gets the red */
+.slot.me .num{background:linear-gradient(180deg,#ff6a55,#b3170f);color:#fff}
+.slot.me:not(.done) .num{background:#3a1512;color:#e98a80}
+.slot.me.done{border-color:#6d2a20;background:var(--grunge),linear-gradient(90deg,rgba(226,51,43,.16),transparent 55%),linear-gradient(180deg,#1d1515,#111216)}
+/* draft */
+.dhead .dk{font:700 13px 'BC','Barlow Condensed',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--gold2)}
+.dround{font:900 italic 60px/.95 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;margin:8px 0;background:linear-gradient(180deg,#fff6d6,var(--gold2) 35%,var(--gold) 65%,var(--gold3));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 0 rgba(0,0,0,.6))}
+.rticks{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;margin-bottom:8px}.rticks i{height:6px;background:#2b2d34}.rticks i.done{background:var(--gold3)}.rticks i.now{background:var(--gold2);box-shadow:0 0 8px var(--gold)}
+.card.ttape{overflow:hidden;min-height:236px;padding:16px;background:radial-gradient(110% 90% at 80% 115%,rgba(255,122,46,.88) 0%,rgba(150,32,10,.68) 28%,rgba(40,12,6,.55) 55%,transparent 78%),linear-gradient(180deg,#18191e,#120b08);border-color:#4b2c1a}
+.tt-bg{position:absolute;right:-4px;top:-26px;font:900 italic 190px/1 'BC','Barlow Condensed',sans-serif;color:rgba(246,221,142,.08);pointer-events:none}
+.tt-pic{position:absolute;right:14px;top:16px;width:92px;height:122px;overflow:hidden;clip-path:var(--cut);background:#0b0b0e;cursor:pointer}
+.tt-pic img,.tt-pic svg{display:block;width:100%;height:100%;object-fit:cover}
+.tt-k{position:relative;display:flex;gap:8px;align-items:center;font:700 13px 'BC','Barlow Condensed',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--gold2)}
+.tt-al{padding:1px 9px;font:800 12px 'BC','Barlow Condensed',sans-serif;letter-spacing:.06em;color:#09090b;clip-path:var(--slant)}.tt-al.fc{background:var(--face)}.tt-al.hl{background:var(--heel)}
+.tt-n{position:relative;max-width:calc(100% - 104px);margin-top:6px;font:900 italic 42px/.92 'BC','Barlow Condensed',sans-serif;text-transform:uppercase}
+.tt-s{position:relative;max-width:calc(100% - 104px);margin-top:6px;font-size:12.5px;color:#d8d2c4}
+.tt-g{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px;margin-top:14px}
+.tt-g div{background:rgba(9,9,11,.72);padding:5px 8px}
+.tt-g small{display:block;font:700 10px 'Barlow',sans-serif;letter-spacing:.1em;color:var(--mut);text-transform:uppercase}
+.tt-g b{font:900 italic 24px/1.1 'BC','Barlow Condensed',sans-serif}
+.ttape .row .btn{margin-top:0}
+.bboard{display:flex;flex-direction:column;gap:3px;margin-bottom:16px}
+.bbr{display:flex;align-items:center;gap:10px;width:100%;min-height:42px;padding:0 12px;background:linear-gradient(180deg,var(--st1),var(--st2));border:0;border-left:3px solid var(--face);color:var(--text);text-align:left;cursor:pointer;font-family:'Barlow',sans-serif}
+.bbr.hl{border-left-color:var(--heel)}.bbr:active{filter:brightness(1.2)}
+.bbk{flex:none;width:20px;font:900 italic 18px 'BC','Barlow Condensed',sans-serif;color:var(--gold)}
+.bbn{flex:1;min-width:0;font:800 italic 18px 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bbs{font:800 12px 'BC','Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--face)}.bbr.hl .bbs{color:var(--heel)}
+.bbo{flex:none;width:28px;text-align:right;font:900 italic 20px 'BC','Barlow Condensed',sans-serif}
+.bbm{flex:none;width:46px;text-align:right;font-size:12px;font-weight:700;color:var(--gold2)}.bbm.bad{color:var(--bad)}
+.pickin{position:sticky;bottom:max(10px,env(safe-area-inset-bottom));z-index:4;display:flex;align-items:stretch;min-height:46px;margin:14px 0 0;background:#f3efe6;color:#09090b;box-shadow:0 -6px 24px rgba(0,0,0,.65)}
+.pickin .pt{flex:none;display:flex;align-items:center;padding:0 18px 0 12px;background:var(--red);color:#fff;font:900 italic 17px 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;clip-path:polygon(0 0,100% 0,86% 100%,0 100%)}
+.pickin .pl{display:flex;align-items:center;padding:4px 10px;font-size:13px;font-weight:700;line-height:1.25}
 </style>
 </head>
 <body>
@@ -573,7 +641,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v82';
+const APP_VERSION='v83';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',22:'Forbidden Door',24:'All In'};
 /* v80: themed TV specials between PPVs — hotter crowds, bigger fan swings, better gates */
@@ -2464,8 +2532,12 @@ titles:sv('<path d="M2 9h4l2-3h8l2 3h4v6h-4l-2 3H8l-2-3H2z"/><circle cx="12" cy=
 star:sv('<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>')};
 const VENUES=[['Heritage Bank Center','Cincinnati, OH'],['Nationwide Arena','Columbus, OH'],['Rocket Arena','Cleveland, OH'],['Gainbridge Fieldhouse','Indianapolis, IN'],['KFC Yum! Center','Louisville, KY'],['Little Caesars Arena','Detroit, MI'],['PPG Paints Arena','Pittsburgh, PA'],['Bridgestone Arena','Nashville, TN'],['Enterprise Center','St. Louis, MO'],['NOW Arena','Hoffman Estates, IL']];
 function venueOf(){return VENUES[((S.season-1)*3+(S.week-1))%VENUES.length]}
-function poster(sh,inner){const v=venueOf();const cls=sh.ppv?'ppv':sh.name==='Collision'?'col':'dyn';
- return `<div class="card showcard ${cls}"><div class="wm">${esc(sh.ppv?sh.name:v[1].split(',')[0])}</div><div class="kicker"><i></i>${sh.ppv?(sh.fd?'Crossover pay-per-view':'Pay-per-view')+' · Week '+S.week+' of '+SEASON:sh.special?`Week ${S.week} of ${SEASON} · 📺 TV special: ${esc(sh.special)}`:`Week ${S.week} of ${SEASON} · Ratings war`}</div><div class="showname" style="--n:${lw(esc(sh.name))}">${esc(sh.name)}</div>${!sh.ppv&&sh.theirs?`<div class="venue" style="margin-top:-2px">vs <b>${esc(S.rival)}'s ${esc(sh.theirs)}</b></div>`:!sh.ppv&&ON()?'<div class="venue" style="margin-top:-2px"><b>Bye week</b> — no head-to-head</div>':''}<div class="venue">${sh.ppv?'<b>Live on pay-per-view</b>':`<b>${esc(v[0])}</b> · ${esc(v[1])}`}</div>${inner||''}</div>`}
+function poster(sh,inner,o){o=o||{};const v=venueOf();const cls=sh.ppv?'ppv':sh.name==='Collision'?'col':'dyn';
+ const day=sh.ppv?'PPV':sh.name==='Collision'?'SAT 8/7c':sh.name==='Dynamite'?'WED 8/7c':'Tonight';
+ const kick=o.kick||(sh.ppv?(sh.fd?'Crossover pay-per-view':'Pay-per-view')+' · Week '+S.week+' of '+SEASON:sh.special?`Week ${S.week} of ${SEASON} · 📺 TV special: ${esc(sh.special)}`:`Week ${S.week} of ${SEASON} · Ratings war`);
+ const sub=sh.ppv?'':`${esc(v[0])}${sh.theirs?` · vs ${esc(S.rival)}'s ${esc(sh.theirs)}`:ON()?' · Bye week — no head-to-head':''}`;
+ const lf=`<div class="livefrom"><div class="lfr"><span class="lft">${sh.ppv?'Live on':'Live from'}</span><span class="lfc">${sh.ppv?'Pay-per-view':esc(v[1])}</span></div><div class="lfl"></div>${sub?`<div class="lfs">${sub}</div>`:''}</div>`;
+ return `<div class="card showcard ${cls}"><div class="spark"></div><div class="wm">${esc(sh.ppv?sh.name:v[1].split(',')[0])}</div><div class="ptop"><div class="kicker"><i></i>${kick}</div><span class="livebug"><b>● Live</b><span>${day}</span></span></div><div class="showname" style="--n:${lw(esc(sh.name))}">${esc(sh.name)}</div>${lf}${inner||''}</div>`}
 function tile(on,icon,t,sub,em){return `<button class="tile" onclick="${on}">${icon}<b>${t}</b><span>${sub}</span><em>${em}</em></button>`}
 let ANIM=true;
 let tab='home',rf='mine',rs='ovr',df='all',ds='ovr',ED=null,PE=null,PS=null,CE=null,aiT=null;
@@ -2580,13 +2652,23 @@ function rookieView(){const rs=createdFA();
  <button class="btn ${rs.length?'':'sec'}" ${myTurn()?'':'disabled'} onclick="rookiesDone()">${rs.length?'Continue to the draft':'Skip to the draft'}</button>`}
 function cnt(l){return `${l.filter(w=>w.g==='M').length}M / ${l.filter(w=>w.g==='F').length}W`}
 function draftView(){const d=S.draft;const oc=onClock();
- let pool=Object.values(S.w).filter(w=>!w.own&&!w.cw&&!w.rookie);if(df!=='all'&&df!=='cw')pool=pool.filter(w=>w.g===df);pool.sort(sorter(ds));
- return `<div class="card showcard"><div class="muted">The Draft · ${d.rounds} rounds</div><div class="showname">Round ${d.round}</div><div class="${oc==='p'?'gold':'muted'}"><b>${oc==='p'?'🟡 You are on the clock':'⏳ '+esc(nameOf(oc))+' is picking…'}</b></div><div class="muted">${brands().map(b=>`${b==='p'?'You':esc(nameOf(b))}: ${cnt(ownList(b))}`).join(' · ')}</div>${d.cap?(()=>{const room=capRoom('p'),pl=picksLeft('p');return `<div class="capbox mt"><div class="row sb"><span>💼 Salary cap <b>${money(d.cap)}</b>/wk</span><span class="${room<pl*minAsk()?'bad':'gold'}"><b>${money(room)}</b> left</span></div><div class="bar"><i style="width:${clamp(payroll('p')/d.cap*100,0,100)}%"></i></div><div class="muted tiny">${pl} pick${pl===1?'':'s'} left · about ${money(pl?room/pl:0)} per pick. Anything left under the cap goes into your bank (×4).</div></div>`})():''}
+ const all=Object.values(S.w).filter(w=>!w.own&&!w.cw&&!w.rookie);
+ let pool=all.slice();if(df!=='all'&&df!=='cw')pool=pool.filter(w=>w.g===df);pool.sort(sorter(ds));
+ const ranked=all.slice().sort((a,b)=>ovr(b)-ovr(a)||b.pop-a.pop);const best=ranked.find(w=>capOk(w,'p'))||ranked[0];
+ const board=ranked.map((w,k)=>({w,r:k+1})).filter(x=>!best||x.w.id!==best.id).slice(0,6);
+ const ticks=Array.from({length:d.rounds},(_,k)=>`<i class="${k<d.round-1?'done':k===d.round-1?'now':''}"></i>`).join('');
+ const tape=best?`<div class="card ttape"><div class="tt-bg">${ovr(best)}</div><div class="tt-pic" onclick="showW('${best.id}')">${portrait(best)}</div><div class="tt-k">Tale of the tape <span class="tt-al ${best.al==='f'?'fc':'hl'}">${best.al==='f'?'Face':'Heel'}</span></div><div class="tt-n">${esc(best.name)}</div><div class="tt-s">${STYLE_N[best.st]||''} · best available${capOk(best,'p')?'':' · <span class="bad">over your cap</span>'}</div>
+ <div class="tt-g"><div><small>Ring</small><b>${Math.round(best.ring)}</b></div><div><small>Mic</small><b>${Math.round(best.mic)}</b></div><div><small>Pop</small><b>${Math.round(best.pop)}</b></div><div><small>Salary</small><b class="gold">${money(mkt(best))}</b></div></div>
+ <div class="row mt"><button class="btn" style="flex:2" ${oc==='p'&&capOk(best,'p')?'':'disabled'} onclick="pDraft('${best.id}')">Make the pick</button><button class="btn sec" style="flex:1" onclick="showW('${best.id}')">Details</button></div></div>`:'';
+ return `<div class="card dhead"><div class="row sb"><span class="dk">The Draft · ${d.rounds} rounds</span>${oc==='p'?'<span class="livebug"><b>● On the clock</b></span>':`<span class="livebug wait"><b>${esc(nameOf(oc))}</b><span>picking…</span></span>`}</div><div class="dround">Round ${d.round}</div><div class="rticks">${ticks}</div><div class="muted">${brands().map(b=>`${b==='p'?'You':esc(nameOf(b))}: ${cnt(ownList(b))}`).join(' · ')}</div>${d.cap?(()=>{const room=capRoom('p'),pl=picksLeft('p');return `<div class="capbox mt"><div class="row sb"><span>💼 Salary cap <b>${money(d.cap)}</b>/wk</span><span class="${room<pl*minAsk()?'bad':'gold'}"><b>${money(room)}</b> left</span></div><div class="bar"><i style="width:${clamp(payroll('p')/d.cap*100,0,100)}%"></i></div><div class="muted tiny">${pl} pick${pl===1?'':'s'} left · about ${money(pl?room/pl:0)} per pick. Anything left under the cap goes into your bank (×4).</div></div>`})():''}
  <div class="row mt"><button class="btn sec" ${oc!=='p'?'disabled':''} onclick="autoPick()">Auto-pick</button><button class="btn sec" onclick="simDraft()">${ON()?(S.online.auto&&S.online.auto.p?'🤖 Stop auto-drafting':'Auto-draft me'):'Sim rest'}</button></div><button class="btn sec" onclick="openStudio()">📷 Photo Studio</button></div>
- ${d.log.length?`<div class="card"><div class="h small">Latest picks</div>${d.log.slice(0,4).map(x=>`<div class="muted">${esc(x)}</div>`).join('')}</div>`:''}
+ ${tape}
+ ${board.length?`<div class="h small">The big board</div><div class="bboard">${board.map(x=>`<button class="bbr ${x.w.al==='f'?'fc':'hl'}" onclick="showW('${x.w.id}')"><span class="bbk">${x.r}</span><span class="bbn">${esc(x.w.name)}</span><span class="bbs">${x.w.al==='f'?'Face':'Heel'}</span><span class="bbo">${ovr(x.w)}</span><span class="bbm ${capOk(x.w,'p')?'':'bad'}">${money(mkt(x.w))}</span></button>`).join('')}</div>`:''}
+ <div class="h small">Everyone available</div>
  ${chips('df',[['all','All'],['M','Men'],['F','Women']],df)}
  <div class="mt">${chips('ds',[['ovr','Overall'],['pop','Popularity'],['ring','In-ring'],['mic','Mic'],['pot','Potential'],['sal','Salary']],ds)}</div>
- <p class="muted">Tap a card to see details${oc==='p'?' and draft':''}.</p><div class="cgrid">${pool.map(w=>wcard(w,{info:`${ds==='sal'?'':gridInfo(w,ds)+' · '}<span class="${capOk(w,'p')?'':'bad'}">${capOk(w,'p')?'':'🚫 '}${money(mkt(w))}</span>`})).join('')}</div>`}
+ <p class="muted">Tap a card to see details${oc==='p'?' and draft':''}.</p><div class="cgrid">${pool.map(w=>wcard(w,{info:`${ds==='sal'?'':gridInfo(w,ds)+' · '}<span class="${capOk(w,'p')?'':'bad'}">${capOk(w,'p')?'':'🚫 '}${money(mkt(w))}</span>`})).join('')}</div>
+ ${d.log.length?`<div class="pickin"><span class="pt">Pick is in</span><span class="pl">${esc(d.log[0])}</span></div>`:''}`}
 function pDraft(id){if(mpLocked())return;if(onClock()!=='p')return;const w=S.w[id];if(!w||w.cw||w.rookie)return;if(w&&!capOk(w,'p'))return toast(`${w.name} doesn't fit under your cap — you need to save room for your remaining picks.`);draftPick(id,'p');closeModal();if(ON())mpDraftStep();render()}
 function autoPick(){if(mpLocked())return;if(onClock()!=='p')return;const c=draftChoice('p');if(c)pDraft(c.id)}
 function simDraft(){if(ON()){const o=S.online;o.auto=o.auto||{};
@@ -2599,6 +2681,17 @@ function simDraft(){if(ON()){const o=S.online;o.auto=o.auto||{};
 
 function nextPPV(){for(let w=S.week;w<=SEASON;w++)if(PPVS[w])return {n:PPVS[w],in:w-S.week};return null}
 function feudList(b){return Object.entries(S.heat).map(([k,h])=>{const [a,c]=k.split('|');return {a:S.w[a],b:S.w[c],h}}).filter(f=>f.a&&f.b&&f.a.own===b&&f.b.own===b).sort((x,y)=>y.h-x.h)}
+/* Tonight's card: the running order on the Home screen, broadcast style */
+function tonightCard(sh){const c=S.card&&S.card.p;if(!c||!c.length)return '';let mn=0;const nM=c.filter(s=>s.k==='match').length;
+ const req=c.filter(sl=>sl.k==='match'||(sl.k==='promo'&&!sl.opt));const done=req.filter(sl=>sl.d).length;
+ const nm=id=>S.w[id]?esc(S.w[id].name):'?';
+ const rows=c.map((sl,i)=>{let lab,who='',me=false;
+  if(sl.k==='match'){mn++;me=mn===nM;lab=me?'Main event':`Match ${mn}`;if(sl.d)who=esc(vsLine(sl.d))}
+  else if(sl.k==='promo'){if(sl.opt&&!sl.d)return '';lab=sl.d&&PT[sl.d.type]?'Promo · '+PT[sl.d.type].n:'Promo segment';if(sl.d)who=nm(sl.d.a)+(sl.d.b&&S.w[sl.d.b]?' &amp; '+nm(sl.d.b):'')}
+  else if(sl.k==='xo'){if(!sl.d)return '';lab='Dream match';who=nm(sl.d.a)+' vs '+nm(sl.d.b)}
+  else{if(!sl.d)return '';lab='Title challenge';who=nm(sl.d.c)}
+  return `<div class="tcr ${me?'me':''}"><span class="n">${i+1}</span><span class="l">${who||lab}${who?`<small>${lab}</small>`:''}</span>${who?'':'<span class="t">TBA</span>'}</div>`}).join('');
+ return `<div class="card tcard" onclick="go('book')"><div class="row sb"><div class="h small" style="margin:0">${sh.ppv?'The PPV card':"Tonight's card"}</div><span class="muted tiny">${done} of ${req.length} booked</span></div><div class="tc">${rows}</div></div>`}
 function homeView(){const sh=curShow();const np=nextPPV();const gp=fanGain('p'),ga=fanGain('ai');const pp=clamp(50+(gp-ga)/(Math.abs(gp)+Math.abs(ga)+20000)*50,3,97);const mine=ownList('p');const al=[];
  {const v=inaugList();if(v.length)al.push(`👑 ${v.length} title${v.length>1?'s are':' is'} still vacant — book title matches to crown your inaugural champions. <a href="#" onclick="go('book');return false" style="color:var(--gold2)">Book now</a>`)}
  if(S.money.p<0)al.push(`💸 You're in the red (${money(S.money.p)}) — wrestlers' morale is slipping. See the Office.`);
@@ -2609,11 +2702,11 @@ function homeView(){const sh=curShow();const np=nextPPV();const gp=fanGain('p'),
  {const n=Object.values(S.w).filter(w=>!w.own&&!w.cw&&onMarket(w));const last=n.filter(w=>faLeft(w)<=1);if(n.length)al.push(`🆕 ${n.length} free agents on the market${last.length?` · last chance: ${last.slice(0,3).map(w=>esc(w.name)).join(', ')}`:''} — <a href="#" onclick="rf='fa';go('roster');return false" style="color:var(--gold2)">browse</a>`)}
  const fs=feudList('p').slice(0,5);
  const held=Object.values(S.titles).filter(t=>t.holders.length&&S.w[t.holders[0]]&&S.w[t.holders[0]].own==='p').length;
- return `${poster(sh,`<div class="venue mt" style="color:#e9d9b0">${sh.ppv?`Each side books a full card · ${cardMatches(true)} matches${sh.fd?' + 2 crossover dream matches':''} + a title challenge`:sh.special?'📺 TV special · hotter crowd, bigger fan swings':`Best show wins the week`}</div><button class="btn mt" onclick="go('book')">${ON()&&S.online.booked.p?'Card locked in ✓':'Book the show ▸'}</button>${np&&!sh.ppv?`<div class="venue mt">Next PPV: <b>${np.n}</b> · ${np.in===0?'this Saturday':`in ${np.in} week${np.in>1?'s':''}`}</div>`:''}`)}
+ return `${poster(sh,`${sh.ppv||sh.special?`<div class="venue mt" style="color:#e9d9b0">${sh.ppv?`Each side books a full card · ${cardMatches(true)} matches${sh.fd?' + 2 crossover dream matches':''} + a title challenge`:'📺 TV special · hotter crowd, bigger fan swings'}</div>`:''}<button class="btn mt" onclick="go('book')">${ON()&&S.online.booked.p?'Card locked in ✓':'Book the show ▸'}</button>${np&&!sh.ppv?`<div class="venue mt">Next PPV: <b>${np.n}</b> · ${np.in===0?'this Saturday':`in ${np.in} week${np.in>1?'s':''}`}</div>`:''}`)}${tonightCard(sh)}${rivalAdHtml()}
  ${S.crisis&&S.w[S.crisis.a]&&CRISES[S.crisis.k]?`<div class="card warn" onclick="openCrisis()" style="cursor:pointer"><b>${CRISES[S.crisis.k].i} ${CRISES[S.crisis.k].good?'Opportunity':'Front office situation'}: ${esc(CRISES[S.crisis.k].t)}</b><div class="muted">Needs your decision before the next show — tap to handle it.</div></div>`:''}<div class="tiles">${tile("go('roster')",ICON.roster,'Roster',`${mine.length} signed · ${mine.filter(w=>w.inj).length} injured`,mine.length)}${tile("go('titles')",ICON.titles,'Titles',`You hold ${held} of ${Object.keys(S.titles).length}`,held)}${tile("go('office')",ICON.office,'Front Office',`Bank ${money(S.money.p)}`,'$')}${S.last?tile('showResults()',ICON.star,'Last Show',(()=>{const L=S.last.pairs?(S.last.pairs.find(p=>p.ratings.p!=null)||{}):S.last;const R=L.ratings||{};return `${R.ai!=null&&!S.last.ppv?(R.p>=R.ai?'Won':'Lost')+' · ':''}<b style="display:inline;font:inherit;color:var(--gold2);margin:0;text-transform:none">${stars(R.p||0)}</b>`})(),'★'):tile("go('office')",ICON.star,'How to Play','Ratings, feuds & fans','?')}</div>
  ${mpStandings()}${ON()&&!S._view.opp?`<div class="card"><div class="h small">Bye week</div><div class="muted">No head-to-head this week — your show airs on its own. Next week you face <b>${esc(nameOf(localKey(oppOf(S._view.me,S.week+1,nSeats()))||'p'))}</b>.</div></div>`:''}<div class="card" ${ON()&&!S._view.opp?'style="display:none"':''}><div class="h small">${ON()&&nSeats()>2?'This week':'Brand war'}</div><div class="warnames"><div><div class="muted tiny">YOU</div><b class="gold">${esc(S.gm)}</b></div><span class="vsdot">VS</span><div class="r"><div class="muted tiny">${ON()?'FRIEND':'RIVAL'}</div><b>${esc(S.rival)}</b></div></div><div class="war"><i style="width:${pp}%"></i></div><div class="row sb muted"><span><b class="gold">${gp>=0?'+':''}${fmtFans(gp)}</b> fans</span><span>Ratings wins ${S.hourWins.p||0}–${S.hourWins.ai||0}</span><span>${ga>=0?'+':''}${fmtFans(ga)} fans</span></div><div class="muted tiny center" style="margin-top:4px">Fans gained this season · all-time ${fmtFans(S.fans.p)} vs ${fmtFans(S.fans.ai||0)}</div></div>
  ${al.length?`<div class="card warn">${al.map(a=>`<div style="margin:3px 0">${a}</div>`).join('')}</div>`:''}
- ${mandCard()}${rivalAdHtml()}${tourCard('p')}
+ ${mandCard()}${tourCard('p')}
  ${(S.promises||[]).length?`<div class="card"><div class="h small">Booked &amp; promised</div>${S.promises.slice().sort((a,b)=>a.week-b.week).map(pr=>S.w[pr.a]&&S.w[pr.b]?`<div class="row sb" style="margin:5px 0"><span class="frow">${face(S.w[pr.a])}${face(S.w[pr.b])}<span>${pr.kind==='contract'?'📜':pr.kind==='shot'?'🎟️':'🎯'} ${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)}${pr.title&&S.titles[pr.title]?' · '+esc(S.titles[pr.title].n)+' title':''}${pr.stip&&pr.stip!=='std'?' · '+STIPS[pr.stip].n:''}</span></span><span class="muted tiny">${pr.week===S.week?'<b class="gold">This week</b>':pr.ppv?esc(pr.ppv):'Week '+pr.week}</span></div>`:'').join('')}</div>`:''}<div class="card"><div class="h small">Hottest feuds</div>${fs.length?fs.map(f=>`<div class="feud" style="cursor:pointer" onclick="openFeud('${f.a.id}','${f.b.id}')"><div class="row sb"><span class="frow">${face(f.a)}${face(f.b)}<span>${esc(f.a.name)} vs ${esc(f.b.name)}</span></span><span class="muted">🔥 ${Math.round(f.h)}</span></div><div class="bar heat"><i style="width:${f.h}%"></i></div></div>`).join(''):'<div class="muted">No feuds yet. Put the same wrestlers in promos and matches week after week to build heat, then pay it off at a PPV.</div>'}</div>
  <div class="card"><div class="h small">The Wire</div>${S.news.slice(-15).reverse().map(n=>`<div class="news"><span class="muted">W${n.w}</span> ${esc(n.t)}</div>`).join('')}</div>`}
 
@@ -2771,16 +2864,16 @@ function flowCard(sh){const segs=[];S.card.p.forEach(sl=>{if(!sl.d||fixedK(sl))r
 function bookView(){const sh=curShow();const c=S.card.p;const ready=c.every(sl=>sl.k==='chal'||sl.opt||sl.d);
  let mn=0;const nM=c.filter(s=>s.k==='match').length;
  const slots=c.map((sl,i)=>{
-  if(sl.k==='match'){mn++;const lbl=`Match ${mn}${mn===nM?' · Main event':''}`;
-   if(!sl.d)return `<button class="slot" ${dgA(i)} onclick="openMatch(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">${lbl}</div><div class="add">+ Book a match</div></button>`;
+  if(sl.k==='match'){mn++;const lbl=`Match ${mn}${mn===nM?' · Main event':''}`;const me=mn===nM?' me':'';
+   if(!sl.d)return `<button class="slot${me}" ${dgA(i)} onclick="openMatch(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">${lbl}</div><div class="add">+ Book a match</div></button>`;
    const r=rateMatch(sl.d,{ppv:sh.ppv,allin:sh.ppv&&S.week===SEASON,preview:true});
    const pr=promiseOf(sl.d);
-   return `<button class="slot done" ${dgA(i)} onclick="openMatch(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">${lbl}${sl.d.tour&&TOURS[sl.d.tour.k]?` · ${TOURS[sl.d.tour.k].i} ${esc(TOURS[sl.d.tour.k].n)} ${esc(sl.d.tour.lab)}`:''}${pr?(pr.kind==='contract'?' · Contracted':pr.kind==='shot'?' · Earned title shot':' · Promised'):''}</div><div><b>${sl.d.tour?vsLine(sl.d):vsLineD(sl.d,i)}</b></div>${slotTags(sl.d,sh.ppv)}<div class="muted">${esc(matchSub(sl.d))} · Winner: ${esc(sideName(sl.d.sides[sl.d.winner]))}</div><div class="stars">${stars(r.lo)} – ${stars(r.hi)}</div></button>`}
+   return `<button class="slot done${me}" ${dgA(i)} onclick="openMatch(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">${lbl}${sl.d.tour&&TOURS[sl.d.tour.k]?` · ${TOURS[sl.d.tour.k].i} ${esc(TOURS[sl.d.tour.k].n)} ${esc(sl.d.tour.lab)}`:''}${pr?(pr.kind==='contract'?' · Contracted':pr.kind==='shot'?' · Earned title shot':' · Promised'):''}</div><div><b>${sl.d.tour?vsLine(sl.d):vsLineD(sl.d,i)}</b></div>${slotTags(sl.d,sh.ppv)}<div class="muted">${esc(matchSub(sl.d))} · Winner: ${esc(sideName(sl.d.sides[sl.d.winner]))}</div><div class="stars">${stars(r.lo)} – ${stars(r.hi)}</div></button>`}
   if(sl.k==='promo'){if(!sl.d)return `<button class="slot ${sl.opt?'opt':''}" ${dgA(i)} onclick="openPromo(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">${sl.opt?'Bonus promo (optional)':'Promo segment'}</div><div class="add">+ Book a promo${sl.opt?' — or leave it empty':''}</div></button>`;
    const p=sl.d;const pdb=debutTag([S.w[p.a],p.b&&S.w[p.b]].filter(Boolean),sh.ppv);return `<button class="slot done" ${dgA(i)} onclick="openPromo(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">Promo · ${PT[p.type].n}</div><div><b>${dnm(S.w[p.a],`pw:${i}:a`)}${p.b&&S.w[p.b]?' <span class="muted">&amp;</span> '+dnm(S.w[p.b],`pw:${i}:b`):''}</b></div>${(p.b&&S.w[p.b]&&heatOf(p.a,p.b)>=1)||pdb?`<div class="tags">${pdb}${p.b&&S.w[p.b]&&heatOf(p.a,p.b)>=1?`<span class="fdt t${heatTier(heatOf(p.a,p.b))+1}">Heat ${Math.round(heatOf(p.a,p.b))}</span>`:''}</div>`:''}<div class="muted">Plays out live when you go live</div></button>`}
   if(sl.k==='xo'){const d=sl.d;return `<button class="slot ${d?'done':'opt'}" onclick="openXo(${i})"><span class="num">${i+1}</span><div class="lbl">🚪 Forbidden Door dream match (optional)</div>${d&&S.w[d.a]&&S.w[d.b]?`<div><b>${alSpan(S.w[d.a])} <span class="muted">vs</span> ${alSpan(S.w[d.b])}</b></div><div class="muted">First time ever · ${esc(nameOf(S.w[d.b].own||'ai'))}'s star · the winner is decided in the ring</div>`:`<div class="add">+ Pick one of yours vs one of ${esc(S.rival)}'s</div>`}</button>`}
   const d=sl.d;return `<button class="slot ${d?'done':''}" onclick="openChal(${i})"><span class="num">${i+1}</span><div class="lbl">Title challenge (optional)</div>${d?`<div><b>${esc(S.w[d.c].name)}</b> challenges for the <b>${esc(S.titles[d.title].n)}</b> title</div>`:'<div class="add">+ Challenge for a title the rival brand holds</div>'}</button>`}).join('');
- const um=unmetPromises(c);return `${inaugCard()}${poster(sh,`<div class="venue mt" style="color:#e9d9b0">${sh.ppv?'Your full PPV card':'Best show wins the week'}</div>`)}${um.length?`<div class="card warn">${um.map(pr=>`<div>⚠️ Fans were ${pr.kind==='contract'?'contracted':'promised'} <b>${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)}</b> this week. Skip it and you'll lose fans and morale.</div>`).join('')}</div>`:''}${mandCard()}${rivalAdHtml()}<div class="row" style="gap:8px">${c.some(sl=>!sl.d&&!sl.opt)||c.some(sl=>!sl.d&&sl.k==='promo')?`<button class="btn sec" style="margin:0" onclick="suggestFill()">✨ Suggest the rest</button>`:''}${c.some(sl=>sl.d&&!(sl.k==='match'&&(sl.d.tour||promiseOf(sl.d))))?`<button class="btn ghost" style="margin:0" onclick="clearCard()">Clear card</button>`:''}</div><p class="muted tiny center dghint">Hold and drag a segment to change the running order, or drag a wrestler onto another to swap them. Drag from the locker room to fill a slot.</p>${slots}${flowCard(sh)}${prodCard(sh)}${feudBoard()}${lockerRoom()}
+ const um=unmetPromises(c);return `${inaugCard()}${poster(sh,sh.ppv?`<div class="venue mt" style="color:#e9d9b0">Your full PPV card</div>`:'',{kick:`Now booking · Week ${S.week} of ${SEASON}`})}${um.length?`<div class="card warn">${um.map(pr=>`<div>⚠️ Fans were ${pr.kind==='contract'?'contracted':'promised'} <b>${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)}</b> this week. Skip it and you'll lose fans and morale.</div>`).join('')}</div>`:''}${rivalAdHtml('line')}${mandCard()}<div class="row" style="gap:8px">${c.some(sl=>!sl.d&&!sl.opt)||c.some(sl=>!sl.d&&sl.k==='promo')?`<button class="btn sec" style="margin:0" onclick="suggestFill()">✨ Suggest the rest</button>`:''}${c.some(sl=>sl.d&&!(sl.k==='match'&&(sl.d.tour||promiseOf(sl.d))))?`<button class="btn ghost" style="margin:0" onclick="clearCard()">Clear card</button>`:''}</div><div class="h small" style="margin-top:14px">The running order</div><p class="muted tiny center dghint">Hold and drag a segment to change the running order, or drag a wrestler onto another to swap them. Drag from the locker room to fill a slot.</p>${slots}${flowCard(sh)}${prodCard(sh)}${feudBoard()}${lockerRoom()}
  ${partyOn()?partyBookBtn(ready):ON()&&S.online.booked.p?`<div class="card"><b>Card locked in ✓</b><div class="muted">It airs when ${esc(S.rival)} books ${sh.ppv?'theirs':esc(sh.theirs)}.</div></div>`:`<button class="btn live" ${ready&&myTurn()?'':'disabled'} onclick="goLive()">${ON()&&!S.online.booked.ai?'Go live & lock in ▸':'Go live ▸'}</button>`}<p class="muted center">${ready?'':'Fill every slot to go live. '}${esc(S.rival)} books their own ${sh.ppv?'card':'show, '+esc(sh.theirs)}. The best overall show wins the week.${ON()&&!S.online.booked.p&&!S.online.booked.ai?' Your segments play out now; the ratings come in once they book too.':''}</p>`}
 function prodCard(sh){const k=prodOf('p',sh);const sc=stipCost(S.card.p);const bank=S.money.p;const pc=prodCost(k,sh);
  const est=sh.ppv?ppvGross(S.fans.p,3.5,S.week===SEASON):0;

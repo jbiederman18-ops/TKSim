@@ -142,7 +142,9 @@ function mandCard(){const md=S.mand&&S.mand.p;if(!md||!MANDS[md.k])return '';con
 /* ===================== ADVERTISED MAIN EVENT & THE MAIN EVENT WAR ===================== */
 function rivalAd(){if(!S.card||!S.card.ai||curShow().ppv)return null;if(ON()&&!(S.online.booked&&S.online.booked.ai))return null;
  const ms=S.card.ai.filter(sl=>sl.k==='match'&&sl.d&&validMatch(sl.d));const me=ms[ms.length-1];if(!me)return null;const r=rateMatch(me.d,{preview:true});return {m:me.d,lo:r.lo,hi:r.hi}}
-function rivalAdHtml(){const a=rivalAd();if(!a)return '';return `<div class="card"><div class="muted tiny">📣 ${esc(S.rival)}'s ${esc(curShow().theirs||'show')} is advertising its main event</div><div style="margin-top:4px"><b>${vsLineC(a.m)}</b></div><div class="tiny muted" style="margin-top:2px">${esc(matchSub(a.m))} · projected <span class="stars">${stars(a.lo)}–${stars(a.hi)}</span>. Top it with your main event to win the main event war (+3K fans).</div></div>`}
+function rivalAdHtml(mode){const a=rivalAd();if(!a)return '';const nm=esc(curShow().theirs||'show');
+ if(mode==='line')return `<div class="rivalad"><div class="lfr"><span class="lft">Rival ad</span><span class="lfc">${nm}: ${vsLineC(a.m)}</span></div><div class="lfl"></div><div class="lfs">${esc(matchSub(a.m))} · <span class="stars">${stars(a.lo)}–${stars(a.hi)}</span> · top it with your main event for +3K fans</div></div>`;
+ return `<div class="card dial"><div class="dk">Across the dial<b>${nm}</b></div><div class="dm"><div class="dv">${vsLineC(a.m)}</div><div class="tiny muted" style="margin-top:3px">${esc(S.rival)}'s main event · ${esc(matchSub(a.m))} · projected <span class="stars">${stars(a.lo)}–${stars(a.hi)}</span>. Top it with your main event to win the main event war (+3K fans).</div></div></div>`}
 
 /* ===================== SUGGEST A CARD ===================== */
 /* the GM's assistant books the empty slots — keeps everything you've already booked, promised or entered in a tournament */
