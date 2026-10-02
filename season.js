@@ -14,9 +14,17 @@ const TOURS={
   d:"Knockout bracket for four of your best women. The winner earns a Women's World title shot at All In."}};
 const RR4=[[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]]];
 function tourState(b,k){S.tour=S.tour||{};const T=S.tour[b]||(S.tour[b]={});let t=T[k];if(!t||t.s!==S.season)t=T[k]={s:S.season,ent:null,res:[],win:null};return t}
-/* entrants are locked in the first time the tournament needs them: the brand's four best (healthy) workers of that division */
-function tourEnt(b,k){const t=tourState(b,k);if(t.ent)return t.ent;const D=TOURS[k];
- const pool=ownList(b).filter(w=>w.g===D.g&&!w.inj).sort((x,y)=>(y.pop+y.ring)-(x.pop+x.ring));const ent=[];
+/* entrants lock the first time the tournament needs them. A field the GM picked is used as chosen (anyone hurt or gone
+   is replaced by the next best); otherwise the brand's four best healthy workers of that division are entered. */
+const tourFirst=D=>D.rr?D.rr[0]:D.semi;
+function tourEnt(b,k){const t=tourState(b,k);const D=TOURS[k];if(t.ent&&(t.lock||!t.pick))return t.ent;
+ const pool=ownList(b).filter(w=>w.g===D.g&&!w.inj).sort((x,y)=>(y.pop+y.ring)-(x.pop+x.ring));
+ if(t.pick&&t.ent){const out=[],gone=[];t.ent.forEach(id=>{const w=S.w[id];if(w&&w.own===b&&!w.inj&&w.g===D.g)out.push(id);else gone.push(id)});
+  const pz=D.prize&&S.titles[D.prize];const champ=pz&&pz.holders[0];pool.forEach(w=>{if(out.length<4&&!out.includes(w.id)&&w.id!==champ)out.push(w.id)});
+  t.lock=1;if(out.length<4){t.ent=[];return t.ent}t.ent=out;
+  if(gone.length&&(b==='p'||ON()))news(`${D.i} ${gone.map(id=>S.w[id]?S.w[id].name:'An entrant').join(' and ')} can't compete — ${out.slice(4-gone.length).map(id=>S.w[id].name).join(' and ')} take${gone.length>1?'':'s'} the spot in the ${D.n}.`);
+  return t.ent}
+ t.lock=1;const ent=[];
  const tt=D.title&&S.titles[D.title];const th=tt&&tt.holders[0]&&S.w[tt.holders[0]];if(th&&th.own===b&&!th.inj&&th.g===D.g)ent.push(th.id);
  const pz=D.prize&&S.titles[D.prize];const champ=pz&&pz.holders[0];
  pool.forEach(w=>{if(ent.length<4&&!ent.includes(w.id)&&w.id!==champ)ent.push(w.id)});
@@ -57,12 +65,14 @@ function tourResult(b,m,notes){const x=Object.assign({},m.tour,{a:m.sides[0][0],
  const w=m.nc?[x.a,x.b].sort((p,q)=>S.w[q].pop-S.w[p].pop)[0]:m.sides[m.winner][0];tourRecord(b,x,w,notes,m.nc?'the officials send them through after the no-contest':'')}
 /* anything still owed after the show (a match that couldn't happen) is settled by forfeit */
 function tourSweep(b,notes){tourPairs(b).forEach(x=>{const ok=[x.a,x.b].map(id=>S.w[id]).filter(w=>w&&w.own===b&&!w.inj);tourRecord(b,x,(ok.length?ok.sort((p,q)=>q.pop-p.pop)[0]:S.w[x.a]||S.w[x.b]).id,notes,'by forfeit')})}
-function tourCard(b){b=b||'p';const l=[];for(const k in TOURS){const D=TOURS[k];const first=D.rr?D.rr[0]:D.semi;if(S.week>D.final||S.week<first-2)continue;
-  const t=tourState(b,k);const ent=S.week>=first?tourEnt(b,k):t.ent;
-  let body='';if(!ent||!ent.length){body=`<div class="muted tiny">Starts week ${first}. Your four best ${D.g==='M'?'men':'women'} will be entered automatically.</div>`}
+function tourCard(b){b=b||'p';const l=[];for(const k in TOURS){const D=TOURS[k];const first=tourFirst(D);if(S.week>D.final||S.week<first-3)continue;
+  const t=tourState(b,k);const ent=S.week>=first?tourEnt(b,k):t.ent;const can=b==='p'&&tourCanPick(k);
+  const pickBtn=can?`<button class="btn sec" style="margin:8px 0 0" onclick="openTourPick('${k}')">${t.pick?'✏️ Change your field':'🎯 Pick your field'}</button>`:'';
+  let body='';if(!ent||!ent.length){body=`<div class="muted tiny">Starts week ${first}. Pick the four ${D.g==='M'?'men':'women'} you want in it${S.week<first?` before week ${first}`:''} — or your four best will be entered automatically.</div>`}
+  else if(S.week<first){body=`<div class="tiny">${D.rr?'Your field':'Your bracket'} (starts week ${first}):${ent.map((id,i)=>`<div>${D.rr?'•':i+1+'.'} ${S.w[id]?esc(S.w[id].name):'?'}</div>`).join('')}${D.rr?'':`<div class="muted" style="margin-top:2px">Semi-finals: 1 vs 4 · 2 vs 3</div>`}</div>`}
   else if(D.rr){const tb=c2Table(t);body=`<div class="tiny">${tb.map((r,i)=>`<div class="row sb"><span>${i+1}. ${S.w[r.id]?esc(S.w[r.id].name):'?'}</span><b>${r.p} pts</b></div>`).join('')}</div>`}
   else{body=`<div class="tiny">${t.res.length?t.res.map(r=>`<div>${esc(r.lab==='Semi'?'Semi-final':r.lab)}: <b>${S.w[r.w]?esc(S.w[r.w].name):'?'}</b> def. ${S.w[r.w===r.a?r.b:r.a]?esc(S.w[r.w===r.a?r.b:r.a].name):'?'}</div>`).join(''):`Semi-finals: ${esc(S.w[ent[0]].name)} vs ${esc(S.w[ent[3]].name)} · ${esc(S.w[ent[1]].name)} vs ${esc(S.w[ent[2]].name)}`}</div>`}
-  l.push(`<div class="mur"><div class="muh">${D.i} ${esc(D.n)}${t.win?` · 🏆 ${esc(S.w[t.win]?S.w[t.win].name:'')}`:''}</div>${body}<div class="tiny muted" style="margin-top:4px">${esc(D.d)}</div></div>`)}
+  l.push(`<div class="mur"><div class="muh">${D.i} ${esc(D.n)}${t.win?` · 🏆 ${esc(S.w[t.win]?S.w[t.win].name:'')}`:''}</div>${body}<div class="tiny muted" style="margin-top:4px">${esc(D.d)}</div>${pickBtn}</div>`)}
  return l.length?`<div class="card"><div class="h small">Tournaments</div>${l.join('')}</div>`:''}
 
 /* ===================== CASINO GAUNTLET ===================== */
@@ -220,3 +230,34 @@ function offseasonHtml(){const o=S.offs;if(!o)return '';const nm=id=>S.w[id]?esc
  ${call.length?`<div class="mur"><div class="muh">📣 Called up from developmental</div>${call.map(id=>`<div class="tiny">${nm(id)} — debut buzz and a popularity bump next season.</div>`).join('')}</div>`:''}
  <div class="mur"><div class="muh">✍️ Contracts expiring soon</div>${exp.length?exp.map(w=>`<div class="row sb" style="margin:4px 0"><span class="tiny"><b>${esc(w.name)}</b> · ${Math.max(0,w.con)} wk${w.con===1?'':'s'} left · asks ${money(askSal(w))}/wk</span><button class="mini" onclick="resign('${w.id}')">Re-sign ${money(resignCost(w))}</button></div>`).join(''):'<div class="tiny muted">Nobody — your roster is locked up.</div>'}</div>
  ${!ret.length&&!dec.length&&!call.length?'<div class="tiny muted">A quiet offseason: no retirements or call-ups this year.</div>':''}</div>`}
+
+/* ===================== PICK YOUR OWN FIELD ===================== */
+/* the GM chooses the four entrants (and, for a knockout, the seeding) from three weeks out until the first matches air */
+function tourCanPick(k){const D=TOURS[k];if(!D||!S||S.phase!=='season')return false;const first=tourFirst(D);const t=tourState('p',k);
+ return S.week>=first-3&&S.week<=first&&!t.res.length}
+let TP=null;
+function openTourPick(k){if(mpLocked())return;if(!tourCanPick(k))return toast('That field is already set.');const t=tourState('p',k);
+ TP={k,sel:(t.ent||[]).filter(id=>S.w[id]&&S.w[id].own==='p')};renderTourPick()}
+function renderTourPick(){const D=TOURS[TP.k];const ct=D.title&&S.titles[D.title];const pz=D.prize&&S.titles[D.prize];
+ const l=ownList('p').filter(w=>w.g===D.g).sort((a,b)=>(a.inj?1:0)-(b.inj?1:0)||(b.pop+b.ring)-(a.pop+a.ring));
+ const row=w=>{const i=TP.sel.indexOf(w.id);const on=i>=0;const champ=ct&&ct.holders.includes(w.id);const isPz=pz&&pz.holders.includes(w.id);const dis=w.inj||isPz;
+  return `<button class="lr ${dis?'out':''}" style="width:100%;margin:4px 0;${on?'box-shadow:inset 0 0 0 2px var(--gold);background:rgba(232,190,90,.12)':''}" ${dis?'disabled':''} onclick="tpToggle('${w.id}')">${face(w)}<span class="lrn"><b class="${w.al==='f'?'face':'heel'}">${esc(w.name)}</b><span class="muted tiny">${STYLE_N[w.st]} · Pop ${Math.round(w.pop)} · Ring ${Math.round(w.ring)}${champ?` · 🏆 ${esc(ct.n)} champ`:''}${isPz?` · already ${esc(pz.n)} champ`:''}</span></span><span class="lrs">${w.inj?'OUT':on?`<b class="gold">${D.rr?'✓ IN':'#'+(i+1)}</b>`:''}</span></button>`};
+ const ready=TP.sel.length===4;
+ openModal(`<div class="h mhd">${D.i} ${esc(D.n)}</div><p class="muted" style="margin-top:0">Pick four ${D.g==='M'?'men':'women'}. ${D.rr?'Everyone wrestles everyone once (3 points a win); the top two meet in the final.':'Tap them in seeding order: #1 meets #4 and #2 meets #3 in the semi-finals.'}${ct&&ct.holders.length&&S.w[ct.holders[0]].own==='p'?` Leave your ${esc(ct.n)} champion out and the final won't be for the title.`:''}</p>
+ <div class="card"><div class="row sb"><b>${TP.sel.length} of 4 picked</b><button class="mini" onclick="tpAuto()">Auto-pick</button></div>${TP.sel.length?`<div class="tiny" style="margin-top:6px">${TP.sel.map((id,i)=>`${D.rr?'':(i+1)+'. '}${esc(S.w[id].name)}`).join(D.rr?' · ':' &nbsp; ')}</div>`:''}</div>
+ <div>${l.map(row).join('')}</div>
+ <button class="btn" ${ready?'':'disabled'} onclick="tpSave()">Lock in the field</button><button class="btn ghost" onclick="TP=null;closeModal();render()">Cancel</button>`)}
+function tpToggle(id){const i=TP.sel.indexOf(id);if(i>=0)TP.sel.splice(i,1);else if(TP.sel.length<4)TP.sel.push(id);else return toast('Four is a full field — tap someone to take them out first.');renderTourPick()}
+function tpAuto(){const D=TOURS[TP.k];const pz=D.prize&&S.titles[D.prize];const champ=pz&&pz.holders[0];const ct=D.title&&S.titles[D.title];const sel=[];
+ const th=ct&&ct.holders[0]&&S.w[ct.holders[0]];if(th&&th.own==='p'&&!th.inj&&th.g===D.g)sel.push(th.id);
+ ownList('p').filter(w=>w.g===D.g&&!w.inj&&w.id!==champ).sort((x,y)=>(y.pop+y.ring)-(x.pop+x.ring)).forEach(w=>{if(sel.length<4&&!sel.includes(w.id))sel.push(w.id)});TP.sel=sel;renderTourPick()}
+function tpSave(){if(!TP||TP.sel.length!==4)return;const k=TP.k,D=TOURS[k];const t=tourState('p',k);t.ent=TP.sel.slice();t.pick=1;t.lock=S.week>=tourFirst(D)?1:0;TP=null;
+ const msg=[];if(S.week===tourFirst(D)&&S.card&&S.card.p)msg.push(...tourReslot(k));
+ news(`${D.i} ${S.gm} set the ${D.n} field: ${t.ent.map(id=>S.w[id].name).join(', ')}.`);save();closeModal();render();toast(`${D.i} Field locked in.${msg.length?' '+msg.join(' '):''}`)}
+/* the first round is already on this week's card: swap in the new field's matches, freeing anyone they clash with */
+function tourReslot(k){const c=S.card.p;const msg=[];const free=[];c.forEach((sl,i)=>{if(sl.k==='match'&&sl.d&&sl.d.tour&&sl.d.tour.k===k){sl.d=null;free.push(i)}});
+ const ms=tourPairs('p').filter(x=>x.k===k).map(tourMatch);const ids=new Set(ms.flatMap(m=>m.sides.flat()));
+ c.forEach((sl,i)=>{if(!sl.d)return;const who=sl.k==='match'?sl.d.sides.flat():sl.k==='promo'?[sl.d.a,sl.d.b]:sl.k==='chal'?[sl.d.c]:sl.k==='xo'?[sl.d.a]:[];
+  if(sl.k==='match'&&sl.d.tour)return;if(who.some(id=>ids.has(id))){sl.d=null;msg.push(`Segment ${i+1} was cleared — someone in it is now in the tournament.`);if(sl.k==='match')free.push(i)}});
+ const slots=free.concat(c.map((sl,i)=>sl.k==='match'&&!sl.d&&!free.includes(i)?i:-1).filter(i=>i>=0)).sort((a,b)=>b-a);
+ ms.forEach(m=>{const i=slots.shift();if(i!=null)c[i].d=m});return msg}
