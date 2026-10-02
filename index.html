@@ -728,7 +728,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v89';
+const APP_VERSION='v90';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',22:'Forbidden Door',24:'All In'};
 /* v80: themed TV specials between PPVs — hotter crowds, bigger fan swings, better gates */
@@ -1894,6 +1894,8 @@ function chemParts(a,b){const p=[];const sv=STY[a.st][b.st];p.push({t:`${STYLE_N
   if(hasT(x,'story'))p.push({t:`${x.name.split(' ')[0]}'s storytelling`,v:1})});
  if(hasT(a,'dare')&&hasT(b,'dare'))p.push({t:'Daredevil spot-fest',v:2});
  return p}
+/* v90: in a tournament it's about winning, not good vs evil — same-alignment pairings rate like face vs heel */
+function tourAl(a,b){return a.al===b.al?(a.ring>=85&&b.ring>=85?2:4):0}
 function chemOpp(a,b){return chemParts(a,b).reduce((s,x)=>s+x.v,0)}
 function teamParts(a,b){const p=[];const t=inTeam(a.id,b.id);if(t)p.push({t:t>=6?'Established tag team':'Faction mates',v:t});
  const h=(S.chem[key(a.id,b.id)]||0)*.5;if(Math.abs(h)>=.1)p.push({t:'History together',v:Math.round(h*10)/10});
@@ -2054,7 +2056,7 @@ function applyRunIn(m,res,notes){const r=riOn(m);
 function heatPlan(m,ppv){const out=[];const all=m.sides.flat();if(!all.length||!all.every(id=>id&&S.w[id]))return out;const r=rateMatch(m,{ppv,preview:true});const st=r.stars;
  for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j]){const A=S.w[a],B=S.w[b];const h0=heatOf(a,b);
   if(ppv){const dirty=['cheat','dq','co'].includes(finOf(m));if(h0>=1)out.push({A,B,h0,h1:h0>=35?(dirty?Math.round(h0*.75):0):Math.round(h0*.5),kind:'pay',end:h0>=35&&!dirty});continue}
-  let g=3+Math.max(0,st-2.5)*2.5;g*=A.al!==B.al?1.4:.75;if(m.title)g+=3;if(hasT(A,'heatm')||hasT(B,'heatm'))g*=1.3;if(r.rep&&repMatch(a,b))g*=.5;if(boilingOver(a,b))g*=1.5;g*=FIN_HEAT[finOf(m)];if(m.type==='gauntlet')g*=.3;out.push({A,B,h0,h1:addHeat(h0,g),kind:'opp'})}
+  let g=3+Math.max(0,st-2.5)*2.5;g*=A.al!==B.al?1.4:m.tour?1:.75;if(m.title)g+=3;if(hasT(A,'heatm')||hasT(B,'heatm'))g*=1.3;if(r.rep&&repMatch(a,b))g*=.5;if(boilingOver(a,b))g*=1.5;g*=FIN_HEAT[finOf(m)];if(m.type==='gauntlet')g*=.3;out.push({A,B,h0,h1:addHeat(h0,g),kind:'opp'})}
  m.sides.forEach(s=>{for(let i=0;i<s.length;i++)for(let j=i+1;j<s.length;j++){const h0=heatOf(s[i],s[j]);if(h0>=15)out.push({A:S.w[s[i]],B:S.w[s[j]],h0,h1:addHeat(h0,4+Math.max(0,st-2.5)*1.5),kind:'mates'})}});
  const ri=riOn(m);if(ri){const h0=heatOf(ri.X.id,ri.T.id);out.push({A:ri.X,B:ri.T,h0,h1:addHeat(h0,riGain(ri,st)),kind:'ri'})}
  return out}
@@ -2072,7 +2074,7 @@ function rateMatch(m,ctx){ctx=ctx||{};
  const mean=f=>all.reduce((s,w)=>s+f(w),0)/n;
  const ring=mean(w=>w.ring)*.7+Math.max(...all.map(w=>w.ring))*.3;const pop=mean(w=>w.pop);
  let oc=0,on=0,hs=0,tc=0,tn=0;
- for(let i=0;i<sides.length;i++)for(let j=i+1;j<sides.length;j++)for(const a of sides[i])for(const b of sides[j]){oc+=chemOpp(a,b);hs+=heatOf(a.id,b.id);on++}
+ for(let i=0;i<sides.length;i++)for(let j=i+1;j<sides.length;j++)for(const a of sides[i])for(const b of sides[j]){oc+=chemOpp(a,b)+(m.tour?tourAl(a,b):0);hs+=heatOf(a.id,b.id);on++}
  for(const s of sides)for(let i=0;i<s.length;i++)for(let j=i+1;j<s.length;j++){tc+=chemTeam(s[i],s[j]);tn++}
  const chem=(on?oc/on:0)+(tn?tc/tn*.6:0);let heat=on?hs/on:0;
  let pen=0,penWhy='',stale=false,rep=false,repWhy='',boil=null;
@@ -2086,6 +2088,7 @@ function rateMatch(m,ctx){ctx=ctx||{};
  const momB=mean(w=>w.mom||0)*.15;const finB=finScore(m,heat,ctx);score+=momB+finB+(ctx.special?1:0)+(m.tour?1.5:0)+(m.type==='gauntlet'?-2:0)+(m.xo?3:0);
  const toS=x=>clamp(Math.round((x-42)/9*4)/4,.25,5);const lo=toS(score-3),hi=toS(score+3);
  score+=riScore(m)+(boil?2.25:0);{const pr=promiseOf(m);if(pr&&sides.flat().every(w=>w.own==='p'))score+=(pr.kind==='contract'?1.8:pr.ppv?1.4:.9)*(pr.spoiled?.5:1)}
+ if(m.tour)rep=false;
  if(!ctx.preview)score+=R(-3,3);
  return {stars:toS(score),lo:toS(score-3),hi:toS(score+3),heat,chem,pen,penWhy,stale,rep,repWhy,boil,raw:score,momB,finB}}
 /* ===================== FINISHES (v80) =====================
@@ -2143,7 +2146,7 @@ function applyMatch(m,res,ctx,notes){
  for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j]){const k=key(a,b);const A=S.w[a],B=S.w[b];
   const first=!(S.mh[k]&&S.mh[k].length)&&!(S.mhx&&S.mhx[k]&&S.mhx[k].length);
   let g=3+Math.max(0,res.stars-2.5)*2.5;const why=[];
-  if(A.al!==B.al){g*=1.4}else g*=.75;
+  if(A.al!==B.al){g*=1.4}else g*=m.tour?1:.75;
   if(m.title){g+=3;why.push('title on the line')}
   if(m.nc){g+=4;why.push('no clean finish')}
   if(m.ev&&m.ev.notes&&m.ev.notes.length)g+=2;
@@ -2155,7 +2158,7 @@ function applyMatch(m,res,ctx,notes){
   if(m.type==='gauntlet')g*=.3;
   /* 50/50 booking: trading clean wins back and forth cools a feud off */
   if(m.type==='singles'&&!m.nc){if(!S.h2h)S.h2h={};const l=S.h2h[k]||[];const last=l[l.length-1];const wid=win.includes(a)?a:b;
-   if(fin==='clean'&&last&&last.c&&last.x!==wid&&AW()-last.w<=4){g*=.6;if(!said.has(k)&&mine(A.own))notes.push(`⚖️ Trading wins: ${A.name} and ${B.name} keep beating each other — 50/50 booking is cooling this feud off.`)}
+   if(fin==='clean'&&!m.tour&&last&&last.c&&last.x!==wid&&AW()-last.w<=4){g*=.6;if(!said.has(k)&&mine(A.own))notes.push(`⚖️ Trading wins: ${A.name} and ${B.name} keep beating each other — 50/50 booking is cooling this feud off.`)}
    S.h2h[k]=l.concat([{w:AW(),x:wid,c:fin==='clean'?1:0}]).slice(-4)}
   if(!ctx.ppv)bumpHeat(a,b,g,said.has(k)?[]:notes,why.join(', ')||(first?'their first encounter':'the rivalry grows'));
   else{const f=S.fs&&S.fs[k];const h=S.heat[k]||0;
@@ -2170,7 +2173,7 @@ function applyMatch(m,res,ctx,notes){
   if(m.type==='singles'){S.mh[k]=((S.mh[k]||[]).concat([AW()])).slice(-6)}else{if(!S.mhx)S.mhx={};S.mhx[k]=((S.mhx[k]||[]).concat([AW()])).slice(-6)}
   S.chem[k]=clamp((S.chem[k]||0)+(res.stars>=3.75?.5:res.stars<2?-1:.15),-5,6)}
  if(S.w[pa].own==='p'){proxyLinks(m).forEach(x=>{const won=m.sides[m.winner].includes(x.me);const g=bumpHeat(x.me,x.foe,(3+Math.max(0,res.stars-2.5)*2)*(won?1.25:.9),notes,'proxy war');const Me=S.w[x.me],F=S.w[x.foe],V=S.w[x.via];notes.push(`🔗 Proxy war: ${Me.name} ${won?'beats':'battles'} ${F.name}'s ${teamName(x.via,x.foe)} partner ${V.name} — ${Me.name} vs ${F.name} heat +${Math.round(g)} ahead of ${whenTxt(x.pr)}`)});
-  if(m.type==='singles')pendingPromises().forEach(pr=>{if(inMatch(m,pr.a,pr.b)&&!pr.spoiled){pr.spoiled=true;notes.push(`⚠️ You gave away ${S.w[pr.a].name} vs ${S.w[pr.b].name} on free TV before ${whenTxt(pr)} — that payoff will be smaller.`)}})}
+  if(m.type==='singles'&&!m.tour)pendingPromises().forEach(pr=>{if(inMatch(m,pr.a,pr.b)&&!pr.spoiled){pr.spoiled=true;notes.push(`⚠️ You gave away ${S.w[pr.a].name} vs ${S.w[pr.b].name} on free TV before ${whenTxt(pr)} — that payoff will be smaller.`)}})}
  if(hk&&!ctx.ppv&&S.w[pa].own==='p'&&notes.length===n0){const h1=S.heat[hk]||0;const d=Math.round(h1-h0);const A=S.w[pa],B=S.w[pb];
   if(d>=1)notes.push(`📈 ${A.name} vs ${B.name} heat ${Math.round(h0)} → ${Math.round(h1)}${res.rep&&repMatch(pa,pb)?' (🔁 same as last week — half heat)':h0<1?' — something may be starting here':h1>=20?'':' — keep building it'}`)}
  /* feuding partners: forced to team up, the tension builds — and a loss can end in betrayal */
@@ -3012,7 +3015,7 @@ function meChoose(ci){if(!ME||ME.out)return;const it=ME.q[ME.k];const ch=evChoic
 function meNext(){if(!ME)return;if(LQ)return liveNext();ME.out=null;ME.k++;if(ME.k>=ME.q.length)finishLive();else renderME()}
 function slotTags(m,ppv){const t=[];let hb=0;for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j])hb=Math.max(hb,heatOf(a,b));
  if(hb>=1){const tr=heatTier(hb);t.push(`<span class="fdt t${tr+1}">Heat ${Math.round(hb)}${tr>=0?' · '+FTIER[tr][1].replace(/^[🔥 ]+/,''):''}</span>`)}
- const ws=m.sides.map(s=>s.map(id=>S.w[id]).filter(Boolean));const full=ws.filter(s=>s.length);if(full.length>=2){const al=full.map(sideAl);if(!al.includes('x'))t.push(new Set(al).size>1?'<span class="tg good">Face vs Heel</span>':`<span class="tg bad">${al[0]==='f'?'Face vs Face':'Heel vs Heel'}</span>`)}
+ const ws=m.sides.map(s=>s.map(id=>S.w[id]).filter(Boolean));const full=ws.filter(s=>s.length);if(full.length>=2){const al=full.map(sideAl);if(!al.includes('x'))t.push(new Set(al).size>1?'<span class="tg good">Face vs Heel</span>':`<span class="tg ${m.tour?'':'bad'}">${al[0]==='f'?'Face vs Face':'Heel vs Heel'}</span>`)}
  const ex=ws.flat().filter(w=>sta(w)-fatGain(w,m,ppv)<100-FAT_RISK);const td=ws.flat().filter(w=>sta(w)<100-FAT_OK);
  if(td.length)t.push(`<span class="tg bad">Tired: ${td.map(w=>esc(w.name.split(' ').slice(-1)[0])).join(', ')}</span>`);else if(ex.length)t.push(`<span class="tg warnt">${ex.map(w=>esc(w.name.split(' ').slice(-1)[0])).join(', ')} will be spent</span>`);
  {const fl=ws.flat();const bf=[];for(let i=0;i<fl.length;i++)for(let j=i+1;j<fl.length;j++)if(beefOf(fl[i].id,fl[j].id)>=BEEF_MIN)bf.push(fl[i].name.split(' ').slice(-1)[0]+' & '+fl[j].name.split(' ').slice(-1)[0]);if(bf.length)t.push(`<span class="tg bad">Real heat: ${bf.map(esc).join(', ')}</span>`)}
@@ -3072,18 +3075,18 @@ function edFeud(w,si){const opp=ED.m.sides.filter((s,i)=>i!==si).flat().filter(B
 function matchupHtml(m,ppv){const ws=m.sides.map(s=>s.filter(Boolean).map(id=>S.w[id]));const all=ws.flat();if(!all.length)return '';let h='';
  const full=ws.filter(s=>s.length);
  const chip=s=>{const a=sideAl(s);return s.length?`<span class="alchip ${a}">${a==='f'?'😇 Face':a==='h'?'😈 Heel':'Mixed'}${s.length>1&&a!=='x'?'s':''}</span>`:'<span class="alchip e">?</span>'};
- let verdict='';if(full.length>=2){const al=full.map(sideAl);if(al.includes('x'))verdict='<span class="muted">Mixed sides — chemistry varies by pairing</span>';else if(new Set(al).size>1)verdict='<span class="good">Face vs heel · +4 chemistry, heat builds faster</span>';else verdict=`<span class="muted">${al[0]==='f'?'Face vs face':'Heel vs heel'} · no chemistry penalty (elite workers get a dream-match bonus), but heat builds slowly</span>`}
+ let verdict='';if(full.length>=2){const al=full.map(sideAl);if(al.includes('x'))verdict='<span class="muted">Mixed sides — chemistry varies by pairing</span>';else if(new Set(al).size>1)verdict='<span class="good">Face vs heel · +4 chemistry, heat builds faster</span>';else if(m.tour)verdict=`<span class="good">🏆 Tournament · ${al[0]==='f'?'face vs face':'heel vs heel'} is fine here — it rates like face vs heel</span>`;else verdict=`<span class="muted">${al[0]==='f'?'Face vs face':'Heel vs heel'} · no chemistry penalty (elite workers get a dream-match bonus), but heat builds slowly</span>`}
  h+=`<div class="mur"><div class="muh">Alignment</div><div class="row" style="flex-wrap:wrap;gap:6px">${ws.map(chip).join('<span class="muted tiny">vs</span>')}</div>${verdict?`<div class="tiny" style="margin-top:4px">${verdict}</div>`:''}</div>`;
  if(full.length>=2){let best=null;for(let i=0;i<ws.length;i++)for(let j=i+1;j<ws.length;j++)for(const a of ws[i])for(const b of ws[j]){const fi=feudInfo(a.id,b.id);if(fi&&(!best||fi.h>best.fi.h))best={fi,a,b}}
   h+=`<div class="mur"><div class="muh">Feud</div>${best?`<div class="row sb"><span><b>${best.fi.t>=0?FTIER[best.fi.t][1]:'👀 Seeds planted'}</b> · ${alSpan(best.a)} vs ${alSpan(best.b)}</span><span class="fh t${best.fi.t+1}">🔥 ${Math.round(best.fi.h)}</span></div><div class="bar heat"><i style="width:${best.fi.h}%"></i></div><div class="tiny muted" style="margin-top:4px">${esc(feudTag(best.fi))}${best.fi.age?` · running ${best.fi.age} wk${best.fi.age>1?'s':''}`:''}</div>`:'<div class="tiny muted">No feud here yet — a strong face vs heel match can start one.</div>'}</div>`}
- if(full.length>=2&&ws.every(s=>s.length===MT[m.type].per))h+=heatPlanHtml(m,ppv)+feudCheck(ws,ppv);
+ if(full.length>=2&&ws.every(s=>s.length===MT[m.type].per))h+=heatPlanHtml(m,ppv)+(m.tour?'':feudCheck(ws,ppv));
  const rows=all.map(w=>{const v=sta(w),g=fatGain(w,m,ppv),a=Math.max(0,v-g);return {w,v,a}});const low=rows.filter(r=>r.a<100-FAT_RISK);const tired=rows.filter(r=>r.v<100-FAT_OK);
  h+=`<div class="mur"><div class="muh">Stamina after this match</div><div>${rows.map(r=>`<span class="stc ${staCls(r.a)}">${esc(r.w.name.split(' ').slice(-1)[0])} ${r.v}→${r.a}</span>`).join('')}</div>${tired.length?`<div class="tiny bad" style="margin-top:4px">😮‍💨 ${tired.map(r=>esc(r.w.name)).join(', ')} ${tired.length>1?'are':'is'} already tired — this match will rate lower.</div>`:''}${low.length?`<div class="tiny bad" style="margin-top:2px">🔋 ${low.map(r=>esc(r.w.name)).join(', ')} will be exhausted after this — injury risk climbs. A week off restores ${REC_REST}.</div>`:''}${(()=>{const fr=all.filter(w=>durOf(w)<50);return fr.length?`<div class="tiny bad" style="margin-top:2px">🩹 ${fr.map(w=>esc(w.name)+' ('+durWord(durOf(w)).toLowerCase()+')').join(', ')} — higher injury risk, especially in rough stipulations.</div>`:''})()}</div>`;
  return `<div class="mu">${h}</div>`}
 function renderMatchEd(keep){const {m}=ED;const sh=curShow();const av=avForMatch(ED.i);
  const flat=m.sides.flat();const complete=flat.every(Boolean);const dup=complete&&new Set(flat).size!==flat.length;
  const et=complete&&!dup?eligibleTitles(m):[];if(m.title&&!et.includes(m.title))m.title='';
- let proj='';if(complete&&!dup){const r=rateMatch(m,{ppv:sh.ppv,allin:sh.ppv&&S.week===SEASON,preview:true});proj=`<div class="proj"><div class="muted">Projected rating</div><div class="stars big">${stars(r.lo)} – ${stars(r.hi)}</div><div class="muted">Chemistry: ${chemWord(r.chem)} · Feud heat: ${Math.round(r.heat)}</div>${r.rep?`<div class="err" style="margin-top:6px">🔁 Again? ${esc(r.repWhy)} met last week — this builds half heat.</div>`:''}${r.boil?`<div class="good" style="margin-top:6px">💥 Boiling over: ${esc(r.boil)} have only been talking — getting physical earns +¼★ and +50% heat.</div>`:''}${r.stale?'<div class="err" style="margin-top:6px">🥱 This feud is stale and cooling fast — pay it off at a PPV.</div>':''}${(()=>{const pr=promiseOf(m);return pr?`<div class="gold" style="margin-top:6px">${pr.kind==='contract'?'📜 Contracted match — payoff bonus':'🎯 Promised match — delivering it pays off'}${pr.spoiled?' (reduced — it was given away on TV)':''}</div>`:''})()}${proxyLinks(m).map(x=>`<div class="good" style="margin-top:6px">🔗 Proxy war: builds ${esc(S.w[x.me].name)} vs ${esc(S.w[x.foe].name)} for ${esc(whenTxt(x.pr))}</div>`).join('')}${m.type==='singles'?pendingPromises().filter(pr=>inMatch(m,pr.a,pr.b)&&!pr.spoiled).map(pr=>`<div class="err" style="margin-top:6px">⚠️ This is the match promised for ${esc(whenTxt(pr))}. Running it now gives it away and shrinks the payoff.</div>`).join(''):''}${whyMatch(m,sh)}</div>`}
+ let proj='';if(complete&&!dup){const r=rateMatch(m,{ppv:sh.ppv,allin:sh.ppv&&S.week===SEASON,preview:true});proj=`<div class="proj"><div class="muted">Projected rating</div><div class="stars big">${stars(r.lo)} – ${stars(r.hi)}</div><div class="muted">Chemistry: ${chemWord(r.chem)} · Feud heat: ${Math.round(r.heat)}</div>${r.rep?`<div class="err" style="margin-top:6px">🔁 Again? ${esc(r.repWhy)} met last week — this builds half heat.</div>`:''}${r.boil?`<div class="good" style="margin-top:6px">💥 Boiling over: ${esc(r.boil)} have only been talking — getting physical earns +¼★ and +50% heat.</div>`:''}${r.stale?'<div class="err" style="margin-top:6px">🥱 This feud is stale and cooling fast — pay it off at a PPV.</div>':''}${(()=>{const pr=promiseOf(m);return pr?`<div class="gold" style="margin-top:6px">${pr.kind==='contract'?'📜 Contracted match — payoff bonus':'🎯 Promised match — delivering it pays off'}${pr.spoiled?' (reduced — it was given away on TV)':''}</div>`:''})()}${proxyLinks(m).map(x=>`<div class="good" style="margin-top:6px">🔗 Proxy war: builds ${esc(S.w[x.me].name)} vs ${esc(S.w[x.foe].name)} for ${esc(whenTxt(x.pr))}</div>`).join('')}${m.type==='singles'&&!m.tour?pendingPromises().filter(pr=>inMatch(m,pr.a,pr.b)&&!pr.spoiled).map(pr=>`<div class="err" style="margin-top:6px">⚠️ This is the match promised for ${esc(whenTxt(pr))}. Running it now gives it away and shrinks the payoff.</div>`).join(''):''}${whyMatch(m,sh)}</div>`}
  const per=MT[m.type].per;
  const slot=(si,pi)=>{const w=m.sides[si][pi]&&S.w[m.sides[si][pi]];const at=`data-dg="ed:${si}:${pi}" data-dp="ed:${si}:${pi}"`;return w?wcard(w,{on:`edPick(${si},${pi})`,info:mInfo(w,si),feud:edFeud(w,si),gain:fatGain(w,m,sh.ppv),attr:at}):emptySlot(`edPick(${si},${pi})`,null,`data-dp="ed:${si}:${pi}"`)};
  const crown=si=>`<button class="crown ${m.winner===si?'on':''}" onclick="ED.m.winner=${si};renderMatchEd(true)">👑 ${m.winner===si?'Winner':'Make winner'}</button>`;
@@ -3105,7 +3108,7 @@ function whyMatch(m,sh){const ws=m.sides.map(s=>s.map(id=>S.w[id]));let h='';con
  for(let i=0;i<ws.length;i++)for(let j=i+1;j<ws.length;j++)for(const a of ws[i])for(const b of ws[j])pairs.push([a,b]);
  pairs.slice(0,4).forEach(([a,b])=>{h+=`<div class="tiny muted" style="margin-top:6px"><b>${esc(a.name)} × ${esc(b.name)}</b></div><div>${partsHtml(chemParts(a,b))}</div>`});
  ws.forEach(s=>{for(let i=0;i<s.length;i++)for(let j=i+1;j<s.length;j++){const p=teamParts(s[i],s[j]);if(p.length)h+=`<div class="tiny muted" style="margin-top:6px"><b>${esc(s[i].name)} & ${esc(s[j].name)}</b> (partners)</div><div>${partsHtml(p)}</div>`}});
- const multi=m.type==='triple'||m.type==='four';const tb=[];ws.flat().forEach(w=>{if(sh.ppv&&hasT(w,'bigm'))tb.push({t:`🏟️ ${w.name} Big Match`,v:3});if((multi||(STIPS[m.stip||'std']||{}).dare)&&hasT(w,'dare'))tb.push({t:`🪂 ${w.name} Daredevil`,v:4})});
+ const multi=m.type==='triple'||m.type==='four';const tb=[];if(m.tour){let tv=0;for(let i=0;i<ws.length;i++)for(let j=i+1;j<ws.length;j++)for(const a of ws[i])for(const b of ws[j])tv=Math.max(tv,tourAl(a,b));if(tv)tb.push({t:'🏆 Tournament — alignment doesn\'t matter',v:tv})}ws.flat().forEach(w=>{if(sh.ppv&&hasT(w,'bigm'))tb.push({t:`🏟️ ${w.name} Big Match`,v:3});if((multi||(STIPS[m.stip||'std']||{}).dare)&&hasT(w,'dare'))tb.push({t:`🪂 ${w.name} Daredevil`,v:4})});
  if(tb.length)h+=`<div class="tiny muted" style="margin-top:6px"><b>Trait boosts</b></div><div>${partsHtml(tb)}</div>`;
  const rr=rateMatch(m,{ppv:sh.ppv,preview:true});if(rr.boil)h+=`<div class="tiny muted" style="margin-top:6px"><b>Bonus</b></div><div><span class="why up">💥 Boiling over +¼★</span></div>`;
  if(rr.rep)h+=`<div class="tiny muted" style="margin-top:6px"><b>Repetition</b></div><div><span class="why dn">🔁 Same as last week — half heat</span></div>`;
@@ -3303,7 +3306,7 @@ const HOWTO=`<p><b>Match ratings</b> blend in-ring skill (the best worker in the
 <p><b>Title reigns:</b> every successful defense adds to a champion's credibility and the title's prestige, and the wrestler who ends a long reign gets a bigger boost. Swap a belt again within 3 weeks and it's a hot potato: the title loses 8 prestige and the new champ gets little out of it.</p>
 <p><b>Card position:</b> main-eventing boosts morale (and popularity after a great match). Top stars (85+ popularity) who go 8 weeks without a main event start grumbling backstage and lose morale.</p>
 <p><b>The calendar:</b> 7 PPVs — WrestleDream, Full Gear, Worlds End, Revolution, Double or Nothing, Forbidden Door and All In — plus 📺 <b>TV specials</b> (Fright Night, Winter Is Coming, Grand Slam, Spring BreakThru) with hotter crowds, 50% bigger fan swings and better gates. <b>Forbidden Door</b> is a crossover PPV: alongside your card you can sign up to two dream matches between one of your stars and one of the rival's. Neither GM controls both sides, so the winner is decided in the ring, and the winner's brand earns extra fans.</p>
-<p><b>Tournaments</b> lock onto your card — you decide who advances. From three weeks out until the first matches air, tap <b>Pick your field</b> on the Home screen to choose your four entrants (and the seeding for the Owen Hart Cups); if you don't, your four best are entered automatically. ♾️ The <b>Continental Classic</b> (weeks 8–10) is a round robin for your four best men (3 points a win, no run-ins), and the top two meet at Worlds End for the Continental title if your brand holds it or it's vacant. 🏆 The <b>Owen Hart Cups</b> (men's semi-finals week 17, women's week 18, both finals at Double or Nothing) send the winners to All In with a World title shot — against your champion, or as your title challenge if the rival holds the belt. Injured entrants forfeit.</p>
+<p><b>Tournaments</b> lock onto your card — you decide who advances. Tournament rules are about winning, not good vs evil: face vs face and heel vs heel pairings rate and build heat like face vs heel, and the repetition rule, trading-wins cooling, feud-check warnings and promised-match giveaways don't apply to bracket matches. From three weeks out until the first matches air, tap <b>Pick your field</b> on the Home screen to choose your four entrants (and the seeding for the Owen Hart Cups); if you don't, your four best are entered automatically. ♾️ The <b>Continental Classic</b> (weeks 8–10) is a round robin for your four best men (3 points a win, no run-ins), and the top two meet at Worlds End for the Continental title if your brand holds it or it's vacant. 🏆 The <b>Owen Hart Cups</b> (men's semi-finals week 17, women's week 18, both finals at Double or Nothing) send the winners to All In with a World title shot — against your champion, or as your title challenge if the rival holds the belt. Injured entrants forfeit.</p>
 <p><b>Casino Gauntlet:</b> a new match type for six. It rates a little lower than a straight wrestling match, but the winner earns a title shot at the next PPV against your top champion in their division.</p>
 <p><b>Network mandates:</b> after each PPV the TV network asks for something specific by the next one — a 4★ main event, two women's matches on one show, a new champion, a debut and so on. Deliver for a cash and fan bonus; miss it and you lose 5K fans. Check the Home or Book screen for your current one.</p>
 <p><b>🎯 Weekly goals &amp; 📣 crowd chants:</b> each week the Book screen gives you one small goal (hit it for a little cash and 3K fans — no penalty for missing it), and the crowd starts chanting for someone on your roster. Book them in a match or promo that week and their segment gets +¼★, they gain popularity and you get 2K fans.</p>
