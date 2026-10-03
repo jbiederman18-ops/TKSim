@@ -400,3 +400,6 @@ function briefResign(id){resign(id);openBrief()}
 /* show it once per week, the first time Home is on screen with nothing else open */
 function briefAuto(){if(!S||S.phase!=='season'||tab!=='home'||(typeof TV!=='undefined'&&TV)||briefSeen())return;if(typeof ME!=='undefined'&&ME||typeof PS!=='undefined'&&PS||typeof LQ!=='undefined'&&LQ)return;
  if(ON()&&!myTurn())return;const m=document.getElementById('modal');if(!m||!m.classList.contains('hidden'))return;setTimeout(()=>{const m2=document.getElementById('modal');if(S&&tab==='home'&&m2&&m2.classList.contains('hidden')&&!briefSeen())openBrief()},350)}
+
+/* v111: star ratings were recalibrated (a solid show is ~3½★ now, 5★ is rare) and fan growth slows as a company gets big */
+function starMigrate(st){if(!st||!st.w||st.v111)return;st.v111=1;if(st.phase!=='season'&&st.phase!=='over')return;const S0=S;S=st;try{news('📏 Star ratings have been recalibrated: a solid show now rates about 3½★, a great one 4★ and up, and 5★ is rare. Fan growth also slows as your company gets bigger.')}finally{S=S0}}

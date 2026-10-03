@@ -783,7 +783,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v110';
+const APP_VERSION='v111';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',22:'Forbidden Door',24:'All In'};
 /* v80: themed TV specials between PPVs — hotter crowds, bigger fan swings, better gates */
@@ -1875,11 +1875,13 @@ function econCap(){if(!S.cap)S.cap=capFor();return S.cap}
  Tickets follow your buzz (last 3 shows), merch follows your stars and tonight's show, ads follow tonight's rating.
  A competent 3½★ show roughly covers a full payroll; great shows make real money and bad ones lose it. */
 const fanF=f=>.6+.4*Math.sqrt(Math.max(50000,f)/250000);
-function tvIncome(f){return Math.round(econCap()*.58*fanF(f))}
+/* v111: the bigger you are, the harder it is to grow — a hit show adds fewer new fans to a company that already has a million */
+const fanGrowF=f=>clamp(Math.pow(250000/Math.max(250000,f),.75),.3,1);
+function tvIncome(f){return Math.round(econCap()*.64*fanF(f))}
 /* the TV deal is signed for a season at a time: your fanbase when the season starts sets it, and it's renegotiated next season */
 function tvDeal(b){const d=S.tvdeal&&S.tvdeal[b];return d!=null?d:tvIncome(S.fans[b])}
 /* a bigger company costs more to run: bigger arenas, more crew, more travel */
-function opsCost(b){return Math.round(econCap()*.3*Math.max(0,fanF(S.fans[b]||0)-1))}
+function opsCost(b){return Math.round(econCap()*.22*Math.max(0,fanF(S.fans[b]||0)-1))}
 /* PPV buys: bigger fanbases buy more, and better shows sell a lot more */
 function ppvGross(f,r,allin){return Math.round(econCap()*.95*fanF(f)*(.15+.12*r)*(allin?1.5:1))}
 function buzzOf(b){const h=(S.history||[]).filter(x=>x[b]!=null).slice(-3);return h.length?h.reduce((a,x)=>a+x[b],0)/h.length:3}
@@ -2001,7 +2003,7 @@ function sgn(n){n=Math.round(n*10)/10;return (n>0?'+':'')+n}
 
 /* ===================== SETUP ===================== */
 function newGame(gm,rival,diff,online){
- S={v:1,nid:1,season:1,week:1,showIdx:0,phase:'draft',gm,rival,diff,w:{},titles:{},teams:[],heat:{},chem:{},touched:[],fans:{p:250000,ai:250000},money:{p:1000,ai:1000},news:[],last:null,history:[],hourWins:{p:0,ai:0},best:null,training:[],card:null,draft:null,econ:1};
+ S={v:1,nid:1,season:1,week:1,showIdx:0,phase:'draft',gm,rival,diff,w:{},titles:{},teams:[],heat:{},chem:{},touched:[],fans:{p:250000,ai:250000},money:{p:1000,ai:1000},news:[],last:null,history:[],hourWins:{p:0,ai:0},best:null,training:[],card:null,draft:null,econ:1,v111:1};
  RAW.trim().split('\n').forEach(l=>{const x=mkW(l.trim());S.w[x.id]=x});
  /* every title starts vacant: the first champions are crowned on TV (the real-life holders are ignored) */
  TITLES.forEach(([id,n,kind,g,h,pr])=>S.titles[id]={id,n,kind,g,holders:[],prestige:pr,since:0,last:0,inaug:1});
@@ -2183,7 +2185,7 @@ function rateMatch(m,ctx){ctx=ctx||{};
  let score=ring*.5+pop*.2+chem+traitB+heat*(ctx.ppv?.25:.15)+stipB+titleB+typeB-mean(w=>Math.max(0,w.fat-FAT_OK))*.08+(ctx.ppv?4:0)+(ctx.allin?4:0);
  /* v80: hot streaks get the crowd invested, the finish shapes how the match lands, and specials/tournaments raise the stakes */
  const momB=mean(w=>w.mom||0)*.15;const finB=finScore(m,heat,ctx);score+=momB+finB+(ctx.special?1:0)+(m.tour?1.5:0)+(m.type==='gauntlet'?-2:0)+(m.xo?3:0);
- const toS=x=>clamp(Math.round((x-42)/9*4)/4,.25,5);const lo=toS(score-3),hi=toS(score+3);
+ const toS=x=>clamp(Math.round(uRaw(x)*4)/4,.25,5);const lo=toS(score-3),hi=toS(score+3);
  score+=riScore(m)+(boil?2.25:0);{const pr=promiseOf(m);if(pr&&sides.flat().every(w=>w.own==='p'))score+=(pr.kind==='contract'?1.8:pr.ppv?1.4:.9)*(pr.spoiled?.5:1)}
  if(m.tour)rep=false;
  if(!ctx.preview)score+=R(-3,3);
@@ -2192,7 +2194,11 @@ function rateMatch(m,ctx){ctx=ctx||{};
  A match can't show more than 5★, but a hot PPV feud often rates well past it. The extra isn't wasted any more:
  everything over 5★ becomes an "instant classic" bonus — fans, popularity, title prestige, and PPV buys / merch. */
 const OVF_MAX=2;
-const uStars=raw=>Math.round((raw-42)/9*4)/4;
+/* v111 star scale: a solid card lands around 3½★, a great one 4★+, and 5★ is rare (about 1 match in 20).
+ It used to be (raw-42)/9, which put almost a third of a decent card at 5★ and left great booking no room to stand out. */
+const STAR_BASE=43,STAR_PER=9.5;
+const uRaw=raw=>(raw-STAR_BASE)/STAR_PER;
+const uStars=raw=>Math.round(uRaw(raw)*4)/4;
 function ovfOf(u){return clamp((u||0)-5,0,OVF_MAX)}
 function ovfWord(o){return o>=1.5?'All-time classic':o>=.75?'Instant classic':'Match of the Night material'}
 /* v105: the fan bonus is small and capped per show — the show rating already counts those stars */
@@ -2379,7 +2385,9 @@ function roll(c,ctx,st){const ok=Math.random()<chance(c,ctx);const d=c.d||0;
  else{st.score-=1;st.heat+=(c.h||0)*.3;st.hx+=(c.hx||0)*.3;st.pop-=1}
  const text=fill(ok?(c.ok||pick(DEF_OK)):(c.no||pick(DEF_NO)),ctx);st.log.push(fill(c.t,ctx)+' — '+text);return {success:ok,text}}
 function finalizePromo(p,ctx,st){const A=ctx.A,B=ctx.B;if(p.type==='turn')st.turn=true;const mm=w=>w.mic+(hasT(w,'mouth')?8:0);const mic=B?mm(A)*.6+mm(B)*.4:mm(A);const pop=B?(A.pop+B.pop)/2:A.pop;
- const s=(mic*.45+pop*.3)/20+st.score*.35+Math.min(.75,st.heat/40);
+ let s=(mic*.45+pop*.3)/20+st.score*.35+Math.min(.75,st.heat/40);
+ /* v111: the same scale as matches — a good promo is 3½★, and only the very best reach 5★ */
+ s-=Math.min(1.1,Math.max(0,(5.3-s)*1.5));
  p.res={stars:clamp(Math.round(s*4)/4,.5,5),heat:Math.round(st.heat),hx:Math.round(st.hx),x:ctx.X&&st.hx>0?ctx.X.id:null,myst:ctx.MYST||null,pop:Math.round(st.pop*10)/10,chem:st.chem,turn:st.turn,log:st.log,chal:!!st.chal,stip:!!st.stip};p.played=true;
  if(st.turn&&turnWhip(A)){p.res.whip=turnWhip(A);p.res.stars=clamp(p.res.stars-.75,.5,5);p.res.pop=Math.round((p.res.pop-4)*10)/10}
  const f=promoFatigue(p);if(f.rep){p.res.rep=true;p.res.heat=Math.round(p.res.heat*f.boost)}else if(f.boost>1){p.res.boost=Math.round((f.boost-1)*100);p.res.streak=f.streak;if(f.bf)p.res.bf=f.bf;p.res.heat=Math.round(p.res.heat*f.boost)}if(f.boil){p.res.boil=true;p.res.stars=clamp(p.res.stars+.25,.5,5)}}
@@ -2553,7 +2561,7 @@ function airPair(){
  order.forEach(b=>{const r=rt[b];let d;const o=b==='p'?'ai':'p';
   if(show.ppv){d=Math.round((r-2.8)*20000*(ctx.allin?2:1))+extra[b]}
   else{d=Math.round((r-2.5)*12000+(r>=4?6000:0));if(rt[o]!=null&&r>rt[o])d+=4000;if(show.special)d=Math.round(d*1.5);d+=extra[b]||0}
-  d+=debF[b]||0;
+  d+=debF[b]||0;if(d>0)d=Math.round(d*fanGrowF(S.fans[b]));
   const before=S.fans[b];S.fans[b]=Math.max(50000,S.fans[b]+d);out.fans[b]=S.fans[b]-before;out.ratings[b]=r});
  if(!show.ppv&&!bye){const hw=rt.p>=rt.ai?'p':'ai';S.hourWins[hw]=(S.hourWins[hw]||0)+1;out.hourWin=hw}
  /* tickets, merch and ads follow the show; sell-outs cash in and cost fans */
@@ -3432,7 +3440,7 @@ const HOWTO=`<p><b>Offers &amp; contracts:</b> free agents with 55+ popularity w
 <p><b>Ending feuds:</b> book a hot feud (35+ heat) against each other on a PPV to <b>blow it off</b> — the feud is over, both wrestlers get a morale boost and the winner gets the last word (a no-contest leaves it unsettled). A feud that isn't working can be dropped early: tap it and choose <b>Cut your losses</b>. It ends at once, but you lose fans (fewer if it had already gone stale), both wrestlers lose a little morale and popularity, and any match you promised between them is cancelled.</p>
 <p><b>Building feuds inside matches:</b> everyone on opposite sides of a match builds heat with each other, so tag and multi-person matches grow several feuds at once (the match editor shows exactly how much). Put two feuding wrestlers on the <b>same side</b> and the tension builds — lose, and one may betray the other. Book a <b>run-in</b> to involve someone who isn't in the match: cost them the match (the most heat, but a screwy finish in a normal-rules match unless the feud is already hot), attack them after the bell, or make the save. Doing the same run-in two weeks running builds half heat.</p>
 <p><b>Stipulations</b> are modelled on real AEW match types — from Submission and 2 Out of 3 Falls to Lights Out, Texas Death, Anarchy in the Arena and Blood &amp; Guts. Each suits certain styles, costs money, and wears wrestlers out. The brutal ones pay off big when the feud is red-hot (heat 50+); without a real feud behind them they simply don't add a bonus. Some are PPV only, and the faction wars need Trios or 8-Man Tag.</p>
-<p><b>Money</b> supports the booking — it doesn't replace it. The draft has a <b>salary cap</b>: stars cost far more than the midcard, so you can't draft an all-star roster (anything left under the cap goes into your bank). Every wrestler's salary is locked in on their contract until they re-sign — and a wrestler who got more popular asks for a raise. Money comes from four places: a <b>TV deal</b> signed for a season at a time (your fanbase at the start of the season sets it, and it's renegotiated each new season), <b>tickets</b> that follow your buzz from recent shows, <b>merch</b> that follows your stars and the show, and <b>ads</b> that follow the rating. PPVs add buys and a bigger gate. A bigger company also costs more to run: arena &amp; crew costs and PPV venue bills grow with your fanbase. <b>Great shows pay</b>: a 3½★ week roughly covers a full payroll, 4½★ weeks make real money and bad shows lose it. Need cash fast? <b>Sell out</b> — sponsored segments, pricier tickets, merch blitzes, extra ad breaks or a sportsbook sponsor — but each one costs fans, and doing it often makes fans angrier. You can spend on <b>production</b> (a small bump to the show rating) and <b>stipulations</b>, and every PPV has a venue bill. Fall into the red and morale drops; stay there 3 weeks and wrestlers start walking out.</p>
+<p><b>Money</b> supports the booking — it doesn't replace it. The draft has a <b>salary cap</b>: stars cost far more than the midcard, so you can't draft an all-star roster (anything left under the cap goes into your bank). Every wrestler's salary is locked in on their contract until they re-sign — and a wrestler who got more popular asks for a raise. Money comes from four places: a <b>TV deal</b> signed for a season at a time (your fanbase at the start of the season sets it, and it's renegotiated each new season), <b>tickets</b> that follow your buzz from recent shows, <b>merch</b> that follows your stars and the show, and <b>ads</b> that follow the rating. PPVs add buys and a bigger gate. A bigger company also costs more to run: arena &amp; crew costs and PPV venue bills grow with your fanbase. <b>Great shows pay</b>: a 3½★ week roughly covers a full payroll, 4★+ weeks make real money and bad shows lose it. Need cash fast? <b>Sell out</b> — sponsored segments, pricier tickets, merch blitzes, extra ad breaks or a sportsbook sponsor — but each one costs fans, and doing it often makes fans angrier. You can spend on <b>production</b> (a small bump to the show rating) and <b>stipulations</b>, and every PPV has a venue bill. Fall into the red and morale drops; stay there 3 weeks and wrestlers start walking out.</p>
 <p><b>Developing talent:</b> the draft is real wrestlers only. During the season, open <b>Roster → Free agents</b> and scroll to <b>Prospects</b> to hand-pick one — Prospect, Blue-Chip or Generational — on a cheap 52-week developmental deal. The board refreshes every few weeks, and the rival scouts too (more often, and better, on Hard). You can still design your own prospect or star; they wait in free agency until you sign them.</p>
 <p><b>Free agency</b> rotates: after the draft only about 8 unsigned wrestlers are on the market at once, each for a few weeks, with new names arriving every week (and anyone released or out of contract going straight onto it). The rival signs from the same market.</p>
 <p><b>Created wrestlers</b> go into the free-agent pool and are always available to you. Draft them or sign them any week from Free Agents; the rival never signs them. Rookies carry a one-time development fee when signed (free if drafted).</p>
@@ -4010,7 +4018,7 @@ if(typeof document!=='undefined'&&document.getElementById('app')){
  {const q=new URLSearchParams(location.search).get('game');BOOT_Q=!!q;if(q&&mpGames().some(g=>g.code===q))LS.set('tksim_active',JSON.stringify(mpGames().find(g=>g.code===q)));
   if(q)history.replaceState(null,'',location.pathname);
   try{const a=JSON.parse(LS.get('tksim_active')||'null');const g=a&&LS.get('tksim_game_'+a.code);if(g){LMP={code:a.code,me:a.me,key:a.key};S=JSON.parse(g)}}catch(e){LMP=null}}
- if(!LMP)S=load();if(S&&(!S.w||!S.phase))S=null;dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);seasonMigrate(S);if(!ON())showMigrate();if(S)saveLocal();
+ if(!LMP)S=load();if(S&&(!S.w||!S.phase))S=null;dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);seasonMigrate(S);starMigrate(S);if(!ON())showMigrate();if(S)saveLocal();
  tvBoot();loadImg();
  window.addEventListener('tko-ready',()=>{mpConnect();tvConnect();cloudCheck();render()});if(window.TKO)setTimeout(()=>{mpConnect();tvConnect();cloudCheck()},0);
  let lastCk=Date.now();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&TV)partyWake();if(document.visibilityState==='visible'&&Date.now()-lastCk>20000){lastCk=Date.now();cloudCheck();if(ON())mpConnect()}else if(document.visibilityState==='hidden')flush()});
