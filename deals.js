@@ -12,7 +12,11 @@
      with it to lose and they'll fight the finish — about half the time they go over anyway.
    Loaded before the main script; everything here only runs once a game is going. */
 'use strict';
-const OFFER_POP=55;
+const OFFER_POP=55,CC_MAX=3,CC_WEEKS=12;
+const ccOn=w=>!!(w&&w.deal&&w.deal.cc&&(w.deal.cc===1||w.deal.cc>=AW()));
+function ccCount(b){return ownList(b).filter(ccOn).length}
+/* a brand can only have so many people with a say in their finishes */
+function ccRoom(w,b){return ccOn(w)&&w.own===b||ccCount(b)<CC_MAX}
 const PERKS={
  cc:{i:'🎬',n:'Creative control',d:"They won't agree to lose. Book them to lose and they'll fight the finish.",v:.22},
  me:{i:'⭐',n:'Main event spots',d:'The main event in 2 of their first 4 shows.',v:.14},
@@ -26,7 +30,7 @@ let DL=null,GL_OK=false,DEAL_OUT=[];
 /* ---------- what a wrestler wants (the same for everyone, every time) ---------- */
 function dealWants(w){const r=seeded(w.id+'|wants');const champ=typeof isChamp==='function'&&isChamp(w.id);
  return {money:.75+r()*.5+(w.pop<55?.2:0),
-  cc:(w.pop>=82?1.5:w.pop>=72?1.05:w.pop>=62?.55:.25)+r()*.5-.2,
+  cc:(w.pop>=85?1.4:w.pop>=78?.8:.3)+r()*.5-.2,
   me:(w.pop>=88?.8:w.pop>=62?1.3:.7)+r()*.4-.2,
   shot:(champ?.3:w.pop>=58?1.25:.7)+r()*.4-.2,
   ppv:(hasT(w,'bigm')?1.3:.8)+r()*.4-.2}}
@@ -43,32 +47,37 @@ const dealWord=u=>u<.9?['bad','Not interested']:u<1?['warnt','Lukewarm']:u<1.15?
 function dealSum(o){return `${money(o.bonus)} bonus · ${money(o.sal)}/wk${(o.perks||[]).length?' · '+o.perks.map(k=>PERKS[k].i+' '+PERKS[k].n).join(' · '):''}`}
 
 /* ---------- contract terms ---------- */
-function dealShotBy(){for(let x=S.week+2;x<=SEASON;x++)if(PPVS[x])return (S.season-1)*SEASON+x;return (S.season-1)*SEASON+SEASON}
+function dealShotBy(){for(let x=S.week+3;x<=SEASON;x++)if(PPVS[x])return (S.season-1)*SEASON+x;return (S.season-1)*SEASON+SEASON}
 function dealTerms(w,perks){const d={};(perks||[]).forEach(k=>{
-  if(k==='cc')d.cc=1;else if(k==='me')d.me={need:2,got:0,by:AW()+3};else if(k==='shot')d.shot={by:dealShotBy()};else if(k==='ppv')d.ppv=S.season});
+  if(k==='cc')d.cc=AW()+CC_WEEKS;else if(k==='me')d.me={need:2,got:0,by:AW()+3};else if(k==='shot')d.shot={by:dealShotBy()};else if(k==='ppv')d.ppv=S.season});
  if(Object.keys(d).length)w.deal=d;else delete w.deal}
-function dealActive(w){const d=w&&w.deal;if(!d)return [];const l=[];if(d.cc)l.push('cc');if(d.me)l.push('me');if(d.shot)l.push('shot');if(d.ppv===S.season)l.push('ppv');return l}
+function dealActive(w){const d=w&&w.deal;if(!d)return [];const l=[];if(ccOn(w))l.push('cc');if(d.me)l.push('me');if(d.shot)l.push('shot');if(d.ppv===S.season)l.push('ppv');return l}
 const wkOf=aw=>aw-(S.season-1)*SEASON;
 function dealTermTxt(w,k){const d=w.deal||{};
- if(k==='cc')return '🎬 Creative control — won\'t agree to lose';
+ if(k==='cc')return `🎬 Creative control — won't agree to lose${d.cc>1?' (until week '+wkOf(d.cc)+')':''}`;
  if(k==='me')return `⭐ Main event ${d.me.need-d.me.got} more time${d.me.need-d.me.got>1?'s':''} by week ${wkOf(d.me.by)}`;
  if(k==='shot'){const wk=wkOf(d.shot.by);return `🏆 A title match by ${PPVS[wk]?esc(PPVS[wk])+' (week '+wk+')':'week '+wk}`}
  return '📺 On every PPV card this season'}
 function breach(w,b,what,notes){w.mor=clamp(w.mor-15,0,100);w.trust=(w.trust||0)+1;
  const n=`💔 ${w.name}: ${what} — that was in the contract (morale −15${w.trust>=2?', and they\'re losing trust in '+nameOf(b):''}).`;notes.push(n);if(b==='p'||ON())news(n);
  if(w.trust>=3&&Math.random()<.5)leave(w,`😤 ${w.name} walked out on ${nameOf(b)} after one broken promise too many.`,notes)}
+/* a promise kept: they're happier, and a little trust comes back */
+function kept(w,what,notes){w.mor=clamp(w.mor+6,0,100);if(w.trust)w.trust--;notes.push(`✅ ${w.name} ${what} (morale +6).`)}
 /* after a brand's show airs: who main-evented, who had a title match, who was on the card */
 function dealAir(b,info,show,notes){if(!(b==='p'||ON()))return;const now=AW();
  ownList(b).forEach(w=>{const d=w.deal;if(!d)return;
-  if(d.me){if(info.me.includes(w.id))d.me.got++;if(d.me.got>=d.me.need){notes.push(`✅ ${w.name} got the main event spots they were promised.`);delete d.me}else if(now>=d.me.by&&w.own===b){delete d.me;breach(w,b,'never got the main event spots they were promised',notes)}}
+  if(d.cc&&d.cc!==1&&d.cc<now+1&&w.own===b){delete d.cc;notes.push(`🎬 ${w.name}'s creative control clause has run out.`)}
+  /* hurt at the deadline? that's nobody's fault: the clock waits until they're back */
+  if(w.inj){if(d.me&&now>=d.me.by)d.me.by=now+w.inj+2;if(d.shot&&now>=d.shot.by)d.shot.by=now+w.inj+3}
+  if(d.me){if(info.me.includes(w.id))d.me.got++;if(d.me.got>=d.me.need){kept(w,'got the main event spots they were promised',notes);delete d.me}else if(now>=d.me.by&&w.own===b){delete d.me;breach(w,b,'never got the main event spots they were promised',notes)}}
   if(w.own!==b)return;
-  if(d.shot){if(info.ttl.includes(w.id)){notes.push(`✅ ${w.name} got the title shot in their contract.`);delete d.shot}else if(now>=d.shot.by){delete d.shot;breach(w,b,'no title shot by the deadline',notes)}}
+  if(d.shot){if(info.ttl.includes(w.id)){kept(w,'got the title shot in their contract',notes);delete d.shot}else if(now>=d.shot.by){delete d.shot;breach(w,b,'no title shot by the deadline',notes)}}
   if(w.own!==b)return;
   if(d.ppv===S.season&&show.ppv&&!w.inj&&!info.on.includes(w.id))breach(w,b,`left off the ${show.name} card`,notes);
-  if(w.own===b&&!d.cc&&!d.me&&!d.shot&&d.ppv!==S.season)delete w.deal})}
+  if(w.own===b&&!ccOn(w)&&!d.me&&!d.shot&&d.ppv!==S.season)delete w.deal})}
 
 /* ---------- creative control ---------- */
-function ccLosers(m,b){if(!m||!m.sides||m.nc||m.type==='open'&&!(m.open&&m.open.who))return [];return m.sides.flatMap((s,i)=>i===m.winner?[]:s).map(id=>S.w[id]).filter(w=>w&&w.own===b&&w.deal&&w.deal.cc&&!w.inj)}
+function ccLosers(m,b){if(!m||!m.sides||m.nc||m.type==='open'&&!(m.open&&m.open.who))return [];return m.sides.flatMap((s,i)=>i===m.winner?[]:s).map(id=>S.w[id]).filter(w=>w&&w.own===b&&ccOn(w)&&!w.inj)}
 function ccTag(m){const l=ccLosers(m,'p');return l.length?`<span class="tg bad">🎬 ${esc(l.map(w=>w.name.split(' ').slice(-1)[0]).join(', '))} won't agree to lose</span>`:''}
 /* at air time: they either take over the finish or do the job under protest */
 function ccFinish(m,b){if(!(b==='p'||ON()))return null;const l=ccLosers(m,b);if(!l.length)return null;const w=l.sort((x,y)=>y.pop-x.pop)[0];
@@ -90,7 +99,7 @@ function dealBookCard(c){const sh=curShow();const on=new Set();let meIds=[];cons
   else if(k==='shot'){ok=ms.some(sl=>sl.d.title&&sl.d.sides.flat().includes(w.id))||(c||[]).some(sl=>sl.k==='chal'&&sl.d&&sl.d.c===w.id);urgent=AW()>=d.shot.by}
   else if(k==='ppv'){if(!sh.ppv)return '';ok=on.has(w.id);urgent=true}
   return `<div style="margin:3px 0">${ok?'✅':urgent?'⚠️':'📜'} <b>${esc(w.name)}</b> · ${dealTermTxt(w,k)}${ok?' <span class="muted tiny">— booked tonight</span>':urgent?' <span class="bad tiny">— due tonight</span>':''}</div>`}).filter(Boolean);
- const cc=ownList('p').filter(w=>w.deal&&w.deal.cc&&!w.inj&&on.has(w.id));
+ const cc=ownList('p').filter(w=>ccOn(w)&&!w.inj&&on.has(w.id));
  if(!rows.length&&!cc.length)return '';
  return `<div class="card ${rows.some(r=>r.includes('⚠️'))?'warn':''}"><div class="h small">📜 Contract promises</div>${rows.join('')}${cc.length?`<div class="muted tiny" style="margin-top:4px">🎬 Creative control on tonight's card: ${cc.map(w=>esc(w.name)).join(', ')} — book them to win, or expect a fight over the finish.</div>`:''}</div>`}
 
@@ -104,8 +113,8 @@ function dealOffer(id){if(mpLocked())return;const w=S.w[id];if(!w||w.own)return;
  if(mine){DL.bi=Math.max(0,DL_BONUS.findIndex(x=>Math.round(signCost(w)*x)===mine.bonus));DL.si=Math.max(0,DL_SAL.findIndex(x=>Math.round(mkt(w)*x)===mine.sal))}
  renderDeal()}
 function dlOffer(){const w=S.w[DL.id];const B=DL.mode==='sign'?signCost(w):DL.ask.bonus,Sl=DL.mode==='sign'?mkt(w):DL.ask.sal;const bx=DL.mode==='sign'?DL_BONUS:NG_BONUS,sx=DL.mode==='sign'?DL_SAL:NG_SAL;
- return {bonus:Math.max(1,Math.round(B*bx[DL.bi])),sal:Math.max(1,Math.round(Sl*sx[DL.si])),perks:PERK_K.filter(k=>DL.perks.has(k))}}
-function dlSet(k,v){if(!DL)return;if(k==='perk'){DL.perks.has(v)?DL.perks.delete(v):DL.perks.add(v)}else DL[k]=v;renderDeal()}
+ return {bonus:Math.max(1,Math.round(B*bx[DL.bi])),sal:Math.max(1,Math.round(Sl*sx[DL.si])),perks:PERK_K.filter(k=>DL.perks.has(k)&&(k!=='cc'||ccRoom(w,'p')))}}
+function dlSet(k,v){if(!DL)return;if(k==='perk'&&v==='cc'&&!DL.perks.has('cc')&&!ccRoom(S.w[DL.id],'p'))return toast(`You already have ${CC_MAX} wrestlers with creative control.`);if(k==='perk'){DL.perks.has(v)?DL.perks.delete(v):DL.perks.add(v)}else DL[k]=v;renderDeal()}
 function dlChips(arr,cur,key,base,unit){return `<div class="chips">${arr.map((x,i)=>`<button class="chip ${cur===i?'on':''}" onclick="dlSet('${key}',${i})">${money(Math.max(1,Math.round(base*x)))}${unit}</button>`).join('')}</div>`}
 function renderDeal(){if(!DL)return;const w=S.w[DL.id];if(!w)return closeModal();if(DL.mode==='neg')return renderNeg();
  const o=dlOffer(),u=dealU(w,o,'p'),[cls,word]=dealWord(u);const W=dealWants(w);const mine=myBid(DL.id),ofr=offerOf(DL.id);
@@ -115,7 +124,7 @@ function renderDeal(){if(!DL)return;const w=S.w[DL.id];if(!w)return closeModal()
  <div class="tags" style="margin:8px 0">${dealHints(w).map(h=>`<span class="tg">${h}</span>`).join(' ')}</div>
  <div class="h small mt">Signing bonus</div>${dlChips(DL_BONUS,DL.bi,'bi',signCost(w),'')}
  <div class="h small mt">Weekly salary</div>${dlChips(DL_SAL,DL.si,'si',mkt(w),'/wk')}
- <div class="h small mt">Promises</div>${PERK_K.map(k=>`<button class="choice ${DL.perks.has(k)?'on':''}" onclick="dlSet('perk','${k}')" style="${DL.perks.has(k)?'box-shadow:inset 0 0 0 2px var(--gold)':''}"><span class="key"><span>${DL.perks.has(k)?'✓':PERKS[k].i}</span></span><div><b>${PERKS[k].n}</b>${W[k]>=1.05?' <span class="tg good">they want this</span>':''}<div class="muted tiny">${esc(perkDesc(k))}</div></div></button>`).join('')}
+ <div class="h small mt">Promises</div>${PERK_K.map(k=>k==='cc'&&!ccRoom(w,'p')?`<div class="choice" style="opacity:.55"><span class="key"><span>🎬</span></span><div><b>Creative control</b><div class="muted tiny">Your locker room already has ${CC_MAX} people with creative control — that's the limit.</div></div></div>`:`<button class="choice ${DL.perks.has(k)?'on':''}" onclick="dlSet('perk','${k}')" style="${DL.perks.has(k)?'box-shadow:inset 0 0 0 2px var(--gold)':''}"><span class="key"><span>${DL.perks.has(k)?'✓':PERKS[k].i}</span></span><div><b>${PERKS[k].n}</b>${W[k]>=1.05?' <span class="tg good">they want this</span>':''}<div class="muted tiny">${esc(perkDesc(k))}</div></div></button>`).join('')}
  <div class="card"><div class="row sb"><span>How it looks to them</span><b class="${cls==='bad'?'bad':cls==='warnt'?'gold':'good'}">${word}</b></div><div class="muted tiny">${u<.95?"As it stands, they'd likely turn this down.":'They\'d sign this if nobody beats it.'} Bonus due on signing · you have ${money(S.money.p)}.</div></div>
  ${lg}<button class="btn" ${S.money.p<o.bonus?'disabled':''} onclick="dealSend()">${mine?'Update my sealed offer':'Send sealed offer'} · ${money(o.bonus)}</button>${mine?`<button class="btn sec" onclick="dealWithdraw('${DL.id}')">Withdraw my offer</button>`:''}<button class="btn ghost" onclick="DL=null;closeModal()">Cancel</button>`)}
 /* the week a league offer resolves: this week if every other GM can still answer before it airs, otherwise next week */
@@ -136,7 +145,7 @@ function dealAiBid(w){if(ownList('ai').length>=30||w.pop<60)return null;const c=
 function dealWhy(w,win,lose){if(!lose)return '';const W=dealWants(w);const rw=dealRaw(win.o,signCost(w),mkt(w)),rl=dealRaw(lose.o,signCost(w),mkt(w));
  const pk=PERK_K.filter(k=>win.o.perks.includes(k)&&!lose.o.perks.includes(k)).sort((a,b)=>W[b]-W[a])[0];
  if(pk&&W[pk]>=1)return `the ${PERKS[pk].n.toLowerCase()}`;if(rw>rl+.05)return 'the bigger paycheck';if(dealShow(win.b)>dealShow(lose.b)+.02)return 'the hotter show';return 'the better overall package'}
-function dealSign(w,b,o){S.money[b]-=o.bonus;w.sal=o.sal;w.own=b;w.con=26;w.mor=clamp(78+o.perks.length*4,0,95);w.fee=0;if(S.fa)delete S.fa[w.id];if(S.phase==='season')w.deb=AW();dealTerms(w,o.perks)}
+function dealSign(w,b,o){if(o.perks.includes('cc')&&ccCount(b)>=CC_MAX&&(b==='p'||ON()))o=Object.assign({},o,{perks:o.perks.filter(k=>k!=='cc')});S.money[b]-=o.bonus;w.sal=o.sal;w.own=b;w.con=26;w.mor=clamp(78+o.perks.length*4,0,95);w.fee=0;if(S.fa)delete S.fa[w.id];if(S.phase==='season')w.deb=AW();dealTerms(w,o.perks)}
 function dealSolo(w,o){const ai=dealAiBid(w);const bids=[{b:'p',o,u:dealU(w,o,'p')+R(-.02,.02)}];if(ai)bids.push({b:'ai',o:ai,u:dealU(w,ai,'ai')+R(-.02,.02)});
  bids.sort((x,y)=>y.u-x.u);const top=bids[0];const ok=top.u>=.95;DL=null;
  if(ok){dealSign(w,top.b,top.o);news(top.b==='p'?`✍️ ${S.gm} signed free agent ${w.name}${ai?` after a bidding war with ${S.rival}`:''}.`:`✍️ ${S.rival} won the bidding war for ${w.name}.`)}
@@ -165,20 +174,20 @@ function dealLocal(d){return Object.assign({},d,{win:d.win?localKey(d.win):null,
 /* ---------- re-signing: their demands, your answer ---------- */
 function dealAsk(w){const m=1+(w.pop>=80?.15:w.pop>=70?.08:0)-(w.mor>=80?.08:0)+(w.mor<35?.15:0)-dealShow('p')*.5;
  const have=dealActive(w);const n=w.pop>=72?2:w.pop>=58?1:0;
- return {bonus:Math.max(1,Math.round(resignCost(w)*m)),sal:Math.max(sal(w),Math.round(askSal(w)*m)),perks:dealWantList(w).filter(k=>!have.includes(k)||k==='cc').slice(0,n)}}
+ return {bonus:Math.max(1,Math.round(resignCost(w)*m)),sal:Math.max(sal(w),Math.round(askSal(w)*m)),perks:dealWantList(w).filter(k=>(!have.includes(k)||k==='cc')&&dealWants(w)[k]>=1.15).slice(0,n)}}
 function dealNegotiate(id){if(mpLocked())return;const w=S.w[id];if(!w||w.own!=='p')return;
  if(w.neg&&w.neg.no&&w.neg.no>AW())return toast(`${w.name} walked away from the table. Try again in week ${wkOf(w.neg.no)}.`);
  if(!w.neg||w.neg.no||w.neg.wk!==AW())w.neg={r:1,wk:AW(),ask:dealAsk(w)};
- DL={id,mode:'neg',bi:2,si:2,ask:w.neg.ask,perks:new Set(w.neg.ask.perks)};renderDeal()}
+ DL={id,mode:'neg',bi:2,si:2,ask:w.neg.ask,perks:new Set(w.neg.ask.perks.filter(k=>k!=='cc'||ccRoom(w,'p')))};renderDeal()}
 function negLenient(w){return .06+(w.mor-55)/250+dealShow('p')+(w.con>4?.03:0)-.06*(w.trust||0)-(w.pop>=80?.04:0)}
-function negU(w,o,ask){const W=dealWants(w);return 1+(dealRaw(o,ask.bonus,ask.sal)-1)*W.money-.6*dealPerkU(w,ask.perks.filter(k=>!o.perks.includes(k)))}
-function negWord(w,o,ask){if(o.bonus>=ask.bonus&&o.sal>=ask.sal&&ask.perks.every(k=>o.perks.includes(k)))return ['good','They\'ll sign'];const g=negU(w,o,ask)-(1-negLenient(w));return g>=0?['good','They should take this']:g>=-.12?['warnt','Might counter']:g>=-.28?['warnt','They\'ll push back']:['bad','Likely walks away']}
+function negU(w,o,ask){const W=dealWants(w);return 1+(dealRaw(o,ask.bonus,ask.sal)-1)*W.money-.5*dealPerkU(w,ask.perks.filter(k=>!o.perks.includes(k)))}
+function negWord(w,o,ask){if(o.bonus>=ask.bonus&&o.sal>=ask.sal&&ask.perks.every(k=>o.perks.includes(k)))return ['good','They\'ll sign'];const g=negU(w,o,ask)-(1-negLenient(w));return g>=0?['good','They should take this']:g>=-.12?['warnt','Might counter']:g>=-.3?['warnt','They\'ll push back']:['bad','Likely walks away']}
 function renderNeg(){const w=S.w[DL.id];const ask=DL.ask;const o=dlOffer();const [cls,word]=negWord(w,o,ask);const r=w.neg?w.neg.r:1;
  openModal(`<div class="h mhd">✍️ Re-signing ${esc(w.name)}</div><div class="muted">${Math.max(0,w.con)} week${w.con===1?'':'s'} left · morale ${Math.round(w.mor)}${w.trust?` · ${w.trust} broken promise${w.trust>1?'s':''}`:''}${r>1?` · round ${r} of 3`:''}</div>
  <div class="card"><div class="h small">${r>1?'Their counter':'Their demands'}</div><div>💰 ${money(ask.bonus)} to sign · ${money(ask.sal)}/wk for 26 weeks</div>${ask.perks.map(k=>`<div>${PERKS[k].i} ${PERKS[k].n}</div>`).join('')||'<div class="muted tiny">No special demands.</div>'}</div>
  <div class="h small mt">Signing bonus</div>${dlChips(NG_BONUS,DL.bi,'bi',ask.bonus,'')}
  <div class="h small mt">Weekly salary</div>${dlChips(NG_SAL,DL.si,'si',ask.sal,'/wk')}
- ${ask.perks.length?`<div class="h small mt">Their demands — tap to agree or refuse</div>${ask.perks.map(k=>`<button class="choice" onclick="dlSet('perk','${k}')" style="${DL.perks.has(k)?'box-shadow:inset 0 0 0 2px var(--gold)':''}"><span class="key"><span>${DL.perks.has(k)?'✓':'✕'}</span></span><div><b>${PERKS[k].n}</b> <span class="tg ${DL.perks.has(k)?'good':'bad'}">${DL.perks.has(k)?'Agreed':'Refused'}</span><div class="muted tiny">${esc(perkDesc(k))}</div></div></button>`).join('')}`:''}
+ ${ask.perks.includes('cc')&&!ccRoom(w,'p')?`<div class="muted tiny">🎬 You already have ${CC_MAX} wrestlers with creative control, so you can't agree to that one.</div>`:''}${ask.perks.length?`<div class="h small mt">Their demands — tap to agree or refuse</div>${ask.perks.map(k=>`<button class="choice" onclick="dlSet('perk','${k}')" style="${DL.perks.has(k)?'box-shadow:inset 0 0 0 2px var(--gold)':''}"><span class="key"><span>${DL.perks.has(k)?'✓':'✕'}</span></span><div><b>${PERKS[k].n}</b> <span class="tg ${DL.perks.has(k)?'good':'bad'}">${DL.perks.has(k)?'Agreed':'Refused'}</span><div class="muted tiny">${esc(perkDesc(k))}</div></div></button>`).join('')}`:''}
  <div class="card"><div class="row sb"><span>Read of the room</span><b class="${cls==='bad'?'bad':cls==='warnt'?'gold':'good'}">${word}</b></div><div class="muted tiny">Their morale and how hot your show is matter. Bonus due on signing · you have ${money(S.money.p)}.</div></div>
  <button class="btn" ${S.money.p<o.bonus?'disabled':''} onclick="negSend()">${o.bonus===ask.bonus&&o.sal===ask.sal&&o.perks.length===ask.perks.length?'Agree to everything':'Send this offer'} · ${money(o.bonus)}</button><button class="btn ghost" onclick="DL=null;closeModal()">Not now</button>`)}
 function negSend(){if(!DL||mpLocked())return;const w=S.w[DL.id];const ask=DL.ask;const o=dlOffer();if(S.money.p<o.bonus)return toast('Not enough money.');
@@ -187,7 +196,7 @@ function negSend(){if(!DL||mpLocked())return;const w=S.w[DL.id];const ask=DL.ask
  if(all||u>=need){S.money.p-=o.bonus;w.sal=o.sal;w.con=Math.max(0,w.con)+26;w.mor=clamp(w.mor+(all?12:6),0,100);delete w.neg;dealTerms(w,o.perks);
   news(`✍️ ${w.name} re-signed with ${S.gm}.`);save();render();
   return openModal(`<div class="h mhd">🤝 Deal done</div><p><b>${esc(w.name)}</b> is signed through ${w.con} more weeks at ${money(w.sal)}/wk.</p>${o.perks.length?`<p class="muted tiny">In the contract: ${o.perks.map(k=>PERKS[k].i+' '+PERKS[k].n).join(', ')}. You'll see what's owed on the Book screen.</p>`:''}<button class="btn" onclick="closeModal()">OK</button>`)}
- if(u>=need-.28&&r<3){/* they meet you partway: split the money and dig in on the demand they care about most */
+ if(u>=need-.3&&r<3){/* they meet you partway: split the money and dig in on the demand they care about most */
   const W=dealWants(w);const dropped=ask.perks.filter(k=>!o.perks.includes(k)).sort((a,b)=>W[b]-W[a]);const keep=dropped.length&&W[dropped[0]]>=1.3?[dropped[0]]:[];
   const extra=dropped.length&&!keep.length?1.05:1;
   const nx={bonus:Math.max(o.bonus,Math.round((ask.bonus+o.bonus)/2*extra)),sal:Math.max(o.sal,Math.round((ask.sal+o.sal)/2*extra)),perks:o.perks.filter(k=>ask.perks.includes(k)).concat(keep)};
