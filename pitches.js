@@ -78,9 +78,9 @@ const PITCHES={
   text:x=>[`"Me and ${x.B.name}? We'd tear the tag division apart."`,`"I've been training with ${x.B.name} on off days. We've got double-team moves nobody's seen."`,`"${x.B.name} and I are the best of friends backstage. Let's make it official."`],
   head:x=>`${x.A.name} wants to team with ${x.B.name}`,
   try:{d:x=>`They team up on a trial basis. Two tag matches together at ${PSTAR(2.75)}+ in ${PITCH_LEN} weeks and they're an official team.`,
-   start:x=>{S.teams.push({id:'t'+(S.nid++),n:`${pLast(x.A)} & ${pLast(x.B)}`,type:'team',m:[x.A.id,x.B.id],trialOf:x.A.id+'|'+x.B.id});return {goal:'team',need:2,min:2.75,txt:`2 tag matches together at ${PSTAR(2.75)}+`}}},
+   start:x=>{S.teams.push({id:'t'+partyNid(),n:`${pLast(x.A)} & ${pLast(x.B)}`,type:'team',m:[x.A.id,x.B.id],trialOf:x.A.id+'|'+x.B.id});return {goal:'team',need:2,min:2.75,txt:`2 tag matches together at ${PSTAR(2.75)}+`}}},
   go:{d:x=>`Make it official now: a new tag team with a head start on chemistry. Sometimes partners clash.`,
-   fx:x=>{S.teams.push({id:'t'+(S.nid++),n:`${pLast(x.A)} & ${pLast(x.B)}`,type:'team',m:[x.A.id,x.B.id]});const k=key(x.A.id,x.B.id);mor(x.A,8);mor(x.B,8);
+   fx:x=>{S.teams.push({id:'t'+partyNid(),n:`${pLast(x.A)} & ${pLast(x.B)}`,type:'team',m:[x.A.id,x.B.id]});const k=key(x.A.id,x.B.id);mor(x.A,8);mor(x.B,8);
     if(Math.random()<.2){S.chem[k]=clamp((S.chem[k]||0)-1,-5,6);return `${pLast(x.A)} & ${pLast(x.B)} are a team — though they're already arguing about whose entrance music to use.`}S.chem[k]=clamp((S.chem[k]||0)+1.5,-5,6);return `${pLast(x.A)} & ${pLast(x.B)} are officially a team, and they've already got chemistry.`}},
   ok:t=>{const tm=pTeamOf(t.a,t.b);if(tm)delete tm.trialOf;const A=pOwn(t.a),B=pOwn(t.b);const k=key(t.a,t.b);S.chem[k]=clamp((S.chem[k]||0)+2,-5,6);mor(A,8);mor(B,8);return `🤝 ${pLast(A)} & ${pLast(B)} are an official team now — and their chemistry is better than ever.`},
   fail:t=>{const tm=pTeamOf(t.a,t.b);if(tm)S.teams=S.teams.filter(x=>x!==tm);const A=pOwn(t.a);mor(A,-4);return `🤝 The ${A.name} and ${S.w[t.b]?S.w[t.b].name:'partner'} team never really got going, so they've gone their separate ways.`},

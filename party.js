@@ -33,7 +33,15 @@ function merge3(base,host,mine,path,conf){
  if(Array.isArray(host)&&Array.isArray(mine)){
   if(top&&k==='news'){const seen=new Set((base||[]).map(PJ)),hs=new Set(host.map(PJ));return host.concat(mine.filter(x=>!seen.has(PJ(x))&&!hs.has(PJ(x)))).slice(-80)}
   if(top&&(k==='touched'||k==='pseen'))return Array.from(new Set(host.concat(mine))).slice(k==='pseen'?-45:-9999);
+  /* tag teams and factions: two GMs can form (or disband) different teams at the same time */
+  if(top&&k==='teams')return mergeById(base,host,mine,path,conf);
   conf.push(path.join('.'));return host}
+function mergeById(base,host,mine,path,conf){const id=x=>x&&x.id;base=Array.isArray(base)?base:[];
+ const B=new Map(base.map(x=>[id(x),x])),M=new Map(mine.map(x=>[id(x),x])),H=new Set(host.map(id));const out=[];
+ host.forEach(h=>{const i=id(h);if(!M.has(i)){/* I disbanded it; keep it only if someone else changed it meanwhile */if(B.has(i)&&PJ(B.get(i))===PJ(h))return;out.push(h);return}
+  out.push(B.has(i)?merge3(B.get(i),h,M.get(i),path.concat(i),conf):h)});
+ mine.forEach(m=>{const i=id(m);if(!H.has(i)&&!B.has(i))out.push(m)});
+ return out}
  if(isObj(host)&&isObj(mine)){const b=isObj(base)?base:{};const out={};
   for(const key of new Set([...Object.keys(host),...Object.keys(mine),...Object.keys(b)])){
    const v=merge3(b[key],host[key],mine[key],path.concat(key),conf);if(v!==undefined)out[key]=v}
@@ -43,7 +51,7 @@ function merge3(base,host,mine,path,conf){
 function noMsg(st){if(st&&st.online)delete st.online.msg;return st}
 
 /* the league version this device's game is built on (kept in memory; set whenever we load or save the league) */
-let MP_BASE=null,MPX=null,MP_HELD=null,MP_TX=false,MP_OFFLINE_TOLD=0;
+let MP_BASE=null,MPX=null,MP_HELD=null,MP_TX=false,MP_OFFLINE_TOLD=0,MP_RETRY=0;
 function mpSetBase(rev,str){MP_BASE=LMP?{code:LMP.code,rev,str}:null}
 function mpBase(){if(MP_BASE&&LMP&&MP_BASE.code===LMP.code)return MP_BASE;
  /* after a restart: the version an unsent change was based on was kept on the device */
@@ -94,13 +102,18 @@ async function leaguePush(retried){
   if(!retried&&m.includes('permission')){/* this seat was last used on another device: take it back, then retry */
    try{await TKO.claim(code,L.key);return leaguePush(true)}catch(e){}}
   if(partyOn()){/* party night never writes blind: keep the changes here and merge them in once we're back */
-   MP_PENDING=true;if(Date.now()-MP_OFFLINE_TOLD>30000){MP_OFFLINE_TOLD=Date.now();toast('📡 Saved on this phone — it will sync when the connection is back.')}return}
+   const was=MP_PENDING;MP_PENDING=true;if(!was&&!busy())render();if(Date.now()-MP_OFFLINE_TOLD>30000){MP_OFFLINE_TOLD=Date.now();toast('📡 Saved on this phone — it will sync when the connection is back.')}
+   /* still online (a busy moment with every phone saving at once, or a slow answer)? try again in a few seconds, not a minute — the room is waiting */
+   if(navigator.onLine){const n=MP_RETRY=Math.min(MP_RETRY+1,5);setTimeout(()=>{if(MP_PENDING&&!MPX&&!mpT&&partyOn())mpPush(S.online.msg)},Math.min(30000,1500*2**n))}
+   return}
   return mpPushBlind()}
  if(r&&r.conflict){console.warn('league conflict',r.conflict.slice(0,5));
-  if(r.d&&r.d.state){mpUnsent(false,code,seq);toast('Someone else got there first — your screen has been refreshed.');if(busy()){mpSetBase(-1,sent);MP_HELD=r.d}else partyAdopt(r.d.state,r.d.rev,r.d)}
+  if(r.d&&r.d.state){mpUnsent(false,code,seq);MP_KEEP=partyMine(PJ(canonState()),me);
+   toast('Someone else got there first — your screen has been refreshed (your card is kept).');
+   if(busy()){mpSetBase(-1,sent);MP_HELD=r.d}else partyAdopt(r.d.state,r.d.rev,r.d)}
   return}
  if(!r||!r.str)return;
- mpUnsent(false,code,seq);
+ MP_RETRY=0;mpUnsent(false,code,seq);
  const now=PJ(canonState());
  if(now===sent&&!busy()&&!X.again){partyAdopt(r.str,r.rev,r.d)}
  else if(now===sent&&!X.again){/* a sheet is open: don't swap the game out from under it; catch up when it closes */
@@ -115,6 +128,32 @@ async function leaguePush(retried){
 function mpPushBlind(){const o=S.online,seq=mpUnsentSeq(LMP.code);o.rev=(o.rev||0)+1;const str=PJ(canonState());saveLocal();
  const f={state:str,rev:o.rev,turn:canonKey(o.turn),msg:o.msg||'',week:S.week,season:S.season,phase:S.phase},code=LMP.code,key=LMP.key;mpSetBase(o.rev,str);
  TKO.push(code,f).then(()=>mpUnsent(false,code,seq)).catch(e=>{console.warn('push failed',e);TKO.claim(code,key).then(()=>TKO.push(code,f)).then(()=>mpUnsent(false,code,seq)).catch(()=>{MP_PENDING=true;toast('Saved on this device — it will sync when you reconnect.')})})}
+/* When a save loses a race (two GMs sign the same free agent at once), the league is reloaded — but the GM's own
+   card, lock-in and private plans shouldn't vanish with it. Those are only ever changed by their own phone, so they're
+   kept and put back on top of the fresh league (minus anything that no longer belongs to them), then sent again. */
+let MP_KEEP=null;
+function partyMine(str,me){try{const c=JSON.parse(str),o=c.online||{},g=(x,k)=>x&&x[k]!==undefined?JSON.parse(PJ(x[k])):undefined;
+ return {code:LMP&&LMP.code,me,season:c.season,week:c.week,phase:c.phase,live:!!o.live,card:g(c.card,me),prod:g(c.prod,me),sell:g(c.sell,me),priv:g(c.priv,me),booked:g(o.booked,me),rk:g(o.rk,me),auto:g(o.auto,me)}}catch(e){return null}}
+function partyReapply(){const k=MP_KEEP;MP_KEEP=null;
+ if(!k||!LMP||!S||!ON()||k.code!==LMP.code||k.me!==LMP.me||k.season!==S.season||k.week!==S.week||k.phase!==S.phase)return false;
+ const o=S.online;o.booked=o.booked||{};o.rk=o.rk||{};o.auto=o.auto||{};
+ /* private plans: training, promises, pitches, open-challenge offer… (they live on S for this GM) */
+ if(k.priv){S.priv=S.priv||{};S.priv.p=k.priv;liftPriv(S);S.training=S.training.filter(t=>S.w[t.id]&&S.w[t.id].own==='p')}
+ if(k.prod!==undefined){S.prod=S.prod||{};S.prod.p=k.prod}
+ if(k.sell!==undefined){S.sell=S.sell||{};S.sell.p=k.sell}
+ if(k.rk!==undefined)o.rk.p=k.rk;if(k.auto!==undefined)o.auto.p=k.auto;
+ let dropped=false;
+ if(Array.isArray(k.card)&&S.phase==='season'&&!o.live&&!k.live){
+  const mine=id=>!id||S.w[id]&&S.w[id].own==='p';
+  k.card.forEach(sl=>{if(!sl||!sl.d)return;const d=sl.d;let ok=true;
+   if(sl.k==='match'&&d.sides)ok=d.sides.flat().every(mine)||(d.type==='open'&&mine(d.sides[0]&&d.sides[0][0]));
+   else if(sl.k==='promo')ok=mine(d.a)&&mine(d.b);
+   else if(sl.k==='chal')ok=mine(d.c);
+   if(!ok){sl.d=null;dropped=true}});
+  S.card.p=k.card;if(k.booked!==undefined)o.booked.p=!!k.booked&&!dropped}
+ save();
+ if(dropped)setTimeout(()=>toast('Someone else signed a wrestler you had booked — that spot on your card is open again.'),1200);
+ return true}
 /* take the league's latest version as this device's game */
 function partyAdopt(str,rev,d,quiet){
  mpLoad(str,d&&d.names,d&&d.shows,rev);saveLocal();mpRemember();if(quiet)return;
@@ -222,7 +261,7 @@ function tvBoot(){const q=new URLSearchParams(location.search).get('join');
 
 function tvRefresh(){if(!TV)return;const R=TV.reveal;if(R&&document.getElementById('rv')&&R.built===R.key+':'+R.pi)return;render()}
 function tvHeader(){const st=TV.status==='on'?'':TV.status==='missing'?'<span class="tv-warn">No league with that code</span>':'<span class="tv-warn">📡 Connecting…</span>';
- return `<header class="top tv-top"><div class="brand"><span class="logo">TONY KHAN</span><span class="logo2">SIM</span></div><div class="hud">${st}<span class="hudc">LEAGUE <b>${esc(TV.code)}</b></span>${S&&S.last?'<button class="mini" onclick="tvReplay()">Replay last week</button>':''}<button class="mini" onclick="tvEnd()">Exit TV</button></div></header>`}
+ return `<header class="top tv-top">${brandHtml()}<div class="hud">${st}<span class="hudc">LEAGUE <b>${esc(TV.code)}</b></span>${S&&S.last?'<button class="mini" onclick="tvReplay()">Replay last week</button>':''}<button class="mini" onclick="tvEnd()">Exit TV</button></div></header>`}
 function tvJoinUrl(){return location.href.split(/[?#]/)[0]+'?join='+TV.code}
 function tvShortUrl(){return location.href.split(/[?#]/)[0].replace(/^https?:\/\//,'').replace(/index\.html$/,'').replace(/\/$/,'')}
 function tvQR(){try{const q=qrcode(0,'M');q.addData(tvJoinUrl());q.make();return q.createSvgTag({cellSize:6,margin:2,scalable:true})}catch(e){return ''}}
