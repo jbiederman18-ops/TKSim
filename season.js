@@ -363,7 +363,7 @@ const BRIEF_KEY='tks_brief';
 function briefId(){return ((typeof LMP!=='undefined'&&LMP&&LMP.code)||'solo')+':'+(S.gm||'')+':'+S.season}
 function briefSeen(){try{const m=JSON.parse(localStorage.getItem(BRIEF_KEY)||'{}');return m[briefId()]===AW()}catch(e){return false}}
 function briefMark(){try{const m=JSON.parse(localStorage.getItem(BRIEF_KEY)||'{}');m[briefId()]=AW();const ks=Object.keys(m);if(ks.length>20)delete m[ks[0]];localStorage.setItem(BRIEF_KEY,JSON.stringify(m))}catch(e){}}
-function briefItems(){const mine=ownList('p');const sec=[];const nm=w=>`<a href="#" onclick="closeModal();showW('${w.id}');return false">${esc(w.name)}</a>`;
+function briefItems(){const mine=ownList('p');const sec=typeof pitchBrief==='function'?pitchBrief():[];const nm=w=>`<a href="#" onclick="closeModal();showW('${w.id}');return false">${esc(w.name)}</a>`;
  /* contracts */
  const exp=mine.filter(w=>w.con<=4||(w.con<=8&&w.pop>=70)).sort((a,b)=>a.con-b.con);
  if(exp.length)sec.push({i:'✍️',t:'Contracts running out',u:exp.some(w=>w.con<=2),rows:exp.map(w=>`<div class="row sb brow"><span>${nm(w)} · <b class="${w.con<=2?'bad':''}">${Math.max(0,w.con)} wk${w.con===1?'':'s'}</b>${w.mor<30?' 😠':''}<br><span class="muted tiny">Asks ${money(askSal(w))}/wk${w.con<=1?' · walks after this week if not re-signed':''}</span></span><button class="mini" onclick="briefResign('${w.id}')">Re-sign ${money(resignCost(w))}</button></div>`)});
@@ -393,7 +393,7 @@ function briefItems(){const mine=ownList('p');const sec=[];const nm=w=>`<a href=
  return sec}
 function briefHtml(){const sec=briefItems();const sh=curShow();
  return `<div class="h mhd">📰 Week ${S.week} briefing</div><p class="muted" style="margin-top:0">${esc(sh.ppv?sh.name+' is this week.':'Here\'s what needs your attention before you book.')}</p>
- ${sec.length?sec.map(s=>`<div class="card brief ${s.u?'urgent':''}"><div class="h small">${s.i} ${s.t}${s.u?' <span class="tg bad">Act now</span>':''}</div>${s.rows.join('')}</div>`).join(''):'<div class="card"><div class="muted">All quiet in the front office. Go book a great show.</div></div>'}
+ ${sec.length?sec.map(s=>`<div class="card brief ${s.u?'urgent':''}"><div class="h small">${s.i} ${s.t}${s.u?' <span class="tg bad">Act now</span>':''}${s.tag?` <span class="tg good">${s.tag}</span>`:''}</div>${s.rows.join('')}</div>`).join(''):'<div class="card"><div class="muted">All quiet in the front office. Go book a great show.</div></div>'}
  <button class="btn" onclick="closeModal();go('book')">Book the show</button><button class="btn sec" onclick="closeModal()">Close</button>`}
 function openBrief(){if(!S||S.phase!=='season')return;briefMark();openModal(briefHtml())}
 function briefResign(id){resign(id);openBrief()}
