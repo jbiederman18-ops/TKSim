@@ -771,7 +771,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v99';
+const APP_VERSION='v100';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',22:'Forbidden Door',24:'All In'};
 /* v80: themed TV specials between PPVs — hotter crowds, bigger fan swings, better gates */
@@ -1531,8 +1531,8 @@ function evRoles(m,brand){const win=m.sides[m.winner];const los=m.sides.filter((
  const A=S.w[pick(win)],B=S.w[pick(Bs)];const A2=win.length>1?S.w[win.find(x=>x!==A.id)]:null;
  const used=new Set();(S.card[brand]||[]).forEach(sl=>{if(!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(i=>used.add(i));if(sl.k==='promo'){used.add(sl.d.a);if(sl.d.b)used.add(sl.d.b)}});
  const anyHeel=A.al==='h'||B.al==='h';
- const xs=Object.values(S.w).filter(w=>w.own===brand&&!w.inj&&!used.has(w.id)&&(w.al==='h'||anyHeel)).map(w=>[w,heatOf(w.id,B.id)+heatOf(w.id,A.id)+w.pop/4+Math.random()*20]).sort((a,b)=>b[1]-a[1]);
- const other=brand==='p'?'ai':'p';const ys=Object.values(S.w).filter(w=>w.own===other&&!w.inj&&(w.al==='h'||anyHeel)).sort((p,q)=>q.pop-p.pop).slice(0,6);
+ const xs=Object.values(S.w).filter(w=>w.own===brand&&!w.inj&&!used.has(w.id)&&(w.al==='h'||anyHeel)&&!inFeud(w.id,[A.id,B.id,A2&&A2.id].filter(Boolean))).map(w=>[w,heatOf(w.id,B.id)+heatOf(w.id,A.id)+w.pop/4+Math.random()*20]).sort((a,b)=>b[1]-a[1]);
+ const other=brand==='p'?'ai':'p';const ys=Object.values(S.w).filter(w=>w.own===other&&!w.inj&&(w.al==='h'||anyHeel)&&!inFeud(w.id,[A.id,B.id])).sort((p,q)=>q.pop-p.pop).slice(0,6);
  return {A,B,A2,X:xs.length?xs[0][0]:null,Y:ys.length?pick(ys):null,T:m.title?S.titles[m.title].n:'',RIVAL:brand==='p'?S.rival:S.gm,loseIdx:m.sides.indexOf(Bs),MT:m.type,STIP:stipKey(m)}}
 function evFill(t,r){return t.replace(/\{(A2|A|B|X|Y|T|RIVAL|V|O|P)\}/g,(_,k)=>k==='T'||k==='RIVAL'?r[k]:(r[k]?r[k].name:''))}
 function genEvent(m,brand,big){const r=evRoles(m,brand);const bigM=big||!!m.title||heatOf(r.A.id,r.B.id)>=30;
@@ -1910,6 +1910,9 @@ function boilingOver(a,b){const k=key(a,b),now=AW();const wks=new Set(((S.ph&&S.
 function feudOf(a,b){return S.fs&&S.fs[key(a,b)]}
 function isStale(a,b){const f=feudOf(a,b);return !!(f&&f.stale)}
 const FTIER=[[20,'🔥 Rivalry brewing'],[45,'🔥🔥 Full-blown feud'],[75,'🔥🔥🔥 BLOOD FEUD']];
+/* v100: is this wrestler already in a feud (rivalry heat 20+) with anyone outside these people? Surprise run-ins and
+ interruptions only come from wrestlers who are free, so nobody gets pulled out of their own story */
+function inFeud(id,except){except=except||[];for(const k in S.heat){if(S.heat[k]<20)continue;const [a,b]=k.split('|');if(a!==id&&b!==id)continue;const o=a===id?b:a;if(!except.includes(o)&&S.w[o]&&S.w[o].own)return true}return false}
 function heatTier(h){let t=-1;FTIER.forEach(([v],i)=>{if(h>=v)t=i});return t}
 /* feud status for the booking screens: how hot, how long it has run, and when it goes stale */
 function feudInfo(a,b){const h=heatOf(a,b);if(h<1)return null;const f=feudOf(a,b);const age=f?AW()-f.start:0;return {h,t:heatTier(h),age,left:f&&!f.paid&&!f.stale?Math.max(0,8-age):null,stale:!!(f&&f.stale),paid:!!(f&&f.paid)}}
@@ -2290,7 +2293,7 @@ function applyMatch(m,res,ctx,notes){
 /* ===================== PROMO ENGINE ===================== */
 function promoCtx(p,brand){const A=S.w[p.a],B=p.b?S.w[p.b]:null;const t=titlesOf(p.a)[0];const f=S.teams.find(x=>x.m.includes(p.a)&&x.m.length>1);
  /* whoever interrupts is on the other side of the face/heel line from the wrestler holding the mic */
- const xs=Object.values(S.w).filter(w=>w.own===brand&&!w.inj&&w.id!==p.a&&w.id!==p.b&&!inTeam(w.id,p.a)&&w.al!==A.al);
+ const xs=Object.values(S.w).filter(w=>w.own===brand&&!w.inj&&w.id!==p.a&&w.id!==p.b&&!inTeam(w.id,p.a)&&w.al!==A.al&&!inFeud(w.id,[p.a,p.b].filter(Boolean)));
  return {A,B,X:xs.length?pick(xs):null,T:t?t.n:'',F:f?f.n:'their crew'}}
 function fill(s,c){return s.replace(/\{A\}/g,c.A.name).replace(/\{B\}/g,c.B?c.B.name:'').replace(/\{X\}/g,c.X?c.X.name:'').replace(/\{T\}/g,c.T).replace(/\{F\}/g,c.F)}
 /* deal fresh promo options: alignment-specific ones for faces/heels, and recently seen lines come up less often */
@@ -3099,7 +3102,7 @@ function finishLive(){if(!LIVE)return;LIVE=false;ME=null;PS=null;LQ=null;S.card.
 function liveHd(show,lab,title,sides,tag,vs){const ss=(sides||[]).map(sd=>sd.filter(Boolean)).filter(sd=>sd.length);
  const col=sd=>`<div class="lvs"><div class="lvf">${sd.map(w=>face(w)).join('')}</div><div class="lvn">${esc(sd.length>1?sideName(sd.map(w=>w.id)):sd[0].name)}</div></div>`;
  const row=ss.length?`<div class="lvsides ${ss.length>2?'many':''}">${ss.map(col).join(vs?'<span class="lvvs">vs</span>':'')}</div>`:'';
- return `<div class="lvhd"><div class="spark"></div><div class="ptop"><span class="livebug"><b>${tag||'● Live'}</b>${show?`<span>${esc(show)}</span>`:''}</span><span class="lvl">${lab}</span></div><div class="lvt">${title}</div>${row}<div class="lfl"></div></div>`}
+ return `<div class="lvhd"><div class="ptop"><span class="livebug"><b>${tag||'● Live'}</b>${show?`<span>${esc(show)}</span>`:''}</span><span class="lvl">${lab}</span></div><div class="lvt">${title}</div>${row}<div class="lfl"></div></div>`}
 function callBar(t,l){return `<div class="callq"><b>${t}</b><span>${l}</span></div>`}
 function renderME(){const it=ME.q[ME.k];const {m,g}=it;const r=g.r;
  const hd=`${liveHd(ME.show,`Match ${it.n}${it.main?' · Main event':''}`,esc(m.title&&S.titles[m.title]?S.titles[m.title].n+' title':MT[m.type].n),m.sides.map(sd=>sd.map(id=>S.w[id])),'',true)}<p class="scene">${esc(evFill(g.e.text,r))}</p>${g.sit?`<div class="note">${g.info}</div>`:''}`;
