@@ -267,7 +267,7 @@ function bidLose(id){const w=S.w[id];const c=signCost(w);S.money.ai-=c;w.sal=mkt
 /* ===================== SEASON SCORING ===================== */
 /* each season's fan war is decided by fans gained that season — the running total is your all-time fanbase */
 const fanGain=b=>Math.round((S.fans[b]||0)-((S.fans0&&S.fans0[b])!=null?S.fans0[b]:250000));
-function seasonStart(){S.fans0={};brands().forEach(b=>S.fans0[b]=S.fans[b]);Object.values(S.w).forEach(w=>{w.pop0=w.pop;w.w0=w.w||0;w.l0=w.l||0});S.tagW={};S.bestP=null;S.mand={};S.aiShot=null}
+function seasonStart(){S.fans0={};brands().forEach(b=>S.fans0[b]=S.fans[b]);{const old=S.tvdeal||{};S.tvdeal={};brands().forEach(b=>S.tvdeal[b]=tvIncome(S.fans[b]));const b0=brands()[0];if(old[b0]!=null&&old[b0]!==S.tvdeal[b0])news(`📺 New TV deals for Season ${S.season}: ${brands().map(b=>`${nameOf(b)} ${money(S.tvdeal[b])}/wk`).join(', ')}.`)}Object.values(S.w).forEach(w=>{w.pop0=w.pop;w.w0=w.w||0;w.l0=w.l||0});S.tagW={};S.bestP=null;S.mand={};S.aiShot=null}
 function seasonMigrate(st){if(!st||!st.w||st.v80)return;st.v80=1;const S0=S;S=st;try{
  if(!st.fans0){st.fans0={};for(const b in st.fans)st.fans0[b]=st.season===1?250000:st.fans[b]}
  if(st.phase==='season'&&!st.mand)mandTick();
