@@ -20,6 +20,12 @@ Upload the changed files (usually `index.html`, plus any `.js` files that change
 ## Play online with a friend
 Host a league for 2–4 GMs and friends join with a 6-letter code. Everyone runs their own brand, you face a different GM each week, and the most fans after All In wins. Offline turns sync later, and each player gets a notification when it's their move. One-time setup: see [ONLINE-SETUP.md](ONLINE-SETUP.md).
 
+## Offers & contracts
+- **Free agents with 55+ popularity want an offer**, not just a fee: a signing bonus, a weekly salary, and promises — 🎬 creative control, ⭐ main event spots, 🏆 a title shot, 📺 a place on every PPV. Each wrestler wants different things (a big star wants control, a hungry midcarder wants main events), and the offer screen tells you how it looks to them. Smaller names still sign on the spot.
+- **Sealed bids.** Solo, the rival may send an offer too and the wrestler picks right away. In a league, every other GM can send one sealed counter before the week airs, and the wrestler picks the best package when it does. On party night the TV reveals every offer in a "Signing war" before the results.
+- **Re-signing is a negotiation** (from the weekly briefing or the wrestler's card). They make demands; agree to some or all, or counter on money. They take it, counter back (up to three rounds) or walk away, depending on their morale, how hot your show is and whether you've kept your word before.
+- **Promises are contract terms.** The Book screen shows what's owed. Break a promise and morale drops; after three, a wrestler may walk out. **Creative control** means they won't agree to lose: the card flags it before you go live, and if you go ahead, about half the time they change the finish and go over (−¼★); otherwise they do the job under protest and morale drops hard.
+
 ## Party night (same room, big screen)
 Party night is a way to play an online league, not a separate game. It uses the same league, the same save and the same code, so you can play some weeks together on the couch and the rest on your own time.
 

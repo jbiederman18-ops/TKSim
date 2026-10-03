@@ -133,7 +133,8 @@ function mpPushBlind(){const o=S.online,seq=mpUnsentSeq(LMP.code);o.rev=(o.rev||
    kept and put back on top of the fresh league (minus anything that no longer belongs to them), then sent again. */
 let MP_KEEP=null;
 function partyMine(str,me){try{const c=JSON.parse(str),o=c.online||{},g=(x,k)=>x&&x[k]!==undefined?JSON.parse(PJ(x[k])):undefined;
- return {code:LMP&&LMP.code,me,season:c.season,week:c.week,phase:c.phase,live:!!o.live,card:g(c.card,me),prod:g(c.prod,me),sell:g(c.sell,me),priv:g(c.priv,me),booked:g(o.booked,me),rk:g(o.rk,me),auto:g(o.auto,me)}}catch(e){return null}}
+ return {code:LMP&&LMP.code,me,season:c.season,week:c.week,phase:c.phase,live:!!o.live,card:g(c.card,me),prod:g(c.prod,me),sell:g(c.sell,me),priv:g(c.priv,me),booked:g(o.booked,me),rk:g(o.rk,me),auto:g(o.auto,me),
+  offers:Object.fromEntries(Object.entries(c.offers||{}).filter(([,x])=>x&&x.by&&x.by[me]).map(([id,x])=>[id,{due:x.due,bid:JSON.parse(PJ(x.by[me]))}]))}}catch(e){return null}}
 function partyReapply(){const k=MP_KEEP;MP_KEEP=null;
  if(!k||!LMP||!S||!ON()||k.code!==LMP.code||k.me!==LMP.me||k.season!==S.season||k.week!==S.week||k.phase!==S.phase)return false;
  const o=S.online;o.booked=o.booked||{};o.rk=o.rk||{};o.auto=o.auto||{};
@@ -141,7 +142,9 @@ function partyReapply(){const k=MP_KEEP;MP_KEEP=null;
  if(k.priv){S.priv=S.priv||{};S.priv.p=k.priv;liftPriv(S);S.training=S.training.filter(t=>S.w[t.id]&&S.w[t.id].own==='p')}
  if(k.prod!==undefined){S.prod=S.prod||{};S.prod.p=k.prod}
  if(k.sell!==undefined){S.sell=S.sell||{};S.sell.p=k.sell}
- if(k.rk!==undefined)o.rk.p=k.rk;if(k.auto!==undefined)o.auto.p=k.auto;
+ if(k.rk!==undefined)o.rk.p=k.rk;
+ /* sealed offers this GM sent */
+ for(const id in k.offers||{}){const w=S.w[id];if(!w||w.own)continue;S.offers=S.offers||{};const x=S.offers[id]||(S.offers[id]={due:k.offers[id].due,by:{}});x.by=x.by||{};x.by.p=k.offers[id].bid}if(k.auto!==undefined)o.auto.p=k.auto;
  let dropped=false;
  if(Array.isArray(k.card)&&S.phase==='season'&&!o.live&&!k.live){
   const mine=id=>!id||S.w[id]&&S.w[id].own==='p';
@@ -316,13 +319,14 @@ function tvRevealHtml(){const L=S.last,R=TV.reveal,pairs=tvRevealPairs(),pr=pair
  const col=(b,ci)=>`<div class="rv-col"><div class="rv-hd"><div class="rv-show">${esc(b.label)}</div><div class="rv-run" id="rvr${ci}">—</div></div>${b.segs.map((s,si)=>`<div class="rv-seg" id="rv-${ci}-${si}" data-st="${s.stars}"><div class="muted tiny">${si===b.segs.length-1?'<b class="gold">MAIN EVENT</b> · ':''}${esc(s.sub)}</div><div class="rv-txt">${esc(s.txt)}</div><div class="stars rv-stars">${stars(s.stars)}</div>${s.notes.slice(0,3).map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`).join('')||'<div class="muted">Nothing aired.</div>'}</div>`;
  const ks=Object.keys(pr.ratings);const best=ks.slice().sort((a,b)=>pr.ratings[b]-pr.ratings[a])[0];
  return `<div id="rv" class="rv"><div class="rv-top"><div class="kicker"><i></i>Week ${L.week} · ${pairs.length>1?`Matchup ${R.pi+1} of ${pairs.length}`:'Results'}</div><div class="showname">${esc(L.ppv?L.title:ks.map(k=>showNames()[k]||nameOf(k)).join(' vs '))}</div></div>
- <div class="rv-cols">${cols.map((b,ci)=>(ci?'<div class="vs rv-vs">VS</div>':'')+col(b,ci)).join('')}</div>
+ ${R.pi===0&&L.deals&&L.deals.length?dealRevealHtml(L.deals):''}<div class="rv-cols">${cols.map((b,ci)=>(ci?'<div class="vs rv-vs">VS</div>':'')+col(b,ci)).join('')}</div>
  ${x?`<div class="card rv-x"><div class="h small">${esc(x.label)}</div>${x.segs.map((s,si)=>`<div class="rv-seg" id="rv-x-${si}"><div class="rv-txt">${esc(s.txt)}</div><div class="muted tiny">${esc(s.sub)}</div><div class="stars rv-stars">${stars(s.stars)}</div>${s.notes.slice(0,2).map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`).join('')}</div>`:''}
  <div class="rv-final" id="rv-final"><div class="rv-scores">${ks.map(k=>`<div class="rv-score ${k===best&&ks.length>1?'win':''}"><span>${esc(nameOf(k))}</span><div class="stars">${stars(pr.ratings[k])}</div><b class="${pr.fans[k]>=0?'good':'bad'}">${pr.fans[k]>=0?'+':''}${fmtFans(Math.abs(pr.fans[k])).replace(/^/,pr.fans[k]<0?'−':'')} fans</b></div>`).join('')}</div>
  <div class="rv-win">${ks.length>1?(pr.hourWin?`🏆 ${esc(nameOf(pr.hourWin))} wins the night!`:`🏆 ${esc(nameOf(best))} steals the show!`):'Bye-week show in the books.'}</div></div>
  <div class="rv-ctl"><button class="mini" onclick="tvRevealSkip()">Skip ▸▸</button></div></div>`}
 function tvRevealRun(){const R=TV.reveal,pr=tvRevealPairs()[R.pi];const cols=pr.blocks.filter(b=>b.brand!=='x'),x=pr.blocks.find(b=>b.brand==='x');
  const steps=[];const max=Math.max(0,...cols.map(b=>b.segs.length));
+ if(R.pi===0&&S.last.deals)S.last.deals.forEach((d,i)=>steps.push({id:'rv-d-'+i,n:d.bids.length+1}));
  for(let i=0;i<max;i++)cols.forEach((b,ci)=>{if(b.segs[i])steps.push({id:`rv-${ci}-${i}`,ci,n:b.segs[i].notes.length})});
  if(x)x.segs.forEach((s,i)=>steps.push({id:'rv-x-'+i,n:s.notes.length}));
  steps.push({id:'rv-final',n:0,final:true});R.steps=steps;R.si=R.si||0;
