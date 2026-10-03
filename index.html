@@ -771,7 +771,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v97';
+const APP_VERSION='v98';
 const SEASON=24;
 const PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',22:'Forbidden Door',24:'All In'};
 /* v80: themed TV specials between PPVs — hotter crowds, bigger fan swings, better gates */
@@ -1524,9 +1524,9 @@ if(typeof GIMMICKS!=='undefined'){GIMMICKS.forEach(g=>{GIM[g.k]=g;
   ['callout','vignette','interview'].forEach(t=>{const b=SCENES[t]&&SCENES[t].solo;if(!b)return;b.texts=(b.texts||[]).concat([{gim:g.k,t:g.p.t}]);b.ch=b.ch.concat(g.p.ch.map(c=>Object.assign({gim:g.k},c)))})});
  TWISTS.push({when:'any',gim:'*',w:3,text:"The crowd starts chanting for {A} to 'DO THE BIT! DO THE BIT!'",ch:[{t:'Do the bit',s:'pop',d:.05,p:4,ok:'They did the bit. The building shakes.'},{t:'Refuse — make them want it more',s:'mic',d:.1,p:3,ok:'The chant gets even louder. Masterful.'},{t:'Do a completely different bit',s:'luck',d:.1,p:2,ok:'Nobody saw that coming. Somehow it works.'}]})}
 function gimProspect(ex){const used=new Set(Object.values(S.w).map(w=>w.gim).filter(Boolean).concat(ex||[]));const seen=S.gimSeen||[];
- let pool=GIMMICKS.filter(g=>!used.has(g.k)&&!seen.includes(g.k));if(!pool.length)pool=GIMMICKS.filter(g=>!used.has(g.k));if(!pool.length)return null;const g=pick(pool);
+ const live=GIMMICKS.filter(g=>!g.old);let pool=live.filter(g=>!used.has(g.k)&&!seen.includes(g.k));if(!pool.length)pool=live.filter(g=>!used.has(g.k));if(!pool.length)return null;const g=pick(pool);
  const w=makeRookie(g.n,g.g,g.st,g.al,g.tier);w.gim=g.k;w.bio=g.bio;w.ring=clamp(w.ring+(g.ring||0),20,99);w.mic=clamp(w.mic+(g.mic||0),5,99);w.pop=w.pop0=clamp(w.pop+(g.pop||0),1,100);w.potM=Math.max(w.potM,w.mic);
- w.tier=g.tier;w.fee=TIERS[g.tier].cost;w.tr=autoTraits(w);S.gimSeen=seen.concat(g.k).slice(-(GIMMICKS.length-3));return w}
+ w.tier=g.tier;w.fee=TIERS[g.tier].cost;w.tr=autoTraits(w);S.gimSeen=seen.concat(g.k).slice(-(live.length-3));return w}
 function evRoles(m,brand){const win=m.sides[m.winner];const los=m.sides.filter((s,i)=>i!==m.winner);const Bs=pick(los);
  const A=S.w[pick(win)],B=S.w[pick(Bs)];const A2=win.length>1?S.w[win.find(x=>x!==A.id)]:null;
  const used=new Set();(S.card[brand]||[]).forEach(sl=>{if(!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(i=>used.add(i));if(sl.k==='promo'){used.add(sl.d.a);if(sl.d.b)used.add(sl.d.b)}});
@@ -1960,6 +1960,7 @@ function chemOpp(a,b){return chemParts(a,b).reduce((s,x)=>s+x.v,0)}
 function teamParts(a,b){const p=[];const t=inTeam(a.id,b.id);if(t)p.push({t:t>=6?'Established tag team':'Faction mates',v:t});
  const h=(S.chem[key(a.id,b.id)]||0)*.5;if(Math.abs(h)>=.1)p.push({t:'History together',v:Math.round(h*10)/10});
  const ts=(hasT(a,'tag')?3:0)+(hasT(b,'tag')?3:0);if(ts)p.push({t:'Tag Specialist',v:ts});
+ if(a.gim&&b.gim&&GIM[a.gim]&&GIM[a.gim].pal===b.gim)p.push({t:'Best friends (they were made for each other)',v:5});
  if(a.al===b.al)p.push({t:'Same alignment',v:1});if(heatOf(a.id,b.id)>=15)p.push({t:'Feuding partners',v:-3});return p}
 function chemTeam(a,b){return teamParts(a,b).reduce((s,x)=>s+x.v,0)}
 function partsHtml(p){return p.filter(x=>x.v).map(x=>`<span class="why ${x.v>0?'up':'dn'}">${esc(x.t)} ${x.v>0?'+':''}${x.v}</span>`).join('')}

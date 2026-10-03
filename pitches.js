@@ -49,7 +49,7 @@ const PITCHES={
   no:2},
  wacky:{cat:'🎭 New direction',w:1.5,
   pick:r=>{if(typeof GIMMICKS==='undefined')return null;const used=new Set(Object.values(S.w).map(w=>w.gim).filter(Boolean));const l=r.filter(w=>!w.gim&&w.pop<72&&(w.mor<60||w.ring<75||Math.random()<.3));if(!l.length)return null;const w=pick(l);
-   const gs=GIMMICKS.filter(g=>!used.has(g.k)&&g.g===w.g);if(!gs.length)return null;return {a:w.id,gim:pick(gs).k}},
+   const gs=GIMMICKS.filter(g=>!g.old&&!used.has(g.k)&&g.g===w.g);if(!gs.length)return null;return {a:w.id,gim:pick(gs).k}},
   text:x=>{const g=pGim(x.gim);return [`${esc(x.A.name)} bursts into your office with a sketchbook. "Hear me out: from now on, I'm <b>${esc(g.n)}</b>." ${esc(g.bio)}`]},
   head:x=>`${x.A.name} has a wild new character idea`,
   try:{d:x=>`They debut the character for ${PITCH_LEN} weeks. Two segments at ${PSTAR(2.5)}+ and it's a hit. If it flops, you quietly drop it (a small popularity hit).`,
