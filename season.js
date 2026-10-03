@@ -152,7 +152,10 @@ const GOALS={
  show:{n:'Put on a 3½★ show',i:'⭐',ok:()=>true,chk:(f,r)=>r>=3.5},
  floor:{n:'No match under 2½★',i:'🧱',ok:()=>true,chk:f=>f.nm>0&&f.lo>=2.5},
  rookie:{n:'Give a prospect a 3★ match',i:'🌱',ok:(sh,b)=>ownList(b).some(w=>w.rookie&&!w.inj),chk:f=>f.rk}};
-const goalReward=()=>({cash:Math.round(econCap()*.05/1000)*1000||5000,fans:3000});
+/* econCap is already in $K: about 5% of a week's cap (≈$20–25K). v95 fix — this used to pay $5M a goal. */
+const goalReward=()=>({cash:Math.max(10,Math.round(econCap()*.05/5)*5),fans:3000});
+/* goals handed out before the fix carried the $5M payout; cap them at the real reward */
+const goalCash=g=>Math.min(g.cash||0,goalReward().cash);
 const CHANTS=['“We want {L}!”','“{U}! {U}! {U}!”','“Let’s go {L}!”','“{L} deserves it!”'];
 function weekTick(){if(S.phase!=='season')return;S.goal=S.goal||{};S.chant=S.chant||{};const sh=curShow();const wk=AW();
  brands().filter(b=>b==='p'||ON()).forEach(b=>{if(!S.goal[b]||S.goal[b].w!==wk){const last=S.goal[b]&&S.goal[b].k;const l=Object.keys(GOALS).filter(k=>k!==last&&GOALS[k].ok(sh,b));if(l.length){const rw=goalReward();S.goal[b]={k:pick(l),w:wk,cash:rw.cash,fans:rw.fans}}}
@@ -161,11 +164,11 @@ function weekTick(){if(S.phase!=='season')return;S.goal=S.goal||{};S.chant=S.cha
 function chantHit(b,ids){const c=S.chant&&S.chant[b];if(!c||c.w!==AW()||c.hit||!ids.includes(c.id))return null;const w=S.w[c.id];if(!w)return null;
  c.hit=true;w.pop=clamp(w.pop+2,1,100);w.mor=clamp(w.mor+5,0,100);return `📣 The crowd got its wish — ${w.name}! The place comes unglued (+¼★, +2 popularity, +2K fans).`}
 function goalCheck(b,inf,rating,show,notes){const g=S.goal&&S.goal[b];if(!g||g.w!==AW()||g.done||!GOALS[g.k])return;
- if(!GOALS[g.k].chk(inf,rating,show))return;g.done=true;S.money[b]+=g.cash;S.fans[b]+=g.fans;
+ if(!GOALS[g.k].chk(inf,rating,show))return;g.done=true;g.cash=goalCash(g);S.money[b]+=g.cash;S.fans[b]+=g.fans;
  if(b==='p'||ON())notes.push(`🎯 ${ON()?nameOf(b)+': ':''}Weekly goal hit — ${GOALS[g.k].n} (+${money(g.cash)}, +${fmtFans(g.fans)} fans).`)}
 function weekGoalsCard(){if(S.phase!=='season')return '';if(!S.goal||!S.goal.p||S.goal.p.w!==AW()||!S.chant||!S.chant.p||S.chant.p.w!==AW())weekTick();
  const g=S.goal&&S.goal.p,c=S.chant&&S.chant.p;const cw=c&&S.w[c.id];if(!(g&&GOALS[g.k])&&!cw)return '';
- return `<div class="card wkg">${g&&GOALS[g.k]?`<div class="row sb"><span><span class="tiny muted">🎯 This week's goal</span><br><b>${GOALS[g.k].i} ${esc(GOALS[g.k].n)}</b>${g.done?'':liveLine(goalLive(g.k))}</span><span class="tiny ${g.done?'good':'muted'}" style="text-align:right">${g.done?'✅ Done':`+${money(g.cash)}<br>+${fmtFans(g.fans)} fans`}</span></div>`:''}${cw?`<div class="row sb wkc" onclick="showW('${cw.id}')"><span><span class="tiny muted">📣 The crowd is chanting</span><br><b>${esc(c.t)}</b></span><span class="tiny muted" style="text-align:right">Book ${esc(cw.name.split(' ').slice(-1)[0])}<br>for a pop</span></div>`:''}</div>`}
+ return `<div class="card wkg">${g&&GOALS[g.k]?`<div class="row sb"><span><span class="tiny muted">🎯 This week's goal</span><br><b>${GOALS[g.k].i} ${esc(GOALS[g.k].n)}</b>${g.done?'':liveLine(goalLive(g.k))}</span><span class="tiny ${g.done?'good':'muted'}" style="text-align:right">${g.done?'✅ Done':`+${money(goalCash(g))}<br>+${fmtFans(g.fans)} fans`}</span></div>`:''}${cw?`<div class="row sb wkc" onclick="showW('${cw.id}')"><span><span class="tiny muted">📣 The crowd is chanting</span><br><b>${esc(c.t)}</b></span><span class="tiny muted" style="text-align:right">Book ${esc(cw.name.split(' ').slice(-1)[0])}<br>for a pop</span></div>`:''}</div>`}
 
 /* ===================== LIVE GOAL TRACKER (v92) =====================
  Reads the card as it's booked right now and says whether the weekly goal and the network mandate are on track.
@@ -179,7 +182,7 @@ function cardProj(){const sh=curShow();const c=(S.card&&S.card.p)||[];const ctx=
   if(sl.k==='match'){const m=sl.d;if(!validMatch(m))return;const ids=m.sides.flat();const ws=ids.map(id=>S.w[id]);if(ws.some(w=>w.inj))return;
    const r=rateMatch(m,ctx);let bump=Math.min(1,ws.filter(w=>w.deb).reduce((a,w)=>a+debutStars(w,sh.ppv),0));if(ch&&!chUsed&&ids.includes(ch)){bump+=.25;chUsed=true}
    const mid=clamp((r.lo+r.hi)/2+bump,.25,5),hi=clamp(r.hi+bump,.25,5);P.booked++;P.nm++;mids.push(mid);his.push(hi);meta.push(segMeta(sl,mid));
-   if(ws.some(w=>w.g==='F'))P.women++;if(m.title)P.title++;if(m.type==='tag'||m.type==='trios'||m.type==='tag8'||m.sides[0].length>1)P.tag++;if(m.stip&&m.stip!=='std')P.stip++;
+   if(ws.some(w=>w.g==='F'))P.women++;if(m.title)P.title++;if(m.type==='tag'||m.type==='trios'||m.type==='tag8'||m.sides[0].length>1)P.tag++;if(stipKey(m)!=='std')P.stip++;
    P.loMid=Math.min(P.loMid,mid);P.loHi=Math.min(P.loHi,hi);if(si===meSlot)P.me={mid,hi,lo:clamp(r.lo+bump,.25,5)};
    if(ws.some(w=>w.rookie&&w.own==='p'))P.rk=Math.max(P.rk,mid>=3?2:hi>=3?1:0.5);
    if(ws.some(w=>w.deb&&w.own==='p'))P.deb=true;
@@ -351,3 +354,49 @@ function tourReslot(k){const c=S.card.p;const msg=[];const free=[];c.forEach((sl
   if(sl.k==='match'&&sl.d.tour)return;if(who.some(id=>ids.has(id))){sl.d=null;msg.push(`Segment ${i+1} was cleared — someone in it is now in the tournament.`);if(sl.k==='match')free.push(i)}});
  const slots=free.concat(c.map((sl,i)=>sl.k==='match'&&!sl.d&&!free.includes(i)?i:-1).filter(i=>i>=0)).sort((a,b)=>b-a);
  ms.forEach(m=>{const i=slots.shift();if(i!=null)c[i].d=m});return msg}
+
+/* ===================== WEEKLY BRIEFING (v95) =====================
+ The first time you open Home each week, a briefing lands on your desk: what needs your attention before it becomes
+ a problem — contracts running out, unhappy or burnt-out talent, real backstage heat, feuds going stale, what's
+ coming on the calendar, and free agents about to leave the market. It can be reopened from Home any time. */
+const BRIEF_KEY='tks_brief';
+function briefId(){return ((typeof LMP!=='undefined'&&LMP&&LMP.code)||'solo')+':'+(S.gm||'')+':'+S.season}
+function briefSeen(){try{const m=JSON.parse(localStorage.getItem(BRIEF_KEY)||'{}');return m[briefId()]===AW()}catch(e){return false}}
+function briefMark(){try{const m=JSON.parse(localStorage.getItem(BRIEF_KEY)||'{}');m[briefId()]=AW();const ks=Object.keys(m);if(ks.length>20)delete m[ks[0]];localStorage.setItem(BRIEF_KEY,JSON.stringify(m))}catch(e){}}
+function briefItems(){const mine=ownList('p');const sec=[];const nm=w=>`<a href="#" onclick="closeModal();showW('${w.id}');return false">${esc(w.name)}</a>`;
+ /* contracts */
+ const exp=mine.filter(w=>w.con<=4||(w.con<=8&&w.pop>=70)).sort((a,b)=>a.con-b.con);
+ if(exp.length)sec.push({i:'✍️',t:'Contracts running out',u:exp.some(w=>w.con<=2),rows:exp.map(w=>`<div class="row sb brow"><span>${nm(w)} · <b class="${w.con<=2?'bad':''}">${Math.max(0,w.con)} wk${w.con===1?'':'s'}</b>${w.mor<30?' 😠':''}<br><span class="muted tiny">Asks ${money(askSal(w))}/wk${w.con<=1?' · walks after this week if not re-signed':''}</span></span><button class="mini" onclick="briefResign('${w.id}')">Re-sign ${money(resignCost(w))}</button></div>`)});
+ /* morale */
+ const sad=mine.filter(w=>!w.inj&&w.mor<45).sort((a,b)=>a.mor-b.mor).slice(0,6);
+ if(sad.length)sec.push({i:'😠',t:'Morale to watch',u:sad.some(w=>w.mor<SIT_MOR),rows:sad.map(w=>`<div class="brow">${nm(w)} · morale <b class="${w.mor<SIT_MOR?'bad':''}">${Math.round(w.mor)}</b><br><span class="muted tiny">${w.mor<SIT_MOR?'Could go off-script in a match — ':''}${w.mor<10?'may demand their release · ':''}a win, a main event spot or a title shot will help</span></div>`)});
+ /* real backstage heat */
+ const bf=[];for(let i=0;i<mine.length;i++)for(let j=i+1;j<mine.length;j++){const v=beefOf(mine[i].id,mine[j].id);if(v>=25)bf.push([mine[i],mine[j],v])}
+ bf.sort((a,b)=>b[2]-a[2]);
+ if(bf.length)sec.push({i:'☢️',t:'Backstage drama',u:bf.some(x=>x[2]>=BEEF_MIN),rows:bf.slice(0,4).map(([A,B,v])=>`<div class="brow">${nm(A)} & ${nm(B)} · real heat <b class="${v>=BEEF_MIN?'bad':''}">${v}</b><br><span class="muted tiny">${v>=BEEF_MIN?'Putting them in a ring together could turn ugly':'Simmering — keep them apart and it will cool off'}</span></div>`)});
+ /* feuds going stale */
+ const fs=[];for(const k in S.heat){const f=S.fs&&S.fs[k];const [a,b]=k.split('|');const A=S.w[a],B=S.w[b];if(!f||f.paid||!A||!B||(A.own!=='p'&&B.own!=='p')||S.heat[k]<20)continue;const age=AW()-f.start;if(f.stale||age>=5)fs.push({A,B,h:S.heat[k],left:8-age,stale:f.stale})}
+ if(fs.length){const np=nextPPV();sec.push({i:'🥱',t:'Feuds that need a payoff',u:fs.some(x=>x.stale),rows:fs.sort((a,b)=>a.left-b.left).slice(0,5).map(x=>`<div class="brow">${nm(x.A)} vs ${nm(x.B)} · heat <b>${Math.round(x.h)}</b><br><span class="muted tiny">${x.stale?'Already stale and cooling fast':`Goes stale in ${Math.max(1,x.left)} week${x.left===1?'':'s'}`}${np?` — blow it off at ${esc(np.n)}${np.in?` (${np.in} wk${np.in===1?'':'s'})`:' (this week)'}`:''}</span></div>`)})}
+ /* calendar */
+ const cal=[];const np=nextPPV();if(np)cal.push(`📅 <b>${esc(np.n)}</b> ${np.in?`in ${np.in} week${np.in===1?'':'s'}`:'is <b>this week</b>'}`);
+ for(const k in TOURS){const D=TOURS[k];const first=tourFirst(D);const d=first-S.week;if(d>=0&&d<=3)cal.push(`${D.i} <b>${esc(D.n)}</b> ${d?`starts in ${d} week${d===1?'':'s'} — pick your field`:'starts <b>this week</b>'}`);else if(S.week>first&&S.week<=D.final)cal.push(`${D.i} <b>${esc(D.n)}</b> is under way${S.week===D.final?' — the final is this week':''}`)}
+ const md=S.mand&&S.mand.p;if(md&&!md.done&&MANDS[md.k]){const l=md.due-S.week;cal.push(`📺 Network mandate: <b>${esc(MANDS[md.k].n)}</b> — ${l<=0?'due tonight':`${l} week${l>1?'s':''} left`}`)}
+ const vac=Object.values(S.titles).filter(t=>!t.holders.length);if(vac.length)cal.push(`👑 Vacant: ${vac.map(t=>esc(t.n)).join(', ')}`);
+ const idle=Object.values(S.titles).filter(t=>t.holders.length&&S.w[t.holders[0]]&&S.w[t.holders[0]].own==='p'&&S.week-t.last>=4);if(idle.length)cal.push(`🏆 Not defended in a while (losing prestige soon): ${idle.map(t=>esc(t.n)).join(', ')}`);
+ if(cal.length)sec.push({i:'🗓️',t:'Coming up',rows:cal.map(x=>`<div class="brow">${x}</div>`)});
+ /* health */
+ const inj=mine.filter(w=>w.inj).sort((a,b)=>a.inj-b.inj);const tired=mine.filter(w=>!w.inj&&w.fat>=FAT_RISK);
+ if(inj.length||tired.length)sec.push({i:'🚑',t:'Health',rows:inj.map(w=>`<div class="brow">${nm(w)} · ${w.susp?'suspended':'injured'} — back in ${w.inj} week${w.inj===1?'':'s'}</div>`).concat(tired.map(w=>`<div class="brow">${nm(w)} · 🔋 exhausted — rest them or risk an injury</div>`))});
+ /* free agents leaving */
+ const fa=Object.values(S.w).filter(w=>onMarket(w)&&!w.cw&&faLeft(w)===1&&w.pop>=55).sort((a,b)=>b.pop-a.pop).slice(0,4);
+ if(fa.length)sec.push({i:'🆕',t:'Last week to sign',rows:fa.map(w=>`<div class="brow">${nm(w)} · POP ${Math.round(w.pop)} · signs for ${money(signCost(w))}</div>`)});
+ return sec}
+function briefHtml(){const sec=briefItems();const sh=curShow();
+ return `<div class="h mhd">📰 Week ${S.week} briefing</div><p class="muted" style="margin-top:0">${esc(sh.ppv?sh.name+' is this week.':'Here\'s what needs your attention before you book.')}</p>
+ ${sec.length?sec.map(s=>`<div class="card brief ${s.u?'urgent':''}"><div class="h small">${s.i} ${s.t}${s.u?' <span class="tg bad">Act now</span>':''}</div>${s.rows.join('')}</div>`).join(''):'<div class="card"><div class="muted">All quiet in the front office. Go book a great show.</div></div>'}
+ <button class="btn" onclick="closeModal();go('book')">Book the show</button><button class="btn sec" onclick="closeModal()">Close</button>`}
+function openBrief(){if(!S||S.phase!=='season')return;briefMark();openModal(briefHtml())}
+function briefResign(id){resign(id);openBrief()}
+/* show it once per week, the first time Home is on screen with nothing else open */
+function briefAuto(){if(!S||S.phase!=='season'||tab!=='home'||(typeof TV!=='undefined'&&TV)||briefSeen())return;if(typeof ME!=='undefined'&&ME||typeof PS!=='undefined'&&PS||typeof LQ!=='undefined'&&LQ)return;
+ if(ON()&&!myTurn())return;const m=document.getElementById('modal');if(!m||!m.classList.contains('hidden'))return;setTimeout(()=>{const m2=document.getElementById('modal');if(S&&tab==='home'&&m2&&m2.classList.contains('hidden')&&!briefSeen())openBrief()},350)}
