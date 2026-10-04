@@ -6,11 +6,11 @@
 
 /* ===================== TOURNAMENTS ===================== */
 const TOURS={
- c2:{n:'Continental Classic',i:'♾️',g:'M',title:'cont',rr:[8,9,10],final:11,
+ c2:{n:'Continental Classic',i:'♾️',g:'M',title:'cont',rr:[37,38,39],final:40,
   d:'Round robin for the Continental title. Four of your best men wrestle three weeks of block matches (3 points a win, Continental Crown rules: no run-ins), and the top two meet at Worlds End.'},
- ohc:{n:'Owen Hart Cup',i:'🏆',g:'M',prize:'world',semi:17,final:20,
+ ohc:{n:'Owen Hart Cup',i:'🏆',g:'M',prize:'world',semi:9,final:12,
   d:"Knockout bracket for four of your best men. The winner earns a World title shot at All In."},
- ohcw:{n:"Women's Owen Hart Cup",i:'🏆',g:'F',prize:'wworld',semi:18,final:20,
+ ohcw:{n:"Women's Owen Hart Cup",i:'🏆',g:'F',prize:'wworld',semi:10,final:12,
   d:"Knockout bracket for four of your best women. The winner earns a Women's World title shot at All In."}};
 const RR4=[[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]]];
 function tourState(b,k){S.tour=S.tour||{};const T=S.tour[b]||(S.tour[b]={});let t=T[k];if(!t||t.s!==S.season)t=T[k]={s:S.season,ent:null,res:[],win:null};return t}
@@ -53,8 +53,8 @@ function tourRecord(b,x,w,notes,how){const t=tourState(b,x.k);if(t.res.some(r=>r
  if(!D.prize)return;const pz=S.titles[D.prize];const h=pz&&pz.holders[0]&&S.w[pz.holders[0]];
  if(!pz||!h){W.pop=clamp(W.pop+2,1,100);return}
  if(h.id===w){notes.push(`👑 The champion proves the point — ${W.name} already holds the ${pz.n} title.`);return}
- if(h.own===b){if(b==='p'){addPromise({kind:'shot',a:w,b:h.id,week:SEASON,ppv:PPVS[SEASON],title:pz.id});notes.push(`🎟️ ${W.name} has earned a ${pz.n} title shot against ${h.name} at ${PPVS[SEASON]}.${ON()?'':" It'll be waiting on your card."}`)}else t.shot=w}
- else{t.chal=w;if(mine)notes.push(`🎟️ ${W.name} has earned a shot at ${nameOf(h.own)}'s ${pz.n} champion ${h.name} — it's booked as ${ON()?nameOf(b)+"'s":'your'} title challenge at ${PPVS[SEASON]}.`)}}
+ if(h.own===b){if(b==='p'){addPromise({kind:'shot',a:w,b:h.id,week:ALLIN_WEEK,ppv:PPVS[ALLIN_WEEK],title:pz.id});notes.push(`🎟️ ${W.name} has earned a ${pz.n} title shot against ${h.name} at ${PPVS[ALLIN_WEEK]}.${ON()?'':" It'll be waiting on your card."}`)}else t.shot=w}
+ else{t.chal=w;if(mine)notes.push(`🎟️ ${W.name} has earned a shot at ${nameOf(h.own)}'s ${pz.n} champion ${h.name} — it's booked as ${ON()?nameOf(b)+"'s":'your'} title challenge at ${PPVS[ALLIN_WEEK]}.`)}}
 function tourMatch(x){const m={type:'singles',stip:'std',sides:[[x.a],[x.b]],winner:0,title:'',tour:{k:x.k,id:x.id,lab:x.lab}};
  if(x.lab==='Final'&&TOURS[x.k].title&&eligibleTitles(m).includes(TOURS[x.k].title))m.title=TOURS[x.k].title;return m}
 /* this week's tournament matches as booked matches; injured entrants forfeit before the show */
@@ -173,7 +173,7 @@ function weekGoalsCard(){if(S.phase!=='season')return '';if(!S.goal||!S.goal.p||
 /* ===================== LIVE GOAL TRACKER (v92) =====================
  Reads the card as it's booked right now and says whether the weekly goal and the network mandate are on track.
  Matches use their projected range, promos a guess from mic skill, the show the same weighting the ratings use. */
-function cardProj(){const sh=curShow();const c=(S.card&&S.card.p)||[];const ctx={ppv:sh.ppv,allin:sh.ppv&&S.week===SEASON,preview:true};
+function cardProj(){const sh=curShow();const c=(S.card&&S.card.p)||[];const ctx={ppv:sh.ppv,allin:sh.ppv&&S.week===ALLIN_WEEK,preview:true};
  const P={sh,booked:0,me:null,women:0,title:0,tag:0,stip:0,pr:null,nm:0,loMid:5,loHi:5,rk:0,newch:false,tagdef:false,deb:false,show:null};
  const ch=S.chant&&S.chant.p&&S.chant.p.w===AW()?S.chant.p.id:null;let chUsed=false;
  const meSlot=c.map((sl,i)=>sl.k==='match'?i:-1).filter(i=>i>=0).pop();
@@ -403,3 +403,18 @@ function briefAuto(){if(!S||S.phase!=='season'||tab!=='home'||(typeof TV!=='unde
 
 /* v111: star ratings were recalibrated (a solid show is ~3½★ now, 5★ is rare) and fan growth slows as a company gets big */
 function starMigrate(st){if(!st||!st.w||st.v111)return;st.v111=1;if(st.phase!=='season'&&st.phase!=='over')return;const S0=S;S=st;try{news('📏 Star ratings have been recalibrated: a solid show now rates about 3½★, a great one 4★ and up, and 5★ is rare. Fan growth also slows as your company gets bigger.')}finally{S=S0}}
+
+/* ===================== v113: THE ROLLING CALENDAR ===================== */
+/* Seasons used to be 24 weeks (WrestleDream → All In). A save in progress keeps its place in the PPV cycle:
+   its next PPV stays its next PPV (at most 3 weeks out), the absolute week count carries on unbroken, and any
+   promise, mandate or rival title shot booked for a week moves with it. */
+const OLD_PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',22:'Forbidden Door',24:'All In'};
+function calMapWeek(w){if(w>OLD_SEASON)return SEASON+(w-OLD_SEASON);if(w<1)return w;
+ let x=w;while(x<=OLD_SEASON&&!OLD_PPVS[x])x++;const nw=+Object.keys(PPVS).find(k=>PPVS[k]===OLD_PPVS[x]);return nw-Math.min(x-w,3)}
+function calMigrate(st){if(!st||!st.w||st.cal2)return;st.cal2=1;if(st.awb==null)st.awb=(st.season-1)*OLD_SEASON;
+ if(st.phase!=='season'&&st.phase!=='over')return;const w0=st.week;const nw=st.phase==='over'?SEASON+1:calMapWeek(w0);
+ st.awb+=w0-nw;st.week=nw;const mv=p=>{if(p&&typeof p.week==='number')p.week=calMapWeek(p.week)};
+ (st.promises||[]).forEach(mv);if(st.priv)for(const k in st.priv)if(st.priv[k])(st.priv[k].promises||[]).forEach(mv);
+ if(st.mand)for(const b in st.mand){const m=st.mand[b];if(m&&typeof m.due==='number')m.due=calMapWeek(m.due)}
+ if(st.aiShot)mv(st.aiShot);
+ const S0=S;S=st;try{news(`📅 New calendar: the year now runs Revolution → Worlds End with a PPV every 4 weeks, adding Dynasty, Redemption and All Out. All In is the midyear supershow, and the season (awards and offseason) wraps after Worlds End. ${st.phase==='season'?`You're now in week ${nw} of ${SEASON}${(()=>{const n=nextPPV();return n?` — next up: ${n.n}${n.in?` in ${n.in} week${n.in>1?'s':''}`:' (this week)'}`:''})()}.`:''}`)}finally{S=S0}}

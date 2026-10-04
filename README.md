@@ -1,6 +1,6 @@
 # Tony Khan Simulator
 
-A wrestling general-manager game: draft, book Dynamite and Collision, and win the fan war on the road to All In. Works fully offline once installed.
+A wrestling general-manager game: draft, book Dynamite and Collision through a full AEW year — a PPV every 4 weeks from Revolution through All In to Worlds End — and win the fan war. Works fully offline once installed.
 
 ## Put it on GitHub Pages
 1. Create a new public repository on GitHub (e.g. `all-elite-gm`).
@@ -18,7 +18,7 @@ Open it once while online; after that it launches with no connection.
 Upload the changed files (usually `index.html`, plus any `.js` files that changed, such as `season.js`), then open `sw.js` and bump the version in `VERSION` (e.g. `aegm-v36` → `aegm-v37`) so phones pick up the update. Installed copies update the next time they're opened online (close and reopen the app once).
 
 ## Play online with a friend
-Host a league for 2–4 GMs and friends join with a 6-letter code. Everyone runs their own brand, you face a different GM each week, and the most fans after All In wins. Offline turns sync later, and each player gets a notification when it's their move. One-time setup: see [ONLINE-SETUP.md](ONLINE-SETUP.md).
+Host a league for 2–4 GMs and friends join with a 6-letter code. Everyone runs their own brand, you face a different GM each week, and the most fans gained by Worlds End wins. Offline turns sync later, and each player gets a notification when it's their move. One-time setup: see [ONLINE-SETUP.md](ONLINE-SETUP.md).
 
 ## Offers & contracts
 - **Free agents with 55+ popularity want an offer**, not just a fee: a signing bonus, a weekly salary, and promises — 🎬 creative control, ⭐ main event spots, 🏆 a title shot, 📺 a place on every PPV. Each wrestler wants different things (a big star wants control, a hungry midcarder wants main events), and the offer screen tells you how it looks to them. Smaller names still sign on the spot.

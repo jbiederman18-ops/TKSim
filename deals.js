@@ -47,12 +47,12 @@ const dealWord=u=>u<.9?['bad','Not interested']:u<1?['warnt','Lukewarm']:u<1.15?
 function dealSum(o){return `${money(o.bonus)} bonus · ${money(o.sal)}/wk${(o.perks||[]).length?' · '+o.perks.map(k=>PERKS[k].i+' '+PERKS[k].n).join(' · '):''}`}
 
 /* ---------- contract terms ---------- */
-function dealShotBy(){for(let x=S.week+3;x<=SEASON;x++)if(PPVS[x])return (S.season-1)*SEASON+x;return (S.season-1)*SEASON+SEASON}
+function dealShotBy(){for(let x=S.week+3;x<=SEASON;x++)if(PPVS[x])return awBase()+x;return awBase()+SEASON}
 function dealTerms(w,perks){const d={};(perks||[]).forEach(k=>{
   if(k==='cc')d.cc=AW()+CC_WEEKS;else if(k==='me')d.me={need:2,got:0,by:AW()+3};else if(k==='shot')d.shot={by:dealShotBy()};else if(k==='ppv')d.ppv=S.season});
  if(Object.keys(d).length)w.deal=d;else delete w.deal}
 function dealActive(w){const d=w&&w.deal;if(!d)return [];const l=[];if(ccOn(w))l.push('cc');if(d.me)l.push('me');if(d.shot)l.push('shot');if(d.ppv===S.season)l.push('ppv');return l}
-const wkOf=aw=>aw-(S.season-1)*SEASON;
+const wkOf=aw=>aw-awBase();
 function dealTermTxt(w,k){const d=w.deal||{};
  if(k==='cc')return `🎬 Creative control — won't agree to lose${d.cc>1?' (until week '+wkOf(d.cc)+')':''}`;
  if(k==='me')return `⭐ Main event ${d.me.need-d.me.got} more time${d.me.need-d.me.got>1?'s':''} by week ${wkOf(d.me.by)}`;
