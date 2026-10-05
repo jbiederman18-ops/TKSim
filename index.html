@@ -793,7 +793,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v121';
+const APP_VERSION='v122';
 /* v113: a rolling AEW year — a PPV every 4 weeks from Revolution to Worlds End. All In is the midyear supershow;
    the season (awards, offseason, fan-war winner) ends after Worlds End, then the calendar rolls into a new year. */
 const SEASON=40,ALLIN_WEEK=24,OLD_SEASON=24;
@@ -875,7 +875,7 @@ function feudInit(st){if(!st)return;
  /* older saves kept paid-off feuds around at half heat — a payoff now ends them */
  if(!st.fe2){st.fe2=1;for(const k in st.fs)if(st.fs[k]&&st.fs[k].paid){delete st.fs[k];if(st.heat)delete st.heat[k]}}}
 function endFeud(k,how,ic){if(how)fhArchive(k,how,ic);else if(S.fh)delete S.fh[k];if(S.heat)delete S.heat[k];if(S.fs)delete S.fs[k]}
-function showMigrate(){if(S&&S.phase==='season'&&!S.fa){S.fa={};marketTick(undefined,true)}if(!S||S.fullShow)return;S.fullShow=true;S.showIdx=0;if(S.phase==='season'&&S.card)S.card={p:emptyCard(curShow().ppv),ai:null}}
+function showMigrate(){if(S&&S.phase==='season'&&!S.fa){S.fa={};marketTick(undefined,true)}cardMigrate();if(!S||S.fullShow)return;S.fullShow=true;S.showIdx=0;if(S.phase==='season'&&S.card)S.card={p:emptyCard(curShow().ppv),ai:null}}
 /* in-ring corrections for Showmen who are elite workers (v61): applied once to existing saves, on top of any progress since */
 const RING_FIX={'jay-white':4,'adam-cole':4,'orange-cassidy':4,'mercedes-mone':2,'toni-storm':3,'christian-cage':2};
 function dataUpdate(st){if(!st||!st.w||(st.dataV||1)>=DATA_V)return;let n=0;
@@ -2107,11 +2107,14 @@ function newCard(){const ppv=!!(PPVS[S.week]);const c=emptyCard(ppv);const slots
   if(h&&h.own==='p'&&h.id!==pr.a)pr.b=h.id;else{pr.void=1;if(h&&h.own&&h.own!=='p'&&chs&&!chs.d&&S.w[pr.a]&&S.w[pr.a].own==='p')chs.d={title:t.id,c:pr.a}}});
  if(S.promises)S.promises=S.promises.filter(pr=>!pr.void);
  const used=new Set();
+ /* v122: on 3-match TV, tournament matches go on first so promises can't crowd them into a forfeit */
+ const placeTour=()=>tourDue('p',used,[]).forEach(m=>{if(f>bk)return;const i=slots[bk--];c[i].d=m;m.sides.flat().forEach(id=>used.add(id))});
+ if(!ppv)placeTour();
  duePromises().sort((x,y)=>(x.kind==='contract'||x.kind==='shot'?2:x.ppv?1:0)-(y.kind==='contract'||y.kind==='shot'?2:y.ppv?1:0)).forEach(pr=>{const A=S.w[pr.a],B=S.w[pr.b];if(!A||!B||A.own!=='p'||B.own!=='p'||f>bk||used.has(pr.a)||used.has(pr.b))return;
   const m={type:'singles',stip:pr.stip||'std',sides:[[pr.a],[pr.b]],winner:0,title:''};const et=eligibleTitles(m).filter(t=>S.titles[t].kind==='singles'&&S.titles[t].holders.length);if(pr.title&&et.includes(pr.title))m.title=pr.title;else if(et.length)m.title=et[0];
   const i=(pr.kind==='contract'||pr.kind==='shot'||pr.ppv)?slots[bk--]:slots[f++];c[i].d=m;used.add(pr.a);used.add(pr.b)});
  /* tournament matches are locked onto the card: you decide who advances */
- tourDue('p',used,[]).forEach(m=>{if(f>bk)return;const i=slots[bk--];c[i].d=m;m.sides.flat().forEach(id=>used.add(id))});
+ if(ppv)placeTour();
  if(S.week===ALLIN_WEEK&&chs&&!chs.d)for(const k in TOURS){const t=tourState('p',k);const pz=S.titles[TOURS[k].prize];const w=t.chal&&S.w[t.chal];if(w&&w.own==='p'&&!used.has(w.id)&&pz&&pz.holders.length&&S.w[pz.holders[0]].own!=='p'){chs.d={title:pz.id,c:w.id};break}}
  return {p:c,ai:null}}
 function settlePromises(out){duePromises().forEach(pr=>{const A=S.w[pr.a],B=S.w[pr.b];if(!A||!B)return;const what=pr.kind==='contract'?'contracted':'promised';
@@ -2128,6 +2131,21 @@ const CARD_TV=['promo','match','promo','match','promo?','match'],CARD_PPV=['matc
 const cardOf=ppv=>ppv?(S&&S.week===FD_WEEK?CARD_FD:CARD_PPV):CARD_TV;
 const cardMatches=ppv=>cardOf(ppv).filter(k=>k==='match').length;
 function emptyCard(ppv){return cardOf(ppv).map(k=>k.endsWith('?')?{k:k.slice(0,-1),d:null,opt:true}:{k,d:null})}
+/* v122: a TV card built under an older layout (e.g. the 4-match TV card before v119) is re-fitted to the current one.
+   Keeps the main event as the main event, keeps tournament/promised matches first, then other booked matches, in their running order. */
+function cardFit(c,ppv){if(!Array.isArray(c)||ppv)return {c,drop:0};const tpl=emptyCard(false);const sig=a=>a.map(x=>x&&x.k+(x.opt?'?':'')).join(',');
+ if(sig(c)===sig(tpl))return {c,drop:0};const nM=tpl.filter(x=>x.k==='match').length;
+ const ms=c.filter(x=>x&&x.k==='match'),ps=c.filter(x=>x&&x.k==='promo'&&x.d);const main=ms.length?ms[ms.length-1]:{k:'match',d:null};
+ const pri=x=>!x.d?0:(x.d.tour||(typeof promiseOf==='function'&&promiseOf(x.d)))?2:1;
+ const rest=ms.slice(0,-1).map((x,i)=>({x,i})).sort((a,b)=>pri(b.x)-pri(a.x)||a.i-b.i);const keep=rest.slice(0,nM-1).sort((a,b)=>a.i-b.i).map(o=>o.x);
+ const drop=rest.slice(nM-1).filter(o=>o.x.d).length+Math.max(0,ps.length-tpl.filter(x=>x.k==='promo').length);
+ while(keep.length<nM-1)keep.push({k:'match',d:null});const mq=keep.concat([main]);
+ const out=tpl.map(sl=>{if(sl.k==='match')return {k:'match',d:mq.shift().d};const p=ps.shift();return p?Object.assign({k:'promo',d:p.d},sl.opt?{opt:true}:{}):sl});return {c:out,drop}}
+function cardMigrate(){if(!S||S.phase!=='season'||!S.card)return;const sh=curShow();if(sh.ppv)return;let drop=0;
+ if(S.card.p&&!(ON()&&S.online&&S.online.booked&&S.online.booked.p)){const r=cardFit(S.card.p,false);if(r.c!==S.card.p){S.card.p=r.c;drop+=r.drop}}
+ /* the offline rival rebooks its own show under the new layout */
+ if(!ON()&&S.card.ai){const r=cardFit(S.card.ai,false);if(r.c!==S.card.ai){try{S.card.ai=autoBook('ai',sh,null)}catch(e){S.card.ai=r.c}}}
+ if(drop)setTimeout(()=>toast(`TV shows are 3 matches now — ${drop} booked segment${drop>1?'s were':' was'} taken off this week's card.`),1200)}
 const fixedK=sl=>!!sl&&(sl.k==='chal'||sl.k==='xo');
 /* ---- stamina: matches drain it, a week off (or a promo-only week) restores it ---- */
 const FAT_MT={singles:16,triple:14,four:12,tag:11,trios:10,eight:9,gauntlet:10},FAT_OK=35,FAT_RISK=55,REC_WORK=10,REC_REST=25;
@@ -2967,7 +2985,7 @@ function feudList(b){return Object.entries(S.heat).map(([k,h])=>{const [a,c]=k.s
 /* Classic Dynamite page banner: kicker, big gold title, a key number on the right */
 function pageHead(kick,title,right,o){o=o||{};return `<div class="card phead"><div class="ptop"><span class="dk">${kick}</span>${o.tag?`<span class="livebug"><b>${o.tag}</b>${o.tag2?`<span>${o.tag2}</span>`:''}</span>`:''}</div><div class="phrow"><div class="dround">${title}</div>${right?`<div class="phr">${right}</div>`:''}</div>${o.sub?`<div class="lfl"></div><div class="lfs">${o.sub}</div>`:''}</div>`}
 /* Tonight's card: the running order on the Home screen, broadcast style */
-function tonightCard(sh){const c=S.card&&S.card.p;if(!c||!c.length)return '';let mn=0;const nM=c.filter(s=>s.k==='match').length;
+function tonightCard(sh){const c=S.card&&S.card.p;if(!c||!c.length)return '';let mn=0,vn=0;const nM=c.filter(s=>s.k==='match').length;
  const req=c.filter(sl=>sl.k==='match'||(sl.k==='promo'&&!sl.opt));const done=req.filter(sl=>sl.d).length;
  const nm=id=>S.w[id]?esc(S.w[id].name):'?';
  const rows=c.map((sl,i)=>{let lab,who='',me=false;
@@ -2975,7 +2993,8 @@ function tonightCard(sh){const c=S.card&&S.card.p;if(!c||!c.length)return '';let
   else if(sl.k==='promo'){if(sl.opt&&!sl.d)return '';lab=sl.d&&PT[sl.d.type]?'Promo · '+PT[sl.d.type].n:'Promo segment';if(sl.d)who=nm(sl.d.a)+(sl.d.b&&S.w[sl.d.b]?' &amp; '+nm(sl.d.b):'')}
   else if(sl.k==='xo'){if(!sl.d)return '';lab='Dream match';who=nm(sl.d.a)+' vs '+nm(sl.d.b)}
   else{if(!sl.d)return '';lab='Title challenge';who=nm(sl.d.c)}
-  return `<div class="tcr ${me?'me':''}"><span class="n">${i+1}</span><span class="l">${who||lab}${who?`<small>${lab}</small>`:''}</span>${who?'':'<span class="t">TBA</span>'}</div>`}).join('');
+  vn++;/* v122: number what's shown — a hidden empty bonus promo doesn't take a number */
+  return `<div class="tcr ${me?'me':''}"><span class="n">${vn}</span><span class="l">${who||lab}${who?`<small>${lab}</small>`:''}</span>${who?'':'<span class="t">TBA</span>'}</div>`}).join('');
  return `<div class="card tcard" onclick="go('book')"><div class="row sb"><div class="h small" style="margin:0">${sh.ppv?'The PPV card':"Tonight's card"}</div><span class="muted tiny">${done} of ${req.length} booked</span></div><div class="tc">${rows}</div></div>`}
 function homeView(){const sh=curShow();const np=nextPPV();const gp=fanGain('p'),ga=fanGain('ai');const pp=clamp(50+(gp-ga)/(Math.abs(gp)+Math.abs(ga)+20000)*50,3,97);const mine=ownList('p');const al=[];
  {const v=inaugList();if(v.length)al.push(`👑 ${v.length} title${v.length>1?'s are':' is'} still vacant — book title matches to crown your inaugural champions. <a href="#" onclick="go('book');return false" style="color:var(--gold2)">Book now</a>`)}
@@ -3138,7 +3157,8 @@ function flowScore(segs,ppv,brand){const out={mod:0,notes:[]};const n=segs.lengt
  {const sp=mts.map(x=>x.stp).filter(x=>x&&x!=='std');const ds=new Set(sp).size;const dt=new Set(mts.map(x=>x.mt).filter(Boolean)).size;
   if(ppv){if(ds>=3)add(.2,`Something for everyone — ${ds} different stipulations made it feel like an event`);else if(ds===2)add(.1,'Two different stipulation matches broke up the card');else if(ds===1&&mts.length>=4)add(.05,'A gimmick match broke up the card')}
   else if(ds>=2)add(.05,'Mixed up the gimmicks on free TV');
-  if(mts.length>=4&&dt>=4)add(.05,'A good mix of singles, tags and multi-person matches')}
+  /* v122: TV is 3 matches now, so 3 different match types earns the mix there */
+  if(ppv?(mts.length>=4&&dt>=4):(mts.length>=3&&dt>=3))add(.05,'A good mix of singles, tags and multi-person matches')}
  if(!segs.some(x=>x.f)&&brand&&Object.values(S.w).filter(w=>w.own===brand&&w.g==='F'&&!w.inj).length>=2)add(-.1,'Nothing for the women\'s division tonight');
  out.mod=Math.round(clamp(out.mod,-.6,.6)*100)/100;return out}
 function flowWord(m){return m>=.3?'Great flow':m>=.1?'Good flow':m>-.1?'Even':m>-.3?'Choppy':'Poorly paced'}
@@ -3613,7 +3633,7 @@ function mpPush(msg){clearTimeout(mpT);mpT=null;if(!ON()||!LMP||TV)return;const 
  if(!window.TKO||!TKO.ready){MP_PENDING=true;return}MP_PENDING=false;leaguePush()}
 function mpPass(msg,to){S.online.turn=to;mpPush(msg)}
 function mpApplyNames(names,shows){if(!LMP||!S._view)return;if(shows&&S.online){S.online.show=S.online.show||{};for(const k in shows)if(shows[k]&&BK.test(k))S.online.show[localKey(k)]=cleanShow(shows[k])}if(!names)return;S.names=S.names||{};for(const k in names)if(names[k])S.names[localKey(k)]=names[k];S.gm=S.names.p||S.gm;S.rival=S._view.opp?(S.names.ai||'Waiting for a GM'):'Bye week'}
-function mpLoad(stateStr,names,shows,rev){const st=JSON.parse(stateStr);delete st._view;if(rev==null)rev=(st.online&&st.online.rev)||0;if(st.online)st.online.rev=rev;mpSetBase(rev,stateStr);viewFor(st,LMP.me);S=st;dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);calMigrate(S);mpApplyNames(names,shows);if(typeof MP_KEEP!=='undefined'&&MP_KEEP)partyReapply()}
+function mpLoad(stateStr,names,shows,rev){const st=JSON.parse(stateStr);delete st._view;if(rev==null)rev=(st.online&&st.online.rev)||0;if(st.online)st.online.rev=rev;mpSetBase(rev,stateStr);viewFor(st,LMP.me);S=st;dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);calMigrate(S);cardMigrate();mpApplyNames(names,shows);if(typeof MP_KEEP!=='undefined'&&MP_KEEP)partyReapply()}
 /* a new copy of the world arrived from another GM */
 let MP_WANT=false,MP_DEFER=null;
 function mpIncoming(d){if(!d||!LMP||!S||!ON()||TV)return;if(d.state&&(d.rev||0)>(S.online.rev||0)&&mpHoldIncoming(d))return;const wasMine=myTurn();let changed=false;
@@ -4073,7 +4093,7 @@ if(typeof document!=='undefined'&&document.getElementById('app')){
  {const q=new URLSearchParams(location.search).get('game');BOOT_Q=!!q;if(q&&mpGames().some(g=>g.code===q))LS.set('tksim_active',JSON.stringify(mpGames().find(g=>g.code===q)));
   if(q)history.replaceState(null,'',location.pathname);
   try{const a=JSON.parse(LS.get('tksim_active')||'null');const g=a&&LS.get('tksim_game_'+a.code);if(g){LMP={code:a.code,me:a.me,key:a.key};S=JSON.parse(g)}}catch(e){LMP=null}}
- if(!LMP)S=load();if(S&&(!S.w||!S.phase))S=null;dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);seasonMigrate(S);starMigrate(S);calMigrate(S);if(!ON())showMigrate();if(S)saveLocal();
+ if(!LMP)S=load();if(S&&(!S.w||!S.phase))S=null;dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);seasonMigrate(S);starMigrate(S);calMigrate(S);if(!ON())showMigrate();else cardMigrate();if(S)saveLocal();
  tvBoot();loadImg();
  window.addEventListener('tko-ready',()=>{mpConnect();tvConnect();cloudCheck();render()});if(window.TKO)setTimeout(()=>{mpConnect();tvConnect();cloudCheck()},0);
  let lastCk=Date.now();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&TV)partyWake();if(document.visibilityState==='visible'&&Date.now()-lastCk>20000){lastCk=Date.now();cloudCheck();if(ON())mpConnect()}else if(document.visibilityState==='hidden')flush()});
