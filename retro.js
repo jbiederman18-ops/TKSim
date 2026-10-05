@@ -7,12 +7,13 @@
 const LOOK_KEY='tksim_look',LOOK_PX='tksim_look_px';
 /* the looks: Classic plus a family of retro video-game styles that share retro.css */
 const LOOKS={classic:{n:'Classic',d:'Black and gold, broadcast style'},'16':{n:'🕹️ 16-Bit',d:'Pixel fonts and arcade colors'},
- rpg:{n:'🗡️ Quest',d:'Old-school RPG menu windows'},arc:{n:'👊 Arcade',d:'90s fighting-game cabinet'},y2k:{n:'💿 Y2K Console',d:'Chrome menus, 2000s wrestling game'}};
+ rpg:{n:'🗡️ Quest',d:'Old-school RPG menu windows'},arc:{n:'👊 Arcade',d:'90s fighting-game cabinet'},
+ y2k:{n:'💿 Y2K Blue',d:'Chrome and blue glass',f:'fy2'},y2s:{n:'⛓️ Y2K Steel Cage',d:'Gunmetal, brushed steel, blood red',f:'fy2'},y2g:{n:'🟢 Y2K Neon',d:'Black glass and toxic green',f:'fy2'},y2p:{n:'🏆 Y2K PPV Gold',d:'Chrome gold on purple glass',f:'fy2'}};
 let LOOK='classic',R16=false,R16PX=true;
 try{LOOK=localStorage.getItem(LOOK_KEY)||'classic';if(LOOK==='r16')LOOK='16';if(!LOOKS[LOOK])LOOK='classic';R16PX=localStorage.getItem(LOOK_PX)!=='spr'}catch(e){}
 R16=LOOK!=='classic';
-function r16Apply(){const d=document.documentElement;Object.keys(LOOKS).forEach(k=>d.classList.remove('lk-'+k));d.classList.remove('r16');d.classList.toggle('rt',R16);if(R16)d.classList.add('lk-'+LOOK);
- const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',{classic:'#09090b','16':'#12061f',rpg:'#0a1250',arc:'#050304',y2k:'#030a1c'}[LOOK]||'#09090b')}
+function r16Apply(){const d=document.documentElement;Object.keys(LOOKS).forEach(k=>d.classList.remove('lk-'+k));d.classList.remove('r16','fy2');d.classList.toggle('rt',R16);if(R16){d.classList.add('lk-'+LOOK);if(LOOKS[LOOK].f)d.classList.add(LOOKS[LOOK].f)}
+ const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',{classic:'#09090b','16':'#12061f',rpg:'#0a1250',arc:'#050304',y2k:'#030a1c',y2s:'#0b0c0f',y2g:'#020402',y2p:'#06030c'}[LOOK]||'#09090b')}
 r16Apply();
 function setLook(k){if(!LOOKS[k])k='classic';LOOK=k;R16=k!=='classic';try{localStorage.setItem(LOOK_KEY,k)}catch(e){}r16Apply();
  if(typeof render==='function')try{render()}catch(e){}
