@@ -793,7 +793,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v118';
+const APP_VERSION='v119';
 /* v113: a rolling AEW year — a PPV every 4 weeks from Revolution to Worlds End. All In is the midyear supershow;
    the season (awards, offseason, fan-war winner) ends after Worlds End, then the calendar rolls into a new year. */
 const SEASON=40,ALLIN_WEEK=24,OLD_SEASON=24;
@@ -2123,8 +2123,8 @@ function settlePromises(out){duePromises().forEach(pr=>{const A=S.w[pr.a],B=S.w[
  S.promises=(S.promises||[]).filter(x=>x.week>S.week)}
 function showNames(){return (S.online&&S.online.show)||{p:'Dynamite',ai:'Collision'}}
 function curShow(){if(PPVS[S.week])return {name:PPVS[S.week],ppv:true,mine:PPVS[S.week],theirs:PPVS[S.week],fd:S.week===FD_WEEK};const n=showNames();return {name:n.p,ppv:false,mine:n.p,theirs:n.ai,special:SPECIALS[S.week]||null}}
-/* TV: 4 matches + 2 promos, plus an optional bonus promo (the '?' slot). PPV: 7 matches + an optional title challenge. */
-const CARD_TV=['match','promo','match','promo','match','promo?','match'],CARD_PPV=['match','match','match','match','match','match','match','chal'],CARD_FD=['match','match','xo?','match','match','xo?','match','chal'];
+/* TV: 3 matches + 2 promos, plus an optional bonus promo (the '?' slot). PPV: 7 matches + an optional title challenge. */
+const CARD_TV=['promo','match','promo','match','promo?','match'],CARD_PPV=['match','match','match','match','match','match','match','chal'],CARD_FD=['match','match','xo?','match','match','xo?','match','chal'];
 const cardOf=ppv=>ppv?(S&&S.week===FD_WEEK?CARD_FD:CARD_PPV):CARD_TV;
 const cardMatches=ppv=>cardOf(ppv).filter(k=>k==='match').length;
 function emptyCard(ppv){return cardOf(ppv).map(k=>k.endsWith('?')?{k:k.slice(0,-1),d:null,opt:true}:{k,d:null})}
@@ -2287,7 +2287,8 @@ function applyMatch(m,res,ctx,notes){
   /* card position: the main event is where stars are made, and top stars notice when they're buried in the opener */
   if(w.lme==null)w.lme=AW();
   if(ctx.pos==='me'){w.lme=AW();w.mor=clamp(w.mor+3,0,100);if(res.stars>=3.5)w.pop=clamp(w.pop+.5,1,100)}
-  else if(w.pop>=85&&w.own&&AW()-w.lme>=8){w.mor=clamp(w.mor-3,0,100);if(mine(w.own)&&(!w.mec||AW()-w.mec>=4)){w.mec=AW();notes.push(`😤 ${w.name} hasn't main-evented a show in ${AW()-w.lme} weeks and is starting to grumble backstage about their spot.`)}}});
+  /* v119: no more silent grumbling — stars who want a main event or a belt come to your office with a pitch (see pitches.js) */
+  });
  if(!S.mh)S.mh={};const said=new Set();const pa=m.sides[0][0],pb=m.sides[1]&&m.sides[1][0];const hk=pb?key(pa,pb):null;const h0=hk?(S.heat[hk]||0):0;const n0=notes.length;
  for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j]){const k=key(a,b);const A=S.w[a],B=S.w[b];
   const first=!(S.mh[k]&&S.mh[k].length)&&!(S.mhx&&S.mhx[k]&&S.mhx[k].length);
@@ -3499,7 +3500,7 @@ const HOWTO=`<p><b>Offers &amp; contracts:</b> free agents with 55+ popularity w
 <p><b>Finishes:</b> pick how every match ends, not just who wins. ✅ <b>Clean</b> is the only way to truly settle a feud on PPV (a clean blow-off rates higher). 😈 <b>Heel shenanigans</b> (heel winners only) builds 35% more heat and protects the loser, but a cold feud's crowd doesn't buy it, and a dirty finish on a PPV blow-off leaves the feud unsettled. ⚡ <b>Upset roll-up</b> (the winner must be the clear underdog) gives the winner a big boost. 🟥 <b>DQ</b> and 🚪 <b>count-out</b> build the most heat but feel cheap unless the feud is hot, and titles never change hands on them — a classic way for a champion to escape. Any finish that isn't clean protects the loser's momentum.</p>
 <p><b>Who wins matters:</b> beating someone more popular than you gives you <b>the rub</b> (an upset even more so) — beating someone far below you does little. Winning streaks build momentum, and a hot streak gets the crowd invested in a wrestler's matches. Lose four in a row clean and fans stop believing in a star (enhancement talent under 45 popularity is fine). Trading clean wins back and forth within a month is 50/50 booking and cools the feud off.</p>
 <p><b>Title reigns:</b> every successful defense adds to a champion's credibility and the title's prestige, and the wrestler who ends a long reign gets a bigger boost. Swap a belt again within 3 weeks and it's a hot potato: the title loses 8 prestige and the new champ gets little out of it.</p>
-<p><b>Card position:</b> main-eventing boosts morale (and popularity after a great match). Top stars (85+ popularity) who go 8 weeks without a main event start grumbling backstage and lose morale.</p>
+<p><b>Card position:</b> main-eventing boosts morale (and popularity after a great match). Stars who want the spotlight don't sulk — they pitch you: a main event slot or a shot at a belt. The unhappier they are, the more often they knock on your door.</p>
 <p><b>The calendar:</b> each season is a full AEW year of ${SEASON} weeks with a PPV every 4 weeks — Revolution, Dynasty, Double or Nothing, Forbidden Door, Redemption, <b>All In</b> (the midyear supershow, week ${ALLIN_WEEK}), All Out, WrestleDream, Full Gear and Worlds End, which closes the year. Then the awards and offseason, and the calendar rolls on into a new year. Plus 📺 <b>TV specials</b> (${Object.values(SPECIALS).join(', ')}) with hotter crowds, 50% bigger fan swings and better gates. <b>Forbidden Door</b> is a crossover PPV: alongside your card you can sign up to two dream matches between one of your stars and one of the rival's. Neither GM controls both sides, so the winner is decided in the ring, and the winner's brand earns extra fans (4K; a 4★+ dream match pays the losing brand 2K too).</p>
 <p><b>Tournaments</b> lock onto your card — you decide who advances. Tournament rules are about winning, not good vs evil: face vs face and heel vs heel pairings rate and build heat like face vs heel, and the repetition rule, trading-wins cooling, feud-check warnings and promised-match giveaways don't apply to bracket matches. From three weeks out until the first matches air, tap <b>Pick your field</b> on the Home screen to choose your four entrants (and the seeding for the Owen Hart Cups); if you don't, your four best are entered automatically. ♾️ The <b>Continental Classic</b> (weeks ${TOURS.c2.rr[0]}–${TOURS.c2.rr[2]}) is a round robin for your four best men (3 points a win, no run-ins), and the top two meet at Worlds End for the Continental title if your brand holds it or it's vacant. 🏆 The <b>Owen Hart Cups</b> (men's semi-finals week ${TOURS.ohc.semi}, women's week ${TOURS.ohcw.semi}, both finals at Double or Nothing) send the winners to All In with a World title shot — against your champion, or as your title challenge if the rival holds the belt. Injured entrants forfeit.</p>
 <p><b>Casino Gauntlet:</b> a new match type for six. It rates a little lower than a straight wrestling match, but the winner earns a title shot at the next PPV against your top champion in their division.</p>

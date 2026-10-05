@@ -18,6 +18,11 @@ function pBusy(id){return (S.trials||[]).some(t=>t.a===id||t.b===id)||(S.pitch&&
 function pRecent(id){return S.pitchBy&&S.pitchBy[id]&&AW()-S.pitchBy[id]<8}
 function pPool(){return ownList('p').filter(w=>!w.inj&&!pBusy(w.id)&&!pRecent(w.id))}
 function pMorCut(w,base){return Math.round(base*(w.mor<40?1.5:w.mor>=75?.5:1))}
+/* v119: the unhappier someone is, the more weight they get when it's time to pick who pitches (morale 75+ → 1×, morale 25 → 5×) */
+function pWant(w){return 1+Math.max(0,75-w.mor)/12}
+function pSince(w){return AW()-(w.lme!=null?w.lme:AW())}
+function pSpot(w){return w.pop>=68&&pSince(w)>=3}
+function pw(k,r){const w=PITCHES[k].w;return typeof w==='function'?w(r):w}
 function pCost(){return Math.max(15,Math.round(econCap()*.08/5)*5)}
 function pTeamOf(a,b){return S.teams.find(t=>t.trialOf===a+'|'+b)}
 /* ---- the pitch types. pick(pool) → context or null; text uses {A} {B} {X}. try() returns a trial; go() returns the result text ---- */
@@ -85,6 +90,16 @@ const PITCHES={
   ok:t=>{const tm=pTeamOf(t.a,t.b);if(tm)delete tm.trialOf;const A=pOwn(t.a),B=pOwn(t.b);const k=key(t.a,t.b);S.chem[k]=clamp((S.chem[k]||0)+2,-5,6);mor(A,8);mor(B,8);return `🤝 ${pLast(A)} & ${pLast(B)} are an official team now — and their chemistry is better than ever.`},
   fail:t=>{const tm=pTeamOf(t.a,t.b);if(tm)S.teams=S.teams.filter(x=>x!==tm);const A=pOwn(t.a);mor(A,-4);return `🤝 The ${A.name} and ${S.w[t.b]?S.w[t.b].name:'partner'} team never really got going, so they've gone their separate ways.`},
   no:2},
+ spot:{cat:'🌟 Spotlight',w:r=>{const l=r.filter(pSpot);return l.length?1.5+Math.min(4,l.filter(w=>w.mor<55).length*1.5):0},
+  pick:r=>{const l=r.filter(pSpot);return l.length?{a:wpick(l,w=>pWant(w)+pSince(w)/4).id}:null},
+  text:x=>{const n=pSince(x.A);return x.A.mor<45?[`"Honestly? I'm losing patience. Either I'm a main eventer here or I'm not."`,`"${n} weeks without a main event. I'm worth more than this, and you know it."`]:[`"I think I'm ready to close a show. Put me in the last match."`,`"It's been ${n} weeks since I main-evented. The fans came to see me — give them what they want."`]},
+  head:x=>`${x.A.name} wants a main event`,
+  try:{d:x=>`Give them a main event slot within ${PITCH_LEN} weeks. They'll feel it was earned.`,start:x=>({goal:'me',need:1,txt:`main event a show within ${PITCH_LEN} weeks`})},
+  go:{d:x=>`"You're closing a show this week or next." A big morale boost if you deliver — and a broken promise if you don't.`,
+   start:x=>({goal:'me',need:1,len:2,txt:'main event a show within 2 weeks',big:1}),fx:null},
+  ok:t=>{const A=pOwn(t.a);mor(A,t.big?20:12);popx(A,t.big?3:1);return `🌟 ${A.name} got their main event and made the most of it.`},
+  fail:t=>{const A=pOwn(t.a);mor(A,t.big?-15:-8);return t.big?`🌟 You promised ${A.name} a main event and didn't deliver. They won't forget it.`:`🌟 ${A.name} never got their main event slot and is not happy about it.`},
+  no:3},
  buried:{cat:'🧩 A problem',w:3,
   pick:r=>{const l=r.filter(w=>w.pop>=58&&w.mor<70&&((w.lme!=null&&AW()-w.lme>=5&&w.pop>=70)||S.week-(w.last||0)>=2));return l.length?{a:l.sort((a,b)=>a.mor-b.mor)[0].id}:null},
   text:x=>[`"I've been ${S.week-(x.A.last||0)>=2?'sitting in catering for weeks':'stuck in the middle of the card for weeks'}. Am I still part of your plans?"`,`"I see my name on the board and it's always in the same spot. What do I have to do to get a real chance?"`],
@@ -95,9 +110,9 @@ const PITCHES={
   ok:t=>{const A=pOwn(t.a);mor(A,t.big?20:15);popx(A,t.big?3:2);return `🧩 ${A.name} got the spot you promised and made the most of it.`},
   fail:t=>{const A=pOwn(t.a);mor(A,t.big?-15:-10);return t.big?`🧩 You promised ${A.name} a main event and didn't deliver. They won't forget it.`:`🧩 ${A.name} is still waiting for that bigger role.`},
   no:3},
- shot:{cat:'🧩 A problem',w:2,
-  pick:r=>{const l=[];r.forEach(w=>{if(w.pop<62||isChamp(w.id))return;Object.values(S.titles).forEach(t=>{if(t.kind!=='singles'||!t.holders.length)return;const h=S.w[t.holders[0]];if(h&&h.own==='p'&&h.g===w.g&&h!==w&&!h.inj)l.push({a:w.id,title:t.id})})});return l.length?pick(l):null},
-  text:x=>[`"I've beaten everyone you've put in front of me. I want a shot at the ${S.titles[x.title].n} title."`,`"The ${S.titles[x.title].n} title should be around my waist. Give me one shot."`],
+ shot:{cat:'🏆 Title shot',w:r=>2+Math.min(3,r.filter(w=>w.pop>=62&&w.mor<55).length),
+  pick:r=>{const l=[];r.forEach(w=>{if(w.pop<62||isChamp(w.id))return;Object.values(S.titles).forEach(t=>{if(t.kind!=='singles')return;if(t.holders.length){const h=S.w[t.holders[0]];if(!h||h.own!=='p'||h===w||h.inj)return}l.push({a:w.id,title:t.id})})});return l.length?wpick(l,c=>pWant(S.w[c.a])):null},
+  text:x=>{const t=S.titles[x.title],n=t.n;const v=!t.holders.length;const low=x.A.mor<45;return v?[`"The ${n} title is sitting there empty. Put me in the hunt for it."`,low?`"I'm tired of watching other people chase that vacant ${n} title. Let me chase it."`:`"Somebody has to be the face of the ${n} title. Why not me?"`]:[`"I've beaten everyone you've put in front of me. I want a shot at the ${n} title."`,low?`"I'm done waiting my turn. Give me the ${n} title shot or tell me where I stand."`:`"The ${n} title should be around my waist. Give me one shot."`]},
   head:x=>`${x.A.name} wants a shot at the ${S.titles[x.title]?S.titles[x.title].n:''} title`,
   try:{d:x=>`"Win two matches in ${PITCH_LEN} weeks and you're next in line." They'll feel it's earned.`,start:x=>({goal:'wins',need:2,txt:'2 wins'})},
   go:{d:x=>`"You've got it." Put them in a match for the ${S.titles[x.title].n} title within ${PITCH_LEN} weeks — a huge boost if you deliver, a broken promise if you don't.`,
@@ -134,9 +149,10 @@ function pitchTickOne(notes){S.trials=S.trials||[];
  const p=S.pitch;if(p&&AW()>p.w){const A=S.w[p.a];S.pitch=null;if(A&&A.own==='p'){const P=PITCHES[p.k];mor(A,-pMorCut(A,(P?P.no:2)*3));pNote(notes,`📨 ${A.name} never heard back about their idea and took it as a no.`)}}
  S.trials=S.trials.filter(t=>{const P=PITCHES[t.k];if(!P)return false;if(t.k==='partner'&&!pTeamOf(t.a,t.b))return false;if(!pOwn(t.a)||(t.b&&!pOwn(t.b))){if(t.k==='partner'){const tm=pTeamOf(t.a,t.b);if(tm)S.teams=S.teams.filter(x=>x!==tm)}return false}
   if(AW()>t.end){const good=t.goal==='rest'||t.goal==='avoid';pNote(notes,good?P.ok(t):P.fail(t));return false}return true});
- if(!S.pitch&&S.week>=2&&S.week<SEASON&&AW()-(S.pitchLast||0)>=2&&Math.random()<.65)pitchGen()}
+ if(!S.pitch&&S.week>=2&&S.week<SEASON&&AW()-(S.pitchLast||0)>=2&&Math.random()<pPitchP())pitchGen()}
+function pPitchP(){const up=ownList('p').filter(w=>w.pop>=65&&w.mor<50).length;return Math.min(.92,.65+up*.08)}
 function pitchGen(){const r=pPool();if(r.length<4)return;const keys=Object.keys(PITCHES);
- for(let n=0;n<6;n++){const k=wpick(keys.filter(k=>!(S.pitchK||[]).slice(-2).includes(k)),k=>PITCHES[k].w);if(!k)return;const c=PITCHES[k].pick(r);if(!c)continue;
+ for(let n=0;n<6;n++){const ok=keys.filter(k=>!(S.pitchK||[]).slice(-2).includes(k)&&pw(k,r)>0);if(!ok.length)return;const k=wpick(ok,k=>pw(k,r));const c=PITCHES[k].pick(r);if(!c)continue;
   S.pitch=Object.assign({k,w:AW()},c);S.pitchLast=AW();S.pitchBy=S.pitchBy||{};S.pitchBy[c.a]=AW();S.pitchK=(S.pitchK||[]).concat([k]).slice(-4);return}}
 /* ---- answering ---- */
 function pitchChoices(p){const P=PITCHES[p.k],x=pCtx(p);const A=x.A;const cut=pMorCut(A,P.no*3);
