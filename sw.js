@@ -3,7 +3,8 @@ const VERSION = 'aegm-v116';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './icon-maskable-512.png',
   './online.js', './firebase-sdk.js', './firebase-config.js',
   './party.js', './scenarios.js', './gimmicks.js', './season.js', './pitches.js', './openchal.js', './deals.js', './vendor/qrcode.js',
-  './retro.js', './retro.css', './fonts/press-start-2p.woff2', './fonts/pixelify-sans-500.woff2', './fonts/pixelify-sans-700.woff2'];
+  './retro.js', './retro.css', './fonts/press-start-2p.woff2', './fonts/pixelify-sans-500.woff2', './fonts/pixelify-sans-700.woff2',
+  './fonts/nunito-600.woff2', './fonts/nunito-800.woff2', './fonts/bungee.woff2', './fonts/exo2-500.woff2', './fonts/exo2-700.woff2', './fonts/exo2-800i.woff2', './fonts/anton.woff2'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)));

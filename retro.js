@@ -6,14 +6,15 @@
 'use strict';
 const LOOK_KEY='tksim_look',LOOK_PX='tksim_look_px';
 /* the looks: Classic plus a family of retro video-game styles that share retro.css */
-const LOOKS={classic:{n:'Classic',d:'Black and gold, broadcast style'},cy2:{n:'✨ Classic Chrome',d:'Classic with a Y2K chrome-and-glass finish',base:1},'16':{n:'🕹️ 16-Bit',d:'Pixel fonts and arcade colors'},
+const LOOKS={classic:{n:'Classic',d:'Black and gold, broadcast style'},cy2:{n:'✨ Classic Chrome',d:'Classic with a Y2K chrome-and-glass finish',base:1},
+ a95:{n:"🕹️ '95 Arcade",d:'Mid-90s digitized arcade fighter',base:1},s06:{n:"⚔️ '06 Brand War",d:'Gritty mid-2000s console, red vs blue',base:1},k14:{n:"🏛️ '14 Showcase",d:'Black, gold and arena lights',base:1},k26:{n:"🔥 '26 Modern",d:'Flat, huge type, one hot accent',base:1},'16':{n:'🕹️ 16-Bit',d:'Pixel fonts and arcade colors'},
  rpg:{n:'🗡️ Quest',d:'Old-school RPG menu windows'},arc:{n:'👊 Arcade',d:'90s fighting-game cabinet'},
  y2k:{n:'💿 Y2K Blue',d:'Chrome and blue glass',f:'fy2'},y2s:{n:'⛓️ Y2K Steel Cage',d:'Gunmetal, brushed steel, blood red',f:'fy2'},y2g:{n:'🟢 Y2K Neon',d:'Black glass and toxic green',f:'fy2'},y2p:{n:'🏆 Y2K PPV Gold',d:'Chrome gold on purple glass',f:'fy2'}};
 let LOOK='classic',R16=false,R16PX=true;
 try{LOOK=localStorage.getItem(LOOK_KEY)||'classic';if(LOOK==='r16')LOOK='16';if(!LOOKS[LOOK])LOOK='classic';R16PX=localStorage.getItem(LOOK_PX)!=='spr'}catch(e){}
 R16=LOOK!=='classic'&&!LOOKS[LOOK].base;
 function r16Apply(){const d=document.documentElement;Object.keys(LOOKS).forEach(k=>d.classList.remove('lk-'+k));d.classList.remove('r16','fy2');d.classList.toggle('rt',R16);if(LOOK!=='classic'){d.classList.add('lk-'+LOOK);if(LOOKS[LOOK].f)d.classList.add(LOOKS[LOOK].f)}
- const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',{classic:'#09090b',cy2:'#09090b','16':'#12061f',rpg:'#0a1250',arc:'#050304',y2k:'#030a1c',y2s:'#0b0c0f',y2g:'#020402',y2p:'#06030c'}[LOOK]||'#09090b')}
+ const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',{classic:'#09090b',cy2:'#09090b',a95:'#000000',s06:'#0e0f11',k14:'#000000',k26:'#08080a','16':'#12061f',rpg:'#0a1250',arc:'#050304',y2k:'#030a1c',y2s:'#0b0c0f',y2g:'#020402',y2p:'#06030c'}[LOOK]||'#09090b')}
 r16Apply();
 function setLook(k){if(!LOOKS[k])k='classic';LOOK=k;R16=k!=='classic'&&!LOOKS[k].base;try{localStorage.setItem(LOOK_KEY,k)}catch(e){}r16Apply();
  if(typeof render==='function')try{render()}catch(e){}

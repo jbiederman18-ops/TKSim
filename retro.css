@@ -503,3 +503,167 @@ html.lk-cy2 .alchip.f{background:linear-gradient(180deg,#c8e8ff 0%,#5cb8ff 45%,#
 html.lk-cy2 .alchip.h{background:linear-gradient(180deg,#ffd0c8 0%,#ff6a5f 45%,#b01d16 55%,#e0463c 100%)}
 html.lk-cy2 .wc.af .alb{background:linear-gradient(180deg,#c8e8ff 0%,#5cb8ff 45%,#1c64b3 55%,#4aa0f0 100%)}
 html.lk-cy2 .wc.ah .alb{background:linear-gradient(180deg,#ffd0c8 0%,#ff6a5f 45%,#b01d16 55%,#e0463c 100%)}
+
+/* =====================================================================================
+   Wrestling-game inspired looks. Built on Classic (same layout, readable text, wrestler cards);
+   each one only restyles colours, frames, titles and buttons.
+   ===================================================================================== */
+@font-face{font-family:'Anton';src:url(fonts/anton.woff2) format('woff2');font-display:swap}
+html:is(.lk-a95,.lk-s06,.lk-k14,.lk-k26) body:after{content:"";position:fixed;inset:0;z-index:9990;pointer-events:none}
+
+/* ---------- '95 ARCADE: mid-90s digitized arcade fighter ---------- */
+html.lk-a95{--gold:#ffd200;--gold2:#ffe866;--gold3:#e07000;--red:#e8120c;--ember:#ff7a00;--line:#5a5a5a;
+ --met:linear-gradient(180deg,#fff7a8 0%,#ffd200 30%,#ff8a00 55%,#d81800 80%,#7a0800 100%)}
+html.lk-a95 body{background:radial-gradient(130% 45% at 50% 112%,rgba(255,90,0,.45),rgba(160,20,0,.18) 40%,transparent 70%),radial-gradient(1px 1px at 20% 30%,#fff,transparent),radial-gradient(1px 1px at 70% 18%,#fff,transparent),radial-gradient(1px 1px at 85% 42%,#ffd,transparent),radial-gradient(1px 1px at 40% 12%,#fff,transparent),#050505;background-attachment:fixed}
+html.lk-a95 body:after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px)}
+html.lk-a95 :is(.logo,.showname,.hero-t,.mhd,.lvt,.dround,.lbbrand,.wd-n,.rv-win,.res-hd .showname,.card.belt.top .h,.showcard:not(.col):not(.ppv) .showname,.showcard.col .showname,.wdt .wd-n,.tt-n,.vs){font-family:'Bungee',Impact,sans-serif!important;font-style:normal!important;font-weight:400!important;letter-spacing:.01em!important;background:var(--met)!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent;color:transparent;-webkit-text-stroke:1.5px #000;filter:drop-shadow(3px 3px 0 #000)!important}
+html.lk-a95 .showname[style]{font-size:min(calc(var(--fs,58px) * .66),calc(100cqi / (var(--n) * .8)))!important;line-height:1.05}
+html.lk-a95 .dround{font-size:40px!important}html.lk-a95 .mhd{font-size:24px!important}html.lk-a95 .hero-t{font-size:46px!important;line-height:1}
+html.lk-a95 .logo{font-size:17px!important}html.lk-a95 .tt-n{font-size:30px!important}
+html.lk-a95 .vs{background:linear-gradient(180deg,#fff 0%,#ff5040 40%,#a00000 100%)!important;-webkit-background-clip:text!important}
+html.lk-a95 :is(.card,.slot,.tile,.sheet .card,.mu,.proj,.side,.score>div,.rib){background:linear-gradient(180deg,#141414,#0a0a0a)!important;border:2px solid #000!important;box-shadow:inset 0 0 0 2px #8a8a8a,inset 2px 2px 0 3px #cfcfcf,inset -2px -2px 0 3px #3a3a3a!important}
+html.lk-a95 :is(.showcard,.card.phead,.card.ttape,.res-hd,.lvhd,.wd-top.wdt,.card.belt){border:2px solid #000!important;box-shadow:inset 0 0 0 2px #ffd200,inset 0 0 0 4px #7a0800,inset 0 0 40px rgba(255,90,0,.25)!important}
+html.lk-a95 .sheet{background:linear-gradient(180deg,#141414,#050505);border-top:3px solid #ffd200}
+html.lk-a95 .small{color:#ffd200;text-shadow:2px 2px 0 #000;font-size:18px}
+html.lk-a95 .small:before{background:#e8120c}
+html.lk-a95 .btn{background:linear-gradient(180deg,#ffe866 0%,#ffd200 40%,#ff8a00 100%);color:#000;border:2px solid #000;box-shadow:inset 0 2px 0 #fff8c0,inset 0 -3px 0 #b05000,3px 3px 0 #000;text-shadow:none}
+html.lk-a95 .btn.sec{background:linear-gradient(180deg,#3a3a3a,#141414);color:#ffd200;box-shadow:inset 0 0 0 2px #8a8a8a,3px 3px 0 #000}
+html.lk-a95 .btn.ghost{background:none;border:0;box-shadow:none}
+html.lk-a95 .btn.live{background:linear-gradient(180deg,#ff7a5a,#e8120c 50%,#7a0800);color:#ffd200}
+html.lk-a95 :is(.chip,.crown,.mini,.hudc){background:#111;color:#e8e8e8;box-shadow:inset 0 0 0 2px #6a6a6a}
+html.lk-a95 :is(.chip.on,.crown.on,.badge.you){background:#ffd200;color:#000;box-shadow:inset 0 0 0 2px #000}
+html.lk-a95 .bar{height:12px;background:#a00000;box-shadow:0 0 0 2px #000,inset 0 0 0 1px #000}
+html.lk-a95 .bar>i{-webkit-mask:none;mask:none;background:linear-gradient(180deg,#fff7a8,#ffd200 50%,#e0a000);box-shadow:none}
+html.lk-a95 .slot .num{background:linear-gradient(180deg,#fff7a8,#ffd200 40%,#ff8a00);color:#000;font-family:'Bungee'!important;font-style:normal!important;font-size:22px}
+html.lk-a95 .slot.me .num{background:linear-gradient(180deg,#ff7a5a,#e8120c 50%,#7a0800);color:#ffd200}
+html.lk-a95 .wc{outline:2px solid #000}
+html.lk-a95 .wc:before{box-shadow:inset 0 0 0 2px #cfcfcf!important}
+html.lk-a95 .wc.t1:before{box-shadow:inset 0 0 0 3px #ffd200!important}
+html.lk-a95 .wc:after{content:"";display:block;position:absolute;inset:0;z-index:2;pointer-events:none;animation:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
+html.lk-a95 .wc .nm b{font-family:'Bungee'!important;font-style:normal!important;font-size:13px!important;line-height:1.1;text-shadow:2px 2px 0 #000}
+html.lk-a95 header.top,html.lk-a95 nav.tabs{background:#000}
+html.lk-a95 header.top{box-shadow:0 2px 0 #ffd200,0 4px 0 #e8120c}
+html.lk-a95 header.top:after,html.lk-a95 nav.tabs:before{display:none}
+html.lk-a95 nav.tabs{box-shadow:0 -2px 0 #ffd200,0 -4px 0 #e8120c}
+html.lk-a95 nav.tabs button.on{color:#ffd200}
+html.lk-a95 .lmk{filter:drop-shadow(2px 2px 0 #000) sepia(1) saturate(4) hue-rotate(-10deg)}
+html.lk-a95 .logo2{background:#e8120c!important;color:#ffd200!important}
+
+/* ---------- '06 BRAND WAR: mid-2000s console, gritty steel, red vs blue ---------- */
+html.lk-s06{--gold:#d9dde4;--gold2:#ffffff;--gold3:#8a909a;--red:#e01c24;--face:#2a8cff;--heel:#ff2a32;--line:#3a3d44;
+ --grit:repeating-linear-gradient(97deg,rgba(255,255,255,.025) 0 1px,transparent 1px 7px),repeating-linear-gradient(3deg,rgba(0,0,0,.18) 0 2px,transparent 2px 11px)}
+html.lk-s06 body{background:linear-gradient(110deg,rgba(224,28,36,.16) 0%,transparent 38%,transparent 62%,rgba(42,140,255,.16) 100%),var(--grit),radial-gradient(120% 60% at 50% -10%,#2a2d33,transparent 60%),#0c0d0f;background-attachment:fixed}
+html.lk-s06 body:after{background:radial-gradient(130% 100% at 50% 50%,transparent 55%,rgba(0,0,0,.6) 100%)}
+html.lk-s06 :is(.logo,.showname,.hero-t,.mhd,.lvt,.dround,.lbbrand,.wd-n,.rv-win,.res-hd .showname,.card.belt.top .h,.showcard:not(.col):not(.ppv) .showname,.showcard.col .showname,.wdt .wd-n,.tt-n){background:linear-gradient(180deg,#fff 0%,#f1f2f4 45%,#a8adb6 55%,#e6e8ec 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(2px 2px 0 #000) drop-shadow(0 0 1px #000)!important;letter-spacing:.01em}
+html.lk-s06 .dround,html.lk-s06 .showname,html.lk-s06 .mhd{text-transform:uppercase}
+html.lk-s06 .vs{background:linear-gradient(90deg,#ff2a32 0 50%,#2a8cff 50% 100%)!important;-webkit-background-clip:text!important}
+html.lk-s06 :is(.card,.slot,.tile,.mu,.proj,.side,.score>div,.rib){background:var(--grit),linear-gradient(180deg,#24262b,#17181b)!important;border:1px solid #42464e!important;border-top-color:#5a5f68!important}
+html.lk-s06 .card.mine{box-shadow:inset 5px 0 0 #e01c24}
+html.lk-s06 :is(.showcard,.card.phead,.card.ttape,.res-hd,.lvhd,.wd-top.wdt,.card.belt){background:var(--grit),linear-gradient(110deg,rgba(224,28,36,.4) 0%,transparent 45%),linear-gradient(180deg,#2a2d33,#111214)!important;border:1px solid #5a5f68!important}
+html.lk-s06 .showcard .lfl,html.lk-s06 .phead .lfl,html.lk-s06 .res-hd .lfl{height:4px;background:linear-gradient(90deg,#e01c24 0 60%,transparent)}
+html.lk-s06 .sheet{background:var(--grit),linear-gradient(180deg,#1d1f23,#0c0d0f);border-top:3px solid #e01c24}
+html.lk-s06 .small{color:#fff;text-transform:uppercase;letter-spacing:.06em}
+html.lk-s06 .small:before{background:#e01c24;width:5px;height:18px;clip-path:none}
+html.lk-s06 .btn{background:linear-gradient(180deg,#ff4a50,#e01c24 45%,#9a0c12);color:#fff;text-shadow:1px 1px 0 rgba(0,0,0,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 3px 0 #000}
+html.lk-s06 .btn.sec{background:var(--grit),linear-gradient(180deg,#3a3d44,#1e2024);color:#fff;box-shadow:inset 0 0 0 1px #6a6f78,0 3px 0 #000}
+html.lk-s06 .btn.ghost{background:none;box-shadow:none}
+html.lk-s06 .btn.live{background:linear-gradient(180deg,#ff6a6a,#e01c24 50%,#7a0008)}
+html.lk-s06 :is(.chip,.crown,.mini,.hudc){background:#1a1b1e;color:#c8ccd4;box-shadow:inset 0 0 0 1px #4a4e56}
+html.lk-s06 :is(.chip.on,.crown.on,.badge.you){background:#e01c24;color:#fff;box-shadow:none}
+html.lk-s06 .bar{background:#0a0a0b;box-shadow:inset 0 0 0 1px #3a3d44}
+html.lk-s06 .bar>i{background:linear-gradient(90deg,#8a909a,#ffffff)}
+html.lk-s06 .bar.heat>i{background:linear-gradient(90deg,#7a0008,#ff2a32)}
+html.lk-s06 .slot .num{background:linear-gradient(180deg,#f1f2f4,#8a909a);color:#111}
+html.lk-s06 .slot.me .num{background:linear-gradient(180deg,#ff4a50,#9a0c12);color:#fff}
+html.lk-s06 .wc:before{box-shadow:inset 0 0 0 2px #5a5f68!important}
+html.lk-s06 .wc.t1:before{box-shadow:inset 0 0 0 2px #fff!important}
+html.lk-s06 .wc.af:before{box-shadow:inset 0 -4px 0 #2a8cff,inset 0 0 0 2px #5a5f68!important}
+html.lk-s06 .wc.ah:before{box-shadow:inset 0 -4px 0 #ff2a32,inset 0 0 0 2px #5a5f68!important}
+html.lk-s06 header.top,html.lk-s06 nav.tabs{background:var(--grit),#0e0f11}
+html.lk-s06 header.top:after{background:linear-gradient(90deg,#e01c24 0 50%,#2a8cff 50% 100%);height:3px}
+html.lk-s06 nav.tabs:before{background:linear-gradient(90deg,#e01c24 0 50%,#2a8cff 50% 100%);height:3px}
+html.lk-s06 nav.tabs button.on{color:#fff}
+html.lk-s06 nav.tabs button.on:before{background:#e01c24}
+html.lk-s06 .logo2{background:#e01c24!important}
+
+/* ---------- '14 SHOWCASE: early-2010s console, black and gold, arena lights ---------- */
+html.lk-k14{--gold:#d4af5a;--gold2:#f2dc9a;--gold3:#9a7a32;--line:#2a2a2a}
+html.lk-k14 body{background:radial-gradient(18px 18px at 12% 22%,rgba(242,220,154,.18),transparent),radial-gradient(28px 28px at 82% 14%,rgba(242,220,154,.14),transparent),radial-gradient(14px 14px at 64% 36%,rgba(255,255,255,.12),transparent),radial-gradient(36px 36px at 30% 62%,rgba(242,220,154,.08),transparent),radial-gradient(22px 22px at 90% 70%,rgba(255,255,255,.08),transparent),radial-gradient(120% 60% at 50% -10%,rgba(212,175,90,.18),transparent 60%),linear-gradient(180deg,#0d0d0d,#000);background-attachment:fixed}
+html.lk-k14 :is(.logo,.showname,.hero-t,.mhd,.lvt,.dround,.lbbrand,.wd-n,.rv-win,.res-hd .showname,.card.belt.top .h,.showcard:not(.col):not(.ppv) .showname,.showcard.col .showname,.wdt .wd-n,.tt-n,.h,.btn,.chip,.crown,.mini,nav.tabs button,.kicker,.tile b,.slot .lbl){font-style:normal!important}
+html.lk-k14 :is(.logo,.showname,.hero-t,.mhd,.lvt,.dround,.lbbrand,.wd-n,.rv-win,.res-hd .showname,.card.belt.top .h,.showcard:not(.col):not(.ppv) .showname,.showcard.col .showname,.wdt .wd-n,.tt-n){font-weight:700!important;letter-spacing:.06em!important;background:linear-gradient(180deg,#fff8e0 0%,#f2dc9a 40%,#d4af5a 60%,#a8843a 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(0 2px 6px rgba(0,0,0,.8))!important}
+html.lk-k14 .h{letter-spacing:.1em!important;font-weight:700!important}
+html.lk-k14 *{clip-path:none!important}
+html.lk-k14 :is(.card,.slot,.tile,.mu,.proj,.side,.score>div,.rib){background:linear-gradient(180deg,rgba(28,28,28,.92),rgba(10,10,10,.95))!important;border:1px solid rgba(212,175,90,.28)!important}
+html.lk-k14 :is(.card,.tile,.slot.done):after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,#d4af5a 30%,#f2dc9a 50%,#d4af5a 70%,transparent);pointer-events:none}
+html.lk-k14 .tile:after{width:auto}
+html.lk-k14 :is(.showcard,.card.phead,.card.ttape,.res-hd,.lvhd,.wd-top.wdt,.card.belt){background:radial-gradient(90% 120% at 50% -20%,rgba(242,220,154,.22),transparent 60%),linear-gradient(180deg,#1a1a1a,#050505)!important;border:1px solid rgba(212,175,90,.6)!important}
+html.lk-k14 .sheet{background:linear-gradient(180deg,#151515,#050505);border-top:1px solid #d4af5a}
+html.lk-k14 .small{color:#f2dc9a;letter-spacing:.14em}
+html.lk-k14 .small:before{background:#d4af5a;width:3px;height:16px}
+html.lk-k14 .btn{background:linear-gradient(180deg,#f2dc9a,#d4af5a 50%,#a8843a);color:#000;letter-spacing:.14em!important;box-shadow:0 0 0 1px #000,0 6px 18px rgba(212,175,90,.18)}
+html.lk-k14 .btn.sec{background:rgba(0,0,0,.6);color:#f2dc9a;box-shadow:inset 0 0 0 1px rgba(212,175,90,.6)}
+html.lk-k14 .btn.ghost{background:none;box-shadow:none}
+html.lk-k14 .btn.live{background:linear-gradient(180deg,#e85a4a,#b01e14);color:#fff}
+html.lk-k14 :is(.chip,.crown,.mini,.hudc){background:transparent;color:#b8b2a2;box-shadow:inset 0 -1px 0 rgba(212,175,90,.35);letter-spacing:.12em}
+html.lk-k14 :is(.chip.on,.crown.on){background:transparent;color:#f2dc9a;box-shadow:inset 0 -3px 0 #d4af5a}
+html.lk-k14 .bar{height:6px;background:#1e1e1e}
+html.lk-k14 .bar>i{-webkit-mask:none;mask:none;background:linear-gradient(90deg,#a8843a,#f2dc9a)}
+html.lk-k14 .slot .num{background:transparent;color:#d4af5a;font-style:normal!important;font-weight:700;box-shadow:inset -1px 0 0 rgba(212,175,90,.4)}
+html.lk-k14 .slot.me .num{color:#ff6a5a;background:transparent}
+html.lk-k14 .wc:before{box-shadow:inset 0 0 0 1px rgba(212,175,90,.45)!important}
+html.lk-k14 .wc.t1:before{box-shadow:inset 0 0 0 2px #f2dc9a!important}
+html.lk-k14 .wc .nm b{font-style:normal!important;letter-spacing:.06em}
+html.lk-k14 header.top,html.lk-k14 nav.tabs{background:rgba(0,0,0,.92)}
+html.lk-k14 header.top:after,html.lk-k14 nav.tabs:before{height:1px;background:linear-gradient(90deg,transparent,#d4af5a 25%,#f2dc9a 50%,#d4af5a 75%,transparent)}
+html.lk-k14 nav.tabs button.on{color:#f2dc9a}
+html.lk-k14 nav.tabs button.on:before{background:#d4af5a;height:2px}
+html.lk-k14 .lmk{display:none}
+
+/* ---------- '26 MODERN: today's console menus, flat, huge type, one hot accent ---------- */
+html.lk-k26{--gold:#ff2d55;--gold2:#ffffff;--gold3:#b0102e;--red:#ff2d55;--line:rgba(255,255,255,.12);--text:#f5f5f7;--mut:#9a9aa3}
+html.lk-k26 body{background:radial-gradient(90% 50% at 85% -5%,rgba(255,45,85,.22),transparent 60%),radial-gradient(70% 40% at 0% 100%,rgba(90,60,255,.14),transparent 60%),#08080a;background-attachment:fixed}
+html.lk-k26 *{clip-path:none!important}
+html.lk-k26 :is(.logo,.showname,.hero-t,.mhd,.lvt,.dround,.lbbrand,.wd-n,.rv-win,.res-hd .showname,.card.belt.top .h,.showcard:not(.col):not(.ppv) .showname,.showcard.col .showname,.wdt .wd-n,.tt-n,.vs){font-family:'Anton',Impact,sans-serif!important;font-style:normal!important;font-weight:400!important;letter-spacing:.005em!important;text-transform:uppercase;background:none!important;-webkit-text-fill-color:#fff!important;color:#fff!important;filter:none!important;text-shadow:none!important}
+html.lk-k26 .vs{-webkit-text-fill-color:#ff2d55!important}
+html.lk-k26 .showname[style]{font-size:min(calc(var(--fs,58px) * 1.05),calc(100cqi / (var(--n) * .5)))!important;line-height:.95}
+html.lk-k26 .dround{font-size:56px!important;line-height:.95}html.lk-k26 .mhd{font-size:34px!important}html.lk-k26 .hero-t{font-size:72px!important;line-height:.9}
+html.lk-k26 .logo{font-size:22px!important}
+html.lk-k26 :is(.h,.btn,.chip,.crown,.mini,nav.tabs button,.kicker,.tile b,.slot .lbl,.hudc,.badge,.alchip,.wc .alb,.wc .o,.slot .num){font-style:normal!important}
+html.lk-k26 .h{font-family:'Anton',Impact,sans-serif!important;font-weight:400!important;letter-spacing:.02em!important}
+html.lk-k26 :is(.card,.slot,.tile,.mu,.proj,.side,.score>div,.rib){background:rgba(255,255,255,.045)!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:16px!important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+html.lk-k26 .card.mine{box-shadow:inset 4px 0 0 #ff2d55}
+html.lk-k26 :is(.showcard,.card.phead,.card.ttape,.res-hd,.lvhd,.wd-top.wdt,.card.belt){background:linear-gradient(135deg,rgba(255,45,85,.32),rgba(255,45,85,.04) 55%),rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.1)!important;border-radius:20px!important}
+html.lk-k26 .sheet{background:#111114;border-top:0;border-radius:22px 22px 0 0;box-shadow:0 -20px 50px rgba(0,0,0,.8)}
+html.lk-k26 .small{color:#fff;font-size:22px}
+html.lk-k26 .small:before{background:#ff2d55;width:8px;height:8px;border-radius:50%}
+html.lk-k26 .btn{background:#ff2d55;color:#fff;border-radius:999px!important;font-weight:800;letter-spacing:.06em;box-shadow:0 8px 24px rgba(255,45,85,.3)}
+html.lk-k26 .btn:after{display:none}
+html.lk-k26 .btn.sec{background:rgba(255,255,255,.08);color:#fff;box-shadow:none}
+html.lk-k26 .btn.ghost{background:none;box-shadow:none}
+html.lk-k26 .btn.live{background:#fff;color:#08080a;animation:none}
+html.lk-k26 :is(.chip,.crown,.mini,.hudc){background:rgba(255,255,255,.07);color:#d0d0d6;border-radius:999px!important;box-shadow:none}
+html.lk-k26 :is(.chip.on,.crown.on,.badge.you){background:#fff;color:#08080a}
+html.lk-k26 .mini{color:#ff2d55}
+html.lk-k26 .bar{height:6px;border-radius:99px!important;background:rgba(255,255,255,.1)}
+html.lk-k26 .bar>i{-webkit-mask:none;mask:none;border-radius:99px;background:#ff2d55;box-shadow:none}
+html.lk-k26 .bar.fat>i{background:#34d399}
+html.lk-k26 .slot{border-radius:16px!important;overflow:hidden}
+html.lk-k26 .slot .num{background:transparent;color:#fff;font-family:'Anton',Impact,sans-serif!important;font-size:30px}
+html.lk-k26 .slot.me .num{background:#ff2d55;color:#fff}
+html.lk-k26 .slot:not(.done){border-style:dashed!important}
+html.lk-k26 .wc{border-radius:14px!important}
+html.lk-k26 .wc:before{border-radius:14px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)!important}
+html.lk-k26 .wc.t1:before{box-shadow:inset 0 0 0 2px #fff!important}
+html.lk-k26 .wc .nm b{font-family:'Anton',Impact,sans-serif!important;font-style:normal!important;font-weight:400!important;font-size:17px!important;letter-spacing:.02em}
+html.lk-k26 .wc .o{border-radius:6px!important;background:rgba(0,0,0,.6);color:#fff;font-style:normal!important}
+html.lk-k26 .wc .alb{border-radius:99px!important;font-style:normal!important}
+html.lk-k26 header.top,html.lk-k26 nav.tabs{background:rgba(8,8,10,.82);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+html.lk-k26 header.top:before{background:#08080a}
+html.lk-k26 header.top{box-shadow:0 1px 0 rgba(255,255,255,.08)}
+html.lk-k26 header.top:after,html.lk-k26 nav.tabs:before{display:none}
+html.lk-k26 nav.tabs{box-shadow:0 -1px 0 rgba(255,255,255,.08)}
+html.lk-k26 nav.tabs button.on{color:#fff}
+html.lk-k26 nav.tabs button.on:before{background:#ff2d55;left:38%;right:38%;border-radius:99px}
+html.lk-k26 .logo2{background:#ff2d55!important;border-radius:4px}
+html.lk-k26 .lmk{filter:invert(1) brightness(2)}
+html.lk-k26 :is(select,input,.dd){border-radius:12px!important;clip-path:none!important;background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1)}
