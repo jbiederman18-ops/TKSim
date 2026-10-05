@@ -444,3 +444,62 @@ html.lk-y2p{--bg:#0a0612;--st1:#22163a;--st2:#160e28;--line:#4a3a6a;--gold:#ffd2
 
 html:is(.lk-rpg,.lk-arc) .small{font-size:17px!important}
 html.lk-arc .small{font-size:15px!important}
+
+/* ================= Classic + Y2K: the house look with a chrome-and-glass finish =================
+   Not part of the retro family: keeps Classic's fonts, angled corners, layout and wrestler cards. */
+html.lk-cy2{--glass:linear-gradient(180deg,rgba(255,255,255,.075) 0%,rgba(255,255,255,.02) 38%,rgba(255,255,255,0) 60%);
+ --chrg:linear-gradient(180deg,#fffdf2 0%,#fff0bc 30%,#e9c96e 46%,#8a6418 52%,#d9b04e 64%,#fff2c4 86%,#fffbe8 100%);
+ --chrs:linear-gradient(180deg,#ffffff 0%,#e6e9ee 40%,#7c828c 52%,#d4d8de 66%,#ffffff 100%);
+ --gedge:rgba(232,207,142,.42);--gglow:rgba(232,190,90,.28)}
+html.lk-cy2 body{background:linear-gradient(115deg,transparent 38%,rgba(255,236,190,.045) 43%,transparent 48%),linear-gradient(115deg,transparent 62%,rgba(255,236,190,.03) 65%,transparent 68%),radial-gradient(110% 50% at 50% -8%,rgba(232,190,90,.14),transparent 60%),linear-gradient(180deg,#111114 0%,#0b0b0d 60%,#060607 100%);background-attachment:fixed}
+html.lk-cy2 body:after{content:"";position:fixed;inset:0;z-index:9990;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 4px)}
+/* chrome-gold titles with a glow */
+html.lk-cy2 :is(.logo,.showname,.hero-t,.mhd,.lvt,.dround,.lbbrand,.wd-n,.rv-win,.res-hd .showname,.card.belt.top .h,.showcard:not(.col):not(.ppv) .showname,.wdt .wd-n,.tt-n){background:var(--chrg)!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(0 2px 0 rgba(0,0,0,.85)) drop-shadow(0 0 12px var(--gglow))!important}
+html.lk-cy2 .showcard.col .showname{background:linear-gradient(180deg,#fff 0%,#ffd8d2 32%,#e2332b 50%,#8f0f0b 54%,#ff8a7a 72%,#fff0ec 100%)!important;-webkit-background-clip:text!important;background-clip:text!important}
+html.lk-cy2 .h.small{background:var(--chrs);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 1px 0 #000)}
+html.lk-cy2 .h.small:before{-webkit-text-fill-color:initial}
+/* glass panels: a light sheen on top, a fine gold edge, a soft glow */
+html.lk-cy2 .card{background:var(--glass),var(--grunge),linear-gradient(180deg,var(--st1) 0%,var(--st2) 100%);border-color:var(--gedge);border-top-color:rgba(255,240,200,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 18px rgba(232,190,90,.07)}
+html.lk-cy2 .card.mine{box-shadow:inset 4px 0 0 var(--gold),inset 0 1px 0 rgba(255,255,255,.18)}
+html.lk-cy2 :is(.showcard,.card.phead,.card.ttape,.res-hd,.lvhd,.wd-top.wdt,.card.belt){border-color:rgba(255,226,150,.55)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 0 26px rgba(255,150,60,.12)}
+html.lk-cy2 :is(.showcard,.card.phead,.card.ttape,.res-hd,.lvhd,.wd-top.wdt):after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.07) 38%,transparent 46%),linear-gradient(180deg,rgba(255,255,255,.08),transparent 40%)}
+html.lk-cy2 :is(.slot.done,.tile,.mu,.proj,.side,.rib,.scout,.score>div,.mpbar){background-image:var(--glass),linear-gradient(180deg,#1b1c21,#111216)!important;border-color:var(--gedge)}
+html.lk-cy2 .slot.done{box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
+html.lk-cy2 .slot .num{background:var(--chrg)!important;color:#17110a;text-shadow:0 1px 0 rgba(255,255,255,.5)}
+html.lk-cy2 .slot.me .num{background:linear-gradient(180deg,#ffb0a4 0%,#ff6a55 40%,#9d100b 52%,#e2332b 70%,#ff8a7a 100%)!important;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.4)}
+html.lk-cy2 .sheet{background:var(--glass),var(--grunge),radial-gradient(90% 40% at 50% 0%,rgba(232,190,90,.12),transparent 70%),linear-gradient(180deg,#17181c 0%,#0d0e11 100%);border-top-color:#ffe9a8;box-shadow:0 -20px 50px rgba(0,0,0,.8),0 -1px 18px rgba(232,190,90,.25)}
+/* chrome buttons */
+html.lk-cy2 .btn{background:var(--chrg);color:#17110a;text-shadow:0 1px 0 rgba(255,255,255,.55);box-shadow:inset 0 1px 0 #fff,inset 0 -1px 0 rgba(0,0,0,.3),0 0 16px var(--gglow)}
+html.lk-cy2 .btn:after{display:block;animation:shine 5s ease-in-out infinite;background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent)}
+html.lk-cy2 .btn.sec{background:var(--glass),linear-gradient(180deg,#2a2c33,#16171b);color:var(--text);text-shadow:none;box-shadow:inset 0 0 0 1px var(--gedge),inset 0 1px 0 rgba(255,255,255,.2)}
+html.lk-cy2 .btn.ghost{background:none;box-shadow:none;text-shadow:none}
+html.lk-cy2 .btn.live{background:linear-gradient(180deg,#ffd0c8 0%,#ff6a55 40%,#9d100b 52%,#e2332b 70%,#ff9a8a 100%);color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 0 18px rgba(226,51,43,.4)}
+html.lk-cy2 :is(.mini,.gsw){background:var(--glass),linear-gradient(180deg,#30280f,#1a1508);box-shadow:inset 0 0 0 1px rgba(255,226,150,.75),0 0 10px rgba(232,190,90,.18)}
+html.lk-cy2 :is(.chip,.crown){background:var(--glass),#17181c;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),inset 0 1px 0 rgba(255,255,255,.12)}
+html.lk-cy2 :is(.chip.on,.crown.on,.badge.you,.gsw.on){background:var(--chrg);color:#17110a;text-shadow:0 1px 0 rgba(255,255,255,.5);box-shadow:0 0 12px var(--gglow)}
+html.lk-cy2 .hudc{background:var(--glass),linear-gradient(180deg,#22232a,#121317);box-shadow:inset 0 0 0 1px rgba(255,226,150,.28)}
+/* glowing bars */
+html.lk-cy2 .bar>i{background:linear-gradient(180deg,#fff3c4,#e8c35a 50%,#a8781e);box-shadow:0 0 10px rgba(246,221,142,.55)}
+html.lk-cy2 .bar.heat>i{background:linear-gradient(180deg,#ffc0a8,#e2332b 50%,#8f0f0b);box-shadow:0 0 10px rgba(255,122,46,.55)}
+html.lk-cy2 .war>i{background:linear-gradient(180deg,#fff3c4,#e8c35a 50%,#a8781e)}
+html.lk-cy2 .war>i:after{box-shadow:0 0 12px #fff}
+/* wrestler cards: a glossy sheen and a chrome edge for the stars */
+html.lk-cy2 .wc:after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(125deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.04) 28%,transparent 34%),linear-gradient(180deg,rgba(255,255,255,.07),transparent 22%);animation:none;display:block}
+html.lk-cy2 .wc.t1:before{box-shadow:inset 0 0 0 2px #ffe9a8,inset 0 0 16px rgba(255,226,150,.35)!important}
+html.lk-cy2 .wc.t2:before{box-shadow:inset 0 0 0 2px #e6e9ee,inset 0 0 12px rgba(255,255,255,.18)!important}
+html.lk-cy2 .wc .o{background:linear-gradient(180deg,rgba(40,40,46,.92),rgba(0,0,0,.9));box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+html.lk-cy2 .wc.champ .o{background:var(--chrg)}
+/* header and nav: black glass with a glowing gold line */
+html.lk-cy2 header.top{background:var(--glass),#09090b;box-shadow:0 1px 0 rgba(255,226,150,.55),0 0 22px rgba(232,190,90,.18)}
+html.lk-cy2 header.top:after{background:linear-gradient(90deg,#ffe9a8 0%,var(--gold) 40%,var(--red) 75%,transparent 100%);box-shadow:0 0 10px rgba(232,190,90,.5)}
+html.lk-cy2 nav.tabs{background:var(--glass),linear-gradient(180deg,#0e0e11,#050506)}
+html.lk-cy2 nav.tabs:before{background:linear-gradient(90deg,transparent,#ffe9a8 30%,var(--red) 70%,transparent);box-shadow:0 0 10px rgba(232,190,90,.5)}
+html.lk-cy2 nav.tabs button.on{text-shadow:0 0 12px rgba(246,221,142,.6)}
+html.lk-cy2 nav.tabs button.on:before{background:var(--chrg);box-shadow:0 0 10px var(--gold)}
+html.lk-cy2 .logo2{background:linear-gradient(180deg,#ff9a8a 0%,#e2332b 45%,#8f0f0b 55%,#d8261f 100%)!important}
+html.lk-cy2 .vs{background:linear-gradient(180deg,#fff 0%,#ffb0a4 30%,#e2332b 50%,#8f0f0b 54%,#ff8a7a 80%)!important;-webkit-background-clip:text!important;background-clip:text!important;filter:drop-shadow(0 2px 0 #000) drop-shadow(0 0 10px rgba(226,51,43,.5))!important}
+html.lk-cy2 .winban.w{background:var(--chrg);box-shadow:0 0 20px var(--gglow)}
+html.lk-cy2 .alchip.f{background:linear-gradient(180deg,#c8e8ff 0%,#5cb8ff 45%,#1c64b3 55%,#4aa0f0 100%)}
+html.lk-cy2 .alchip.h{background:linear-gradient(180deg,#ffd0c8 0%,#ff6a5f 45%,#b01d16 55%,#e0463c 100%)}
+html.lk-cy2 .wc.af .alb{background:linear-gradient(180deg,#c8e8ff 0%,#5cb8ff 45%,#1c64b3 55%,#4aa0f0 100%)}
+html.lk-cy2 .wc.ah .alb{background:linear-gradient(180deg,#ffd0c8 0%,#ff6a5f 45%,#b01d16 55%,#e0463c 100%)}
