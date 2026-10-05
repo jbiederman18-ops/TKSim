@@ -302,36 +302,36 @@ html.lk-s06 nav.tabs button.on:before{background:#e01c24}
 html.lk-s06 .logo2{background:#e01c24!important}
 
 /* ---------- '26 MODERN: today's console menus, flat, huge type, one hot accent ---------- */
-html.lk-k26{--gold:#ff2d55;--gold2:#ffffff;--gold3:#b0102e;--red:#ff2d55;--line:rgba(255,255,255,.12);--text:#f5f5f7;--mut:#9a9aa3}
-html.lk-k26 body{background:radial-gradient(90% 50% at 85% -5%,rgba(255,45,85,.22),transparent 60%),radial-gradient(70% 40% at 0% 100%,rgba(90,60,255,.14),transparent 60%),#08080a;background-attachment:fixed}
+html.lk-k26{--k26a:#ff2d55;--k26rgb:255,45,85;--k26h:#fff;--gold:var(--k26a);--gold2:#ffffff;--gold3:#b0102e;--red:var(--k26a);--line:rgba(255,255,255,.12);--text:#f5f5f7;--mut:#9a9aa3}
+html.lk-k26 body{background:radial-gradient(90% 50% at 85% -5%,rgba(var(--k26rgb),.22),transparent 60%),radial-gradient(70% 40% at 0% 100%,rgba(90,60,255,.14),transparent 60%),#08080a;background-attachment:fixed}
 html.lk-k26 *{clip-path:none!important}
 html.lk-k26 :is(.logo,.showname,.hero-t,.mhd,.lvt,.dround,.lbbrand,.wd-n,.rv-win,.res-hd .showname,.card.belt.top .h,.showcard:not(.col):not(.ppv) .showname,.showcard.col .showname,.wdt .wd-n,.tt-n,.vs){font-family:'Anton',Impact,sans-serif!important;font-style:normal!important;font-weight:400!important;letter-spacing:.005em!important;text-transform:uppercase;background:none!important;-webkit-text-fill-color:#fff!important;color:#fff!important;filter:none!important;text-shadow:none!important}
-html.lk-k26 .vs{-webkit-text-fill-color:#ff2d55!important}
+html.lk-k26 .vs{-webkit-text-fill-color:var(--k26a)!important}
 html.lk-k26 .showname[style]{font-size:min(calc(var(--fs,58px) * 1.05),calc(100cqi / (var(--n) * .5)))!important;line-height:.95}
 html.lk-k26 .dround{font-size:56px!important;line-height:.95}html.lk-k26 .mhd{font-size:34px!important}html.lk-k26 .hero-t{font-size:72px!important;line-height:.9}
 html.lk-k26 .logo{font-size:22px!important}
 html.lk-k26 :is(.h,.btn,.chip,.crown,.mini,nav.tabs button,.kicker,.tile b,.slot .lbl,.hudc,.badge,.alchip,.wc .alb,.wc .o,.slot .num){font-style:normal!important}
 html.lk-k26 .h{font-family:'Anton',Impact,sans-serif!important;font-weight:400!important;letter-spacing:.02em!important}
 html.lk-k26 :is(.card,.slot,.tile,.mu,.proj,.side,.score>div,.rib){background:rgba(255,255,255,.045)!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:16px!important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
-html.lk-k26 .card.mine{box-shadow:inset 4px 0 0 #ff2d55}
-html.lk-k26 :is(.showcard,.card.phead,.card.ttape,.res-hd,.lvhd,.wd-top.wdt,.card.belt){background:linear-gradient(135deg,rgba(255,45,85,.32),rgba(255,45,85,.04) 55%),rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.1)!important;border-radius:20px!important}
+html.lk-k26 .card.mine{box-shadow:inset 4px 0 0 var(--k26a)}
+html.lk-k26 :is(.showcard,.card.phead,.card.ttape,.res-hd,.lvhd,.wd-top.wdt,.card.belt){background:linear-gradient(135deg,rgba(var(--k26rgb),.32),rgba(var(--k26rgb),.04) 55%),rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.1)!important;border-radius:20px!important}
 html.lk-k26 .sheet{background:#111114;border-top:0;border-radius:22px 22px 0 0;box-shadow:0 -20px 50px rgba(0,0,0,.8)}
 html.lk-k26 .small{color:#fff;font-size:22px}
-html.lk-k26 .small:before{background:#ff2d55;width:8px;height:8px;border-radius:50%}
-html.lk-k26 .btn{background:#ff2d55;color:#fff;border-radius:999px!important;font-weight:800;letter-spacing:.06em;box-shadow:0 8px 24px rgba(255,45,85,.3)}
+html.lk-k26 .small:before{background:var(--k26a);width:8px;height:8px;border-radius:50%}
+html.lk-k26 .btn{background:var(--k26a);color:#fff;border-radius:999px!important;font-weight:800;letter-spacing:.06em;box-shadow:0 8px 24px rgba(var(--k26rgb),.3)}
 html.lk-k26 .btn:after{display:none}
 html.lk-k26 .btn.sec{background:rgba(255,255,255,.08);color:#fff;box-shadow:none}
 html.lk-k26 .btn.ghost{background:none;box-shadow:none}
 html.lk-k26 .btn.live{background:#fff;color:#08080a;animation:none}
 html.lk-k26 :is(.chip,.crown,.mini,.hudc){background:rgba(255,255,255,.07);color:#d0d0d6;border-radius:999px!important;box-shadow:none}
 html.lk-k26 :is(.chip.on,.crown.on,.badge.you){background:#fff;color:#08080a}
-html.lk-k26 .mini{color:#ff2d55}
+html.lk-k26 .mini{color:var(--k26a)}
 html.lk-k26 .bar{height:6px;border-radius:99px!important;background:rgba(255,255,255,.1)}
-html.lk-k26 .bar>i{-webkit-mask:none;mask:none;border-radius:99px;background:#ff2d55;box-shadow:none}
+html.lk-k26 .bar>i{-webkit-mask:none;mask:none;border-radius:99px;background:var(--k26a);box-shadow:none}
 html.lk-k26 .bar.fat>i{background:#34d399}
 html.lk-k26 .slot{border-radius:16px!important;overflow:hidden}
 html.lk-k26 .slot .num{background:transparent;color:#fff;font-family:'Anton',Impact,sans-serif!important;font-size:30px}
-html.lk-k26 .slot.me .num{background:#ff2d55;color:#fff}
+html.lk-k26 .slot.me .num{background:var(--k26a);color:#fff}
 html.lk-k26 .slot:not(.done){border-style:dashed!important}
 html.lk-k26 .wc{border-radius:14px!important}
 html.lk-k26 .wc:before{border-radius:14px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)!important}
@@ -345,8 +345,8 @@ html.lk-k26 header.top{box-shadow:0 1px 0 rgba(255,255,255,.08)}
 html.lk-k26 header.top:after,html.lk-k26 nav.tabs:before{display:none}
 html.lk-k26 nav.tabs{box-shadow:0 -1px 0 rgba(255,255,255,.08)}
 html.lk-k26 nav.tabs button.on{color:#fff}
-html.lk-k26 nav.tabs button.on:before{background:#ff2d55;left:38%;right:38%;border-radius:99px}
-html.lk-k26 .logo2{background:#ff2d55!important;border-radius:4px}
+html.lk-k26 nav.tabs button.on:before{background:var(--k26a);left:38%;right:38%;border-radius:99px}
+html.lk-k26 .logo2{background:var(--k26a)!important;border-radius:4px}
 html.lk-k26 .lmk{filter:invert(1) brightness(2)}
 html.lk-k26 :is(select,input,.dd){border-radius:12px!important;clip-path:none!important;background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1)}
 /* '06 / '26 polish: no Classic gold left over */
@@ -358,12 +358,76 @@ html.lk-s06 .rticks i.done{background:#8a909a}html.lk-s06 .rticks i.now{backgrou
 html.lk-k26 *{font-style:normal!important}
 html.lk-k26 :is(.lfc,.warnames b,.phr b,.lbht,.lbsec,.tile b,.bbn,.bbo,.bbk,.tt-g b,.lbhs b,.winban,.rv-show,.rv-score span,.tv-pl b,.tv-gm b,.tcr .n,.dial .dk b,.lbtile b,.tp b,.pickin .pt,.callbar .pt,.motn,.score i,.vsdot,.lvvs,.tv-code){font-family:'Anton',Impact,sans-serif!important;font-weight:400!important;letter-spacing:.01em!important}
 html.lk-k26 .winban{border-radius:999px!important;padding:10px 26px 8px}
-html.lk-k26 .winban.w{background:#fff;color:#08080a}html.lk-k26 .winban.l{background:#ff2d55;color:#fff}
+html.lk-k26 .winban.w{background:#fff;color:#08080a}html.lk-k26 .winban.l{background:var(--k26a);color:#fff}
 html.lk-k26 .war{height:10px;border-radius:99px!important;background:rgba(255,255,255,.14)}
-html.lk-k26 .war>i{background:#ff2d55;border-radius:99px}
+html.lk-k26 .war>i{background:var(--k26a);border-radius:99px}
 html.lk-k26 .war>i:after{display:none}
-html.lk-k26 .lfl{background:linear-gradient(90deg,#ff2d55,transparent)}
-html.lk-k26 .tile:after{background:#ff2d55;height:3px;width:28%;border-radius:0 3px 0 0}
-html.lk-k26 .rticks i{border-radius:99px}html.lk-k26 .rticks i.done{background:#6a6a72}html.lk-k26 .rticks i.now{background:#ff2d55;box-shadow:none}
+html.lk-k26 .lfl{background:linear-gradient(90deg,var(--k26a),transparent)}
+html.lk-k26 .tile:after{background:var(--k26a);height:3px;width:28%;border-radius:0 3px 0 0}
+html.lk-k26 .rticks i{border-radius:99px}html.lk-k26 .rticks i.done{background:#6a6a72}html.lk-k26 .rticks i.now{background:var(--k26a);box-shadow:none}
 html.lk-k26 .small:before{align-self:center}
 html.lk-k26 :is(.lbhero,.lbrow,.lbtile,.gmain){border-radius:16px!important;clip-path:none!important}
+
+/* ================= Blends of Classic and '26 Modern (preview) ================= */
+/* --- Modern Gold: '26 Modern's shapes and type in Classic's black, gold and ember --- */
+html.lk-k2g{--k26a:#d8b449;--k26rgb:216,180,73;--gold:#d8b449;--gold2:#f6dd8e;--gold3:#9c7424;--red:#e2332b}
+html.lk-k2g body{background:radial-gradient(90% 45% at 50% -8%,rgba(255,138,46,.2),transparent 60%),radial-gradient(70% 40% at 100% 0%,rgba(226,51,43,.12),transparent 60%),#09090b}
+html.lk-k2g :is(.logo,.showname,.hero-t,.mhd,.lvt,.dround,.lbbrand,.wd-n,.rv-win,.res-hd .showname,.card.belt.top .h,.showcard:not(.col):not(.ppv) .showname,.wdt .wd-n,.tt-n){background:linear-gradient(180deg,#fff6d6 0%,#f6dd8e 35%,#d8b449 65%,#9c7424 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important}
+html.lk-k2g .showcard.col .showname{-webkit-text-fill-color:#fff!important}
+html.lk-k2g .vs{-webkit-text-fill-color:#e2332b!important}
+html.lk-k2g :is(.showcard,.card.phead,.card.ttape,.res-hd,.lvhd,.wd-top.wdt,.card.belt){background:radial-gradient(120% 78% at 50% 118%,rgba(255,122,46,.7) 0%,rgba(150,32,10,.45) 30%,transparent 70%),rgba(255,255,255,.04)!important}
+html.lk-k2g .showcard.col{background:radial-gradient(120% 78% at 50% 118%,rgba(226,51,43,.75) 0%,rgba(120,16,12,.45) 30%,transparent 70%),rgba(255,255,255,.04)!important}
+html.lk-k2g .btn{background:linear-gradient(180deg,#f6dd8e,#d8b449 55%,#b8913f);color:#1a1308;box-shadow:0 8px 24px rgba(216,180,73,.22)}
+html.lk-k2g .btn.sec{background:rgba(255,255,255,.08);color:#fff;box-shadow:none}
+html.lk-k2g .btn.ghost{background:none;box-shadow:none}
+html.lk-k2g .btn.live{background:#e2332b;color:#fff}
+html.lk-k2g :is(.chip.on,.crown.on,.badge.you){background:linear-gradient(180deg,#f6dd8e,#d8b449);color:#1a1308}
+html.lk-k2g .mini{color:#f6dd8e}
+html.lk-k2g .winban.w{background:linear-gradient(180deg,#f6dd8e,#d8b449);color:#1a1308}html.lk-k2g .winban.l{background:#e2332b}
+html.lk-k2g .slot.me .num{background:#e2332b}
+html.lk-k2g .slot.done .num{color:#f6dd8e}
+html.lk-k2g .wc.t1:before{box-shadow:inset 0 0 0 2px #f6dd8e!important}
+html.lk-k2g nav.tabs button.on{color:#f6dd8e}
+html.lk-k2g .logo2{background:#e2332b!important}
+html.lk-k2g .lmk{filter:none}
+html.lk-k2g .small{color:#f6dd8e}
+html.lk-k2g .bar.fat>i{background:#4fd585}
+
+/* --- Classic Clean: Classic's fonts, gold titles and glow with '26 Modern's clean rounded shapes --- */
+html.lk-c26 *{clip-path:none!important}
+html.lk-c26 body{background:radial-gradient(110% 50% at 50% -8%,rgba(224,119,58,.1),transparent 60%),#0a0a0c}
+html.lk-c26 :is(.card,.slot,.tile,.mu,.proj,.side,.score>div,.rib,.lbhero,.lbrow,.lbtile,.gmain,.tp,.prod,.sell,.choice,.capbox,.scout){background:rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:16px!important}
+html.lk-c26 :is(.showcard,.card.phead,.card.ttape,.res-hd,.lvhd,.wd-top.wdt,.card.belt){border-radius:20px!important;border:1px solid rgba(232,207,142,.18)!important}
+html.lk-c26 .card.mine{box-shadow:inset 4px 0 0 var(--gold)}
+html.lk-c26 .slot{overflow:hidden}
+html.lk-c26 .slot:not(.done){border-style:dashed!important;background:transparent!important}
+html.lk-c26 .slot .num{border-radius:0}
+html.lk-c26 .sheet{border-radius:22px 22px 0 0;border-top:0;background:#121215;box-shadow:0 -20px 50px rgba(0,0,0,.8),0 -1px 0 rgba(232,207,142,.35)}
+html.lk-c26 .btn{border-radius:999px!important;background:linear-gradient(180deg,#f0d995,#d5b061 55%,#b8913f);box-shadow:0 8px 22px rgba(216,180,73,.2)}
+html.lk-c26 .btn.sec{background:rgba(255,255,255,.07);box-shadow:none}
+html.lk-c26 .btn.ghost{background:none;box-shadow:none}
+html.lk-c26 .btn.live{background:#cc3f35}
+html.lk-c26 :is(.chip,.crown,.mini,.hudc,.badge,.alchip,.live-tag,.wc .alb,.gsw){border-radius:999px!important}
+html.lk-c26 :is(.chip,.crown){background:rgba(255,255,255,.06);box-shadow:none}
+html.lk-c26 .hudc{background:rgba(255,255,255,.06);border:0}
+html.lk-c26 :is(select,input,.dd){border-radius:12px!important;background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1)}
+html.lk-c26 .ddl{border-radius:0 0 12px 12px}
+html.lk-c26 .bar{height:6px;border-radius:99px;background:rgba(255,255,255,.1)}
+html.lk-c26 .bar>i{-webkit-mask:none;mask:none;border-radius:99px}
+html.lk-c26 .war{height:10px;border-radius:99px;background:rgba(255,255,255,.14)}
+html.lk-c26 .war>i{border-radius:99px}html.lk-c26 .war>i:after{display:none}
+html.lk-c26 .wc{border-radius:14px}
+html.lk-c26 .wc:before{border-radius:14px}
+html.lk-c26 .wc .o{border-radius:6px}
+html.lk-c26 .fav{border-radius:50%!important}
+html.lk-c26 header.top,html.lk-c26 nav.tabs{background:rgba(10,10,12,.82);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+html.lk-c26 header.top:before{background:#0a0a0c}
+html.lk-c26 header.top:after{height:1px;background:rgba(232,207,142,.3)}
+html.lk-c26 nav.tabs:before{height:1px;background:rgba(232,207,142,.25)}
+html.lk-c26 nav.tabs button.on:before{left:38%;right:38%;border-radius:99px}
+html.lk-c26 .winban{border-radius:999px}
+html.lk-c26 .tcr{border-radius:10px;border-left:0;box-shadow:inset 3px 0 0 var(--line)}
+html.lk-c26 .tcr.me{box-shadow:inset 3px 0 0 var(--red)}
+html.lk-c26 .bbr{border-radius:10px}
+html.lk-c26 .rticks i{border-radius:99px}
+html.lk-c26 :is(.chip.on,.crown.on,.badge.you){background:linear-gradient(180deg,#ecd494,#c9a453);color:#17110a}

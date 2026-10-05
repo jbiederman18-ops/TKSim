@@ -8,12 +8,13 @@ const LOOK_KEY='tksim_look',LOOK_PX='tksim_look_px';
 /* the looks: Classic plus a family of retro video-game styles that share retro.css */
 const LOOKS={classic:{n:'Classic',d:'Black and gold, broadcast style'},
  s06:{n:"⚔️ '06 Brand War",d:'Gritty mid-2000s console, red vs blue',base:1},k26:{n:"🔥 '26 Modern",d:'Flat and dark, huge type, one hot accent',base:1},
+ k2g:{n:'✨ Modern Gold',d:"'26 Modern in Classic's black and gold",base:1,f:'lk-k26'},c26:{n:'🧼 Classic Clean',d:"Classic with '26 Modern's clean rounded shapes",base:1},
  '16':{n:'🕹️ 16-Bit',d:'Pixel fonts and arcade colors'}};
 let LOOK='classic',R16=false,R16PX=true;
 try{LOOK=localStorage.getItem(LOOK_KEY)||'classic';if(LOOK==='r16')LOOK='16';if(!LOOKS[LOOK])LOOK='classic';R16PX=localStorage.getItem(LOOK_PX)!=='spr'}catch(e){}
 R16=LOOK!=='classic'&&!LOOKS[LOOK].base;
-function r16Apply(){const d=document.documentElement;Object.keys(LOOKS).forEach(k=>d.classList.remove('lk-'+k));d.classList.remove('r16','fy2');d.classList.toggle('rt',R16);if(LOOK!=='classic'){d.classList.add('lk-'+LOOK);if(LOOKS[LOOK].f)d.classList.add(LOOKS[LOOK].f)}
- const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',{classic:'#09090b',s06:'#0e0f11',k26:'#08080a','16':'#12061f'}[LOOK]||'#09090b')}
+function r16Apply(){const d=document.documentElement;Object.keys(LOOKS).forEach(k=>d.classList.remove('lk-'+k));d.classList.remove('r16','fy2','lk-k26');d.classList.toggle('rt',R16);if(LOOK!=='classic'){d.classList.add('lk-'+LOOK);if(LOOKS[LOOK].f)d.classList.add(LOOKS[LOOK].f)}
+ const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',{classic:'#09090b',s06:'#0e0f11',k26:'#08080a',k2g:'#09090b',c26:'#0a0a0c','16':'#12061f'}[LOOK]||'#09090b')}
 r16Apply();
 function setLook(k){if(!LOOKS[k])k='classic';LOOK=k;R16=k!=='classic'&&!LOOKS[k].base;try{localStorage.setItem(LOOK_KEY,k)}catch(e){}r16Apply();
  if(typeof render==='function')try{render()}catch(e){}
