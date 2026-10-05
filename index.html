@@ -793,7 +793,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v123';
+const APP_VERSION='v124';
 /* v113: a rolling AEW year — a PPV every 4 weeks from Revolution to Worlds End. All In is the midyear supershow;
    the season (awards, offseason, fan-war winner) ends after Worlds End, then the calendar rolls into a new year. */
 const SEASON=40,ALLIN_WEEK=24,OLD_SEASON=24;
@@ -1492,12 +1492,12 @@ const MEV=[
  {t:'Tease a breakup',split:1,s:'mic',d:.05,st:.5,heatT:15,chemT:-2,ok:'{A} shoves {A2} after the bell. Trouble in paradise…',no:'The tease is so subtle nobody notices.'},
  {al:'f',t:'{A} and {A2} hug it out in the middle of the ring',s:'pop',d:0,st:.25,chemT:2,ok:'The crowd cheers the reunion. They\'re closer than ever.',no:'The hug is awkward. Very awkward.'},
  {al:'h',t:'{A} slaps {A2} and demands they get it together',s:'mic',d:.1,st:.25,heatT:10,chemT:-1,ok:'Harsh, but it works — for now.',no:'{A2} glares back. This isn\'t over.'}]},
-{id:'invade',w:1,need:'Y',text:'{Y} from {RIVAL} hops the barricade and storms the ring!',ch:[
- {t:'Everyone fights {Y} off',s:'ring',d:.05,st:.25,hy:'A',heat:15,ok:'{Y} is sent packing. The brand war is on.',no:'{Y} escapes after landing a few shots.'},
- {t:'{Y} lays out {A} and poses',yh:'A',always:1,st:.25,hy:'A',heat:22,popA:-1,ok:'{Y} stands tall. War has been declared.'},
+{id:'invade',w:4,fd:1,need:'Y',text:'{Y} from {RIVAL} hops the barricade and storms the ring!',ch:[
+ {t:'Everyone fights {Y} off',fdx:'A',s:'ring',d:.05,st:.25,hy:'A',heat:15,ok:'{Y} is sent packing. The brand war is on.',no:'{Y} escapes after landing a few shots.'},
+ {t:'{Y} lays out {A} and poses',fdx:'A',yh:'A',always:1,st:.25,hy:'A',heat:22,popA:-1,ok:'{Y} stands tall. War has been declared.'},
  {t:'Ignore it and finish the match',always:1,st:0,ok:'Security handles it. The match goes on.'},
- {al:'f',sty:'fl|sh|te',t:'{A} dives through the ropes onto {Y}',iAn:.5,s:'ring',d:.1,st:.5,hy:'A',heat:14,popA:2,ok:'{A} defends the brand! Huge pop.',no:'{Y} catches {A} and throws them into the barricade.'},
- {al:'h',yh:'B',t:'{A} hides behind the ref and lets {Y} deal with {B}',s:'luck',d:0,st:.25,hy:'B',heat:14,ok:'{Y} takes out {B}, and {A} strolls over for the pin.',no:'{Y} goes after {A} instead.'}]},
+ {al:'f',sty:'fl|sh|te',t:'{A} dives through the ropes onto {Y}',fdx:'A',iAn:.5,s:'ring',d:.1,st:.5,hy:'A',heat:14,popA:2,ok:'{A} defends the brand! Huge pop.',no:'{Y} catches {A} and throws them into the barricade.'},
+ {al:'h',yh:'B',t:'{A} hides behind the ref and lets {Y} deal with {B}',fdx:'B',fdxNo:'A',s:'luck',d:0,st:.25,hy:'B',heat:14,ok:'{Y} takes out {B}, and {A} strolls over for the pin.',no:'{Y} goes after {A} instead.'}]},
 {id:'belt',w:3,vs:'h',title:1,text:'While the ref checks on a fallen wrestler, {B} grabs the {T} title belt.',ch:[
  {t:'Belt shot! {B} steals the win',always:1,flip:1,st:.25,heat:18,ok:'{B} cracks {A} with the gold and steals it!'},
  {t:'The ref snatches the belt away',s:'luck',st:.25,heat:8,ok:'Order is restored — for now.',no:'The ref fumbles it and the moment gets confusing.'},
@@ -1560,11 +1560,13 @@ function evRoles(m,brand){const win=m.sides[m.winner];const los=m.sides.filter((
  const used=new Set();(S.card[brand]||[]).forEach(sl=>{if(!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(i=>used.add(i));if(sl.k==='promo'){used.add(sl.d.a);if(sl.d.b)used.add(sl.d.b)}});
  const anyHeel=A.al==='h'||B.al==='h';
  const xs=Object.values(S.w).filter(w=>w.own===brand&&!w.inj&&!used.has(w.id)&&(w.al==='h'||anyHeel)&&!inFeud(w.id,[A.id,B.id,A2&&A2.id].filter(Boolean))).map(w=>[w,heatOf(w.id,B.id)+heatOf(w.id,A.id)+w.pop/4+Math.random()*20]).sort((a,b)=>b[1]-a[1]);
- const other=brand==='p'?'ai':'p';const ys=Object.values(S.w).filter(w=>w.own===other&&!w.inj&&(w.al==='h'||anyHeel)&&!inFeud(w.id,[A.id,B.id])).sort((p,q)=>q.pop-p.pop).slice(0,6);
+ const other=brand==='p'?'ai':'p';const ys=Object.values(S.w).filter(w=>w.own===other&&!w.inj&&w.g===A.g&&(w.al==='h'||anyHeel)&&!inFeud(w.id,[A.id,B.id])).sort((p,q)=>q.pop-p.pop).slice(0,6);
  return {A,B,A2,X:xs.length?xs[0][0]:null,Y:ys.length?pick(ys):null,T:m.title?S.titles[m.title].n:'',RIVAL:brand==='p'?S.rival:S.gm,loseIdx:m.sides.indexOf(Bs),MT:m.type,STIP:stipKey(m)}}
 function evFill(t,r){return t.replace(/\{(A2|A|B|X|Y|T|RIVAL|V|O|P)\}/g,(_,k)=>k==='T'||k==='RIVAL'?r[k]:(r[k]?r[k].name:''))}
+/* v124: Forbidden Door season — the TV weeks between the previous PPV and Forbidden Door. Only then do rival stars invade. */
+function fdSeason(){if(!S||S.week>=FD_WEEK)return false;for(let k=S.week;k<FD_WEEK;k++)if(PPVS[k])return false;return true}
 function genEvent(m,brand,big){const r=evRoles(m,brand);const bigM=big||!!m.title||heatOf(r.A.id,r.B.id)>=30;
- const opts=MEV.filter(e=>(!e.need||r[e.need])&&(!e.title||m.title)&&(!e.big||bigM)&&okFor(e,r));if(!opts.length)return null;
+ const opts=MEV.filter(e=>(!e.fd||fdSeason())&&(!e.need||r[e.need])&&(!e.title||m.title)&&(!e.big||bigM)&&okFor(e,r));if(!opts.length)return null;
  const e=wpick(opts,x=>x.w*(seenP('ev:'+x.id)?.4:1)*(x.al||x.vs?1.3:1));const ch=dealEv(e,m,r);if(brand==='p')noteP(['ev:'+e.id,...ch.map(c=>c.t)]);return {e:Object.assign({},e,{ch}),r}}
 /* faces only go after heels; heels go after anyone. xh/yh: who X/Y hits, xa: X is helping A, xal: X must be that alignment */
 const canHit=(x,t)=>!!(x&&t&&(x.al==='h'||t.al==='h'));
@@ -1592,6 +1594,8 @@ function evRoll(c,r,m){const ev=evNew(m);ev.hit=true;const ok=Math.random()<evCh
   if(c.split&&r.A2)ev.split=[r.A.id,r.A2.id,c.split===2];
   if(c.rematch&&m.nc&&m.sides.length===2&&m.sides.every(x=>x.length===1))ev.rematch=[r.A.id,r.B.id];
   if(c.stash)ev.stash=r.A.id}
+ /* an invasion pencils in a Forbidden Door dream match with whoever the invader went after */
+ {const k=ok?c.fdx:(c.fdxNo||c.fdx);const t=k&&r[k];if(t&&r.Y)ev.xo=[t.id,r.Y.id]}
  const text=evFill(ok?(c.ok||pick(DEF_OK)):(c.no||pick(DEF_NO)),r);ev.notes.push(`⚡ ${evFill(c.t,r)} — ${text}`);return {success:ok,text,flip,nc:ok&&c.nc}}
 function aiEv(ch,r){let best=ch[0],bv=-1e9;ch.forEach(c=>{const p=evChance(c,r);const v=p*(c.st||0)+(c.heat||c.heatT||0)/40-(c.flip?.3:0)-(c.loseOk?.3:0)-(c.loseNo?(1-p)*.3:0)-((c.iA||0)+(c.iB||0))*p*.6-((c.failInj?1:0)+(c.iAn||0)+(c.iBn||0))*(1-p)*.6-(c.fine||c.susp?.2:0)+Math.random()*.4;if(v>bv){bv=v;best=c}});return best}
 /* v123: a chair stashed under the ring comes back out in that wrestler's next match (within 10 weeks) */
@@ -1607,6 +1611,8 @@ function applyEv(ev,notes){const evn=(ev.notes||[]).find(n=>n.startsWith('⚡'))
   const n=t.m.length>=2?`💔 ${S.w[b].name} has walked out on ${t.n}.`:`💔 ${t.n} is finished — ${S.w[a].name} and ${S.w[b].name} have split.`;notes.push(n);news(n)}}
  if(ev.rematch){const [a,b]=ev.rematch;const A=S.w[a],B=S.w[b];if(A&&B&&A.own==='p'&&B.own==='p'&&S.week<SEASON&&!(S.promises||[]).some(x=>key(x.a,x.b)===key(a,b)&&x.week>S.week)){const pr={kind:'callout',a,b,week:S.week+1};if(PPVS[S.week+1])pr.ppv=PPVS[S.week+1];addPromise(pr);notes.push(`📣 Nobody won, and the fans want it settled: ${A.name} vs ${B.name} is promised for ${pr.ppv||'next week'}.`)}}
  if(ev.stash){S.stash=S.stash||{};S.stash[ev.stash]=AW()}
+ if(ev.xo){const [a,b]=ev.xo;const A=S.w[a],Y=S.w[b];if(A&&Y&&A.own&&Y.own&&A.own!==Y.own){S.xoSeed=(S.xoSeed||[]).filter(x=>AW()-x.w<=4&&x.a!==a&&x.b!==b);S.xoSeed.push({a,b,w:AW()});
+  const n=`🚪 The Forbidden Door just swung open: ${A.name} vs ${Y.name} is penciled in for ${PPVS[FD_WEEK]}.`;notes.push(n);if(A.own==='p'||Y.own==='p'||ON())news(n)}}
  (ev.beef||[]).forEach(([a,b,v])=>addBeef(a,b,v));
  (ev.mor||[]).forEach(([id,v])=>{const w=S.w[id];if(w)w.mor=clamp(w.mor+v,0,100)});
  (ev.cash||[]).forEach(([id,v])=>{const w=S.w[id];if(w&&w.own&&S.money&&S.money[w.own]!=null)S.money[w.own]+=v})}
@@ -2139,6 +2145,7 @@ function newCard(){const ppv=!!(PPVS[S.week]);const c=emptyCard(ppv);const slots
   const i=(pr.kind==='contract'||pr.kind==='shot'||pr.ppv)?slots[bk--]:slots[f++];c[i].d=m;used.add(pr.a);used.add(pr.b)});
  /* tournament matches are locked onto the card: you decide who advances */
  if(ppv)placeTour();
+ if(S.week===FD_WEEK)xoSeeds('p',used).forEach(x=>{const sl=c.find(q=>q.k==='xo'&&!q.d);if(sl)sl.d=x});
  if(S.week===ALLIN_WEEK&&chs&&!chs.d)for(const k in TOURS){const t=tourState('p',k);const pz=S.titles[TOURS[k].prize];const w=t.chal&&S.w[t.chal];if(w&&w.own==='p'&&!used.has(w.id)&&pz&&pz.holders.length&&S.w[pz.holders[0]].own!=='p'){chs.d={title:pz.id,c:w.id};break}}
  return {p:c,ai:null}}
 function settlePromises(out){duePromises().forEach(pr=>{const A=S.w[pr.a],B=S.w[pr.b];if(!A||!B)return;const what=pr.kind==='contract'?'contracted':'promised';
@@ -3533,7 +3540,7 @@ const HOWTO=`<p><b>Offers &amp; contracts:</b> free agents with 55+ popularity w
 <p><b>Stamina</b> (the green-to-red STA bar on each card): a match costs about 16 in singles, less in tag and multi-person matches, more with a rough stipulation or on PPV. Wrestlers who worked a match get 10 back each week; anyone who gets the week off — or only cuts a promo — gets 25 back. Below ${100-FAT_OK} stamina matches start to suffer, and below ${100-FAT_RISK} the injury risk climbs. Rotate your roster and rest your stars before PPVs. <b>Double duty:</b> a wrestler can work up to ${DD_MAX} matches on the same show — each match after their first costs ${DD_FAT}× the stamina, and they go into it carrying the first one's wear. If they get hurt in the first, the second is scrapped. AEW rotates a big roster, so sitting out is fine — time off TV doesn't cost morale.</p>
 <p><b>Turning heel or face:</b> book a <b>Heel / Face Turn</b> promo — the turn is guaranteed when it airs. Add a second wrestler and a face can turn on them (big heat) or a heel can make the save (chemistry). Or use <b>Turn off-screen</b> on a wrestler's profile for an instant switch that costs a little popularity. You can also turn someone with a <b>run-in</b>: a face who costs another face the match or beats them down after the bell turns heel, and a heel who runs off another heel to save the day turns face — tick the turn option in the run-in section. Turning the same wrestler again within 8 weeks gives fans whiplash.</p>
 <p><b>Intergender booking</b> is fully open: anyone can wrestle anyone, form teams, cut promos together, and challenge for any championship — a woman can win the World title and a man can win the Women's title. Title names keep their original division, but the belts go to whoever wins.</p>
-<p><b>Calls that stick:</b> what happens in a match doesn't stay there. Risky spots and brutal moments can hurt someone: most injuries are a week or two out, some turn out to be a false alarm, and now and then it's serious (low durability makes that likelier, Iron Man less so). Get caught cheating under normal rules and it's a DQ loss; go too far and it's a fine or a suspension. A tag partner walking out ends the team, a no-contest has fans demanding the rematch next week, and a chair stashed under the ring comes back out in that wrestler's next match.</p>
+<p><b>Calls that stick:</b> what happens in a match doesn't stay there. Risky spots and brutal moments can hurt someone: most injuries are a week or two out, some turn out to be a false alarm, and now and then it's serious (low durability makes that likelier, Iron Man less so). Get caught cheating under normal rules and it's a DQ loss; go too far and it's a fine or a suspension. A tag partner walking out ends the team, a no-contest has fans demanding the rematch next week, and a chair stashed under the ring comes back out in that wrestler's next match. In the weeks before Forbidden Door, rival stars can invade your matches — whoever they go after gets that dream match penciled onto the Forbidden Door card.</p>
 <p><b>Durability</b> (on each wrestler's profile) reflects how well their real-life body holds up, based on their actual injury history. Iron-bodied workers like Darby Allin lose up to ~18% less stamina per match and get hurt far less often; fragile ones like Wardlow drain faster, get injured up to 3.5× as often and stay out longer. Sort your roster by Durability to see who can carry a heavy schedule.</p>
 <p><b>Traits</b> (the round badges on each card) add chemistry and bonuses on top of style — e.g. a Monster vs an Underdog is +4, a Storyteller adds +1 with anyone. Open any wrestler to see their best opponents and tag partners on your roster with the reasons, or tap <b>Why?</b> under a match's projected rating.</p>
 <p><b>Front office situations</b> pop up now and then after a show — backstage fights, viral videos, social media trouble, contract demands, travel mishaps, and the occasional viral opportunity. Pick how to handle each one; every option has tradeoffs. These are randomly generated fictional events.</p>

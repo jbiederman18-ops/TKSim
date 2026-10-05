@@ -87,8 +87,12 @@ function gauntletPrize(b,m,notes){if(m.nc)return;const W=S.w[m.sides[m.winner][0
 
 /* ===================== FORBIDDEN DOOR: crossover dream matches ===================== */
 const otherBrand=b=>b==='p'?'ai':'p';
-function xoAuto(brand,used,n){const other=otherBrand(brand);const theirs=new Set();((S.card&&S.card[other])||[]).forEach(sl=>{if(!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(id=>theirs.add(id));if(sl.k==='chal'&&sl.d.c)theirs.add(sl.d.c);if(sl.k==='xo'){theirs.add(sl.d.a);theirs.add(sl.d.b)}});
+/* v124: grudges from invasions this Forbidden Door season (both wrestlers still healthy and on opposite brands) */
+function xoSeeds(brand,used){const out=[];(S.xoSeed||[]).filter(x=>AW()-x.w<=4).slice().reverse().forEach(x=>{const A=S.w[x.a],B=S.w[x.b];
+ if(out.length>=2||!A||!B||A.own!==brand||!B.own||B.own===brand||A.inj||B.inj||used.has(A.id)||out.some(o=>o.a===x.a||o.b===x.b))return;out.push({a:x.a,b:x.b});used.add(x.a)});return out}
+function xoAuto(brand,used,n){const seeded=xoSeeds(brand,used);if(seeded.length>=n)return seeded.slice(0,n);const other=otherBrand(brand);const theirs=new Set();((S.card&&S.card[other])||[]).forEach(sl=>{if(!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(id=>theirs.add(id));if(sl.k==='chal'&&sl.d.c)theirs.add(sl.d.c);if(sl.k==='xo'){theirs.add(sl.d.a);theirs.add(sl.d.b)}});
  const mineL=ownList(brand).filter(w=>!w.inj&&!used.has(w.id)).sort((a,b)=>b.pop-a.pop);const opp=ownList(other).filter(w=>!w.inj&&!theirs.has(w.id));const out=[];
+ out.push(...seeded);mineL.splice(0,mineL.length,...mineL.filter(w=>!seeded.some(x=>x.a===w.id)));
  for(const A of mineL){if(out.length>=n)break;const c=opp.filter(o=>o.g===A.g&&!out.some(x=>x.b===o.id)).sort((x,y)=>(chemOpp(A,y)*2+y.pop)-(chemOpp(A,x)*2+x.pop))[0];if(c){out.push({a:A.id,b:c.id});used.add(A.id)}}
  return out}
 function openXo(i){if(mpLocked())return;const sl=S.card.p[i];const used=usedIn('p',i);const other='ai';
