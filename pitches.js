@@ -23,6 +23,14 @@ function pWant(w){return 1+Math.max(0,75-w.mor)/12}
 function pSince(w){return AW()-(w.lme!=null?w.lme:AW())}
 function pSpot(w){return w.pop>=68&&pSince(w)>=3}
 function pw(k,r){const w=PITCHES[k].w;return typeof w==='function'?w(r):w}
+function pSincePr(w){return AW()-(w.lpr!=null?w.lpr:AW())}
+function pMic(w){return w.mic>=62&&w.pop>=45&&pSincePr(w)>=4}
+function pRaiseAmt(w){return Math.max(1,Math.round(sal(w)*.15))}
+function pRaiseOK(w){return mkt(w)>=sal(w)*1.15&&w.pop>=60&&payroll('p')+pRaiseAmt(w)<=econCap()}
+function pRaise(w){const inc=pRaiseAmt(w);if(payroll('p')+inc>econCap())return 0;w.sal=sal(w)+inc;return inc}
+/* a real tag team (both on your roster, healthy, no trial) and a tag belt they could chase */
+function pTagShots(r){const l=[];S.teams.forEach(tm=>{if(tm.type!=='team'||tm.trialOf||tm.m.length!==2)return;const [a,b]=tm.m.map(id=>S.w[id]);if(!a||!b||!r.includes(a)||!r.includes(b)||a.pop<50)return;
+  Object.values(S.titles).forEach(t=>{if(t.kind!=='tag')return;if(t.holders.length&&(t.holders.some(h=>!S.w[h]||S.w[h].own!=='p'||h===a.id||h===b.id||S.w[h].inj)))return;const lo=a.mor<=b.mor?[a,b]:[b,a];l.push({a:lo[0].id,b:lo[1].id,title:t.id})})});return l}
 function pCost(){return Math.max(15,Math.round(econCap()*.08/5)*5)}
 function pTeamOf(a,b){return S.teams.find(t=>t.trialOf===a+'|'+b)}
 /* ---- the pitch types. pick(pool) → context or null; text uses {A} {B} {X}. try() returns a trial; go() returns the result text ---- */
@@ -100,6 +108,36 @@ const PITCHES={
   ok:t=>{const A=pOwn(t.a);mor(A,t.big?20:12);popx(A,t.big?3:1);return `🌟 ${A.name} got their main event and made the most of it.`},
   fail:t=>{const A=pOwn(t.a);mor(A,t.big?-15:-8);return t.big?`🌟 You promised ${A.name} a main event and didn't deliver. They won't forget it.`:`🌟 ${A.name} never got their main event slot and is not happy about it.`},
   no:3},
+ mic:{cat:'🎤 Mic time',w:r=>{const l=r.filter(pMic);return l.length?1+Math.min(3,l.filter(w=>w.mor<55).length):0},
+  pick:r=>{const l=r.filter(pMic);return l.length?{a:wpick(l,w=>pWant(w)+pSincePr(w)/4).id}:null},
+  text:x=>{const n=pSincePr(x.A);return x.A.mor<45?[`"${n} weeks since anybody handed me a microphone. Am I even on this show?"`,`"I'm a talker and you're letting me rot backstage. Give me a promo or give me an answer."`]:[`"I've got a lot to say and nobody's handing me a mic. Give me a promo segment."`,`"The crowd loves hearing me talk. Let me cut one on TV."`]},
+  head:x=>`${x.A.name} wants mic time`,
+  try:{d:x=>`Promise a promo: cut one at ${PSTAR(3)}+ within ${PITCH_LEN} weeks.`,start:x=>({goal:'seg',need:1,min:3,kind:'promo',txt:`a promo at ${PSTAR(3)}+`})},
+  go:{d:x=>`"You're getting a featured promo in the next 2 weeks." A good morale boost if you deliver — a broken promise if you don't.`,
+   start:x=>({goal:'seg',need:1,min:0,kind:'promo',len:2,txt:'cut a promo within 2 weeks',big:1}),fx:null},
+  ok:t=>{const A=pOwn(t.a);mor(A,t.big?15:10);popx(A,t.big?2:1);return `🎤 ${A.name} got their mic time and the crowd listened.`},
+  fail:t=>{const A=pOwn(t.a);mor(A,t.big?-10:-6);return t.big?`🎤 You promised ${A.name} a promo and didn't deliver. They noticed.`:`🎤 ${A.name} never got their mic moment.`},
+  no:2},
+ tagshot:{cat:'🏆 Title shot',w:r=>{const l=pTagShots(r);return l.length?1.5+Math.min(2,l.filter(c=>S.w[c.a].mor<55).length):0},
+  pick:r=>{const l=pTagShots(r);return l.length?wpick(l,c=>pWant(S.w[c.a])):null},
+  text:x=>{const t=S.titles[x.title],n=t.n,v=!t.holders.length;return x.A.mor<45?[`"${pLast(x.B)} and I are tired of waiting. Give us the ${n} shot."`]:v?[`"The ${n} titles are sitting there empty. ${pLast(x.B)} and I want them."`]:[`"${pLast(x.B)} and I have been the best team here for weeks. Give us a shot at the ${n} titles."`,`"Put the ${n} titles on the line against us. We'll take them."`]},
+  head:x=>`${x.A.name} & ${x.B.name} want the ${S.titles[x.title]?S.titles[x.title].n:''} titles`,
+  try:{d:x=>`"Win two matches in ${PITCH_LEN} weeks and you're next in line." They'll feel it's earned.`,start:x=>({goal:'wins',need:2,txt:'2 wins'})},
+  go:{d:x=>`"You've got it." Put them in a match for the ${S.titles[x.title].n} titles within ${PITCH_LEN} weeks — a big boost for both if you deliver, a broken promise if you don't.`,
+   start:x=>({goal:'title',need:1,title:x.title,txt:`a match for the ${S.titles[x.title].n} titles`,big:1}),fx:null},
+  ok:t=>{const A=pOwn(t.a),B=pOwn(t.b);mor(A,t.big?15:10);if(B)mor(B,t.big?10:6);popx(A,2);return t.big?`🏆 ${A.name} & ${B?B.name:'partner'} got their tag title shot, as promised.`:`🏆 ${A.name} & ${B?B.name:'partner'} earned it — they're the clear top contenders (+2 popularity).`},
+  fail:t=>{const A=pOwn(t.a),B=pOwn(t.b);mor(A,t.big?-15:-6);if(B)mor(B,t.big?-8:-3);return t.big?`🏆 You never gave ${A.name} & ${B?B.name:'partner'} the tag title shot you promised.`:`🏆 ${A.name} & ${B?B.name:'partner'} came up short of earning a tag title shot.`},
+  no:3},
+ raise:{cat:'💰 Contract',w:r=>{const l=r.filter(pRaiseOK);return l.length?1+Math.min(3,l.filter(w=>w.mor<55).length):0},
+  pick:r=>{const l=r.filter(pRaiseOK);return l.length?{a:wpick(l,w=>pWant(w)+(mkt(w)/sal(w)-1)*3).id}:null},
+  text:x=>x.A.mor<45?[`"I'm worth more than my paycheck says. Fix it, or I'll start listening to other offers."`]:[`"I've been selling tickets on a rookie contract. I think it's time for a raise."`,`"My numbers are up and my pay isn't. Can we talk about a raise?"`],
+  head:x=>`${x.A.name} wants a raise`,
+  try:{d:x=>`Promise a raise if they deliver: two segments at ${PSTAR(3)}+ within ${PITCH_LEN} weeks. The ${money(pRaiseAmt(x.A))}/wk bump kicks in when they do.`,start:x=>({goal:'seg',need:2,min:3,txt:`2 segments at ${PSTAR(3)}+ (earns a raise)`})},
+  go:{d:x=>`Give them a ${money(pRaiseAmt(x.A))}/wk raise now. A big morale boost, a bigger payroll.`,
+   fx:x=>{const inc=pRaise(x.A);if(!inc){mor(x.A,5);return `${x.A.name} wanted more, but there's no room under your payroll cap. They appreciate that you tried (+5 morale).`}mor(x.A,15);return `${x.A.name} signs the new numbers: +${money(inc)}/wk. They're thrilled (+15 morale).`}},
+  ok:t=>{const A=pOwn(t.a);const inc=pRaise(A);mor(A,inc?12:6);popx(A,1);return inc?`💰 ${A.name} earned it: a ${money(inc)}/wk raise as promised.`:`💰 ${A.name} earned a raise, but there's no room under the payroll cap right now. They understand (+6 morale).`},
+  fail:t=>{const A=pOwn(t.a);mor(A,-8);return `💰 ${A.name} never got the chance to earn that raise and is not happy about it.`},
+  no:3},
  buried:{cat:'🧩 A problem',w:3,
   pick:r=>{const l=r.filter(w=>w.pop>=58&&w.mor<70&&((w.lme!=null&&AW()-w.lme>=5&&w.pop>=70)||S.week-(w.last||0)>=2));return l.length?{a:l.sort((a,b)=>a.mor-b.mor)[0].id}:null},
   text:x=>[`"I've been ${S.week-(x.A.last||0)>=2?'sitting in catering for weeks':'stuck in the middle of the card for weeks'}. Am I still part of your plans?"`,`"I see my name on the board and it's always in the same spot. What do I have to do to get a real chance?"`],
@@ -173,7 +211,7 @@ function openPitch(){const p=S.pitch;if(!p||!PITCHES[p.k])return;const P=PITCHES
  ${pitchChoices(p).map((c,i)=>`<button class="choice" ${c.cost&&S.money.p<c.cost?'disabled':''} onclick="pitchChoose('${c.k}')"><span class="key"><span>${'ABC'[i]}</span></span><div>${PCH[c.k].i} ${PCH[c.k].n}</div><div class="muted tiny">${esc(c.d)}</div></button>`).join('')}
  <button class="btn ghost" onclick="openBrief()">Decide later</button>`)}
 /* ---- trial progress, called after every segment airs ---- */
-function pitchSeg(seg,notes0){const l=S.trials;if(!l||!l.length)return;const ids=seg.sides.flat().filter(Boolean);
+function pitchSeg(seg,notes0){const ids=seg.sides.flat().filter(Boolean);ids.forEach(id=>{const w=S.w[id];if(!w)return;if(w.lpr==null||seg.kind==='promo')w.lpr=AW()});const l=S.trials;if(!l||!l.length)return;
  const notes={push:t=>{notes0.push(t);S.pitchNews=(S.pitchNews||[]).concat([{w:AW(),t}]).slice(-12)}};
  S.trials=l.filter(t=>{if(!ids.includes(t.a))return true;const P=PITCHES[t.k];if(!P||!pOwn(t.a))return true;
   const side=s=>seg.sides.findIndex(x=>x.includes(s));let hit=false;
