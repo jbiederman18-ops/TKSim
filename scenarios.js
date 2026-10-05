@@ -17,14 +17,14 @@ const MEV_MORE=[
  {t:"Moonsault to the floor",s:'ring',d:.15,st:.75,fat:7,failInj:'A',ok:"{A} flies and connects — the front row is on its feet.",no:"{B} moves. {A} crashes onto the thin mats and stays down a worrying beat."},
  {t:"Springboard back in and wait for {B} to return",s:'ring',d:.1,st:.5,fat:4,ok:"Perfect timing — {B} rolls in right into a flying cutter.",no:"{A} slips on the springboard and has to scramble."},
  {t:"Stay patient and pick the moment",always:1,st:.25,ok:"No big risk, but {A} keeps control."},
- {al:'f',t:"Point to the fans, then take the leap",s:'pop',d:.15,st:.75,popA:2,fat:6,ok:"A highlight-reel dive the fans will be posting all week.",no:"{B} pulls a fan's chair in the way. Ouch."},
+ {al:'f',t:"Point to the fans, then take the leap",iAn:.5,s:'pop',d:.15,st:.75,popA:2,fat:6,ok:"A highlight-reel dive the fans will be posting all week.",no:"{B} pulls a fan's chair in the way. Ouch."},
  {al:'h',t:"Fake the dive, then slide in to win by count-out",dq:1,s:'luck',d:.05,st:.25,heat:12,ok:"{A} celebrates a cheap count-out win. The crowd is livid.",no:"{B} beats the count by a hair and the crowd roars."}]},
 {id:'power',w:2.5,sty:'pw',text:"{A} hoists {B} up into the air and just… holds them there. The crowd starts counting.",ch:[
  {t:"Hold the delayed vertical suplex as long as possible",s:'ring',d:.1,st:.5,fat:5,ok:"Ten… eleven… twelve… SLAM. The building explodes.",no:"{B} wriggles free and lands on their feet."},
  {t:"Launch {B} over the top rope to the floor",s:'ring',d:.1,st:.5,heat:8,ok:"{B} sails over the ropes. Pure power.",no:"{B} skins the cat and gets right back in."},
  {t:"Power bomb {B} straight into the mat",s:'ring',d:.15,st:.75,fat:5,ok:"The ring shakes. So does the crowd.",no:"{B} counters with a hurricanrana out of nowhere."},
  {al:'f',t:"Let the crowd count along, then slam",s:'pop',d:.05,st:.5,popA:2,ok:"The whole arena counts to ten with {A}. Iconic.",no:"The count loses steam at six. Awkward."},
- {al:'h',t:"Drop {B} throat-first on the ring apron",s:'ring',d:.05,st:.5,heat:14,ok:"The hardest part of the ring. {B} is in real trouble.",no:"{B} grabs the ropes and hangs on."}]},
+ {al:'h',t:"Drop {B} throat-first on the ring apron",iB:.15,s:'ring',d:.05,st:.5,heat:14,ok:"The hardest part of the ring. {B} is in real trouble.",no:"{B} grabs the ropes and hangs on."}]},
 {id:'chain',w:2.5,sty:'te',text:"{A} and {B} are locked in a chain-wrestling battle — reversal after reversal, nobody giving an inch.",ch:[
  {t:"Bust out a rare submission nobody has seen in years",s:'ring',d:.2,st:.75,ok:"The purists lose their minds. {B} is trapped.",no:"{B} knows the counter. Of course they do."},
  {t:"Grind {B} down with a methodical limb attack",always:1,st:.25,ok:"Not flashy, but {B}'s arm is done for the night."},
@@ -46,7 +46,7 @@ const MEV_MORE=[
  {t:"Catch and counter into the finisher",s:'ring',d:.15,st:.75,ok:"Caught in mid-air and planted. The crowd can't believe it.",no:"{B} slips out the back and lands on their feet."},
  {t:"Catch {B} and toss them across the ring",sty:'pw|br',s:'ring',d:.05,st:.5,ok:"{B} bounces off the canvas like a rag doll.",no:"{B} twists free before {A} can throw them."},
  {t:"Let {B} crash and cover",always:1,st:.25,ok:"{B} hits nothing but canvas. {A} covers for a near-fall."},
- {al:'h',t:"Catch {B}, then drop them on the top turnbuckle",s:'ring',d:.1,st:.5,heat:12,ok:"A sickening landing. The crowd winces.",no:"{B} grabs the ropes and slides out."}]},
+ {al:'h',t:"Catch {B}, then drop them on the top turnbuckle",iB:.15,s:'ring',d:.1,st:.5,heat:12,ok:"A sickening landing. The crowd winces.",no:"{B} grabs the ropes and slides out."}]},
 {id:'test',w:1.5,sty:'pw',bsty:'pw',text:"Two powerhouses lock up for a test of strength in the middle of the ring.",ch:[
  {t:"Win the test of strength outright",s:'ring',d:.15,st:.5,popA:2,ok:"{A} forces {B} to one knee. Pure brute force.",no:"{B} powers out and shoves {A} across the ring."},
  {t:"Collide with shoulder blocks until someone falls",s:'ring',d:.1,st:.5,fat:5,heat:6,ok:"On the fourth collision, {B} finally hits the mat.",no:"Neither budges. The crowd chants 'Both these guys!'"},
@@ -68,7 +68,7 @@ const MEV_MORE=[
  {al:'h',t:"Double-team {B} while the ref is distracted",s:'luck',d:.05,st:.5,heat:12,ok:"Illegal and effective.",no:"The ref catches them and forces {A2} out."},
  {al:'f',t:"Let {B} fight their way out, then tag in fresh",s:'pop',d:.1,st:.5,popA:1,ok:"A fair fight — and {A} still wins the exchange.",no:"{B} makes the tag and the tide turns."}]},
 {id:'divetrain',w:2,mt:'trios|eight',text:"Everyone in the match is fighting at once, and the bodies are piling up on the floor.",ch:[
- {t:"Start a dive train — everyone flies",s:'ring',d:.15,st:1,fat:7,ok:"Dive after dive after dive. Social media will be on fire tonight.",no:"The last dive comes up short and someone crashes into the barricade."},
+ {t:"Start a dive train — everyone flies",iAn:.4,s:'ring',d:.15,st:1,fat:7,ok:"Dive after dive after dive. Social media will be on fire tonight.",no:"The last dive comes up short and someone crashes into the barricade."},
  {t:"Clear the ring and pose as a team",always:1,st:.25,chemT:1,ok:"A striking picture of unity."},
  {al:'h',t:"While everyone's outside, {A} steals a pin",s:'luck',d:.05,st:.5,heat:10,ok:"Opportunistic and smart.",no:"The ref is outside checking on everyone."}]},
 {id:'tower',w:2.5,mt:'triple|four',text:"{B} and another competitor both have {A} set up in the corner for a tower of doom.",ch:[
@@ -79,7 +79,7 @@ const MEV_MORE=[
 /* ---------- stipulations ---------- */
 {id:'ladder',w:3,stip:'ladder',text:"The ladder is standing in the middle of the ring and {A} and {B} are climbing opposite sides.",ch:[
  {t:"Slug it out at the very top",s:'ring',d:.2,st:1,fat:8,failInj:'A',ok:"Punches at the top of the ladder with the prize dangling above. Breathtaking.",no:"The ladder topples and {A} lands hard."},
- {t:"Tip the ladder and send {B} flying",s:'ring',d:.1,st:.75,heat:10,ok:"{B} crashes into the ropes. Scary.",no:"{B} leaps off before it falls."},
+ {t:"Tip the ladder and send {B} flying",iB:.15,s:'ring',d:.1,st:.75,heat:10,ok:"{B} crashes into the ropes. Scary.",no:"{B} leaps off before it falls."},
  {t:"Climb down and use the ladder as a weapon",s:'ring',d:.05,st:.5,heat:8,ok:"A ladder shot to the ribs. {B} is folded in half.",no:"{B} kicks the ladder back into {A}'s face."},
  {sty:'fl',t:"Dive off the top of the ladder onto everyone",s:'ring',d:.2,st:1,fat:10,failInj:'A',popA:3,ok:"The dive of the year. The fans are losing their minds.",no:"{A} crashes. Medics are checking on them."}]},
 {id:'cage',w:3,stip:'cage',text:"{B} is climbing out over the top of the cage.",ch:[
@@ -91,22 +91,22 @@ const MEV_MORE=[
  {t:"Powerbomb {B} through the table",sty:'pw|br',s:'ring',d:.1,st:.75,ok:"The table explodes. So does the crowd.",no:"{B} back-drops {A} over the top instead."},
  {t:"Leg drop {B} through the table from the top rope",sty:'fl|sh|te',s:'ring',d:.2,st:.75,fat:6,failInj:'A',ok:"From the top rope, through the table. Carnage.",no:"{B} rolls away and {A} goes through it alone."},
  {t:"Set up a second table for a bigger spot",s:'luck',d:.1,st:.5,ok:"Two tables, one spot, huge reaction.",no:"The tables collapse before anyone goes through them."},
- {al:'h',t:"Spray lighter fluid on the table",s:'luck',d:.1,st:.75,heat:16,ok:"The crowd gasps. Even commentary is horrified.",no:"Officials put it out before {A} can use it."}]},
+ {al:'h',t:"Spray lighter fluid on the table",fine:1,susp:1,s:'luck',d:.1,st:.75,heat:16,ok:"The crowd gasps. Even commentary is horrified.",no:"Officials put it out before {A} can use it."}]},
 {id:'weapons',w:3,stip:'hard',text:"{A} reaches under the ring and pulls out a bag full of weapons.",ch:[
  {t:"Kendo stick shots to the back",s:'ring',d:.05,st:.5,heat:8,ok:"Every shot echoes. The crowd winces along.",no:"{B} catches the stick and turns it around."},
- {t:"Pour out the thumbtacks",s:'luck',d:.1,st:.75,heat:12,fat:4,ok:"Somebody's going in the tacks — and it's {B}.",no:"{A} ends up in their own thumbtacks."},
+ {t:"Pour out the thumbtacks",iB:.15,s:'luck',d:.1,st:.75,heat:12,fat:4,ok:"Somebody's going in the tacks — and it's {B}.",no:"{A} ends up in their own thumbtacks."},
  {t:"Trash can lid duel",s:'pop',d:.05,st:.5,ok:"Clang, clang, clang. The crowd chants along.",no:"The lids go flying into the crowd."},
  {al:'f',vs:'h',t:"Use {B}'s own favorite weapon against them",s:'ring',d:.1,st:.75,popA:3,heat:10,ok:"Poetic justice. The crowd erupts.",no:"{B} knows exactly how it works and gets the upper hand."},
- {al:'h',t:"Wrap barbed wire around a baseball bat",s:'luck',d:.1,st:.75,heat:16,ok:"The crowd goes silent. This just became personal.",no:"The ref snatches it away before it gets used."}]},
+ {al:'h',t:"Wrap barbed wire around a baseball bat",iB:.2,s:'luck',d:.1,st:.75,heat:16,ok:"The crowd goes silent. This just became personal.",no:"The ref snatches it away before it gets used."}]},
 {id:'iquit',w:3,stip:'iquit',text:"{A} has {B} trapped in a submission and shoves the microphone in their face.",ch:[
  {t:"Crank it harder until {B} says it",s:'ring',d:.15,st:.75,heat:12,ok:"{B} screams, but refuses. Incredible drama.",no:"{B} powers out and grabs the mic."},
  {t:"Let {B} speak — and they spit defiance",always:1,st:.5,heat:10,ok:"'NEVER!' The crowd rallies behind {B}."},
- {al:'h',t:"Threaten {B}'s friend at ringside",s:'mic',d:.1,st:.75,heat:18,ok:"{B} says the words to protect their friend. The crowd is disgusted.",no:"The friend fights back and {B} escapes."},
- {al:'f',t:"Demand {B} admit what they did",vs:'h',s:'mic',d:.1,st:.75,popA:2,heat:10,ok:"{B} is broken. The crowd has waited months for this.",no:"{B} laughs even in agony."}]},
+ {al:'h',t:"Threaten {B}'s friend at ringside",morB:-6,popB:-1,s:'mic',d:.1,st:.75,heat:18,ok:"{B} says the words to protect their friend. The crowd is disgusted.",no:"The friend fights back and {B} escapes."},
+ {al:'f',t:"Demand {B} admit what they did",morB:-6,popB:-2,vs:'h',s:'mic',d:.1,st:.75,popA:2,heat:10,ok:"{B} is broken. The crowd has waited months for this.",no:"{B} laughs even in agony."}]},
 {id:'count10',w:3,stip:'lms|texas',text:"{B} is down. The referee is counting… six… seven… eight…",ch:[
  {t:"{B} uses the ropes to stagger up at nine",always:1,st:.5,popB:2,ok:"Up at nine! The crowd is on its feet."},
  {t:"{A} hits one more big move to make sure",s:'ring',d:.1,st:.5,fat:5,ok:"No getting up from that.",no:"{B} catches the move and they both go down."},
- {al:'h',t:"Pile ring steps and debris on top of {B}",s:'luck',d:.05,st:.5,heat:14,ok:"{B} is buried under steel. Horrific — and effective.",no:"{B} kicks the pile off at nine."},
+ {al:'h',t:"Pile ring steps and debris on top of {B}",iB:.15,s:'luck',d:.05,st:.5,heat:14,ok:"{B} is buried under steel. Horrific — and effective.",no:"{B} kicks the pile off at nine."},
  {al:'f',t:"{A} rises to their own feet and stares {B} down",s:'pop',d:.1,st:.5,popA:2,ok:"The picture of resilience.",no:"{A} stumbles and goes back down."}]},
 {id:'falls',w:3,stip:'iron|twoof3',text:"The falls are tied and time is running out.",ch:[
  {t:"Go for broke with everything left",s:'ring',d:.2,st:.75,fat:8,ok:"The final minutes are an all-out sprint. Instant classic.",no:"Exhaustion takes over and the finish is sloppy."},
@@ -121,7 +121,7 @@ const MEV_MORE=[
  {t:"Brawl through the crowd to the merch stand",s:'ring',d:.1,st:.5,fat:6,ok:"Merch, beer and bodies everywhere. Glorious chaos.",no:"Security has to step in to protect the fans."},
  {t:"Take it backstage — through the catering tables",s:'luck',d:.1,st:.75,fat:6,ok:"The cameras follow them through catering. Instant classic TV.",no:"The cameras lose them backstage."},
  {al:'f',t:"Let a fan hand {A} a weapon",s:'pop',d:.1,st:.5,popA:2,ok:"The fan becomes a legend.",no:"The 'weapon' is a foam finger."},
- {al:'h',t:"Throw a drink in a fan's face on the way past",s:'luck',d:0,st:.25,heat:8,ok:"Instant heat.",no:"The fan throws it right back."}]},
+ {al:'h',t:"Throw a drink in a fan's face on the way past",fine:1,s:'luck',d:0,st:.25,heat:8,ok:"Instant heat.",no:"The fan throws it right back."}]},
 /* ---------- face / heel dynamics ---------- */
 {id:'beg',w:2.5,al:'f',vs:'h',text:"{B} backs into the corner, hands up, begging {A} for mercy.",ch:[
  {t:"Back off honorably — and brace for the cheap shot",always:1,st:.25,heat:8,ok:"{B} tries the eye poke, but {A} sees it coming and fires back."},
@@ -143,7 +143,7 @@ const MEV_MORE=[
 {id:'twoheels',w:2,al:'h',vs:'h',text:"{A} and {B} both go for the same foreign object at the same time.",ch:[
  {t:"Tug-of-war over it — until the ref grabs it",always:1,st:.25,heat:8,ok:"The ref confiscates it. Both are furious."},
  {t:"{A} gets it first and makes it count",s:'luck',d:.05,st:.5,heat:12,ok:"{A} won the cheating contest.",no:"{B} yanks it away and uses it first."},
- {t:"Both get caught and the ref throws it out",dq:1,always:1,st:-.25,nc:1,heat:15,ok:"The ref has had enough of both of them."}]},
+ {t:"Both get caught and the ref throws it out",rematch:1,dq:1,always:1,st:-.25,nc:1,heat:15,ok:"The ref has had enough of both of them."}]},
 {id:'hope2',w:2,al:'f',und:1,text:"{A} has been beaten from pillar to post, but refuses to stay down.",ch:[
  {t:"Small package out of nowhere",s:'luck',d:.05,st:.5,popA:3,ok:"One… two… so close! The crowd believes.",no:"{B} kicks out at one and a half."},
  {t:"Fight back with everything left",s:'pop',d:.15,st:.75,popA:3,ok:"The underdog is rallying. The whole building is behind {A}.",no:"{B} cuts it off with one big shot."},
@@ -151,25 +151,25 @@ const MEV_MORE=[
 {id:'clinic',w:2,star:1,text:"{A} slows the pace and puts on a clinic — a big star showing why they're at the top.",ch:[
  {t:"Break out a move nobody expected",s:'ring',d:.15,st:.75,popA:2,ok:"The crowd gasps. Superstar stuff.",no:"The fancy move doesn't quite connect."},
  {t:"Let {B} get their shine, then shut it down",always:1,st:.5,popB:2,ok:"A generous veteran performance. {B} looks like a player."},
- {al:'h',t:"Make {B} look foolish in front of everyone",s:'mic',d:.1,st:.5,heat:10,ok:"Arrogant, dominant and hated.",no:"{B} catches {A} being cocky."}]},
+ {al:'h',t:"Make {B} look foolish in front of everyone",morB:-5,s:'mic',d:.1,st:.5,heat:10,ok:"Arrogant, dominant and hated.",no:"{B} catches {A} being cocky."}]},
 {id:'blood',w:1.5,big:1,text:"{B} is busted open. The crowd is stunned and the referee is checking the cut.",ch:[
  {t:"Keep going — this is a fight now",s:'ring',d:.1,st:.75,heat:10,ok:"Grit and blood. An unforgettable war.",no:"The doctor steps in and the match looks shaky."},
  {t:"Take it home quickly",always:1,st:.25,ok:"A fast finish."},
- {al:'h',t:"{A} targets the cut",s:'ring',d:.05,st:.5,heat:15,ok:"Relentless and cruel.",no:"{B} fires back with fury."},
+ {al:'h',t:"{A} targets the cut",iB:.15,s:'ring',d:.05,st:.5,heat:15,ok:"Relentless and cruel.",no:"{B} fires back with fury."},
  {al:'f',t:"{A} backs off until {B} says they're fine",s:'pop',d:.05,st:.25,popA:2,ok:"The fans applaud {A}'s decency.",no:"{B} takes advantage of the pause."}]},
 {id:'bell',w:1,text:"The timekeeper rings the bell by mistake! Nobody knows if the match is over.",ch:[
  {t:"Restart and keep going",always:1,st:0,ok:"Confusion, then back to business."},
  {t:"{A} rolls {B} up while everyone's confused",s:'luck',d:.05,st:.25,ok:"Three! Or was it? The ref counts it.",no:"The ref waves it off."},
- {al:'h',t:"{A} celebrates like they won and heads to the back",s:'mic',d:.05,st:.25,heat:10,ok:"The ref drags {A} back. The crowd laughs at them.",no:"{A} gets counted out while arguing."}]},
+ {al:'h',t:"{A} celebrates like they won and heads to the back",loseNo:'co',dq:1,s:'mic',d:.05,st:.25,heat:10,ok:"The ref drags {A} back. The crowd laughs at them.",no:"{A} gets counted out while arguing."}]},
 {id:'mic2',w:1.5,sty:'sh',al:'h',text:"{A} grabs a mic from the timekeeper in the middle of the match.",ch:[
  {t:"Insult {B} while they're down",s:'mic',d:.1,st:.5,heat:12,ok:"The crowd is outraged — and hooked.",no:"{B} gets up and knocks the mic out of {A}'s hand."},
  {t:"Ask the crowd if they want to see {B} lose",s:'mic',d:.05,st:.25,heat:8,ok:"The boos are deafening.",no:"The crowd shouts back 'NO!' and rallies {B}."},
  {t:"Drop the mic and hit the finisher",s:'ring',d:.1,st:.5,ok:"Talk and action. Effective.",no:"{B} ducks."}]},
 {id:'partner',w:1.5,mt:'tag|trios|eight',need:'A2',text:"{A2} hesitates on the apron. Something isn't right between {A} and {A2}.",ch:[
  {t:"{A2} makes the tag anyway",always:1,st:.25,chemT:1,ok:"Crisis averted — for now."},
- {t:"{A2} jumps off the apron and leaves {A} alone",s:'luck',d:.05,st:.5,heatT:15,chemT:-2,ok:"The crowd gasps. Is this the end of the team?",no:"{A2} comes back at the last second."},
+ {t:"{A2} jumps off the apron and leaves {A} alone",split:2,s:'luck',d:.05,st:.5,heatT:15,chemT:-2,ok:"The crowd gasps. Is this the end of the team?",no:"{A2} comes back at the last second."},
  {al:'f',t:"{A} convinces {A2} to stick together",s:'pop',d:.05,st:.5,chemT:2,ok:"A heartfelt moment — and it wins them the match.",no:"{A2} isn't convinced."},
- {al:'h',t:"{A} shoves {A2}, blaming them for everything",s:'mic',d:.1,st:.5,heatT:12,chemT:-1,ok:"Cracks in the team. The crowd is buzzing.",no:"{A2} shoves back."}]},
+ {al:'h',t:"{A} shoves {A2}, blaming them for everything",split:1,s:'mic',d:.1,st:.5,heatT:12,chemT:-1,ok:"Cracks in the team. The crowd is buzzing.",no:"{A2} shoves back."}]},
 {id:'intimidate',w:1.5,sty:'pw|br',bsty:'fl|te|sh',text:"{A} towers over {B} and just stares down at them. {B} takes a step back.",ch:[
  {t:"Squash {B} with pure power",s:'ring',d:.05,st:.25,popA:1,ok:"Dominant. Nobody's getting up from that.",no:"{B} uses speed to escape."},
  {t:"Let {B} bounce off, then flatten them",always:1,st:.5,ok:"Irresistible force, very movable object."},

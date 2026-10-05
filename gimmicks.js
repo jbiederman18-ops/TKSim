@@ -30,7 +30,7 @@ const GIMMICKS=[
 {k:'trophy',old:1,n:'The Human Participation Trophy',g:'M',st:'br',al:'f',tier:'prospect',pop:8,bio:"Has never won a match. Gets a trophy after every single one anyway. The fans adore him for it.",
  m:{t:"{A} is losing badly, but a ringside attendant is already polishing a trophy for them.",ch:[
   {t:"Fight on — everyone's a winner",s:'pop',d:.15,st:.75,popA:3,ok:"'YOU TRIED YOUR BEST' chants shake the building.",no:"They lost. They still get the trophy."},
-  {t:"Hit {B} with the trophy",dq:1,s:'luck',d:.05,st:.25,heat:10,ok:"Disqualified. Still gets the trophy.",no:"The trophy is plastic. It breaks. Tears."}]},
+  {t:"Hit {B} with the trophy",loseOk:'dq',dq:1,s:'luck',d:.05,st:.25,heat:10,ok:"Disqualified. Still gets the trophy.",no:"The trophy is plastic. It breaks. Tears."}]},
  p:{t:"{A} comes out clutching a shelf full of trophies to thunderous applause.",ch:[
   {key:1,t:"Thank every opponent who ever beat them",s:'pop',d:.05,p:4,ok:"It takes a while. The crowd cheers every name.",no:"The list is so long the show goes to commercial."},
   {t:"Promise that someday they'll win one for real",s:'mic',d:.1,p:3,ok:"Not a dry eye in the house.",no:"The crowd isn't sure they believe it either."}]}},
@@ -79,7 +79,7 @@ const GIMMICKS=[
 {k:'influencer',old:1,n:"Like & Subscribe Kayleigh",g:'F',st:'sh',al:'h',tier:'prospect',mic:5,bio:"Films every match on a ring light attached to her head. Four million followers. Nine of them are real.",
  m:{t:"{A} stops to film a quick vertical video for her followers — with {B} still in the ring.",ch:[
   {t:"Film a reaction video of {B}'s pain",s:'mic',d:.05,st:.25,heat:10,ok:"The video goes viral. The crowd is disgusted.",no:"The ring light blinds her."},
-  {t:"Ask chat what move to do next",s:'luck',d:.1,st:.5,popA:2,ok:"Chat says 'moonsault'. She actually hits it.",no:"Chat says 'lose'. She loses."}]},
+  {t:"Ask chat what move to do next",loseNo:'pin',s:'luck',d:.1,st:.5,popA:2,ok:"Chat says 'moonsault'. She actually hits it.",no:"Chat says 'lose'. She loses."}]},
  p:{t:"{A} livestreams her entrance, narrating to her followers.",ch:[
   {key:1,t:"Remind everyone to like and subscribe",s:'mic',d:.05,p:3,ok:"The crowd chants 'NO'. Great engagement.",no:"The stream crashes."},
   {t:"Announce a new merch drop",s:'pop',d:.1,p:2,ok:"It's a hoodie that costs $180. Pure villainy.",no:"The website crashes."}]}},
@@ -92,7 +92,7 @@ const GIMMICKS=[
   {t:"Check everyone's bags for outside snacks",s:'pop',d:.1,p:2,ok:"He confiscates a pretzel. The crowd cheers.",no:"He eats the pretzel. The crowd boos."}]}},
 {k:'nap',old:1,n:'Mister Nap',g:'M',st:'te',al:'f',tier:'bluechip',mic:-5,bio:"The most talented technical wrestler of his generation. Falls asleep in rest holds. Sometimes in his own.",
  m:{t:"{A} locks in a rest hold… and starts snoring.",ch:[
-  {t:"Wake up and roll into a submission",s:'ring',d:.15,st:.75,popA:2,ok:"He was never asleep! Or was he? The crowd goes wild.",no:"He was asleep. The ref counts three."},
+  {t:"Wake up and roll into a submission",loseNo:'pin',s:'ring',d:.15,st:.75,popA:2,ok:"He was never asleep! Or was he? The crowd goes wild.",no:"He was asleep. The ref counts three."},
   {t:"Let the crowd wake him with a chant",s:'pop',d:.05,st:.5,popA:3,ok:"'WAKE UP NAP!' He springs to life.",no:"He rolls over."}]},
  p:{t:"{A} walks out in pajamas holding a pillow.",ch:[
   {key:1,t:"Try to cut a promo before dozing off",s:'mic',d:.15,p:3,ok:"He gets through it. The crowd applauds his effort.",no:"Asleep by the third sentence."},
@@ -290,7 +290,7 @@ const GIMMICKS=[
 {k:'binoculars',n:'"Looks Good from Here" Brian Binoculars',g:'M',st:'sh',al:'h',tier:'prospect',bio:"Watches every match through binoculars. From inside the ring. Including his own.",
  m:{t:"{A} backs into the far corner and studies {B} through his binoculars.",ch:[
   {t:"Spot the weakness and strike",s:'ring',d:.1,st:.5,heat:6,ok:"Looked good from there. Looks even better up close.",no:"He was looking through the wrong end."},
-  {al:'h',t:"Clock {B} with the binoculars",s:'luck',d:.05,st:.5,heat:12,ok:"Pinpoint accuracy.",no:"The ref saw it. Without binoculars."}]},
+  {al:'h',t:"Clock {B} with the binoculars",loseNo:'dq',s:'luck',d:.05,st:.5,heat:12,ok:"Pinpoint accuracy.",no:"The ref saw it. Without binoculars."}]},
  p:{t:"{A} surveys the crowd through binoculars for a very long time.",ch:[
   {key:1,t:"Rate the crowd from a distance",s:'mic',d:.1,p:3,ok:"\"Looks good from here.\" The crowd boos and cheers at once.",no:"He rates the crowd a four. They are furious."},
   {t:"Spot someone in the upper deck and wave",s:'pop',d:.05,p:2,ok:"The upper deck goes nuts.",no:"Nobody's up there."}]}},
@@ -318,7 +318,7 @@ const GIMMICKS=[
 {k:'cooldad',n:'"Cool Dad" Don Crenshaw',g:'M',st:'br',al:'f',tier:'prospect',pop:3,bio:"Grills in the parking lot before every show. Calls everyone 'champ'. Wears his sunglasses on the back of his head.",
  m:{t:"{A} stops to adjust his sunglasses and tell {B} he's proud of the effort.",ch:[
   {t:"Dad strength: one perfect bodyslam",s:'ring',d:.05,st:.5,popA:2,ok:"He didn't even spill his iced tea.",no:"He pulled something. He'll be fine. He says."},
-  {t:"Give {B} a pep talk mid-match",s:'mic',d:.1,st:.25,ok:"{B} feels great about themselves — and gets pinned.",no:"{B} feels great about themselves and wins."}]},
+  {t:"Give {B} a pep talk mid-match",loseNo:'pin',s:'mic',d:.1,st:.25,ok:"{B} feels great about themselves — and gets pinned.",no:"{B} feels great about themselves and wins."}]},
  p:{t:"{A} walks out in cargo shorts, holding grill tongs.",ch:[
   {key:1,t:"Tell the crowd a dad joke",s:'mic',d:.1,p:3,ok:"The groan is deafening. It's perfect.",no:"It ran long. He lost the punchline."},
   {t:"Toss hot dogs off the grill to the crowd",s:'pop',d:.05,p:2,ok:"Perfect grill marks. The fans love him.",no:"He forgot the buns."}]}},
@@ -346,7 +346,7 @@ const GIMMICKS=[
 {k:'mahogony',n:'"Hardwood" Rich Mahogony',g:'M',st:'sh',al:'h',tier:'bluechip',mic:5,bio:"Very important. Owns many leather-bound books. Everything he touches smells of rich hardwood.",
  m:{t:"{A} pauses mid-match to polish the turnbuckle with a cloth.",ch:[
   {t:"Hit the Grain of the Wood elbow drop",s:'ring',d:.1,st:.5,heat:6,ok:"Polished. Expensive. Effective.",no:"Splinters."},
-  {al:'h',t:"Hit {B} with a leather-bound book",s:'luck',d:.05,st:.5,heat:12,ok:"First edition. Very heavy.",no:"The ref saw the book. Classy cheating, though."}]},
+  {al:'h',t:"Hit {B} with a leather-bound book",loseNo:'dq',s:'luck',d:.05,st:.5,heat:12,ok:"First edition. Very heavy.",no:"The ref saw the book. Classy cheating, though."}]},
  p:{t:"{A} enters to smooth jazz, wearing a velvet smoking jacket.",ch:[
   {key:1,t:"Read a passage from one of his leather-bound books",s:'mic',d:.1,p:3,ok:"The crowd is furious and somehow impressed.",no:"Too much reading."},
   {t:"Tell the crowd they could never afford his furniture",s:'mic',d:.05,p:2,ok:"The boos echo off his solid hardwood.",no:"Someone yells 'IKEA!'"}]}},

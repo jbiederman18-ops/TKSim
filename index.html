@@ -793,7 +793,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v122';
+const APP_VERSION='v123';
 /* v113: a rolling AEW year — a PPV every 4 weeks from Revolution to Worlds End. All In is the midyear supershow;
    the season (awards, offseason, fan-war winner) ends after Worlds End, then the calendar rolls into a new year. */
 const SEASON=40,ALLIN_WEEK=24,OLD_SEASON=24;
@@ -1447,18 +1447,18 @@ const MEV=[
  {al:'h',vs:'f',t:'{A} rips off a turnbuckle pad while the ref is out',s:'luck',d:.05,st:.25,heat:10,ok:'Exposed steel — and {B} finds it face-first.',no:'{B} reverses and {A} eats the steel instead.'}]},
 {id:'chair',w:3,bd:1,text:'{B} slides a steel chair into the ring.',ch:[
  {t:'{A} kicks it away and hits the finisher',s:'ring',d:.05,st:.25,popA:2,ok:'Poetic justice. The crowd loves it.',no:'The spot is sloppy and the finish falls flat.'},
- {t:"{A} uses it behind the referee's back",s:'luck',d:.1,st:.5,heat:10,heelA:1,ok:'Nobody saw it — except 10,000 fans.',no:'The ref turns around at the worst moment. Awkward.'},
- {t:'The ref catches it — throw the match out',dq:1,always:1,st:-.25,heat:18,nc:1,ok:'No contest! Both wrestlers are furious. This feud just got hotter.'},
+ {t:"{A} uses it behind the referee's back",loseNo:'dq',s:'luck',d:.1,st:.5,heat:10,heelA:1,ok:'Nobody saw it — except 10,000 fans.',no:'The ref turns around at the worst moment. Awkward.'},
+ {t:'The ref catches it — throw the match out',rematch:1,dq:1,always:1,st:-.25,heat:18,nc:1,ok:'No contest! Both wrestlers are furious. This feud just got hotter.'},
  {t:'They fight over the chair until it goes flying',s:'ring',d:.1,st:.5,fat:5,heat:8,ok:'A wild tug-of-war that ends with {A} on top.',no:'The chair spot looks clumsy.'},
  {al:'f',t:'{A} tosses the chair out and dares {B} to fight fair',s:'pop',d:.05,st:.25,popA:2,heat:6,ok:'"Fight me like a man!" The fans are fired up.',no:'{B} takes advantage of the distraction.'},
- {al:'h',t:'{A} stashes the chair under the ring for later',s:'luck',d:0,st:.25,heat:8,ok:'Smart and sneaky. It will come in handy another night.',no:'The camera catches it and the crowd tells the ref.'},
+ {al:'h',t:'{A} stashes the chair under the ring for later',stash:1,s:'luck',d:0,st:.25,heat:8,ok:'Smart and sneaky. It will come in handy another night.',no:'The camera catches it and the crowd tells the ref.'},
  {al:'h',vs:'h',t:'The ref confiscates it and {B} throws a tantrum',always:1,st:.25,heat:6,ok:'{B} melts down, and {A} capitalizes with a cheap shot.'}]},
 {id:'hurt',w:1.5,text:'{B} lands awkwardly and is clutching their knee. The referee throws up the X.',ch:[
- {t:'Call an audible and take it home now',always:1,st:-.5,ok:'Smart call. {B} walks out under their own power.'},
- {t:'Let {B} push through',s:'luck',d:.25,st:.5,popB:3,failInj:'B',ok:'A gutsy, heroic performance. The fans are in awe.',no:"{B} can't continue — it looks serious."},
- {t:'The doctor checks {B} at ringside while {A} waits',always:1,st:0,ok:'{B} is cleared to continue, and they finish strong.'},
- {al:'f',t:'{A} checks on {B} before finishing the match',always:1,st:.25,popA:2,ok:'A classy moment the fans won\'t forget.'},
- {al:'h',t:'{A} goes straight for the bad knee',s:'ring',d:.05,st:.25,heat:15,ok:'Cruel and calculated. {B} taps in agony.',no:'{B} fires up out of pure spite.'}]},
+ {t:'Call an audible and take it home now',iB:.2,always:1,st:-.5,ok:'Smart call. {B} walks out under their own power.'},
+ {t:'Let {B} push through',iB:.15,s:'luck',d:.25,st:.5,popB:3,failInj:'B',ok:'A gutsy, heroic performance. The fans are in awe.',no:"{B} can't continue — it looks serious."},
+ {t:'The doctor checks {B} at ringside while {A} waits',iB:.25,always:1,st:0,ok:'{B} is cleared to continue, and they finish strong.'},
+ {al:'f',t:'{A} checks on {B} before finishing the match',iB:.3,always:1,st:.25,popA:2,ok:'A classy moment the fans won\'t forget.'},
+ {al:'h',t:'{A} goes straight for the bad knee',iB:.6,iBn:.3,s:'ring',d:.05,st:.25,heat:15,ok:'Cruel and calculated. {B} taps in agony.',no:'{B} fires up out of pure spite.'}]},
 {id:'dead',w:2,text:'A long rest hold has the crowd sitting on their hands.',ch:[
  {nsty:'pw',t:'Go to a big spot off the top rope',s:'ring',d:.2,st:.5,fat:8,ok:'The building explodes!',no:'A nasty botch. Everyone winces.'},
  {t:'Play to the crowd with a comedy spot',s:'mic',d:.1,st:.25,popA:1,ok:'The crowd is laughing and back in it.',no:'The joke lands with a thud.'},
@@ -1482,28 +1482,28 @@ const MEV=[
  {vs:'h',t:'{B} tries a cheap roll-up — {A} reverses it',s:'ring',d:.1,st:.5,popA:2,heat:10,ok:'Hoisted by their own petard! {A} wins.',no:'The reversal is botched.'}]},
 {id:'floor',w:2,text:'The action spills to the floor and into the crowd.',ch:[
  {t:'Brawl up into the stands',s:'ring',d:.15,st:.5,fat:8,ok:'Fans scatter as they trade shots in the seats.',no:"It's hard to see anything on camera."},
- {t:'Double countout',dq:1,always:1,st:-.25,heat:20,nc:1,ok:"Neither makes it back. This isn't over."},
+ {t:'Double countout',rematch:1,dq:1,always:1,st:-.25,heat:20,nc:1,ok:"Neither makes it back. This isn't over."},
  {t:'Get it back in the ring',always:1,st:0,ok:'Back to business.'},
  {t:'A brawl up the entrance ramp',s:'ring',d:.1,st:.5,fat:6,heat:8,ok:'They fight all the way to the stage and back.',no:'It drags on too long.'},
- {al:'f',sty:'fl|sh|te',t:'{A} dives off the top rope onto {B} on the floor',s:'ring',d:.15,st:.5,fat:6,popA:2,ok:'"THIS IS AWESOME!" chants fill the arena.',no:'{B} moves and {A} crashes hard.'},
- {al:'h',t:'{A} rams {B} into the steel steps',s:'ring',d:.05,st:.25,heat:12,ok:'A sickening thud. {A} smirks.',no:'{B} blocks it and {A} hits the steps instead.'}]},
+ {al:'f',sty:'fl|sh|te',t:'{A} dives off the top rope onto {B} on the floor',iAn:.5,s:'ring',d:.15,st:.5,fat:6,popA:2,ok:'"THIS IS AWESOME!" chants fill the arena.',no:'{B} moves and {A} crashes hard.'},
+ {al:'h',t:'{A} rams {B} into the steel steps',iB:.15,s:'ring',d:.05,st:.25,heat:12,ok:'A sickening thud. {A} smirks.',no:'{B} blocks it and {A} hits the steps instead.'}]},
 {id:'miscomm',w:3,need:'A2',text:'{A2} swings at {B} — and accidentally nails their own partner {A}!',ch:[
  {t:'They shake it off and win together',s:'luck',st:.25,chemT:1,ok:'A quick apology and a double-team finisher. Crisis averted.',no:'The tension lingers all the way to the finish.'},
- {t:'Tease a breakup',s:'mic',d:.05,st:.5,heatT:15,chemT:-2,ok:'{A} shoves {A2} after the bell. Trouble in paradise…',no:'The tease is so subtle nobody notices.'},
+ {t:'Tease a breakup',split:1,s:'mic',d:.05,st:.5,heatT:15,chemT:-2,ok:'{A} shoves {A2} after the bell. Trouble in paradise…',no:'The tease is so subtle nobody notices.'},
  {al:'f',t:'{A} and {A2} hug it out in the middle of the ring',s:'pop',d:0,st:.25,chemT:2,ok:'The crowd cheers the reunion. They\'re closer than ever.',no:'The hug is awkward. Very awkward.'},
  {al:'h',t:'{A} slaps {A2} and demands they get it together',s:'mic',d:.1,st:.25,heatT:10,chemT:-1,ok:'Harsh, but it works — for now.',no:'{A2} glares back. This isn\'t over.'}]},
 {id:'invade',w:1,need:'Y',text:'{Y} from {RIVAL} hops the barricade and storms the ring!',ch:[
  {t:'Everyone fights {Y} off',s:'ring',d:.05,st:.25,hy:'A',heat:15,ok:'{Y} is sent packing. The brand war is on.',no:'{Y} escapes after landing a few shots.'},
  {t:'{Y} lays out {A} and poses',yh:'A',always:1,st:.25,hy:'A',heat:22,popA:-1,ok:'{Y} stands tall. War has been declared.'},
  {t:'Ignore it and finish the match',always:1,st:0,ok:'Security handles it. The match goes on.'},
- {al:'f',sty:'fl|sh|te',t:'{A} dives through the ropes onto {Y}',s:'ring',d:.1,st:.5,hy:'A',heat:14,popA:2,ok:'{A} defends the brand! Huge pop.',no:'{Y} catches {A} and throws them into the barricade.'},
+ {al:'f',sty:'fl|sh|te',t:'{A} dives through the ropes onto {Y}',iAn:.5,s:'ring',d:.1,st:.5,hy:'A',heat:14,popA:2,ok:'{A} defends the brand! Huge pop.',no:'{Y} catches {A} and throws them into the barricade.'},
  {al:'h',yh:'B',t:'{A} hides behind the ref and lets {Y} deal with {B}',s:'luck',d:0,st:.25,hy:'B',heat:14,ok:'{Y} takes out {B}, and {A} strolls over for the pin.',no:'{Y} goes after {A} instead.'}]},
 {id:'belt',w:3,vs:'h',title:1,text:'While the ref checks on a fallen wrestler, {B} grabs the {T} title belt.',ch:[
  {t:'Belt shot! {B} steals the win',always:1,flip:1,st:.25,heat:18,ok:'{B} cracks {A} with the gold and steals it!'},
  {t:'The ref snatches the belt away',s:'luck',st:.25,heat:8,ok:'Order is restored — for now.',no:'The ref fumbles it and the moment gets confusing.'},
  {t:'{A} ducks and hits the finisher',s:'ring',d:.1,st:.5,popA:2,ok:'The belt goes flying and {A} gets the win.',no:'The ducking spot looks rehearsed.'},
  {al:'f',t:'{A} wrestles the belt away and hands it to the ref',s:'ring',d:.05,st:.25,popA:2,heat:8,ok:'Doing it the right way — and winning anyway.',no:'The handoff gives {B} time to recover.'},
- {al:'h',t:'{A} grabs the belt first and nails {B} with it',s:'luck',d:.1,st:.5,heat:14,ok:'{A} wins with the belt they were fighting for. Dastardly.',no:'The ref turns around and catches it all.'}]},
+ {al:'h',t:'{A} grabs the belt first and nails {B} with it',loseNo:'dq',s:'luck',d:.1,st:.5,heat:14,ok:'{A} wins with the belt they were fighting for. Dastardly.',no:'The ref turns around and catches it all.'}]},
 {id:'rally',w:2,al:'f',text:'The crowd rallies behind {A} with a deafening chant.',ch:[
  {t:'Feed off the crowd and fire up',s:'pop',d:.05,st:.5,popA:2,ok:'{A} is unstoppable with the crowd behind them.',no:'{B} cuts the comeback off with a cheap shot.'},
  {t:'Hit a signature move to pop the crowd',s:'ring',d:.1,st:.5,ok:'The place comes unglued.',no:'The move is slightly off.'},
@@ -1511,7 +1511,7 @@ const MEV=[
  {t:'Fly off the top rope for the crowd',s:'ring',d:.2,st:.75,fat:6,popA:1,ok:'An unforgettable moment.',no:'{B} gets the knees up.'}]},
 {id:'cheat',w:2,al:'h',text:'The ref is distracted by the commotion on the apron.',ch:[
  {t:'Rake {B}\'s eyes',s:'luck',d:0,st:.25,heat:10,ok:'Dirty, quick and effective.',no:'The ref turns around in time. Busted.'},
- {t:'Slip on brass knuckles',s:'luck',d:.1,st:.5,heat:14,ok:'Lights out for {B}.',no:'The knuckles clatter to the mat and the ref sees everything.'},
+ {t:'Slip on brass knuckles',loseNo:'dq',s:'luck',d:.1,st:.5,heat:14,ok:'Lights out for {B}.',no:'The knuckles clatter to the mat and the ref sees everything.'},
  {t:'Use the ropes for leverage on a pin',s:'ring',d:.05,st:.25,heat:10,ok:'1… 2… 3. Nobody saw it — except everyone.',no:'The ref kicks the hand off the rope.'},
  {t:'Spit water in {B}\'s face',s:'luck',d:.05,st:.25,heat:12,ok:'Disgusting. The crowd is outraged.',no:'{B} ducks and the ref gets drenched.'}]},
 {id:'boos',w:1.5,al:'h',text:'The crowd is chanting "{A} sucks!" at the top of their lungs.',ch:[
@@ -1534,9 +1534,9 @@ const MEV=[
 {id:'villains',w:1.5,al:'h',vs:'h',text:'Two villains, and neither will stop cheating. The ref has lost control.',ch:[
  {t:'Both go for low blows at the same time',s:'luck',d:0,st:.5,heat:12,ok:'A double low blow! The crowd howls with laughter.',no:'They both miss. Embarrassing.'},
  {t:'{A} out-cheats {B} with a foreign object',s:'luck',d:.1,st:.5,heat:14,ok:'The better cheater wins.',no:'{B} out-cheats them back.'},
- {t:'Double DQ — the ref has had enough',dq:1,always:1,st:-.25,nc:1,heat:16,ok:'Nobody wins, and neither is happy about it.'}]},
+ {t:'Double DQ — the ref has had enough',rematch:1,dq:1,always:1,st:-.25,nc:1,heat:16,ok:'Nobody wins, and neither is happy about it.'}]},
 {id:'top',w:2,nsty:'pw',text:'{A} climbs to the top rope with {B} down on the mat.',ch:[
- {t:'The highest-risk move in their arsenal',s:'ring',d:.2,st:.75,fat:6,ok:'They nail it! The crowd can\'t believe it.',no:'{A} overshoots and crashes.'},
+ {t:'The highest-risk move in their arsenal',iAn:.5,s:'ring',d:.2,st:.75,fat:6,ok:'They nail it! The crowd can\'t believe it.',no:'{A} overshoots and crashes.'},
  {t:'Play it safe and climb back down',always:1,st:0,ok:'The crowd groans, but {A} wins anyway.'},
  {al:'f',t:'Point to the fans, then fly',s:'pop',d:.15,st:.75,popA:2,fat:6,ok:'A picture-perfect moment for the highlight reel.',no:'{B} rolls away at the last second.'},
  {al:'h',t:'Taunt the crowd from the top',s:'mic',d:.1,st:.25,popA:1,ok:'The boos peak just as {A} comes crashing down on {B}.',no:'{B} gets up and crotches {A} on the top rope.'}]}];
@@ -1580,14 +1580,33 @@ function evRoll(c,r,m){const ev=evNew(m);ev.hit=true;const ok=Math.random()<evCh
  if(c.fat)m.sides.flat().forEach(id=>ev.fat.push([id,c.fat]));
  if(ok){ev.stars+=c.st||0;H(hp[0],hp[1],hv);if(c.popA)ev.pop.push([r.A.id,c.popA]);if(c.popB)ev.pop.push([r.B.id,c.popB]);if(c.heelA&&r.A.al==='f')ev.pop.push([r.A.id,-1.5]);
   if(c.chemT&&r.A2)ev.chem.push([r.A.id,r.A2.id,c.chemT]);if(c.nc)m.nc=true;if(c.flip)m.winner=r.loseIdx}
- else{ev.stars-=Math.max(.25,Math.abs(c.st||0)*.5);H(hp[0],hp[1],hv*.3);if(c.failInj)ev.inj.push([r[c.failInj].id,RI(3,6)])}
- const text=evFill(ok?(c.ok||pick(DEF_OK)):(c.no||pick(DEF_NO)),r);ev.notes.push(`⚡ ${evFill(c.t,r)} — ${text}`);return {success:ok,text,flip:ok&&c.flip,nc:ok&&c.nc}}
-function aiEv(ch,r){let best=ch[0],bv=-1e9;ch.forEach(c=>{const v=evChance(c,r)*(c.st||0)+(c.heat||c.heatT||0)/40-(c.flip?.3:0)+Math.random()*.4;if(v>bv){bv=v;best=c}});return best}
+ else{ev.stars-=Math.max(.25,Math.abs(c.st||0)*.5);H(hp[0],hp[1],hv*.3)}
+ /* v123: consequences that outlast the match. iA/iB = injury chance if the call works, iAn/iBn (or failInj = certain) if it doesn't */
+ const ip=ok?{A:c.iA,B:c.iB}:{A:c.failInj==='A'?1:c.iAn,B:c.failInj==='B'?1:c.iBn};
+ ['A','B'].forEach(k=>{const w=r[k];if(ip[k]&&w&&Math.random()<ip[k])ev.inj.push([w.id,injSev(w),1])});
+ let flip=ok&&!!c.flip;const lose=ok?c.loseOk:c.loseNo;const dqR=!!(STIPS[stipKey(m)]||STIPS.std).dq;
+ if(lose&&!m.nc&&r.loseIdx>=0&&m.winner!==r.loseIdx&&(lose==='pin'||dqR)){m.winner=r.loseIdx;m.fin=lose==='pin'?'clean':lose;flip=true}
+ if(ok){if(c.morA)ev.mor.push([r.A.id,c.morA]);if(c.morB)ev.mor.push([r.B.id,c.morB]);
+  if(c.fine){const f=fineAmt();ev.cash.push([r.A.id,-f]);ev.notes.push(`💸 ${r.A.name} is fined ${money(f)} for that.`)}
+  if(c.susp)(ev.susp=ev.susp||[]).push([r.A.id,c.susp+1]);
+  if(c.split&&r.A2)ev.split=[r.A.id,r.A2.id,c.split===2];
+  if(c.rematch&&m.nc&&m.sides.length===2&&m.sides.every(x=>x.length===1))ev.rematch=[r.A.id,r.B.id];
+  if(c.stash)ev.stash=r.A.id}
+ const text=evFill(ok?(c.ok||pick(DEF_OK)):(c.no||pick(DEF_NO)),r);ev.notes.push(`⚡ ${evFill(c.t,r)} — ${text}`);return {success:ok,text,flip,nc:ok&&c.nc}}
+function aiEv(ch,r){let best=ch[0],bv=-1e9;ch.forEach(c=>{const p=evChance(c,r);const v=p*(c.st||0)+(c.heat||c.heatT||0)/40-(c.flip?.3:0)-(c.loseOk?.3:0)-(c.loseNo?(1-p)*.3:0)-((c.iA||0)+(c.iB||0))*p*.6-((c.failInj?1:0)+(c.iAn||0)+(c.iBn||0))*(1-p)*.6-(c.fine||c.susp?.2:0)+Math.random()*.4;if(v>bv){bv=v;best=c}});return best}
+/* v123: a chair stashed under the ring comes back out in that wrestler's next match (within 10 weeks) */
+function stashHit(m){if(!S.stash)return null;const id=m.sides.flat().find(i=>S.stash[i]!=null&&S.stash[i]<AW());if(!id)return null;const wk=S.stash[id];delete S.stash[id];if(AW()-wk>10||!S.w[id])return null;
+ return `🪑 ${S.w[id].name} reaches under the ring for the chair they stashed ${AW()-wk>1?(AW()-wk)+' weeks':'a week'} ago (+¼★).`}
 function applyEv(ev,notes){const evn=(ev.notes||[]).find(n=>n.startsWith('⚡'));ev.heat.forEach(([a,b,h])=>{if(S.w[a]&&S.w[b]&&a!==b){const k=key(a,b);const h0=S.heat[k]||0;S.heat[k]=addHeat(h0,h);touch(k);fhLog(a,b,{d:S.heat[k]-h0,h:S.heat[k],n:evn||'a wild moment in the match'})}});
  ev.pop.forEach(([id,v])=>{const w=S.w[id];if(w)w.pop=clamp(w.pop+v,1,100)});
  ev.chem.forEach(([a,b,v])=>{const k=key(a,b);S.chem[k]=clamp((S.chem[k]||0)+v,-5,6)});
  ev.fat.forEach(([id,v])=>{const w=S.w[id];if(w)w.fat=clamp(w.fat+v,0,100)});
- ev.inj.forEach(([id,wk])=>{const w=S.w[id];if(w&&!w.inj){w.inj=wk;const n=`🚑 ${w.name} was injured and will miss ${wk} weeks.`;notes.push(n);news(n)}});
+ ev.inj.forEach(([id,wk,sev])=>{const w=S.w[id];if(!w||w.inj)return;if(sev){const n=injNote(w,wk);notes.push(n);if(wk){w.inj=wk;news(n)}return}w.inj=wk;const n=`🚑 ${w.name} was injured and will miss ${wk} weeks.`;notes.push(n);news(n)});
+ (ev.susp||[]).forEach(([id,n])=>{const w=S.w[id];if(w&&!w.inj){susp(w,n);const t=`🚫 ${w.name} is suspended for ${n-1>1?(n-1)+' weeks':'a week'}.`;notes.push(t);news(t)}});
+ if(ev.split){const [a,b,always]=ev.split;/* the smallest unit they share: a tag team breaks up before a faction loses a member */const t=(S.teams||[]).filter(x=>x.m.includes(a)&&x.m.includes(b)).sort((x,y)=>x.m.length-y.m.length)[0];if(t&&(always||(S.chem[key(a,b)]||0)<=-2)){t.m=t.m.filter(x=>x!==b);if(t.m.length<2)S.teams=S.teams.filter(x=>x!==t);[a,b].forEach(id=>{const w=S.w[id];if(w)w.mor=clamp(w.mor-4,0,100)});
+  const n=t.m.length>=2?`💔 ${S.w[b].name} has walked out on ${t.n}.`:`💔 ${t.n} is finished — ${S.w[a].name} and ${S.w[b].name} have split.`;notes.push(n);news(n)}}
+ if(ev.rematch){const [a,b]=ev.rematch;const A=S.w[a],B=S.w[b];if(A&&B&&A.own==='p'&&B.own==='p'&&S.week<SEASON&&!(S.promises||[]).some(x=>key(x.a,x.b)===key(a,b)&&x.week>S.week)){const pr={kind:'callout',a,b,week:S.week+1};if(PPVS[S.week+1])pr.ppv=PPVS[S.week+1];addPromise(pr);notes.push(`📣 Nobody won, and the fans want it settled: ${A.name} vs ${B.name} is promised for ${pr.ppv||'next week'}.`)}}
+ if(ev.stash){S.stash=S.stash||{};S.stash[ev.stash]=AW()}
  (ev.beef||[]).forEach(([a,b,v])=>addBeef(a,b,v));
  (ev.mor||[]).forEach(([id,v])=>{const w=S.w[id];if(w)w.mor=clamp(w.mor+v,0,100)});
  (ev.cash||[]).forEach(([id,v])=>{const w=S.w[id];if(w&&w.own&&S.money&&S.money[w.own]!=null)S.money[w.own]+=v})}
@@ -1604,6 +1623,11 @@ function beefTick(notes){S.beef=S.beef||{};Object.keys(S.beef).forEach(k=>{const
  if(Math.random()<.03){const pool=Object.values(S.w).filter(w=>w.own&&!w.inj);if(!pool.length)return;const A=wpick(pool,w=>w.mor<40?3:1);const mates=pool.filter(w=>w!==A&&w.own===A.own&&beefOf(A.id,w.id)<BEEF_MIN);if(!mates.length)return;
   const B=pick(mates);addBeef(A.id,B.id,RI(45,60));const n=`🗞️ Dirt sheets: ${A.name} and ${B.name} reportedly can't stand each other backstage. Careful putting them in a ring together.`;news(n);notes.push(n)}}
 function injRisk(w){return clamp((((w.fat||0)-30)/100*.9+(60-durOf(w))/100*.8+.08)*(hasT(w,'iron')?.5:1),.05,.8)}
+/* v123: an injury from an in-match call rolls for severity — usually minor (1-2 shows), sometimes a false alarm, rarely serious (6-10 weeks).
+   w.inj ticks down at the end of the week it happens, so inj N = N-1 shows missed. Low durability raises the serious odds; Iron Man halves them. */
+function injSev(w){const r=Math.random();const maj=clamp(.05*durInj(w)*(hasT(w,'iron')?.5:1),.02,.12);if(r<.15)return 0;if(r<.15+maj)return RI(7,11);return RI(2,3)}
+function injNote(w,wk){return !wk?`😮‍💨 False alarm — ${w.name} was helped to the back but is cleared to compete.`:wk>=7?`🚑 Serious injury: ${w.name} will miss about ${wk-1} weeks.`:`🩹 ${w.name} is banged up and will miss ${wk-1>1?(wk-1)+' weeks':'a week'}.`}
+const fineAmt=()=>Math.max(5,Math.round(econCap()*.04/5)*5);
 const riskWord=p=>p>=.5?'Very high':p>=.35?'High':p>=.2?'Moderate':'Low';
 const reinOdds=w=>clamp(.3+w.mor/100*1.2-(w.pop>=75?.1:0),.15,.8);
 function evNew(m){const e=m.ev||(m.ev={stars:0,heat:[],pop:[],chem:[],inj:[],fat:[],notes:[]});e.mor=e.mor||[];e.cash=e.cash||[];e.beef=e.beef||[];return e}
@@ -1675,9 +1699,9 @@ function sitRoll(c,r,m){const ev=evNew(m);const ok=Math.random()<evChance(c,r);c
  if(fx.beef&&O)ev.beef.push([V.id,O.id,fx.beef]);
  if(fx.flipV){const i=side(V);if(i>=0&&i!==m.winner){m.winner=i;out.flip=true}}
  if(fx.nc){m.nc=true;out.nc=true}
- if(fx.injV){ev.inj.push([V.id,durWeeks(V)+1]);out.extra.push(`🚑 ${V.name} is hurt and will miss time`);
-  const i=side(V);if(!m.nc&&i===m.winner&&m.sides[i].length===1){const j=side(O)>=0&&side(O)!==i?side(O):m.sides.findIndex((s,x)=>x!==i);m.winner=j;out.flip=true;ev.notes.push(`🛑 ${V.name} couldn't continue — referee stoppage`)}}
- if(fx.injO&&O){ev.inj.push([O.id,durWeeks(O)]);out.extra.push(`🚑 ${O.name} is hurt and will miss time`)}
+ if(fx.injV){const wk=injSev(V);ev.inj.push([V.id,wk,1]);if(!wk)out.extra.push(`😮‍💨 ${V.name} is shaken up, but it's a false alarm`);else{out.extra.push(`🚑 ${V.name} is hurt and will miss time`);
+  const i=side(V);if(!m.nc&&i===m.winner&&m.sides[i].length===1){const j=side(O)>=0&&side(O)!==i?side(O):m.sides.findIndex((s,x)=>x!==i);m.winner=j;out.flip=true;ev.notes.push(`🛑 ${V.name} couldn't continue — referee stoppage`)}}}
+ if(fx.injO&&O){const wk=injSev(O);ev.inj.push([O.id,wk,1]);out.extra.push(wk?`🚑 ${O.name} is hurt and will miss time`:`😮‍💨 ${O.name} is shaken up, but it's a false alarm`)}
  if(fx.ot){const l=squeeze(r.brand,m,fx.ot===1?1:2,V.name);if(l.length)out.extra.push(`⏱️ ${l.length>1?l.length+' later matches get':'The next match gets'} squeezed for time (−¼★ each)`);else{ev.cash.push([V.id,-25]);ev.notes.push('💸 The show overran — $25K overtime fee');out.extra.push('💸 The show overran — $25K overtime fee')}}
  if(fx.give){const x=giveTime(r.brand,m,V.name);if(x)out.extra.push(`⏱️ Extra minutes for ${vsLine(x)} (+¼★)`)}
  if(fx.cut&&r.Pp){r.Pp.cut=true;[r.Pp.a,r.Pp.b].filter(Boolean).forEach(id=>ev.mor.push([id,-6]));ev.notes.push(`✂️ ${r.P.name}'s promo was cut to make time`);out.extra.push(`✂️ ${r.P.name}'s promo is cut from the show`)}
@@ -2580,7 +2604,7 @@ function airPair(){
   const mIdx=S.card[b].map((sl,i)=>sl.k==='match'&&sl.d&&validMatch(sl.d)&&!sl.d.sides.flat().some(id=>S.w[id].inj)?i:-1).filter(i=>i>=0);
   S.card[b].forEach((sl,si)=>{if(!sl.d)return;
    const shw=show.ppv?show.name:(showNames()[b]||show.name);
-   if(sl.k==='match'){const m=sl.d;ctx.worked=ctx.worked||new Set();if(validMatch(m)){const hurt=m.sides.flat().filter(id=>S.w[id].inj&&ctx.worked.has(id));if(hurt.length&&(b==='p'||ON()))news(`🚑 ${hurt.map(id=>S.w[id].name).join(' and ')} got hurt earlier tonight, so their second match was scrapped.`)}if(!validMatch(m)||m.sides.flat().some(id=>S.w[id].inj))return;const mctx=Object.assign({},ctx,{pos:mIdx.length>=3&&si===mIdx[mIdx.length-1]?'me':mIdx.length>=3&&si===mIdx[0]?'open':'mid'});const cc=ccFinish(m,b);const res=rateMatch(m,mctx);res.u=uStars(res.raw)+adj(b)+(m.ev?m.ev.stars:0)-(cc?cc.pen:0);res.stars=clamp(res.u,.25,5);const notes=m.ev?m.ev.notes.slice():[];if(cc)notes.push(cc.note);dl.on.push(...m.sides.flat());if(si===mIdx[mIdx.length-1])dl.me.push(...m.sides.flat());if(m.title)dl.ttl.push(...m.sides.flat());{const ch=chantHit(b,m.sides.flat());if(ch){res.u+=.25;res.stars=clamp(res.u,.25,5);df+=2000;notes.push(ch)}}if(res.boil)notes.push(`💥 Boiling over! After weeks of talk, ${res.boil} finally got their hands on each other (+¼★, +50% heat).`);if(res.rep)notes.push(`🔁 ${res.repWhy} again — they met last week, so it builds ${res.repLight?'75% heat (a tag or multi-person rematch is a lighter repeat)':'half heat'}.`);{const db=debut(m.sides.flat().map(id=>S.w[id]),notes);if(db){res.u+=db;res.stars=clamp(res.u,.25,5)}}const txt=matchText(m);SEG={t:`${shw} · ${txt} ${stars(res.stars)}`,win:m.nc?[]:(m.sides[m.winner]||[]),sides:m.sides};const th=m.title&&S.titles[m.title]?S.titles[m.title].holders.join('|'):null;applyMatch(m,res,mctx,notes);if(m.ev)applyEv(m.ev,notes);applyRunIn(m,res,notes);if(m.tour)tourResult(b,m,notes);if(m.type==='gauntlet')gauntletPrize(b,m,notes);{const ov=overflowRewards(b,m,res,mctx,notes,OVF_FAN_CAP(show.ppv)*(ctx.allin?1.5:1)-(inf.ovFans||0));if(ov.o){inf.ovf+=ov.o;df+=ov.fans;inf.ovFans=(inf.ovFans||0)+ov.fans}}try{ocAfter(b,m,res,notes)}catch(e){console.warn(e)}try{pitchSeg({kind:'match',sides:m.sides,stars:res.stars,pos:mctx.pos,title:m.title||null,won:m.nc?[]:m.sides[m.winner]},notes)}catch(e){console.warn(e)}SEG=null;segs.push({txt,sub:matchSub(m),stars:res.stars,notes});v.push(res.stars);meta.push(segMeta(sl,res.stars));
+   if(sl.k==='match'){const m=sl.d;ctx.worked=ctx.worked||new Set();if(validMatch(m)){const hurt=m.sides.flat().filter(id=>S.w[id].inj&&ctx.worked.has(id));if(hurt.length&&(b==='p'||ON()))news(`🚑 ${hurt.map(id=>S.w[id].name).join(' and ')} got hurt earlier tonight, so their second match was scrapped.`)}if(!validMatch(m)||m.sides.flat().some(id=>S.w[id].inj))return;const mctx=Object.assign({},ctx,{pos:mIdx.length>=3&&si===mIdx[mIdx.length-1]?'me':mIdx.length>=3&&si===mIdx[0]?'open':'mid'});const cc=ccFinish(m,b);const res=rateMatch(m,mctx);res.u=uStars(res.raw)+adj(b)+(m.ev?m.ev.stars:0)-(cc?cc.pen:0);res.stars=clamp(res.u,.25,5);const notes=m.ev?m.ev.notes.slice():[];if(cc)notes.push(cc.note);dl.on.push(...m.sides.flat());if(si===mIdx[mIdx.length-1])dl.me.push(...m.sides.flat());if(m.title)dl.ttl.push(...m.sides.flat());{const ch=chantHit(b,m.sides.flat());if(ch){res.u+=.25;res.stars=clamp(res.u,.25,5);df+=2000;notes.push(ch)}}{const sh=stashHit(m);if(sh){res.u+=.25;res.stars=clamp(res.u,.25,5);notes.push(sh)}}if(res.boil)notes.push(`💥 Boiling over! After weeks of talk, ${res.boil} finally got their hands on each other (+¼★, +50% heat).`);if(res.rep)notes.push(`🔁 ${res.repWhy} again — they met last week, so it builds ${res.repLight?'75% heat (a tag or multi-person rematch is a lighter repeat)':'half heat'}.`);{const db=debut(m.sides.flat().map(id=>S.w[id]),notes);if(db){res.u+=db;res.stars=clamp(res.u,.25,5)}}const txt=matchText(m);SEG={t:`${shw} · ${txt} ${stars(res.stars)}`,win:m.nc?[]:(m.sides[m.winner]||[]),sides:m.sides};const th=m.title&&S.titles[m.title]?S.titles[m.title].holders.join('|'):null;applyMatch(m,res,mctx,notes);if(m.ev)applyEv(m.ev,notes);applyRunIn(m,res,notes);if(m.tour)tourResult(b,m,notes);if(m.type==='gauntlet')gauntletPrize(b,m,notes);{const ov=overflowRewards(b,m,res,mctx,notes,OVF_FAN_CAP(show.ppv)*(ctx.allin?1.5:1)-(inf.ovFans||0));if(ov.o){inf.ovf+=ov.o;df+=ov.fans;inf.ovFans=(inf.ovFans||0)+ov.fans}}try{ocAfter(b,m,res,notes)}catch(e){console.warn(e)}try{pitchSeg({kind:'match',sides:m.sides,stars:res.stars,pos:mctx.pos,title:m.title||null,won:m.nc?[]:m.sides[m.winner]},notes)}catch(e){console.warn(e)}SEG=null;segs.push({txt,sub:matchSub(m),stars:res.stars,notes});v.push(res.stars);meta.push(segMeta(sl,res.stars));
     /* what the show delivered, for the network's mandates and the year-end awards */
     const ws=m.sides.flat().map(id=>S.w[id]);if(ws.some(w=>w.g==='F'))inf.women++;inf.nm++;inf.lo=Math.min(inf.lo,res.stars);if(m.title)inf.title++;if(m.type==='tag'||m.type==='trios'||m.type==='tag8'||m.sides[0].length>1)inf.tag++;if(stipKey(m)!=='std')inf.stip++;if(si===mIdx[mIdx.length-1]){inf.me=res.stars;if(!S.meh)S.meh={};S.meh[b]=((S.meh[b]||[]).filter(x=>AW()-x.w<4).concat([{w:AW(),ids:m.sides.flat()}]))}if(res.stars>=3&&ws.some(w=>w.rookie&&w.own===b))inf.rk=true;
     if(th!=null){const t=S.titles[m.title];const now=t.holders.join('|');if(now!==th&&t.holders.length&&S.w[t.holders[0]].own===b)inf.newch=true;if(now===th&&t.kind!=='singles'&&!m.nc&&t.holders.length&&S.w[t.holders[0]].own===b)inf.tagdef=true}
@@ -3509,6 +3533,7 @@ const HOWTO=`<p><b>Offers &amp; contracts:</b> free agents with 55+ popularity w
 <p><b>Stamina</b> (the green-to-red STA bar on each card): a match costs about 16 in singles, less in tag and multi-person matches, more with a rough stipulation or on PPV. Wrestlers who worked a match get 10 back each week; anyone who gets the week off — or only cuts a promo — gets 25 back. Below ${100-FAT_OK} stamina matches start to suffer, and below ${100-FAT_RISK} the injury risk climbs. Rotate your roster and rest your stars before PPVs. <b>Double duty:</b> a wrestler can work up to ${DD_MAX} matches on the same show — each match after their first costs ${DD_FAT}× the stamina, and they go into it carrying the first one's wear. If they get hurt in the first, the second is scrapped. AEW rotates a big roster, so sitting out is fine — time off TV doesn't cost morale.</p>
 <p><b>Turning heel or face:</b> book a <b>Heel / Face Turn</b> promo — the turn is guaranteed when it airs. Add a second wrestler and a face can turn on them (big heat) or a heel can make the save (chemistry). Or use <b>Turn off-screen</b> on a wrestler's profile for an instant switch that costs a little popularity. You can also turn someone with a <b>run-in</b>: a face who costs another face the match or beats them down after the bell turns heel, and a heel who runs off another heel to save the day turns face — tick the turn option in the run-in section. Turning the same wrestler again within 8 weeks gives fans whiplash.</p>
 <p><b>Intergender booking</b> is fully open: anyone can wrestle anyone, form teams, cut promos together, and challenge for any championship — a woman can win the World title and a man can win the Women's title. Title names keep their original division, but the belts go to whoever wins.</p>
+<p><b>Calls that stick:</b> what happens in a match doesn't stay there. Risky spots and brutal moments can hurt someone: most injuries are a week or two out, some turn out to be a false alarm, and now and then it's serious (low durability makes that likelier, Iron Man less so). Get caught cheating under normal rules and it's a DQ loss; go too far and it's a fine or a suspension. A tag partner walking out ends the team, a no-contest has fans demanding the rematch next week, and a chair stashed under the ring comes back out in that wrestler's next match.</p>
 <p><b>Durability</b> (on each wrestler's profile) reflects how well their real-life body holds up, based on their actual injury history. Iron-bodied workers like Darby Allin lose up to ~18% less stamina per match and get hurt far less often; fragile ones like Wardlow drain faster, get injured up to 3.5× as often and stay out longer. Sort your roster by Durability to see who can carry a heavy schedule.</p>
 <p><b>Traits</b> (the round badges on each card) add chemistry and bonuses on top of style — e.g. a Monster vs an Underdog is +4, a Storyteller adds +1 with anyone. Open any wrestler to see their best opponents and tag partners on your roster with the reasons, or tap <b>Why?</b> under a match's projected rating.</p>
 <p><b>Front office situations</b> pop up now and then after a show — backstage fights, viral videos, social media trouble, contract demands, travel mishaps, and the occasional viral opportunity. Pick how to handle each one; every option has tradeoffs. These are randomly generated fictional events.</p>
