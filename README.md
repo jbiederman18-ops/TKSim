@@ -36,6 +36,9 @@ Party night is a way to play an online league, not a separate game. It uses the 
 - **End it:** **Office → End party night** (or the link in the banner). The league goes back to taking turns from exactly where it is. GMs who already went live that week stay locked in, and everyone else goes live on their own turn. If someone has to leave early, end party night and they book their show later with turn alerts as usual.
 - Needs the Firebase setup in [ONLINE-SETUP.md](ONLINE-SETUP.md) and an internet connection on every device. No new setup beyond online leagues.
 
+## The 16-Bit look
+**Office → ⚙️ Game menu → Look** switches this device between **Classic** and **🕹️ 16-Bit**, a retro wrestling video game style with pixel fonts, an arcade palette and pixel-art wrestlers. Wrestlers with a photo get a pixelated version of it (or pick **Sprites only**); everyone else gets their own sprite. It's a per-device setting, so it doesn't change your save or anyone else in a league. The look lives in `retro.css`, `retro.js` and `fonts/`, so upload those too when updating.
+
 ## Your games
 Tap **⇄** at the top to see every game on this device — several solo games plus any online leagues — and switch between them. When you have more than one, the game opens on this list (tap outside it to carry on where you left off).
 
