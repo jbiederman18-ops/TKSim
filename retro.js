@@ -5,19 +5,23 @@
    Loaded before the main script; the look itself lives in retro.css under html.r16. */
 'use strict';
 const LOOK_KEY='tksim_look',LOOK_PX='tksim_look_px';
-let R16=false,R16PX=true;
-try{R16=localStorage.getItem(LOOK_KEY)==='r16';R16PX=localStorage.getItem(LOOK_PX)!=='spr'}catch(e){}
-function r16Apply(){const d=document.documentElement;d.classList.toggle('r16',R16);
- const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',R16?'#12061f':'#09090b')}
+/* the looks: Classic plus a family of retro video-game styles that share retro.css */
+const LOOKS={classic:{n:'Classic',d:'Black and gold, broadcast style'},'16':{n:'🕹️ 16-Bit',d:'Pixel fonts and arcade colors'},
+ rpg:{n:'🗡️ Quest',d:'Old-school RPG menu windows'},arc:{n:'👊 Arcade',d:'90s fighting-game cabinet'},y2k:{n:'💿 Y2K Console',d:'Chrome menus, 2000s wrestling game'}};
+let LOOK='classic',R16=false,R16PX=true;
+try{LOOK=localStorage.getItem(LOOK_KEY)||'classic';if(LOOK==='r16')LOOK='16';if(!LOOKS[LOOK])LOOK='classic';R16PX=localStorage.getItem(LOOK_PX)!=='spr'}catch(e){}
+R16=LOOK!=='classic';
+function r16Apply(){const d=document.documentElement;Object.keys(LOOKS).forEach(k=>d.classList.remove('lk-'+k));d.classList.remove('r16');d.classList.toggle('rt',R16);if(R16)d.classList.add('lk-'+LOOK);
+ const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',{classic:'#09090b','16':'#12061f',rpg:'#0a1250',arc:'#050304',y2k:'#030a1c'}[LOOK]||'#09090b')}
 r16Apply();
-function setLook(k){R16=k==='r16';try{localStorage.setItem(LOOK_KEY,R16?'r16':'classic')}catch(e){}r16Apply();
+function setLook(k){if(!LOOKS[k])k='classic';LOOK=k;R16=k!=='classic';try{localStorage.setItem(LOOK_KEY,k)}catch(e){}r16Apply();
  if(typeof render==='function')try{render()}catch(e){}
- if(typeof toast==='function')toast(R16?'🕹️ 16-Bit look on. Press start!':'Classic look is back.')}
+ if(typeof toast==='function')toast(R16?`${LOOKS[k].n} look on.`:'Classic look is back.')}
 function setLookPx(on){R16PX=!!on;try{localStorage.setItem(LOOK_PX,R16PX?'px':'spr')}catch(e){}if(typeof render==='function')try{render()}catch(e){}}
 /* the Game menu card */
-function lookCard(){const opt=(k,t,d)=>`<button class="tp ${(k==='r16')===R16?'on':''}" onclick="setLook('${k}')"><b>${t}</b><span>${d}</span></button>`;
+function lookCard(){const opt=k=>`<button class="tp ${k===LOOK?'on':''}" onclick="setLook('${k}')"><b>${LOOKS[k].n}</b><span>${LOOKS[k].d}</span></button>`;
  return `<div class="card mt"><div class="h small">Look</div><p class="muted" style="margin-top:0">Pick how the game looks on this device. Your save and leagues aren't affected.</p>
- <div class="tpick">${opt('classic','Classic','Black and gold, broadcast style')}${opt('r16','🕹️ 16-Bit','Retro wrestling video game')}</div>
+ <div class="tpick">${Object.keys(LOOKS).map(opt).join('')}</div>
  ${R16?`<label>Wrestler pictures</label><div class="tpick"><button class="tp ${R16PX?'on':''}" onclick="setLookPx(true)"><b>Pixel photos</b><span>Photos turned into pixel art; sprites for the rest</span></button><button class="tp ${R16PX?'':'on'}" onclick="setLookPx(false)"><b>Sprites only</b><span>Everyone gets a pixel sprite</span></button></div>`:''}</div>`}
 
 /* ---------- sprites ---------- */
