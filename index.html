@@ -207,6 +207,16 @@ nav.tabs:after{top:100%;background:#050506}
 .scene{font-size:18px;line-height:1.5;margin:10px 0 16px;font-weight:600}
 .choice{position:relative;display:grid;grid-template-columns:36px 1fr;column-gap:10px;align-items:center;width:100%;text-align:left;background:linear-gradient(90deg,rgba(216,180,73,.08),transparent 60%),#15161a;border:1px solid #3a3222;padding:12px;margin-bottom:9px;color:var(--text);font-size:16px;font-weight:600;font-family:inherit;clip-path:var(--cut);cursor:pointer;transition:transform .1s}
 .choice:active{transform:scale(.98);border-color:var(--gold)}
+.sbody.picking .choice{pointer-events:none}
+.sbody .choice.picked{border-color:var(--gold);box-shadow:inset 0 0 0 2px var(--gold),inset 0 0 26px rgba(255,200,80,.3);background:linear-gradient(90deg,rgba(255,205,90,.28),rgba(255,205,90,.06) 70%),#1c1a12;z-index:1;animation:tvpick .45s both}
+.sbody .choice.picked::after{content:'✓ PICKED';position:absolute;bottom:7px;right:12px;padding:3px 10px;background:var(--gold);color:#16120a;font:900 italic 12px/1.2 'BC',sans-serif;letter-spacing:.08em;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%);animation:rise .3s both}
+.sbody .choice.picked .key span{font-size:0}.sbody .choice.picked .key span::before{content:'✓';font-size:18px}
+.sbody .choice.unpicked{opacity:.28;filter:grayscale(.7);transition:opacity .25s,filter .25s}
+.ppick{display:flex;align-items:center;gap:11px;margin:0 0 10px;padding:8px 12px;border:1px solid var(--gold3);border-left:4px solid var(--gold);background:rgba(255,200,80,.08);animation:rise .3s both}
+.ppick small{display:block;color:var(--gold);font:800 11px/1.3 'BC',sans-serif;letter-spacing:.14em;text-transform:uppercase}
+.ppick .tvp-k{flex:none;width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:var(--gold);color:#16120a;font:900 italic 15px 'BC',sans-serif;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.tv-live-sheet .ppick{display:none}
+nav.tabs.kb{display:none}
 .choice .key{grid-row:span 2;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;font-style:italic;color:#1a1203;background:linear-gradient(180deg,#fbe7a1,#c99a33);transform:rotate(45deg) scale(.82)}
 .choice .key span{transform:rotate(-45deg)}
 .outcome{padding:13px 14px;margin:10px 0;font-size:16px;font-weight:600;clip-path:var(--cut)}
@@ -838,7 +848,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v131';
+const APP_VERSION='v132';
 /* v113: a rolling AEW year — a PPV every 4 weeks from Revolution to Worlds End. All In is the midyear supershow;
    the season (awards, offseason, fan-war winner) ends after Worlds End, then the calendar rolls into a new year. */
 const SEASON=40,ALLIN_WEEK=24,OLD_SEASON=24;
@@ -3039,10 +3049,14 @@ function navView(){return `<nav class="tabs">${[['home','Home'],['book','Book'],
 /* iOS can leave the page's layout viewport out of step with the screen (most often after the on-screen keyboard
  closes), and then fixed elements like the tab bar ride along with the scroll. Keep the tab bar pinned to the bottom
  of what's actually on screen, and nudge iOS to resync once the keyboard goes away. */
-function pinNav(){const n=document.querySelector('nav.tabs');const vv=window.visualViewport;if(!n)return;
- if(!vv||vv.scale>1.01){n.style.transform='';return}const off=Math.round(window.innerHeight-vv.height-vv.offsetTop);n.style.transform=Math.abs(off)>24&&off<window.innerHeight/2?`translateY(${-off}px)`:''}
-if(typeof window!=='undefined'){const vv=window.visualViewport;if(vv){vv.addEventListener('resize',pinNav);vv.addEventListener('scroll',pinNav)}window.addEventListener('scroll',pinNav,{passive:true});window.addEventListener('orientationchange',()=>setTimeout(pinNav,300));
- document.addEventListener('focusout',e=>{if(!/^(INPUT|TEXTAREA|SELECT)$/.test(e.target&&e.target.tagName||''))return;setTimeout(()=>{if(/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||''))return;window.scrollTo(window.scrollX,window.scrollY);pinNav()},120)})}
+/* v132: the old fix nudged the bar up by however much the visual viewport looked short. iOS sometimes reports stale
+ numbers after the keyboard closes, which lifted the bar into the middle of the screen. Now the bar never moves:
+ it hides while you're typing (when the keyboard covers it anyway) and sits flush at the bottom otherwise. */
+function typingNow(){const a=document.activeElement;if(!a||a===document.body)return false;if(a.isContentEditable)return true;
+ if(a.tagName==='TEXTAREA'||a.tagName==='SELECT')return true;return a.tagName==='INPUT'&&!/^(button|checkbox|radio|range|submit|reset|file|color|image)$/i.test(a.type||'')}
+function pinNav(){const n=document.querySelector('nav.tabs');if(!n)return;if(n.style.transform)n.style.transform='';n.classList.toggle('kb',typingNow())}
+if(typeof window!=='undefined'){const vv=window.visualViewport;if(vv){vv.addEventListener('resize',pinNav);vv.addEventListener('scroll',pinNav)}window.addEventListener('scroll',pinNav,{passive:true});window.addEventListener('orientationchange',()=>setTimeout(pinNav,300));document.addEventListener('focusin',pinNav);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(pinNav,60)});
+ document.addEventListener('focusout',e=>{if(!/^(INPUT|TEXTAREA|SELECT)$/.test(e.target&&e.target.tagName||''))return;setTimeout(()=>{if(/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||''))return;window.scrollTo(window.scrollX,window.scrollY);pinNav()},120);setTimeout(pinNav,500)})}
 function render(){const app=$('#app');
  if(TV)return tvRender();document.body.classList.remove('tv');
  if(!S){app.innerHTML=hdr()+`<main class="enter">${setupView()}</main>`;return}
@@ -3384,10 +3398,10 @@ function liveHd(show,lab,title,sides,tag,vs){const ss=(sides||[]).map(sd=>sd.fil
 function callBar(t,l){return `<div class="callq"><b>${t}</b><span>${l}</span></div>`}
 function renderME(){const it=ME.q[ME.k];const {m,g}=it;const r=g.r;
  const hd=`${liveHd(ME.show,`Match ${it.n}${it.main?' · Main event':''}`,esc(m.title&&S.titles[m.title]?S.titles[m.title].n+' title':MT[m.type].n),m.sides.map(sd=>sd.map(id=>S.w[id])),'',true)}<p class="scene">${esc(evFill(g.e.text,r))}</p>${g.sit?`<div class="note">${g.info}</div>`:''}`;
- if(ME.out){const o=ME.out;return openModal(hd+`<div class="outcome ${o.success?'ok':'no'}">${o.success?'✅':'❌'} ${esc(o.text)}</div>${o.dst!=null?`<div class="note">⭐ Your call: ${qStar(o.dst)} to this match${o.dst>0?' — and it still counts if the match was already headed for 5★':''}</div>`:''}${o.flip?`<div class="note">👑 New winner: ${esc(sideName(m.sides[m.winner]))}</div>`:''}${o.nc?'<div class="note">🚫 The match ends without a winner.</div>':''}${(o.extra||[]).map(x=>`<div class="note">${esc(x)}</div>`).join('')}<button class="btn" onclick="meNext()">${ME.last?'Finish the show':'Continue the show ▸'}</button>`)}
+ if(ME.out){const o=ME.out;return openModal(hd+pickedStrip(ME.pick)+`<div class="outcome ${o.success?'ok':'no'}">${o.success?'✅':'❌'} ${esc(o.text)}</div>${o.dst!=null?`<div class="note">⭐ Your call: ${qStar(o.dst)} to this match${o.dst>0?' — and it still counts if the match was already headed for 5★':''}</div>`:''}${o.flip?`<div class="note">👑 New winner: ${esc(sideName(m.sides[m.winner]))}</div>`:''}${o.nc?'<div class="note">🚫 The match ends without a winner.</div>':''}${(o.extra||[]).map(x=>`<div class="note">${esc(x)}</div>`).join('')}<button class="btn" onclick="meNext()">${ME.last?'Finish the show':'Continue the show ▸'}</button>`)}
  const ch=evChoices(g.e,m,r);
  const ck=CALLS[callKind(g)];openModal(hd+callBar(`${ck.i} ${ck.n}`,ck.l)+ch.map((c,ci)=>`<button class="choice" onclick="meChoose(${ci})"><span class="key"><span>${'ABCD'[ci]}</span></span><div>${esc(evFill(c.t,r))}</div><div class="muted tiny">${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:c.heelA&&r.A.al==='f'?'<span class="heel">😈 Dirty — fans won\'t like it from a face</span> · ':''}${c.always?'✅ Guaranteed':STAT_ICON[c.s]+' · '+oddsWord(evChance(c,r))}${c.flip?' · changes the winner':''}${c.nc?' · no winner':''}<br>${callStakes(c,g)}${g.sit&&c.tip?` · ${esc(sitTip(c,r))}`:''}</div></button>`).join(''))}
-function meChoose(ci){if(!ME||ME.out)return;const it=ME.q[ME.k];const ch=evChoices(it.g.e,it.m,it.g.r);const s0=it.m.ev?it.m.ev.stars||0:0;ME.out=it.g.sit?sitRoll(ch[ci],it.g.r,it.m):evRoll(ch[ci],it.g.r,it.m);ME.out.dst=(it.m.ev?it.m.ev.stars||0:0)-s0;renderME()}
+function meChoose(ci){if(!ME||ME.out)return;pickFlash(p=>{if(!ME||ME.out)return;ME.pick=p;const it=ME.q[ME.k];const ch=evChoices(it.g.e,it.m,it.g.r);const s0=it.m.ev?it.m.ev.stars||0:0;ME.out=it.g.sit?sitRoll(ch[ci],it.g.r,it.m):evRoll(ch[ci],it.g.r,it.m);ME.out.dst=(it.m.ev?it.m.ev.stars||0:0)-s0;renderME()})}
 function meNext(){if(!ME)return;if(LQ)return liveNext();ME.out=null;ME.k++;if(ME.k>=ME.q.length)finishLive();else renderME()}
 function slotTags(m,ppv){const t=[];{const cc=ccTag(m);if(cc)t.push(cc)}let hb=0;for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j])hb=Math.max(hb,heatOf(a,b));
  if(hb>=1){const tr=heatTier(hb);t.push(`<span class="fdt t${tr+1}">Heat ${Math.round(hb)}${tr>=0?' · '+FTIER[tr][1].replace(/^[🔥 ]+/,''):''}</span>`)}
@@ -3588,9 +3602,18 @@ function renderPS(){const {scene,ctx}=PS;
   <div class="card"><div class="muted tiny">When the show wraps:</div><div>Popularity ${sgn(r.pop)}</div>${PS.p.b?`<div>Feud heat with ${esc(ctx.B.name)} ${sgn(r.heat)}</div>`:''}${r.x?`<div>🔥 New rivalry with ${esc(S.w[r.x].name)} ${sgn(r.hx)}</div>`:''}${r.chem?`<div>Team chemistry ${sgn(r.chem)}</div>`:''}${r.turn?'<div>🔄 Alignment turn when this airs!</div>':''}${r.rep?'<div class="bad">🔁 Same segment as last week — half heat.</div>':''}${r.boil?'<div class="good">💥 Boiling over — a bigger reaction and +50% heat.</div>':''}${r.boost&&!r.bf?`<div class="good">📺 ${r.streak?`Week ${r.streak+1} of a steady build`:'Back-and-forth'} — +${r.boost}% heat.</div>`:''}${PS.p.type==='contract'&&PS.p.b?(()=>{const np=nextPPVAfter(S.week);return np?`<div class="gold">📜 When this airs, ${esc(ctx.A.name)} vs ${esc(ctx.B.name)}${r.stip?' ('+STIPS[bestStip(ctx.A,ctx.B)].n+')':''} becomes official for ${esc(np.n)} and is pre-booked on that card.</div>`:''})():''}${r.chal&&PS.p.b&&PS.p.type!=='contract'&&S.week<SEASON?(()=>{const np=nextPPVAfter(S.week);const both=np&&np.w>S.week+1;const cf=PS.p.chalFor||'next';return `<div class="gold">🎯 When this airs, ${esc(ctx.A.name)} vs ${esc(ctx.B.name)} is promised for <b>${cf==='ppv'&&np?esc(np.n):PPVS[S.week+1]?esc(PPVS[S.week+1])+' (next week)':'next week'}</b> — deliver it or fans will notice.</div>${both?`<div class="muted tiny" style="margin-top:8px">Set the match for:</div><div class="chips" style="margin-top:4px"><button class="chip ${cf==='next'?'on':''}" onclick="PS.p.chalFor='next';renderPS()">Next week</button><button class="chip ${cf==='ppv'?'on':''}" onclick="PS.p.chalFor='ppv';renderPS()">${esc(np.n)} · in ${np.w-S.week} wks</button></div>${cf==='ppv'?`<div class="muted tiny" style="margin-top:6px">Build it up: pit them against each other's stablemates and trade promos (alternate who leads) until the PPV. Don't give the match away on TV.</div>`:''}`:''}`})():''}${r.bf?`<div class="good">↔️ Back-and-forth promo in the build to ${esc(r.bf)} — +${r.boost}% heat.</div>`:''}</div>
   <button class="btn" onclick="${PS.live?'liveNext()':'lockPromo()'}">${PS.live?(PS.last?'Finish the show':'Continue the show ▸'):'Lock it in'}</button>`)}
  const hd=`${liveHd(PS.live&&LQ?LQ.show:'',`Promo · ${PS.beat?'The twist':'On air'}`,esc(PT[PS.p.type].n),[[ctx.A],[ctx.B],PS.beat&&ctx.X&&/\{X\}/.test(scene.text)?[ctx.X]:[]],PS.live?'● Live':'Preview')}<p class="scene">${esc(fill(scene.text,ctx))}</p>`;
- if(PS.out)return openModal(hd+`<div class="outcome ${PS.out.success?'ok':'no'}">${PS.out.success?'✅':'❌'} ${esc(PS.out.text)}</div><button class="btn" onclick="psNext()">Continue</button>`);
+ if(PS.out)return openModal(hd+pickedStrip(PS.pick)+`<div class="outcome ${PS.out.success?'ok':'no'}">${PS.out.success?'✅':'❌'} ${esc(PS.out.text)}</div><button class="btn" onclick="psNext()">Continue</button>`);
  openModal(hd+callBar('Your call',`What does ${esc(ctx.A.name)} do?`)+scene.ch.map((c,ci)=>`<button class="choice" onclick="psChoose(${ci})"><span class="key"><span>${'ABC'[ci]}</span></span><div>${esc(fill(c.t,ctx))}</div><div class="muted tiny">${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:''}${STAT_ICON[c.s]} · ${oddsWord(chance(c,ctx))}${c.turn?' · 🔄 turns them':''}${c.ch?' · 🎯 sets up a match':''}${c.stp?' · adds a stipulation':''}</div></button>`).join(''))}
-function psChoose(ci){if(!PS||PS.out||PS.done)return;PS.out=roll(PS.scene.ch[ci],PS.ctx,PS.st);renderPS()}
+/* v132: the "picked" moment from party-night TV, on your own phone too — the call you tap lights up for a beat
+ (the others dim) before the outcome, and the outcome screen keeps a "You picked" strip on top */
+let PICK_EL=null,PICK_AT=0,PICKING=false;
+document.addEventListener('click',e=>{const b=e.target&&e.target.closest&&e.target.closest('#modal .choice');if(b){PICK_EL=b;PICK_AT=Date.now()}},true);
+function pickFlash(fn){const b=PICK_EL;PICK_EL=null;const body=b&&b.closest('.sbody');if(PICKING)return;if(!body||Date.now()-PICK_AT>800||!document.body.contains(b))return fn(null);PICKING=true;
+ body.classList.add('picking');body.querySelectorAll('.choice').forEach(x=>x.classList.add(x===b?'picked':'unpicked'));
+ const p={k:((b.querySelector('.key')||{}).textContent||'').trim(),t:((b.querySelector('.key+div')||b).textContent||'').trim().slice(0,200)};
+ const ms=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches?350:800;setTimeout(()=>{PICKING=false;fn(p)},ms)}
+function pickedStrip(p){return p&&p.t?`<div class="ppick"><span class="tvp-k">${esc(p.k)}</span><span><small>You picked</small>${esc(p.t)}</span></div>`:''}
+function psChoose(ci){if(!PS||PS.out||PS.done)return;pickFlash(p=>{if(!PS||PS.out||PS.done)return;PS.pick=p;PS.out=roll(PS.scene.ch[ci],PS.ctx,PS.st);renderPS()})}
 function psNext(){if(!PS||!PS.out)return;PS.out=null;if(PS.beat===0){PS.beat=1;PS.scene=pickTwist(PS.p,PS.ctx)}else{finalizePromo(PS.p,PS.ctx,PS.st);PS.done=true}renderPS()}
 function lockPromo(){S.card.p[PS.i].d=PS.p;PS=null;save();closeModal();render()}
 

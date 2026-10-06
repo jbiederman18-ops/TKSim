@@ -61,10 +61,10 @@ let OCL=null;
 function renderOC(){const {m}=OCL;const I=S.w[m.sides[0][0]],W=S.w[m.sides[1][0]];const hope=m.open.hope&&S.w[m.open.hope];
  const hd=liveHd(OCL.show,`Match ${OCL.n}${OCL.main?' · Main event':''}`,`${m.title&&S.titles[m.title]?esc(S.titles[m.title].n)+' title · ':''}Open challenge`,[[I],[W]],'',true);
  const reveal=`<p class="scene">${esc(I.name)} grabs the mic: "Anybody. Anytime. Come and get it."${hope?` The crowd is chanting for ${esc(hope.name)}…`:''}<br><br>The lights go out. The music hits. It's <b>${esc(W.name)}</b>!${m.open.fa?' (A free agent!)':''}</p><div class="note">${m.open.v==='dream'?'🤯':m.open.v==='big'?'🔥':m.open.v==='ok'?'👍':'😐'} ${esc(m.open.vt)}</div>`;
- if(OCL.out)return openModal(liveHd(OCL.show,`Match ${OCL.n}${OCL.main?' · Main event':''}`,'Open challenge',[[I],[W]],'',true)+`<div class="outcome ok">${esc(OCL.out)}</div><button class="btn" onclick="liveNext()">${OCL.last?'Finish the show':'Continue the show ▸'}</button>`);
+ if(OCL.out)return openModal(liveHd(OCL.show,`Match ${OCL.n}${OCL.main?' · Main event':''}`,'Open challenge',[[I],[W]],'',true)+(typeof pickedStrip==='function'?pickedStrip(OCL.pick):'')+`<div class="outcome ok">${esc(OCL.out)}</div><button class="btn" onclick="liveNext()">${OCL.last?'Finish the show':'Continue the show ▸'}</button>`);
  const up=ocLvl(W)<ocLvl(I)-6;const ch=[
   {k:'issuer',t:`${I.name} wins — the challenge stands`,d:'✅ Guaranteed · 🛡️ Plays it safe',},
   {k:'answer',t:`${W.name} wins — ${up?'shock the world':'they earned it'}`,d:`✅ Guaranteed · 👍 ${up?'A huge night for the underdog':'Makes the answerer'}${m.title?' · the title changes hands':''}`},
   {k:'free',t:'No script — let them fight for it',d:'🎲 Anyone could win · 🔥 Big payoff'}];
  openModal(hd+reveal+callBar('🏁 Call the finish','The challenge has been answered. How does this one end?')+ch.map((c,i)=>`<button class="choice" onclick="ocChoose('${c.k}')"><span class="key"><span>${'ABC'[i]}</span></span><div>${esc(c.t)}</div><div class="muted tiny">${c.d}</div></button>`).join(''))}
-function ocChoose(k){if(!OCL||OCL.out)return;const m=OCL.m;ocCall(m,k);const W=S.w[m.sides[m.winner][0]];OCL.out=k==='free'?`No script. ${W.name} wins it the hard way.`:`${W.name} goes over.`;renderOC()}
+function ocChoose(k){if(!OCL||OCL.out)return;const go=p=>{if(!OCL||OCL.out)return;OCL.pick=p;const m=OCL.m;ocCall(m,k);const W=S.w[m.sides[m.winner][0]];OCL.out=k==='free'?`No script. ${W.name} wins it the hard way.`:`${W.name} goes over.`;renderOC()};typeof pickFlash==='function'?pickFlash(go):go(null)}
