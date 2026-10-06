@@ -191,10 +191,20 @@ function partyLiveDone(){const o=S.online;o.lv=o.lv||{};o.lv.p=true;partyFeed(''
  const n=(o.live&&o.live.order||[]).find(k=>!o.lv[k]);toast(n?`That's a wrap! ${nameOf(n)} is up next.`:"That's a wrap! The week is airing.")}
 /* mirror what the live GM sees onto the TV (the modal's own HTML, minus private photos) */
 let FEED_T=null,FEED_LAST='';
-function partyFeed(html){if(!ON()||!LMP||!window.TKO||!TKO.ready)return;clearTimeout(FEED_T);
+/* v129: when the live GM taps a choice, the TV holds that screen for a moment with the pick lit up, then shows how it played out
+   (with a "Picked" tag on top, for anyone who looked away) */
+const PICK_HOLD=1900;let FEED_HOLD=0,FEED_PICK=null;
+function partyFeed(html,now){if(!ON()||!LMP||!window.TKO||!TKO.ready)return;clearTimeout(FEED_T);
  html=String(html||'').replace(/<img\b[^>]*src="data:[^"]*"[^>]*>/gi,'').slice(0,90000);
+ if(html&&!now&&FEED_PICK){html=`<div class="tv-picked"><span class="tvp-k">${esc(FEED_PICK.k)}</span><span><small>${esc(nameOf('p'))} picked</small>${esc(FEED_PICK.t)}</span></div>`+html;FEED_PICK=null}
  const send=()=>{if(html===FEED_LAST)return;FEED_LAST=html;TKO.push(LMP.code,{live:{seat:LMP.me,week:S.week,season:S.season,html,at:Date.now()}}).catch(()=>{})};
- if(!html)return send();FEED_T=setTimeout(send,150)}
+ if(!html||now)return send();FEED_T=setTimeout(send,Math.max(150,FEED_HOLD-Date.now()))}
+document.addEventListener('click',e=>{const b=e.target&&e.target.closest&&e.target.closest('#modal .choice');if(!b||b.disabled)return;
+ try{if(typeof LIVE==='undefined'||!LIVE||!partyLiveTurn())return;const body=b.closest('.sbody');if(!body)return;
+  const all=[...body.querySelectorAll('.choice')],i=all.indexOf(b);if(i<0)return;const c=body.cloneNode(true);
+  c.querySelectorAll('.choice').forEach((x,j)=>x.classList.add(j===i?'picked':'unpicked'));
+  const key=(b.querySelector('.key')||{}).textContent||'';const txt=((b.querySelector('.key+div')||b).textContent||'').trim();
+  partyFeed(c.innerHTML,true);FEED_HOLD=Date.now()+PICK_HOLD;FEED_PICK={k:key.trim(),t:txt.slice(0,160)}}catch(err){console.warn(err)}},true);
 function partyLivePrompt(){if(!partyLiveTurn()||LIVE)return false;const key=S.season*100+S.week;if(+(LS.get('tksim_livep_'+LMP.code)||0)===key)return false;LS.set('tksim_livep_'+LMP.code,key);
  openModal(`<div class="h mhd">🔴 You're live!</div><p>It's your turn on the TV. Everyone's watching your promos and match calls play out — you make the calls here.</p><button class="btn live" onclick="closeModal();goLive()">Start my show ▸</button><button class="btn ghost" onclick="closeModal()">Give me a second</button>`);return true}
 function partyLocked(){if(partyMyTurn())return false;
