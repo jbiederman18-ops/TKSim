@@ -26,6 +26,12 @@ Host a league for 2–4 GMs and friends join with a 6-letter code. Everyone runs
 - **Re-signing is a negotiation** (from the weekly briefing or the wrestler's card). They make demands; agree to some or all, or counter on money. They take it, counter back (up to three rounds) or walk away, depending on their morale, how hot your show is and whether you've kept your word before.
 - **Promises are contract terms.** The Book screen shows what's owed. Keep one and morale rises (and a little lost trust comes back); break one and morale drops; after three, a wrestler may walk out. An injury pauses the clock on a promise. Only true main eventers ask for creative control, it lasts 12 weeks, and a roster can have at most 3 people with it. **Creative control** means they won't agree to lose: the card flags it before you go live, and if you go ahead, about half the time they change the finish and go over (−¼★); otherwise they do the job under protest and morale drops hard.
 
+## Booking by feel
+- **No star math while booking.** The match editor shows crowd buzz (🥶 → 🔥🔥🔥) and ▲/▼ tells on stipulations, titles and finishes instead of exact star bonuses. Risky calls (first-time pairings, gimmick matches, screwy finishes, run-ins, rookies) make a match a 🎲 wild card.
+- **Reveal after the show.** Tap **Why that rating?** under any of your matches in the results to see what each part was worth, including the luck of the night.
+- **Discovered chemistry.** Wrestlers who've never shared a ring only show chemistry "on paper" with a ❓; their first match rolls a spark that sticks as history.
+- **Multi-person matches** are carried by their top two names and their hottest rivalry, reward a mix of styles (triple threats and 4-ways love flyers and showmen; tags lean on partners who click), and pay off later: only one loser takes the fall, lower names gain popularity from the top star, and the top star uses less stamina.
+
 ## Party night (same room, big screen)
 Party night is a way to play an online league, not a separate game. It uses the same league, the same save and the same code, so you can play some weeks together on the couch and the rest on your own time.
 

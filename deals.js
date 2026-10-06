@@ -86,7 +86,7 @@ function ccFinish(m,b){if(!(b==='p'||ON()))return null;const l=ccLosers(m,b);if(
 function ccIssues(c){return (c||[]).filter(sl=>sl&&sl.k==='match'&&sl.d).flatMap(sl=>ccLosers(sl.d,'p').map(w=>({w,m:sl.d})))}
 /* checked when you lock in or go live */
 function ccGate(c){if(GL_OK){GL_OK=false;return false}const l=ccIssues(c);if(!l.length)return false;
- openModal(`<div class="h mhd">🎬 Creative control</div>${l.map(x=>`<div class="card warn"><b>${esc(x.w.name)}</b> is booked to lose to ${esc(sideName(x.m.sides[x.m.winner]))}, but their contract gives them creative control. They won't go along with it quietly: about half the time they change the finish and go over (−¼★). Otherwise they do the job under protest and morale drops hard.</div>`).join('')}
+ openModal(`<div class="h mhd">🎬 Creative control</div>${l.map(x=>`<div class="card warn"><b>${esc(x.w.name)}</b> is booked to lose to ${esc(sideName(x.m.sides[x.m.winner]))}, but their contract gives them creative control. They won't go along with it quietly: about half the time they change the finish and go over (a messier match). Otherwise they do the job under protest and morale drops hard.</div>`).join('')}
  <button class="btn" onclick="closeModal();go('book')">Change the card</button><button class="btn sec" onclick="GL_OK=true;closeModal();goLive()">Go live anyway</button>`);return true}
 
 /* ---------- what's owed this week (Book screen + briefing) ---------- */

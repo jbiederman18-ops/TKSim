@@ -205,7 +205,7 @@ function cardProj(){const sh=curShow();const c=(S.card&&S.card.p)||[];const ctx=
  return P}
 /* status: y = on track, m = could go either way, n = not yet, x = doesn't apply this week */
 const LV=(s,t)=>({s,t});
-function starLive(r,th,what){if(!r)return LV('n',`Book ${what} to see a projection`);const tx=`${what[0].toUpperCase()+what.slice(1)} projects ${stars(Math.floor(r.mid*4+1e-6)/4)}`;
+function starLive(r,th,what){if(!r)return LV('n',`Book ${what} to see a projection`);const tx=`${what[0].toUpperCase()+what.slice(1)}: ${tellWord(r.mid)}`;
  return r.mid>=th?LV('y',tx):r.hi>=th?LV('m',tx+' — right on the edge'):LV('n',tx)}
 function goalLive(k){const P=cardProj();if(!P.booked)return LV('n','Nothing booked yet');
  switch(k){
@@ -214,10 +214,10 @@ function goalLive(k){const P=cardProj();if(!P.booked)return LV('n','Nothing book
   case 'women':return P.women?LV('y',`${P.women} women's match${P.women>1?'es':''} booked`):LV('n',"No women's match booked");
   case 'tag':return P.tag?LV('y','Tag/trios match booked'):LV('n','No tag or trios match booked');
   case 'stip':return P.stip?LV('y','Stipulation match booked'):LV('n','No stipulation match booked');
-  case 'promo':return P.pr==null?LV('n','No promo booked'):P.pr>=3.5?LV('y',`Best promo looks like ${stars(Math.floor(P.pr*4+1e-6)/4)}`):P.pr>=3?LV('m',`Best promo looks like ${stars(Math.floor(P.pr*4+1e-6)/4)} — promos are live, so it's up to you`):LV('n',`Best promo looks like ${stars(Math.floor(P.pr*4+1e-6)/4)}`);
+  case 'promo':return P.pr==null?LV('n','No promo booked'):P.pr>=3.5?LV('y',`Best promo: ${tellWord(P.pr)}`):P.pr>=3?LV('m',`Best promo: ${tellWord(P.pr)} — promos are live, so it's up to you`):LV('n',`Best promo: ${tellWord(P.pr)}`);
   case 'show':return starLive(P.show,3.5,'the show');
-  case 'floor':return !P.nm?LV('n','No matches booked'):P.loMid>=2.5?LV('y',`Weakest match projects ${stars(Math.floor(P.loMid*4+1e-6)/4)}`):P.loHi>=2.5?LV('m',`Weakest match projects ${stars(Math.floor(P.loMid*4+1e-6)/4)} — on the edge`):LV('n',`Weakest match projects ${stars(Math.floor(P.loMid*4+1e-6)/4)}`);
-  case 'rookie':return P.rk>=2?LV('y','Your prospect projects 3★+'):P.rk>=1?LV('m','Your prospect is right around 3★'):P.rk?LV('n',"Your prospect's match projects under 3★"):LV('n','No prospect booked')}
+  case 'floor':return !P.nm?LV('n','No matches booked'):P.loMid>=2.5?LV('y',`Weakest match: ${tellWord(P.loMid)}`):P.loHi>=2.5?LV('m',`Weakest match: ${tellWord(P.loMid)} — on the edge`):LV('n',`Weakest match: ${tellWord(P.loMid)}`);
+  case 'rookie':return P.rk>=2?LV('y','Your prospect looks ready to deliver'):P.rk>=1?LV('m','Your prospect is on the edge'):P.rk?LV('n',"Your prospect's match doesn't look ready"):LV('n','No prospect booked')}
  return LV('x','')}
 function mandLive(md){const P=cardProj();const sh=P.sh;if(!P.booked&&md.k!=='nosell'&&md.k!=='win2')return LV('n','Nothing booked yet');
  switch(md.k){
@@ -227,9 +227,9 @@ function mandLive(md){const P=cardProj();const sh=P.sh;if(!P.booked&&md.k!=='nos
   case 'newchamp':return P.newch?LV('y','A new champion gets crowned'):LV('n','No title change booked');
   case 'debut':return P.deb?LV('y','A new signing debuts'):LV('n','No new signing on the card');
   case 'tagdef':return P.tagdef?LV('y','Your tag champs retain'):LV('n','No tag/trios title defense booked');
-  case 'rookie':return P.rk>=2?LV('y','Your prospect projects 3★+'):P.rk>=1?LV('m','Your prospect is right around 3★'):LV('n',P.rk?"Your prospect's match projects under 3★":'No prospect booked');
+  case 'rookie':return P.rk>=2?LV('y','Your prospect looks ready to deliver'):P.rk>=1?LV('m','Your prospect is on the edge'):LV('n',P.rk?"Your prospect's match doesn't look ready":'No prospect booked');
   case 'nosell':return sellOf('p',sh).length?LV('n',"You've sold out this week — it'll count against you"):LV('y','No sell-outs — keep it that way');
-  case 'win2':return sh.ppv?LV('x','No ratings war on PPV weeks'):LV('m',`Streak ${md.st||0}/2${P.show?` · your show projects ${stars(Math.floor(P.show.mid*4+1e-6)/4)}`:''} — it comes down to the rival`)}
+  case 'win2':return sh.ppv?LV('x','No ratings war on PPV weeks'):LV('m',`Streak ${md.st||0}/2${P.show?` · your show: ${tellWord(P.show.mid)}`:''} — it comes down to the rival`)}
  return LV('x','')}
 function liveLine(l,pre){if(!l||l.s==='x'&&!l.t)return '';const ic={y:'✅ On track',m:'🤞 Could happen',n:'⏳ Not yet',x:'➖ Not this week'}[l.s];
  return `<div class="glive ${l.s}"><b>${pre?esc(pre)+': ':''}${ic}</b>${l.t?` · ${esc(l.t)}`:''}</div>`}
@@ -238,8 +238,8 @@ function liveLine(l,pre){if(!l||l.s==='x'&&!l.t)return '';const ic={y:'✅ On tr
 function rivalAd(){if(!ON()||!S.card||!S.card.ai||curShow().ppv)return null;/* booking at the same time: cards stay secret until the week airs */if(simOn()||partyOn())return null;if(ON()&&!(S.online.booked&&S.online.booked.ai))return null;
  const ms=S.card.ai.filter(sl=>sl.k==='match'&&sl.d&&validMatch(sl.d));const me=ms[ms.length-1];if(!me)return null;const r=rateMatch(me.d,{preview:true});return {m:me.d,lo:r.lo,hi:r.hi}}
 function rivalAdHtml(mode){const a=rivalAd();if(!a)return '';const nm=esc(curShow().theirs||'show');
- if(mode==='line')return `<div class="rivalad"><div class="lft">Rival ad · ${nm}</div><div class="lfc">${esc(vsLine(a.m))}</div><div class="lfs">${esc(a.m.title&&S.titles[a.m.title]?S.titles[a.m.title].n+' title':MT[a.m.type].n)} · <span class="stars">${stars(a.lo)}–${stars(a.hi)}</span> · beat it for +3K fans</div></div>`;
- return `<div class="card dial"><div class="dk">Across the dial<b>${nm}</b></div><div class="dm"><div class="dv">${esc(vsLine(a.m))}</div><div class="tiny muted" style="margin-top:3px">${esc(a.m.title&&S.titles[a.m.title]?S.titles[a.m.title].n+' title':MT[a.m.type].n)} · <span class="stars">${stars(a.lo)}–${stars(a.hi)}</span> · beat it for +3K fans</div></div></div>`}
+ if(mode==='line')return `<div class="rivalad"><div class="lft">Rival ad · ${nm}</div><div class="lfc">${esc(vsLine(a.m))}</div><div class="lfs">${esc(a.m.title&&S.titles[a.m.title]?S.titles[a.m.title].n+' title':MT[a.m.type].n)} · ${esc(tellWord((a.lo+a.hi)/2))} · beat it for +3K fans</div></div>`;
+ return `<div class="card dial"><div class="dk">Across the dial<b>${nm}</b></div><div class="dm"><div class="dv">${esc(vsLine(a.m))}</div><div class="tiny muted" style="margin-top:3px">${esc(a.m.title&&S.titles[a.m.title]?S.titles[a.m.title].n+' title':MT[a.m.type].n)} · ${esc(tellWord((a.lo+a.hi)/2))} · beat it for +3K fans</div></div></div>`}
 
 /* ===================== SUGGEST A CARD ===================== */
 /* the GM's assistant books the empty slots — keeps everything you've already booked, promised or entered in a tournament */
