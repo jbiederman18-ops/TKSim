@@ -15,10 +15,15 @@ A wrestling general-manager game: draft, book Dynamite and Collision through a f
 Open it once while online; after that it launches with no connection.
 
 ## Updating the game
-Upload the changed files (usually `index.html`, plus any `.js` files that changed, such as `season.js`), then open `sw.js` and bump the version in `VERSION` (e.g. `aegm-v36` → `aegm-v37`) so phones pick up the update. Installed copies update the next time they're opened online (close and reopen the app once).
+Upload the changed files (usually `index.html`, plus any `.js` files that changed, such as `season.js` or `tutorial.js`), then open `sw.js` and bump the version in `VERSION` (e.g. `aegm-v36` → `aegm-v37`) so phones pick up the update. Installed copies update the next time they're opened online (close and reopen the app once).
 
 ## Play online with a friend
 Host a league for 2–4 GMs and friends join with a 6-letter code. Everyone runs their own brand, you face a different GM each week, and the most fans gained by Worlds End wins. Offline turns sync later, and each player gets a notification when it's their move. One-time setup: see [ONLINE-SETUP.md](ONLINE-SETUP.md).
+
+## New players: the tour
+A new game offers a one-minute **draft tour**, then a **first-week tour** once the draft is done. Each stop spotlights the real screen — the cap, what Ring/Mic/Pop mean, the running order, crowd buzz, feuds, stamina, making stars, free agents, titles and money — and explains how you win the fan war. After that, one-time **coach tips** pop up the first time you open the match editor, see your results or reach a PPV week. Replay it any time from **⚙️ → Rookie orientation** (where you can also turn coach tips on or off).
+
+The tour reads its numbers straight from the game and is checked automatically on every update (`tools/check-tutorial.py`), so it keeps up as the rules change. When a stop changes, players who already took the tour get a short **What's new** replay of just those stops.
 
 ## Offers & contracts
 - **Free agents with 55+ popularity want an offer**, not just a fee: a signing bonus, a weekly salary, and promises — 🎬 creative control, ⭐ main event spots, 🏆 a title shot, 📺 a place on every PPV. Each wrestler wants different things (a big star wants control, a hungry midcarder wants main events), and the offer screen tells you how it looks to them. Smaller names still sign on the spot.
