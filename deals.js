@@ -106,6 +106,20 @@ function dealBookCard(c){const sh=curShow();const on=new Set();let meIds=[];cons
 /* ---------- making an offer to a free agent ---------- */
 function dealNeedsOffer(w){return !!w&&!w.cw&&w.pop>=OFFER_POP&&S.phase==='season'}
 function offerOf(id){return S.offers&&S.offers[id]||null}
+/* v126: while another GM is still booking (league weeks booked at the same time, or party night), smaller names don't
+   go to whoever taps first: you send a quick sealed offer on standard terms, anyone still booking can counter, and the
+   wrestler picks when the week airs (the hotter show usually wins). With nobody left to compete, they sign on the spot. */
+function dealQuickNeeded(w){if(!w||w.own||w.cw||!ON()||S.phase!=='season'||dealNeedsOffer(w)||!(simOn()||partyOn()))return false;
+ if(offerOf(w.id))return true;const o=S.online||{};return localSeats().some(k=>k!=='p'&&!(o.booked||{})[k])}
+function dealQuick(id){if(mpLocked())return;const w=S.w[id];if(!w||w.own)return;const c=signCost(w);if(S.money.p<c)return toast('Not enough money.');if(ownList('p').length>=30)return toast('Your roster is full (30).');
+ if(w.snub&&w.snub[canonKey('p')]>=AW())return toast(`${w.name} isn't taking your calls this week — try again next week.`);
+ S.offers=S.offers||{};const ex=S.offers[id];const off=ex||(S.offers[id]={due:AW(),by:{}});off.by=off.by||{};const counter=Object.keys(off.by).some(k=>k!=='p');
+ off.by.p={bonus:c,sal:mkt(w),perks:[],quick:1,at:Date.now()};S.fa=S.fa||{};S.fa[id]=Math.max(S.fa[id]||0,off.due);
+ news(counter?`📨 ${S.gm} sent a counter-offer for ${w.name}.`:`📨 ${S.gm} made an offer to free agent ${w.name}.`);
+ save();closeModal();render();toast(`📨 Offer sent. ${w.name} decides when week ${wkOf(off.due)} airs.`)}
+function dealQuickHtml(w){const id=w.id,mine=myBid(id),ofr=offerOf(id),others=ofr?Object.keys(ofr.by||{}).filter(k=>k!=='p').length:0;
+ const note=`<div class="muted center tiny">${mine?`Your offer is in. ${esc(w.name)} decides when the week airs`:'Another GM is still booking, so this is a sealed offer'}${others?` — <b class="gold">${others} other offer${others>1?'s are':' is'} in</b>`:''}. If more than one GM wants ${esc(w.name)}, they usually pick the hotter show.</div>`;
+ return mine?`<button class="btn sec" onclick="dealWithdraw('${id}')">Withdraw my offer</button>${note}`:`<button class="btn" onclick="dealQuick('${id}')">📨 ${others?'Send a counter-offer':'Make an offer'} · ${money(signCost(w))}</button>${note}`}
 function myBid(id){const o=offerOf(id);return o&&o.by&&o.by.p||null}
 function dealOffer(id){if(mpLocked())return;const w=S.w[id];if(!w||w.own)return;if(!onMarket(w)&&!offerOf(id))return toast(`${w.name} isn't on the market right now.`);
  if(w.snub&&w.snub[ON()?canonKey('p'):'p']>=AW())return toast(`${w.name} isn't taking your calls this week — try again next week.`);
@@ -144,7 +158,7 @@ function dealAiBid(w){if(ownList('ai').length>=30||w.pop<60)return null;const c=
  const o={bonus:Math.round(c*R(.95,1.35)),sal:Math.round(mkt(w)*R(.95,1.25)),perks};if(S.money.ai<o.bonus)o.bonus=S.money.ai;return o}
 function dealWhy(w,win,lose){if(!lose)return '';const W=dealWants(w);const rw=dealRaw(win.o,signCost(w),mkt(w)),rl=dealRaw(lose.o,signCost(w),mkt(w));
  const pk=PERK_K.filter(k=>win.o.perks.includes(k)&&!lose.o.perks.includes(k)).sort((a,b)=>W[b]-W[a])[0];
- if(pk&&W[pk]>=1)return `the ${PERKS[pk].n.toLowerCase()}`;if(rw>rl+.05)return 'the bigger paycheck';if(dealShow(win.b)>dealShow(lose.b)+.02)return 'the hotter show';return 'the better overall package'}
+ if(pk&&W[pk]>=1)return `the ${PERKS[pk].n.toLowerCase()}`;if(rw>rl+.05)return 'the bigger paycheck';if(dealShow(win.b)>dealShow(lose.b)+.02)return 'the hotter show';if(win.o.quick&&lose.o.quick)return 'a gut feeling — it was that close';return 'the better overall package'}
 function dealSign(w,b,o){if(o.perks.includes('cc')&&ccCount(b)>=CC_MAX&&(b==='p'||ON()))o=Object.assign({},o,{perks:o.perks.filter(k=>k!=='cc')});S.money[b]-=o.bonus;w.sal=o.sal;w.own=b;w.con=26;w.mor=clamp(78+o.perks.length*4,0,95);w.fee=0;if(S.fa)delete S.fa[w.id];if(S.phase==='season')w.deb=AW();dealTerms(w,o.perks)}
 function dealSolo(w,o){const ai=dealAiBid(w);const bids=[{b:'p',o,u:dealU(w,o,'p')+R(-.02,.02)}];if(ai)bids.push({b:'ai',o:ai,u:dealU(w,ai,'ai')+R(-.02,.02)});
  bids.sort((x,y)=>y.u-x.u);const top=bids[0];const ok=top.u>=.95;DL=null;
@@ -164,7 +178,7 @@ function dealResolveAll(notes){DEAL_OUT=[];if(!S.offers||!ON())return;const now=
   const ok=bids.filter(x=>(S.money[x.b]||0)>=x.o.bonus&&ownList(x.b).length<30);
   ok.forEach(x=>x.u=dealU(w,x.o,x.b)+R(-.02,.02));ok.sort((a,b)=>b.u-a.u||(a.o.at||0)-(b.o.at||0));const top=ok[0];
   const rec={id,name:w.name,bids:bids.map(x=>({b:canonKey(x.b),s:dealSum(x.o)})),win:null,why:''};
-  if(top&&top.u>=.95){dealSign(w,top.b,top.o);rec.win=canonKey(top.b);rec.why=bids.length>1?dealWhy(w,top,ok[1]):'';
+  if(top&&(top.u>=.95||top.o.quick)){dealSign(w,top.b,top.o);rec.win=canonKey(top.b);rec.why=bids.length>1?dealWhy(w,top,ok[1]):'';
    const n=`✍️ ${w.name} signs with ${nameOf(top.b)}${bids.length>1?` — picked from ${bids.length} sealed offers for ${rec.why}`:''}.`;notes.push(n);news(n)}
   else{const n=`🚫 ${w.name} turned down ${bids.length>1?'every offer':'the offer from '+nameOf(bids[0]&&bids[0].b||'p')} and stays a free agent.`;notes.push(n);news(n);
    bids.forEach(x=>{w.snub=w.snub||{};w.snub[canonKey(x.b)]=now+1})}

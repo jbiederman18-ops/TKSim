@@ -69,7 +69,9 @@ function partyAdvance(st,me){const keep=S,keepTab=typeof tab!=='undefined'?tab:n
   if(S.phase==='draft'&&o.auto[onClock()]){const was=onClock();let guard=0;while(S.phase==='draft'&&guard++<400){const oc=onClock();if(!o.auto[oc])break;const c=draftChoice(oc);if(!c){finishDraft();break}draftPick(c.id,oc)}
    if(S.phase==='draft'){o.turn=onClock();if(o.turn!==was)msg=`The auto-drafters have picked — you're on the clock in round ${S.draft.round}.`}
    else{o.booked={};o.order=bookingOrder();o.turn='p';msg='The draft is complete — time to book week 1!'}}
-  if(!o.party)return {st:canonState(),msg};
+  if(!o.party){/* v126: booking at the same time — the last GM to lock in airs the week right here */
+   if(simOn()&&S.phase==='season'&&localSeats().every(k=>o.booked[k])){const wk=S.week;airShow();o.booked={};o.order=bookingOrder();o.turn='p';msg=`Week ${wk} results are in!`}
+   return {st:canonState(),msg}}
   if(S.phase==='season'&&localSeats().every(k=>o.booked[k])){o.lv=o.lv||{};
    /* everyone's locked in: GMs go live on the TV one at a time, then the week airs */
    if(!o.live){o.live={order:(o.order&&o.order.length?o.order:bookingOrder()).filter(k=>!o.lv[k])};const n=partyLiveNow();if(n)msg=`🔴 ${nameOf(n)} is live on the TV!`}
@@ -101,10 +103,10 @@ async function leaguePush(retried){
  if(err){const m=String(err&&(err.code||err.message)||err);
   if(!retried&&m.includes('permission')){/* this seat was last used on another device: take it back, then retry */
    try{await TKO.claim(code,L.key);return leaguePush(true)}catch(e){}}
-  if(partyOn()){/* party night never writes blind: keep the changes here and merge them in once we're back */
+  if(partyOn()||simOn()){/* party night (and booking at the same time) never writes blind: keep the changes here and merge them in once we're back */
    const was=MP_PENDING;MP_PENDING=true;if(!was&&!busy())render();if(Date.now()-MP_OFFLINE_TOLD>30000){MP_OFFLINE_TOLD=Date.now();toast('📡 Saved on this phone — it will sync when the connection is back.')}
    /* still online (a busy moment with every phone saving at once, or a slow answer)? try again in a few seconds, not a minute — the room is waiting */
-   if(navigator.onLine){const n=MP_RETRY=Math.min(MP_RETRY+1,5);setTimeout(()=>{if(MP_PENDING&&!MPX&&!mpT&&partyOn())mpPush(S.online.msg)},Math.min(30000,1500*2**n))}
+   if(navigator.onLine){const n=MP_RETRY=Math.min(MP_RETRY+1,5);setTimeout(()=>{if(MP_PENDING&&!MPX&&!mpT&&(partyOn()||simOn()))mpPush(S.online.msg)},Math.min(30000,1500*2**n))}
    return}
   return mpPushBlind()}
  if(r&&r.conflict){console.warn('league conflict',r.conflict.slice(0,5));
@@ -162,7 +164,7 @@ function partyAdopt(str,rev,d,quiet){
  mpLoad(str,d&&d.names,d&&d.shows,rev);saveLocal();mpRemember();if(quiet)return;
  render();partyAfterLoad()}
 /* on party night, a phone that just got a new week's results asks whether to watch the TV or open its own */
-function partyAfterLoad(){if(!S.online.party)return false;if(partyLivePrompt())return true;if(S.phase==='draft'||!mpUnseen())return false;mpMarkSeen();partyResultsPrompt();return true}
+function partyAfterLoad(){if(!S.online.party){if(simOn()&&mpUnseen()){mpMarkSeen();showResults();return true}return false}if(partyLivePrompt())return true;if(S.phase==='draft'||!mpUnseen())return false;mpMarkSeen();partyResultsPrompt();return true}
 /* a newer league arrived while we were busy: apply it now if nothing is in the way */
 function partyCatchUp(){if(!MP_HELD||MPX||busy())return;const d=MP_HELD;MP_HELD=null;if(typeof mpIncoming==='function')mpIncoming(d)}
 /* mpIncoming asks this first: should this new copy of the league wait? */
@@ -224,7 +226,7 @@ function partySet(on){closeModal();if(!ON()||!LMP)return;if(!mpAvail()||!navigat
   else if(S.phase==='season'){/* only GMs who already went live keep their cards locked; the rest go live on their turn */
    const done=o.lv||{};o.booked={};for(const k in done)if(done[k])o.booked[k]=true;delete o.live;delete o.lv;
    const n=(o.order&&o.order.length?o.order:bookingOrder()).find(k=>!o.booked[k]);if(n)o.turn=n}
-  news('📺 Party night is over — back to taking turns.');o.msg='Party night is over — back to taking turns. Your turn!'}
+  const sim=o.sim!==false;news(sim?'📺 Party night is over — back to booking on your own phones.':'📺 Party night is over — back to taking turns.');o.msg=sim?'Party night is over — book your show whenever you like.':'Party night is over — back to taking turns. Your turn!'}
  save();mpPush();render();toast(on?'📺 Party night is on!':'Back to taking turns.')}
 
 /* ===================== the TV ===================== */

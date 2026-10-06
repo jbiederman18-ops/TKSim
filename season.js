@@ -235,7 +235,7 @@ function liveLine(l,pre){if(!l||l.s==='x'&&!l.t)return '';const ic={y:'✅ On tr
  return `<div class="glive ${l.s}"><b>${pre?esc(pre)+': ':''}${ic}</b>${l.t?` · ${esc(l.t)}`:''}</div>`}
 
 /* ===================== ADVERTISED MAIN EVENT & THE MAIN EVENT WAR ===================== */
-function rivalAd(){if(!ON()||!S.card||!S.card.ai||curShow().ppv)return null;if(ON()&&!(S.online.booked&&S.online.booked.ai))return null;
+function rivalAd(){if(!ON()||!S.card||!S.card.ai||curShow().ppv)return null;/* booking at the same time: cards stay secret until the week airs */if(simOn()||partyOn())return null;if(ON()&&!(S.online.booked&&S.online.booked.ai))return null;
  const ms=S.card.ai.filter(sl=>sl.k==='match'&&sl.d&&validMatch(sl.d));const me=ms[ms.length-1];if(!me)return null;const r=rateMatch(me.d,{preview:true});return {m:me.d,lo:r.lo,hi:r.hi}}
 function rivalAdHtml(mode){const a=rivalAd();if(!a)return '';const nm=esc(curShow().theirs||'show');
  if(mode==='line')return `<div class="rivalad"><div class="lft">Rival ad · ${nm}</div><div class="lfc">${esc(vsLine(a.m))}</div><div class="lfs">${esc(a.m.title&&S.titles[a.m.title]?S.titles[a.m.title].n+' title':MT[a.m.type].n)} · <span class="stars">${stars(a.lo)}–${stars(a.hi)}</span> · beat it for +3K fans</div></div>`;
