@@ -185,10 +185,10 @@ function cardProj(){const sh=curShow();const c=(S.card&&S.card.p)||[];const ctx=
  c.forEach((sl,si)=>{if(!sl.d||fixedK(sl))return;
   if(sl.k==='match'){const m=sl.d;if(!validMatch(m))return;const ids=m.sides.flat();const ws=ids.map(id=>S.w[id]);if(ws.some(w=>w.inj))return;
    const r=rateMatch(m,ctx);let bump=Math.min(1,ws.filter(w=>w.deb).reduce((a,w)=>a+debutStars(w,sh.ppv),0));if(ch&&!chUsed&&ids.includes(ch)){bump+=.25;chUsed=true}
-   const mid=clamp((r.lo+r.hi)/2+bump,.25,5),hi=clamp(r.hi+bump,.25,5);P.booked++;P.nm++;mids.push(mid);his.push(hi);meta.push(segMeta(sl,mid));
+   const mid=clamp((r.lo+r.hi)/2+bump,.25,5),hi=clamp(r.hi+bump,.25,5);P.booked++;P.nm++;mids.push(mid);his.push(hi);meta.push(segMeta(sl,tellStar(mid)));
    if(ws.some(w=>w.g==='F'))P.women++;if(m.title)P.title++;if(m.type==='tag'||m.type==='trios'||m.type==='tag8'||m.sides[0].length>1)P.tag++;if(stipKey(m)!=='std')P.stip++;
    P.loMid=Math.min(P.loMid,mid);P.loHi=Math.min(P.loHi,hi);if(si===meSlot)P.me={mid,hi,lo:clamp(r.lo+bump,.25,5)};
-   if(ws.some(w=>w.rookie&&w.own==='p'))P.rk=Math.max(P.rk,mid>=3?2:hi>=3?1:0.5);
+   if(ws.some(w=>w.rookie&&w.own==='p'))P.rk=Math.max(P.rk,tellLv(mid,3)==='y'?2:tellLv(mid,3)==='m'?1:0.5);
    if(ws.some(w=>w.deb&&w.own==='p'))P.deb=true;
    const t=m.title&&S.titles[m.title];const win=(m.sides[m.winner]||[]).slice().sort().join('|');const f=finOf(m);
    if(t&&t.holders.length&&win){const held=t.holders.slice().sort().join('|');const wo=S.w[(m.sides[m.winner]||[])[0]];
@@ -197,7 +197,7 @@ function cardProj(){const sh=curShow();const c=(S.card&&S.card.p)||[];const ctx=
    else if(t&&!t.holders.length&&win){const wo=S.w[(m.sides[m.winner]||[])[0]];if(wo&&wo.own==='p')P.newch=true}}
   else if(sl.k==='promo'){const p=sl.d;if(!S.w[p.a])return;let st=p.res?p.res.stars:promoEst(p);const ids=[p.a,p.b].filter(Boolean);
    st+=Math.min(1,ids.map(id=>S.w[id]).filter(w=>w&&w.deb).reduce((a,w)=>a+debutStars(w,sh.ppv),0));if(ch&&!chUsed&&ids.includes(ch)){st+=.25;chUsed=true}
-   st=clamp(st,.5,5);P.booked++;P.pr=Math.max(P.pr||0,st);mids.push(st);his.push(st);meta.push(segMeta(sl,st));
+   st=clamp(st,.5,5);P.booked++;P.pr=Math.max(P.pr||0,st);mids.push(st);his.push(st);meta.push(segMeta(sl,tellStar(st)));
    if(ids.some(id=>S.w[id]&&S.w[id].deb&&S.w[id].own==='p'))P.deb=true}});
  if(mids.length){const wavg=v=>{let s=0,ws=0;v.forEach((x,i)=>{const w=i===v.length-1?1.6:1;s+=x*w;ws+=w});return s/ws};
   const fm=flowScore(meta,sh.ppv,'p').mod;const pk=prodOf('p',sh);const pb=PROD[pk]&&PROD[pk].b||0;
@@ -205,8 +205,11 @@ function cardProj(){const sh=curShow();const c=(S.card&&S.card.p)||[];const ctx=
  return P}
 /* status: y = on track, m = could go either way, n = not yet, x = doesn't apply this week */
 const LV=(s,t)=>({s,t});
+/* v136: the verdict comes from the tell's whole star range, not the exact projection — so ✅/🤞/⏳ never says more than
+ the 🔥 already does. A tell entirely past the bar is on track, one the bar falls inside could go either way. */
+function tellLv(x,th){const [lo,hi]=tellBand(x);return lo>=th?'y':hi>th?'m':'n'}
 function starLive(r,th,what){if(!r)return LV('n',`Book ${what} to see a projection`);const tx=`${what[0].toUpperCase()+what.slice(1)}: ${tellWord(r.mid)}`;
- return r.mid>=th?LV('y',tx):r.hi>=th?LV('m',tx+' — right on the edge'):LV('n',tx)}
+ const v=tellLv(r.mid,th);return LV(v,v==='m'?tx+' — it could go either way':tx)}
 function goalLive(k){const P=cardProj();if(!P.booked)return LV('n','Nothing booked yet');
  switch(k){
   case 'me4':return starLive(P.me,4,'your main event');
@@ -214,9 +217,9 @@ function goalLive(k){const P=cardProj();if(!P.booked)return LV('n','Nothing book
   case 'women':return P.women?LV('y',`${P.women} women's match${P.women>1?'es':''} booked`):LV('n',"No women's match booked");
   case 'tag':return P.tag?LV('y','Tag/trios match booked'):LV('n','No tag or trios match booked');
   case 'stip':return P.stip?LV('y','Stipulation match booked'):LV('n','No stipulation match booked');
-  case 'promo':return P.pr==null?LV('n','No promo booked'):P.pr>=3.5?LV('y',`Best promo: ${tellWord(P.pr)}`):P.pr>=3?LV('m',`Best promo: ${tellWord(P.pr)} — promos are live, so it's up to you`):LV('n',`Best promo: ${tellWord(P.pr)}`);
+  case 'promo':{if(P.pr==null)return LV('n','No promo booked');const v=tellLv(P.pr,3.5);return LV(v,`Best promo: ${tellWord(P.pr)}${v==='m'?" — promos are live, so it's up to you":''}`)}
   case 'show':return starLive(P.show,3.5,'the show');
-  case 'floor':return !P.nm?LV('n','No matches booked'):P.loMid>=2.5?LV('y',`Weakest match: ${tellWord(P.loMid)}`):P.loHi>=2.5?LV('m',`Weakest match: ${tellWord(P.loMid)} — on the edge`):LV('n',`Weakest match: ${tellWord(P.loMid)}`);
+  case 'floor':{if(!P.nm)return LV('n','No matches booked');const v=tellLv(P.loMid,2.5);return LV(v,`Weakest match: ${tellWord(P.loMid)}${v==='m'?' — could go either way':''}`)}
   case 'rookie':return P.rk>=2?LV('y','Your prospect looks ready to deliver'):P.rk>=1?LV('m','Your prospect is on the edge'):P.rk?LV('n',"Your prospect's match doesn't look ready"):LV('n','No prospect booked')}
  return LV('x','')}
 function mandLive(md){const P=cardProj();const sh=P.sh;if(!P.booked&&md.k!=='nosell'&&md.k!=='win2')return LV('n','Nothing booked yet');
