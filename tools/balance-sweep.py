@@ -19,7 +19,7 @@ def port():
     s = socket.socket(); s.bind(('127.0.0.1', 0)); p = s.getsockname()[1]; s.close(); return p
 
 
-async def run(variants, games, weeks):
+async def run(variants, games, weeks, spend=False):
     from playwright.async_api import async_playwright
     srv, results = [], {}
     for v in variants.values():
@@ -42,7 +42,7 @@ async def run(variants, games, weeks):
                     try:
                         await pg.goto(f"http://127.0.0.1:{v['port']}/index.html"); await pg.wait_for_timeout(800)
                         await pg.add_script_tag(content=SIM)
-                        r = await pg.evaluate(f"SIM({{diff:'{diff}',bonus:{str(v['bonus']).lower()},weeks:{weeks}}})")
+                        r = await pg.evaluate(f"SIM({{diff:'{diff}',bonus:{str(v['bonus']).lower()},weeks:{weeks},spend:{str(spend).lower()}}})")
                     except Exception as e:
                         r = {'seasons': [], 'errs': ['runner: ' + str(e)[:200]]}
                     r['perr'] = perr; results.setdefault(f'{name}|{diff}', []).append(r); await ctx.close()
@@ -83,7 +83,7 @@ def table(results):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--games', type=int, default=10); ap.add_argument('--seasons', type=int, default=2)
-    ap.add_argument('--compare', help='an older commit/tag to run side by side'); ap.add_argument('--bonus', action='store_true')
+    ap.add_argument('--compare', help='an older commit/tag to run side by side'); ap.add_argument('--bonus', action='store_true'); ap.add_argument('--spend', action='store_true', help='bot buys production like the rival does')
     a = ap.parse_args()
     variants = {'current': {'dir': ROOT, 'bonus': False}}
     if a.bonus: variants['current+bonus'] = {'dir': ROOT, 'bonus': True}
@@ -92,7 +92,7 @@ def main():
         wt = tempfile.mkdtemp(prefix='tksim-'); subprocess.run(['git', '-C', ROOT, 'worktree', 'add', '-q', '--detach', wt, a.compare], check=True)
         variants[a.compare] = {'dir': wt, 'bonus': False}
     try:
-        t = time.time(); res = asyncio.run(run(variants, a.games, a.seasons * 41))
+        t = time.time(); res = asyncio.run(run(variants, a.games, a.seasons * 41, a.spend))
         print(f'{sum(len(v) for v in res.values())} games in {round(time.time() - t)}s\n'); table(res)
     finally:
         if wt: subprocess.run(['git', '-C', ROOT, 'worktree', 'remove', '--force', wt])

@@ -11,7 +11,7 @@
      tour get a "what's new" replay of just those stops.
    • Run `python3 tools/check-tutorial.py` — it plays every stop and tip in a headless browser and fails on any
      missing target or stale value. */
-const TUT_REV=2;
+const TUT_REV=3;
 const TUT_KEY='tksim_tut';
 const TUT_MISS=[];
 
@@ -96,8 +96,8 @@ const TUT_STEPS=[
  b:()=>`A few free agents are on the market at once, each for a few weeks. Big names (55+ popularity) want an offer — money plus promises — and ${tvRival()} can bid too, sealed. Scroll down for <b>prospects</b>: cheap developmental deals that can grow into stars.`},
 {id:'s.titles',track:'season',since:1,tab:'titles',sel:'main .card.belt',sys:['titles','prestige'],t:'The gold',
  b:()=>`Titles start vacant — book a match and pick the title in the match editor to crown a champion. Defenses build a champion's credibility and the belt's prestige. Swap a title too fast and it loses prestige. The only way to take ${ON()?"another GM's":"the rival's"} gold is a PPV title challenge.`},
-{id:'s.money',track:'season',since:1,tab:'office',sel:()=>tutCard(/finances/i),sys:['money','production'],t:'The money',
- b:()=>`Money comes from your TV deal, tickets, merch and ads — and hot shows earn more of all four. Payroll goes out every week. In the red, morale slips. Spend on signings, production and stipulations when it'll pay off.`},
+{id:'s.money',track:'season',since:3,tab:'office',sel:()=>tutCard(/finances/i),sys:['money','production','wages','stipulations'],t:'The money',
+ b:()=>`Money comes from your TV deal, tickets, merch and ads — and hot shows earn more of all four. Payroll goes out every week. In the red, morale slips. Growing costs too: a bigger company pays bigger wages${tv('wage',()=>wageF('p')>1.01?` (yours: +${Math.round((wageF('p')-1)*100)}% right now)`:'',' ')}, bigger venues make production and stipulations pricier, and one show can only take in so much. Spend it on signings, production and stipulations when it'll pay off — money in the bank doesn't win the fan war.`},
 {id:'s.end',track:'season',since:1,sel:'header .gsw',sys:['reference'],t:"You're ready",
  b:()=>`The ⚙️ menu has <b>How it all works</b> — the full rulebook — and you can replay this tour from there any time.<br><br>New things will get a quick tip the first time they come up. Go book a great show.`},
 

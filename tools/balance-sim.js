@@ -46,6 +46,7 @@ window.SIM = async function (opt) {
       if (owned('p').length < 22) { const fa = Object.values(S.w).filter(w => !w.own && onMarket(w) && !dealNeedsOffer(w)).sort((a, b) => ovr(b) - ovr(a))[0]; if (fa && S.money.p > signCost(fa) * 3) { S.money.p -= signCost(fa); fa.sal = mkt(fa); fa.own = 'p'; fa.con = 26; fa.mor = 80; fa.fee = 0 } }
       // book: the in-game "Suggest the rest" assistant
       suggestFill();
+      if (opt.spend) { S.prod = S.prod || {}; const m = S.money.p / econCap(); S.prod.p = curShow().ppv ? (m > 5 ? 'max' : m > 2 ? 'plus' : 'std') : (m > 6 ? 'max' : m > 3.2 ? 'plus' : 'std') }
       const sh = curShow();
       if (opt.bonus && !sh.ppv && bookBonus()) cur.bonusBooked++;
       // play the show: promos and match calls made with the rival's own decision rules
@@ -59,6 +60,7 @@ window.SIM = async function (opt) {
       const out = airShow();
       const o = S.last || out;
       Object.values(S.titles).forEach(t => { if (before[t.id] && t.holders.join('|') !== before[t.id]) cur.titleChanges++ });
+      { const c = o && o.cash; const f = S.fin || {}; for (const bb of ['p', 'ai']) { const x = (c && c[bb]) || {}; const y = f[bb] || {}; cur.cash = cur.cash || { p: {}, ai: {} }; const acc = cur.cash[bb]; ['tix', 'merch', 'ad', 'gate', 'bill', 'prod', 'stip', 'ovfCash', 'spons'].forEach(k => acc[k] = (acc[k] || 0) + (x[k] || 0)); ['tv', 'pay', 'ops'].forEach(k => acc[k] = (acc[k] || 0) + (y[k] || 0)) } }
       if (o && o.ratings) { if (o.ratings.p != null) cur.rp.push(o.ratings.p); if (o.ratings.ai != null) cur.rai.push(o.ratings.ai); if (o.hourWin === 'p') cur.wins++ }
       if (o && o.blocks) { const PN = new Set(Object.values(PT).map(x => x.n)); o.blocks.filter(b => b.brand === 'p').forEach(b => b.segs.forEach(s => (PN.has(s.sub) ? cur.promoStars : cur.matchStars).push(s.stars))) }
       cur.injP += owned('p').filter(w => w.inj > 0).length; cur.injAI += owned('ai').filter(w => w.inj > 0).length;
