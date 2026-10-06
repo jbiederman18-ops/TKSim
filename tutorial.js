@@ -79,7 +79,7 @@ const TUT_STEPS=[
 {id:'s.suggest',track:'season',since:1,tab:'book',opt:true,sel:'main [onclick="suggestFill()"]',sys:['booking'],t:'Need a starting point?',
  b:()=>`<b>Suggest the rest</b> fills any empty slots with a sensible card and keeps what you've already booked. Great for your first week — then tweak it.`},
 {id:'s.buzz',track:'season',since:1,tab:'book',sel:()=>document.querySelector('main .slot .tellrow')||document.querySelector('main .slot:not(.done)'),sys:['ratings','chemistry','risk'],t:'Booking by feel',
- b:()=>`There's no star math while you book. Each match shows <b>crowd buzz</b> (🥶 → 🔥🔥🔥) and ▲/▼ tells on stipulations, titles and finishes.<br><br>🎲 <b>Wild card</b> means it could land big or fall flat — first-time pairings, gimmick matches, screwy finishes, run-ins. Chemistry between two wrestlers is only a guess until they've shared a ring.`},
+ b:()=>`There's no star math while you book. Each match shows <b>crowd buzz</b> (🥶 → 🔥🔥🔥) and ▲/▼ tells on titles and finishes. Stipulations show a rough 📈 upside weighed against the 🔋 wear and 🩹 injury risk they add.<br><br>🎲 <b>Wild card</b> means it could land big or fall flat — first-time pairings, gimmick matches, screwy finishes, run-ins. Chemistry between two wrestlers is only a guess until they've shared a ring.`},
 {id:'s.flow',track:'season',since:1,tab:'book',sel:'main .card.flowc',sys:['show flow'],t:'Show flow',
  b:()=>`The order matters. Open hot, keep the middle moving (back-to-back promos drag), build through the second half and close on your best match. This card grades your running order as you book.`},
 {id:'s.feuds',track:'season',since:1,tab:'book',sel:()=>tutCard(/your feuds/i),sys:['feuds','heat','repetition'],t:'Feuds are the engine',
@@ -103,7 +103,7 @@ const TUT_STEPS=[
 
 /* ---- one-time coach tips ---- */
 {id:'t.editor',track:'tip',since:2,sel:'#modal .proj',sys:['ratings','chemistry','risk','stipulations'],t:'Crowd buzz',
- b:()=>`This is your read on the match: how hot the crowd is for it and whether it's a 🎲 wild card. Change the stipulation, title or finish and watch the ▲/▼ tells — stipulations marked ⭐ are a <b>specialty</b> for someone in the match. Exact numbers stay hidden until after the show.`},
+ b:()=>`This is your read on the match: how hot the crowd is for it and whether it's a 🎲 wild card. Stipulations marked ⭐ are a <b>specialty</b> for someone in the match; each one shows its rough 📈 upside against the 🔋 wear and 🩹 injury risk it adds. Titles and finishes get ▲/▼ tells. Exact numbers stay hidden until after the show.`},
 {id:'t.results',track:'tip',since:1,opt:true,sel:'#modal .whyd',sys:['ratings'],t:'Why that rating?',
  b:()=>`Open this under any of your matches to see what each part was worth — chemistry, stamina, the finish, the luck of the night. It's the fastest way to learn what works.`},
 {id:'t.ppv',track:'tip',since:1,sel:'main .card.showcard',sys:['ppv','feuds','titles'],t:"It's PPV week",
