@@ -247,7 +247,7 @@ function suggestCard(){const sh=curShow();const c=JSON.parse(JSON.stringify(S.ca
  c.forEach(sl=>{if(!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(id=>id&&used.add(id));if(sl.k==='promo'){used.add(sl.d.a);if(sl.d.b)used.add(sl.d.b)}if(sl.k==='chal'&&sl.d.c)used.add(sl.d.c);if(sl.k==='xo')used.add(sl.d.a)});
  const gen=autoBook('p',sh,[...used],{smart:1});const ms=gen.filter(x=>x.k==='match'&&x.d),ps=gen.filter(x=>x.k==='promo'&&x.d);
  const exP=new Set();c.forEach(sl=>{if(sl.k==='promo'&&sl.d){exP.add(sl.d.a);if(sl.d.b)exP.add(sl.d.b)}});
- c.forEach(sl=>{if(sl.d)return;if(sl.k==='match'){const x=ms.shift();if(x)sl.d=x.d}
+ c.forEach(sl=>{if(sl.d)return;if(sl.k==='match'){if(sl.opt)return;const x=ms.shift();if(x)sl.d=x.d}
   else if(sl.k==='promo'){let x=ps.shift();while(x&&(exP.has(x.d.a)||x.d.b&&exP.has(x.d.b)))x=ps.shift();const p=x?x.d:autoPromo('p',exP);if(p){delete p.res;p.played=false;sl.d=p;exP.add(p.a);if(p.b)exP.add(p.b)}}
   else if(sl.k==='chal'){const ch=autoChal('p',used);if(ch)sl.d=ch}
   else if(sl.k==='xo'){const x=xoAuto('p',used,1)[0];if(x)sl.d=x}});

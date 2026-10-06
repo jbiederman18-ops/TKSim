@@ -411,7 +411,10 @@ nav.tabs button.on{text-shadow:none}nav.tabs button.on svg{filter:none}nav.tabs 
 .fdt,.tell{display:inline-block;font-weight:800;padding:3px 9px;margin:2px 3px;border-radius:4px;background:rgba(255,255,255,.07);font-size:12.5px}.tell.big{font-size:16px;padding:5px 12px}.tell.good{color:var(--good);background:rgba(79,213,133,.12)}.tell.bad{color:var(--bad);background:rgba(255,90,82,.12)}.tell.muted{color:inherit}.tell.wild{color:var(--gold2);background:rgba(255,200,80,.1)}.tellrow{margin-top:4px}.proj .tellrow{margin:6px 0}
 .tg{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,.06)}
 .fdt{color:#ffb38a;background:rgba(255,122,46,.12)}.fdt.t2{color:#fff;background:rgba(226,85,43,.55)}.fdt.t3{color:#fff;background:linear-gradient(90deg,#c01d12,#ff7a2e)}
-.tg.good{color:var(--good);background:rgba(79,213,133,.1)}.tg.bad{color:#ff8a82;background:rgba(255,90,82,.12)}.tg.warnt{color:#e6b640;background:rgba(230,182,64,.12)}
+.tg.good{color:var(--good);background:rgba(79,213,133,.1)}.tg.bad{color:#ff8a82;background:rgba(255,90,82,.12)}.tg.spec{color:var(--gold2);background:rgba(216,180,73,.16);box-shadow:inset 0 0 0 1px rgba(216,180,73,.35)}
+.ddo.spec{box-shadow:inset 3px 0 0 var(--gold2);background:linear-gradient(90deg,rgba(216,180,73,.09),transparent 70%)}
+.ddo.spec.on{background:linear-gradient(90deg,rgba(216,180,73,.2),transparent 80%)}
+.tg.warnt{color:#e6b640;background:rgba(230,182,64,.12)}
 .slot.opt{border-style:dotted;opacity:.85}
 .fb{padding:10px 0 8px}.fb+.fb{border-top:1px solid var(--line)}.fb:first-of-type{margin-top:4px}
 .fb.hot .bar.heat>i{box-shadow:0 0 10px rgba(255,122,46,.6)}
@@ -848,7 +851,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v132';
+const APP_VERSION='v133';
 /* v113: a rolling AEW year — a PPV every 4 weeks from Revolution to Worlds End. All In is the midyear supershow;
    the season (awards, offseason, fan-war winner) ends after Worlds End, then the calendar rolls into a new year. */
 const SEASON=40,ALLIN_WEEK=24,OLD_SEASON=24;
@@ -2199,7 +2202,7 @@ function duePromises(){return (S.promises||[]).filter(x=>x.week===S.week)}
 function inMatch(m,a,b){return m&&m.sides&&m.sides.some(s=>s.includes(a))&&m.sides.some(s=>s.includes(b))&&!m.sides.some(s=>s.includes(a)&&s.includes(b))}
 function promiseOf(m){return duePromises().find(pr=>inMatch(m,pr.a,pr.b))}
 function unmetPromises(card){return duePromises().filter(pr=>!card.some(sl=>sl.k==='match'&&sl.d&&inMatch(sl.d,pr.a,pr.b)))}
-function newCard(){const ppv=!!(PPVS[S.week]);const c=emptyCard(ppv);const slots=c.map((sl,i)=>sl.k==='match'?i:-1).filter(i=>i>=0);let f=0,bk=slots.length-1;
+function newCard(){const ppv=!!(PPVS[S.week]);const c=emptyCard(ppv);const slots=c.map((sl,i)=>sl.k==='match'&&!sl.opt?i:-1).filter(i=>i>=0);let f=0,bk=slots.length-1;
  /* an earned title shot follows the belt: it's against whoever holds it now — or, if it left the brand, it becomes the PPV title challenge */
  const chs=c.find(sl=>sl.k==='chal');
  duePromises().filter(pr=>pr.kind==='shot').forEach(pr=>{const t=S.titles[pr.title];const h=t&&t.holders[0]&&S.w[t.holders[0]];
@@ -2227,10 +2230,17 @@ function settlePromises(out){duePromises().forEach(pr=>{const A=S.w[pr.a],B=S.w[
 function showNames(){return (S.online&&S.online.show)||{p:'Dynamite',ai:'Collision'}}
 function curShow(){if(PPVS[S.week])return {name:PPVS[S.week],ppv:true,mine:PPVS[S.week],theirs:PPVS[S.week],fd:S.week===FD_WEEK};const n=showNames();return {name:n.p,ppv:false,mine:n.p,theirs:n.ai,special:SPECIALS[S.week]||null}}
 /* TV: 3 matches + 2 promos, plus an optional bonus promo (the '?' slot). PPV: 7 matches + an optional title challenge. */
-const CARD_TV=['promo','match','promo','match','promo?','match'],CARD_PPV=['match','match','match','match','match','match','match','chal'],CARD_FD=['match','match','xo?','match','match','xo?','match','chal'];
+const CARD_TV=['promo','match','promo','match','match?','promo?','match'],CARD_PPV=['match','match','match','match','match','match','match','chal'],CARD_FD=['match','match','xo?','match','match','xo?','match','chal'];
 const cardOf=ppv=>ppv?(S&&S.week===FD_WEEK?CARD_FD:CARD_PPV):CARD_TV;
 const cardMatches=ppv=>cardOf(ppv).filter(k=>k==='match').length;
 function emptyCard(ppv){return cardOf(ppv).map(k=>k.endsWith('?')?{k:k.slice(0,-1),d:null,opt:true}:{k,d:null})}
+/* v133: weekly TV has an optional bonus match. Labels: required matches are numbered, the last match slot is always the
+ main event, the optional one is the "Bonus match" */
+function mLab(c,i){const ms=c.map((x,j)=>x&&x.k==='match'?j:-1).filter(j=>j>=0);let n=0;for(const j of ms){if(!c[j].opt||j===ms[ms.length-1])n++;if(j===i)break}
+ if(i===ms[ms.length-1])return {main:true,n,lab:'Main event'};if(c[i]&&c[i].opt)return {opt:true,n:0,lab:'Bonus match'};return {n,lab:'Match '+n}}
+/* keep the optional flag off the main event after segments are dragged around */
+function optNorm(c){const ms=c.map((x,j)=>x&&x.k==='match'?j:-1).filter(j=>j>=0);const last=ms[ms.length-1];if(last==null||!c[last].opt)return;
+ const prev=ms.slice(0,-1).reverse().find(j=>!c[j].opt);delete c[last].opt;if(prev!=null)c[prev].opt=true}
 /* v122: a TV card built under an older layout (e.g. the 4-match TV card before v119) is re-fitted to the current one.
    Keeps the main event as the main event, keeps tournament/promised matches first, then other booked matches, in their running order. */
 function cardFit(c,ppv){if(!Array.isArray(c)||ppv)return {c,drop:0};const tpl=emptyCard(false);const sig=a=>a.map(x=>x&&x.k+(x.opt?'?':'')).join(',');
@@ -2240,7 +2250,7 @@ function cardFit(c,ppv){if(!Array.isArray(c)||ppv)return {c,drop:0};const tpl=em
  const rest=ms.slice(0,-1).map((x,i)=>({x,i})).sort((a,b)=>pri(b.x)-pri(a.x)||a.i-b.i);const keep=rest.slice(0,nM-1).sort((a,b)=>a.i-b.i).map(o=>o.x);
  const drop=rest.slice(nM-1).filter(o=>o.x.d).length+Math.max(0,ps.length-tpl.filter(x=>x.k==='promo').length);
  while(keep.length<nM-1)keep.push({k:'match',d:null});const mq=keep.concat([main]);
- const out=tpl.map(sl=>{if(sl.k==='match')return {k:'match',d:mq.shift().d};const p=ps.shift();return p?Object.assign({k:'promo',d:p.d},sl.opt?{opt:true}:{}):sl});return {c:out,drop}}
+ const out=tpl.map(sl=>{if(sl.k==='match')return Object.assign({k:'match',d:mq.shift().d},sl.opt?{opt:true}:{});const p=ps.shift();return p?Object.assign({k:'promo',d:p.d},sl.opt?{opt:true}:{}):sl});return {c:out,drop}}
 function cardMigrate(){if(!S||S.phase!=='season'||!S.card)return;const sh=curShow();if(sh.ppv)return;let drop=0;
  if(S.card.p&&!(ON()&&S.online&&S.online.booked&&S.online.booked.p)){const r=cardFit(S.card.p,false);if(r.c!==S.card.p){S.card.p=r.c;drop+=r.drop}}
  /* the offline rival rebooks its own show under the new layout */
@@ -2703,7 +2713,7 @@ function autoBook(brand,show,extUsed,opt){opt=opt||{};
  if(show.ppv){const out=[];let mi=0;const xo=S.week===FD_WEEK?xoAuto(brand,new Set(used),2):[];
   cardOf(true).forEach(k=>{if(k==='match'){if(ms[mi])out.push(ms[mi++])}else if(k==='xo?'){const x=xo.shift();out.push({k:'xo',d:x||null,opt:true})}else if(k==='chal')out.push({k:'chal',d:chal0})});while(mi<ms.length)out.push(ms[mi++]);return out}
  const exP=new Set();
- const out=[];let mi=0;CARD_TV.forEach(k=>{if(k==='match'){if(ms[mi])out.push(ms[mi++])}else{const p=autoPromo(brand,exP);if(p){exP.add(p.a);if(p.b)exP.add(p.b)}const sl={k:'promo',d:p};if(k.endsWith('?'))sl.opt=true;out.push(sl)}});
+ const out=[];let mi=0;CARD_TV.forEach(k=>{if(k==='match'){if(ms[mi])out.push(ms[mi++])}else if(k==='match?'){out.push({k:'match',d:null,opt:true})}else{const p=autoPromo(brand,exP);if(p){exP.add(p.a);if(p.b)exP.add(p.b)}const sl={k:'promo',d:p};if(k.endsWith('?'))sl.opt=true;out.push(sl)}});
  while(mi<ms.length)out.push(ms[mi++]);return out}
 function autoChal(brand,used){if(S.week===ALLIN_WEEK)for(const k in TOURS){const t=tourState(brand,k);const pz=S.titles[TOURS[k].prize];const c=t.chal&&S.w[t.chal];if(c&&pz&&pz.holders.length&&c.own===brand&&!c.inj&&!used.has(c.id)&&S.w[pz.holders[0]].own!==brand)return {title:pz.id,c:c.id}}
  if(Math.random()>.6)return null;const other=brand==='p'?'ai':'p';
@@ -2889,7 +2899,7 @@ gear:{t:'Gear mix-up',i:'👕',text:'{A}\'s expensive new custom gear arrived �
  {t:'Lean in: that\'s their new nickname',d:'Could become a merch hit… or a punchline.',fx:c=>{if(Math.random()<.5){popx(c.A,5);S.money.p+=40;return `"${c.wrong}" shirts fly off the tables (+$40K, +5 popularity).`}popx(c.A,-2);mor(c.A,-5);return `It doesn't catch on. ${c.A.name} wants to forget this ever happened.`}}]},
 viral:{t:'Going viral',i:'📈',good:true,text:'A clip of {A} from last week has millions of views. Fans want more.',ch:[
  {t:'Strike now — book a sit-down interview',d:'Quick popularity boost.',fx:c=>{popx(c.A,6);c.A.mic=Math.min(Math.max(c.A.mic,c.A.potM),c.A.mic+1);return `${c.A.name}'s interview racks up even more views (+6 popularity).`}},
- {t:'Promise them a big match next week',d:'{VM}',fx:c=>{popx(c.A,3);if(c.vm){addPromise({kind:'callout',a:c.A.id,b:c.vm.id,week:S.week});const nc=S.card.p.findIndex(sl=>sl.k==='match'&&!sl.d);if(nc>=0)S.card.p[nc].d={type:'singles',stip:'std',sides:[[c.A.id],[c.vm.id]],winner:0,title:''};}return c.vm?`${c.A.name} vs ${c.vm.name} is promised for this week's show.`:`Fans are buzzing.`}},
+ {t:'Promise them a big match next week',d:'{VM}',fx:c=>{popx(c.A,3);if(c.vm){addPromise({kind:'callout',a:c.A.id,b:c.vm.id,week:S.week});let nc=S.card.p.findIndex(sl=>sl.k==='match'&&!sl.d&&!sl.opt);if(nc<0)nc=S.card.p.findIndex(sl=>sl.k==='match'&&!sl.d);if(nc>=0)S.card.p[nc].d={type:'singles',stip:'std',sides:[[c.A.id],[c.vm.id]],winner:0,title:''};}return c.vm?`${c.A.name} vs ${c.vm.name} is promised for this week's show.`:`Fans are buzzing.`}},
  {t:'Let it grow organically',d:'Smaller boost, happier wrestler.',fx:c=>{popx(c.A,3);mor(c.A,6);return `${c.A.name} enjoys the moment (+3 popularity).`}}]},
 subtweet:{t:'Subliminal shots',i:'💧',need:2,text:'At 2 a.m., {A} posted a single line: "cry me a river." No names, no tags — but everyone knows it\'s aimed at {B}, and {B} has already liked a reply calling {A} washed up.',ch:[
  {t:'Turn it into a TV feud',d:'Big feud heat. {B} may not find it funny.',fx:c=>{const n=[];bumpHeat(c.A.id,c.B.id,22,n,'a late-night subliminal post');popx(c.A,2);if(Math.random()<.3){mor(c.B,-8);return `The crowd starts chanting "cry me a river" at ${c.B.name}. Great heat, but ${c.B.name} is genuinely annoyed. ${n.join(' ')}`}popx(c.B,2);return `Both of them run with it and the internet is hooked. ${n.join(' ')}`}},
@@ -3017,7 +3027,7 @@ function pkPick(id){const p=PK;PK=null;p.onPick(id)}
 function pkBack(){const p=PK;PK=null;p.back()}
 function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),2200)}
 let MODAL_AT=0;
-function openModal(html,keep){keep=keep||DDKEEP;MODAL_AT=Date.now();const m=$('#modal');const was=m.classList.contains('hidden');const sh=m.querySelector('.sheet');const st=keep&&sh?sh.scrollTop:0;m.classList.toggle('lobbyM',html.startsWith('<div id="games"'));m.innerHTML=`<div class="sheet ${was?'in':keep?'':'swap'}"><div class="sbody">${html}</div></div>`;m.classList.remove('hidden');document.body.classList.add('lock');const ns=m.querySelector('.sheet');if(keep)ns.scrollTop=st;sheetScrollFix(ns);if(LIVE&&partyLiveTurn())partyFeed(html)}
+function openModal(html,keep){keep=keep||DDKEEP;MODAL_AT=Date.now();const m=$('#modal');const was=m.classList.contains('hidden');const sh=m.querySelector('.sheet');const st=keep&&sh?sh.scrollTop:0;m.classList.toggle('lobbyM',html.startsWith('<div id="games"'));m.innerHTML=`<div class="sheet ${was?'in':keep?'':'swap'}"><div class="sbody">${html}</div></div>`;m.classList.remove('hidden');document.body.classList.add('lock');pageLock();const ns=m.querySelector('.sheet');if(keep)ns.scrollTop=st;sheetScrollFix(ns);if(LIVE&&partyLiveTurn())partyFeed(html)}
 /* iOS WebKit sometimes doesn't treat the sheet as scrollable when its content grows after it opens
    (animation finishing, photos loading, a "Why?" expanding, the picker grid refilling) until it's reopened.
    Whenever the content height changes, briefly toggle overflow so WebKit rebuilds the scroll area. */
@@ -3026,7 +3036,7 @@ function sheetScrollFix(sh){if(!sh)return;let last=-1,raf=0;
  const soon=()=>{if(!raf)raf=requestAnimationFrame(kick)};
  sh.addEventListener('animationend',()=>{last=-1;soon()},{once:true});sh.addEventListener('toggle',soon,true);sh.addEventListener('load',soon,true);
  if(window.ResizeObserver&&sh.firstElementChild){const ro=new ResizeObserver(()=>{if(!sh.isConnected){ro.disconnect();return}soon()});ro.observe(sh.firstElementChild)}}
-function closeModal(){const m=$('#modal');m.classList.add('hidden');m.innerHTML='';document.body.classList.remove('lock');
+function closeModal(){const m=$('#modal');m.classList.add('hidden');m.innerHTML='';document.body.classList.remove('lock');pageUnlock();
  /* editors are finished once their sheet closes; leaving these set blocked live league updates and cloud loads */
  ED=PE=CE=PK=CF=QP=null;
  if(!PS&&!ME&&!LQ)setTimeout(afterIdle,60)}
@@ -3036,7 +3046,13 @@ function afterIdle(){if(busy())return;
  if(CL_DEFER){CL_DEFER=false;cloudCheck()}
  partyCatchUp()}
 let MENU_BACK='home';
-function go(t){if(t==='menu'&&tab!=='menu')MENU_BACK=tab||'home';tab=t;ANIM=true;window.scrollTo(0,0);render()}
+function go(t){if(t==='menu'&&tab!=='menu')MENU_BACK=tab||'home';tab=t;ANIM=true;if(LOCK_Y!==null)LOCK_Y=0;window.scrollTo(0,0);render()}
+/* v133: while a sheet is open the page behind it is pinned in place. iOS ignores overflow:hidden on the body for touch
+ scrolling, so a swipe on a short sheet (or on the dimmed backdrop) used to scroll the screen underneath. Pinning the
+ body with position:fixed stops that; closing the sheet puts you back exactly where you were. */
+let LOCK_Y=null;
+function pageLock(){if(LOCK_Y!==null||(typeof TV!=='undefined'&&TV))return;LOCK_Y=window.scrollY||0;const b=document.body.style;b.position='fixed';b.top=`-${LOCK_Y}px`;b.left='0';b.right='0';b.width='100%'}
+function pageUnlock(){if(LOCK_Y===null)return;const y=LOCK_Y;LOCK_Y=null;const b=document.body.style;b.position=b.top=b.left=b.right=b.width='';window.scrollTo(0,y)}
 const sorter=k=>(a,b)=>k==='ovr'?ovr(b)-ovr(a):k==='sta'?a.fat-b.fat:k==='dur'?durOf(b)-durOf(a):k==='sal'?sal(b)-sal(a):b[k]-a[k];
 function chips(v,opts,cur){return `<div class="chips">${opts.map(([k,n])=>`<button class="chip ${k===cur?'on':''}" onclick="${v}='${k}';render()">${n}</button>`).join('')}</div>`}
 function icons(w){let s='';if(isChamp(w.id))s+='🏆';if(w.inj)s+=w.susp?'⛔':'🚑';if(w.own&&w.mor<30)s+='😠';if(w.own==='p'&&w.con<=4)s+='📝';if(w.fat>=FAT_RISK)s+='🔋';return s?' '+s:''}
@@ -3163,10 +3179,10 @@ function feudList(b){return Object.entries(S.heat).map(([k,h])=>{const [a,c]=k.s
 function pageHead(kick,title,right,o){o=o||{};return `<div class="card phead"><div class="ptop"><span class="dk">${kick}</span>${o.tag?`<span class="livebug"><b>${o.tag}</b>${o.tag2?`<span>${o.tag2}</span>`:''}</span>`:''}</div><div class="phrow"><div class="dround">${title}</div>${right?`<div class="phr">${right}</div>`:''}</div>${o.sub?`<div class="lfl"></div><div class="lfs">${o.sub}</div>`:''}</div>`}
 /* Tonight's card: the running order on the Home screen, broadcast style */
 function tonightCard(sh){const c=S.card&&S.card.p;if(!c||!c.length)return '';let mn=0,vn=0;const nM=c.filter(s=>s.k==='match').length;
- const req=c.filter(sl=>sl.k==='match'||(sl.k==='promo'&&!sl.opt));const done=req.filter(sl=>sl.d).length;
+ const req=c.filter(sl=>(sl.k==='match'||sl.k==='promo')&&!sl.opt);const done=req.filter(sl=>sl.d).length;
  const nm=id=>S.w[id]?esc(S.w[id].name):'?';
  const rows=c.map((sl,i)=>{let lab,who='',me=false;
-  if(sl.k==='match'){mn++;me=mn===nM;lab=me?'Main event':`Match ${mn}`;if(sl.d)who=esc(vsLine(sl.d))}
+  if(sl.k==='match'){if(sl.opt&&!sl.d)return '';mn++;const ml=mLab(c,i);me=!!ml.main;lab=ml.lab;if(sl.d)who=esc(vsLine(sl.d))}
   else if(sl.k==='promo'){if(sl.opt&&!sl.d)return '';lab=sl.d&&PT[sl.d.type]?'Promo · '+PT[sl.d.type].n:'Promo segment';if(sl.d)who=nm(sl.d.a)+(sl.d.b&&S.w[sl.d.b]?' &amp; '+nm(sl.d.b):'')}
   else if(sl.k==='xo'){if(!sl.d)return '';lab='Dream match';who=nm(sl.d.a)+' vs '+nm(sl.d.b)}
   else{if(!sl.d)return '';lab='Title challenge';who=nm(sl.d.c)}
@@ -3257,7 +3273,7 @@ function dgPrev(c){const t=dgP(DG.src).t,e=c.e;DG.pv={e};
  else e.classList.add('dg-here')}
 function dgUnprev(){const p=DG&&DG.pv;if(!p)return;const e=p.e;e.style.transform='';e.classList.remove('dg-mv','dg-new','dg-here');if(p.h!=null)e.innerHTML=p.h;
  DG.el.style.transform='';DG.el.classList.remove('dg-land','dg-new');if(DG.h0!=null&&DG.el.innerHTML!==DG.h0)DG.el.innerHTML=DG.h0;DG.pv=null}
-function segLbl(i){const c=S.card.p,sl=c[i];if(!sl)return '';if(sl.k==='promo')return sl.opt?'Bonus promo':'Promo';let n=0;for(let k=0;k<=i;k++)if(c[k].k==='match')n++;return n===c.filter(x=>x.k==='match').length?'Main event':'Match '+n}
+function segLbl(i){const c=S.card.p,sl=c[i];if(!sl)return '';if(sl.k==='promo')return sl.opt?'Bonus promo':'Promo';return mLab(c,i).lab}
 function dgWho(dp){const B=dgP(dp);if(B.t!=='w'&&B.t!=='pw')return null;const d=S.card.p[+B.a[0]].d;const id=B.t==='w'?d.sides[+B.a[1]][+B.a[2]]:d[B.a[1]];return S.w[id]}
 function dgLab(dp){if(!DG||!DG.lab)return;const A=dgP(DG.src);let t;
  if(!dp)t=A.t==='slot'?'Drop on a segment to trade places':A.t==='ed'||A.t==='pe'?'Drop on a spot to swap':A.t==='lr'?'Drop on a name or an empty slot':'Drop on another wrestler to swap';
@@ -3282,7 +3298,7 @@ function dgDrop(s,d){const A=dgP(s),B=dgP(d);
  if(A.t==='ed'){const m=ED.m;const [si,pi]=A.a.map(Number),[sj,pj]=B.a.map(Number);const x=m.sides[si][pi];m.sides[si][pi]=m.sides[sj][pj];m.sides[sj][pj]=x;if(si!==sj&&MT[m.type].per===1)m.winner=m.winner===si?sj:m.winner===sj?si:m.winner;return renderMatchEd(true)}
  if(A.t==='pe'){const x=PE.a;PE.a=PE.b||'';PE.b=x;const pt=PT[PE.type];if(pt.champ&&PE.a&&!isChamp(PE.a)){PE.b=PE.a;PE.a=x;return toast("Only a champion can lead a Champion's Address.")}return renderPromoEd(true)}
  if(mpLocked())return;const card=S.card.p;
- if(A.t==='slot'){const i=+A.a[0],j=+B.a[0];if(i===j||fixedK(card[i])||fixedK(card[j]))return;const x=card[i];card[i]=card[j];card[j]=x;save();render();return}
+ if(A.t==='slot'){const i=+A.a[0],j=+B.a[0];if(i===j||fixedK(card[i])||fixedK(card[j]))return;if(card[i].k==='match'&&card[j].k==='match'){const x=card[i].d;card[i].d=card[j].d;card[j].d=x}else{const x=card[i];card[i]=card[j];card[j]=x;optNorm(card)}save();render();return}
  if(A.t==='lr'&&B.t==='slot'){const j=+B.a[0];const sl=card[j];if(sl.d)return;return sl.k==='match'?openMatchWith(j,A.a[0]):openPromoWith(j,A.a[0])}
  const c=JSON.parse(JSON.stringify(card));const pd=cpOf(B);let ps=null,id;
  if(A.t==='lr'){id=A.a[0];const w=S.w[id];if(!w||w.inj)return;
@@ -3353,8 +3369,8 @@ function flowCard(sh){const segs=[];S.card.p.forEach(sl=>{if(!sl.d||fixedK(sl))r
 function bookView(){const sh=curShow();const c=S.card.p;const ready=c.every(sl=>sl.k==='chal'||sl.opt||sl.d);
  let mn=0;const nM=c.filter(s=>s.k==='match').length;
  const slots=c.map((sl,i)=>{
-  if(sl.k==='match'){mn++;const lbl=`Match ${mn}${mn===nM?' · Main event':''}`;const me=mn===nM?' me':'';
-   if(!sl.d)return `<button class="slot${me}" ${dgA(i)} onclick="openMatch(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">${lbl}</div><div class="add">+ Book a match</div></button>`;
+  if(sl.k==='match'){mn++;const ml=mLab(c,i);const lbl=ml.main?`Match ${ml.n} · Main event`:ml.lab;const me=ml.main?' me':'';
+   if(!sl.d)return `<button class="slot${me}${ml.opt?' opt':''}" ${dgA(i)} onclick="openMatch(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">${ml.opt?'Bonus match (optional)':lbl}</div><div class="add">+ Book a match${ml.opt?' — or leave it empty':''}</div></button>`;
    if(ocPending(sl.d)){const I=ocIssuer(sl.d);const h=sl.d.open&&sl.d.open.hope&&S.w[sl.d.open.hope];return `<button class="slot done${me}" ${dgA(i)} onclick="openMatch(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">${lbl} · 🎤 Open challenge</div><div><b>${vsLineD(sl.d,i)}</b></div><div class="muted">${sl.d.title&&S.titles[sl.d.title]?esc(S.titles[sl.d.title].n)+' title on the line · ':''}${stipKey(Object.assign({},sl.d,{type:'singles'}))!=='std'?esc(STIPS[sl.d.stip].n)+' · ':''}Someone answers live${h?` · crowd wants ${esc(h.name)}`:''}</div><div class="stars">?</div></button>`}
    const r=rateMatch(sl.d,{ppv:sh.ppv,allin:sh.ppv&&S.week===ALLIN_WEEK,preview:true});
    const pr=promiseOf(sl.d);
@@ -3404,6 +3420,7 @@ function renderME(){const it=ME.q[ME.k];const {m,g}=it;const r=g.r;
 function meChoose(ci){if(!ME||ME.out)return;pickFlash(p=>{if(!ME||ME.out)return;ME.pick=p;const it=ME.q[ME.k];const ch=evChoices(it.g.e,it.m,it.g.r);const s0=it.m.ev?it.m.ev.stars||0:0;ME.out=it.g.sit?sitRoll(ch[ci],it.g.r,it.m):evRoll(ch[ci],it.g.r,it.m);ME.out.dst=(it.m.ev?it.m.ev.stars||0:0)-s0;renderME()})}
 function meNext(){if(!ME)return;if(LQ)return liveNext();ME.out=null;ME.k++;if(ME.k>=ME.q.length)finishLive();else renderME()}
 function slotTags(m,ppv){const t=[];{const cc=ccTag(m);if(cc)t.push(cc)}let hb=0;for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j])hb=Math.max(hb,heatOf(a,b));
+ {const k=stipKey(m);if(k!=='std'){const f=stipFits(STIPS[k],m);if(f.spec.length)t.push(`<span class="tg spec">⭐ ${esc(STIPS[k].n)}: ${shortNames(f.spec)}'s specialty</span>`)}}
  if(hb>=1){const tr=heatTier(hb);t.push(`<span class="fdt t${tr+1}">Heat ${Math.round(hb)}${tr>=0?' · '+FTIER[tr][1].replace(/^[🔥 ]+/,''):''}</span>`)}
  const ws=m.sides.map(s=>s.map(id=>S.w[id]).filter(Boolean));const full=ws.filter(s=>s.length);if(full.length>=2){const al=full.map(sideAl);if(!al.includes('x'))t.push(new Set(al).size>1?'<span class="tg good">Face vs Heel</span>':`<span class="tg ${m.tour?'':'bad'}">${al[0]==='f'?'Face vs Face':'Heel vs Heel'}</span>`)}
  const ex=ws.flat().filter(w=>sta(w)-fatGain(w,m,ppv)<100-FAT_RISK);const td=ws.flat().filter(w=>sta(w)<100-FAT_OK);
@@ -3529,16 +3546,29 @@ function edDD(k){ED.dd=ED.dd===k?null:k;renderMatchEd(true)}
 function edSet(k,v){if(k==='stip')ED.m.stip=v;else ED.m.title=v;ED.dd=null;renderMatchEd(true)}
 function ddBtn(k,title,sub){return `<button type="button" class="dd ${ED.dd===k?'open':''}" onclick="edDD('${k}')"><span class="ddv"><b>${title}</b>${sub?`<small>${sub}</small>`:''}</span><i class="ddc"></i></button>`}
 function ddDelta(d){if(d==null||isNaN(d))return '';return nudge(d/STAR_PER)}
+/* v133: stipulation specialties — each wrestler's style (High-Flyer, Brawler…) has stipulations it shines in. A wrestler's
+ specialties are their best (up to SPEC_TOP) stipulations available for this match type and show, among those that suit
+ their style (+4 or more in the stip's style table). Ones that fight their style (−3 or worse) are flagged too. */
+const SPEC_MIN=4,SPEC_TOP=3,TOUGH_MAX=-3;
+function stipAvail(st,m,ppv){return (!st.ppv||ppv)&&(!st.mt||st.mt.includes(m.type))&&m.type!=='gauntlet'}
+function wSpecs(w,m,ppv){return Object.entries(STIPS).filter(([k,st])=>k!=='std'&&stipAvail(st,m,ppv)&&((st.b||{})[w.st]||0)>=SPEC_MIN).sort((a,b)=>(b[1].b[w.st]-a[1].b[w.st])||((a[1].c||0)-(b[1].c||0))).slice(0,SPEC_TOP).map(e=>e[0])}
+function stipFits(st,m,ppv){if(ppv===undefined)ppv=!!(typeof curShow==='function'&&curShow().ppv);const k=Object.keys(STIPS).find(x=>STIPS[x]===st);const ws=(m&&m.sides?m.sides.flat():[]).map(id=>S.w[id]).filter(Boolean);const b=(st&&st.b)||{};
+ return {spec:ws.filter(w=>wSpecs(w,m,ppv).includes(k)),tough:ws.filter(w=>(b[w.st]||0)<=TOUGH_MAX)}}
+function shortNames(ws){const n=ws.map(w=>esc(w.name.split(' ').slice(-1)[0]));return n.length>2?n.slice(0,2).join(', ')+` +${n.length-2}`:n.join(' & ')}
 function bestFor(s){const PL={fl:'High-Flyers',te:'Technicians',br:'Brawlers',pw:'Powerhouses',sh:'Showmen'};const l=Object.entries(s.b||{}).filter(x=>x[1]>=4).sort((a,b)=>b[1]-a[1]).map(x=>PL[x[0]]);return l.length?'Best for '+l.slice(0,2).join(' & '):''}
 function stipDD(m,sh,ok){const k0=m.stip||'std',cur=STIPS[k0]||STIPS.std;const ctx={ppv:sh.ppv,allin:sh.ppv&&S.week===ALLIN_WEEK,preview:true};
  const star=k=>ok?rateMatch(Object.assign({},m,{stip:k}),ctx).raw:null;const base=star('std');const heat=ok?rateMatch(m,ctx).heat:0;
- const head=ddBtn('stip',esc(cur.n),[cur.c?money(cur.c):'',bestFor(cur)].filter(Boolean).join(' · '));if(ED.dd!=='stip')return head;
+ const isOpen=st=>(!st.ppv||sh.ppv)&&(!st.mt||st.mt.includes(m.type));const fitCur=k0!=='std'?stipFits(cur,m):{spec:[],tough:[]};
+ const nSpec=Object.entries(STIPS).filter(([k,st])=>k!=='std'&&isOpen(st)&&stipFits(st,m).spec.length).length;
+ const hint=fitCur.spec.length?`⭐ Specialty for ${shortNames(fitCur.spec)}`:nSpec?`⭐ ${nSpec} specialty stipulation${nSpec>1?'s':''} for this match`:'';
+ const head=ddBtn('stip',esc(cur.n),[cur.c?money(cur.c):'',hint||bestFor(cur)].filter(Boolean).join(' · '));if(ED.dd!=='stip')return head;
  const row=([k,st])=>{const lock=!st.ppv||sh.ppv?(!st.mt||st.mt.includes(m.type)?'':'Needs '+st.mt.map(t=>MT[t].n).join(' or ')):'PPV only';
   const t=[];if(lock)t.push(`<span class="tg">🔒 ${esc(lock)}</span>`);else{if(ok&&k!=='std')t.push(ddDelta(star(k)-base));if(ok&&(st.hb||0)>=4){if(heat>=50)t.push('<span class="tg good">🔥 Blood feud payoff</span>');else if(heat<15)t.push('<span class="tg bad">🥶 Needs a real feud</span>')}if(st.dare)t.push('<span class="tg">🪂 Daredevils shine</span>');if(k!=='std')t.push('<span class="tg">🎲 Riskier</span>');if(st.c&&S.money.p-stipCost(S.card.p)<st.c)t.push('<span class="tg warnt">💸 More than you have</span>')}
+  const fit=k!=='std'?stipFits(st,m):{spec:[],tough:[]};if(!lock){if(fit.spec.length)t.unshift(`<span class="tg spec">⭐ Specialty · ${shortNames(fit.spec)}</span>`);if(fit.tough.length)t.push(`<span class="tg bad">⚠️ Tough for ${shortNames(fit.tough)}</span>`)}
   const bf=bestFor(st);
-  return `<button type="button" class="ddo ${k===k0?'on':''}" ${lock?'disabled':''} onclick="edSet('stip','${k}')"><div class="ddt"><b>${esc(st.n)}</b><span class="ddp">${st.c?money(st.c):'Free'}</span></div><div class="ddd">${esc(st.d)}${bf?` <i>${bf}.</i>`:''}</div>${t.length?`<div class="tags ddm">${t.join('')}</div>`:''}</button>`};
+  return `<button type="button" class="ddo ${k===k0?'on':''} ${!lock&&fit.spec.length?'spec':''}" ${lock?'disabled':''} onclick="edSet('stip','${k}')"><div class="ddt"><b>${esc(st.n)}</b><span class="ddp">${st.c?money(st.c):'Free'}</span></div><div class="ddd">${esc(st.d)}${bf?` <i>${bf}.</i>`:''}</div>${t.length?`<div class="tags ddm">${t.join('')}</div>`:''}</button>`};
  const open=e=>(!e[1].ppv||sh.ppv)&&(!e[1].mt||e[1].mt.includes(m.type));
- return head+`<div class="ddl">${ok?'':'<div class="ddh">Pick the wrestlers first to see how each stipulation would rate.</div>'}${STIP_G.map(([g,gn])=>{const l=Object.entries(STIPS).filter(e=>e[1].g===g).sort((a,b)=>open(b)-open(a));return `<div class="ddg">${gn}</div>${l.map(row).join('')}`}).join('')}</div>`}
+ return head+`<div class="ddl">${ok?'':'<div class="ddh">Pick the wrestlers first to see how each stipulation would rate.</div>'}${STIP_G.map(([g,gn])=>{const sp=e=>e[0]!=='std'&&open(e)&&stipFits(e[1],m).spec.length?1:0;const l=Object.entries(STIPS).filter(e=>e[1].g===g).sort((a,b)=>open(b)-open(a)||sp(b)-sp(a));return `<div class="ddg">${gn}</div>${l.map(row).join('')}`}).join('')}</div>`}
 function titleDD(m,et,sh,ok){const T=m.title&&S.titles[m.title];const hold=t=>t.holders.length?'Champion: '+t.holders.map(h=>S.w[h]?S.w[h].name:'?').join(' & '):'Vacant — the winner takes it';
  const head=ddBtn('title',T?esc(T.n)+' title':'Non-title',T?esc(hold(T)):(et.length?`${et.length} title${et.length>1?'s':''} available`:ok?'No titles fit this match':'Pick the wrestlers first'));if(ED.dd!=='title')return head;
  const ctx={ppv:sh.ppv,allin:sh.ppv&&S.week===ALLIN_WEEK,preview:true};const star=id=>ok?rateMatch(Object.assign({},m,{title:id}),ctx).raw:null;const base=star('');
@@ -3693,7 +3723,7 @@ function titlesView(){const tl=Object.values(S.titles);const own=t=>{const h=t.h
  return pageHead('Championships','The gold',`<b>${nY}</b><small>Yours of ${tl.length}</small>`,{sub:`You ${nY} · ${ON()?'Others':'Rival'} ${nR} · ${tl.length-nY-nR} vacant`})+`<p class="muted">Titles stay with whichever brand holds them. The only way to take gold from the rival is a PPV title challenge.</p>`+Object.values(S.titles).map((t,ti)=>{const hs=t.holders.map(h=>S.w[h]).filter(Boolean);const o=hs.length?hs[0].own:null;
  return `<div class="card belt ${ti===0?'top':''} ${o==='p'?'mine':o?'theirs':''}"><div class="row sb"><div class="h">${t.n}</div><span class="badge ${o==='p'?'you':o?'riv':'vac'}">${o==='p'?'YOU':o?(ON()?esc(nameOf(o)).toUpperCase():'RIVAL'):'VACANT'}</span></div><div class="champ">${hs.length?`<span class="frow">${hs.map(w=>face(w)).join('')}<span>${hs.map(w=>`<span onclick="showW('${w.id}')">${esc(w.name)}</span>`).join(' & ')}</span></span>`:'<span class="muted">Vacant — book a match for it</span>'}</div><div class="muted">${t.g==='M'?"Men's":"Women's"} ${t.kind==='singles'?'singles':t.kind==='tag'?'tag team':'trios'}${hs.length?` · ${t.since?'won W'+t.since:'reigning champion'}`:''} · last defense ${t.last?'W'+t.last:'—'}</div>${statBar('Prestige',t.prestige)}</div>`}).join('')}
 const HOWTO=`<p><b>Offers &amp; contracts:</b> free agents with 55+ popularity want an offer, not just a fee: a signing bonus, a weekly salary and promises — creative control, main event spots, a title shot, a place on every PPV. Each wrestler wants different things, so the biggest number doesn't always win. Offers are sealed: the rival (or, in a league, every other GM) can send one too, and the wrestler picks the best package. Re-signing is a negotiation: agree to their demands, or counter on money and refuse some — they take it, counter back or walk away depending on morale, how hot your show is and whether you've kept your word. Promises are contract terms you'll see on the Book screen. Break one and morale drops; break three and they may walk out. Creative control means they won't agree to lose: book them to lose and they fight the finish.</p><p><b>Open challenges:</b> book one wrestler and see who answers — someone from your roster or the free agents, usually at the challenger's level. The crowd builds up a favourite beforehand: deliver them (or someone bigger) for a huge pop, or fall flat with someone they didn't want. The answer is revealed live and you call the finish. A champion can put their title on the line. A free agent who impresses can be signed at a discount for one week.</p><p><b>Pitches:</b> every couple of weeks a wrestler brings you an idea — a turn, a new skill, a wild new character, a feud, a tag partner, or a problem they need fixed. <i>Give it a try</i> starts a short trial with a clear goal (hit it and it sticks); <i>Go for it</i> commits right away for a bigger payoff and more risk; <i>Let them down gently</i> costs a little morale. Answer within the week or they'll take it as a no. Trials and promises are tracked in your weekly briefing.</p><p><b>Past 5★:</b> a match can only show 5★, but a hot feud on the big stage can rate well past it. The extra becomes an instant-classic bonus — popularity, title prestige, more PPV buys (or merch on TV) and a few extra fans (capped per show, since the show rating already counts those stars). That's also why a gimmick match or a gutsy producer call still pays off on a match that was already headed for 5★.</p><p><b>Producer calls:</b> during a live show you're the producer in gorilla — call the big spots, call the finish, make audibles when things go off the layout, and handle disasters. Each choice shows its odds and how big the payoff could be; you find out exactly what your call did to the match after you make it.</p><p><b>Weekly briefing:</b> the first time you open Home each week you'll get a rundown of expiring contracts, unhappy talent, backstage heat, feuds about to go stale, what's coming up and free agents about to leave. Reopen it from Home any time.</p><p><b>Match ratings</b> blend in-ring skill (the best worker in the match helps carry the rest), popularity, chemistry (styles that mesh — high-flyers vs powerhouses, technicians vs technicians — plus face vs heel and history together), feud heat, stipulation fit, title prestige and stamina.</p><p><b>Booking by feel:</b> the match editor doesn't show star math any more. You get the crowd buzz (🥶 Crowd won't care up to 🔥🔥🔥 Could steal the show) and ▲/▼ tells on each stipulation, title and finish. Risky calls — a first-time pairing, a gimmick match, a screwy finish, a run-in or a green rookie — make a match a 🎲 <b>wild card</b> that can land big or fall flat. After the show, tap <b>Why that rating?</b> under any of your matches to see exactly what each part was worth, including the luck of the night.</p><p><b>Discovered chemistry:</b> two wrestlers who have never shared a ring show their chemistry "on paper" only (styles, face vs heel, traits) with a ❓. Their first match together finds out whether they really click — and that spark stays with them as history from then on.</p><p><b>Building stars:</b> popularity from a match is judged against what's expected at each wrestler's level, so a midcarder in a good-for-them match grows while a main eventer still needs a real performance. The fastest way to make someone is to put them next to a top star: tag them together, put them in a multi-person match with the star (winning it helps most), or have them beat the star once — the bigger the name you beat, and the better the match, the bigger the rub. Losing to a top star in a good match costs very little; losing every week to midcarders does.</p><p><b>The top of the card:</b> popularity gets much harder to gain past 80, and harder again past 90, so a 100 is rare. Stars at 85+ also need upkeep: in any week they don't main event, win on PPV or have a 3½★+ match or promo, they slip a little (half as much if they carried a lower name in a decent tag or multi-person match). Keep your top stars featured — and pay them back with a big win after they've spent a few weeks making someone else.</p><p><b>Multi-person matches:</b> in triple threats, 4-ways, tags and trios the top two names carry the crowd and the hottest rivalry in the ring sets the heat. Triple threats and 4-ways love high-flyers and showmen, tag matches lean on partners who click, and a good mix of styles (plus someone to boo) helps. They pay off later too: only one loser takes the fall, lower names gain popularity from working with the top star, and the top star does less of the work (less stamina).</p>
-<p><b>Shows</b>: ${cardMatches(false)} matches and 2 promos on weekly TV, plus an optional bonus promo; PPVs are ${cardMatches(true)} matches plus an optional title challenge. The last match is your main event and counts the most.</p>
+<p><b>Shows</b>: ${cardMatches(false)} matches and 2 promos on weekly TV, plus an optional <b>bonus match</b> and <b>bonus promo</b> — run them when you have something worth showing; they count toward the show rating like any segment and cost stamina like any match; PPVs are ${cardMatches(true)} matches plus an optional title challenge. The last match is your main event and counts the most.</p>
 <p><b>Stamina</b> (the green-to-red STA bar on each card): a match costs about 16 in singles, less in tag and multi-person matches, more with a rough stipulation or on PPV. Wrestlers who worked a match get 10 back each week; anyone who gets the week off — or only cuts a promo — gets 25 back. Below ${100-FAT_OK} stamina matches start to suffer, and below ${100-FAT_RISK} the injury risk climbs. Rotate your roster and rest your stars before PPVs. <b>Double duty:</b> a wrestler can work up to ${DD_MAX} matches on the same show — each match after their first costs ${DD_FAT}× the stamina, and they go into it carrying the first one's wear. If they get hurt in the first, the second is scrapped. AEW rotates a big roster, so sitting out is fine — time off TV doesn't cost morale.</p>
 <p><b>Turning heel or face:</b> book a <b>Heel / Face Turn</b> promo — the turn is guaranteed when it airs. Add a second wrestler and a face can turn on them (big heat) or a heel can make the save (chemistry). Or use <b>Turn off-screen</b> on a wrestler's profile for an instant switch that costs a little popularity. You can also turn someone with a <b>run-in</b>: a face who costs another face the match or beats them down after the bell turns heel, and a heel who runs off another heel to save the day turns face — tick the turn option in the run-in section. Turning the same wrestler again within 8 weeks gives fans whiplash.</p>
 <p><b>Intergender booking</b> is fully open: anyone can wrestle anyone, form teams, cut promos together, and challenge for any championship — a woman can win the World title and a man can win the Women's title. Title names keep their original division, but the belts go to whoever wins.</p>

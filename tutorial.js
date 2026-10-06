@@ -11,7 +11,7 @@
      tour get a "what's new" replay of just those stops.
    • Run `python3 tools/check-tutorial.py` — it plays every stop and tip in a headless browser and fails on any
      missing target or stale value. */
-const TUT_REV=1;
+const TUT_REV=2;
 const TUT_KEY='tksim_tut';
 const TUT_MISS=[];
 
@@ -72,8 +72,8 @@ const TUT_STEPS=[
  b:()=>`The network wants something specific by the next PPV. Deliver for cash and fans; miss it and you lose fans. It's always on Home and Book with a live ✅/⏳ check on your card.`},
 {id:'s.goal',track:'season',since:1,tab:'book',opt:true,sel:'main .card.wkg',sys:['weekly goals','chants'],t:'Small wins every week',
  b:()=>`A <b>weekly goal</b> pays a little cash and fans (no penalty for missing it), and the crowd <b>chants</b> for someone. Put them on the show for a bonus and a popularity bump.`},
-{id:'s.card',track:'season',since:1,tab:'book',sel:'main .slot',sys:['card','promos'],t:'The running order',
- b:()=>`Weekly TV is ${tv('cardMatches',()=>cardMatches(false),3)} matches and 2 promos, plus an optional <b>bonus promo</b>. PPVs are ${tv('cardMatches ppv',()=>cardMatches(true),5)} matches and a title challenge.<br><br>Promos build feud heat without anyone wrestling — a cheap way to make people care. Hold and drag to reorder.`},
+{id:'s.card',track:'season',since:2,tab:'book',sel:'main .slot',sys:['card','promos'],t:'The running order',
+ b:()=>`Weekly TV is ${tv('cardMatches',()=>cardMatches(false),3)} matches and 2 promos, plus an optional <b>bonus match</b> and <b>bonus promo</b> — book them when you have something worth showing, or leave them empty. PPVs are ${tv('cardMatches ppv',()=>cardMatches(true),5)} matches and a title challenge.<br><br>Promos build feud heat without anyone wrestling — a cheap way to make people care. Hold and drag to reorder.`},
 {id:'s.main',track:'season',since:1,tab:'book',sel:'main .slot.me',sys:['card','fans'],t:'The main event',
  b:()=>`The last match counts the most. Put your biggest names and hottest feud here, and make it the best thing on the show.`},
 {id:'s.suggest',track:'season',since:1,tab:'book',opt:true,sel:'main [onclick="suggestFill()"]',sys:['booking'],t:'Need a starting point?',
@@ -102,8 +102,8 @@ const TUT_STEPS=[
  b:()=>`The ⚙️ menu has <b>How it all works</b> — the full rulebook — and you can replay this tour from there any time.<br><br>New things will get a quick tip the first time they come up. Go book a great show.`},
 
 /* ---- one-time coach tips ---- */
-{id:'t.editor',track:'tip',since:1,sel:'#modal .proj',sys:['ratings','chemistry','risk'],t:'Crowd buzz',
- b:()=>`This is your read on the match: how hot the crowd is for it and whether it's a 🎲 wild card. Change the stipulation, title or finish and watch the ▲/▼ tells. Exact numbers stay hidden until after the show.`},
+{id:'t.editor',track:'tip',since:2,sel:'#modal .proj',sys:['ratings','chemistry','risk','stipulations'],t:'Crowd buzz',
+ b:()=>`This is your read on the match: how hot the crowd is for it and whether it's a 🎲 wild card. Change the stipulation, title or finish and watch the ▲/▼ tells — stipulations marked ⭐ are a <b>specialty</b> for someone in the match. Exact numbers stay hidden until after the show.`},
 {id:'t.results',track:'tip',since:1,opt:true,sel:'#modal .whyd',sys:['ratings'],t:'Why that rating?',
  b:()=>`Open this under any of your matches to see what each part was worth — chemistry, stamina, the finish, the luck of the night. It's the fastest way to learn what works.`},
 {id:'t.ppv',track:'tip',since:1,sel:'main .card.showcard',sys:['ppv','feuds','titles'],t:"It's PPV week",
