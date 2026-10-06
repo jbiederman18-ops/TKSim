@@ -10,3 +10,6 @@ The Rookie GM orientation lives in `tutorial.js`. When you change, add or remove
 3. If returning players should see the change, bump `TUT_REV` and set that stop's `since` to the new value — they get a short "What's new" replay of just those stops.
 4. Update the matching paragraph in `HOWTO` (index.html) and the README.
 5. Run `python3 tools/check-tutorial.py` (needs `pip install playwright`). It plays every stop and tip headlessly and must pass. GitHub runs it on every push too.
+
+## Balance sweeps
+`python3 tools/balance-sweep.py --compare <older-commit>` plays full seasons headlessly (bot books with Suggest the rest and decides like the offline rival) and prints show ratings, fan war results, money, popularity spread, morale, injuries and errors side by side. Run it after any change to ratings, fans, money, popularity, stamina or the card.
