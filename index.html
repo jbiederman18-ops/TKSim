@@ -851,7 +851,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v133';
+const APP_VERSION='v134';
 /* v113: a rolling AEW year — a PPV every 4 weeks from Revolution to Worlds End. All In is the midyear supershow;
    the season (awards, offseason, fan-war winner) ends after Worlds End, then the calendar rolls into a new year. */
 const SEASON=40,ALLIN_WEEK=24,OLD_SEASON=24;
@@ -2243,7 +2243,10 @@ function optNorm(c){const ms=c.map((x,j)=>x&&x.k==='match'?j:-1).filter(j=>j>=0)
  const prev=ms.slice(0,-1).reverse().find(j=>!c[j].opt);delete c[last].opt;if(prev!=null)c[prev].opt=true}
 /* v122: a TV card built under an older layout (e.g. the 4-match TV card before v119) is re-fitted to the current one.
    Keeps the main event as the main event, keeps tournament/promised matches first, then other booked matches, in their running order. */
-function cardFit(c,ppv){if(!Array.isArray(c)||ppv)return {c,drop:0};const tpl=emptyCard(false);const sig=a=>a.map(x=>x&&x.k+(x.opt?'?':'')).join(',');
+/* v134: the layout check compares what's on the card, not its order. It used to compare slot by slot, so a card the
+ GM had reordered by dragging (a promo swapped with a match) looked like an old layout and was rebuilt in the default
+ order — every time the app opened or a league update arrived. */
+function cardFit(c,ppv){if(!Array.isArray(c)||ppv)return {c,drop:0};const tpl=emptyCard(false);const sig=a=>a.map(x=>x&&x.k+(x.opt?'?':'')).sort().join(',');
  if(sig(c)===sig(tpl))return {c,drop:0};const nM=tpl.filter(x=>x.k==='match').length;
  const ms=c.filter(x=>x&&x.k==='match'),ps=c.filter(x=>x&&x.k==='promo'&&x.d);const main=ms.length?ms[ms.length-1]:{k:'match',d:null};
  const pri=x=>!x.d?0:(x.d.tour||(typeof promiseOf==='function'&&promiseOf(x.d)))?2:1;
