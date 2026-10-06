@@ -233,8 +233,21 @@ function partySet(on){closeModal();if(!ON()||!LMP)return;if(!mpAvail()||!navigat
 function partySetupCard(){return `<div class="card"><div class="h small">📺 Party night</div><p class="muted" style="margin-top:0">Same room, big screen. Any online league can have a party night: everyone books their show on their phone at the same time, and the results play out on the TV. Start it from your league's Office, then put the league on the TV.</p><button class="btn sec" onclick="tvForm()">Show a league on this screen</button></div>`}
 function tvForm(code){if(!mpAvail())return mpNeedSetup();openModal(`<div class="h mhd">📺 Show a league on this screen</div><p class="muted">This screen becomes the TV. It follows the league live: who's still booking, the draft, and each week's results, segment by segment. It doesn't take a seat. Your own games on this device are kept.</p>
  <label>League code</label><input id="tvCode" maxlength="6" autocapitalize="characters" value="${esc(code||(LMP&&ON()?LMP.code:''))}" placeholder="ABC123" style="text-transform:uppercase;letter-spacing:6px;font-size:24px;text-align:center">
- <button class="btn mt" onclick="tvGo()">Put it on the TV</button><button class="btn ghost" onclick="closeModal()">Cancel</button>`)}
-function tvGo(){const code=($('#tvCode').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(!/^[A-Z0-9]{6}$/.test(code))return toast('League codes look like ABC123.');closeModal();tvStart(code)}
+ ${fsCan()?'<p class="muted tiny">This screen goes full screen. Press <b>F</b> or tap ⛶ to switch.</p>':'<p class="muted tiny">This browser can\'t go full screen. For the best TV, open the game in a laptop or smart-TV browser hooked up to the TV, or screen-mirror this device.</p>'}<button class="btn mt" onclick="tvGo()">Put it on the TV</button><button class="btn ghost" onclick="closeModal()">Cancel</button>`)}
+function tvGo(){const code=($('#tvCode').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(!/^[A-Z0-9]{6}$/.test(code))return toast('League codes look like ABC123.');tvFull(true);closeModal();tvStart(code)}
+/* v127: real full screen on the TV — goes full screen when you put a league on it (and with the ⛶ button or the F key);
+   the controls and cursor hide until the mouse moves */
+function fsEl(){return document.fullscreenElement||document.webkitFullscreenElement||null}
+function fsCan(){const e=document.documentElement;return !!(e.requestFullscreen||e.webkitRequestFullscreen)&&!!(document.fullscreenEnabled||document.webkitFullscreenEnabled)}
+function tvFull(on){if(!fsCan())return;if(on===undefined)on=!fsEl();if(on===!!fsEl())return;
+ try{if(on){const e=document.documentElement;const p=(e.requestFullscreen||e.webkitRequestFullscreen).call(e,{navigationUI:'hide'});if(p&&p.catch)p.catch(()=>{})}
+  else{const p=(document.exitFullscreen||document.webkitExitFullscreen).call(document);if(p&&p.catch)p.catch(()=>{})}}catch(e){}}
+function fsSync(){document.body.classList.toggle('fs',!!fsEl());const b=document.getElementById('fsBtn');if(b)b.textContent=fsEl()?'Exit full screen':'⛶ Full screen';tvMove()}
+let TVMOVE_T=null;
+function tvMove(){if(!document.body.classList.contains('tv'))return;document.body.classList.add('tvmove');clearTimeout(TVMOVE_T);TVMOVE_T=setTimeout(()=>document.body.classList.remove('tvmove'),2500)}
+document.addEventListener('fullscreenchange',fsSync);document.addEventListener('webkitfullscreenchange',fsSync);
+['mousemove','pointerdown','touchstart'].forEach(ev=>document.addEventListener(ev,tvMove,{passive:true}));
+document.addEventListener('keydown',e=>{if(!TV||e.ctrlKey||e.metaKey||e.altKey||/input|textarea|select/i.test((e.target&&e.target.tagName)||''))return;if(e.key==='f'||e.key==='F'){e.preventDefault();tvFull()}})
 function tvStart(code){if(S&&!ON())saveLocal();if(typeof leaveLeagueView==='function')leaveLeagueView();
  TV={code,unsub:null,rev:0,seen:null,reveal:null,status:'connecting'};S=null;LS.set(TV_KEY,code);tab='home';render();tvConnect()}
 function tvConnect(){if(!TV)return;if(TV.unsub){TV.unsub();TV.unsub=null}
@@ -252,7 +265,7 @@ function tvIncoming(d){if(!TV||!d||!d.state)return;if((d.rev||0)<TV.rev&&S)retur
  if(TV.reveal&&TV.feed&&TV.feed.html&&TV.feed.week===S.week&&S.online&&S.online.live){if(TV.reveal.t)clearTimeout(TV.reveal.t);TV.reveal=null}
  tvRefresh()}
 function tvEnd(){if(!confirm('Take the league off this screen?'))return;tvStop()}
-function tvStop(){if(TV){if(TV.unsub)TV.unsub();if(TV.reveal&&TV.reveal.t)clearTimeout(TV.reveal.t)}TV=null;LS.del(TV_KEY);document.body.classList.remove('tv');
+function tvStop(){tvFull(false);if(TV){if(TV.unsub)TV.unsub();if(TV.reveal&&TV.reveal.t)clearTimeout(TV.reveal.t)}TV=null;LS.del(TV_KEY);document.body.classList.remove('tv');
  S=null;try{const a=JSON.parse(LS.get('tksim_active')||'null');const g=a&&LS.get('tksim_game_'+a.code);if(g){LMP={code:a.code,me:a.me,key:a.key};S=JSON.parse(g)}}catch(e){LMP=null}
  if(!S)S=load();if(S){dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);if(!ON())showMigrate()}closeModal();tab='home';ANIM=true;render();if(ON())mpConnect()}
 function tvReplay(){if(!TV||!S||!S.last)return;TV.reveal={key:S.last.season+'-'+S.last.week,pi:0};render()}
@@ -266,7 +279,7 @@ function tvBoot(){const q=new URLSearchParams(location.search).get('join');
 
 function tvRefresh(){if(!TV)return;const R=TV.reveal;if(R&&document.getElementById('rv')&&R.built===R.key+':'+R.pi)return;render()}
 function tvHeader(){const st=TV.status==='on'?'':TV.status==='missing'?'<span class="tv-warn">No league with that code</span>':'<span class="tv-warn">📡 Connecting…</span>';
- return `<header class="top tv-top">${brandHtml()}<div class="hud">${st}<span class="hudc">LEAGUE <b>${esc(TV.code)}</b></span>${S&&S.last?'<button class="mini" onclick="tvReplay()">Replay last week</button>':''}<button class="mini" onclick="tvEnd()">Exit TV</button></div></header>`}
+ return `<header class="top tv-top">${brandHtml()}<div class="hud">${st}<span class="hudc">LEAGUE <b>${esc(TV.code)}</b></span>${S&&S.last?'<button class="mini" onclick="tvReplay()">Replay last week</button>':''}${fsCan()?`<button class="mini" id="fsBtn" onclick="tvFull()">${fsEl()?'Exit full screen':'⛶ Full screen'}</button>`:''}<button class="mini" onclick="tvEnd()">Exit TV</button></div></header>`}
 function tvJoinUrl(){return location.href.split(/[?#]/)[0]+'?join='+TV.code}
 function tvShortUrl(){return location.href.split(/[?#]/)[0].replace(/^https?:\/\//,'').replace(/index\.html$/,'').replace(/\/$/,'')}
 function tvQR(){try{const q=qrcode(0,'M');q.addData(tvJoinUrl());q.make();return q.createSvgTag({cellSize:6,margin:2,scalable:true})}catch(e){return ''}}
@@ -285,11 +298,13 @@ function tvLobby(){const n=nSeats(),names=localSeats();
 function tvRookies(){const o=S.online;const made=Object.values(S.w).filter(w=>w.cw).length;const party=o.party;
  return `<div class="tv-title"><div class="kicker"><i></i>Before the draft · ${tvPartyTag()}</div><div class="hero-t tv-hero">Create your<br>wrestlers</div><p class="muted">${party?"Everyone's building original wrestlers on their phones. The draft starts when every GM is ready.":`GMs take turns creating wrestlers. Up now: <b class="gold">${esc(nameOf(o.turn))}</b>.`}${made?` <b class="gold">${made} created so far.</b>`:''}</p></div>
  <div class="tv-players">${localSeats().map(k=>`<div class="tv-pl on ${(o.rk||{})[k]?'ok':''}"><b>${esc(nameOf(k))}</b><span>${(o.rk||{})[k]?'✅ Ready for the draft':'✏️ Creating…'}</span></div>`).join('')}</div>`}
-function tvDraft(){const d=S.draft,oc=onClock();
- return `<div class="tv-grid"><div><div class="tv-title"><div class="kicker"><i></i>The Draft · Round ${d.round} of ${d.rounds}</div><div class="tv-sub">On the clock</div><div class="hero-t tv-hero tv-clock">${esc(nameOf(oc))}</div></div>
- <div class="tv-players">${localSeats().map(k=>{const l=ownList(k);return `<div class="tv-pl on ${k===oc?'ok':''}"><b>${esc(nameOf(k))}</b><span>${l.length} picked · ${cnt(l)}${S.online.auto&&S.online.auto[k]?' · auto':''}</span></div>`}).join('')}</div>
- ${d.last&&S.w[d.last]?`<div class="tv-last">${wcard(S.w[d.last],{on:''})}<div><div class="tv-sub">Just picked</div><b>${esc(S.w[d.last].name)}</b><div class="muted">${esc(nameOf(S.w[d.last].own))} · ${STYLE_N[S.w[d.last].st]} · ${S.w[d.last].al==='f'?'Face':'Heel'}</div></div></div>`:''}</div>
- <div class="card tv-log"><div class="h small">Latest picks</div>${d.log.slice(0,10).map((x,i)=>`<div class="tv-pick ${i?'':'new'}">${esc(x)}</div>`).join('')||'<div class="muted">First pick coming up…</div>'}</div></div>`}
+function tvDraft(){const d=S.draft,oc=onClock(),L=d.last&&S.w[d.last],ks=localSeats();
+ const col=k=>{const l=draftRoster(k),m=l.filter(w=>w.g==='M').length;
+  return `<div class="tv-col ${k===oc?'oc':''}"><h3>${esc(nameOf(k))}</h3><div class="cs">${l.length} picked · ${m}M / ${l.length-m}W${d.cap?` · ${money(capRoom(k))} cap room`:''}${S.online&&S.online.auto&&S.online.auto[k]?' · 🤖 auto':''}${k===oc?' · <b class="gold">on the clock</b>':''}</div>
+  <div class="tv-rows">${l.length?l.map(w=>`<div class="tv-r ${w.al==='f'?'fc':'hl'} ${w.id===d.last?'new':''}"><i></i><span class="k">${w.drr?'R'+w.drr:'★'}</span><span class="n">${esc(w.name)}</span><span class="o">${ovr(w)}</span></div>`).join(''):'<div class="muted">No picks yet</div>'}</div></div>`};
+ return `<div class="tv-dtop"><div class="tv-title"><div class="kicker"><i></i>The Draft · Round ${d.round} of ${d.rounds}</div><div class="tv-sub">On the clock</div><div class="hero-t tv-hero tv-clock">${esc(nameOf(oc))}</div></div>
+ ${L?`<div class="tv-last">${wcard(L,{on:''})}<div><div class="tv-sub">Just picked</div><b>${esc(L.name)}</b><div class="muted">${esc(nameOf(L.own))} · ${STYLE_N[L.st]} · ${L.al==='f'?'Face':'Heel'}</div></div></div>`:''}</div>
+ <div class="tv-board" style="--n:${ks.length}">${ks.map(col).join('')}</div>`}
 function tvStandings(){const l=localSeats().slice().sort((a,b)=>S.fans[b]-S.fans[a]);
  return `<div class="card"><div class="h small">Standings</div>${l.map((k,i)=>`<div class="tv-row"><span>${['🥇','🥈','🥉','4.'][i]} <b>${esc(nameOf(k))}</b> <span class="muted tiny">${esc(showNames()[k]||'')}</span></span><span><b class="gold">${fmtFans(S.fans[k])}</b> <span class="muted">fans · ${S.hourWins[k]||0} W</span></span></div>`).join('')}</div>`}
 function tvWeek(){const sh=curShow(),o=S.online;const v=venueOf();const party=o.party;

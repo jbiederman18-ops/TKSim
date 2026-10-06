@@ -773,6 +773,43 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 .callq{display:flex;flex-direction:column;gap:2px;margin:2px 0 10px;padding:2px 0 2px 12px;border-left:3px solid var(--gold)}
 .callq b{font:700 12px 'BC','Barlow Condensed',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--gold2)}
 .callq span{font-size:15px;font-weight:600;color:var(--text)}
+
+/* v127: draft board (phone + TV) and real full screen on the TV */
+.dvtab{margin:0 0 12px}
+.dteam{padding-bottom:10px}
+.dteam.oc{box-shadow:inset 0 0 0 1px var(--gold3)}
+.dtl{display:flex;flex-direction:column;gap:3px;margin-top:10px}
+.dtr{display:flex;align-items:center;gap:10px;width:100%;min-height:38px;padding:0 10px;background:linear-gradient(180deg,var(--st1),var(--st2));border:0;border-left:3px solid var(--face);color:var(--text);text-align:left;cursor:pointer;font-family:'Barlow',sans-serif}
+.dtr.hl{border-left-color:var(--heel)}
+.dtr.new{box-shadow:inset 0 0 0 1px var(--gold);animation:rise .5s both}
+.dtr.new .dtn{color:var(--gold2)}
+.dtk{flex:none;width:30px;font:900 italic 15px 'BC','Barlow Condensed',sans-serif;color:var(--gold)}
+.dtn{flex:1;min-width:0;font:800 italic 17px 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dts{flex:none;font-size:12px;color:var(--mut)}
+.dto{flex:none;width:26px;text-align:right;font:900 italic 17px 'BC','Barlow Condensed',sans-serif}
+.tv-dtop{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:clamp(16px,2.4vw,44px);align-items:end}
+.tv-dtop .tv-last{margin-top:0}
+.tv-dtop .tv-last .wc{width:clamp(110px,8.5vw,190px)}
+.tv-dtop .tv-hero{margin-bottom:0!important}
+.tv-board{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:clamp(10px,1.2vw,22px);margin-top:clamp(14px,1.6vw,30px)}
+.tv-col{border:1px solid var(--line);background:var(--grunge),linear-gradient(180deg,var(--st1),var(--st2));clip-path:var(--cut);padding:clamp(10px,1vw,20px);min-width:0}
+.tv-col.oc{border-color:var(--gold3);box-shadow:inset 0 0 0 1px rgba(207,171,85,.35),0 0 24px rgba(207,171,85,.12)}
+.tv-col h3{font:800 italic clamp(20px,1.9vw,40px)/1 'BC',sans-serif;text-transform:uppercase;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tv-col .cs{color:var(--mut);font-size:clamp(12px,.85vw,18px);margin:6px 0 8px}
+.tv-rows{max-height:calc(100vh - clamp(330px,27vw,600px));overflow:hidden;-webkit-mask-image:linear-gradient(#000 82%,transparent);mask-image:linear-gradient(#000 82%,transparent)}
+.tv-r{display:flex;gap:.6em;align-items:center;padding:clamp(3px,.32vw,8px) 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:clamp(13px,1vw,22px)}
+.tv-r i{flex:none;width:.5em;height:.5em;border-radius:50%;background:var(--face)}
+.tv-r.hl i{background:var(--heel)}
+.tv-r .k{flex:none;width:2.4em;color:var(--gold);font:800 italic 1em 'BC',sans-serif}
+.tv-r .n{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
+.tv-r .o{flex:none;color:var(--mut);font-variant-numeric:tabular-nums}
+.tv-r.new{color:var(--gold2);animation:rise .5s both}
+body.tv main.tv-main{max-width:1800px}
+body.tv.fs main.tv-main{max-width:none}
+body.tv.fs .tv-top .hud button{transition:opacity .3s}
+body.tv.fs:not(.tvmove) .tv-top .hud button{opacity:0;pointer-events:none}
+body.tv.fs:not(.tvmove){cursor:none}
+@media(max-width:900px){.tv-dtop{grid-template-columns:1fr}.tv-board{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -793,7 +830,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v126';
+const APP_VERSION='v127';
 /* v113: a rolling AEW year — a PPV every 4 weeks from Revolution to Worlds End. All In is the midyear supershow;
    the season (awards, offseason, fan-war winner) ends after Worlds End, then the calendar rolls into a new year. */
 const SEASON=40,ALLIN_WEEK=24,OLD_SEASON=24;
@@ -2111,7 +2148,7 @@ function draftChoice(brand){
  const cand=needF?pool.filter(w=>w.g==='F'):pool;const list=cand.length?cand:pool;
  let best=null,bv=-1;list.forEach(w=>{const v=w.pop*.5+w.ring*.35+w.mic*.15+(w.pot-w.ring)*.3+(isChamp(w.id)?8:0)+(mine.some(o=>inTeam(o.id,w.id))?6:0)+R(0,aiq(brand).noise)-Math.max(0,mkt(w)-allow)*.9;if(v>bv){bv=v;best=w}});return best}
 function draftPick(id,brand){const d=S.draft,w=S.w[id];if(!w||w.own)return;w.sal=mkt(w);w.own=brand;w.con=RI(14,40);w.fee=0;
- d.log.unshift(`R${d.round} · ${nameOf(brand)}: ${w.name}`);d.last=id;d.pick++;if(d.pick>=(d.order||[1,1]).length){d.pick=0;d.round++}
+ d.log.unshift(`R${d.round} · ${nameOf(brand)}: ${w.name}`);d.last=id;d.pk=(d.pk||0)+1;w.dr=d.pk;w.drr=d.round;d.pick++;if(d.pick>=(d.order||[1,1]).length){d.pick=0;d.round++}
  if(d.round>d.rounds)finishDraft();save()}
 function finishDraft(){S.phase='season';bothSides(()=>scoutTick(true));
  if(S.draft&&S.draft.cap)brands().forEach(b=>{const left=S.draft.cap-payroll(b);if(left>0){const bonus=Math.round(left*4);S.money[b]+=bonus;news(`💼 ${nameOf(b)} came in ${money(left)}/wk under the cap — ${money(bonus)} goes into the bank.`)}});
@@ -2859,7 +2896,7 @@ function poster(sh,inner,o){o=o||{};const v=venueOf();const cls=sh.ppv?'ppv':sh.
  return `<div class="card showcard ${cls}"><div class="wm">${esc(sh.ppv?sh.name:v[1].split(',')[0])}</div><div class="ptop"><div class="kicker"><i></i>${kick}</div><span class="livebug"><b>● Live</b><span>${day}</span></span></div><div class="showname" style="--n:${lw(esc(sh.name))}">${esc(sh.name)}</div>${lf}${inner||''}</div>`}
 function tile(on,icon,t,sub,em){return `<button class="tile" onclick="${on}">${icon}<b>${t}</b><span>${sub}</span><em>${em}</em></button>`}
 let ANIM=true;
-let tab='home',rf='mine',rs='ovr',df='all',ds='ovr',ED=null,PE=null,PS=null,CE=null,aiT=null;
+let tab='home',rf='mine',rs='ovr',df='all',ds='ovr',dv='pick',ED=null,PE=null,PS=null,CE=null,aiT=null;
 const $=s=>document.querySelector(s);
 function openPicker(o){PK=Object.assign({q:'',g:'all',al:'all',sort:'ovr'},o);renderPicker()}
 function pkList(pool){let l=pool||PK.pool();if(PK.g!=='all')l=l.filter(w=>w.g===PK.g);if(PK.al&&PK.al!=='all')l=l.filter(w=>w.al===PK.al);if(PK.sort==='feud'&&PK.feud){const fh=w=>(PK.feud(w)||{h:0}).h;return l.sort((a,b)=>fh(b)-fh(a)||ovr(b)-ovr(a))}if(PK.q){const q=PK.q.toLowerCase();l=l.filter(w=>w.name.toLowerCase().includes(q))}return PK.sort==='chem'&&PK.chem?l.sort((a,b)=>PK.chem(b)-PK.chem(a)):PK.sort==='fat'?l.sort((a,b)=>a.fat-b.fat||ovr(b)-ovr(a)):PK.sort==='nophoto'?l.sort((a,b)=>hasPhoto(a)-hasPhoto(b)||b.pop-a.pop):l.sort(sorter(PK.sort))}
@@ -2988,6 +3025,13 @@ function rookieView(){const rs=createdFA();
  ${rs.length?`<div class="muted" style="margin-bottom:8px">${rs.length} created free agent${rs.length>1?'s':''} · tap to view or edit</div><div class="cgrid" style="margin-bottom:12px">${rs.map(w=>wcard(w)).join('')}</div>`:''}
  <button class="btn ${rs.length?'':'sec'}" ${myTurn()?'':'disabled'} onclick="rookiesDone()">${rs.length?'Continue to the draft':'Skip to the draft'}</button>`}
 function cnt(l){return `${l.filter(w=>w.g==='M').length}M / ${l.filter(w=>w.g==='F').length}W`}
+/* v127: the draft board — every GM's picks so far, newest first */
+function draftRoster(b){return ownList(b).slice().sort((x,y)=>(y.dr||0)-(x.dr||0)||ovr(y)-ovr(x))}
+function draftTeamsHtml(){const d=S.draft,oc=onClock(),bs=brands().slice().sort((a,b)=>(a==='p'?-1:b==='p'?1:0));
+ return bs.map(b=>{const l=draftRoster(b),m=l.filter(w=>w.g==='M').length;
+  return `<div class="card dteam ${b===oc?'oc':''}"><div class="row sb"><div class="h small" style="margin:0">${b==='p'?'You':esc(nameOf(b))}</div>${b===oc?`<span class="livebug"><b>● On the clock</b></span>`:''}</div>
+  <div class="muted tiny">${l.length} picked · ${m} men / ${l.length-m} women · payroll ${money(payroll(b))}/wk${d.cap?` · ${money(capRoom(b))} cap room`:''}</div>
+  <div class="dtl">${l.length?l.map(w=>`<button class="dtr ${w.al==='f'?'fc':'hl'} ${w.id===d.last?'new':''}" onclick="showW('${w.id}')"><span class="dtk">${w.drr?'R'+w.drr:'★'}</span><span class="dtn">${esc(w.name)}</span><span class="dts">${STYLE_N[w.st]||''}</span><span class="dto">${ovr(w)}</span></button>`).join(''):'<div class="muted">No picks yet.</div>'}</div></div>`}).join('')}
 function draftView(){const d=S.draft;const oc=onClock();
  const all=Object.values(S.w).filter(w=>!w.own&&!w.cw&&!w.rookie);
  let pool=all.slice();if(df!=='all'&&df!=='cw')pool=pool.filter(w=>w.g===df);pool.sort(sorter(ds));
@@ -2999,13 +3043,13 @@ function draftView(){const d=S.draft;const oc=onClock();
  <div class="row mt"><button class="btn" style="flex:2" ${oc==='p'&&draftOk(best,'p')?'':'disabled'} onclick="pDraft('${best.id}')">Make the pick</button><button class="btn sec" style="flex:1" onclick="showW('${best.id}')">Details</button></div></div>`:'';
  return `<div class="card dhead"><div class="row sb"><span class="dk">The Draft · ${d.rounds} rounds</span>${oc==='p'?'<span class="livebug"><b>● On the clock</b></span>':`<span class="livebug wait"><b>${esc(nameOf(oc))}</b><span>picking…</span></span>`}</div><div class="dround">Round ${d.round}</div><div class="rticks">${ticks}</div><div class="muted">${brands().map(b=>`${b==='p'?'You':esc(nameOf(b))}: ${cnt(ownList(b))}`).join(' · ')}</div>${d.cap?(()=>{const room=capRoom('p'),pl=picksLeft('p');return `<div class="capbox mt"><div class="row sb"><span>💼 Salary cap <b>${money(d.cap)}</b>/wk</span><span class="${room<pl*minAsk()?'bad':'gold'}"><b>${money(room)}</b> left</span></div><div class="bar"><i style="width:${clamp(payroll('p')/d.cap*100,0,100)}%"></i></div><div class="muted tiny">${pl} pick${pl===1?'':'s'} left · about ${money(pl?room/pl:0)} per pick. Anything left under the cap goes into your bank (×4).</div></div>`})():''}
  <div class="row mt"><button class="btn sec" ${oc!=='p'?'disabled':''} onclick="autoPick()">Auto-pick</button><button class="btn sec" onclick="simDraft()">${ON()?(S.online.auto&&S.online.auto.p?'🤖 Stop auto-drafting':'Auto-draft me'):'Sim rest'}</button></div><button class="btn sec" onclick="openStudio()">📷 Photo Studio</button></div>
- ${tape}
+ ${chips('dv',[['pick','Make a pick'],['teams','Draft board']],dv).replace('class="chips"','class="chips dvtab"')}${dv==='teams'?draftTeamsHtml()+(d.log.length?`<div class="pickin"><span class="pt">Pick is in</span><span class="pl">${esc(d.log[0])}</span></div>`:''):`${tape}
  ${board.length?`<div class="h small">The big board</div><div class="bboard">${board.map(x=>`<button class="bbr ${x.w.al==='f'?'fc':'hl'}" onclick="showW('${x.w.id}')"><span class="bbk">${x.r}</span><span class="bbn">${esc(x.w.name)}</span><span class="bbs">${x.w.al==='f'?'Face':'Heel'}</span><span class="bbo">${ovr(x.w)}</span><span class="bbm ${capOk(x.w,'p')?'':'bad'}">${money(mkt(x.w))}</span></button>`).join('')}</div>`:''}
  <div class="h small">Everyone available</div>
  ${chips('df',[['all','All'],['M','Men'],['F','Women']],df)}
  <div class="mt">${chips('ds',[['ovr','Overall'],['pop','Popularity'],['ring','In-ring'],['mic','Mic'],['pot','Potential'],['sal','Salary']],ds)}</div>
  <p class="muted">Tap a card to see details${oc==='p'?' and draft':''}.</p><div class="cgrid">${pool.map(w=>wcard(w,{info:`${ds==='sal'?'':gridInfo(w,ds)+' · '}<span class="${draftOk(w,'p')?'':'bad'}">${draftOk(w,'p')?'':'🚫 '}${money(mkt(w))}</span>`})).join('')}</div>
- ${d.log.length?`<div class="pickin"><span class="pt">Pick is in</span><span class="pl">${esc(d.log[0])}</span></div>`:''}`}
+ ${d.log.length?`<div class="pickin"><span class="pt">Pick is in</span><span class="pl">${esc(d.log[0])}</span></div>`:''}`}`}
 function pDraft(id){if(mpLocked())return;if(onClock()!=='p')return;const w=S.w[id];if(!w||w.cw||w.rookie)return;if(w&&!draftOk(w,'p'))return toast(`${w.name} doesn't fit under your cap — you need to save room for your remaining picks.`);draftPick(id,'p');closeModal();if(ON())mpDraftStep();render()}
 function autoPick(){if(mpLocked())return;if(onClock()!=='p')return;const c=draftChoice('p');if(c)pDraft(c.id)}
 function simDraft(){if(ON()){const o=S.online;o.auto=o.auto||{};
@@ -3561,7 +3605,8 @@ const HOWTO=`<p><b>Offers &amp; contracts:</b> free agents with 55+ popularity w
 <p><b>Promos</b> play out as short scenes. Each choice tests mic skill, in-ring ability, popularity or luck. Promos between two wrestlers build feud heat. A <b>Contract Signing</b> books that match on your next PPV card (with a stipulation if you add one); a callout where you <b>lay down a challenge</b> promises the match for next week or the next PPV — your pick. While a match is promised, booking either wrestler against the other's stablemates or tag partners (🔗 proxy war) and trading promos where they take turns leading (↔️ back-and-forth) builds the feud with bonus heat. Running the promised singles match early gives it away and halves the payoff. Deliver and it pays off; skip it and you lose fans and morale. Trading promos week after week on the road to a PPV is how feuds are built: a steady weekly build earns up to +30% heat, and alternating who leads adds +15%. The only thing fans tire of is the exact same segment two weeks running (half heat). A pair can only share one promo per show. Match events work the same way — faces fly and rally the crowd, heels rake eyes and put their feet on the ropes, and some events only happen in face vs heel, face vs face or heel vs heel matches. Each promo deals fresh options: faces get crowd-pleasing moves and heels get dirty tricks (😇/😈 — playing to character gives slightly better odds), and the scene changes depending on whether it's face vs heel, heel vs heel or face vs face.</p>
 <p><b>Development:</b> wrestlers improve toward their potential by working matches (faster against better opponents) and by Performance Center training. Overworked talent gets hurt.</p>
 <p><b>League weeks:</b> everyone books the same week at the same time, on their own phone, whenever suits them. Make your calls, lock in, and the week airs the moment the last GM locks in — cards stay secret until then. While anyone is still booking, even smaller free agents take sealed offers instead of going to whoever taps first: if two GMs want the same wrestler, they usually pick the hotter show. (Prefer the old way? Office → League weeks → Take turns.)</p>
-<p><b>Party night:</b> any online league can play in the same room. Start it from the league's Office and everyone books their own show at the same time instead of taking turns. Once every card is locked in, GMs go live one at a time: you make your promo and match calls on your phone while the TV shows every choice and outcome to the room. The week airs when the last GM wraps up. To put it on a TV, open the game there, tap <b>Show a league on this screen</b> and enter the league code — the TV shows who's still booking and plays the results segment by segment. End party night any time and the league goes back to taking turns with the same save.</p>
+<p><b>Draft board:</b> during the draft, tap <b>Draft board</b> to see every GM's roster as it fills up — round by round, newest pick on top, with payroll and cap room.</p>
+<p><b>Party night:</b> any online league can play in the same room. Start it from the league's Office and everyone locks in their card, then GMs go live one at a time: you make your promo and match calls on your phone while the TV shows every choice and outcome to the room. The week airs when the last GM wraps up. To put it on a TV, open the game there, tap <b>Show a league on this screen</b> and enter the league code — the TV shows who's still booking and plays the results segment by segment. End party night any time and the league goes back to taking turns with the same save. The TV goes full screen (press <b>F</b> or tap ⛶ to switch) and shows the draft as a live board of every GM's picks.</p>
 <p><b>Cloud save &amp; backups:</b> turn on cloud save in the ⚙️ Game menu to back up automatically and continue on any device with your sync code. Everything still saves on the device first, so offline play just works and syncs later. The game also keeps automatic backups of your last few weeks (Office → Backups).</p>
 <p><b>Show structure</b> counts toward the show rating, the way AEW's quarter-hour numbers reward it: open hot with a strong segment, keep the middle moving (back-to-back promos and dead spots cost you), build through the second half, and make the main event the best thing on the show. Every show needs something for the women's division if you have one. The Show flow card on the booking screen previews it — hold and drag segments to change the running order.</p>
 <p><b>Debuts:</b> anyone you sign during the season arrives with debut buzz. Their first appearance on your show — match or promo — pops the crowd: the bigger the star, the bigger the bump in stars and fans (a PPV debut is bigger still). Wait more than a few weeks and the buzz wears off.</p>
