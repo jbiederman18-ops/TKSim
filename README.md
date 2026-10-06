@@ -30,6 +30,7 @@ Host a league for 2–4 GMs and friends join with a 6-letter code. Everyone runs
 - **No star math while booking.** The match editor shows crowd buzz (🥶 → 🔥🔥🔥) and ▲/▼ tells on stipulations, titles and finishes instead of exact star bonuses. Risky calls (first-time pairings, gimmick matches, screwy finishes, run-ins, rookies) make a match a 🎲 wild card.
 - **Reveal after the show.** Tap **Why that rating?** under any of your matches in the results to see what each part was worth, including the luck of the night.
 - **Discovered chemistry.** Wrestlers who've never shared a ring only show chemistry "on paper" with a ❓; their first match rolls a spark that sticks as history.
+- **The top is hard to reach and hard to hold.** Popularity gains slow sharply past 80 and again past 90, and stars at 85+ slip a little in weeks they aren't featured (main event, PPV win, or a 3½★+ match or promo).
 - **Multi-person matches** are carried by their top two names and their hottest rivalry, reward a mix of styles (triple threats and 4-ways love flyers and showmen; tags lean on partners who click), and pay off later: only one loser takes the fall, lower names gain popularity from the top star, and the top star uses less stamina.
 
 ## Party night (same room, big screen)
