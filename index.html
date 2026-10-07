@@ -857,7 +857,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v138';
+const APP_VERSION='v139';
 /* v113: a rolling AEW year — a PPV every 4 weeks from Revolution to Worlds End. All In is the midyear supershow;
    the season (awards, offseason, fan-war winner) ends after Worlds End, then the calendar rolls into a new year. */
 const SEASON=40,ALLIN_WEEK=24,OLD_SEASON=24;
@@ -2384,7 +2384,7 @@ function rateMatch(m,ctx){ctx=ctx||{};
  const multi=m.type==='triple'||m.type==='four'||m.type==='gauntlet';const typeB=chaosB(all,m);const role=roleMix(all,m);
  const traitB=mean(w=>(ctx.ppv&&hasT(w,'bigm')?3:0)+((multi||st.dare)&&hasT(w,'dare')?4:0));
  const fatT=-(()=>{const px=ctx.preview?preFat(m,ctx.ppv):null;return mean(w=>Math.max(0,w.fat+(px&&px[w.id]||0)-FAT_OK))})()*.08;
- const heatT=heat*(ctx.ppv?.25:.15);const occ=(ctx.ppv?4:0)+(ctx.allin?4:0)+(ctx.special?1:0)+(m.tour?1.5:0)+(m.type==='gauntlet'?-2:0)+(m.xo?3:0);
+ const heatT=heat*(ctx.ppv?.25:.15);const occ=(ctx.ppv?4:0)+(ctx.allin?4:0)+(ctx.special?1:0)+(m.tour?1.5:0)+(m.xo?3:0);
  const base=ring*.5+pop*.2;
  /* v80: hot streaks get the crowd invested, the finish shapes how the match lands, and specials/tournaments raise the stakes */
  const momB=mean(w=>w.mom||0)*.15;const finB=finScore(m,heat,ctx);
@@ -2468,7 +2468,8 @@ function applyMatch(m,res,ctx,notes){
  const losers=m.nc?[]:all.filter(id=>!win.includes(id));let losePop=losers.length?Math.max(...losers.map(id=>S.w[id].pop)):0;
  const mine=b=>b==='p'||ON()&&b;
  /* v128: in a match with 3+ people only one loser takes the fall — everyone else on the losing end stays protected */
- const bigM=all.length>=3&&m.type!=='gauntlet'&&!m.nc;const pinned=bigM&&losers.length?losers.slice().sort((a,b)=>S.w[a].pop-S.w[b].pop)[0]:null;const protM=new Set(bigM?losers.filter(id=>id!==pinned):[]);
+ /* v139: the Casino Gauntlet is first-fall-loses too — only the one who gets pinned or submitted takes the loss */
+ const bigM=all.length>=3&&!m.nc;const pinned=bigM&&losers.length?losers.slice().sort((a,b)=>S.w[a].pop-S.w[b].pop)[0]:null;const protM=new Set(bigM?losers.filter(id=>id!==pinned):[]);
  const topPop=Math.max(...all.map(id=>S.w[id].pop));
  /* v129: winning a multi-person match isn't the same as pinning the top star — the rub mostly comes from who you actually beat */
  if(pinned){const pp=S.w[pinned].pop;losePop=pp+(losePop-pp)*.3}
@@ -2480,7 +2481,7 @@ function applyMatch(m,res,ctx,notes){
   const gap=w.pot-w.ring;if(gap>0)w.ring=Math.min(w.pot,w.ring+gap*.035*(.5+res.stars/4)*(gap>20?1.4:1)+(maxRing>w.ring+5?.3:.1));
   /* the rub: beating someone bigger than you makes you. A win over someone far below you does little. */
   /* v129: the bigger the name you beat, the bigger the rub (beating the top star is a night that makes you) — and it lands harder in a match people cared about */
-  const sq=clamp(res.stars/3.5,.25,1.1);let rub=0;if(won&&!m.nc&&m.type!=='gauntlet'){const gp=losePop-w.pop;rub=(gp<=0?0:gp<=20?gp/10:Math.min(6,2+(gp-20)/8))*({clean:1,upset:1.4,cheat:.6,dq:.4,co:.4}[fin])*sq}
+  const sq=clamp(res.stars/3.5,.25,1.1);let rub=0;if(won&&!m.nc){const gp=losePop-w.pop;rub=(gp<=0?0:gp<=20?gp/10:Math.min(6,2+(gp-20)/8))*({clean:1,upset:1.4,cheat:.6,dq:.4,co:.4}[fin])*sq}
   /* v129: a match is judged against what's expected at your level — a midcarder in a good-for-them match grows, a star in a dud doesn't.
    Main eventers are still measured against 3★. Losers keep half the credit for a strong showing. */
   const exp=clamp((w.pop-30)/20,.5,3);let q=(res.stars-exp)*.8;if(q>0){q=Math.min(q,1.2);if(!won&&!m.nc)q*=.5}
@@ -3544,7 +3545,7 @@ function renderMatchEd(keep){if(ED.m.type==='open')return renderOpenEd(keep);con
  const TD=m.tour&&TOURS[m.tour.k];
  openModal(`<div class="h mhd">${TD?`${TD.i} ${esc(TD.n)} · ${esc(m.tour.lab)}`:'Book a match'}</div>${ED.auto&&m.sides.flat().includes(ED.auto)?`<div class="note tiny">${esc(S.w[ED.auto].name)} was added as the rival. Tap their card to change it.</div>`:''}
  ${TD?`<div class="note tiny">The bracket is set — you decide who advances${m.tour.k==='c2'?'. Continental Crown rules: no run-ins':''}.</div>`:`<div class="chips">${Object.entries(MT).map(([k,t])=>`<button class="chip ${k===m.type?'on':''}" onclick="edType('${k}')">${t.n}</button>`).join('')}</div>`}
- ${m.type==='gauntlet'?'<div class="note tiny">🎰 Six enter one at a time. Fans love the spectacle more than the wrestling (it rates lower), but it builds a little heat between everyone and the winner earns a title shot at the next PPV against your top champion in their division.</div>':''}
+ ${m.type==='gauntlet'?'<div class="note tiny">🎰 Six enter one at a time, and the first to be pinned or submitted loses — everyone else stays protected. Flyers and showmen shine in the chaos. With six people involved, heat builds slowly, but the winner earns a title shot at the next PPV against your top champion in their division.</div>':''}
  ${sides}${dup?'<div class="err">Someone is booked twice.</div>':''}${matchupHtml(m,sh.ppv)}
  ${m.type==='gauntlet'?'':`<label>Stipulation</label>${stipDD(m,sh,complete&&!dup)}`}
  <label>Championship</label>${titleDD(m,et,sh,complete&&!dup)}
@@ -3795,7 +3796,7 @@ const HOWTO=`<p><b>Offers &amp; contracts:</b> free agents with 55+ popularity w
 <p><b>Card position:</b> main-eventing boosts morale (and popularity after a great match). Stars who want the spotlight don't sulk — they pitch you: a main event slot or a shot at a belt. The unhappier they are, the more often they knock on your door.</p>
 <p><b>The calendar:</b> each season is a full AEW year of ${SEASON} weeks with a PPV every 4 weeks — Revolution, Dynasty, Double or Nothing, Forbidden Door, Redemption, <b>All In</b> (the midyear supershow, week ${ALLIN_WEEK}), All Out, WrestleDream, Full Gear and Worlds End, which closes the year. Then the awards and offseason, and the calendar rolls on into a new year. Plus 📺 <b>TV specials</b> (${Object.values(SPECIALS).join(', ')}) with hotter crowds, 50% bigger fan swings and better gates. <b>Forbidden Door</b> is a crossover PPV: alongside your card you can sign up to two dream matches between one of your stars and one of the rival's. Neither GM controls both sides, so the winner is decided in the ring, and the winner's brand earns extra fans (4K; a 4★+ dream match pays the losing brand 2K too).</p>
 <p><b>Tournaments</b> lock onto your card — you decide who advances. Tournament rules are about winning, not good vs evil: face vs face and heel vs heel pairings rate and build heat like face vs heel, and the repetition rule, trading-wins cooling, feud-check warnings and promised-match giveaways don't apply to bracket matches. From three weeks out until the first matches air, tap <b>Pick your field</b> on the Home screen to choose your four entrants (and the seeding for the Owen Hart Cups); if you don't, your four best are entered automatically. ♾️ The <b>Continental Classic</b> (weeks ${TOURS.c2.rr[0]}–${TOURS.c2.rr[2]}) is a round robin for your four best men (3 points a win, no run-ins), and the top two meet at Worlds End for the Continental title if your brand holds it or it's vacant. 🏆 The <b>Owen Hart Cups</b> (men's semi-finals week ${TOURS.ohc.semi}, women's week ${TOURS.ohcw.semi}, both finals at Double or Nothing) send the winners to All In with a World title shot — against your champion, or as your title challenge if the rival holds the belt. Injured entrants forfeit.</p>
-<p><b>Casino Gauntlet:</b> a new match type for six. It rates a little lower than a straight wrestling match, but the winner earns a title shot at the next PPV against your top champion in their division.</p>
+<p><b>Casino Gauntlet:</b> six wrestlers enter one at a time and the first to be pinned or submitted loses, so only that one takes the loss. It rates like any other multi-person match (flyers and showmen love the chaos), but it can't take a stipulation, needs a clean finish and builds heat slowly. The winner gets the rub from whoever they pinned and earns a title shot at the next PPV against your top champion in their division.</p>
 <p><b>Network mandates:</b> after each PPV the TV network asks for something specific by the next one — a 4★ main event, two women's matches on one show, a new champion, a debut and so on. Deliver for a cash and fan bonus; miss it and you lose 5K fans. Check the Home or Book screen for your current one.</p>
 <p><b>🎯 Weekly goals &amp; 📣 crowd chants:</b> each week the Book screen gives you one small goal (hit it for a little cash and 3K fans — no penalty for missing it; a live ✅/🤞/⏳ line tells you if the card you've booked is on track), and the crowd starts chanting for someone on your roster. Book them in a match or promo that week and their segment gets +¼★, they gain popularity and you get 2K fans.</p>
 <p><b>Head to head:</b> in solo play the rival's card stays a surprise until the show airs. On TV, whoever's main event rates higher wins the main event war (+3K fans). When you sign a big free agent (70+ popularity), the rival may start a <b>bidding war</b>: pay 35% more (and a 20% higher salary) or let them go.</p>
