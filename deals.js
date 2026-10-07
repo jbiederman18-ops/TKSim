@@ -77,7 +77,7 @@ function dealAir(b,info,show,notes){if(!(b==='p'||ON()))return;const now=AW();
   if(w.own===b&&!ccOn(w)&&!d.me&&!d.shot&&d.ppv!==S.season)delete w.deal})}
 
 /* ---------- creative control ---------- */
-function ccLosers(m,b){if(!m||!m.sides||m.nc||m.type==='open'&&!(m.open&&m.open.who))return [];return m.sides.flatMap((s,i)=>i===m.winner?[]:s).map(id=>S.w[id]).filter(w=>w&&w.own===b&&ccOn(w)&&!w.inj)}
+function ccLosers(m,b){if(!m||!m.sides||m.nc||m.type==='open'&&!(m.open&&m.open.who))return [];/* v140: in a 3+ person match only the one taking the pin is really losing */const ids=m.sides.flat().length>=3&&typeof pinOf==='function'?[pinOf(m)].filter(Boolean):m.sides.flatMap((s,i)=>i===m.winner?[]:s);return ids.map(id=>S.w[id]).filter(w=>w&&w.own===b&&ccOn(w)&&!w.inj)}
 function ccTag(m){const l=ccLosers(m,'p');return l.length?`<span class="tg bad">🎬 ${esc(l.map(w=>w.name.split(' ').slice(-1)[0]).join(', '))} won't agree to lose</span>`:''}
 /* at air time: they either take over the finish or do the job under protest */
 function ccFinish(m,b){if(!(b==='p'||ON()))return null;const l=ccLosers(m,b);if(!l.length)return null;const w=l.sort((x,y)=>y.pop-x.pop)[0];

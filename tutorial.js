@@ -11,7 +11,7 @@
      tour get a "what's new" replay of just those stops.
    • Run `python3 tools/check-tutorial.py` — it plays every stop and tip in a headless browser and fails on any
      missing target or stale value. */
-const TUT_REV=4;
+const TUT_REV=5;
 const TUT_KEY='tksim_tut';
 const TUT_MISS=[];
 
@@ -94,8 +94,8 @@ const TUT_STEPS=[
  b:()=>`Morale rises with main events, wins and kept promises, and drops when people sit or lose too much. Contracts run out — re-signing is a negotiation, and promises you make (main events, title shots, creative control) are contract terms. Break three and a wrestler may walk.`},
 {id:'s.fa',track:'season',since:1,tab:'roster',prep:()=>{rf='fa'},after:()=>{rf='mine'},sel:()=>document.querySelector('main .cgrid')||tutCard(/on the market/i),sys:['free agency','offers','prospects'],t:'Free agents & prospects',
  b:()=>`A few free agents are on the market at once, each for a few weeks. Big names (55+ popularity) want an offer — money plus promises — and ${tvRival()} can bid too, sealed. Scroll down for <b>prospects</b>: cheap developmental deals that can grow into stars.`},
-{id:'s.titles',track:'season',since:1,tab:'titles',sel:'main .card.belt',sys:['titles','prestige'],t:'The gold',
- b:()=>`Titles start vacant — book a match and pick the title in the match editor to crown a champion. Defenses build a champion's credibility and the belt's prestige. Swap a title too fast and it loses prestige. The only way to take ${ON()?"another GM's":"the rival's"} gold is a PPV title challenge.`},
+{id:'s.titles',track:'season',since:5,tab:'titles',sel:'main .card.belt',sys:['titles','prestige'],t:'The gold',
+ b:()=>`The titles are split evenly between the shows, and yours start vacant — book a match and pick the title in the match editor to crown a champion. Nobody else can crown your belts. Defenses build a champion's credibility and the belt's prestige. Swap a title too fast and it loses prestige. The only way to take ${ON()?"another GM's":"the rival's"} gold is a PPV title challenge.`},
 {id:'s.money',track:'season',since:3,tab:'office',sel:()=>tutCard(/finances/i),sys:['money','production','wages','stipulations'],t:'The money',
  b:()=>`Money comes from your TV deal, tickets, merch and ads — and hot shows earn more of all four. Payroll goes out every week. In the red, morale slips. Growing costs too: a bigger company pays bigger wages${tv('wage',()=>wageF('p')>1.01?` (yours: +${Math.round((wageF('p')-1)*100)}% right now)`:'',' ')}, bigger venues make production and stipulations pricier, and one show can only take in so much. Spend it on signings, production and stipulations when it'll pay off — money in the bank doesn't win the fan war.`},
 {id:'s.end',track:'season',since:1,sel:'header .gsw',sys:['reference'],t:"You're ready",
