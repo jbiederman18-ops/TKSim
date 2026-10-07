@@ -857,7 +857,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v140';
+const APP_VERSION='v141';
 /* v113: a rolling AEW year — a PPV every 4 weeks from Revolution to Worlds End. All In is the midyear supershow;
    the season (awards, offseason, fan-war winner) ends after Worlds End, then the calendar rolls into a new year. */
 const SEASON=40,ALLIN_WEEK=24,OLD_SEASON=24;
@@ -2946,8 +2946,8 @@ viral:{t:'Going viral',i:'📈',good:true,text:'A clip of {A} from last week has
  {t:'Strike now — book a sit-down interview',d:'Quick popularity boost.',fx:c=>{popx(c.A,6);c.A.mic=Math.min(Math.max(c.A.mic,c.A.potM),c.A.mic+1);return `${c.A.name}'s interview racks up even more views (+6 popularity).`}},
  {t:'Promise them a big match next week',d:'{VM}',fx:c=>{popx(c.A,3);if(c.vm){addPromise({kind:'callout',a:c.A.id,b:c.vm.id,week:S.week});let nc=S.card.p.findIndex(sl=>sl.k==='match'&&!sl.d&&!sl.opt);if(nc<0)nc=S.card.p.findIndex(sl=>sl.k==='match'&&!sl.d);if(nc>=0)S.card.p[nc].d={type:'singles',stip:'std',sides:[[c.A.id],[c.vm.id]],winner:0,title:''};}return c.vm?`${c.A.name} vs ${c.vm.name} is promised for this week's show.`:`Fans are buzzing.`}},
  {t:'Let it grow organically',d:'Smaller boost, happier wrestler.',fx:c=>{popx(c.A,3);mor(c.A,6);return `${c.A.name} enjoys the moment (+3 popularity).`}}]},
-subtweet:{t:'Subliminal shots',i:'💧',need:2,text:'At 2 a.m., {A} posted a single line: "cry me a river." No names, no tags — but everyone knows it\'s aimed at {B}, and {B} has already liked a reply calling {A} washed up.',ch:[
- {t:'Turn it into a TV feud',d:'Big feud heat. {B} may not find it funny.',fx:c=>{const n=[];bumpHeat(c.A.id,c.B.id,22,n,'a late-night subliminal post');popx(c.A,2);if(Math.random()<.3){mor(c.B,-8);return `The crowd starts chanting "cry me a river" at ${c.B.name}. Great heat, but ${c.B.name} is genuinely annoyed. ${n.join(' ')}`}popx(c.B,2);return `Both of them run with it and the internet is hooked. ${n.join(' ')}`}},
+subtweet:{t:'Subliminal shots',i:'💧',need:2,text:'At 2 a.m., {A} posted a single line: "{POST}" No names, no tags — but everyone knows it\'s aimed at {B}, and {B} has already liked a reply calling {A} washed up.',ch:[
+ {t:'Turn it into a TV feud',d:'Big feud heat. {B} may not find it funny.',fx:c=>{const n=[];bumpHeat(c.A.id,c.B.id,22,n,'a late-night subliminal post');popx(c.A,2);if(Math.random()<.3){mor(c.B,-8);return `The crowd turns ${c.A.name}'s post into a chant aimed at ${c.B.name}. Great heat, but ${c.B.name} is genuinely annoyed. ${n.join(' ')}`}popx(c.B,2);return `Both of them run with it and the internet is hooked. ${n.join(' ')}`}},
  {t:'Make them squash it privately',d:'Chemistry improves. The internet is disappointed.',fx:c=>{S.chem[key(c.A.id,c.B.id)]=clamp((S.chem[key(c.A.id,c.B.id)]||0)+2,-5,6);mor(c.A,3);mor(c.B,3);return `A closed-door chat and a handshake. ${c.A.name} deletes the post.`}},
  {t:'Fine {A} for the post',d:'Sends a message. {A} sulks.',fx:c=>{mor(c.A,-10);mor(c.B,4);S.money.p+=10;return `${c.A.name} is fined $10K and goes quiet online — for now.`}}]},
 dogsave:{t:'Hero of the hallway',i:'🐶',good:true,text:'A backstage shouting match spilled into the loading dock, and a crew member\'s dog got caught in the middle of it. {A} scooped the pup up and carried it to safety. The clip is everywhere.',ch:[
@@ -2987,10 +2987,13 @@ botch:{t:'Instant meme',i:'😬',text:'{A} flubbed their own name on live TV, pr
  {t:'Have {A} laugh it off in a promo',d:'Mic-skill check.',fx:c=>{if(Math.random()<.35+c.A.mic/150){popx(c.A,4);return `${c.A.name} owns the moment. Fans love a wrestler who can laugh at themselves.`}popx(c.A,-2);return `The joke doesn't land. The meme lives on.`}},
  {t:'Never speak of it again',d:'{A} will be grateful.',fx:c=>{mor(c.A,6);return `Nobody mentions it backstage. ${c.A.name} is quietly relieved.`}}]}};
 function crisisTick(notes){bothSides(crisisGen);
- if(!ON()&&Math.random()<.15){const r=ownList('ai').filter(w=>!w.inj);if(r.length){const w=pick(r);const e=pick([[`was suspended by ${S.rival} after a backstage scuffle`,2],[`is sitting out a week after a social media controversy`,1],[`missed their flight and will miss ${S.rival}'s next show`,1],[`signed a raise with ${S.rival}`,0],[`posted a cryptic "cry me a river" that everyone thinks is about ${S.gm}`,0],[`went viral for rescuing a dog backstage`,0],[`got into it at a post-show media scrum and was sent home`,1],[`had their big match leaked to the dirt sheets`,0]]);if(e[1])susp(w,e[1]);const n=`📰 Rival news: ${w.name} ${e[0]}.`;news(n);notes.push(n)}}}
+ if(!ON()&&Math.random()<.15){const r=ownList('ai').filter(w=>!w.inj);if(r.length){const w=pick(r);const e=pick([[`was suspended by ${S.rival} after a backstage scuffle`,2],[`is sitting out a week after a social media controversy`,1],[`missed their flight and will miss ${S.rival}'s next show`,1],[`signed a raise with ${S.rival}`,0],[pick([`posted a cryptic late-night message that everyone thinks is about ${S.gm}`,`liked a post calling ${S.gm}'s shows "unwatchable"`,`unfollowed half of ${S.rival}'s roster overnight`]),0],[`went viral for rescuing a dog backstage`,0],[`got into it at a post-show media scrum and was sent home`,1],[`had their big match leaked to the dirt sheets`,0]]);if(e[1])susp(w,e[1]);const n=`📰 Rival news: ${w.name} ${e[0]}.`;news(n);notes.push(n)}}}
 function crisisGen(){
  if(!S.crisis&&S.week>=2&&Math.random()<.22){const r=ownList('p').filter(w=>!w.inj);if(r.length<4)return;
-  const kinds=Object.keys(CRISES);let k=pick(kinds),A=null,B=null;
+  const kinds=Object.keys(CRISES),recent=S.crisisLog||[],pool=kinds.filter(x=>!recent.includes(x));let k=null,A=null,B=null;
+  /* don't repeat any of the last 12 events; events with a who() filter pick their own wrestlers or step aside */
+  for(let t=0;t<10&&!k;t++){const c=pick(pool.length?pool:kinds),W=CRISES[c].who;if(!W){k=c;break}try{const p=W(r);if(p&&p[0]){k=c;A=p[0];B=p[1]||null}}catch(e){console.warn(e)}}
+  if(!k)k='post';
   if(k==='raise'){A=r.filter(w=>w.pop>=78&&w.con>4).sort(()=>Math.random()-.5)[0];if(!A)k='post'}
   if(k==='fight'){const pairs=[];r.forEach(a=>r.forEach(b=>{if(a.id<b.id&&!inTeam(a.id,b.id))pairs.push([a,b,heatOf(a.id,b.id)+Math.random()*30])}));pairs.sort((x,y)=>y[2]-x[2]);if(pairs.length){[A,B]=pairs[0]}else k='post'}
   if(k==='viral')A=r.filter(w=>w.pop<75).sort(()=>Math.random()-.5)[0];
@@ -2999,13 +3002,14 @@ function crisisGen(){
   if(k==='mentor'){A=r.filter(w=>w.pot-w.ring>=4).sort((a,b)=>a.ring-b.ring)[0]||null;B=A?shuffle(r.filter(w=>w!==A&&w.ring>=85))[0]||null:null;if(!A||!B){A=null;B=null;k='shape'}}
   if(k==='subtweet'||k==='podcast'){const pairs=[];r.forEach(a=>r.forEach(b=>{if(a!==b&&!inTeam(a.id,b.id))pairs.push([a,b,heatOf(a.id,b.id)+Math.random()*40])}));pairs.sort((x,y)=>y[2]-x[2]);if(pairs.length)[A,B]=pairs[0]}
   if(!A)A=pick(r);if(CRISES[k].need===2&&!B){const o=r.filter(w=>w!==A);if(o.length)B=pick(o);else k='post'}
-  S.crisis={k,a:A.id,b:B?B.id:null,w:S.week,tal:RI(0,99)}}}
+  S.crisis={k,a:A.id,b:B?B.id:null,w:S.week,tal:RI(0,99)};S.crisisLog=[k,...recent.filter(x=>x!==k)].slice(0,12)}}
 function misspell(n){const w=n.split(' ');const i=w.length-1;let t=w[i];if(t.length>=4){const j=Math.floor(t.length/2);t=t.slice(0,j-1)+t[j]+t[j-1]+t.slice(j+1)}else t=t+t.slice(-1);w[i]=t;return w.join(' ').toUpperCase()}
+const SUBPOSTS=['cry me a river.','some people peaked years ago.','funny how the loudest ones never main event.','be careful who you carry. 🧳','imagine needing a podcast to stay relevant.','receipts are in the drafts. 📸','not everyone who smiles at you in catering is your friend.','unbothered. 🧘','I\'ll wait.','the ring doesn\'t lie. people do.'];
 const TALENTS=['singing flawless opera in the hallway','juggling five steel chairs','speed-painting a portrait of the whole production crew','doing genuinely baffling close-up magic','beatboxing better than most professionals','solving a Rubik\'s cube in under ten seconds','tap dancing like a Broadway veteran','doing a pitch-perfect ventriloquist act'];
-function crisisCtx(){const c=S.crisis;const A=S.w[c.a],B=c.b?S.w[c.b]:null;const x={A,B,title:(titlesOf(A.id)[0]||{}).n||'championship',cost:Math.round(sal(A)*4),wrong:misspell(A.name),tal:TALENTS[(c.tal||0)%TALENTS.length]};
+function crisisCtx(){const c=S.crisis;const A=S.w[c.a],B=c.b?S.w[c.b]:null;const x={A,B,title:(titlesOf(A.id)[0]||{}).n||'championship',cost:Math.round(sal(A)*4),wrong:misspell(A.name),tal:TALENTS[(c.tal||0)%TALENTS.length],post:SUBPOSTS[(c.tal||0)%SUBPOSTS.length],con:A.con};{const V=CRISES[c.k]&&CRISES[c.k].vars;if(V)x.vr=V[(c.tal||0)%V.length]}
  const np=nextPPVAfter(S.week-1);if(np&&np.w>S.week){const tOk=t=>t.kind==='singles'&&t.holders.length&&S.w[t.holders[0]]&&S.w[t.holders[0]].own==='p'&&t.holders[0]!==A.id;const t=Object.values(S.titles).find(t=>tOk(t)&&t.g===A.g)||Object.values(S.titles).find(tOk);if(t)x.ts={champ:t.holders[0],title:t.n,w:np.w,ppv:np.n}}
  const top=ownList('p').filter(w=>w.id!==A.id&&!w.inj&&!inTeam(w.id,A.id)).sort((a,b)=>b.pop-a.pop)[0];if(top&&!PPVS[S.week])x.vm=top;return x}
-function crisisFill(t,x){return t.replace('{TITLE}',x.title).replace('{TAL}',x.tal).replace('{WRONG}',x.wrong).replace(/\{A\}/g,x.A.name).replace(/\{B\}/g,x.B?x.B.name:'').replace('{COST}',money(x.cost)).replace('{TS}',x.ts?`Adds ${x.A.name} vs ${S.w[x.ts.champ].name} (${x.ts.title} title) to your ${x.ts.ppv} card. Break it and they'll be furious.`:'No eligible title shot right now — they\'ll accept a verbal promise, grudgingly.').replace('{VM}',x.vm?`Books ${x.A.name} vs ${x.vm.name} on this week's show. Deliver it for a bigger payoff.`:'Nothing big to book right now — just a morale boost.')}
+function crisisFill(t,x){return t.replace('{POST}',x.post||'').replace('{VAR}',x.vr||'').replace('{CON}',x.con!=null?x.con:'a few').replace('{TITLE}',x.title).replace('{TAL}',x.tal).replace('{WRONG}',x.wrong).replace(/\{A\}/g,x.A.name).replace(/\{B\}/g,x.B?x.B.name:'').replace('{COST}',money(x.cost)).replace('{TS}',x.ts?`Adds ${x.A.name} vs ${S.w[x.ts.champ].name} (${x.ts.title} title) to your ${x.ts.ppv} card. Break it and they'll be furious.`:'No eligible title shot right now — they\'ll accept a verbal promise, grudgingly.').replace('{VM}',x.vm?`Books ${x.A.name} vs ${x.vm.name} on this week's show. Deliver it for a bigger payoff.`:'Nothing big to book right now — just a morale boost.')}
 function openCrisis(){const c=S.crisis;if(!c)return;if(!CRISES[c.k])c.k='talent';const A=S.w[c.a];if(!A||A.own!=='p'){S.crisis=null;save();return}const C=CRISES[c.k];const x=crisisCtx();
  openModal(`<div class="muted"><span class="live-tag" style="${C.good?'background:var(--good)':''}">${C.good?'OPPORTUNITY':'FRONT OFFICE'}</span>Week ${S.week}</div><div class="h mhd mt">${esc(C.t)}</div><div class="duo" style="align-items:center"><span style="font-size:38px;line-height:1">${C.i}</span>${face(x.A)}${x.B?face(x.B):''}</div><p class="scene">${esc(crisisFill(C.text,x))}</p>
  <div class="muted tiny" style="margin-bottom:8px">How do you handle it?</div>${C.ch.map((o,i)=>`<button class="choice" onclick="crisisChoose(${i})"><span class="key"><span>${'ABC'[i]}</span></span><div>${esc(crisisFill(o.t,x))}</div><div class="muted tiny">${esc(crisisFill(o.d,x))}</div></button>`).join('')}
@@ -4421,6 +4425,7 @@ if(typeof document!=='undefined'&&document.getElementById('app')){
  setTimeout(()=>shelfRecover().catch(()=>{}),1500);
 }
 </script>
+<script src="crises2.js"></script>
 <script src="tutorial.js"></script>
 <script type="module" src="online.js"></script>
 </body>
