@@ -370,10 +370,28 @@ const BRIEF_KEY='tks_brief';
 function briefId(){return ((typeof LMP!=='undefined'&&LMP&&LMP.code)||'solo')+':'+(S.gm||'')+':'+S.season}
 function briefSeen(){try{const m=JSON.parse(localStorage.getItem(BRIEF_KEY)||'{}');return m[briefId()]===AW()}catch(e){return false}}
 function briefMark(){try{const m=JSON.parse(localStorage.getItem(BRIEF_KEY)||'{}');m[briefId()]=AW();const ks=Object.keys(m);if(ks.length>20)delete m[ks[0]];localStorage.setItem(BRIEF_KEY,JSON.stringify(m))}catch(e){}}
-function briefItems(){const mine=ownList('p');const sec=(typeof ocBrief==='function'?ocBrief():[]).concat(typeof pitchBrief==='function'?pitchBrief():[]).concat(typeof dealBrief==='function'?dealBrief():[]);const nm=w=>`<a href="#" onclick="closeModal();showW('${w.id}');return false">${esc(w.name)}</a>`;
- /* contracts */
- const exp=mine.filter(w=>w.con<=4||(w.con<=8&&w.pop>=70)).sort((a,b)=>a.con-b.con);
- if(exp.length)sec.push({i:'✍️',t:'Contracts running out',u:exp.some(w=>w.con<=2),rows:exp.map(w=>`<div class="row sb brow"><span>${nm(w)} · <b class="${w.con<=2?'bad':''}">${Math.max(0,w.con)} wk${w.con===1?'':'s'}</b>${w.mor<30?' 😠':''}<br><span class="muted tiny">${w.neg&&w.neg.no>AW()?'Walked away from talks · back at the table week '+wkOf(w.neg.no):'Wants about '+money(askSal(w))+'/wk'+(dealWantList(w).length&&w.pop>=58?' plus a say in things':'')}${w.con<=1?' · walks after this week if not re-signed':''}</span></span><button class="mini" onclick="closeModal();dealNegotiate('${w.id}')">Negotiate</button></div>`)});
+/* v138: contracts kept sneaking up on people, so the countdown now follows you: a Home card, the top of the briefing,
+ a 📝 tag on the Book screen and a check before you go live on anyone's last show. */
+const CON_SOON=5,CON_STAR=9,CON_URGENT=3;
+function conWatch(){return ownList('p').filter(w=>w.con<=CON_SOON||(w.con<=CON_STAR&&w.pop>=70)).sort((a,b)=>a.con-b.con||b.pop-a.pop)}
+function conLvl(w){return w.con<=1?'bad':w.con<=CON_URGENT?'warnt':''}
+function conTxt(w){return w.con<=1?'last show':`${Math.max(0,w.con)} wk${w.con===1?'':'s'} left`}
+function conTag(w){return `<span class="tg ${conLvl(w)}">⏳ ${conTxt(w)}</span>`}
+function conHome(){if(!S||S.phase!=='season')return '';const l=conWatch();if(!l.length)return '';const hot=l.filter(w=>w.con<=CON_URGENT);
+ return `<div class="card conbar ${hot.length?'warn':''}"><div class="row sb"><b>✍️ Contract countdown</b><span class="muted tiny">${hot.length?`${hot.length} need${hot.length>1?'':'s'} a deal now`:'Coming up'}</span></div><div class="conchips">${l.slice(0,8).map(w=>`<button class="conchip ${conLvl(w)}" onclick="dealNegotiate('${w.id}')">${esc(w.name)}<b>${conTxt(w)}</b></button>`).join('')}${l.length>8?`<button class="conchip" onclick="openBrief()">+${l.length-8} more</button>`:''}</div>${l.some(w=>w.con<=1)?'<div class="tiny bad" style="margin-top:6px">Anyone on their last show becomes a free agent the moment this show ends — and the rival can sign them.</div>':''}</div>`}
+/* Book screen: a one-line reminder while you build the card */
+function conBook(){const l=ownList('p').filter(w=>w.con<=CON_URGENT).sort((a,b)=>a.con-b.con);if(!l.length)return '';
+ return `<div class="card warn" style="padding:10px 12px"><b>✍️ Contracts ending:</b> ${l.map(w=>`<a href="#" onclick="dealNegotiate('${w.id}');return false" style="color:var(--gold2)">${esc(w.name)}</a> <span class="tg ${conLvl(w)}">${conTxt(w)}</span>`).join(' · ')}</div>`}
+/* checked when you go live: anyone whose contract ends tonight. Once you've seen it this week it won't nag again. */
+function conGate(){const a=AW();if(!S.conAck||S.conAck.wk!==a)S.conAck={wk:a,ids:[]};const l=ownList('p').filter(w=>w.con<=1&&!S.conAck.ids.includes(w.id));if(!l.length)return false;
+ openModal(`<div class="h mhd">✍️ Last show on their contract</div><p class="muted" style="margin-top:0">When tonight's show ends, ${l.length>1?'these wrestlers become free agents':'this wrestler becomes a free agent'} unless you re-sign them first.</p>${l.map(w=>{const blk=w.neg&&w.neg.no>a;return `<div class="card warn"><div class="row sb"><span><b>${esc(w.name)}</b> · POP ${Math.round(w.pop)}${isChamp(w.id)?' · 🏆 holds a title':''}<br><span class="muted tiny">${blk?'Walked away from talks — only a re-sign at their price works now':'Wants about '+money(askSal(w))+'/wk'}</span></span>${blk?`<button class="mini" onclick="conGateSign('${w.id}')">Re-sign ${money(resignCost(w))}</button>`:`<button class="mini" onclick="closeModal();dealNegotiate('${w.id}')">Negotiate</button>`}</div></div>`}).join('')}
+ <button class="btn sec" onclick="S.conAck.ids.push(${l.map(w=>`'${w.id}'`).join(',')});save();closeModal();goLive()">Let ${l.length>1?'them':esc(l[0].name.split(' ')[0])} go · go live</button><button class="btn ghost" onclick="closeModal()">Back</button>`);return true}
+function conGateSign(id){resign(id);if(S.w[id]&&S.w[id].own==='p'&&S.w[id].con>1)goLive()}
+function briefItems(){const mine=ownList('p');const sec=cdBrief().concat(typeof ocBrief==='function'?ocBrief():[]).concat(typeof pitchBrief==='function'?pitchBrief():[]).concat(typeof dealBrief==='function'?dealBrief():[]);const nm=w=>`<a href="#" onclick="closeModal();showW('${w.id}');return false">${esc(w.name)}</a>`;
+ /* contracts — v138: always the first section, a longer runway, and a clear countdown on every name */
+ const exp=conWatch();
+ if(exp.length){const last=exp.filter(w=>w.con<=1).length;sec.unshift({i:'✍️',t:last?`Contracts running out · ${last} on their last show`:'Contracts running out',u:exp.some(w=>w.con<=CON_URGENT),con:1,rows:exp.map(w=>{const blk=w.neg&&w.neg.no>AW();
+  return `<div class="row sb brow"><span>${nm(w)} ${conTag(w)}${w.mor<30?' 😠':''}<br><span class="muted tiny">${blk?'Walked away from talks · back at the table week '+wkOf(w.neg.no)+(w.neg.no>AW()+w.con-1?' — too late to negotiate, re-sign at their price':''):'Wants about '+money(askSal(w))+'/wk'+(dealWantList(w).length&&w.pop>=58?' plus a say in things':'')}${w.con<=1?' · <b class="bad">becomes a free agent after this show</b>':''}</span></span>${blk?`<button class="mini" onclick="briefResign('${w.id}')">Re-sign ${money(resignCost(w))}</button>`:`<button class="mini" onclick="closeModal();dealNegotiate('${w.id}')">Negotiate</button>`}</div>`})})}
  /* morale */
  const sad=mine.filter(w=>!w.inj&&w.mor<45).sort((a,b)=>a.mor-b.mor).slice(0,6);
  if(sad.length)sec.push({i:'😠',t:'Morale to watch',u:sad.some(w=>w.mor<SIT_MOR),rows:sad.map(w=>`<div class="brow">${nm(w)} · morale <b class="${w.mor<SIT_MOR?'bad':''}">${Math.round(w.mor)}</b><br><span class="muted tiny">${w.mor<SIT_MOR?'Could go off-script in a match — ':''}${w.mor<10?'may demand their release · ':''}a win, a main event spot or a title shot will help</span></div>`)});
@@ -385,7 +403,7 @@ function briefItems(){const mine=ownList('p');const sec=(typeof ocBrief==='funct
  const fs=[];for(const k in S.heat){const f=S.fs&&S.fs[k];const [a,b]=k.split('|');const A=S.w[a],B=S.w[b];if(!f||f.paid||!A||!B||(A.own!=='p'&&B.own!=='p')||S.heat[k]<20)continue;const age=AW()-f.start;if(f.stale||age>=5)fs.push({A,B,h:S.heat[k],left:8-age,stale:f.stale})}
  if(fs.length){const np=nextPPV();sec.push({i:'🥱',t:'Feuds that need a payoff',u:fs.some(x=>x.stale),rows:fs.sort((a,b)=>a.left-b.left).slice(0,5).map(x=>`<div class="brow">${nm(x.A)} vs ${nm(x.B)} · heat <b>${Math.round(x.h)}</b><br><span class="muted tiny">${x.stale?'Already stale and cooling fast':`Goes stale in ${Math.max(1,x.left)} week${x.left===1?'':'s'}`}${np?` — blow it off at ${esc(np.n)}${np.in?` (${np.in} wk${np.in===1?'':'s'})`:' (this week)'}`:''}</span></div>`)})}
  /* calendar */
- const cal=[];const np=nextPPV();if(np)cal.push(`📅 <b>${esc(np.n)}</b> ${np.in?`in ${np.in} week${np.in===1?'':'s'}`:'is <b>this week</b>'}`);
+ const cal=[];{const l=cdLeft();if(l!=null&&S.w[S.cdown.a])cal.push(`⏳ The countdown from ${esc(S.w[S.cdown.a].name)}'s promo hits zero ${l?`in <b>${l} week${l>1?'s':''}</b>`:'<b>after this show</b>'}`)}const np=nextPPV();if(np)cal.push(`📅 <b>${esc(np.n)}</b> ${np.in?`in ${np.in} week${np.in===1?'':'s'}`:'is <b>this week</b>'}`);
  for(const k in TOURS){const D=TOURS[k];const first=tourFirst(D);const d=first-S.week;if(d>=0&&d<=3)cal.push(`${D.i} <b>${esc(D.n)}</b> ${d?`starts in ${d} week${d===1?'':'s'} — pick your field`:'starts <b>this week</b>'}`);else if(S.week>first&&S.week<=D.final)cal.push(`${D.i} <b>${esc(D.n)}</b> is under way${S.week===D.final?' — the final is this week':''}`)}
  const md=S.mand&&S.mand.p;if(md&&!md.done&&MANDS[md.k]){const l=md.due-S.week;cal.push(`📺 Network mandate: <b>${esc(MANDS[md.k].n)}</b> — ${l<=0?'due tonight':`${l} week${l>1?'s':''} left`}`)}
  const vac=Object.values(S.titles).filter(t=>!t.holders.length);if(vac.length)cal.push(`👑 Vacant: ${vac.map(t=>esc(t.n)).join(', ')}`);
@@ -425,3 +443,35 @@ function calMigrate(st){if(!st||!st.w||st.cal2)return;st.cal2=1;if(st.awb==null)
  if(st.mand)for(const b in st.mand){const m=st.mand[b];if(m&&typeof m.due==='number')m.due=calMapWeek(m.due)}
  if(st.aiShot)mv(st.aiShot);
  const S0=S;S=st;try{news(`📅 New calendar: the year now runs Revolution → Worlds End with a PPV every 4 weeks, adding Dynasty, Redemption and All Out. All In is the midyear supershow, and the season (awards and offseason) wraps after Worlds End. ${st.phase==='season'?`You're now in week ${nw} of ${SEASON}${(()=>{const n=nextPPV();return n?` — next up: ${n.n}${n.in?` in ${n.in} week${n.in>1?'s':''}`:' (this week)'}`:''})()}.`:''}`)}finally{S=S0}}
+
+/* ===================== THE COUNTDOWN (v138) =====================
+ The "countdown clock" promo twist now goes somewhere. A clock appears on the big screen during one of your solo
+ promos and counts down for CD_WKS weeks (it shows in the briefing). When it hits zero, a real free agent from the other
+ side of the face/heel line debuts and goes after the wrestler who had the mic — instant heat — and you get first
+ dibs on signing them that week at a discount. The more the promo hyped the clock, the bigger the debut.
+ If you or the rival sign them before the clock runs out, the debut happens anyway — for whoever signed them. */
+const CD_WKS=3,CD_GAP=10;
+function cdCand(A){if(!A||!S||S.cdown||(S.cdLast&&AW()-S.cdLast<CD_GAP))return null;const mx=S.myst&&S.myst.x;
+ const l=Object.values(S.w).filter(w=>!w.own&&!w.cw&&!w.rookie&&!w.inj&&w.id!==mx&&w.al!==A.al&&w.pop>=55&&!(typeof onMarket==='function'&&!onMarket(w))).sort((a,b)=>b.pop-a.pop).slice(0,8);return l.length?pick(l):null}
+function cdStart(x,a,h,notes){if(S.cdown||!S.w[x]||!S.w[a])return;S.cdown={x,a,h:Math.max(0,Math.min(3,h||0)),at:AW(),due:AW()+CD_WKS};if(S.fa)S.fa[x]=Math.max(S.fa[x]||0,AW()+CD_WKS+1);
+ const n=`⏳ A countdown clock appeared during ${S.w[a].name}'s promo — it hits zero in ${CD_WKS} weeks. Who is it for?`;news(n);notes.push(n)}
+function cdLeft(){const c=S.cdown;return c&&!c.done?Math.max(0,c.due-AW()):null}
+function cdTick(notes){const c=S.cdown;if(!c)return;
+ if(c.done){if(AW()>c.done+1){S.cdown=null}return}
+ if(AW()<c.due)return;const X=S.w[c.x],A=S.w[c.a];S.cdLast=AW();
+ if(!X||X.inj){S.cdown=null;const n=`⏳ The countdown hit zero… and nothing happened. Fans are furious they were left hanging.`;news(n);notes.push(n);if(A&&A.own==='p')A.pop=clamp(A.pop-1,1,100);return}
+ const hype=c.h;const heat=14+hype*4;
+ if(A&&A.own)bumpHeat(X.id,A.id,heat,notes,'the countdown debut');
+ X.pop=clamp(X.pop+1+hype,1,100);
+ if(X.own==='p'){X.deb=AW();X.mor=clamp(X.mor+8,0,100);S.cdown=null;const n=`⏳ The countdown hit zero — and it was for your own signing! ${X.name} debuts${A?` and goes right after ${A.name}`:''}. The crowd erupts.`;news(n);notes.push(n);return}
+ if(X.own){S.cdown=null;const n=`⏳ The countdown hit zero — ${X.name} debuts for ${nameOf(X.own)}${A?` and lays out ${A.name}`:''}! The rival got there first.`;news(n);notes.push(n);return}
+ const cost=Math.max(5,Math.round(signCost(X)*(.8-hype*.08)));c.done=AW();c.cost=cost;if(S.fa)S.fa[X.id]=Math.max(S.fa[X.id]||0,AW()+1);
+ const n=`⏳ The countdown hit zero: ${X.name} debuts${A?` and confronts ${A.name}`:''}! They're a free agent — you have first dibs this week (${money(cost)}).`;news(n);notes.push(n)}
+function cdOfferLive(){const c=S.cdown;if(!c||!c.done||AW()>c.done+1)return null;const X=S.w[c.x];if(!X||X.own){S.cdown=null;return null}return c}
+function cdSign(){if(typeof mpLocked==='function'&&mpLocked())return;const c=cdOfferLive();if(!c)return closeModal();const w=S.w[c.x];
+ if(ownList('p').length>=30)return toast('Your roster is full (30).');if(S.money.p<c.cost)return toast('Not enough money.');
+ S.money.p-=c.cost;w.sal=mkt(w);w.own='p';w.con=26;w.mor=88;w.fee=0;w.deb=AW();if(S.fa)delete S.fa[w.id];S.cdown=null;
+ news(`✍️ ${S.gm} signed ${w.name} after their countdown debut.`);save();closeModal();render();toast(`${w.name} signed!`)}
+function cdPass(){S.cdown=null;save();render();if(typeof openBrief==='function')openBrief()}
+function cdBrief(){const c=cdOfferLive();if(!c)return [];const w=S.w[c.x],A=S.w[c.a];
+ return [{i:'⏳',t:'The countdown debut',tag:'This week only',rows:[`<div class="brow"><span><b>${esc(w.name)}</b> · POP ${Math.round(w.pop)} · ${w.al==='f'?'face':'heel'}<br><span class="muted tiny">Debuted ${A?`going after ${esc(A.name)} (a ready-made feud) `:''}· usually ${money(signCost(w))} to sign — yours for ${money(c.cost)}, with debut buzz</span></span><div class="row" style="margin-top:6px"><button class="mini" onclick="cdSign()">Sign ${money(c.cost)}</button><button class="mini" onclick="cdPass()">Pass</button></div></div>`]}]}

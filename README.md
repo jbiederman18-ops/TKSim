@@ -25,9 +25,14 @@ A new game offers a one-minute **draft tour**, then a **first-week tour** once t
 
 The tour reads its numbers straight from the game and is checked automatically on every update (`tools/check-tutorial.py`), so it keeps up as the rules change. When a stop changes, players who already took the tour get a short **What's new** replay of just those stops.
 
+## The countdown
+
+Now and then a countdown clock appears during a solo promo. Three weeks later a free agent from the other side of the face/heel line debuts and goes after the wrestler who had the mic (instant heat), and you get one week to sign them at a discount — bigger if the promo hyped the clock. Sign them early, or let the rival, and they debut for whoever did.
+
 ## Offers & contracts
 - **Free agents with 55+ popularity want an offer**, not just a fee: a signing bonus, a weekly salary, and promises — 🎬 creative control, ⭐ main event spots, 🏆 a title shot, 📺 a place on every PPV. Each wrestler wants different things (a big star wants control, a hungry midcarder wants main events), and the offer screen tells you how it looks to them. Smaller names still sign on the spot.
 - **Sealed bids.** Solo, the rival may send an offer too and the wrestler picks right away. In a league, every other GM can send one sealed counter before the week airs, and the wrestler picks the best package when it does. On party night the TV reveals every offer in a "Signing war" before the results.
+- **Contract countdown.** Deals with 5 weeks or less left (9 for stars) show on a ✍️ card on Home and at the top of the weekly briefing, amber at 3 weeks and red on the last show. The Book screen repeats it, and going live on someone's last show asks you to re-sign them or let them go first
 - **Re-signing is a negotiation** (from the weekly briefing or the wrestler's card). They make demands; agree to some or all, or counter on money. They take it, counter back (up to three rounds) or walk away, depending on their morale, how hot your show is and whether you've kept your word before.
 - **Promises are contract terms.** The Book screen shows what's owed. Keep one and morale rises (and a little lost trust comes back); break one and morale drops; after three, a wrestler may walk out. An injury pauses the clock on a promise. Only true main eventers ask for creative control, it lasts 12 weeks, and a roster can have at most 3 people with it. **Creative control** means they won't agree to lose: the card flags it before you go live, and if you go ahead, about half the time they change the finish and go over (−¼★); otherwise they do the job under protest and morale drops hard.
 

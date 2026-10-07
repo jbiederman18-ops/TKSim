@@ -11,7 +11,7 @@
      tour get a "what's new" replay of just those stops.
    • Run `python3 tools/check-tutorial.py` — it plays every stop and tip in a headless browser and fails on any
      missing target or stale value. */
-const TUT_REV=3;
+const TUT_REV=4;
 const TUT_KEY='tksim_tut';
 const TUT_MISS=[];
 
@@ -66,8 +66,8 @@ const TUT_STEPS=[
  b:()=>`Each week you book ${tv('show name',()=>esc(curShow().mine),'your show')} while ${tvRival()} books ${ON()?'theirs':tv('rival show',()=>esc(curShow().theirs),'theirs')}. The better show wins the night.<br><br>${tv('next PPV',()=>{const n=nextPPV();return n?`Next PPV: <b>${esc(n.n)}</b>${n.in?` in ${n.in} week${n.in>1?'s':''}`:' — this week'}. PPVs are where feuds pay off and fans swing big.`:''},'')}`},
 {id:'s.war',track:'season',since:1,tab:'home',sel:()=>{const w=document.querySelector('main .war');return w&&w.closest('.card')},sys:['goal','fans'],t:'How you win',
  b:()=>`This is the scoreboard: <b>fans gained this season</b>. Your show rating earns or loses fans — the main event counts most, beating the rival's show adds a bonus, PPVs swing far more, and ${tv('All In',()=>PPVS[ALLIN_WEEK],'All In')} counts double.`},
-{id:'s.brief',track:'season',since:1,tab:'home',opt:true,sel:'main [onclick="openBrief()"]',sys:['briefing','contracts','morale'],t:'The weekly briefing',
- b:()=>`The first time you open Home each week you get a rundown: expiring contracts, unhappy talent, injuries and what's coming. Wrestlers who want more will <b>pitch you</b> — a main event, a title shot, mic time, a raise. The unhappier they are, the more they ask.`},
+{id:'s.brief',track:'season',since:4,tab:'home',opt:true,sel:'main [onclick="openBrief()"]',sys:['briefing','contracts','morale'],t:'The weekly briefing',
+ b:()=>`The first time you open Home each week you get a rundown — <b>expiring contracts always come first</b> — then unhappy talent, injuries and what's coming. A <b>✍️ Contract countdown</b> card sits on Home whenever a deal is ${tv('CON_SOON',()=>CON_SOON,5)} weeks or less from ending (stars sooner), and you'll get a warning before you go live on anyone's last show. Wrestlers who want more will <b>pitch you</b> — a main event, a title shot, mic time, a raise. The unhappier they are, the more they ask.`},
 {id:'s.mand',track:'season',since:1,tab:'home',opt:true,sel:'main .card.mand',sys:['mandates'],t:'Network mandates',
  b:()=>`The network wants something specific by the next PPV. Deliver for cash and fans; miss it and you lose fans. It's always on Home and Book with a live ✅/⏳ check on your card.`},
 {id:'s.goal',track:'season',since:1,tab:'book',opt:true,sel:'main .card.wkg',sys:['weekly goals','chants'],t:'Small wins every week',

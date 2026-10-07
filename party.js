@@ -32,7 +32,7 @@ function merge3(base,host,mine,path,conf){
  if(top&&k==='nid')return Math.max(host||0,mine||0);
  if(Array.isArray(host)&&Array.isArray(mine)){
   if(top&&k==='news'){const seen=new Set((base||[]).map(PJ)),hs=new Set(host.map(PJ));return host.concat(mine.filter(x=>!seen.has(PJ(x))&&!hs.has(PJ(x)))).slice(-80)}
-  if(top&&(k==='touched'||k==='pseen'))return Array.from(new Set(host.concat(mine))).slice(k==='pseen'?-45:-9999);
+  if(top&&(k==='touched'||k==='pseen'))return Array.from(new Set(host.concat(mine))).slice(k==='pseen'?-220:-9999);
   /* tag teams and factions: two GMs can form (or disband) different teams at the same time */
   if(top&&k==='teams')return mergeById(base,host,mine,path,conf);
   conf.push(path.join('.'));return host}
