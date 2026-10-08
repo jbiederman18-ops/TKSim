@@ -518,10 +518,16 @@ body.tv .card .h.small{font-size:clamp(17px,1.4vw,26px)}
 .rv-show{font:800 italic clamp(20px,1.8vw,36px)/1.05 'BC',sans-serif;text-transform:uppercase;color:var(--gold2)}
 .rv-run{white-space:nowrap;font-size:clamp(16px,1.3vw,26px)}
 .rv-seg{padding:clamp(10px,1vw,18px);margin-bottom:10px;border:1px solid var(--line);clip-path:var(--cut);background:var(--grunge),linear-gradient(180deg,var(--st1),var(--st2));opacity:.12;filter:grayscale(1);transition:opacity .5s,filter .5s,transform .5s}
-.rv-seg .rv-stars,.rv-seg .note{opacity:0;transition:opacity .5s .9s,transform .5s .9s;transform:scale(.85)}
+.rv-seg .note{opacity:0;transition:opacity .5s 1.9s,transform .5s 1.9s;transform:translateY(6px)}
+.rv-seg .rv-stars{margin:4px 0}
+.rv-seg.rvw{border-color:var(--gold);background:linear-gradient(90deg,rgba(216,180,73,.22),rgba(0,0,0,.25) 70%);box-shadow:0 0 40px rgba(216,180,73,.22);transition:border-color .6s,background .6s,box-shadow .6s}
+.rv-seg{position:relative}
+.rv-seg::after{content:'▲ Wins the round';position:absolute;top:clamp(10px,1vw,18px);right:clamp(14px,1.4vw,26px);font:700 clamp(12px,.9vw,17px) 'BC',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--gold2);opacity:0;transition:opacity .6s}
+.rv-seg.rvw::after{opacity:1}
+.rv-fs{font-size:clamp(34px,3.4vw,64px);margin:4px 0}
 .rv-seg.on{opacity:1;filter:none;border-color:var(--gold3);transform:translateY(-2px)}
-.rv-seg.on .rv-stars,.rv-seg.on .note{opacity:1;transform:none}
-.rv-seg.now,.rv-seg.now .rv-stars,.rv-seg.now .note{transition:none}
+.rv-seg.on .note{opacity:1;transform:none}
+.rv-seg.now,.rv-seg.now .note,.rv-seg.now .smeter .sm-f{transition:none}
 .rv-txt{font-weight:700;font-size:clamp(17px,1.45vw,28px);line-height:1.2;margin:2px 0}
 .rv-stars{font-size:clamp(24px,2.3vw,44px);transform-origin:left center}
 .rv-seg .note{font-size:clamp(13px,1vw,19px)}
@@ -742,49 +748,69 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 .winban.l{background:linear-gradient(180deg,#ff6a55,var(--red) 60%,#8f0f0b);color:#fff}
 /* v143 live promo crowd reaction */
 .pr-react{margin:6px 0 12px}.pr-react .pr-e{font-size:34px;line-height:1.1}.pr-react b{display:block;font:800 italic 22px/1.1 'BC',sans-serif;text-transform:uppercase;color:var(--gold2)}
-/* v144 solo star reveal: a fixed stage, no scrolling */
+/* v145 star meter: dim stars with a gold layer that sweeps to the rating */
+span.smeter.smeter{position:relative;display:inline-block;line-height:1;letter-spacing:0;white-space:nowrap;vertical-align:middle;color:var(--gold2);font-family:inherit;font-weight:400;text-transform:none;overflow:visible;text-overflow:clip}
+.smeter .sm-b,.smeter .sm-f{display:inline;font:inherit;letter-spacing:0;text-transform:none;color:inherit;white-space:nowrap;overflow:visible;margin:0;padding:0;background:none;-webkit-text-fill-color:currentColor}
+.smeter .sm-b{opacity:.16;text-shadow:none}
+.smeter .sm-f{position:absolute;left:0;top:0;clip-path:inset(0 100% 0 0);transition:clip-path var(--d,1s) cubic-bezier(.3,.7,.25,1)}
+.smeter.go .sm-f,.rv-seg.on .smeter .sm-f,.rv-final.on .smeter .sm-f{clip-path:inset(0 calc(100% - var(--v) * 100%) 0 0)}
+.rv-seg.on .smeter .sm-f{transition-delay:.7s}.rv-final.on .smeter .sm-f{transition-delay:.9s}
+.smeter.now .sm-f,.rv-seg.now .smeter .sm-f{transition:none}
+/* v145 solo star reveal: a fixed stage of head-to-head rounds, no scrolling */
 .srv{cursor:pointer;-webkit-user-select:none;user-select:none}
 .sr-top{text-align:center;margin:2px 0 8px}
 .sr-title{font:900 italic 26px/1.05 'BC',sans-serif;text-transform:uppercase;color:var(--gold2);margin-top:8px}
 .srv .score{margin:6px 0 12px}
+.srv .score .stars{height:28px;line-height:28px}
+.srv .score .smeter{font-size:22px}
 .srq{opacity:.45}
 .srso{font:700 10px 'BC',sans-serif;font-style:normal;letter-spacing:.14em;color:var(--mut);vertical-align:middle;text-shadow:none}
-.sr-spot{display:flex;height:236px;margin-bottom:12px}
-.sr-card{flex:1;min-width:0;overflow:hidden;display:flex;flex-direction:column;justify-content:center;padding:14px 16px;border:1px solid var(--line);clip-path:var(--cut);background:var(--grunge),linear-gradient(180deg,var(--st1),var(--st2));transition:opacity .22s ease,transform .22s ease}
-.sr-card.p{border-color:var(--gold3);box-shadow:inset 3px 0 0 var(--gold)}
-.sr-card.ai{box-shadow:inset 3px 0 0 var(--mut)}
-.sr-card.x{box-shadow:inset 3px 0 0 var(--red)}
+.sr-spot{display:flex;height:286px;margin-bottom:12px}
+.sr-card{flex:1;min-width:0;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:6px;transition:opacity .22s ease,transform .22s ease}
 .sr-card.out{opacity:0;transform:translateX(-24px)}
 .sr-card.pre{opacity:0;transform:translateX(24px);transition:none}
-.sr-tag{font:700 11px 'BC',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
-.sr-tag b{color:var(--gold2);font-weight:700}
-.sr-txt{font-weight:700;font-size:19px;line-height:1.2;margin:2px 0 6px}
-.sr-big{font-size:34px;height:42px;line-height:42px;transform-origin:left center}
-.srv .score .stars{height:28px;line-height:28px;transform-origin:center}
-.sr-notes .note{opacity:0;transform:translateY(6px);transition:opacity .35s,transform .35s;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.sr-notes.on .note{opacity:1;transform:none}
-.sr-notes.on .note+.note{transition-delay:.25s}
+.sr-intro,.sr-fin,.sr-half{border:1px solid var(--line);clip-path:var(--cut);background:var(--grunge),linear-gradient(180deg,var(--st1),var(--st2))}
+.sr-intro,.sr-fin{flex:1;display:flex;flex-direction:column;justify-content:center;padding:14px 16px}
+.sr-rd{font:700 11px 'BC',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);text-align:center}
+.sr-rd b{color:var(--gold2);font-weight:700}
+.sr-half{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;padding:8px 14px;transition:border-color .4s,box-shadow .4s,background .4s}
+.sr-half.p{box-shadow:inset 3px 0 0 var(--gold)}
+.sr-half.ai{box-shadow:inset 3px 0 0 var(--mut)}
+.sr-half.x{box-shadow:inset 3px 0 0 var(--red)}
+.sr-half.empty{opacity:.45}
+.sr-half.won{border-color:var(--gold);background:linear-gradient(90deg,rgba(216,180,73,.2),rgba(0,0,0,.25) 70%);box-shadow:inset 3px 0 0 var(--gold2),0 0 22px rgba(216,180,73,.18)}
+.sr-half.won .sr-tag::after{content:' · ▲ Wins the round';color:var(--gold2)}
+.sr-card.tie .sr-rd::after{content:' · Dead even';color:var(--gold2)}
+.sr-tag{font:700 11px 'BC',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sr-txt{font-weight:700;font-size:17px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sr-intro .sr-txt,.sr-fin .sr-txt{font-size:19px;margin:2px 0 6px}
+.sr-line{display:flex;align-items:center;gap:10px;margin-top:4px;min-width:0}
+.sr-line .smeter{font-size:26px;flex:none}
+.sr-half.solo .sr-line .smeter{font-size:34px}
+.sr-sub{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sr-note{margin-top:4px;font-size:13px;opacity:0;transition:opacity .4s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sr-card.notes .sr-note{opacity:1}
 .sr-fin{text-align:center}
 .sr-fin .winban{margin:0 auto 8px}
 .sr-btns{display:grid;grid-template-columns:1.4fr 1fr;gap:8px;margin-top:14px}
 .sr-btns .btn{margin:0;padding:12px 8px;font-size:16px}
 .sr-run{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
 .sr-run.one{grid-template-columns:minmax(0,1fr)}
-.sr-ch{font:800 italic 13px 'BC',sans-serif;text-transform:uppercase;color:var(--gold2);border-bottom:1px solid var(--line);padding-bottom:4px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sr-ch{font:800 italic 13px 'BC',sans-serif;text-transform:uppercase;color:var(--gold2);border-bottom:1px solid var(--line);padding-bottom:4px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sr-col.theirs .sr-ch{color:var(--text)}
-.sr-row{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:12px;line-height:1.3;padding:4px 6px;opacity:.35;transition:opacity .3s,background .3s}
+.sr-row{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:12px;line-height:1.3;padding:3px 6px;opacity:.35;transition:opacity .3s,background .3s}
 .sr-n{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sr-v{flex:none;color:var(--gold2)}
 .sr-row.cur{opacity:1;background:rgba(216,180,73,.12)}
 .sr-row.on{opacity:1}
 .sr-row.best{box-shadow:inset 2px 0 0 var(--red);background:rgba(226,51,43,.1)}
-.sr-ctl{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+.sr-ctl{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
 .sr-ctl .mini{padding:5px 12px}
 .sr-rep{margin:-4px 0 12px}
-@media (max-height:740px){.sr-top{margin-bottom:4px}.sr-title{font-size:21px;margin-top:5px}.srv .score{margin:4px 0 8px}.sr-spot{height:206px;margin-bottom:8px}.sr-txt{font-size:17px}.sr-big{font-size:30px}.sr-row{padding:3px 6px}.sr-ctl{margin-top:8px}}
-.srv .srpop{display:inline-block;animation:srPop .35s ease-out}
-@keyframes srPop{0%{transform:scale(.7)}55%{transform:scale(1.2)}100%{transform:none}}
-@media (prefers-reduced-motion:reduce){.srv *{animation:none!important;transition:none!important}}
+.srfade{animation:srFade .45s ease-out}
+@keyframes srFade{from{opacity:0}to{opacity:1}}
+@media (max-height:740px){.sr-top{margin-bottom:4px}.sr-title{font-size:21px;margin-top:5px}.srv .score{margin:4px 0 8px}.sr-spot{height:250px;margin-bottom:8px}.sr-txt{font-size:15px}.sr-line .smeter{font-size:22px}.sr-note{display:none}.sr-row{padding:2px 6px}.sr-ctl{margin-top:8px}}
+@media (prefers-reduced-motion:reduce){.srv *,.smeter *{animation:none!important;transition:none!important}}
 .seg.best{position:relative;margin:4px -15px;padding:10px 15px;border-top:0;background:linear-gradient(90deg,rgba(226,51,43,.18),transparent 70%);box-shadow:inset 3px 0 0 var(--red)}
 .motn{display:inline-block;margin-bottom:4px;padding:1px 12px 1px 8px;background:var(--red);color:#fff;font:900 italic 12px/1.3 'BC','Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;clip-path:polygon(0 0,100% 0,86% 100%,0 100%)}
 /* start screen */
@@ -902,7 +928,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v144';
+const APP_VERSION='v145';
 /* v113: a rolling AEW year — a PPV every 4 weeks from Revolution to Worlds End. All In is the midyear supershow;
    the season (awards, offseason, fan-war winner) ends after Worlds End, then the calendar rolls into a new year. */
 const SEASON=40,ALLIN_WEEK=24,OLD_SEASON=24;
@@ -3813,7 +3839,7 @@ function chPick(){openPicker({title:'Choose a challenger',cur:CE.c,g:'all',pool:
 let SRV=null;
 function srBest(o){let m=null;o.blocks.forEach(b=>{if(b.brand==='p')b.segs.forEach(x=>{if(!m||x.stars>m.stars)m=x})});return m}
 function showResults(rv){const o=S.last;if(!o)return;if(o.pairs)return openModal(mpResults(o));
- if(SRV&&SRV.t)clearTimeout(SRV.t);SRV=null;
+ if(SRV)srClear();SRV=null;
  const segs=o.blocks.reduce((n,b)=>n+b.segs.length,0);if(rv===true&&segs)return srStage(o);
  const best=srBest(o);
  openModal(`<div class="res-hd"><div class="ptop" style="justify-content:center"><span class="livebug"><b>Final</b><span>Week ${o.week}</span></span></div><div class="showname" style="--n:${lw(esc(o.title))}">${esc(o.title)}</div><div class="lfl"></div></div>${o.ratings?`<div class="score"><div class="me ${o.hourWin==='p'?'win':''}"><span>${esc(S.gm)}</span><div class="stars">${stars(o.ratings.p)}</div></div><i>VS</i><div class="${o.hourWin&&o.hourWin!=='p'?'win':''}"><span>${esc(S.rival)}</span><div class="stars">${stars(o.ratings.ai)}</div></div></div>${o.hourWin?`<div class="winban ${o.hourWin==='p'?'w':'l'}">${o.hourWin==='p'?'You win the night!':esc(S.rival)+' takes the night'}</div>`:''}`:''}
@@ -3822,47 +3848,63 @@ function showResults(rv){const o=S.last;if(!o)return;if(o.pairs)return openModal
  <div class="card"><div class="h small">Fan impact${o.hourWin?` · ${o.hourWin==='p'?'You':'Rival'} won the ratings`:''}</div><div class="row sb"><span>${esc(S.gm)}</span><b class="${o.fans.p>=0?'good':'bad'}">${o.fans.p>=0?'+':''}${o.fans.p.toLocaleString()}</b></div><div class="row sb"><span>${esc(S.rival)}</span><b class="${o.fans.ai>=0?'good':'bad'}">${o.fans.ai>=0?'+':''}${o.fans.ai.toLocaleString()}</b></div></div>${cashCard(o.cash&&o.cash.p)}
  ${o.notes.length?`<div class="card"><div class="h small">Storylines &amp; news</div>${o.notes.map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`:''}
  <button class="btn" onclick="closeModal();go('home');if(S.crisis)setTimeout(openCrisis,250)">Continue</button>`)}
-function srStage(o){const best=srBest(o),q='<span class="srq">?</span>';
- const ord=o.blocks.map((b,bi)=>bi).sort((x,y)=>({p:0,ai:1,x:2}[o.blocks[x].brand]||1)-({p:0,ai:1,x:2}[o.blocks[y].brand]||1));
- const steps=[];ord.forEach(bi=>{const b=o.blocks[bi];b.segs.forEach((s,si)=>steps.push({bi,si,b,s,last:b.brand!=='x'&&si===b.segs.length-1}))});
- const cols=ord.filter(bi=>o.blocks[bi].brand!=='x');
- const who=b=>b.brand==='p'?S.gm:b.brand==='ai'?S.rival:'';
+/* v145: a star meter — five dim stars with a gold layer that sweeps across to the exact rating (¼ steps show as part of a
+   star). Add .go (or sit inside a revealed TV segment) to start the sweep. Shared by the solo stage and the TV reveal. */
+function starMeter(v,cls){v=clamp(+v||0,0,5);return `<span class="smeter ${cls||''}" style="--v:${(v/5).toFixed(4)};--d:${(.55+v*.2).toFixed(2)}s" role="img" aria-label="${stars(v)}"><span class="sm-b">★★★★★</span><span class="sm-f">★★★★★</span></span>`}
+function srGo(el,instant,cb){if(!el)return;if(instant){el.classList.add('now','go');if(cb)cb();return}void el.offsetWidth;el.classList.add('go');
+ if(cb){const d=parseFloat(getComputedStyle(el).getPropertyValue('--d'))||1;srLater(cb,d*1000+120)}}
+function srLater(f,ms){const t=setTimeout(()=>{if(SRV)SRV.tt=SRV.tt.filter(x=>x!==t);f()},ms);if(SRV)SRV.tt.push(t);return t}
+function srClear(){if(!SRV)return;clearTimeout(SRV.t);(SRV.tt||[]).forEach(clearTimeout);SRV.tt=[]}
+/* rounds: your segment and the rival's in the same slot of the card, side by side — main events always meet in the last round */
+function srRounds(o){const P=o.blocks.findIndex(b=>b.brand==='p'),A=o.blocks.findIndex(b=>b.brand==='ai');
+ const it=bi=>bi<0?[]:o.blocks[bi].segs.map((s,si)=>({bi,si,b:o.blocks[bi],s,me:si===o.blocks[bi].segs.length-1}));
+ const p=it(P),q=it(A),n=Math.max(p.length,q.length);const pad=l=>{const x=l.slice();while(x.length<n)x.splice(Math.max(0,x.length-1),0,null);return x};
+ const pp=pad(p),qq=pad(q),out=[];for(let i=0;i<n;i++)out.push({p:pp[i]||null,ai:qq[i]||null,main:i===n-1&&n>1});
+ o.blocks.forEach((b,bi)=>{if(b.brand==='x')b.segs.forEach((s,si)=>out.push({x:{bi,si,b,s}}))});return out}
+function srStage(o){const best=srBest(o),q='<span class="srq">?</span>';const rounds=srRounds(o);
+ const cols=o.blocks.map((b,bi)=>bi).filter(bi=>o.blocks[bi].brand==='p'||o.blocks[bi].brand==='ai').sort((x,y)=>(o.blocks[x].brand==='p'?0:1)-(o.blocks[y].brand==='p'?0:1));
+ const who=b=>b.brand==='p'?S.gm:S.rival;
  openModal(`<div id="srv" class="srv" onclick="srTap(event)">
  <div class="sr-top"><span class="livebug"><b>On air</b><span>Week ${o.week}</span></span><div class="sr-title">${esc(o.title)}</div></div>
  ${o.ratings?`<div class="score"><div class="me" id="srs-p"><span>${esc(S.gm)}</span><div class="stars">${q}</div></div><i>VS</i><div id="srs-ai"><span>${esc(S.rival)}</span><div class="stars">${q}</div></div></div>`:''}
- <div class="sr-spot"><div class="sr-card" id="sr-card"><div class="sr-tag">Tonight</div><div class="sr-txt">${esc(o.title)}</div><div class="muted">${steps.length} segments. Here's how they landed.</div></div></div>
- <div class="sr-run${cols.length<2?' one':''}">${cols.map(bi=>{const b=o.blocks[bi];return `<div class="sr-col ${b.brand==='p'?'mine':'theirs'}"><div class="sr-ch">${esc(who(b)||b.label)}</div>${b.segs.map((s,si)=>`<div class="sr-row" id="srw-${bi}-${si}"><span class="sr-n">${esc(s.txt)}</span><span class="sr-v">·</span></div>`).join('')||'<div class="muted tiny">Nothing aired.</div>'}</div>`}).join('')}</div>
+ <div class="sr-spot"><div class="sr-card" id="sr-card"><div class="sr-intro"><div class="sr-tag">Tonight</div><div class="sr-txt">${esc(o.title)}</div><div class="muted">${rounds.length} round${rounds.length>1?'s':''}, segment against segment. Here's how they landed.</div></div></div></div>
+ <div class="sr-run${cols.length<2?' one':''}">${cols.map(bi=>{const b=o.blocks[bi];return `<div class="sr-col ${b.brand==='p'?'mine':'theirs'}"><div class="sr-ch">${esc(who(b))}</div>${b.segs.map((s,si)=>`<div class="sr-row" id="srw-${bi}-${si}"><span class="sr-n">${esc(s.txt)}</span><span class="sr-v">·</span></div>`).join('')||'<div class="muted tiny">Nothing aired.</div>'}</div>`}).join('')}</div>
  <div class="sr-ctl" id="sr-ctl"><span class="muted tiny">Tap to speed it up</span><button class="mini" onclick="event.stopPropagation();srSkip()">Skip ▸▸</button></div></div>`);
  let bk=null;o.blocks.forEach((b,bi)=>b.segs.forEach((s,si)=>{if(s===best)bk=`srw-${bi}-${si}`}));
- SRV={o,steps,i:0,t:null,cur:null,best:bk,done:false};SRV.t=setTimeout(srNext,1400)}
+ SRV={o,rounds,i:0,t:null,tt:[],cur:null,best:bk,done:false,seen:[]};SRV.t=setTimeout(srNext,1400)}
 function srOn(){return !!(SRV&&document.getElementById('srv'))}
-/* stars fill one at a time; a tick that outlives its card (the card was swapped) just stops */
-function srFill(el,s,instant,cb){if(!el)return;const full=stars(s);if(instant){el.textContent=full;if(cb)cb();return}const ch=[...full];el.textContent='';let k=0;
- const tick=()=>{if(!el.isConnected)return;el.textContent=ch.slice(0,++k).join('');el.classList.remove('srpop');void el.offsetWidth;el.classList.add('srpop');if(k<ch.length)setTimeout(tick,150);else if(cb)setTimeout(cb,250)};setTimeout(tick,450)}
 /* a segment is "done" once its stars are in: its rundown row fills and its show's running score updates (safe to call twice) */
-function srDone(st){if(!st||st.ok)return;st.ok=true;const r=document.getElementById(`srw-${st.bi}-${st.si}`);
- if(r){r.classList.remove('cur');r.classList.add('on');const v=r.querySelector('.sr-v');v.textContent=stars(st.s.stars);v.classList.remove('srpop');void v.offsetWidth;v.classList.add('srpop')}
- const br=st.b.brand;if(br!=='p'&&br!=='ai')return;const box=document.getElementById(br==='p'?'srs-p':'srs-ai');if(!box)return;
- const v=SRV.steps.filter(x=>x.ok&&x.b.brand===br).map(x=>x.s.stars);if(v.length)box.querySelector('.stars').innerHTML=`<em class="srso">SO FAR</em> ${stars(avg(v))}`}
-/* swap the spotlight: the old card slides out left, the new one slides in from the right — same box, so nothing below moves */
+function srDone(it){if(!it||it.ok)return;it.ok=true;SRV.seen.push(it);const r=document.getElementById(`srw-${it.bi}-${it.si}`);
+ if(r){r.classList.remove('cur');r.classList.add('on');const v=r.querySelector('.sr-v');v.textContent=stars(it.s.stars);v.classList.remove('srfade');void v.offsetWidth;v.classList.add('srfade')}
+ const br=it.b.brand;if(br!=='p'&&br!=='ai')return;const box=document.getElementById(br==='p'?'srs-p':'srs-ai');if(!box)return;
+ const v=SRV.seen.filter(x=>x.b.brand===br).map(x=>x.s.stars);const st=box.querySelector('.stars');st.innerHTML=`<em class="srso">SO FAR</em> ${stars(avg(v))}`;st.classList.remove('srfade');void st.offsetWidth;st.classList.add('srfade')}
+/* swap the spotlight: the old round slides out left, the new one slides in from the right — same box, so nothing below moves */
 function srSwap(html,cls,then){const c=document.getElementById('sr-card');if(!c)return;c.classList.add('out');
- setTimeout(()=>{if(!c.isConnected)return;c.className='sr-card pre '+cls;c.innerHTML=html;void c.offsetWidth;c.classList.remove('pre');if(then)then(c)},230)}
-function srStep(st){srDone(SRV.cur);SRV.cur=st;const b=st.b,s=st.s;
- document.querySelectorAll('#srv .sr-row.cur').forEach(r=>r.classList.remove('cur'));const r=document.getElementById(`srw-${st.bi}-${st.si}`);if(r)r.classList.add('cur');
- const tag=b.brand==='p'?'Your show':b.brand==='ai'?'Rival':'Title challenge';
- srSwap(`<div class="sr-tag">${tag} · ${esc(b.brand==='x'?b.label:(b.label.split(' — ')[0]||b.label))}${st.last?' · <b>Main event</b>':''}</div><div class="muted tiny">${esc(s.sub)}</div><div class="sr-txt">${esc(s.txt)}</div><div class="stars sr-big"></div><div class="sr-notes">${s.notes.slice(0,2).map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`,b.brand,
-  c=>srFill(c.querySelector('.sr-big'),s.stars,false,()=>{if(SRV&&SRV.cur===st){srDone(st);const n=c.querySelector('.sr-notes');if(n)n.classList.add('on')}}));
- return Math.min(4200,1900+[...stars(s.stars)].length*150+Math.min(2,s.notes.length)*800)}
-function srFinal(instant){const o=SRV.o;SRV.steps.forEach(srDone);SRV.cur=null;SRV.done=true;clearTimeout(SRV.t);
+ srLater(()=>{if(!c.isConnected)return;c.className='sr-card pre '+cls;c.innerHTML=html;void c.offsetWidth;c.classList.remove('pre');if(then)then(c)},230)}
+function srHalf(it,br,solo){if(!it)return `<div class="sr-half ${br} empty"><div class="sr-tag">${esc(br==='p'?S.gm:S.rival)}</div><div class="muted">Nothing in this slot.</div></div>`;
+ const b=it.b,s=it.s,tag=b.brand==='x'?'Title challenge · '+b.label:(b.brand==='p'?S.gm:S.rival)+' · '+(b.label.split(' — ')[0]||b.label);
+ return `<div class="sr-half ${b.brand}${solo?' solo':''}" id="srh-${br}"><div class="sr-tag">${esc(tag)}</div><div class="sr-txt">${esc(s.txt)}</div><div class="sr-line">${starMeter(s.stars)}<span class="muted tiny sr-sub">${esc(s.sub)}</span></div>${s.notes.length?`<div class="sr-note note">${esc(s.notes[0])}</div>`:''}</div>`}
+function srRound(rd){srDone(SRV.cur&&SRV.cur.p);srDone(SRV.cur&&SRV.cur.ai);srDone(SRV.cur&&SRV.cur.x);SRV.cur=rd;const k=SRV.i;
+ document.querySelectorAll('#srv .sr-row.cur').forEach(r=>r.classList.remove('cur'));[rd.p,rd.ai,rd.x].forEach(it=>{if(!it)return;const r=document.getElementById(`srw-${it.bi}-${it.si}`);if(r)r.classList.add('cur')});
+ if(rd.x){srSwap(`<div class="sr-rd">Interpromotional title challenge</div>${srHalf(rd.x,'x',true)}`,'one',c=>srGo(c.querySelector('.smeter'),false,()=>{srDone(rd.x);c.classList.add('notes')}));return 4200}
+ const n=SRV.rounds.filter(r=>!r.x).length;
+ srSwap(`<div class="sr-rd">${rd.main?'<b>Main event</b>':`Round ${k} of ${n}`}</div>${srHalf(rd.p,'p')}${srHalf(rd.ai,'ai')}`,'pair',c=>{
+  const mp=c.querySelector('#srh-p .smeter'),ma=c.querySelector('#srh-ai .smeter');
+  const cmp=()=>{c.classList.add('notes');if(!rd.p||!rd.ai)return;const d=rd.p.s.stars-rd.ai.s.stars;if(Math.abs(d)<.01)return c.classList.add('tie');const w=c.querySelector(d>0?'#srh-p':'#srh-ai');if(w)w.classList.add('won')};
+  const two=()=>{if(ma)srGo(ma,false,()=>{srDone(rd.ai);srLater(cmp,250)});else srLater(cmp,250)};
+  if(mp)srLater(()=>srGo(mp,false,()=>{srDone(rd.p);srLater(two,350)}),250);else srLater(two,250)});
+ const d=it=>it?.55+it.s.stars*.2:0;return Math.min(7500,Math.round(1000+(d(rd.p)+d(rd.ai))*1000+1000+((rd.p&&rd.p.s.notes.length)||(rd.ai&&rd.ai.s.notes.length)?1600:500)))}
+function srFinal(instant){const o=SRV.o;srClear();SRV.rounds.forEach(r=>[r.p,r.ai,r.x].forEach(srDone));SRV.cur=null;SRV.done=true;
  document.querySelectorAll('#srv .sr-row.cur').forEach(r=>r.classList.remove('cur'));if(SRV.best){const r=document.getElementById(SRV.best);if(r)r.classList.add('best')}
  const v=document.getElementById('srv');const lb=v&&v.querySelector('.livebug b');if(lb)lb.textContent='Final';const ctl=document.getElementById('sr-ctl');if(ctl)ctl.style.visibility='hidden';
  const pb=o.blocks.find(b=>b.brand==='p'),fl=pb&&pb.flow&&pb.flow.mod;
- const html=`<div class="sr-fin">${o.ratings&&o.hourWin?`<div class="winban ${o.hourWin==='p'?'w':'l'}">${o.hourWin==='p'?'You win the night!':esc(S.rival)+' takes the night'}</div>`:o.ratings?'':`<div class="sr-txt">Show's in the books</div><div class="stars sr-big">${pb&&pb.rating!=null?stars(pb.rating):''}</div>`}
+ const html=`<div class="sr-fin">${o.ratings&&o.hourWin?`<div class="winban ${o.hourWin==='p'?'w':'l'}">${o.hourWin==='p'?'You win the night!':esc(S.rival)+' takes the night'}</div>`:o.ratings?'':`<div class="sr-txt">Show's in the books</div><div class="sr-line" style="justify-content:center">${pb&&pb.rating!=null?starMeter(pb.rating,'go now'):''}</div>`}
   ${fl?`<div class="muted tiny">Show structure ${fl>0?'+':'−'}${Math.abs(fl).toFixed(2)}★ · ${esc(flowWord(fl))}</div>`:''}
   <div class="sr-btns"><button class="btn" onclick="event.stopPropagation();showResults()">Full results ▸</button><button class="btn sec" onclick="event.stopPropagation();closeModal();go('home');if(S.crisis)setTimeout(openCrisis,250)">Continue</button></div></div>`;
- const fill=()=>{if(o.ratings)[['p','srs-p'],['ai','srs-ai']].forEach(([k,id])=>{const box=document.getElementById(id);if(!box)return;srFill(box.querySelector('.stars'),o.ratings[k],instant);if(o.hourWin===k)setTimeout(()=>box.classList.add('win'),instant?0:900)})};
+ const fill=()=>{if(o.ratings)[['p','srs-p'],['ai','srs-ai']].forEach(([k,id])=>{const box=document.getElementById(id);if(!box)return;const st=box.querySelector('.stars');st.innerHTML=starMeter(o.ratings[k]);
+  const m=st.querySelector('.smeter');const win=()=>{if(o.hourWin===k)box.classList.add('win')};if(instant){srGo(m,true);win()}else setTimeout(()=>srGo(m,false,win),350)})};
  if(instant){const c=document.getElementById('sr-card');if(c){c.className='sr-card fin';c.innerHTML=html}fill()}else{srSwap(html,'fin');fill()}}
-function srNext(){if(!srOn()||SRV.done)return;clearTimeout(SRV.t);const st=SRV.steps[SRV.i++];if(!st)return srFinal(false);SRV.t=setTimeout(srNext,srStep(st))}
+function srNext(){if(!srOn()||SRV.done)return;srClear();const rd=SRV.rounds[SRV.i++];if(!rd)return srFinal(false);SRV.t=setTimeout(srNext,srRound(rd))}
 function srTap(e){if(!srOn()||SRV.done)return;if(e&&e.target&&e.target.closest('button,a,summary,details'))return;srNext()}
 function srSkip(){if(!srOn()||SRV.done)return;srFinal(true)}
 
@@ -3921,7 +3963,7 @@ function release(id){if(mpLocked())return;const w=S.w[id];if(!confirm(`Release $
 function titlesView(){const tl=Object.values(S.titles);const own=t=>{const h=t.holders.map(x=>S.w[x]).filter(Boolean);return h.length?h[0].own:null};const nY=tl.filter(t=>own(t)==='p').length,nR=tl.filter(t=>own(t)&&own(t)!=='p').length,vY=tl.filter(t=>!own(t)&&t.br==='p').length;
  return pageHead('Championships','The gold',`<b>${nY}</b><small>Yours of ${tl.length}</small>`,{sub:`You ${nY} · ${ON()?'Others':'Rival'} ${nR} · ${tl.length-nY-nR} vacant${vY?` (${vY} yours to crown)`:''}`})+`<p class="muted">The titles were split evenly between the shows at the start. Each brand crowns its own, and a vacant title stays on its brand. The only way to take gold from the rival is a PPV title challenge.</p>`+Object.values(S.titles).map((t,ti)=>{const hs=t.holders.map(h=>S.w[h]).filter(Boolean);const o=hs.length?hs[0].own:null;
  return `<div class="card belt ${ti===0?'top':''} ${o==='p'?'mine':o?'theirs':''}"><div class="row sb"><div class="h">${t.n}</div><span class="badge ${o==='p'?'you':o?'riv':'vac'}">${o==='p'?'YOU':o?(ON()?esc(nameOf(o)).toUpperCase():'RIVAL'):t.br==='p'?'VACANT · YOURS':t.br?'VACANT · '+(ON()?esc(nameOf(t.br)).toUpperCase():'RIVAL'):'VACANT'}</span></div><div class="champ">${hs.length?`<span class="frow">${hs.map(w=>face(w)).join('')}<span>${hs.map(w=>`<span onclick="showW('${w.id}')">${esc(w.name)}</span>`).join(' & ')}</span></span>`:(t.br&&t.br!=='p'?`<span class="muted">Vacant — ${ON()?esc(nameOf(t.br)):esc(S.rival)} will crown a new champion</span>`:'<span class="muted">Vacant — book a match for it</span>')}</div><div class="muted">${t.g==='M'?"Men's":"Women's"} ${t.kind==='singles'?'singles':t.kind==='tag'?'tag team':'trios'}${hs.length?` · ${t.since?'won W'+t.since:'reigning champion'}`:''} · last defense ${t.last?'W'+t.last:'—'}</div>${statBar('Prestige',t.prestige)}</div>`}).join('')}
-const HOWTO=`<p><b>Offers &amp; contracts:</b> free agents with 55+ popularity want an offer, not just a fee: a signing bonus, a weekly salary and promises — creative control, main event spots, a title shot, a place on every PPV. Each wrestler wants different things, so the biggest number doesn't always win. Offers are sealed: the rival (or, in a league, every other GM) can send one too, and the wrestler picks the best package. Re-signing is a negotiation: agree to their demands, or counter on money and refuse some — they take it, counter back or walk away depending on morale, how hot your show is and whether you've kept your word. Promises are contract terms you'll see on the Book screen. Break one and morale drops; break three and they may walk out. Creative control means they won't agree to lose: book them to lose and they fight the finish.</p><p><b>The countdown:</b> now and then a countdown clock appears on the big screen during a solo promo. It hits zero 3 weeks later, and a free agent from the other side of the face/heel line debuts and goes after the wrestler who had the mic — instant heat. You get first dibs on signing them that week at a discount (more if the promo hyped the clock). If you or the rival sign them early, they debut for whoever did.</p><p><b>Open challenges:</b> book one wrestler and see who answers — someone from your roster or the free agents, usually at the challenger's level. The crowd builds up a favourite beforehand: deliver them (or someone bigger) for a huge pop, or fall flat with someone they didn't want. The answer is revealed live and you call the finish. A champion can put their title on the line. A free agent who impresses can be signed at a discount for one week.</p><p><b>Pitches:</b> every couple of weeks a wrestler brings you an idea — a turn, a new skill, a wild new character, a feud, a tag partner, or a problem they need fixed. <i>Give it a try</i> starts a short trial with a clear goal (hit it and it sticks); <i>Go for it</i> commits right away for a bigger payoff and more risk; <i>Let them down gently</i> costs a little morale. Answer within the week or they'll take it as a no. Trials and promises are tracked in your weekly briefing.</p><p><b>Past 5★:</b> a match can only show 5★, but a hot feud on the big stage can rate well past it. The extra becomes an instant-classic bonus — popularity, title prestige, more PPV buys (or merch on TV) and a few extra fans (capped per show, since the show rating already counts those stars). That's also why a gimmick match or a gutsy producer call still pays off on a match that was already headed for 5★.</p><p><b>Producer calls:</b> during a live show you're the producer in gorilla — call the big spots, call the finish, make audibles when things go off the layout, and handle disasters. Each choice shows its odds and how big the payoff could be; you find out exactly what your call did to the match after you make it.</p><p><b>Contract countdown:</b> whenever a deal has 5 weeks or less left (9 for stars at 70+ popularity), a ✍️ card on Home lists every name with their weeks remaining — amber at 3, red on their last show — and tapping a name opens the negotiation. The Book screen repeats it, and if you go live on someone's last show you're asked to re-sign them or let them go first.</p><p><b>Weekly briefing:</b> the first time you open Home each week you'll get a rundown — contracts first — of expiring contracts, unhappy talent, backstage heat, feuds about to go stale, what's coming up and free agents about to leave. Reopen it from Home any time.</p><p><b>Match ratings</b> blend in-ring skill (the best worker in the match helps carry the rest), popularity, chemistry (styles that mesh — high-flyers vs powerhouses, technicians vs technicians — plus face vs heel and history together), feud heat, stipulation fit, title prestige and stamina.</p><p><b>Booking by feel:</b> the match editor doesn't show star math any more. You get the crowd buzz (🥶 Crowd won't care up to 🔥🔥🔥 Could steal the show) and ▲/▼ tells on each stipulation, title and finish. Risky calls — a first-time pairing, a gimmick match, a screwy finish, a run-in or a green rookie — make a match a 🎲 <b>wild card</b> that can land big or fall flat. After the show, tap <b>Why that rating?</b> under any of your matches to see exactly what each part was worth, including the luck of the night.</p><p><b>Discovered chemistry:</b> two wrestlers who have never shared a ring show their chemistry "on paper" only (styles, face vs heel, traits) with a ❓. Their first match together finds out whether they really click — and that spark stays with them as history from then on.</p><p><b>Building stars:</b> popularity from a match is judged against what's expected at each wrestler's level, so a midcarder in a good-for-them match grows while a main eventer still needs a real performance. The fastest way to make someone is to put them next to a top star: tag them together, put them in a multi-person match with the star (winning it helps most), or have them beat the star once — the bigger the name you beat, and the better the match, the bigger the rub. Losing to a top star in a good match costs very little; losing every week to midcarders does.</p><p><b>The top of the card:</b> popularity gets much harder to gain past 80, and harder again past 90, so a 100 is rare. Stars at 85+ also need upkeep: in any week they don't main event, win on PPV or have a 3½★+ match or promo, they slip a little (half as much if they carried a lower name in a decent tag or multi-person match). Keep your top stars featured — and pay them back with a big win after they've spent a few weeks making someone else.</p><p><b>Multi-person matches:</b> in triple threats, 4-ways, tags and trios the top two names carry the crowd and the hottest rivalry in the ring sets the heat. Triple threats and 4-ways love high-flyers and showmen, tag matches lean on partners who click, and a good mix of styles (plus someone to boo) helps. They pay off later too: only one loser takes the fall, lower names gain popularity from working with the top star, and the top star does less of the work (less stamina).</p>
+const HOWTO=`<p><b>Offers &amp; contracts:</b> free agents with 55+ popularity want an offer, not just a fee: a signing bonus, a weekly salary and promises — creative control, main event spots, a title shot, a place on every PPV. Each wrestler wants different things, so the biggest number doesn't always win. Offers are sealed: the rival (or, in a league, every other GM) can send one too, and the wrestler picks the best package. Re-signing is a negotiation: agree to their demands, or counter on money and refuse some — they take it, counter back or walk away depending on morale, how hot your show is and whether you've kept your word. Promises are contract terms you'll see on the Book screen. Break one and morale drops; break three and they may walk out. Creative control means they won't agree to lose: book them to lose and they fight the finish.</p><p><b>The countdown:</b> now and then a countdown clock appears on the big screen during a solo promo. It hits zero 3 weeks later, and a free agent from the other side of the face/heel line debuts and goes after the wrestler who had the mic — instant heat. You get first dibs on signing them that week at a discount (more if the promo hyped the clock). If you or the rival sign them early, they debut for whoever did.</p><p><b>Open challenges:</b> book one wrestler and see who answers — someone from your roster or the free agents, usually at the challenger's level. The crowd builds up a favourite beforehand: deliver them (or someone bigger) for a huge pop, or fall flat with someone they didn't want. The answer is revealed live and you call the finish. A champion can put their title on the line. A free agent who impresses can be signed at a discount for one week.</p><p><b>Pitches:</b> every couple of weeks a wrestler brings you an idea — a turn, a new skill, a wild new character, a feud, a tag partner, or a problem they need fixed. <i>Give it a try</i> starts a short trial with a clear goal (hit it and it sticks); <i>Go for it</i> commits right away for a bigger payoff and more risk; <i>Let them down gently</i> costs a little morale. Answer within the week or they'll take it as a no. Trials and promises are tracked in your weekly briefing.</p><p><b>Past 5★:</b> a match can only show 5★, but a hot feud on the big stage can rate well past it. The extra becomes an instant-classic bonus — popularity, title prestige, more PPV buys (or merch on TV) and a few extra fans (capped per show, since the show rating already counts those stars). That's also why a gimmick match or a gutsy producer call still pays off on a match that was already headed for 5★.</p><p><b>Producer calls:</b> during a live show you're the producer in gorilla — call the big spots, call the finish, make audibles when things go off the layout, and handle disasters. Each choice shows its odds and how big the payoff could be; you find out exactly what your call did to the match after you make it.</p><p><b>Contract countdown:</b> whenever a deal has 5 weeks or less left (9 for stars at 70+ popularity), a ✍️ card on Home lists every name with their weeks remaining — amber at 3, red on their last show — and tapping a name opens the negotiation. The Book screen repeats it, and if you go live on someone's last show you're asked to re-sign them or let them go first.</p><p><b>Weekly briefing:</b> the first time you open Home each week you'll get a rundown — contracts first — of expiring contracts, unhappy talent, backstage heat, feuds about to go stale, what's coming up and free agents about to leave. Reopen it from Home any time.</p><p><b>Match ratings</b> blend in-ring skill (the best worker in the match helps carry the rest), popularity, chemistry (styles that mesh — high-flyers vs powerhouses, technicians vs technicians — plus face vs heel and history together), feud heat, stipulation fit, title prestige and stamina.</p><p><b>Booking by feel:</b> the match editor doesn't show star math any more. You get the crowd buzz (🥶 Crowd won't care up to 🔥🔥🔥 Could steal the show) and ▲/▼ tells on each stipulation, title and finish. Risky calls — a first-time pairing, a gimmick match, a screwy finish, a run-in or a green rookie — make a match a 🎲 <b>wild card</b> that can land big or fall flat. After a solo show the results play out head to head: your segment and the rival's in the same slot share the spotlight, their stars sweep in, the better one wins the round, and the final ratings land last (tap to hurry it, Skip to jump ahead). Then open <b>Full results</b> and tap <b>Why that rating?</b> under any of your matches to see exactly what each part was worth, including the luck of the night.</p><p><b>Discovered chemistry:</b> two wrestlers who have never shared a ring show their chemistry "on paper" only (styles, face vs heel, traits) with a ❓. Their first match together finds out whether they really click — and that spark stays with them as history from then on.</p><p><b>Building stars:</b> popularity from a match is judged against what's expected at each wrestler's level, so a midcarder in a good-for-them match grows while a main eventer still needs a real performance. The fastest way to make someone is to put them next to a top star: tag them together, put them in a multi-person match with the star (winning it helps most), or have them beat the star once — the bigger the name you beat, and the better the match, the bigger the rub. Losing to a top star in a good match costs very little; losing every week to midcarders does.</p><p><b>The top of the card:</b> popularity gets much harder to gain past 80, and harder again past 90, so a 100 is rare. Stars at 85+ also need upkeep: in any week they don't main event, win on PPV or have a 3½★+ match or promo, they slip a little (half as much if they carried a lower name in a decent tag or multi-person match). Keep your top stars featured — and pay them back with a big win after they've spent a few weeks making someone else.</p><p><b>Multi-person matches:</b> in triple threats, 4-ways, tags and trios the top two names carry the crowd and the hottest rivalry in the ring sets the heat. Triple threats and 4-ways love high-flyers and showmen, tag matches lean on partners who click, and a good mix of styles (plus someone to boo) helps. They pay off later too: only one loser takes the fall, lower names gain popularity from working with the top star, and the top star does less of the work (less stamina).</p>
 <p><b>Shows</b>: ${cardMatches(false)} matches and 2 promos on weekly TV, plus an optional <b>bonus match</b> and <b>bonus promo</b> — run them when you have something worth showing; they count toward the show rating like any segment and cost stamina like any match; PPVs are ${cardMatches(true)} matches plus an optional title challenge. The last match is your main event and counts the most.</p>
 <p><b>Stamina</b> (the green-to-red STA bar on each card): a match costs about 16 in singles, less in tag and multi-person matches, more with a rough stipulation or on PPV. Wrestlers who worked a match get 10 back each week; anyone who gets the week off — or only cuts a promo — gets 25 back. Below ${100-FAT_OK} stamina matches start to suffer, and below ${100-FAT_RISK} the injury risk climbs. Rotate your roster and rest your stars before PPVs. <b>Double duty:</b> a wrestler can work up to ${DD_MAX} matches on the same show — each match after their first costs ${DD_FAT}× the stamina, and they go into it carrying the first one's wear. If they get hurt in the first, the second is scrapped. AEW rotates a big roster, so sitting out is fine — time off TV doesn't cost morale.</p>
 <p><b>Turning heel or face:</b> book a <b>Heel / Face Turn</b> promo — the turn is guaranteed when it airs. Add a second wrestler and a face can turn on them (big heat) or a heel can make the save (chemistry). Or use <b>Turn off-screen</b> on a wrestler's profile for an instant switch that costs a little popularity. You can also turn someone with a <b>run-in</b>: a face who costs another face the match or beats them down after the bell turns heel, and a heel who runs off another heel to save the day turns face — tick the turn option in the run-in section. Turning the same wrestler again within 8 weeks gives fans whiplash.</p>
@@ -3943,7 +3985,7 @@ const HOWTO=`<p><b>Offers &amp; contracts:</b> free agents with 55+ popularity w
 <p><b>Development:</b> wrestlers improve toward their potential by working matches (faster against better opponents) and by Performance Center training. Overworked talent gets hurt.</p>
 <p><b>League weeks:</b> everyone books the same week at the same time, on their own phone, whenever suits them. Make your calls, lock in, and the week airs the moment the last GM locks in — cards stay secret until then. While anyone is still booking, even smaller free agents take sealed offers instead of going to whoever taps first: if two GMs want the same wrestler, they usually pick the hotter show. (Prefer the old way? Office → League weeks → Take turns.)</p>
 <p><b>Draft board:</b> during the draft, tap <b>Draft board</b> to see every GM's roster as it fills up — round by round, newest pick on top, with payroll and cap room.</p>
-<p><b>Party night:</b> any online league can play in the same room. Start it from the league's Office and everyone locks in their card, then GMs go live one at a time: you make your promo and match calls on your phone while the TV shows every choice and outcome to the room. The week airs when the last GM wraps up. To put it on a TV, open the game there, tap <b>Show a league on this screen</b> and enter the league code — the TV shows who's still booking and plays the results segment by segment. End party night any time and the league goes back to taking turns with the same save. The TV goes full screen (press <b>F</b> or tap ⛶ to switch) and shows the draft as a live board of every GM's picks.</p>
+<p><b>Party night:</b> any online league can play in the same room. Start it from the league's Office and everyone locks in their card, then GMs go live one at a time: you make your promo and match calls on your phone while the TV shows every choice and outcome to the room. The week airs when the last GM wraps up. To put it on a TV, open the game there, tap <b>Show a league on this screen</b> and enter the league code — the TV shows who's still booking and plays the results head to head, alternating between shows, with the better segment in each slot winning the round. End party night any time and the league goes back to taking turns with the same save. The TV goes full screen (press <b>F</b> or tap ⛶ to switch) and shows the draft as a live board of every GM's picks.</p>
 <p><b>Cloud save &amp; backups:</b> turn on cloud save in the ⚙️ Game menu to back up automatically and continue on any device with your sync code. Everything still saves on the device first, so offline play just works and syncs later. The game also keeps automatic backups of your last few weeks (Office → Backups).</p>
 <p><b>Show structure</b> counts toward the show rating, the way AEW's quarter-hour numbers reward it: open hot with a strong segment, keep the middle moving (back-to-back promos and dead spots cost you), build through the second half, and make the main event the best thing on the show. Every show needs something for the women's division if you have one. The Show flow card on the booking screen previews it — hold and drag segments to change the running order.</p>
 <p><b>Debuts:</b> anyone you sign during the season arrives with debut buzz. Their first appearance on your show — match or promo — pops the crowd: the bigger the star, the bigger the bump in stars and fans (a PPV debut is bigger still). Wait more than a few weeks and the buzz wears off.</p>

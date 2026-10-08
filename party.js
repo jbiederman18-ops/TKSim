@@ -343,12 +343,12 @@ function tvOver(){const l=localSeats().slice().sort((a,b)=>S.fans[b]-S.fans[a]);
 function tvRevealPairs(){const L=S.last;return (L.pairs||[{blocks:L.blocks,ratings:L.ratings,fans:L.fans,hourWin:L.hourWin}])}
 function tvRevealHtml(){const L=S.last,R=TV.reveal,pairs=tvRevealPairs(),pr=pairs[R.pi];R.built=R.key+':'+R.pi;
  const cols=pr.blocks.filter(b=>b.brand!=='x'),x=pr.blocks.find(b=>b.brand==='x');
- const col=(b,ci)=>`<div class="rv-col"><div class="rv-hd"><div class="rv-show">${esc(b.label)}</div><div class="rv-run" id="rvr${ci}">—</div></div>${b.segs.map((s,si)=>`<div class="rv-seg" id="rv-${ci}-${si}" data-st="${s.stars}"><div class="muted tiny">${si===b.segs.length-1?'<b class="gold">MAIN EVENT</b> · ':''}${esc(s.sub)}</div><div class="rv-txt">${esc(s.txt)}</div><div class="stars rv-stars">${stars(s.stars)}</div>${s.notes.slice(0,3).map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`).join('')||'<div class="muted">Nothing aired.</div>'}</div>`;
+ const col=(b,ci)=>`<div class="rv-col"><div class="rv-hd"><div class="rv-show">${esc(b.label)}</div><div class="rv-run" id="rvr${ci}">—</div></div>${b.segs.map((s,si)=>`<div class="rv-seg" id="rv-${ci}-${si}" data-st="${s.stars}"><div class="muted tiny">${si===b.segs.length-1?'<b class="gold">MAIN EVENT</b> · ':''}${esc(s.sub)}</div><div class="rv-txt">${esc(s.txt)}</div><div class="rv-stars">${starMeter(s.stars)}</div>${s.notes.slice(0,3).map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`).join('')||'<div class="muted">Nothing aired.</div>'}</div>`;
  const ks=Object.keys(pr.ratings);const best=ks.slice().sort((a,b)=>pr.ratings[b]-pr.ratings[a])[0];
  return `<div id="rv" class="rv"><div class="rv-top"><div class="kicker"><i></i>Week ${L.week} · ${pairs.length>1?`Matchup ${R.pi+1} of ${pairs.length}`:'Results'}</div><div class="showname">${esc(L.ppv?L.title:ks.map(k=>showNames()[k]||nameOf(k)).join(' vs '))}</div></div>
  ${R.pi===0&&L.deals&&L.deals.length?dealRevealHtml(L.deals):''}<div class="rv-cols">${cols.map((b,ci)=>(ci?'<div class="vs rv-vs">VS</div>':'')+col(b,ci)).join('')}</div>
- ${x?`<div class="card rv-x"><div class="h small">${esc(x.label)}</div>${x.segs.map((s,si)=>`<div class="rv-seg" id="rv-x-${si}"><div class="rv-txt">${esc(s.txt)}</div><div class="muted tiny">${esc(s.sub)}</div><div class="stars rv-stars">${stars(s.stars)}</div>${s.notes.slice(0,2).map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`).join('')}</div>`:''}
- <div class="rv-final" id="rv-final"><div class="rv-scores">${ks.map(k=>`<div class="rv-score ${k===best&&ks.length>1?'win':''}"><span>${esc(nameOf(k))}</span><div class="stars">${stars(pr.ratings[k])}</div><b class="${pr.fans[k]>=0?'good':'bad'}">${pr.fans[k]>=0?'+':''}${fmtFans(Math.abs(pr.fans[k])).replace(/^/,pr.fans[k]<0?'−':'')} fans</b></div>`).join('')}</div>
+ ${x?`<div class="card rv-x"><div class="h small">${esc(x.label)}</div>${x.segs.map((s,si)=>`<div class="rv-seg" id="rv-x-${si}"><div class="rv-txt">${esc(s.txt)}</div><div class="muted tiny">${esc(s.sub)}</div><div class="rv-stars">${starMeter(s.stars)}</div>${s.notes.slice(0,2).map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`).join('')}</div>`:''}
+ <div class="rv-final" id="rv-final"><div class="rv-scores">${ks.map(k=>`<div class="rv-score ${k===best&&ks.length>1?'win':''}"><span>${esc(nameOf(k))}</span><div class="rv-fs">${starMeter(pr.ratings[k])}</div><b class="${pr.fans[k]>=0?'good':'bad'}">${pr.fans[k]>=0?'+':''}${fmtFans(Math.abs(pr.fans[k])).replace(/^/,pr.fans[k]<0?'−':'')} fans</b></div>`).join('')}</div>
  <div class="rv-win">${ks.length>1?(pr.hourWin?`🏆 ${esc(nameOf(pr.hourWin))} wins the night!`:`🏆 ${esc(nameOf(best))} steals the show!`):'Bye-week show in the books.'}</div></div>
  <div class="rv-ctl"><button class="mini" onclick="tvRevealSkip()">Skip ▸▸</button></div></div>`}
 function tvRevealRun(){const R=TV.reveal,pr=tvRevealPairs()[R.pi];const cols=pr.blocks.filter(b=>b.brand!=='x'),x=pr.blocks.find(b=>b.brand==='x');
@@ -359,13 +359,17 @@ function tvRevealRun(){const R=TV.reveal,pr=tvRevealPairs()[R.pi];const cols=pr.
  steps.push({id:'rv-final',n:0,final:true});R.steps=steps;R.si=R.si||0;
  for(let i=0;i<R.si&&i<steps.length;i++)tvRevealShow(steps[i],true);
  tvRevealNext()}
-function tvRevealShow(st,instant){const el=document.getElementById(st.id);if(!el)return;el.classList.add('on');if(instant)el.classList.add('now');
+/* v145: once both shows' segments in the same slot are up, the better one wins the round */
+function tvRoundWin(i,instant){const els=[...document.querySelectorAll('#rv .rv-col')].map((c,ci)=>document.getElementById(`rv-${ci}-${i}`));
+ if(els.length<2||els.some(e=>!e||!e.classList.contains('on')))return;const v=els.map(e=>+e.dataset.st),m=Math.max(...v);if(v.filter(x=>Math.abs(x-m)<.01).length>1)return;
+ const w=els[v.indexOf(m)];setTimeout(()=>{if(w.isConnected)w.classList.add('rvw')},instant?0:2300)}
+function tvRevealShow(st,instant){const el=document.getElementById(st.id);if(!el)return;el.classList.add('on');if(instant)el.classList.add('now');if(st.ci!=null){const i=+st.id.split('-').pop();tvRoundWin(i,instant)}
  if(st.ci!=null){const segs=[...document.querySelectorAll(`[id^="rv-${st.ci}-"].on`)].map(e=>+e.dataset.st);const r=document.getElementById('rvr'+st.ci);if(r&&segs.length)r.innerHTML=`<span class="muted tiny">SO FAR</span> <span class="stars">${stars(avg(segs))}</span>`}
  if(!instant)try{el.scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}}
 function tvRevealNext(){const R=TV&&TV.reveal;if(!R||!R.steps||!document.getElementById('rv'))return;clearTimeout(R.t);
  if(R.si>=R.steps.length){R.t=setTimeout(tvRevealAdvance,9000);return}
  const st=R.steps[R.si++];tvRevealShow(st,false);
- R.t=setTimeout(tvRevealNext,st.final?0:Math.min(7000,3000+st.n*1100))}
+ R.t=setTimeout(tvRevealNext,st.final?0:Math.min(7600,3600+st.n*1100))}
 function tvRevealAdvance(){const R=TV&&TV.reveal;if(!R)return;clearTimeout(R.t);const n=tvRevealPairs().length;
  if(R.pi<n-1){R.pi++;R.si=0;R.built=null;render();return}
  TV.reveal=null;window.scrollTo(0,0);render()}
