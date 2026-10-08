@@ -275,7 +275,7 @@ function tvIncoming(d){if(!TV||!d||!d.state)return;if((d.rev||0)<TV.rev&&S)retur
  if(TV.reveal&&TV.feed&&TV.feed.html&&TV.feed.week===S.week&&S.online&&S.online.live){if(TV.reveal.t)clearTimeout(TV.reveal.t);TV.reveal=null}
  tvRefresh()}
 function tvEnd(){if(!confirm('Take the league off this screen?'))return;tvStop()}
-function tvStop(){tvFull(false);if(TV){if(TV.unsub)TV.unsub();if(TV.reveal&&TV.reveal.t)clearTimeout(TV.reveal.t)}TV=null;LS.del(TV_KEY);document.body.classList.remove('tv');
+function tvStop(){tvFull(false);document.body.style.zoom='';document.body.style.removeProperty('--tvz');if(TV){if(TV.unsub)TV.unsub();if(TV.reveal&&TV.reveal.t)clearTimeout(TV.reveal.t)}TV=null;LS.del(TV_KEY);document.body.classList.remove('tv');
  S=null;try{const a=JSON.parse(LS.get('tksim_active')||'null');const g=a&&LS.get('tksim_game_'+a.code);if(g){LMP={code:a.code,me:a.me,key:a.key};S=JSON.parse(g)}}catch(e){LMP=null}
  if(!S)S=load();if(S){dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);if(!ON())showMigrate()}closeModal();tab='home';ANIM=true;render();if(ON())mpConnect()}
 function tvReplay(){if(!TV||!S||!S.last)return;TV.reveal={key:S.last.season+'-'+S.last.week,pi:0};render()}
@@ -293,7 +293,13 @@ function tvHeader(){const st=TV.status==='on'?'':TV.status==='missing'?'<span cl
 function tvJoinUrl(){return location.href.split(/[?#]/)[0]+'?join='+TV.code}
 function tvShortUrl(){return location.href.split(/[?#]/)[0].replace(/^https?:\/\//,'').replace(/index\.html$/,'').replace(/\/$/,'')}
 function tvQR(){try{const q=qrcode(0,'M');q.addData(tvJoinUrl());q.make();return q.createSvgTag({cellSize:6,margin:2,scalable:true})}catch(e){return ''}}
-function tvRender(){document.body.classList.add('tv');const app=$('#app');
+/* v146: big screens. The TV layout is designed for a 1920×1080 picture; a PC driving a 4K TV at 100% Windows scaling reports
+   3840×2160, which left everything half-size in a strip down the middle. Scale the whole TV view up to fill the screen
+   (same proportions as 1080p at every size). 150%/200% scaling and 1080p TVs come out at 1× and are unchanged. */
+function tvScale(){const z=TV?Math.max(1,Math.min(innerWidth/1920,innerHeight/1080)):1;const v=z>1.02?String(Math.round(z*100)/100):'';
+ if(document.body.style.zoom!==v){document.body.style.zoom=v;document.body.style.setProperty('--tvz',v||'1')}}
+addEventListener('resize',()=>{try{tvScale()}catch(e){}});
+function tvRender(){document.body.classList.add('tv');tvScale();const app=$('#app');
  if(TV.reveal&&S&&S.last){if(document.getElementById('rv')&&TV.reveal.built===TV.reveal.key+':'+TV.reveal.pi)return;app.innerHTML=tvHeader()+`<main class="tv-main">${tvRevealHtml()}</main>`;tvRevealRun();return}
  let body;
  if(!S)body=tvWaiting();else if(Object.values(S.names||{}).filter(Boolean).length<nSeats())body=tvLobby();else if(S.phase==='rookies')body=tvRookies();else if(S.phase==='draft')body=tvDraft();else if(S.phase==='over')body=tvOver();else if(S.online&&S.online.live&&partyLiveNow())body=tvLive();else body=tvWeek();
