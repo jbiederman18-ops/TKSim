@@ -11,7 +11,7 @@
      tour get a "what's new" replay of just those stops.
    • Run `python3 tools/check-tutorial.py` — it plays every stop and tip in a headless browser and fails on any
      missing target or stale value. */
-const TUT_REV=6;
+const TUT_REV=7;
 const TUT_KEY='tksim_tut';
 const TUT_MISS=[];
 
@@ -86,8 +86,8 @@ const TUT_STEPS=[
  b:()=>`Put the same two people in matches and promos week after week and heat builds: a rivalry at ${tvTier(0)}, a full feud at ${tvTier(1)}, a blood feud at ${tvTier(2)}. Face vs heel, title matches and messy finishes build the most.<br><br>Pay it off at a PPV once it's hot (35+) with a <b>clean finish</b>. Don't repeat the exact same thing two weeks running — the crowd tires of it.`},
 {id:'s.stam',track:'season',since:1,tab:'book',opt:true,sel:'main details.lrd',sys:['stamina','injuries','durability'],t:'Stamina',
  b:()=>`Everyone has a stamina bar. A match drains it; a week off (or just a promo) refills it fastest. Below ${tv('FAT_OK',()=>100-FAT_OK,65)} stamina matches suffer, and below ${tv('FAT_RISK',()=>100-FAT_RISK,45)} injuries get likely. Rotate your stars — and check <b>Durability</b> on profiles: some bodies hold up, some don't.`},
-{id:'s.live',track:'season',since:6,tab:'book',sel:'main .btn.live',sys:['live','calls','injuries'],t:'Go live',
- b:()=>`When every slot is filled, go live. Promos play out as short scenes where you make the calls, and matches throw you decisions mid-match.<br><br>Calls stick: a risky spot can injure someone, a cheating heel can get disqualified, a partner can turn. ${ON()?'After the show,':"When the show airs, the results play out one segment at a time — yours, then the rival's — and the final star ratings land last (tap to hurry it, or Skip). Then"} tap <b>Why that rating?</b> to see what each part was worth.`},
+{id:'s.live',track:'season',since:7,tab:'book',sel:'main .btn.live',sys:['live','calls','injuries'],t:'Go live',
+ b:()=>`When every slot is filled, go live. Promos play out as short scenes where you make the calls (you'll hear how the crowd took it — 🥶 to 🔥🔥🔥 — but not the stars), and matches throw you decisions mid-match.<br><br>Calls stick: a risky spot can injure someone, a cheating heel can get disqualified, a partner can turn. ${ON()?'After the show,':"When the show airs, the results play out one segment at a time — yours, then the rival's — and the final star ratings land last (tap to hurry it, or Skip). Then"} tap <b>Why that rating?</b> to see what each part was worth.`},
 {id:'s.stars',track:'season',since:1,tab:'roster',prep:()=>{rf='mine'},sel:()=>{const g=document.querySelector('main .cgrid');return g&&g.firstElementChild},sys:['popularity','the rub','development'],t:'Making new stars',
  b:()=>`Your top names can make the next ones. Beating someone more popular gives a wrestler <b>the rub</b> (an upset even more), and teaming with or sharing a multi-person match with a star rubs off too.<br><br>The very top is hard to reach and hard to hold: gains slow past 80 and 90, and stars at ${tv('UPKEEP_AT',()=>UPKEEP_AT,85)}+ slip in weeks they aren't featured. Tap any wrestler to see their best opponents and partners.`},
 {id:'s.morale',track:'season',since:1,tab:'roster',prep:()=>{rf='mine'},sel:'main .card.phead',sys:['morale','contracts','promises'],t:'Keep them happy',
