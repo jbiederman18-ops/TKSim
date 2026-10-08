@@ -11,7 +11,7 @@
      tour get a "what's new" replay of just those stops.
    • Run `python3 tools/check-tutorial.py` — it plays every stop and tip in a headless browser and fails on any
      missing target or stale value. */
-const TUT_REV=5;
+const TUT_REV=6;
 const TUT_KEY='tksim_tut';
 const TUT_MISS=[];
 
@@ -72,8 +72,8 @@ const TUT_STEPS=[
  b:()=>`The network wants something specific by the next PPV. Deliver for cash and fans; miss it and you lose fans. It's always on Home and Book with a live ✅/⏳ check on your card.`},
 {id:'s.goal',track:'season',since:1,tab:'book',opt:true,sel:'main .card.wkg',sys:['weekly goals','chants'],t:'Small wins every week',
  b:()=>`A <b>weekly goal</b> pays a little cash and fans (no penalty for missing it), and the crowd <b>chants</b> for someone. Put them on the show for a bonus and a popularity bump.`},
-{id:'s.card',track:'season',since:2,tab:'book',sel:'main .slot',sys:['card','promos'],t:'The running order',
- b:()=>`Weekly TV is ${tv('cardMatches',()=>cardMatches(false),3)} matches and 2 promos, plus an optional <b>bonus match</b> and <b>bonus promo</b> — book them when you have something worth showing, or leave them empty. PPVs are ${tv('cardMatches ppv',()=>cardMatches(true),5)} matches and a title challenge.<br><br>Promos build feud heat without anyone wrestling — a cheap way to make people care. Hold and drag to reorder.`},
+{id:'s.card',track:'season',since:6,tab:'book',sel:'main .slot',sys:['card','promos'],t:'The running order',
+ b:()=>`Weekly TV is ${tv('cardMatches',()=>cardMatches(false),3)} matches and 2 promos, plus an optional <b>bonus match</b> and <b>bonus promo</b> — book them when you have something worth showing, or leave them empty. PPVs are ${tv('cardMatches ppv',()=>cardMatches(true),5)} matches and a title challenge.<br><br>Promos build feud heat without anyone wrestling — a cheap way to make people care. Each kind has its own job: a <b>Sit-Down Interview</b> lifts morale, a <b>Faction Rally</b> lends a star's shine to a partner, a <b>Backstage Vignette</b> safely builds an unknown, a <b>Champion's Address</b> adds prestige to the belt. The picker marks ✓ Good fit when one suits who you've chosen. Hold and drag to reorder.`},
 {id:'s.main',track:'season',since:1,tab:'book',sel:'main .slot.me',sys:['card','fans'],t:'The main event',
  b:()=>`The last match counts the most. Put your biggest names and hottest feud here, and make it the best thing on the show.`},
 {id:'s.suggest',track:'season',since:1,tab:'book',opt:true,sel:'main [onclick="suggestFill()"]',sys:['booking'],t:'Need a starting point?',
@@ -86,8 +86,8 @@ const TUT_STEPS=[
  b:()=>`Put the same two people in matches and promos week after week and heat builds: a rivalry at ${tvTier(0)}, a full feud at ${tvTier(1)}, a blood feud at ${tvTier(2)}. Face vs heel, title matches and messy finishes build the most.<br><br>Pay it off at a PPV once it's hot (35+) with a <b>clean finish</b>. Don't repeat the exact same thing two weeks running — the crowd tires of it.`},
 {id:'s.stam',track:'season',since:1,tab:'book',opt:true,sel:'main details.lrd',sys:['stamina','injuries','durability'],t:'Stamina',
  b:()=>`Everyone has a stamina bar. A match drains it; a week off (or just a promo) refills it fastest. Below ${tv('FAT_OK',()=>100-FAT_OK,65)} stamina matches suffer, and below ${tv('FAT_RISK',()=>100-FAT_RISK,45)} injuries get likely. Rotate your stars — and check <b>Durability</b> on profiles: some bodies hold up, some don't.`},
-{id:'s.live',track:'season',since:1,tab:'book',sel:'main .btn.live',sys:['live','calls','injuries'],t:'Go live',
- b:()=>`When every slot is filled, go live. Promos play out as short scenes where you make the calls, and matches throw you decisions mid-match.<br><br>Calls stick: a risky spot can injure someone, a cheating heel can get disqualified, a partner can turn. After the show, tap <b>Why that rating?</b> to see what each part was worth.`},
+{id:'s.live',track:'season',since:6,tab:'book',sel:'main .btn.live',sys:['live','calls','injuries'],t:'Go live',
+ b:()=>`When every slot is filled, go live. Promos play out as short scenes where you make the calls, and matches throw you decisions mid-match.<br><br>Calls stick: a risky spot can injure someone, a cheating heel can get disqualified, a partner can turn. ${ON()?'After the show,':"When the show airs, the results play out one segment at a time — yours, then the rival's — and the final star ratings land last (tap to hurry it, or Skip). Then"} tap <b>Why that rating?</b> to see what each part was worth.`},
 {id:'s.stars',track:'season',since:1,tab:'roster',prep:()=>{rf='mine'},sel:()=>{const g=document.querySelector('main .cgrid');return g&&g.firstElementChild},sys:['popularity','the rub','development'],t:'Making new stars',
  b:()=>`Your top names can make the next ones. Beating someone more popular gives a wrestler <b>the rub</b> (an upset even more), and teaming with or sharing a multi-person match with a star rubs off too.<br><br>The very top is hard to reach and hard to hold: gains slow past 80 and 90, and stars at ${tv('UPKEEP_AT',()=>UPKEEP_AT,85)}+ slip in weeks they aren't featured. Tap any wrestler to see their best opponents and partners.`},
 {id:'s.morale',track:'season',since:1,tab:'roster',prep:()=>{rf='mine'},sel:'main .card.phead',sys:['morale','contracts','promises'],t:'Keep them happy',
@@ -212,7 +212,7 @@ function tutMenuCard(){if(!S)return '';const dr=S.phase==='draft',on=tutTipsOn()
  if(typeof briefAuto==='function'){const b0=briefAuto;briefAuto=function(){if(TUT||TUT_OFFER)return;const st=tutStore();
   if(S&&S.phase==='season'&&st.season===undefined&&S.week<=2&&!(S.season>1))return;return b0.apply(this,arguments)}}
  if(typeof renderMatchEd==='function'){const m0=renderMatchEd;renderMatchEd=function(){const out=m0.apply(this,arguments);try{tutTip('t.editor')}catch(e){}return out}}
- if(typeof showResults==='function'){const s0=showResults;showResults=function(){const out=s0.apply(this,arguments);try{tutTip('t.results')}catch(e){}return out}}
+ if(typeof showResults==='function'){const s0=showResults;showResults=function(rv){const out=s0.apply(this,arguments);/* the solo reveal shows this tip itself once it finishes */if(rv!==true)try{tutTip('t.results')}catch(e){}return out}}
  let raf=0;const re=()=>{if(!TUT||raf)return;raf=requestAnimationFrame(()=>{raf=0;if(TUT)tutPlace(tutFind(TUT.steps[TUT.i]))})};
  addEventListener('resize',re);addEventListener('scroll',re,true);
  setTimeout(()=>{try{tutAuto()}catch(e){}},900);

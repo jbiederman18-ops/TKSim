@@ -95,7 +95,8 @@ async def main(shots):
             else:
                 visited.append('t.ppv'); await shot('t.ppv'); await pg.evaluate('tutNext()')
             await pg.evaluate('goLive()'); await pg.wait_for_timeout(300)
-            await pg.evaluate('finishLive()'); await pg.wait_for_timeout(900)
+            await pg.evaluate('finishLive()'); await pg.wait_for_timeout(300)
+            await pg.evaluate("typeof srSkip==='function'&&srSkip()"); await pg.wait_for_timeout(900)
             if await pg.evaluate("!!(TUT&&TUT.steps[0].id==='t.results')"):
                 visited.append('t.results'); await shot('t.results'); await pg.evaluate('tutNext()')
 
