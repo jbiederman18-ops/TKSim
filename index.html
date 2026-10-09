@@ -932,7 +932,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v146';
+const APP_VERSION='v147';
 /* v113: a rolling AEW year — a PPV every 4 weeks from Revolution to Worlds End. All In is the midyear supershow;
    the season (awards, offseason, fan-war winner) ends after Worlds End, then the calendar rolls into a new year. */
 const SEASON=40,ALLIN_WEEK=24,OLD_SEASON=24;
@@ -1031,7 +1031,6 @@ const RAW=`Will Ospreay|M|fl|f|97|80|92|99
 Kenny Omega|M|te|f|94|80|90
 Jon Moxley|M|br|h|88|90|91
 Claudio Castagnoli|M|pw|h|90|62|72
-PAC|M|fl|h|89|72|70
 Wheeler Yuta|M|te|h|80|55|55|88
 Marina Shafir|F|te|h|70|50|45|76
 MJF|M|te|h|86|98|93|90
@@ -1047,7 +1046,7 @@ Konosuke Takeshita|M|pw|f|93|65|78|96
 Kazuchika Okada|M|te|h|92|70|84
 Andrade El Ídolo|M|fl|f|87|60|72
 Daniel Garcia|M|te|f|82|72|66|90
-Mark Davis|M|pw|h|80|55|55|84
+Mark Davis|M|pw|h|80|55|60|84
 Jack Perry|M|fl|h|80|72|70|88
 Ricochet|M|fl|h|88|78|74
 Christian Cage|M|sh|h|80|95|82
@@ -1068,7 +1067,7 @@ Mark Briscoe|M|br|f|84|75|72
 Tommaso Ciampa|M|br|h|84|80|68
 Samoa Joe|M|pw|f|82|88|80
 Hook|M|br|f|72|55|66|82
-Myron Reed|M|fl|f|78|58|45|86
+Myron Reed|M|fl|f|78|58|48|86
 Wardlow|M|pw|f|76|70|72|84
 Josh Alexander|M|te|h|88|72|64
 Hechicero|M|te|h|85|45|50
@@ -1118,7 +1117,7 @@ Athena|F|br|h|84|84|74
 Anna Jay|F|te|f|70|70|60|80
 Mina Shirakawa|F|te|f|74|65|62
 Riho|F|fl|f|78|55|62
-Queen Aminata|F|br|f|74|65|56|84
+Queen Aminata|F|br|f|74|65|60|84
 Billie Starkz|F|fl|h|72|60|52|90
 Thunder Rosa|F|br|f|80|75|66
 Serena Deeb|F|te|h|86|65|55
@@ -1218,7 +1217,7 @@ const TITLES=[
 ['wtag',"Women's Tag Team",'tag','F',['jamie-hayter','alex-windsor'],60],
 ['trios','World Trios','trios','M',['swerve-strickland','kofi-kingston','austin-creed'],60]];
 const TEAMS=[
-['Death Riders','faction',['jon-moxley','claudio-castagnoli','pac','wheeler-yuta','marina-shafir','daniel-garcia','gabe-kidd']],
+['Death Riders','faction',['jon-moxley','claudio-castagnoli','wheeler-yuta','marina-shafir','daniel-garcia','gabe-kidd']],
 ['Don Callis Family','faction',['kyle-fletcher','kevin-knight','kazuchika-okada','josh-alexander','hechicero','mark-davis','lance-archer','brian-cage','wardlow','el-clon','jake-doyle','rocky-romero','trent-beretta']],
 ['Dark Order','faction',['evil-uno','john-silver','alex-reynolds','preston-vance']],
 ['Motor City Machine Guns','team',['alex-shelley','chris-sabin']],
@@ -1249,11 +1248,12 @@ const TEAMS=[
 ['The Hurt Syndicate','team',['bobby-lashley','shelton-benjamin']],
 ['The Opps','faction',['samoa-joe','katsuyori-shibata','hook']],
 ['Allin & Borden','team',['darby-allin','steven-borden']],
-['Cage & Copeland','team',['christian-cage','adam-copeland']]];
-const FEUDS=[['mercedes-mone','thekla',70],['swerve-strickland','hangman-adam-page',55],['matt-jackson','dax-harwood',50],['nick-jackson','cash-wheeler',50],['matt-jackson','christian-cage',45],['nick-jackson','adam-copeland',40],['kevin-knight','steven-borden',50],['darby-allin','kyle-fletcher',45],['kyle-fletcher','matt-jackson',30],['andrade-el-idolo','pac',45],['kazuchika-okada','tommaso-ciampa',40],['samoa-joe','jack-perry',50],['jamie-hayter','megan-bayne',45],['alex-windsor','lena-kross',45],['jay-white','jon-moxley',35],['juice-robinson','david-finlay',35],['mike-bailey','gabe-kidd',30],['will-ospreay','claudio-castagnoli',30],['will-ospreay','jon-moxley',20],['willow-nightingale','thekla',30],['persephone','dani-luna',25],['persephone','hyan',25],['kris-statlander','julia-hart',30],['queen-aminata','skye-blue',30],['ricochet','swerve-strickland',30]];
-const OUT={'toni-storm':14,'adam-cole':12,'mark-briscoe':8,'steven-borden':6,'kota-ibushi':10,'hologram':6,'anna-jay':6,'penelope-ford':6,'maya-world':4,'riho':4,'serena-deeb':4,'harley-cameron':2,'wardlow':2};
+['Cage & Copeland','team',['christian-cage','adam-copeland']],
+['Shane Taylor Promotions','faction',['shane-taylor','lee-moriarty','shawn-dean','carlie-bravo']]];
+const FEUDS=[['mercedes-mone','thekla',75],['swerve-strickland','hangman-adam-page',55],['matt-jackson','dax-harwood',50],['nick-jackson','cash-wheeler',50],['matt-jackson','christian-cage',45],['nick-jackson','adam-copeland',40],['kevin-knight','steven-borden',50],['darby-allin','kyle-fletcher',55],['kyle-fletcher','matt-jackson',30],['kazuchika-okada','tommaso-ciampa',40],['samoa-joe','jack-perry',50],['jamie-hayter','megan-bayne',45],['alex-windsor','lena-kross',45],['jay-white','jon-moxley',35],['juice-robinson','david-finlay',35],['mike-bailey','gabe-kidd',30],['will-ospreay','claudio-castagnoli',30],['will-ospreay','jon-moxley',20],['willow-nightingale','thekla',30],['persephone','dani-luna',25],['persephone','hyan',25],['kris-statlander','julia-hart',30],['queen-aminata','skye-blue',30],['ricochet','swerve-strickland',30],['jon-moxley','mark-davis',55],['will-ospreay','samoa-joe',35],['will-ospreay','kazuchika-okada',40],['chris-jericho','nick-wayne',40],['kofi-kingston','bandido',40],['mercedes-mone','queen-aminata',35],['jon-moxley','jake-doyle',30]];
+const OUT={'toni-storm':14,'adam-cole':12,'mark-briscoe':8,'steven-borden':6,'kota-ibushi':10,'hologram':6,'anna-jay':6,'penelope-ford':6,'maya-world':4,'riho':4,'serena-deeb':4,'harley-cameron':2,'wardlow':2,'jay-white':8};
 const REMOVED=['big-bill','powerhouse-hobbs','tay-melo'];
-const DATA_V=6,DATA_AS_OF='AEW All Out, Sept 26, 2026';
+const DATA_V=6,DATA_AS_OF='AEW Dynamite Grand Slam France, Oct 6, 2026';
 /* Durability (1–99): how well a body holds up. Based on each wrestler's real injury history, current to All Out 2026. High = less stamina lost per match and fewer injuries; low = the opposite. name|durability|note */
 const DUR_RAW=`Darby Allin|95|Takes insane bumps and stunts, and almost never misses time
 Jon Moxley|92|Works hurt and keeps showing up — one of the most reliable bodies in wrestling
@@ -1308,7 +1308,7 @@ Bobby Lashley|55|Missed significant time with an injury in late 2025
 Juice Robinson|55|A few extended layoffs
 Mercedes Moné|50|Broken ankle in 2023 cost her most of a year
 Will Ospreay|50|Herniated neck discs in 2025 — a punishing style catches up
-Jay White|50|Broken hand in 2025
+Jay White|45|Broken hand in 2025; out up to two months after the Tailgate Brawl at All Out 2026
 Tommaso Ciampa|45|Neck fusion and knee surgeries
 Kenny Omega|45|Hernias, shoulders and a life-threatening illness in 2024
 Josh Alexander|45|Knee injury March 2026; torn triceps before that
