@@ -180,8 +180,8 @@ function farmWeek(notes){if(!S.farm)return;const a=AW();
     if(a>=w.exc.until){w.pot=Math.min(99,w.pot+2);w.potM=Math.min(99,(w.potM||w.pot)+1);if(X.dur)w.dur=Math.min(95,(w.dur||60)+X.dur);w.back=X.pop;w.done=1;delete w.exc;w.mor=clamp(w.mor+10,0,100);
      if(mine){const n=`✈️ ${w.name} is back from ${X.n} — and looks like a different wrestler. Call them up while the buzz is fresh.`;news(n);notes.push(n)}}}
    else if(w.inj>0){w.inj--}
-   else{const ft=f.feat===w.id;w.ring=Math.min(Math.max(w.ring,w.pot),w.ring+Math.max(.3,(w.pot-w.ring)*(ft?.06:.04)));w.mic=Math.min(Math.max(w.mic,w.potM||w.pot),w.mic+Math.max(.15,((w.potM||w.pot)-w.mic)*(ft?.035:.02)));
-    if(w.pop<ROH_POP_CAP)w.pop=Math.min(ROH_POP_CAP,w.pop+(ft?.6:.25));
+   else{const ft=f.feat===w.id;/* v155: most growth now comes from working the ROH show (rohleague.js); this is the coaching on top */w.ring=Math.min(Math.max(w.ring,w.pot),w.ring+Math.max(.2,(w.pot-w.ring)*(ft?.035:.025)));w.mic=Math.min(Math.max(w.mic,w.potM||w.pot),w.mic+Math.max(.15,((w.potM||w.pot)-w.mic)*(ft?.035:.02)));
+    if(ft&&w.pop<ROH_POP_CAP)w.pop=Math.min(ROH_POP_CAP,w.pop+.3);
     if(Math.random()<.015){w.inj=RI(1,3);if(mine){const n=`🩹 ${w.name} got banged up on ROH TV — out ${w.inj} week${w.inj>1?'s':''}.`;notes.push(n)}}}
    if(w.con<=0&&!w.exc){delete f.r[w.id];if(f.feat===w.id)f.feat=null;if(mine){const n=`📝 ${w.name}'s ROH deal ran out and they left.`;news(n);notes.push(n)}}
    else if(w.con===4&&mine)notes.push(`✍️ ${w.name}'s ROH deal ends in 4 weeks — call them up or extend it from the ROH screen.`)})}}
@@ -204,17 +204,19 @@ function scoutHub(){scoutFresh();const s=S.scout;if(!s)return '';boards();const 
   ${l.length?l.map(prospectCard).join(''):'<p class="muted center">You signed everyone on this board. New names arrive soon.</p>'}<button class="btn sec" onclick="openCreate()">✏️ Design your own prospect</button>`}
 if(typeof faProspects==='function'){faProspects=function(){try{return scoutHub()}catch(e){console.warn(e);return ''}}}
 
-function farmCard(w){const f=F('p');const ft=f.feat===w.id;const X=w.exc&&EXC[w.exc.k];const ready=w.ring>=60;
- const st=X?`<span class="tg">✈️ ${X.n} · back in ${Math.max(0,w.exc.until-AW())} wk</span>`:w.inj?`<span class="tg bad">🩹 Out ${w.inj} wk</span>`:w.back?'<span class="tg good">✈️ Back from excursion</span>':ready?'<span class="tg good">Ready for AEW</span>':'';
+function farmCard(w){const f=F('p');const ft=f.feat===w.id;const X=w.exc&&EXC[w.exc.k];const ready=(w.buzz||0)>=9;
+ const st=X?`<span class="tg">✈️ ${X.n} · back in ${Math.max(0,w.exc.until-AW())} wk</span>`:w.inj?`<span class="tg bad">🩹 Out ${w.inj} wk</span>`:w.back?'<span class="tg good">✈️ Back from excursion</span>':ready?'<span class="tg good">🔥 Ready for AEW</span>':'';
  return `<div class="card${ft?' good':''}"><div class="row sb"><span class="frow">${face(w)}<span><b>${esc(w.name)}</b>${ft?' <span class="tg warnt">⭐ Featured</span>':''}<br><span class="muted tiny">${w.g==='M'?"Men's":"Women's"} · ${STYLE_N[w.st]} · ${w.al==='f'?'Face':'Heel'} · ${money(w.fsal||fsal(w))}/wk · ${w.con} wk left</span></span></span>${st}</div>
   <div class="grid2" style="margin-top:8px"><div><span class="muted tiny">In-ring</span><br><b>${Math.round(w.ring)}</b> <span class="muted tiny">/ ${Math.round(w.pot)} potential</span></div><div><span class="muted tiny">Mic · Popularity</span><br><b>${Math.round(w.mic)}</b> · <b>${Math.round(w.pop)}</b></div></div>
   <div class="row" style="gap:6px;margin-top:10px;flex-wrap:wrap">${X?'':`<button class="mini" onclick="callUp('${w.id}')">📣 Call up</button>`}${X||w.inj?'':`<button class="mini" onclick="farmFeature('${w.id}')">${ft?'Unfeature':'⭐ Feature'}</button>`}${X||w.done?'':`<button class="mini" onclick="farmExcPick('${w.id}')">✈️ Excursion</button>`}${w.con<=8?`<button class="mini" onclick="farmExtend('${w.id}')">✍️ Extend ${money(fsal(w)*4)}</button>`:''}<button class="mini" onclick="farmRelease('${w.id}')">Release</button></div></div>`}
 function farmView(){const l=farmL('p').sort((a,b)=>b.ring-a.ring);const pay=l.reduce((x,w)=>x+(w.fsal||fsal(w)),0);
  const cand=ownList('p').filter(downOk);
- return `${pageHead('Ring of Honor','ROH roster',`<b>${money(pay)}</b><small>ROH payroll / wk</small>`,{sub:`${l.length}/${FARM_MAX} wrestlers · develop on ROH TV every week`})}${chips('rf',[['mine','Mine'],['rival','Rival'],['fa','Free agents'],['roh','🏟️ ROH'],['all','All']],rf)}
+ return `${pageHead('Ring of Honor','ROH',`<b>${money(pay)}</b><small>ROH payroll / wk</small>`,{sub:`${l.length}/${FARM_MAX} wrestlers · develop on ROH TV every week`})}${chips('rf',[['mine','Mine'],['rival','Rival'],['fa','Free agents'],['roh','🏟️ ROH'],['all','All']],rf)}
  <div class="card mt"><div class="muted">Everyone here works ROH TV each week and grows toward their potential — slower than the Performance Center, but there's room for ${FARM_MAX} and they don't take AEW roster spots. <b>⭐ Feature</b> one to grow faster and build popularity (up to ${ROH_POP_CAP}). <b>✈️ Excursion</b> sends someone abroad for ${EXC_WK} weeks to come back better. Call anyone up whenever you need them.</div>
  <button class="btn sec" style="margin-top:10px" onclick="rf='fa';SREG_SET('roh')">🔎 Scout new talent</button></div>
  ${l.length?l.map(farmCard).join(''):'<p class="muted center">Nobody on ROH yet. Sign prospects to ROH from Scouting, or send a rookie down.</p>'}
  ${cand.length?`<div class="card"><div class="h small">Send down</div><div class="muted" style="margin-bottom:8px">Rookies and anyone at 45 popularity or lower can go to ROH to develop. Champions can't.</div>${cand.slice(0,12).map(w=>`<div class="prow">${face(w)}<div class="wl"><div class="wn">${esc(w.name)}</div><div class="muted tiny">Popularity ${Math.round(w.pop)} · Ring ${Math.round(w.ring)}${w.rookie?' · ROOKIE':''}</div></div><button class="mini" onclick="sendDown('${w.id}')">🏟️ Send down</button></div>`).join('')}</div>`:''}`}
-if(typeof rosterView==='function'){const r0=rosterView;rosterView=function(){if(rf==='roh')return farmView();return r0.apply(this,arguments)}}
+window.farmView=farmView;window.farmCard=farmCard;
+window.FARM={F,farmL,fsal,toFarm,taken,rohGen,intlGen,known,signCostF,INTL,FARM_MAX,ROH_POP_CAP};
+if(typeof rosterView==='function'){const r0=rosterView;rosterView=function(){if(rf==='roh')return window.farmView();return r0.apply(this,arguments)}}
 })();
