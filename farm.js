@@ -26,6 +26,72 @@ Viva Van|F|sh|h|60|62|28|76
 Christyan XO|F|br|h|58|55|24|76
 Trish Adora|F|br|f|66|60|32|78
 Isla Dawn|F|sh|h|70|66|38|80`;
+/* v154: known names from outside AEW/ROH/WWE — men from the 2026 PWI 500 (rank in the last field), women from the
+   independent and joshi scenes (the 2026 Women's 250 isn't out yet). name|g|style|align|ring|mic|pop|pot|board|from|org|pwi */
+const KNOWN_RAW=`Leon Slater|M|fl|f|84|62|50|94|indie||TNA|29
+Nic Nemeth|M|te|f|84|82|62|86|indie||TNA|40
+Frankie Kazarian|M|te|h|80|80|50|82|indie||TNA|44
+Mance Warner|M|br|f|74|80|46|80|indie||Indies|52
+Mustafa Ali|M|fl|f|84|84|58|86|indie||Indies|55
+EFFY|M|br|f|74|80|44|80|indie||GCW|72
+Bear Bronson|M|pw|f|74|66|40|80|indie||Indies|87
+Moose|M|pw|h|82|72|56|84|indie||TNA|94
+Krule|M|pw|h|74|50|36|84|indie||GCW|96
+1 Called Manders|M|br|f|76|70|40|84|indie||GCW|105
+Matt Riddle|M|te|f|84|74|60|86|indie||MLW|106
+Joey Janela|M|br|f|74|80|50|78|indie||GCW|109
+Joshua Bishop|M|pw|f|72|58|34|84|indie||Indies|122
+Matt Cardona|M|sh|h|72|82|58|76|indie||Indies|155
+Kerry Morton|M|sh|h|72|70|38|84|indie||Indies|169
+Trevor Lee|M|fl|h|80|62|40|84|indie||TNA|205
+Eddie Edwards|M|te|f|80|66|48|82|indie||TNA|222
+Gringo Loco|M|fl|f|76|50|30|80|indie||Indies|248
+Alex Kane|M|pw|h|74|72|38|82|indie||MLW|287
+Rich Swann|M|fl|f|76|66|44|78|indie||Indies|333
+Daga|M|br|h|76|50|34|78|indie||Indies|400
+Masha Slamovich|F|br|h|82|62|46|88|indie||TNA|
+Steph De Lander|F|br|h|72|72|36|82|indie||Indies|
+Jody Threat|F|br|f|72|62|34|82|indie||Indies|
+Man Like DeReiss|M|fl|f|80|66|40|90|intl|uk|UK|60
+Michael Oku|M|fl|f|82|62|40|92|intl|uk|RevPro|56
+Luke Jacobs|M|pw|h|78|58|34|88|intl|uk|RevPro|117
+Robbie X|M|fl|f|78|56|32|86|intl|uk|UK|210
+Ricky Knight Jr.|M|br|h|74|66|32|84|intl|uk|UK|273
+Kidd Bandit|F|fl|f|72|60|28|84|intl|uk|UK|
+Session Moth Martina|F|sh|f|66|78|34|76|intl|uk|UK|
+Yota Tsuji|M|pw|f|90|74|66|95|intl|jp|NJPW|7
+Zack Sabre Jr.|M|te|h|92|74|68|94|intl|jp|NJPW|26
+Yoshiki Inamura|M|pw|f|84|62|48|92|intl|jp|NOAH|31
+KENTA|M|br|h|80|72|56|80|intl|jp|Japan|67
+El Desperado|M|te|h|86|70|50|88|intl|jp|NJPW|73
+Shota Umino|M|br|f|82|72|52|92|intl|jp|NJPW|89
+Oleg Boltin|M|pw|f|80|50|40|90|intl|jp|NJPW|91
+Yuya Uemura|M|te|f|80|60|42|90|intl|jp|Japan|97
+Shingo Takagi|M|br|h|88|74|56|88|intl|jp|NJPW|103
+Kenoh|M|br|h|84|72|46|86|intl|jp|Japan|156
+Kaito Kiyomiya|M|te|f|86|66|50|90|intl|jp|NOAH|166
+Saya Kamitani|F|fl|h|86|64|50|94|intl|jp|Japan|
+Sareee|F|br|f|84|58|40|90|intl|jp|Japan|
+Momo Watanabe|F|pw|h|80|60|40|86|intl|jp|Japan|
+Starlight Kid|F|fl|h|80|62|40|90|intl|jp|Stardom|
+AZM|F|fl|f|80|56|38|90|intl|jp|Stardom|
+Miyu Yamashita|F|br|f|82|60|40|86|intl|jp|Japan|
+Templario|M|pw|h|84|52|40|88|intl|mx|CMLL|68
+Laredo Kid|M|fl|f|84|52|42|86|intl|mx|Mexico|77
+Averno|M|te|h|78|62|40|78|intl|mx|CMLL|112
+Atlantis Jr.|M|fl|f|84|56|46|90|intl|mx|CMLL|134
+Titán|M|fl|f|84|50|42|88|intl|mx|CMLL|137
+Volador Jr.|M|fl|h|84|56|48|86|intl|mx|CMLL|149
+Galeno del Mal|M|br|h|76|50|34|80|intl|mx|CMLL|219
+Bárbaro Cavernario|M|br|h|80|52|40|86|intl|mx|CMLL|290
+Lady Flammer|F|fl|h|76|52|30|86|intl|mx|CMLL|
+Zeuxis|F|br|h|74|56|30|80|intl|mx|CMLL|
+Dalys|F|pw|h|72|52|30|80|intl|mx|CMLL|`;
+function knownList(){return KNOWN_RAW.trim().split('\n').map(l=>{const f=l.split('|');const w=mkW(f.slice(0,8).join('|'));w.reg=f[8];if(f[9])w.from=f[9];w.org=f[10];if(f[11])w.pwi=+f[11];return w})}
+function onBoards(){const s=S.scout||{};return new Set([].concat(s.l||[],s.roh||[],s.intl||[]).map(w=>w.id))}
+function known(reg,n,ex){const used=onBoards();(ex||[]).forEach(id=>used.add(id));const l=shuffle(knownList().filter(w=>w.reg===reg&&!taken(w.id)&&!used.has(w.id))).slice(0,n);
+ l.forEach(w=>{w.real=1;w.tier=w.pot>=90?'gen':w.pot>=84?'bluechip':'prospect';w.fee=Math.round(60+Math.max(0,w.ring-72)*8+w.pop*1.5);w.con=0;w.mor=80;w.tr=autoTraits(w)});return l}
+window.KNOWN_RAW=KNOWN_RAW;window.knownList=knownList;
 /* fictional international names */
 const INTL={
  jp:{n:'Japan',f:'🇯🇵',st:['te','fl','br'],M:['Kaito Morishima','Ren Kanda','Hiroto Ishizaki','Sora Ogawara','Daichi Hayase','Yuto Nakazono','Takumi Arakawa'],F:['Aoi Kitamura','Hina Sakuraba','Mei Tachibana','Yui Hoshino','Rin Asakura','Saki Mizuno']},
@@ -59,13 +125,15 @@ function intlGen(){const k=pick(['jp','mx','uk']),R=INTL[k];const g=Math.random(
  const w=polish(makeRookie(pick(opts),g,pick(R.st),pick(['f','h']),tier),RI(16,26),-RI(4,10));w.mic=Math.max(18,w.mic);w.tier=tier;w.reg='intl';w.from=k;w.fee=Math.round(TIERS[tier].cost*1.3);w.tr=autoTraits(w);return w}
 function boards(){const s=S.scout;if(!s)return;
  if(!s.roh){const l=[];for(let i=0;i<3;i++){const w=rohReal(l.map(x=>x.id));if(w)l.push(w)}while(l.length<5)l.push(rohGen());s.roh=shuffle(l)}
- if(!s.intl){const l=[];for(let i=0;i<8&&l.length<4;i++){const w=intlGen();if(w&&!l.some(x=>x.name===w.name))l.push(w)}s.intl=l}}
+ if(!s.intl){const l=known('intl',2);for(let i=0;i<8&&l.length<4;i++){const w=intlGen();if(w&&!l.some(x=>x.name===w.name))l.push(w)}s.intl=shuffle(l)}
+ /* v154: one or two known indie names on every Indies board, in place of generic prospects first */
+ if(!s.kn&&s.l){s.kn=1;const k=known('indie',Math.random()<.5?1:2);k.forEach(w=>{let i=s.l.findIndex(x=>!x.gim&&!x.real);if(i<0)i=s.l.length-1;if(i>=0)s.l[i]=w;else s.l.push(w)})}}
 if(typeof scoutTick==='function'){const s0=scoutTick;scoutTick=function(){const before=S&&S.scout;const out=s0.apply(this,arguments);try{if(S.scout&&S.scout!==before)boards()}catch(e){console.warn('farm boards',e)}return out}}
 function board(reg){boards();const s=S.scout;return !s?[]:reg==='indie'?s.l:s[reg]||[]}
 const signCostF=w=>w.fee+mkt(w)*4;
 
 window.farmSign=function(reg,i,dest){if(mpLocked())return;const l=board(reg),w=l[i];if(!w)return;
- if(reg==='indie'&&dest==='aew')return signProspect(i);
+ if(reg==='indie'&&dest==='aew'&&!w.real)return signProspect(i);
  const c=signCostF(w);if(S.money.p<c)return toast('Not enough money.');if(S.money.p<0)return toast("You can't sign anyone while you're in the red.");
  if(dest==='aew'&&ownList('p').length>=30)return toast('Your roster is full (30).');
  if(dest==='roh'&&farmL('p').length>=FARM_MAX)return toast(`Your ROH roster is full (${FARM_MAX}).`);
@@ -124,8 +192,8 @@ if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){const o
 function regionChips(){return `<div class="chips">${Object.entries(REG).map(([k,r])=>`<button class="chip ${SREG===k?'on':''}" onclick="SREG_SET('${k}')">${r.i} ${r.n} · ${board(k).length}</button>`).join('')}</div>`}
 window.SREG_SET=k=>{SREG=k;render();setTimeout(()=>{const e=document.getElementById('faPros');if(e)e.scrollIntoView({block:'start'})},0)};
 function prospectCard(w,i){const T=TIERS[w.tier]||TIERS.prospect;const c=signCostF(w);const full=farmL('p').length>=FARM_MAX;const poor=S.money.p<c;
- const from=w.reg==='intl'&&INTL[w.from]?`${INTL[w.from].f} ${INTL[w.from].n} · `:w.real?'🏟️ ROH roster · ':'';
- return `<div class="card scout${w.gim?' gimc':''}"><div class="row sb"><span class="frow">${face(w)}<span><b>${alSpan(w)}</b><br>${w.bio?`<span class="tiny gold">🎭 ${esc(w.bio)}</span><br>`:''}<span class="muted tiny">${from}${w.g==='M'?"Men's":"Women's"} · ${STYLE_N[w.st]} · ${w.al==='f'?'Face':'Heel'}</span></span></span><span class="tg ${w.tier==='gen'?'good':w.tier==='bluechip'?'warnt':''}">${w.real?'Known name':T.n}</span></div>
+ const from=w.org?`${w.from&&INTL[w.from]?INTL[w.from].f+' ':''}${esc(w.org)} · `:w.reg==='intl'&&INTL[w.from]?`${INTL[w.from].f} ${INTL[w.from].n} · `:w.real?'🏟️ ROH roster · ':'';
+ return `<div class="card scout${w.gim?' gimc':''}"><div class="row sb"><span class="frow">${face(w)}<span><b>${alSpan(w)}</b><br><span class="muted tiny">${from}${w.g==='M'?"Men's":"Women's"} · ${STYLE_N[w.st]} · ${w.al==='f'?'Face':'Heel'}</span></span></span><span class="tg ${w.tier==='gen'?'good':w.tier==='bluechip'?'warnt':''}">${w.pwi?`PWI 500 #${w.pwi}`:w.real?'Known name':T.n}</span></div>
   <div class="grid2" style="margin-top:8px"><div><span class="muted tiny">Scout's projection</span><br><b>${w.real?`${Math.round(w.pot)}`:`${T.pot[0]}–${T.pot[1]}`}</b> potential</div><div><span class="muted tiny">Right now</span><br>RNG ${Math.round(w.ring)} · MIC ${Math.round(w.mic)} · POP ${Math.round(w.pop)}</div></div>
   ${(w.tr||[]).length?`<div class="tags" style="margin-top:6px">${w.tr.map(t=>TRAITS[t]?`<span class="tg">${TRAITS[t].i} ${esc(TRAITS[t].n)}</span>`:'').join('')}</div>`:''}
   <div class="muted tiny" style="margin-top:8px">${money(c)} to sign (${money(w.fee)} fee + 4 wks of salary)</div>
