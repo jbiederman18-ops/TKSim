@@ -49,7 +49,7 @@ const search=n=>'https://www.google.com/search?tbm=isch&q='+encodeURIComponent((
 /* ---------------- the belt studio ---------------- */
 window.openBelts=function(){const l=allTitles();const have=l.filter(t=>beltImg(t.id)).length;
  openModal(`<div class="h mhd">🏆 Belt photos</div><div class="row sb"><span class="muted">${have} of ${l.length} titles have a photo</span><b class="gold">${Math.round(have/l.length*100)}%</b></div>
- ${bcPicker()}<p class="muted tiny" style="margin:6px 0 10px">Tap <b>🔍 Find</b> to search for the belt, long-press a picture → <b>Copy</b>, come back and tap <b>Paste</b>. Pictures keep their shape, and plain backgrounds (like the white behind a product photo) are cleared automatically. To share belts with every device, put them in the repo's <b>photos/belts</b> folder and list them under <b>"belts"</b> in photos/manifest.json (e.g. <b>"world": "world.png"</b>).</p>
+ <p class="muted tiny" style="margin:6px 0 10px">Tap <b>🔍 Find</b> to search for the belt, long-press a picture → <b>Copy</b>, come back and tap <b>Paste</b>. Pictures keep their shape, and plain backgrounds (like the white behind a product photo) are cleared automatically. To share belts with every device, put them in the repo's <b>photos/belts</b> folder and list them under <b>"belts"</b> in photos/manifest.json (e.g. <b>"world": "world.png"</b>).</p>
  ${l.map(t=>{const b=beltImg(t.id);const own=IMG[K(t.id)];return `<div class="card" style="padding:10px 12px"><div class="row sb"><b>${esc(t.n)}</b>${b?'<span class="tg good">✅ Photo</span>':''}</div>${b?`<div style="margin:8px 0;text-align:center;background:radial-gradient(ellipse,#2a2416,#0b0b0d);padding:8px;border-radius:6px"><img src="${b}" alt="" style="max-width:100%;max-height:110px;object-fit:contain"></div>`:''}
   <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><a class="mini" href="${search(t.n)}" target="_blank" rel="noopener">🔍 Find</a><button class="mini" onclick="beltPaste('${t.id}')">📋 Paste</button><button class="mini" onclick="beltAdd('${t.id}')">📷 Add</button>${own?`<button class="mini" onclick="beltDel('${t.id}')">Remove</button>`:''}</div></div>`}).join('')}
  <button class="btn ghost" onclick="closeModal()">Done</button>`,true)};
@@ -61,20 +61,17 @@ loadRepoBelts();
 /* ---------------- where belts show up ---------------- */
 const plate=(id,h)=>{const b=beltImg(id);return b?`<div class="beltimg" style="text-align:center;margin:8px 0 2px"><img src="${b}" alt="" style="max-width:100%;max-height:${h||90}px;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(0,0,0,.6))"></div>`:''};
 window.beltPlate=plate;
-/* ---------------- belts on champions' cards (a per-device setting) ---------------- */
-const BC_KEY='tksim_beltcard';const BC_MODES={corner:'Small corner',strip:'Title strip',off:'Off'};
-function bcMode(){try{const m=localStorage.getItem(BC_KEY);return BC_MODES[m]?m:'corner'}catch(e){return 'corner'}}
-window.setBeltCard=function(m){try{localStorage.setItem(BC_KEY,m)}catch(e){}if(document.querySelector('#modal .bcm'))openBelts();try{render()}catch(e){}};
-{const st=document.createElement('style');st.textContent=`.wc .bl{position:absolute;z-index:3;pointer-events:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.85))}.wc .bl img{display:block;width:100%;height:auto}
-.nm .bl.corner{right:5px;bottom:calc(100% - 24px);width:30%;max-width:62px}.nm .bl.corner img{max-height:30px;object-fit:contain;object-position:right bottom;border-radius:3px}
-.wc .btl{display:flex;align-items:center;gap:6px;margin:0 -8px 6px -10px;padding:3px 8px 3px 10px;font:800 italic 11px/1 'BC',sans-serif;letter-spacing:.04em;text-transform:uppercase;color:#2b1f05;background:linear-gradient(90deg,rgba(232,196,96,.95),rgba(150,112,30,.25))}
-.wc .btl img{height:16px;max-width:38px;object-fit:contain;flex:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}.wc .btl span{display:inline;margin:0;font:inherit;color:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bcm .chip{margin:3px}.wc .ic,.wc .cwb{z-index:4}`;document.head.appendChild(st)}
-if(typeof wcard==='function'){const w0=wcard;wcard=function(w,o){let h=w0.apply(this,arguments);try{const m=bcMode();if(m==='off'||!w)return h;const t=titlesOf(w.id)[0];const b=t&&beltImg(t.id);if(!b)return h;
- const i=h.indexOf('<div class="nm">');if(i<0)return h;const at=i+'<div class="nm">'.length;
- const tag=m==='strip'?`<div class="btl"><img src="${b}" alt=""><span>${esc(({world:'AEW World',wworld:"Women's World",intl:'International',cont:'Continental',tag:'Tag Team',wtag:"Women's Tag",trios:'Trios'})[t.id]||t.n)} champ</span></div>`:`<span class="bl corner"><img src="${b}" alt="${esc(t.n)}"></span>`;
- h=h.slice(0,at)+tag+h.slice(at)}catch(e){}return h}}
-function bcPicker(){const m=bcMode();return `<div class="card bcm" style="padding:10px 12px"><div class="h small" style="margin:0 0 6px">Belts on champions' cards</div><div class="chips">${Object.entries(BC_MODES).map(([k,n])=>`<button class="chip ${k===m?'on':''}" onclick="setBeltCard('${k}')">${n}</button>`).join('')}</div><div class="muted tiny" style="margin-top:6px">Champions with a belt photo show it on their card: a small belt in the corner of their photo, or a gold title strip like the feud strips. Just for this device.</div></div>`}
-window.bcPicker=bcPicker;
+/* ---------------- champions' cards: the title on the bottom line ---------------- */
+/* The gold title strip (mini belt + title) replaces the card's bottom line (the style) — or, on cards without one, sits at the
+   very bottom — so it never adds a row over the photo. */
+try{localStorage.removeItem('tksim_beltcard')}catch(e){}
+{const st=document.createElement('style');st.textContent=`.wc .nm .inf.btlb{display:flex;align-items:center;gap:6px;margin:5px -7px -7px -10px;padding:4px 8px 4px 10px;font:800 italic 11px/1 'BC',sans-serif;letter-spacing:.04em;text-transform:uppercase;color:#2b1f05;background:linear-gradient(90deg,rgba(232,196,96,.95),rgba(150,112,30,.35))}
+.wc .nm .inf.btlb img{height:15px;max-width:36px;object-fit:contain;flex:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}.wc .nm .inf.btlb i{font-style:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wc .ic,.wc .cwb{z-index:4}`;document.head.appendChild(st)}
+const SHORT={world:'AEW World',wworld:"Women's World",intl:'International',cont:'Continental',tag:'Tag Team',wtag:"Women's Tag",trios:'Trios'};
+if(typeof wcard==='function'){const w0=wcard;wcard=function(w,o){let h=w0.apply(this,arguments);try{if(!w)return h;const t=titlesOf(w.id)[0];if(!t)return h;const b=beltImg(t.id);
+ const strip=`<span class="inf btlb">${b?`<img src="${b}" alt="">`:'🏆'}<i>${esc(SHORT[t.id]||t.n)} champ</i></span>`;
+ if(/<span class="inf">[^<]*<\/span>/.test(h))h=h.replace(/<span class="inf">[^<]*<\/span>/,strip);else{const i=h.lastIndexOf('</div></button>');if(i>0)h=h.slice(0,i)+strip+h.slice(i)}}catch(e){}return h}}
 /* Titles screen: the belt on each title card, plus the studio button */
 if(typeof titlesView==='function'){const t0=titlesView;titlesView=function(){let out=t0.apply(this,arguments);try{
  Object.values(S.titles).forEach(t=>{const p=plate(t.id,84);if(!p)return;const mark=`<div class="h">${t.n}</div>`;const i=out.indexOf(mark);if(i<0)return;const j=out.indexOf('<div class="champ">',i);if(j>0)out=out.slice(0,j)+p+out.slice(j)});

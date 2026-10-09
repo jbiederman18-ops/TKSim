@@ -454,7 +454,7 @@ nav.tabs button.on{text-shadow:none}nav.tabs button.on svg{filter:none}nav.tabs 
 .wc .sta u{height:6px;border-radius:1px}
 .wc .sta em{font-size:12px}
 .wc .fdb{display:flex;align-items:center;gap:5px;margin:0 -8px 6px -10px;padding:4px 8px 3px 10px;font:800 italic 11px/1 'BC',sans-serif;letter-spacing:.04em;text-transform:uppercase;color:#fff;background:linear-gradient(90deg,rgba(168,70,31,.85),rgba(94,26,11,.2))}
-.wc .fdb span{flex:none;display:inline;margin:0;font:inherit;color:inherit}.wc .fdb b{font:inherit;font-weight:700;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wc .fdb span{flex:none;display:inline;margin:0;font:inherit;color:inherit}.wc .fdb .fdx{margin-left:auto;flex:none;font:800 10px/1 'Barlow',sans-serif;font-style:normal;padding:2px 5px;border-radius:3px;background:rgba(0,0,0,.45);color:#f3d9a0}.wc .fdb b{font:inherit;font-weight:700;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wc .fdb.t2{background:linear-gradient(90deg,rgba(226,85,43,.95),rgba(143,23,11,.3))}
 .wc .fdb.t3{background:linear-gradient(90deg,#ff7a2e,rgba(192,29,18,.5));box-shadow:0 0 12px rgba(255,122,46,.5)}
 .wc .nm span.inf{margin-top:5px;display:flex;gap:4px;overflow:hidden;white-space:nowrap}
@@ -931,7 +931,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v166';
+const APP_VERSION='v167';
 /* v113: a rolling AEW year — a PPV every 4 weeks from Revolution to Worlds End. All In is the midyear supershow;
    the season (awards, offseason, fan-war winner) ends after Worlds End, then the calendar rolls into a new year. */
 const SEASON=40,ALLIN_WEEK=24,OLD_SEASON=24;
@@ -1970,8 +1970,9 @@ function face(w){return w?`<span class="fav a${w.al}">${portrait(w)}</span>`:''}
 function wcard(w,o){o=o||{};const fdv=o.feud&&o.feud.h>=1?o.feud:null;const tier=fdv?heatTier(fdv.h):-1;const inSeason=S&&(S.phase==='season'||S.phase==='over');const showSta=w.own&&inSeason&&!o.noSta;const bars=!inSeason;const compact=inSeason&&!o.full;const inf=o.info!=null?o.info:compact?'':`${STYLE_N[w.st]}${w.rookie?' · Rookie':''}`;
  const num=(l,v,pt)=>`<div><small>${l}</small><em class="${v>=85?'hi':v>=75?'':'lo'}">${Math.round(v)}${!bars&&pt!=null&&pt-v>=3?'<sup>▲</sup>':''}</em>${bars?`<u><i style="width:${clamp(v,0,100)}%"></i>${pt!=null&&pt-v>=3?`<s style="left:${clamp(pt,0,100)}%"></s>`:''}</u>`:''}</div>`;
  return `<button class="wc t${ovr(w)>=88?1:ovr(w)>=78?2:3} a${w.al} ${tier>=0?'fd':''} ${isChamp(w.id)?'champ':''} ${o.sel?'sel':''} ${o.bk?'bkd':''} ${o.dis?'dis':''}" ${o.attr||''} ${o.dis?'aria-disabled="true"':''} onclick="${o.dis?'':o.on!=null?o.on:`showW('${w.id}')`}"><div class="pic">${portrait(w)}</div>${o.bk?`<span class="bkb">${esc(o.bk)}</span>`:''}<i class="al ${w.al==='f'?'fc':'hl'}"></i><span class="o">${ovr(w)}</span><span class="alb">${w.al==='f'?'Face':'Heel'}</span>${w.inj?`<span class="ic">${w.susp?'SUSP':'INJ'}</span>`:''}${w.cw&&!w.own?'<span class="cwb">NEW</span>':w.deb&&w.own?'<span class="cwb deb">DEBUT</span>':''}<div class="nm">${o.fl&&o.fl.length?feudStrip(o.fl):fdv?`<div class="fdb t${tier+1}"><span>${Math.round(fdv.h)}</span>${fdv.o?`<b>vs ${esc(fdv.o.name.split(' ').slice(-1)[0])}</b>`:''}</div>`:''}<b class="${w.name.length>14?'xl':w.name.length>12?'ln':''}">${esc(w.name)}</b>${compact?'':`<div class="ms ${bars?'':'nb'}">${num('RNG',w.ring,w.pot)}${num('MIC',w.mic,w.potM)}${num('POP',w.pop)}</div>`}${showSta?staRow(w,o.gain):''}${inf?`<span class="inf">${inf}</span>`:''}</div></button>`}
-function feudStrip(fl){const ln=w=>esc(w.name.split(' ').slice(-1)[0]);
- return `<div class="fdl">${fl.slice(0,2).map(f=>`<div class="fdb t${f.t+1} ${f.x?'x':''}"><span>${Math.round(f.h)}${f.stale?' stale':''}</span><b>vs ${ln(f.o)}</b></div>`).join('')}${fl.length>2?`<div class="fdm">+${fl.length-2} more feud${fl.length>3?'s':''}</div>`:''}</div>`}
+/* v167: one feud row per card (the hottest), with a +N for any others — keeps the photo clear */
+function feudStrip(fl){const ln=w=>esc(w.name.split(' ').slice(-1)[0]);const f=fl[0];const more=fl.length-1;
+ return `<div class="fdl"><div class="fdb t${f.t+1} ${f.x?'x':''}"><span>${Math.round(f.h)}${f.stale?' stale':''}</span><b>vs ${ln(f.o)}</b>${more?`<em class="fdx">+${more}</em>`:''}</div></div>`}
 function staRow(w,gain){const v=sta(w);const a=Math.max(0,v-(gain||0));return `<div class="sta ${staCls(gain?a:v)}" title="Stamina"><small>STA</small><u><i style="width:${a}%"></i>${gain?`<s style="left:${a}%;width:${v-a}%"></s>`:''}</u><em>${gain?`${v}<small>→</small>${a}`:v}</em></div>`}
 function emptySlot(on,label,attr){return `<button class="wc empty" ${attr||''} onclick="${on}"><span>+</span><small>${label||'Add'}</small></button>`}
 /* iOS Safari can drop a detached <input type=file> while the picker is open, so keep it in the DOM. */
