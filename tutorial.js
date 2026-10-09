@@ -11,7 +11,7 @@
      tour get a "what's new" replay of just those stops.
    • Run `python3 tools/check-tutorial.py` — it plays every stop and tip in a headless browser and fails on any
      missing target or stale value. */
-const TUT_REV=8;
+const TUT_REV=9;
 const TUT_KEY='tksim_tut';
 const TUT_MISS=[];
 
@@ -82,8 +82,8 @@ const TUT_STEPS=[
  b:()=>`There's no star math while you book. Each match shows <b>crowd buzz</b> (🥶 → 🔥🔥🔥) and ▲/▼ tells on titles and finishes. Stipulations show a rough 📈 upside weighed against the 🔋 wear and 🩹 injury risk they add.<br><br>🎲 <b>Wild card</b> means it could land big or fall flat — first-time pairings, gimmick matches, screwy finishes, run-ins. Chemistry between two wrestlers is only a guess until they've shared a ring.`},
 {id:'s.flow',track:'season',since:1,tab:'book',sel:'main .card.flowc',sys:['show flow'],t:'Show flow',
  b:()=>`The order matters. Open hot, keep the middle moving (back-to-back promos drag), build through the second half and close on your best match. This card grades your running order as you book.`},
-{id:'s.feuds',track:'season',since:1,tab:'book',sel:()=>tutCard(/your feuds/i),sys:['feuds','heat','repetition'],t:'Feuds are the engine',
- b:()=>`Put the same two people in matches and promos week after week and heat builds: a rivalry at ${tvTier(0)}, a full feud at ${tvTier(1)}, a blood feud at ${tvTier(2)}. Face vs heel, title matches and messy finishes build the most.<br><br>Pay it off at a PPV once it's hot (35+) with a <b>clean finish</b>. Don't repeat the exact same thing two weeks running — the crowd tires of it.`},
+{id:'s.feuds',track:'season',since:9,tab:'book',sel:()=>tutCard(/your feuds/i),sys:['feuds','heat','repetition'],t:'Feuds are the engine',
+ b:()=>`Put the same two people in matches and promos week after week and heat builds: a rivalry at ${tvTier(0)}, a full feud at ${tvTier(1)}, a blood feud at ${tvTier(2)}. Face vs heel, title matches and messy finishes build the most.<br><br>Pay it off at a PPV once it's hot (35+) with a <b>clean finish</b> — or end it on TV by making a match the <b>💥 blow-off</b> (smaller payoff; a gimmick stipulation helps). Don't repeat the exact same thing two weeks running — the crowd tires of it.`},
 {id:'s.stam',track:'season',since:1,tab:'book',opt:true,sel:'main details.lrd',sys:['stamina','injuries','durability'],t:'Stamina',
  b:()=>`Everyone has a stamina bar. A match drains it; a week off (or just a promo) refills it fastest. Below ${tv('FAT_OK',()=>100-FAT_OK,65)} stamina matches suffer, and below ${tv('FAT_RISK',()=>100-FAT_RISK,45)} injuries get likely. Rotate your stars — and check <b>Durability</b> on profiles: some bodies hold up, some don't.`},
 {id:'s.live',track:'season',since:7,tab:'book',sel:'main .btn.live',sys:['live','calls','injuries'],t:'Go live',
