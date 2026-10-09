@@ -86,6 +86,16 @@ A card on Home shows your progress and the weeks left. Win or lose, the save kee
 - **🕵️ Tampering.** When an unhappy or underpaid wrestler is within 8 weeks of the end of their deal, the rival office (in a league, "another company") may call them. The briefing flags the rumor with the offer: match it and extend, negotiate, sit down with them, or let them go. Ignore it and, when the deal runs out, they sign with the rival on the spot (in a league they hit free agency).
 - **🚑 Injury decisions.** When someone on your roster is hurt for a few weeks, choose: let it heal; rush them back in about half the time (fragile for 6 weeks after, with much higher re-injury risk); or, for longer injuries, surgery — more time out and a fee, but they come back tougher (+5 durability). Decisions wait in the briefing, with a card on Home.
 
+## The history book
+Open it from the Titles screen or the Office:
+- **Title lineages** — every reign of every title, with weeks held, defenses and how it ended.
+- **Records** — most wins, title reigns, five-star matches, main events and PPV wins, the biggest legacies and the greatest matches.
+- **Awards** — the year-end awards, season by season.
+- **Hall of Fame** — at each year-end, retiring wrestlers with a big enough legacy are inducted automatically, and every GM gets one pick of their own for the class.
+- Tap any wrestler to see their **career line** and **head-to-head** records against the people they've faced most.
+
+History is recorded from v157 on (existing champions are picked up the first time you open a save).
+
 ## Party night (same room, big screen)
 Party night is a way to play an online league, not a separate game. It uses the same league, the same save and the same code, so you can play some weeks together on the couch and the rest on your own time.
 
