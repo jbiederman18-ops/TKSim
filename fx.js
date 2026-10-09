@@ -2,10 +2,10 @@
    Eight visual upgrades for the Classic look, all in one place and all respecting the phone's reduce-motion setting:
      1. Title changes — a full-screen "AND NEW" moment with the belt plate sliding in (solo reveal and the party-night TV)
      2. Debuts & call-ups — a titantron entrance with a name slam and light sweeps; hotter ROH buzz = bigger pop
-     3. Results that hit — 5★ segments shake with a star burst, flat ones go grey, "You win the night" fires confetti
+     3. Results that hit — 5★ segments shake with a star burst, flat ones go grey, "You win the night" sets off fireworks
      4. Live numbers — fans and money in the header count up or down with a floating +/- chip; hype bars fill
      5. Wrestler cards — 🔥 streak flame, mood badge for unhappy wrestlers, a soft face/heel edge glow, ROH buzz meters
-     6. Broadcast lower-thirds — live promos and matches get Dynamite-style name bars and a news ticker
+     6. Broadcast lower-thirds — live promos and matches get Dynamite-style name bars
      7. Smoother navigation — screens slide in the direction you move, and the bottom-nav highlight glides between tabs
      8. ROH identity — the ROH screen gets its own red-and-black HonorClub styling
    Loaded last; hooks in by wrapping globals. */
@@ -33,8 +33,6 @@ const css=`
 #fxo.hot .bm{background:linear-gradient(0deg,transparent,rgba(255,120,60,.25) 60%,transparent)}
 .fxspark{position:absolute;bottom:0;width:6px;height:6px;border-radius:50%;background:#ffd36b;box-shadow:0 0 8px #ffb02e;animation:fxSpark 1.6s ease-out both;pointer-events:none}
 @keyframes fxSpark{from{transform:translate(0,0);opacity:1}to{transform:translate(var(--dx),var(--dy));opacity:0}}
-.fxconf{position:fixed;top:-12px;width:8px;height:14px;z-index:9998;pointer-events:none;animation:fxFall var(--t) linear both}
-@keyframes fxFall{to{transform:translate(var(--dx),110vh) rotate(var(--r))}}
 .fx5{animation:fxShake .5s ease-in-out}@keyframes fxShake{0%,100%{transform:none}20%{transform:translate(-3px,1px) rotate(-.5deg)}40%{transform:translate(3px,-1px) rotate(.5deg)}60%{transform:translate(-2px,0)}80%{transform:translate(2px,0)}}
 .fxstar{position:absolute;font-size:16px;color:#ffe08a;text-shadow:0 0 8px #ffb02e;pointer-events:none;animation:fxStar 1s ease-out both;z-index:5}
 @keyframes fxStar{from{transform:translate(0,0) scale(.4);opacity:1}to{transform:translate(var(--dx),var(--dy)) scale(1.1);opacity:0}}
@@ -54,9 +52,6 @@ const css=`
 .fxl3 .b:nth-child(2){animation-delay:.12s}.fxl3 .b:nth-child(3){animation-delay:.24s}.fxl3 .b:nth-child(4){animation-delay:.36s}
 .fxl3 .b b{display:block;font:900 italic 15px/1 'BC',Impact,sans-serif;text-transform:uppercase;color:#fff}.fxl3 .b small{display:block;font:700 10px/1.3 'Barlow',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--gold2,#f6dd8e)}
 @keyframes fxL3{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:none}}
-.fxtk{position:relative;overflow:hidden;white-space:nowrap;margin:6px -2px 8px;background:#0a0a0c;border-top:1px solid #2a2618;border-bottom:1px solid #2a2618;font:600 12px/24px 'Barlow',sans-serif;color:#cfc6b0}
-.fxtk:before{content:"NEWS";position:absolute;left:0;top:0;bottom:0;z-index:2;padding:0 8px;background:var(--red,#e2332b);color:#fff;font:900 italic 12px/24px 'BC',sans-serif;letter-spacing:.1em}
-.fxtk span{display:inline-block;padding-left:100%;animation:fxTick var(--t,40s) linear infinite}
 @keyframes fxTick{to{transform:translateX(-100%)}}
 main.fxr>*{animation:fxSlideR .34s cubic-bezier(.2,.8,.2,1) both!important}main.fxl>*{animation:fxSlideL .34s cubic-bezier(.2,.8,.2,1) both!important}
 @keyframes fxSlideR{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}@keyframes fxSlideL{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
@@ -69,8 +64,7 @@ nav.tabs.fxn button.on:before{opacity:0}
 .roh-x .chip.on{background:linear-gradient(90deg,#b3161d,#6b0c10)!important;color:#fff!important}
 .roh-x .h.small{color:#ff8a8a}
 .roh-x .tg.good{background:rgba(179,22,29,.25);color:#ff9a9a}
-@media (prefers-reduced-motion: reduce){#fxo *,#fxo,.fx5,.fxl3 .b,.fxtk span,main.fxr>*,main.fxl>*,.fxd,.fxconf,.fxstar,.fxspark{animation:none!important}.fxtk span{padding-left:0}nav.tabs .nvi{transition:none}}
-`;
+@media (prefers-reduced-motion: reduce){#fxo *,#fxo,.fx5,.fxl3 .b,`;
 const st=document.createElement('style');st.id='fxcss';st.textContent=css;document.head.appendChild(st);
 
 /* ---------------- overlays (one at a time, queued) ---------------- */
@@ -81,7 +75,19 @@ function next(){const o=Q.shift();if(!o){ON_=false;return}ON_=true;let el=docume
  let done=false;const close=()=>{if(done)return;done=true;el.classList.add('out');setTimeout(()=>{el.remove();next()},330)};el.onclick=e=>{e.stopPropagation();close()};setTimeout(close,RM()?1800:o.ms||3600)}
 window.fxOverlay=overlay;
 function sparks(el,n,hot){for(let i=0;i<n;i++){const s=document.createElement('i');s.className='fxspark';s.style.left=(10+Math.random()*80)+'%';s.style.setProperty('--dx',(Math.random()*160-80)+'px');s.style.setProperty('--dy',-(200+Math.random()*420)+'px');s.style.animationDelay=(Math.random()*1.4)+'s';if(hot)s.style.background='#ff8a3b';el.appendChild(s)}}
-function confetti(n){if(RM())return;const C=['#f6dd8e','#d8b449','#e2332b','#ffffff','#4aa8ff'];for(let i=0;i<(n||70);i++){const c=document.createElement('i');c.className='fxconf';c.style.left=Math.random()*100+'vw';c.style.background=C[i%C.length];c.style.setProperty('--dx',(Math.random()*120-60)+'px');c.style.setProperty('--r',(Math.random()*900-450)+'deg');c.style.setProperty('--t',(2.2+Math.random()*1.8)+'s');c.style.animationDelay=(Math.random()*.6)+'s';document.body.appendChild(c);setTimeout(()=>c.remove(),5200)}}
+/* fireworks: rockets rise from the bottom and burst into gold, red and white sparks (one canvas, ~3.5s) */
+function fireworks(n){if(RM())return;const old=document.getElementById('fxfw');if(old)old.remove();const c=document.createElement('canvas');c.id='fxfw';const dpr=Math.min(2,window.devicePixelRatio||1);
+ c.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;z-index:9998;pointer-events:none';const W=innerWidth,H=innerHeight;c.width=W*dpr;c.height=H*dpr;document.body.appendChild(c);const x=c.getContext('2d');x.scale(dpr,dpr);
+ const COL=['#f6dd8e','#ffcf4a','#e2332b','#ffffff','#ff8a3b','#4aa8ff'];const rockets=[],sparks=[];const N=n||6;
+ for(let i=0;i<N;i++)rockets.push({t:i*380+Math.random()*200,x:W*(.15+Math.random()*.7),y:H+10,vy:-(H*.0105+Math.random()*H*.003),ty:H*(.18+Math.random()*.3),c:COL[i%COL.length],live:false,done:false});
+ const t0=performance.now();let last=t0;
+ const step=now=>{const dt=Math.min(40,now-last)/16.7;last=now;const el=now-t0;x.clearRect(0,0,W,H);x.globalCompositeOperation='lighter';x.lineCap='round';
+  rockets.forEach(r=>{if(r.done||el<r.t)return;r.live=true;r.y+=r.vy*dt;x.strokeStyle=r.c;x.lineWidth=2.4;x.globalAlpha=.9;x.beginPath();x.moveTo(r.x,r.y-r.vy*5);x.lineTo(r.x,r.y);x.stroke();x.globalAlpha=1;
+   if(r.y<=r.ty){r.done=true;const k=46+Math.floor(Math.random()*26),sp=2.4+Math.random()*1.6;for(let j=0;j<k;j++){const a=j/k*Math.PI*2+Math.random()*.1,v=sp*(.6+Math.random()*.5);sparks.push({x:r.x,y:r.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c:Math.random()<.25?'#ffffff':r.c})}}});
+  for(let i=sparks.length-1;i>=0;i--){const p=sparks[i];p.vy+=.045*dt;p.vx*=.985;p.vy*=.985;p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=.011*dt;if(p.l<=0){sparks.splice(i,1);continue}x.globalAlpha=Math.max(0,p.l);x.strokeStyle=p.c;x.lineWidth=2;x.beginPath();x.moveTo(p.x-p.vx*4,p.y-p.vy*4);x.lineTo(p.x,p.y);x.stroke()}
+  x.globalAlpha=1;if(el<N*380+3600&&(sparks.length||rockets.some(r=>!r.done)))requestAnimationFrame(step);else c.remove()};
+ requestAnimationFrame(step)}
+const confetti=fireworks;window.fxFireworks=fireworks;
 window.fxConfetti=confetti;
 
 /* ---------------- 1. title changes ---------------- */
@@ -93,10 +99,10 @@ function segTitles(notes){(notes||[]).forEach(n=>{if(TRX.test(n))titleFx(n)})}
 /* solo reveal: when a segment's stars land */
 if(typeof srDone==='function'){const d0=srDone;srDone=function(it){const was=it&&it.ok;const out=d0.apply(this,arguments);try{if(it&&!was&&!MUTE){hit(it);segTitles(it.s&&it.s.notes)}}catch(e){}return out}}
 if(typeof srFinal==='function'){const f0=srFinal;srFinal=function(instant){if(instant)MUTE=true;let out;try{out=f0.apply(this,arguments)}finally{MUTE=false}
- try{const o=SRV&&SRV.o;if(o&&o.hourWin==='p')setTimeout(()=>confetti(80),instant?100:900)}catch(e){}return out}}
+ try{const o=SRV&&SRV.o;if(o&&o.hourWin==='p')setTimeout(()=>fireworks(6),instant?100:900)}catch(e){}return out}}
 /* party-night TV reveal */
 if(typeof tvRevealShow==='function'){const t0=tvRevealShow;tvRevealShow=function(stp,instant){const out=t0.apply(this,arguments);try{if(!instant){const el=document.getElementById(stp.id);if(el){const v=+el.dataset.st;if(v>=5)burst(el);else if(v&&v<2)el.classList.add('fxflat');[...el.querySelectorAll('.note')].forEach(n=>{if(TRX.test(n.textContent))titleFx(n.textContent)})}
- if(stp.final&&document.querySelector('#rv .rv-score.win'))setTimeout(()=>confetti(90),600)}}catch(e){}return out}}
+ if(stp.final&&document.querySelector('#rv .rv-score.win'))setTimeout(()=>fireworks(7),600)}}catch(e){}return out}}
 
 /* ---------------- 3. results that hit ---------------- */
 function burst(el){if(RM()||!el)return;el.classList.remove('fx5');void el.offsetWidth;el.classList.add('fx5');const pos=getComputedStyle(el).position;if(pos==='static')el.style.position='relative';
@@ -135,12 +141,11 @@ if(typeof wcard==='function'){const w0=wcard;wcard=function(w,o){let h=w0.apply(
 /* ROH buzz meter on farm cards */
 if(typeof window.farmCard==='function'){const f0=window.farmCard;window.farmCard=function(w){let h=f0.apply(this,arguments);try{const b=clamp((w.buzz||0)/15*100,0,100);h=h.replace(/(Call-up buzz [^<]*<b>[^<]*<\/b>)/,`$1<span class="bzm"><i style="width:${b}%"></i></span>`)}catch(e){}return h}}
 
-/* ---------------- 6. lower-thirds & ticker on live segments ---------------- */
-function tickerHtml(){const l=(S.news||[]).slice(-8).reverse().map(n=>n.t).filter(Boolean);if(!l.length)return '';const txt=l.map(esc).join('  ✦  ');return `<div class="fxtk"><span style="--t:${Math.max(20,Math.round(txt.length/7))}s">${txt}</span></div>`}
+/* ---------------- 6. lower-thirds on live segments ---------------- */
 if(typeof liveHd==='function'){const l0=liveHd;liveHd=function(show,lab,title,sides){let h=l0.apply(this,arguments);try{const ss=(sides||[]).map(sd=>(sd||[]).filter(Boolean)).filter(sd=>sd.length);
  const bars=ss.slice(0,4).map(sd=>{const w=sd[0];const tl=sd.map(x=>titlesOf(x.id)[0]).find(Boolean);const c=w.cr||{};const info=tl?`${tl.n} Champion${sd.length>1?'s':''}`:sd.length>1?(S.teams.find(t=>sd.every(x=>t.m.includes(x.id)))||{}).n||`${sd.length}-person team`:c.m?`${c.w}–${c.l} · ${STYLE_N[w.st]}`:STYLE_N[w.st];
   return `<div class="b"><b>${esc(sd.length>1?sideName(sd.map(x=>x.id)):w.name)}</b><small>${esc(info)}</small></div>`}).join('');
- h+=(bars?`<div class="fxl3">${bars}</div>`:'')+tickerHtml()}catch(e){}return h}}
+ h+=(bars?`<div class="fxl3">${bars}</div>`:'')}catch(e){}return h}}
 
 /* ---------------- 7. smoother navigation ---------------- */
 const ORDER=['home','book','roster','titles','office','menu'];let DIR=null,NAVL=null;
