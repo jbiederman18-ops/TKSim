@@ -82,6 +82,10 @@ A card on Home shows your progress and the weeks left. Win or lose, the save kee
 - **Pitches about every two weeks** (more often when the locker room is unhappy): main events, title shots, mic time, feuds, partners, rest, raises — plus **a spot on the next PPV** and **a dream match** with a bigger star.
 - **Grievances escalate** when morale sinks, as front-office decisions you make before the next show: a **pay demand** (under 55), a **walkout threat** (under 45), a **shoot promo** on live TV or grievances at the **media scrum** (under 35), and an actual **walkout** for a few weeks (under 25, or after you call their bluff). Below 10, they may still demand their release.
 
+## Tampering & injuries
+- **🕵️ Tampering.** When an unhappy or underpaid wrestler is within 8 weeks of the end of their deal, the rival office (in a league, "another company") may call them. The briefing flags the rumor with the offer: match it and extend, negotiate, sit down with them, or let them go. Ignore it and, when the deal runs out, they sign with the rival on the spot (in a league they hit free agency).
+- **🚑 Injury decisions.** When someone on your roster is hurt for a few weeks, choose: let it heal; rush them back in about half the time (fragile for 6 weeks after, with much higher re-injury risk); or, for longer injuries, surgery — more time out and a fee, but they come back tougher (+5 durability). Decisions wait in the briefing, with a card on Home.
+
 ## Party night (same room, big screen)
 Party night is a way to play an online league, not a separate game. It uses the same league, the same save and the same code, so you can play some weeks together on the couch and the rest on your own time.
 
