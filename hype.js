@@ -12,7 +12,7 @@
 const START=30,ANN=6,ANN_MAX=4;
 function HY(b){S.hype=S.hype||{};return S.hype[b]=S.hype[b]||{v:START,log:[]}}
 function np(){return PPVS[S.week]?{w:S.week,n:PPVS[S.week]}:nextPPVAfter(S.week)}
-function announced(b,P){if(!P)return 0;if(b==='ai'&&!ON())return {easy:0,normal:1,hard:2}[S.diff]||1;/* the rival advertises its card; harder rivals build better */let n=0;try{if(b==='p'||!ON())n=(S.promises||[]).filter(pr=>pr.week===P.w&&(pr.kind==='contract'||pr.kind==='callout')).length}catch(e){}return Math.min(ANN_MAX,n)}
+function announced(b,P){if(!P)return 0;if(b==='ai'&&!ON())return {easy:0,normal:0,hard:1}[S.diff]||0;/* the rival advertises its card; harder rivals build better */let n=0;try{if(b==='p'||!ON())n=(S.promises||[]).filter(pr=>pr.week===P.w&&(pr.kind==='contract'||pr.kind==='callout')).length}catch(e){}return Math.min(ANN_MAX,n)}
 function hype(b){const h=HY(b);return clamp(Math.round(h.v+announced(b,np())*ANN),0,100)}
 window.hypeOf=hype;
 const word=v=>v>=80?['🔥','Sold out']:v>=60?['🎟️','Selling fast']:v>=40?['🙂','Steady']:v>=25?['😐','Slow']:['🥶','Empty seats'];
@@ -23,7 +23,7 @@ function addL(h,d,t){if(!d)return;h.v=clamp(h.v+d,0,100);if(Math.round(d))h.log=
 function build(notes){const sh=curShow();const P=np();if(!P)return;const wk=S.week;
  const last=(S.history||[]).filter(x=>x.s===S.season&&x.w===wk).slice(-1)[0];
  brands().forEach(b=>{const h=HY(b);
-  if(sh.ppv){const v=hype(b);if(!h.paid){h.paid=wk;const fans=Math.round((v-50)/50*.025*(S.fans[b]||0));if(fans){S.fans[b]=Math.max(50000,S.fans[b]+fans)}
+  if(sh.ppv){const v=hype(b);if(!h.paid){h.paid=wk;const fans=Math.round((v-50)/50*.015*(S.fans[b]||0));if(fans){S.fans[b]=Math.max(50000,S.fans[b]+fans)}
     if(b==='p'||ON()){const [ic,wd]=word(v);const who=ON()?nameOf(b)+"'s ":'';const n=v>=55?`${ic} ${who}${sh.name}: ${wd.toLowerCase()} — ${sell(v)}% of seats sold, and the hot build brought ${fans.toLocaleString()} extra fans.`:v<45?`${ic} ${who}${sh.name}: ${wd.toLowerCase()} — only ${sell(v)}% of seats sold after a cold build (${fans.toLocaleString()} fans).`:`${ic} ${who}${sh.name}: ${wd.toLowerCase()} — ${sell(v)}% of seats sold. A middling build (${fans>=0?'+':''}${fans.toLocaleString()} fans).`;notes.push(n);news(n)}}
    return}
   const r=last&&last[b];if(r!=null)addL(h,(r-3)*6,r>=3?'A good show':'A flat show');
