@@ -932,7 +932,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v147';
+const APP_VERSION='v148';
 /* v113: a rolling AEW year — a PPV every 4 weeks from Revolution to Worlds End. All In is the midyear supershow;
    the season (awards, offseason, fan-war winner) ends after Worlds End, then the calendar rolls into a new year. */
 const SEASON=40,ALLIN_WEEK=24,OLD_SEASON=24;
@@ -1029,7 +1029,7 @@ function ensureTraits(st){if(!st||!st.w)return;Object.values(st.w).forEach(w=>{i
 // name|gender|style|align|ring|mic|pop|potential(optional)
 const RAW=`Will Ospreay|M|fl|f|97|80|92|99
 Kenny Omega|M|te|f|94|80|90
-Jon Moxley|M|br|h|88|90|91
+Jon Moxley|M|br|f|88|90|91
 Claudio Castagnoli|M|pw|h|90|62|72
 Wheeler Yuta|M|te|h|80|55|55|88
 Marina Shafir|F|te|h|70|50|45|76
@@ -1043,53 +1043,53 @@ Steven Borden|M|pw|f|55|45|50|88
 Kyle Fletcher|M|te|h|91|72|80|97
 Kevin Knight|M|fl|h|85|68|74|94
 Konosuke Takeshita|M|pw|f|93|65|78|96
-Kazuchika Okada|M|te|h|92|70|84
-Andrade El Ídolo|M|fl|f|87|60|72
+Kazuchika Okada|M|te|h|92|70|86
+Andrade El Ídolo|M|fl|f|87|60|80
 Daniel Garcia|M|te|f|82|72|66|90
 Mark Davis|M|pw|h|80|55|60|84
-Jack Perry|M|fl|h|80|72|70|88
+Jack Perry|M|fl|f|80|72|70|88
 Ricochet|M|fl|h|88|78|74
 Christian Cage|M|sh|h|80|95|82
 Adam Copeland|M|br|f|82|90|88
 Cash Wheeler|M|te|h|88|70|74
 Dax Harwood|M|te|h|90|78|76
-Matt Jackson|M|fl|h|87|82|84
-Nick Jackson|M|fl|h|88|70|83
+Matt Jackson|M|fl|f|87|82|84
+Nick Jackson|M|fl|f|88|70|83
 Brody King|M|pw|f|83|68|70
 Bandido|M|fl|f|90|55|74|93
 Gabe Kidd|M|br|h|82|70|65|88
-Chris Jericho|M|sh|h|74|94|82
+Chris Jericho|M|sh|f|74|94|82
 Orange Cassidy|M|sh|f|86|70|84
 Kyle O'Reilly|M|te|f|87|60|66
-Roderick Strong|M|te|h|85|58|58
+Roderick Strong|M|te|f|85|58|58
 Adam Cole|M|sh|h|86|88|82
 Mark Briscoe|M|br|f|84|75|72
 Tommaso Ciampa|M|br|h|84|80|68
-Samoa Joe|M|pw|f|82|88|80
-Hook|M|br|f|72|55|66|82
+Samoa Joe|M|pw|h|82|88|80
+Hook|M|br|h|72|55|66|82
 Myron Reed|M|fl|f|78|58|48|86
-Wardlow|M|pw|f|76|70|72|84
+Wardlow|M|pw|h|76|70|72|84
 Josh Alexander|M|te|h|88|72|64
 Hechicero|M|te|h|85|45|50
 Komander|M|fl|f|85|45|60|89
 Mascara Dorada|M|fl|f|84|45|52
 Lance Archer|M|pw|h|76|72|58
-Katsuyori Shibata|M|br|f|80|55|62
+Katsuyori Shibata|M|br|h|80|55|62
 Jay White|M|sh|h|88|86|72
-Eddie Kingston|M|br|f|76|92|76
+Eddie Kingston|M|br|f|76|92|68
 Bryan Keith|M|br|h|80|60|48|86
 Lio Rush|M|fl|f|83|70|58
 Mike Bailey|M|fl|f|89|65|74|92
 Francesco Akira|M|fl|f|84|55|55|90
-Bobby Lashley|M|pw|h|84|70|80
-Shelton Benjamin|M|te|h|84|60|62
+Bobby Lashley|M|pw|f|84|70|80
+Shelton Benjamin|M|te|f|84|60|62
 Místico|M|fl|f|88|55|74|90
 Tomohiro Ishii|M|br|f|84|50|68
 Brian Cage|M|pw|h|80|55|58
-Ace Austin|M|fl|h|80|62|56|86
-Juice Robinson|M|br|h|78|74|58
-Austin Gunn|M|sh|h|72|68|58|78
-Colten Gunn|M|br|h|72|60|56|78
+Ace Austin|M|fl|f|80|62|56|86
+Juice Robinson|M|br|f|78|74|58
+Austin Gunn|M|sh|f|72|68|58|78
+Colten Gunn|M|br|f|72|60|56|78
 David Finlay|M|br|h|82|62|60|86
 Clark Connors|M|br|h|76|55|50|82
 Bishop Kaun|M|pw|h|74|50|48|80
@@ -1098,18 +1098,18 @@ Dezmond Xavier|M|fl|f|80|55|48|86
 Kota Ibushi|M|fl|f|84|55|72
 Hologram|M|fl|f|80|40|60|90
 Mercedes Moné|F|sh|h|90|88|92
-Thekla|F|br|h|82|78|78|90
+Thekla|F|br|h|82|78|82|90
 Willow Nightingale|F|pw|f|84|82|80
 Jamie Hayter|F|br|f|86|80|84
-Alex Windsor|F|te|f|80|70|60|88
+Alex Windsor|F|te|f|80|70|64|88
 Megan Bayne|F|pw|h|78|55|64|88
-Lena Kross|F|pw|h|70|55|55|84
-Persephone|F|te|f|74|58|62|86
+Lena Kross|F|pw|h|70|55|58|84
+Persephone|F|te|h|74|58|66|86
 Maya World|F|sh|f|68|70|55|84
 Harley Cameron|F|sh|f|66|85|70|80
 Toni Storm|F|sh|f|87|92|90
 Kris Statlander|F|pw|f|86|72|80
-Hikaru Shida|F|te|f|84|60|68
+Hikaru Shida|F|te|h|84|60|68
 Julia Hart|F|sh|h|72|70|70|86
 Skye Blue|F|fl|h|74|60|64|84
 Zayda Steel|F|sh|h|62|65|48|82
@@ -1123,33 +1123,33 @@ Thunder Rosa|F|br|f|80|75|66
 Serena Deeb|F|te|h|86|65|55
 Penelope Ford|F|fl|h|72|60|58
 Britt Baker|F|te|h|80|88|82
-Dani Luna|F|pw|f|76|55|52|86
+Dani Luna|F|pw|f|76|55|55|86
 Hyan|F|te|f|70|55|50|82
 Deonna Purrazzo|F|te|h|80|68|60
-Yuka Sakazaki|F|fl|f|80|55|62
+Yuka Sakazaki|F|fl|f|80|55|58
 Taya Valkyrie|F|br|h|76|70|60
 Sammy Guevara|M|fl|h|83|78|72|88
-Jay Lethal|M|te|h|82|80|66
+Jay Lethal|M|te|h|82|80|60
 Dustin Rhodes|M|br|f|74|82|70
-MVP|M|sh|h|60|88|68
+MVP|M|sh|f|60|88|68
 Rush|M|br|h|82|70|66
 Dralístico|M|fl|h|80|50|52|86
-Nick Wayne|M|fl|h|78|58|58|90
-Action Andretti|M|fl|f|80|55|56|86
+Nick Wayne|M|fl|h|78|58|62|90
+Action Andretti|M|fl|h|80|55|56|86
 Alex Shelley|M|te|f|83|66|60
 Chris Sabin|M|fl|f|80|62|58
 Buddy Matthews|M|br|h|82|60|58
 The Beast Mortos|M|pw|h|76|40|56|84
 Blake Christian|M|fl|f|80|55|54|88
 Lee Moriarty|M|te|h|78|60|52|86
-Anthony Bowens|M|sh|f|72|80|68
-Billy Gunn|M|pw|f|62|72|62
+Anthony Bowens|M|sh|h|72|80|68
+Billy Gunn|M|pw|f|62|72|56
 Tony Nese|M|fl|h|78|62|52
-Rocky Romero|M|te|f|74|72|56
+Rocky Romero|M|te|h|74|72|56
 Trent Beretta|M|te|h|78|66|56
 Angelico|M|te|h|74|40|44
 Evil Uno|M|sh|f|70|74|56
-John Silver|M|br|f|72|74|62
+John Silver|M|br|f|72|74|58
 Alex Reynolds|M|te|f|72|60|50
 Preston Vance|M|pw|f|72|56|50|80
 Matt Sydal|M|fl|f|76|56|50
@@ -1228,7 +1228,7 @@ const TEAMS=[
 ['La Facción Ingobernable','faction',['rush','dralistico','the-beast-mortos']],
 ['Premier Athletes','faction',['josh-woods','ariya-daivari','tony-nese']],
 ['The Renegade Twins','team',['charlette-renegade','robyn-renegade']],
-['United Empire','faction',['will-ospreay','mike-bailey','francesco-akira']],
+['United Empire','faction',['will-ospreay','mike-bailey','francesco-akira','andrade-el-idolo']],
 ['Fletcher & Knight','team',['kyle-fletcher','kevin-knight']],
 ['The Young Bucks','team',['matt-jackson','nick-jackson']],
 ['FTR','team',['cash-wheeler','dax-harwood']],
@@ -1246,9 +1246,13 @@ const TEAMS=[
 ['The Dogs','faction',['gabe-kidd','david-finlay','clark-connors']],
 ['The Demand','faction',['ricochet','bishop-kaun','toa-liona']],
 ['The Hurt Syndicate','team',['bobby-lashley','shelton-benjamin']],
-['The Opps','faction',['samoa-joe','katsuyori-shibata','hook']],
+['The Opps','faction',['samoa-joe','katsuyori-shibata','hook','anthony-bowens','action-andretti']],
 ['Allin & Borden','team',['darby-allin','steven-borden']],
 ['Cage & Copeland','team',['christian-cage','adam-copeland']],
+['El Bueno, El Malo y El Guapo','faction',['hangman-adam-page','brody-king','bandido']],
+['The Rascalz','faction',['lio-rush','dezmond-xavier','myron-reed','zachary-wentz']],
+['RPG Vice','team',['rocky-romero','trent-beretta']],
+['The Swirl','team',['lee-johnson','blake-christian']],
 ['Shane Taylor Promotions','faction',['shane-taylor','lee-moriarty','shawn-dean','carlie-bravo']]];
 const FEUDS=[['mercedes-mone','thekla',75],['swerve-strickland','hangman-adam-page',55],['matt-jackson','dax-harwood',50],['nick-jackson','cash-wheeler',50],['matt-jackson','christian-cage',45],['nick-jackson','adam-copeland',40],['kevin-knight','steven-borden',50],['darby-allin','kyle-fletcher',55],['kyle-fletcher','matt-jackson',30],['kazuchika-okada','tommaso-ciampa',40],['samoa-joe','jack-perry',50],['jamie-hayter','megan-bayne',45],['alex-windsor','lena-kross',45],['jay-white','jon-moxley',35],['juice-robinson','david-finlay',35],['mike-bailey','gabe-kidd',30],['will-ospreay','claudio-castagnoli',30],['will-ospreay','jon-moxley',20],['willow-nightingale','thekla',30],['persephone','dani-luna',25],['persephone','hyan',25],['kris-statlander','julia-hart',30],['queen-aminata','skye-blue',30],['ricochet','swerve-strickland',30],['jon-moxley','mark-davis',55],['will-ospreay','samoa-joe',35],['will-ospreay','kazuchika-okada',40],['chris-jericho','nick-wayne',40],['kofi-kingston','bandido',40],['mercedes-mone','queen-aminata',35],['jon-moxley','jake-doyle',30]];
 const OUT={'toni-storm':14,'adam-cole':12,'mark-briscoe':8,'steven-borden':6,'kota-ibushi':10,'hologram':6,'anna-jay':6,'penelope-ford':6,'maya-world':4,'riho':4,'serena-deeb':4,'harley-cameron':2,'wardlow':2,'jay-white':8};
