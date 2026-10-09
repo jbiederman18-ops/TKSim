@@ -40,7 +40,7 @@ function card(compact){const P=np();if(!P||S.phase!=='season')return '';const v=
  const tips=[];if(ann<ANN_MAX)tips.push(`Announce PPV matches with a <b>Contract Signing</b> or a <b>callout</b> (${ann}/${ANN_MAX} announced)`);if(goHome)tips.push('This is the <b>go-home show</b>: feature your PPV names and make it a strong one');
  const rows=(h.log||[]).slice(-3).reverse().map(x=>`<div class="row sb tiny"><span>${esc(x.t)}</span><b class="${x.d>=0?'good':'bad'}">${x.d>=0?'+':''}${x.d}</b></div>`).join('')+(ann?`<div class="row sb tiny"><span>${ann} match${ann>1?'es':''} announced</span><b class="good">+${ann*ANN}</b></div>`:'');
  return `<div class="card"><div class="row sb"><b>${ic} ${tonight?'Tonight':`Road to ${esc(P.n)}`}</b><span class="tg ${v>=60?'good':v<25?'bad':''}">${wd} · ${sell(v)}% sold</span></div>
-  <div style="height:8px;border-radius:4px;background:var(--line,#333);overflow:hidden;margin:8px 0"><div style="height:100%;width:${v}%;background:var(--gold2,#e8c35a)"></div></div>
+  <div style="height:8px;border-radius:4px;background:var(--line,#333);overflow:hidden;margin:8px 0"><div data-hyv="${v}" style="height:100%;width:${v}%;background:var(--gold2,#e8c35a)"></div></div>
   <div class="muted tiny">Hype ${v}/100 · ${tonight?'it pays off tonight: ticket sales and extra fans':`${P.w-S.week} week${P.w-S.week>1?'s':''} to go`}</div>
   ${compact?'':`${rows?`<div style="margin-top:6px">${rows}</div>`:''}${!tonight&&tips.length?`<div class="tiny" style="margin-top:6px">${tips.map(t=>'💡 '+t).join('<br>')}</div>`:''}`}</div>`}
 window.hypeCard=card;

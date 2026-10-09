@@ -118,6 +118,16 @@ Party night is a way to play an online league, not a separate game. It uses the 
 - **End it:** **Office → End party night** (or the link in the banner). The league goes back to taking turns from exactly where it is. GMs who already went live that week stay locked in, and everyone else goes live on their own turn. If someone has to leave early, end party night and they book their show later with turn alerts as usual.
 - Needs the Firebase setup in [ONLINE-SETUP.md](ONLINE-SETUP.md) and an internet connection on every device. No new setup beyond online leagues.
 
+## Broadcast touches
+- **Title changes** get a full-screen "AND NEW" moment with the belt plate, in the solo results reveal and on the party-night TV.
+- **Debuts and call-ups** get a titantron entrance — the hotter their ROH buzz, the bigger the pop.
+- **Results hit harder:** five-star segments shake with a burst of stars, flat ones go grey, and winning the night fires confetti.
+- **Live numbers:** fans and money in the header count up or down with a +/- chip; PPV hype bars fill.
+- **Wrestler cards** show a 🔥 streak badge, a mood badge for unhappy wrestlers, a face/heel edge glow, and ROH buzz meters.
+- **Live segments** get Dynamite-style lower-thirds and a scrolling news ticker.
+- Screens slide in the direction you move and the nav highlight glides between tabs. The **ROH** screen has its own red-and-black look.
+- Everything calms down to simple fades if your phone has **Reduce motion** turned on.
+
 ## Your games
 Tap **⇄** at the top to see every game on this device — several solo games plus any online leagues — and switch between them. When you have more than one, the game opens on this list (tap outside it to carry on where you left off).
 

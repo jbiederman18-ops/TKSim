@@ -205,7 +205,7 @@ function pTurn(w,trial){w.al=w.al==='f'?'h':'f';w.turnW=AW();news(`🔄 ${w.name
 function pCtx(p){const x=Object.assign({},p);x.A=S.w[p.a];x.B=p.b?S.w[p.b]:null;return x}
 /* ---- weekly tick: expire the open pitch, end trials that ran out of time, maybe bring a new pitch ---- */
 function pitchTick(notes){if(S.phase!=='season')return;bothSides(()=>pitchTickOne(notes))}
-function pitchTickOne(notes){S.trials=S.trials||[];
+function pitchTickOne(notes){S.trials=(S.trials||[]).filter(t=>!t.b||S.w[t.b]);if(S.pitch&&S.pitch.b&&!S.w[S.pitch.b])S.pitch=null;
  const p=S.pitch;if(p&&AW()>p.w){const A=S.w[p.a];S.pitch=null;if(A&&A.own==='p'){const P=PITCHES[p.k];mor(A,-pMorCut(A,(P?P.no:2)*3));pNote(notes,`📨 ${A.name} never heard back about their idea and took it as a no.`)}}
  S.trials=S.trials.filter(t=>{const P=PITCHES[t.k];if(!P)return false;if(t.k==='partner'&&!pTeamOf(t.a,t.b))return false;if(!pOwn(t.a)||(t.b&&!pOwn(t.b))){if(t.k==='partner'){const tm=pTeamOf(t.a,t.b);if(tm)S.teams=S.teams.filter(x=>x!==tm)}return false}
   if(AW()>t.end){const good=t.goal==='rest'||t.goal==='avoid';pNote(notes,good?P.ok(t):P.fail(t));return false}return true});
@@ -227,7 +227,7 @@ function pitchChoose(k){if(typeof mpLocked==='function'&&mpLocked())return;const
  else{const cut=pMorCut(x.A,P.no*3);mor(x.A,-cut);txt=`${PCH.no.i} You let ${x.A.name} down gently. They understand — mostly (−${cut} morale).`}
  S.pitch=null;S.pitchNews=(S.pitchNews||[]).concat([{w:AW(),t:txt}]).slice(-12);save();render();
  openModal(`<div class="h mhd">📨 ${esc(P.head(x))}</div><div class="duo" style="align-items:center">${face(x.A)}${x.B?face(x.B):''}</div><div class="outcome ok">${esc(txt)}</div><button class="btn" onclick="openBrief()">Back to the briefing</button><button class="btn sec" onclick="closeModal()">Back to work</button>`)}
-function openPitch(){const p=S.pitch;if(!p||!PITCHES[p.k])return;const P=PITCHES[p.k],x=pCtx(p);if(!x.A||x.A.own!=='p'){S.pitch=null;save();return}
+function openPitch(){const p=S.pitch;if(!p||!PITCHES[p.k])return;const P=PITCHES[p.k],x=pCtx(p);if(!x.A||x.A.own!=='p'||(p.b&&!x.B)){S.pitch=null;save();return}
  const said=P.text(x);const line=said[(p.v!=null?p.v:(p.v=RI(0,said.length-1)))%said.length];
  openModal(`<div class="muted"><span class="live-tag" style="background:var(--gold);color:#111">PITCH</span>${esc(P.cat)} · expires after this week</div><div class="h mhd mt">${esc(P.head(x))}</div><div class="duo" style="align-items:center">${face(x.A)}${x.B?face(x.B):''}</div><p class="scene">${p.k==='wacky'?line:esc(line)}</p>
  <div class="muted tiny" style="margin-bottom:8px">${esc(x.A.name)} · morale ${Math.round(x.A.mor)} · POP ${Math.round(x.A.pop)} · ${x.A.al==='f'?'Face':'Heel'}</div>
@@ -252,8 +252,8 @@ function pitchSeg(seg,notes0){const ids=seg.sides.flat().filter(Boolean);ids.for
   if(hit){t.have=(t.have||0)+1;if(t.have>=t.need){notes.push(P.ok(t));return false}}return true})}
 /* ---- briefing sections ---- */
 function pitchBrief(){const sec=[];const p=S.pitch;
- if(p&&PITCHES[p.k]&&pOwn(p.a)){const P=PITCHES[p.k],x=pCtx(p);sec.push({i:'📨',t:'A pitch for you',tag:'New',rows:[`<div class="brow pitchrow" onclick="openPitch()"><span>${face(x.A)}</span><span><b>${esc(P.head(x))}</b><br><span class="muted tiny">${esc(P.cat)} · answer this week or they'll take it as a no</span></span><span class="gold">›</span></div>`]})}
- const tl=(S.trials||[]).filter(t=>PITCHES[t.k]&&pOwn(t.a));
+ if(p&&PITCHES[p.k]&&pOwn(p.a)&&(!p.b||S.w[p.b])){const P=PITCHES[p.k],x=pCtx(p);sec.push({i:'📨',t:'A pitch for you',tag:'New',rows:[`<div class="brow pitchrow" onclick="openPitch()"><span>${face(x.A)}</span><span><b>${esc(P.head(x))}</b><br><span class="muted tiny">${esc(P.cat)} · answer this week or they'll take it as a no</span></span><span class="gold">›</span></div>`]})}
+ const tl=(S.trials||[]).filter(t=>PITCHES[t.k]&&pOwn(t.a)&&(!t.b||S.w[t.b]));
  if(tl.length)sec.push({i:'🧪',t:'Trials and promises',rows:tl.map(t=>{const A=S.w[t.a],B=t.b&&S.w[t.b];const left=t.end-AW()+1;const P=PITCHES[t.k];
    const prog=t.goal==='rest'||t.goal==='avoid'?'':` · <b>${t.have||0}/${t.need}</b>`;
    return `<div class="brow"><b>${esc(P.head(pCtx(t)))}</b><br><span class="muted tiny">Goal: ${esc(t.txt)}${prog} · ${left<=1?'<b class="bad">last week</b>':`${left} weeks left`}${t.big?' · 🚀 you promised':''}</span></div>`})});
