@@ -106,8 +106,8 @@ const TUT_STEPS=[
  b:()=>`This is your read on the match: how hot the crowd is for it and whether it's a 🎲 wild card. Stipulations marked ⭐ are a <b>specialty</b> for someone in the match; each one shows its rough 📈 upside against the 🔋 wear and 🩹 injury risk it adds. Titles and finishes get ▲/▼ tells. Exact numbers stay hidden until after the show.`},
 {id:'t.results',track:'tip',since:1,opt:true,sel:'#modal .whyd',sys:['ratings'],t:'Why that rating?',
  b:()=>`Open this under any of your matches to see what each part was worth — chemistry, stamina, the finish, the luck of the night. It's the fastest way to learn what works.`},
-{id:'t.ppv',track:'tip',since:1,sel:'main .card.showcard',sys:['ppv','feuds','titles'],t:"It's PPV week",
- b:()=>`Bigger card, bigger crowd, bigger fan swings. This is the night to blow off hot feuds (35+ heat) with a clean finish, and your title challenge is the one way to take ${ON()?"another GM's":"the rival's"} gold.`}
+{id:'t.ppv',track:'tip',since:1,sel:'main .card.showcard',sys:['ppv','feuds','titles','hype'],t:"It's PPV week",
+ b:()=>`Bigger card, bigger crowd, bigger fan swings. This is the night to blow off hot feuds (35+ heat) with a clean finish, and your title challenge is the one way to take ${ON()?"another GM's":"the rival's"} gold.<br><br>The 🎟️ <b>hype meter</b> you built over the last few weeks pays off tonight: ticket sales and extra fans. Build the next one by announcing PPV matches and nailing the go-home show.`}
 ];
 
 /* ---------- saved progress (per device, never in the game save) ---------- */
