@@ -24,13 +24,9 @@ const css=`
 #fxo .tap{position:absolute;bottom:22px;left:0;right:0;font:600 12px 'Barlow',sans-serif;color:#8d877a;letter-spacing:.1em;text-transform:uppercase;animation:fxIn .4s 1.8s both}
 @keyframes fxDrop{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:none}}
 @keyframes fxSlam{0%{opacity:0;transform:scale(2.4)}60%{opacity:1;transform:scale(.94)}80%{transform:scale(1.03) rotate(-.6deg)}100%{transform:none}}
-.fxbelt{position:relative;width:min(86vw,520px);height:clamp(70px,17vw,120px);margin:6px auto 0;animation:fxBelt .7s cubic-bezier(.2,1.2,.3,1) .45s both}
-.fxbelt:before{content:"";position:absolute;left:0;right:0;top:28%;bottom:28%;background:linear-gradient(180deg,#1b1b1f,#050506);border-top:2px solid #6b5212;border-bottom:2px solid #6b5212;border-radius:8px}
-.fxbelt i{position:absolute;left:50%;top:0;bottom:0;width:46%;transform:translateX(-50%);border-radius:50%/50%;background:radial-gradient(ellipse at 40% 30%,#fff3c4,#e5bf55 35%,#a77e1e 70%,#5c4310);box-shadow:0 0 30px rgba(246,221,142,.55),inset 0 0 0 3px #f8e39a,inset 0 0 0 7px #8b6a1a;display:flex;align-items:center;justify-content:center}
-.fxbelt i b{font:900 italic clamp(10px,2.8vw,17px)/1.05 'BC',Impact,sans-serif;color:#2b1f05;text-transform:uppercase;letter-spacing:.06em;padding:0 10%;text-shadow:0 1px 0 rgba(255,255,255,.4)}
-.fxbelt u{position:absolute;top:31%;bottom:31%;width:9%;border-radius:4px;background:radial-gradient(ellipse at 40% 30%,#f8e7a6,#b88e2a 60%,#6b5212)}
-.fxbelt u:nth-of-type(1){left:13%}.fxbelt u:nth-of-type(2){right:13%}
 @keyframes fxBelt{from{opacity:0;transform:translateY(60px) scale(.7)}to{opacity:1;transform:none}}
+.fxbi{display:block;max-width:min(88vw,560px);max-height:30vh;object-fit:contain;margin:6px auto 0;filter:drop-shadow(0 10px 30px rgba(0,0,0,.7)) drop-shadow(0 0 26px rgba(246,221,142,.35));animation:fxBelt .7s cubic-bezier(.2,1.2,.3,1) .45s both}
+.fxplate{display:inline-block;margin:10px auto 0;padding:10px 26px;border-top:2px solid var(--gold,#d8b449);border-bottom:2px solid var(--gold,#d8b449);background:linear-gradient(90deg,transparent,rgba(216,180,73,.18),transparent);font:900 italic clamp(16px,4.6vw,30px)/1 'BC',Impact,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#f3e6c4;animation:fxBelt .7s cubic-bezier(.2,1.2,.3,1) .45s both}
 #fxo .bm{position:absolute;bottom:-20%;width:40vmax;height:140vmax;background:linear-gradient(0deg,rgba(255,230,160,.0),rgba(255,230,160,.18) 60%,transparent);transform-origin:50% 100%;pointer-events:none;filter:blur(6px)}
 #fxo .bm.a{left:5%;animation:fxBeamA 3.2s ease-in-out infinite}#fxo .bm.b{right:5%;animation:fxBeamB 3.2s ease-in-out infinite}
 @keyframes fxBeamA{0%,100%{transform:rotate(-28deg)}50%{transform:rotate(14deg)}}@keyframes fxBeamB{0%,100%{transform:rotate(28deg)}50%{transform:rotate(-14deg)}}
@@ -91,7 +87,7 @@ window.fxConfetti=confetti;
 /* ---------------- 1. title changes ---------------- */
 const TRX=/(NEW|INAUGURAL) (.+?) CHAMPIONS?: (.+?)(?: make| makes| —|!|$)/;
 function titleFx(note){const m=TRX.exec(note||'');if(!m)return;const first=m[1]==='INAUGURAL';const title=m[2].replace(/\b\w+/g,w=>w.charAt(0)+w.slice(1).toLowerCase());const who=m[3].trim();
- overlay(`<div class="fl"></div><div class="kk">${first?'The first ever':'And new'}</div><div class="fxbelt"><u></u><u></u><i><b>${esc(title)}</b></i></div><div class="nmx">${esc(who)}</div><div class="sub">${esc(title)} Champion${/&/.test(who)?'s':''}</div>`,'',4200,el=>sparks(el,26))}
+ overlay(`<div class="fl"></div><div class="kk">${first?'The first ever':'And new'}</div>${(()=>{const id=window.beltIdByName&&beltIdByName(title);const b=id&&window.beltImg&&beltImg(id);return b?`<img class="fxbi" src="${b}" alt="">`:`<div class="fxplate">${esc(title)}</div>`})()}<div class="nmx">${esc(who)}</div><div class="sub">${esc(title)} Champion${/&/.test(who)?'s':''}</div>`,'',4200,el=>sparks(el,26))}
 window.fxTitle=titleFx;
 function segTitles(notes){(notes||[]).forEach(n=>{if(TRX.test(n))titleFx(n)})}
 /* solo reveal: when a segment's stars land */
