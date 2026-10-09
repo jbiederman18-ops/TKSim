@@ -122,9 +122,9 @@ Party night is a way to play an online league, not a separate game. It uses the 
 - **Title changes** get a full-screen "AND NEW" moment with the real belt (from your belt photos) or a gold nameplate, in the solo results reveal and on the party-night TV.
 - **🏆 Belt photos** (Titles screen or Photo Studio): add a real photo for every AEW and ROH title — 🔍 Find, copy, 📋 Paste, or 📷 Add from your device. Plain backgrounds are cleared automatically. To share belts with every device, put the files in the repo's `photos/belts` folder and list them under `"belts"` in `photos/manifest.json` (e.g. `"world": "world.png"`). Title ids: world, wworld, intl, cont, tnt, tbs, nat, tag, wtag, trios, roh-rw, roh-rwom, roh-rtv, roh-rpure.
 - **Debuts and call-ups** get a titantron entrance — the hotter their ROH buzz, the bigger the pop.
-- **Results hit harder:** five-star segments shake with a burst of stars, flat ones go grey, and winning the night sets off fireworks.
+- **Results hit harder:** five-star segments shake with a burst of stars, flat ones go grey, and winning the night sets off gold fireworks.
 - **Live numbers:** fans and money in the header count up or down with a +/- chip; PPV hype bars fill.
-- **Wrestler cards** show a 🔥 streak badge, a mood badge for unhappy wrestlers, a face/heel edge glow, and ROH buzz meters.
+- **Wrestler cards** show a mood badge for unhappy wrestlers, a face/heel edge glow, and ROH buzz meters. The weekly briefing lists your **🔥 hottest wrestlers** — win streaks, momentum and recent popularity gains — so you know who to ride.
 - **Live segments** get Dynamite-style lower-thirds.
 - Screens slide in the direction you move and the nav highlight glides between tabs. The **ROH** screen has its own red-and-black look.
 - Everything calms down to simple fades if your phone has **Reduce motion** turned on.

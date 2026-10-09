@@ -4,7 +4,7 @@
      2. Debuts & call-ups — a titantron entrance with a name slam and light sweeps; hotter ROH buzz = bigger pop
      3. Results that hit — 5★ segments shake with a star burst, flat ones go grey, "You win the night" sets off fireworks
      4. Live numbers — fans and money in the header count up or down with a floating +/- chip; hype bars fill
-     5. Wrestler cards — 🔥 streak flame, mood badge for unhappy wrestlers, a soft face/heel edge glow, ROH buzz meters
+     5. Wrestler cards — mood badge for unhappy wrestlers, a soft face/heel edge glow, ROH buzz meters (the hottest names are listed in the briefing)
      6. Broadcast lower-thirds — live promos and matches get Dynamite-style name bars
      7. Smoother navigation — screens slide in the direction you move, and the bottom-nav highlight glides between tabs
      8. ROH identity — the ROH screen gets its own red-and-black HonorClub styling
@@ -78,12 +78,12 @@ function sparks(el,n,hot){for(let i=0;i<n;i++){const s=document.createElement('i
 /* fireworks: rockets rise from the bottom and burst into gold, red and white sparks (one canvas, ~3.5s) */
 function fireworks(n){if(RM())return;const old=document.getElementById('fxfw');if(old)old.remove();const c=document.createElement('canvas');c.id='fxfw';const dpr=Math.min(2,window.devicePixelRatio||1);
  c.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;z-index:9998;pointer-events:none';const W=innerWidth,H=innerHeight;c.width=W*dpr;c.height=H*dpr;document.body.appendChild(c);const x=c.getContext('2d');x.scale(dpr,dpr);
- const COL=['#f6dd8e','#ffcf4a','#e2332b','#ffffff','#ff8a3b','#4aa8ff'];const rockets=[],sparks=[];const N=n||6;
+ const COL=['#f6dd8e','#ffcf4a','#d8b449','#fff1c2','#e8b84a','#ffe08a'];const rockets=[],sparks=[];const N=n||6;
  for(let i=0;i<N;i++)rockets.push({t:i*380+Math.random()*200,x:W*(.15+Math.random()*.7),y:H+10,vy:-(H*.0105+Math.random()*H*.003),ty:H*(.18+Math.random()*.3),c:COL[i%COL.length],live:false,done:false});
  const t0=performance.now();let last=t0;
  const step=now=>{const dt=Math.min(40,now-last)/16.7;last=now;const el=now-t0;x.clearRect(0,0,W,H);x.globalCompositeOperation='lighter';x.lineCap='round';
   rockets.forEach(r=>{if(r.done||el<r.t)return;r.live=true;r.y+=r.vy*dt;x.strokeStyle=r.c;x.lineWidth=2.4;x.globalAlpha=.9;x.beginPath();x.moveTo(r.x,r.y-r.vy*5);x.lineTo(r.x,r.y);x.stroke();x.globalAlpha=1;
-   if(r.y<=r.ty){r.done=true;const k=46+Math.floor(Math.random()*26),sp=2.4+Math.random()*1.6;for(let j=0;j<k;j++){const a=j/k*Math.PI*2+Math.random()*.1,v=sp*(.6+Math.random()*.5);sparks.push({x:r.x,y:r.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c:Math.random()<.25?'#ffffff':r.c})}}});
+   if(r.y<=r.ty){r.done=true;const k=46+Math.floor(Math.random()*26),sp=2.4+Math.random()*1.6;for(let j=0;j<k;j++){const a=j/k*Math.PI*2+Math.random()*.1,v=sp*(.6+Math.random()*.5);sparks.push({x:r.x,y:r.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c:Math.random()<.25?'#fff6dc':r.c})}}});
   for(let i=sparks.length-1;i>=0;i--){const p=sparks[i];p.vy+=.045*dt;p.vx*=.985;p.vy*=.985;p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=.011*dt;if(p.l<=0){sparks.splice(i,1);continue}x.globalAlpha=Math.max(0,p.l);x.strokeStyle=p.c;x.lineWidth=2;x.beginPath();x.moveTo(p.x-p.vx*4,p.y-p.vy*4);x.lineTo(p.x,p.y);x.stroke()}
   x.globalAlpha=1;if(el<N*380+3600&&(sparks.length||rockets.some(r=>!r.done)))requestAnimationFrame(step);else c.remove()};
  requestAnimationFrame(step)}
@@ -134,12 +134,23 @@ function numbers(){if(!S||!S.fans||!S.money||!(S.phase==='season'||S.phase==='ov
 
 /* ---------------- 5. wrestler cards ---------------- */
 if(typeof wcard==='function'){const w0=wcard;wcard=function(w,o){let h=w0.apply(this,arguments);try{if(!w)return h;const inS=S&&(S.phase==='season'||S.phase==='over');let add='';
- if(inS&&(w.strk||0)>=3)add+=`<span class="fxb st">🔥${w.strk}</span>`;
  if(inS&&w.own==='p'&&w.mor<50&&typeof moodWord==='function')add+=`<span class="fxb md" title="${esc(moodWord(w.mor)[1])}">${moodWord(w.mor)[0]}</span>`;
  h=h.replace('<button class="wc ','<button class="wc '+(w.al==='f'?'af ':'ah '));
  if(add){const i=h.indexOf('<div class="nm">');if(i>0)h=h.slice(0,i)+add+h.slice(i)}}catch(e){}return h}}
 /* ROH buzz meter on farm cards */
 if(typeof window.farmCard==='function'){const f0=window.farmCard;window.farmCard=function(w){let h=f0.apply(this,arguments);try{const b=clamp((w.buzz||0)/15*100,0,100);h=h.replace(/(Call-up buzz [^<]*<b>[^<]*<\/b>)/,`$1<span class="bzm"><i style="width:${b}%"></i></span>`)}catch(e){}return h}}
+
+/* ---------------- hottest on the roster (weekly briefing) ---------------- */
+/* tracks each of your wrestlers' popularity over the last 4 weeks; "hot" = win streak + momentum + recent popularity gains */
+if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(){const out=e0.apply(this,arguments);try{brands().forEach(b=>ownList(b).forEach(w=>{w.ph4=(w.ph4||[]).concat([Math.round(w.pop*10)/10]).slice(-5)}))}catch(e){}return out}}
+function heatScore(w){const ph=w.ph4||[];const gain=ph.length>1?w.pop-ph[0]:0;return {s:Math.max(0,w.strk||0)*2+Math.max(0,w.mom||0)*1.5+Math.max(0,gain)*1.2+(w.lme!=null&&AW()-w.lme<=1?1.5:0),gain}}
+function hotList(){return ownList('p').filter(w=>!w.inj).map(w=>Object.assign({w},heatScore(w))).filter(x=>x.s>=4).sort((a,b)=>b.s-a.s).slice(0,5)}
+window.hotList=hotList;
+if(typeof briefItems==='function'){const b0=briefItems;window.briefItems=briefItems=function(){const sec=b0.apply(this,arguments);try{const l=hotList();if(l.length){
+ const why=x=>{const r=[];if((x.w.strk||0)>=3)r.push(`${x.w.strk}-match win streak`);if(x.gain>=1)r.push(`+${Math.round(x.gain)} popularity in ${Math.min(4,(x.w.ph4||[]).length-1)} weeks`);if((x.w.mom||0)>=3)r.push('strong momentum');if(x.w.lme!=null&&AW()-x.w.lme<=1)r.push('fresh off a main event');return r.join(' · ')||'on a roll'};
+ const row=`<div class="brow"><span class="muted tiny">Ride the wave: feature them, put them next to someone you want to build, or give them a big win.</span></div>`;
+ const at=sec.findIndex(x=>x.i==='🗓️');const item={i:'🔥',t:'Hottest on your roster',rows:l.map((x,i)=>`<div class="brow"><b>${i+1}. <a href="#" onclick="closeModal();showW('${x.w.id}');return false">${esc(x.w.name)}</a></b> <span class="muted tiny">· POP ${Math.round(x.w.pop)}</span><br><span class="tiny">${why(x)}</span></div>`).concat([row])};
+ if(at<0)sec.push(item);else sec.splice(at,0,item)}}catch(e){console.warn(e)}return sec}}
 
 /* ---------------- 6. lower-thirds on live segments ---------------- */
 if(typeof liveHd==='function'){const l0=liveHd;liveHd=function(show,lab,title,sides){let h=l0.apply(this,arguments);try{const ss=(sides||[]).map(sd=>(sd||[]).filter(Boolean)).filter(sd=>sd.length);
