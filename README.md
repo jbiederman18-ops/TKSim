@@ -96,6 +96,12 @@ Open it from the Titles screen or the Office:
 
 History is recorded from v157 on (existing champions are picked up the first time you open a save).
 
+## Trades
+- Propose from the **Office** or the **🔁 Trade** button on another brand's wrestler: up to two wrestlers each way, plus cash either way. Champions can't be traded, and nobody can go over 30 wrestlers.
+- **Solo:** the rival answers on the spot — accept, counter (they want more cash) or decline — based on each wrestler's overall, upside and contract length. On Hard it drives a harder bargain. Every few weeks the rival may call with an offer of its own; it waits in your briefing for a week.
+- **Leagues:** offers wait in the other GM's briefing until they accept or decline (or you withdraw). Offers expire after 3 weeks.
+- Traded wrestlers keep their contracts. Happy ones take it a little hard; unhappy ones welcome the fresh start.
+
 ## Party night (same room, big screen)
 Party night is a way to play an online league, not a separate game. It uses the same league, the same save and the same code, so you can play some weeks together on the couch and the rest on your own time.
 
