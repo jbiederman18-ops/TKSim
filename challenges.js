@@ -66,9 +66,9 @@ const CHALS=[
  won(){return Object.values(S.titles).some(t=>t.kind==='singles'&&t.holders.some(h=>{const w=S.w[h];return w&&w.own==='p'&&(w.id.startsWith('rk')||w.cw)}))}},
 {id:'happy',i:'🤝',t:'Happy Locker Room',diff:'normal',by:ALLIN_WEEK,
  d:'Keep everyone smiling for a full half-year. It\'s harder than it sounds.',
- goal:'Reach All In winning the fan war, with roster morale averaging 92+ and nobody under 75. Nobody may walk out or demand their release.',
- prog(){const m=avgMor(),lo=Math.min(...mineL().map(w=>w.mor)),f=fanGain('p')-fanGain('ai');return {txt:`Average morale ${Math.round(m)} / 92 · lowest ${Math.round(lo)} / 75 · fan war ${f>=0?'ahead':'behind'}`,pct:Math.round(pct(m-65,27)*.5+pct(lo,75)*.3+(f>=0?20:0))}},
- won(){return S.week>ALLIN_WEEK&&avgMor()>=92&&mineL().every(w=>w.mor>=75)&&fanGain('p')>fanGain('ai')},
+ goal:'Reach All In winning the fan war, with roster morale averaging 80+ and nobody under 60. Nobody may walk out or demand their release.',
+ prog(){const m=avgMor(),lo=Math.min(...mineL().map(w=>w.mor)),f=fanGain('p')-fanGain('ai');return {txt:`Average morale ${Math.round(m)} / 80 · lowest ${Math.round(lo)} / 60 · fan war ${f>=0?'ahead':'behind'}`,pct:Math.round(pct(m-65,15)*.5+pct(lo,60)*.3+(f>=0?20:0))}},
+ won(){return S.week>ALLIN_WEEK&&avgMor()>=80&&mineL().every(w=>w.mor>=60)&&fanGain('p')>fanGain('ai')},
  lost(){if(C().walk)return C().walk;return avgMor()<65?'Average morale fell under 65 — the locker room has turned on you.':false}}];
 const CH=id=>CHALS.find(c=>c.id===id);
 window.CHALS=CHALS;

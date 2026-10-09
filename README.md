@@ -49,7 +49,7 @@ Tap **🎯 Challenge scenarios** on the new-game screen for a solo season with o
 | ✨ Five-Star Factory | 12 matches at 5★ or better, your own wrestlers only | All In |
 | 🪨 David vs. Goliath | On Hard, with the rival 150K fans and $1.5M ahead, finish the year with more total fans | Worlds End |
 | 🌱 Homegrown | A wrestler you scouted or created holds a singles title | Week 32 |
-| 🤝 Happy Locker Room | Win the fan war at All In with morale averaging 92+, nobody under 75, and no walkouts | All In |
+| 🤝 Happy Locker Room | Win the fan war at All In with morale averaging 80+, nobody under 60, and no walkouts | All In |
 
 A card on Home shows your progress and the weeks left. Win or lose, the save keeps going as a normal game, and your best result for each challenge is kept on the device.
 
@@ -73,6 +73,11 @@ A card on Home shows your progress and the weeks left. Win or lose, the save kee
 - **Money stays meaningful.** A bigger company pays bigger wages when wrestlers sign or re-sign (about +15% at 1M fans), production and stipulations cost more in bigger venues, and past a big night's box office the extra comes in at half — so a hit promotion's bank levels off instead of piling up millions. The offline rival doesn't pay the wage premium (it runs a bigger roster); in online leagues every GM does.
 - **The top is hard to reach and hard to hold.** Popularity gains slow sharply past 80 and again past 90, and stars at 85+ slip a little in weeks they aren't featured (main event, PPV win, or a 3½★+ match or promo).
 - **Multi-person matches** are carried by their top two names and their hottest rivalry, reward a mix of styles (triple threats and 4-ways love flyers and showmen; tags lean on partners who click), and pay off later: only one loser takes the fall, lower names gain popularity from the top star, and the top star uses less stamina.
+
+## Morale, pitches & grievances
+- **Morale moves every week.** TV time, wins, main events, kept promises and answered pitches lift it. Sitting at home wears on people (stars after 2 weeks off TV, everyone else after 3), clean losses sting (more for stars, most when they lose to someone less popular), and being worn down or underpaid grinds on them. Tap any wrestler to see their **Mood** and the reasons behind it.
+- **Pitches about every two weeks** (more often when the locker room is unhappy): main events, title shots, mic time, feuds, partners, rest, raises — plus **a spot on the next PPV** and **a dream match** with a bigger star.
+- **Grievances escalate** when morale sinks, as front-office decisions you make before the next show: a **pay demand** (under 55), a **walkout threat** (under 45), a **shoot promo** on live TV or grievances at the **media scrum** (under 35), and an actual **walkout** for a few weeks (under 25, or after you call their bluff). Below 10, they may still demand their release.
 
 ## Party night (same room, big screen)
 Party night is a way to play an online league, not a separate game. It uses the same league, the same save and the same code, so you can play some weeks together on the couch and the rest on your own time.

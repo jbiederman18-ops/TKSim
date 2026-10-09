@@ -15,7 +15,7 @@ function pFree(w){return w&&w.own==='p'&&!w.inj}
 function pLast(w){return w.name.split(' ').slice(-1)[0]}
 function pNote(notes,t){S.pitchNews=(S.pitchNews||[]).concat([{w:AW(),t}]).slice(-12);if(notes&&!ON())notes.push(t)}
 function pBusy(id){return (S.trials||[]).some(t=>t.a===id||t.b===id)||(S.pitch&&(S.pitch.a===id||S.pitch.b===id))}
-function pRecent(id){return S.pitchBy&&S.pitchBy[id]&&AW()-S.pitchBy[id]<8}
+function pRecent(id){return S.pitchBy&&S.pitchBy[id]&&AW()-S.pitchBy[id]<6}
 function pPool(){return ownList('p').filter(w=>!w.inj&&!pBusy(w.id)&&!pRecent(w.id))}
 function pMorCut(w,base){return Math.round(base*(w.mor<40?1.5:w.mor>=75?.5:1))}
 /* v119: the unhappier someone is, the more weight they get when it's time to pick who pitches (morale 75+ → 1×, morale 25 → 5×) */
@@ -31,6 +31,9 @@ function pRaise(w){const inc=pRaiseAmt(w);if(payroll('p')+inc>econCap())return 0
 /* a real tag team (both on your roster, healthy, no trial) and a tag belt they could chase */
 function pTagShots(r){const l=[];S.teams.forEach(tm=>{if(tm.type!=='team'||tm.trialOf||tm.m.length!==2)return;const [a,b]=tm.m.map(id=>S.w[id]);if(!a||!b||!r.includes(a)||!r.includes(b)||a.pop<50)return;
   Object.values(S.titles).forEach(t=>{if(t.kind!=='tag')return;if(t.holders.length&&(t.holders.some(h=>!S.w[h]||S.w[h].own!=='p'||h===a.id||h===b.id||S.w[h].inj)))return;const lo=a.mor<=b.mor?[a,b]:[b,a];l.push({a:lo[0].id,b:lo[1].id,title:t.id})})});return l}
+function pNextPPV(){return PPVS[S.week]?{w:S.week,n:PPVS[S.week]}:nextPPVAfter(S.week)}
+/* someone in the midcard who wants a match with a bigger star on your roster (not a partner, not already feuding) */
+function pDreams(r){const l=[];r.forEach(a=>{if(a.pop<40||a.pop>72)return;r.forEach(b=>{if(a===b||a.g!==b.g||b.pop<75||b.pop<a.pop+12||inTeam(a.id,b.id)||heatOf(a.id,b.id)>=15)return;l.push({a:a.id,b:b.id})})});return l}
 function pCost(){return Math.max(15,Math.round(econCap()*.08/5)*5)}
 function pTeamOf(a,b){return S.teams.find(t=>t.trialOf===a+'|'+b)}
 /* ---- the pitch types. pick(pool) → context or null; text uses {A} {B} {X}. try() returns a trial; go() returns the result text ---- */
@@ -158,6 +161,25 @@ const PITCHES={
   ok:t=>{const A=pOwn(t.a);mor(A,t.big?15:10);popx(A,2);return t.big?`🏆 ${A.name} got their title shot, as promised.`:`🏆 ${A.name} earned it — they're the clear number one contender (+2 popularity).`},
   fail:t=>{const A=pOwn(t.a);mor(A,t.big?-15:-6);return t.big?`🏆 ${A.name} never got the title shot you promised.`:`🏆 ${A.name} came up short of earning a title shot.`},
   no:3},
+ ppv:{cat:'📺 Big-show spot',w:r=>{const np=pNextPPV();if(!np||np.w-S.week>4)return 0;const l=r.filter(w=>w.pop>=50);return l.length?1.5+Math.min(3,l.filter(w=>w.mor<60).length):0},
+  pick:r=>{const l=r.filter(w=>w.pop>=50);return l.length?{a:wpick(l,w=>pWant(w)).id}:null},
+  text:x=>{const np=pNextPPV();const n=np?np.n:'the next PPV';return x.A.mor<45?[`"I sat out the last big show. I'm not sitting out ${n}."`,`"If I'm not on ${n}, what am I even doing here?"`]:[`"${n} is coming up. I want to be on that card."`,`"Put me on ${n}. Big shows are where I do my best work."`]},
+  head:x=>{const np=pNextPPV();return `${x.A.name} wants a spot on ${np?np.n:'the next PPV'}`},
+  try:{d:x=>{const np=pNextPPV();return `"Earn it." Put them on the ${np?np.n:'PPV'} card if they're ready — any match or promo counts.`},start:x=>{const np=pNextPPV();return {goal:'ppv',need:1,len:np?Math.max(1,np.w-S.week+1):PITCH_LEN,txt:`a spot on ${np?np.n:'the PPV'}`}}},
+  go:{d:x=>{const np=pNextPPV();return `"You're on the card." Book them on ${np?np.n:'the PPV'} — a big boost if you deliver, a broken promise if you don't.`},
+   start:x=>{const np=pNextPPV();return {goal:'ppv',need:1,len:np?Math.max(1,np.w-S.week+1):PITCH_LEN,txt:`a spot on ${np?np.n:'the PPV'}`,big:1}},fx:null},
+  ok:t=>{const A=pOwn(t.a);mor(A,t.big?14:9);popx(A,1);return `📺 ${A.name} got their big-show moment.`},
+  fail:t=>{const A=pOwn(t.a);mor(A,t.big?-14:-6);return t.big?`📺 You promised ${A.name} a spot on the big show and left them off.`:`📺 ${A.name} didn't make the big-show card.`},
+  no:2},
+ dream:{cat:'⭐ Dream match',w:r=>pDreams(r).length?2:0,
+  pick:r=>{const l=pDreams(r);return l.length?wpick(l,c=>pWant(S.w[c.a])):null},
+  text:x=>x.A.mor<45?[`"I've been here long enough. Give me ${x.B.name} — or tell me I'm never getting that chance."`,`"Everyone gets a shot at ${pLast(x.B)} except me. Why?"`]:[`"One match with ${x.B.name}. That's all I'm asking. I'll show you what I can do."`,`"I grew up watching ${x.B.name}. Let me get in the ring with ${pLast(x.B)}."`],
+  head:x=>`${x.A.name} wants a match with ${x.B.name}`,
+  try:{d:x=>`Book ${x.A.name} vs ${x.B.name} within ${PITCH_LEN} weeks — on any show, any stipulation.`,start:x=>({goal:'vs',need:1,txt:`a match with ${x.B.name}`})},
+  go:{d:x=>`"It's happening." Book it within 2 weeks — a big boost if you deliver, a broken promise if you don't.`,start:x=>({goal:'vs',need:1,len:2,txt:`a match with ${x.B.name} within 2 weeks`,big:1}),fx:null},
+  ok:t=>{const A=pOwn(t.a);mor(A,t.big?14:10);return `⭐ ${A.name} got the match they wanted.`},
+  fail:t=>{const A=pOwn(t.a);mor(A,t.big?-12:-5);return t.big?`⭐ The match you promised ${A.name} never happened.`:`⭐ ${A.name} never got their dream match.`},
+  no:2},
  rest:{cat:'🧩 A problem',w:3,
   pick:r=>{const busy=new Set();for(const k in TOURS){const D=TOURS[k];if(S.week>=tourFirst(D)-1&&S.week<=D.final)(tourState('p',k).ent||[]).forEach(id=>busy.add(id))}(S.promises||[]).forEach(pr=>{if(pr.week<=S.week+1){busy.add(pr.a);busy.add(pr.b)}});const l=r.filter(w=>w.fat>=45&&!busy.has(w.id));return l.length?{a:l.sort((a,b)=>b.fat-a.fat)[0].id}:null},
   text:x=>[`"I'm running on fumes. My body needs a week."`,`"Everything hurts. I'll keep going if you need me to, but I need a break."`],
@@ -187,8 +209,9 @@ function pitchTickOne(notes){S.trials=S.trials||[];
  const p=S.pitch;if(p&&AW()>p.w){const A=S.w[p.a];S.pitch=null;if(A&&A.own==='p'){const P=PITCHES[p.k];mor(A,-pMorCut(A,(P?P.no:2)*3));pNote(notes,`📨 ${A.name} never heard back about their idea and took it as a no.`)}}
  S.trials=S.trials.filter(t=>{const P=PITCHES[t.k];if(!P)return false;if(t.k==='partner'&&!pTeamOf(t.a,t.b))return false;if(!pOwn(t.a)||(t.b&&!pOwn(t.b))){if(t.k==='partner'){const tm=pTeamOf(t.a,t.b);if(tm)S.teams=S.teams.filter(x=>x!==tm)}return false}
   if(AW()>t.end){const good=t.goal==='rest'||t.goal==='avoid';pNote(notes,good?P.ok(t):P.fail(t));return false}return true});
- if(!S.pitch&&S.week>=2&&S.week<SEASON&&AW()-(S.pitchLast||0)>=2&&Math.random()<pPitchP())pitchGen()}
-function pPitchP(){const up=ownList('p').filter(w=>w.pop>=65&&w.mor<50).length;return Math.min(.92,.65+up*.08)}
+ if(!S.pitch&&S.week>=2&&S.week<SEASON&&AW()-(S.pitchLast||0)>=1&&Math.random()<pPitchP())pitchGen()}
+/* v153: a pitch can come any week — about every two weeks, more often when people are unhappy */
+function pPitchP(){const up=ownList('p').filter(w=>w.mor<55).length;return Math.min(.9,.45+up*.06)}
 function pitchGen(){const r=pPool();if(r.length<4)return;const keys=Object.keys(PITCHES);
  for(let n=0;n<6;n++){const ok=keys.filter(k=>!(S.pitchK||[]).slice(-2).includes(k)&&pw(k,r)>0);if(!ok.length)return;const k=wpick(ok,k=>pw(k,r));const c=PITCHES[k].pick(r);if(!c)continue;
   S.pitch=Object.assign({k,w:AW()},c);S.pitchLast=AW();S.pitchBy=S.pitchBy||{};S.pitchBy[c.a]=AW();S.pitchK=(S.pitchK||[]).concat([k]).slice(-4);return}}
@@ -221,6 +244,8 @@ function pitchSeg(seg,notes0){const ids=seg.sides.flat().filter(Boolean);ids.for
   else if(t.goal==='wins')hit=seg.kind==='match'&&seg.won&&seg.won.includes(t.a);
   else if(t.goal==='me')hit=seg.kind==='match'&&seg.pos==='me';
   else if(t.goal==='title')hit=seg.kind==='match'&&seg.title===t.title;
+  else if(t.goal==='ppv')hit=!!(typeof curShow==='function'&&curShow()&&curShow().ppv);
+  else if(t.goal==='vs')hit=seg.kind==='match'&&!!t.b&&ids.includes(t.b)&&side(t.a)!==side(t.b);
   else if(t.goal==='rest'){if(seg.kind!=='match')return true;notes.push(P.fail(t));return false}
   else if(t.goal==='avoid'){if(t.b&&ids.includes(t.b)){notes.push(P.fail(t));return false}return true}
   if(t.k==='turn'&&S.w[t.a].al!==t.al)return false;

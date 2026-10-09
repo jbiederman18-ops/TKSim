@@ -11,7 +11,7 @@
      tour get a "what's new" replay of just those stops.
    • Run `python3 tools/check-tutorial.py` — it plays every stop and tip in a headless browser and fails on any
      missing target or stale value. */
-const TUT_REV=9;
+const TUT_REV=10;
 const TUT_KEY='tksim_tut';
 const TUT_MISS=[];
 
@@ -90,8 +90,8 @@ const TUT_STEPS=[
  b:()=>`When every slot is filled, go live. Promos play out as short scenes where you make the calls (you'll hear how the crowd took it — 🥶 to 🔥🔥🔥 — but not the stars), and matches throw you decisions mid-match.<br><br>Calls stick: a risky spot can injure someone, a cheating heel can get disqualified, a partner can turn. ${ON()?'After the show,':"When the show airs, the results play out head to head, round by round — your segment against the rival's in the same slot — and the final star ratings land last (tap to hurry it, or Skip). Then"} tap <b>Why that rating?</b> to see what each part was worth.`},
 {id:'s.stars',track:'season',since:1,tab:'roster',prep:()=>{rf='mine'},sel:()=>{const g=document.querySelector('main .cgrid');return g&&g.firstElementChild},sys:['popularity','the rub','development'],t:'Making new stars',
  b:()=>`Your top names can make the next ones. Beating someone more popular gives a wrestler <b>the rub</b> (an upset even more), and teaming with or sharing a multi-person match with a star rubs off too.<br><br>The very top is hard to reach and hard to hold: gains slow past 80 and 90, and stars at ${tv('UPKEEP_AT',()=>UPKEEP_AT,85)}+ slip in weeks they aren't featured. Tap any wrestler to see their best opponents and partners.`},
-{id:'s.morale',track:'season',since:1,tab:'roster',prep:()=>{rf='mine'},sel:'main .card.phead',sys:['morale','contracts','promises'],t:'Keep them happy',
- b:()=>`Morale rises with main events, wins and kept promises, and drops when people sit or lose too much. Contracts run out — re-signing is a negotiation, and promises you make (main events, title shots, creative control) are contract terms. Break three and a wrestler may walk.`},
+{id:'s.morale',track:'season',since:10,tab:'roster',prep:()=>{rf='mine'},sel:'main .card.phead',sys:['morale','contracts','promises','grievances','pitches'],t:'Keep them happy',
+ b:()=>`Morale moves every week: TV time, wins, main events and kept promises lift it; sitting at home, clean losses (worst for stars, and worst of all to someone below them), being worn down or underpaid drag it down. Tap anyone to see their <b>Mood</b> and why. Unhappy wrestlers pitch you ideas — answer them. Ignore it and they escalate: pay demands, walkout threats, shoot promos, and real walkouts.`},
 {id:'s.fa',track:'season',since:8,tab:'roster',prep:()=>{rf='fa'},after:()=>{rf='mine'},sel:()=>document.querySelector('main .cgrid')||tutCard(/on the market/i),sys:['free agency','offers','prospects','ROH','farm'],t:'Free agents & prospects',
  b:()=>`A few free agents are on the market at once, each for a few weeks. Big names (55+ popularity) want an offer — money plus promises — and ${tvRival()} can bid too, sealed. Scroll down to <b>Scouting</b>: prospects from the Indies, ROH and overseas. Sign them to AEW, or to your <b>🏟️ ROH</b> roster, where they develop at half salary without taking a roster spot until you call them up.`},
 {id:'s.titles',track:'season',since:5,tab:'titles',sel:'main .card.belt',sys:['titles','prestige'],t:'The gold',
