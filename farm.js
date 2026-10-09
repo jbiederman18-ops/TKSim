@@ -50,15 +50,15 @@ function toFarm(w,b){w.own=null;delete w.sal;w.fsal=fsal(w);w.mor=Math.max(w.mor
 
 /* ---------------- scouting boards ---------------- */
 function polish(w,ring,mic){w.ring=Math.min(w.pot-2,w.ring+ring);w.mic=Math.min(w.potM||w.pot,w.mic+mic);return w}
-function rohReal(ex){const used=new Set(ex);const l=ROH_REAL.trim().split('\n').map(x=>mkW(x.trim())).filter(w=>!taken(w.id)&&!used.has(w.id));
- const w=l.length?pick(l):null;if(!w)return null;w.reg='roh';w.real=1;w.tier=w.pot>=78?'bluechip':'prospect';w.fee=60;w.con=0;w.mor=80;w.tr=autoTraits(w);return w}
+function rohReal(ex){const used=new Set(ex);const l=(ROH_REAL.trim()+(typeof ROH_RAW==='string'?'\n'+ROH_RAW.trim():'')).split('\n').map(x=>mkW(x.trim())).filter(w=>!taken(w.id)&&!used.has(w.id));
+ const w=l.length?pick(l):null;if(!w)return null;w.reg='roh';w.real=1;w.tier=w.pot>=78?'bluechip':'prospect';w.fee=w.pop>=55?120:60;w.con=0;w.mor=80;w.tr=autoTraits(w);return w}
 function rohGen(){const g=Math.random()<.5?'M':'F';const tier=Math.random()<.3?'bluechip':'prospect';const nm=()=>pick(g==='M'?FIRST_M:FIRST_F)+' '+pick(LAST);let n=nm();for(let i=0;i<8&&Object.values(S.w).some(w=>w.name===n);i++)n=nm();
  const w=polish(makeRookie(n,g,pick(['te','te','br','fl','pw']),pick(['f','h']),tier),RI(14,22),RI(8,16));w.tier=tier;w.reg='roh';w.fee=Math.round(TIERS[tier].cost*.8);w.pop=RI(14,24);w.pop0=w.pop;w.tr=autoTraits(w);return w}
 function intlGen(){const k=pick(['jp','mx','uk']),R=INTL[k];const g=Math.random()<.6?'M':'F';const r=Math.random();const tier=r<.15?'gen':r<.6?'bluechip':'prospect';
  const ex=new Set(Object.values(S.w).map(w=>w.name).concat(...Object.values(S.farm||{}).map(f=>Object.values(f.r||{}).map(w=>w.name))));const opts=R[g].filter(n=>!ex.has(n));if(!opts.length)return null;
  const w=polish(makeRookie(pick(opts),g,pick(R.st),pick(['f','h']),tier),RI(16,26),-RI(4,10));w.mic=Math.max(18,w.mic);w.tier=tier;w.reg='intl';w.from=k;w.fee=Math.round(TIERS[tier].cost*1.3);w.tr=autoTraits(w);return w}
 function boards(){const s=S.scout;if(!s)return;
- if(!s.roh){const l=[];for(let i=0;i<2;i++){const w=rohReal(l.map(x=>x.id));if(w)l.push(w)}while(l.length<4)l.push(rohGen());s.roh=shuffle(l)}
+ if(!s.roh){const l=[];for(let i=0;i<3;i++){const w=rohReal(l.map(x=>x.id));if(w)l.push(w)}while(l.length<5)l.push(rohGen());s.roh=shuffle(l)}
  if(!s.intl){const l=[];for(let i=0;i<8&&l.length<4;i++){const w=intlGen();if(w&&!l.some(x=>x.name===w.name))l.push(w)}s.intl=l}}
 if(typeof scoutTick==='function'){const s0=scoutTick;scoutTick=function(){const before=S&&S.scout;const out=s0.apply(this,arguments);try{if(S.scout&&S.scout!==before)boards()}catch(e){console.warn('farm boards',e)}return out}}
 function board(reg){boards();const s=S.scout;return !s?[]:reg==='indie'?s.l:s[reg]||[]}
@@ -73,7 +73,7 @@ window.farmSign=function(reg,i,dest){if(mpLocked())return;const l=board(reg),w=l
  S.money.p-=c;l.splice(i,1);if(!w.real)w.id='rk'+partyNid();w.fee=0;w.con=w.real?40:52;w.mor=85;
  const where=REG[reg].i;
  if(dest==='roh'){toFarm(w,'p');news(`${where} ${S.gm} signed ${w.name} to an ROH developmental deal.`);toast(`${w.name} joins your ROH roster.`)}
- else{w.own='p';w.sal=mkt(w);w.deb=AW();S.w[w.id]=w;news(`${where} ${S.gm} signed ${w.name} straight to the AEW roster.`);toast(`${w.name} signed! Put them on TV soon for a debut pop.`)}
+ else{w.own='p';w.sal=mkt(w);w.deb=AW();S.w[w.id]=w;reunite(w.id);news(`${where} ${S.gm} signed ${w.name} straight to the AEW roster.`);toast(`${w.name} signed! Put them on TV soon for a debut pop.`)}
  save();render()};
 
 /* ---------------- moving between AEW and ROH ---------------- */
@@ -81,8 +81,11 @@ window.callUp=function(id){if(mpLocked())return;const f=F('p'),w=f.r[id];if(!w)r
  if(w.exc)return toast(`${w.name} is still on excursion.`);if(ownList('p').length>=30)return toast('Your AEW roster is full (30).');
  delete f.r[id];if(f.feat===id)f.feat=null;const back=w.back;delete w.back;delete w.fsal;
  w.own='p';w.sal=mkt(w);w.deb=AW();w.mor=clamp(w.mor+10,0,100);w.pop=clamp(w.pop+(back?back:3),1,100);S.w[id]=w;
- news(back?`✈️ ${w.name} is back from excursion and called up to AEW — fans can't wait to see what's changed.`:`📣 ${w.name} has been called up from ROH to AEW.`);
+ reunite(id);news(back?`✈️ ${w.name} is back from excursion and called up to AEW — fans can't wait to see what's changed.`:`📣 ${w.name} has been called up from ROH to AEW.`);
  save();render();toast(`${w.name} called up! Book them in the next few weeks for a debut pop.`)};
+function reunite(id){try{const me=S.w[id];if(!me||typeof TEAMS==='undefined')return;TEAMS.forEach(([n,type,m])=>{if(!m.includes(id))return;const mates=m.filter(x=>S.w[x]&&S.w[x].own===me.own);if(mates.length<2)return;
+  let t=S.teams.find(x=>x.n===n);if(t){if(!t.m.includes(id))t.m.push(id)}else{S.teams.push({id:'t'+(S.nid++),n,type,m:mates});news(`🤝 ${n} are back together on ${nameOf(me.own)}.`)}})}catch(e){console.warn('reunite',e)}}
+window.farmReunite=reunite;
 const downOk=w=>w&&w.own==='p'&&!isChamp(w.id)&&(w.rookie||w.pop<=45);
 window.downOk=downOk;
 window.sendDown=function(id){if(mpLocked())return;const w=S.w[id];if(!downOk(w))return toast('Only rookies and wrestlers at 45 popularity or lower can be sent to ROH.');

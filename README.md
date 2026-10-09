@@ -30,10 +30,11 @@ The tour reads its numbers straight from the game and is checked automatically o
 Now and then a countdown clock appears during a solo promo. Three weeks later a free agent from the other side of the face/heel line debuts and goes after the wrestler who had the mic (instant heat), and you get one week to sign them at a discount — bigger if the promo hyped the clock. Sign them early, or let the rival, and they debut for whoever did.
 
 ## Scouting & ROH (the farm system)
-- **Three scouting boards** (Roster → Free agents → Scouting), refreshing every few weeks: **🌱 Indies** (raw prospects and gimmick acts, the most upside), **🏟️ ROH** (polished regulars plus real ROH-level names like Dalton Castle, Lacey Lane and Marq Quen — ready sooner, less upside) and **🌏 Overseas** (skilled imports from Japan, Mexico and the UK who are still learning promos).
+- **Three scouting boards** (Roster → Free agents → Scouting), refreshing every few weeks: **🌱 Indies** (raw prospects and gimmick acts, the most upside), **🏟️ ROH** (polished regulars plus the real ROH roster — Jay Lethal, Matt Sydal, Top Flight, the Von Erichs, Premier Athletes, Dalton Castle, Lacey Lane and more. They aren't in the AEW draft, so ROH is the only place to get them. Ready sooner, less upside) and **🌏 Overseas** (skilled imports from Japan, Mexico and the UK who are still learning promos).
 - **Sign to AEW or to ROH.** AEW signings take a roster spot and can be booked right away. ROH signings go to your ROH roster (Roster → 🏟️ ROH, up to 8): no AEW roster spot, half salary, and they grow toward their potential every week on ROH TV, slower than the Performance Center.
 - **Feature** one ROH wrestler to grow faster and build popularity (up to 45). Send someone on a once-per-career **10-week excursion**: NJPW (biggest in-ring jump and a tougher body), CMLL (comes back a bigger draw) or RevPro (real mic reps). They return with more potential and a bigger debut pop.
 - **Call up** anyone whenever you need them (they get a debut pop), and **send down** rookies or anyone at 45 popularity or lower to develop. Champions can't be sent down. ROH deals run out like any contract — extend them from the ROH screen.
+- **Teams reunite.** Sign or call up both halves of a real ROH team (Top Flight, the Von Erichs, Premier Athletes…) and they're a team again on your roster.
 - Works in online leagues too: every GM has their own ROH roster.
 
 ## Challenge scenarios

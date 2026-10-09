@@ -932,7 +932,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v150';
+const APP_VERSION='v151';
 /* v113: a rolling AEW year — a PPV every 4 weeks from Revolution to Worlds End. All In is the midyear supershow;
    the season (awards, offseason, fan-war winner) ends after Worlds End, then the calendar rolls into a new year. */
 const SEASON=40,ALLIN_WEEK=24,OLD_SEASON=24;
@@ -1077,7 +1077,6 @@ Lance Archer|M|pw|h|76|72|58
 Katsuyori Shibata|M|br|h|80|55|62
 Jay White|M|sh|h|88|86|72
 Eddie Kingston|M|br|f|76|92|68
-Bryan Keith|M|br|h|80|60|48|86
 Lio Rush|M|fl|f|83|70|58
 Mike Bailey|M|fl|f|89|65|74|92
 Francesco Akira|M|fl|f|84|55|55|90
@@ -1112,13 +1111,11 @@ Kris Statlander|F|pw|f|86|72|80
 Hikaru Shida|F|te|h|84|60|68
 Julia Hart|F|sh|h|72|70|70|86
 Skye Blue|F|fl|h|74|60|64|84
-Zayda Steel|F|sh|h|62|65|48|82
 Athena|F|br|h|84|84|74
 Anna Jay|F|te|f|70|70|60|80
 Mina Shirakawa|F|te|f|74|65|62
 Riho|F|fl|f|78|55|62
 Queen Aminata|F|br|f|74|65|60|84
-Billie Starkz|F|fl|h|72|60|52|90
 Thunder Rosa|F|br|f|80|75|66
 Serena Deeb|F|te|h|86|65|55
 Penelope Ford|F|fl|h|72|60|58
@@ -1129,7 +1126,6 @@ Deonna Purrazzo|F|te|h|80|68|60
 Yuka Sakazaki|F|fl|f|80|55|58
 Taya Valkyrie|F|br|h|76|70|60
 Sammy Guevara|M|fl|h|83|78|72|88
-Jay Lethal|M|te|h|82|80|60
 Dustin Rhodes|M|br|f|74|82|70
 MVP|M|sh|f|60|88|68
 Rush|M|br|h|82|70|66
@@ -1144,51 +1140,23 @@ Blake Christian|M|fl|f|80|55|54|88
 Lee Moriarty|M|te|h|78|60|52|86
 Anthony Bowens|M|sh|h|72|80|68
 Billy Gunn|M|pw|f|62|72|56
-Tony Nese|M|fl|h|78|62|52
 Rocky Romero|M|te|h|74|72|56
 Trent Beretta|M|te|h|78|66|56
-Angelico|M|te|h|74|40|44
-Evil Uno|M|sh|f|70|74|56
 John Silver|M|br|f|72|74|58
-Alex Reynolds|M|te|f|72|60|50
 Preston Vance|M|pw|f|72|56|50|80
-Matt Sydal|M|fl|f|76|56|50
-Dante Martin|M|fl|f|78|55|56|88
-Darius Martin|M|fl|f|74|55|50|82
 Lee Johnson|M|fl|f|70|60|50|80
 Jake Doyle|M|pw|h|72|50|48|80
 El Clon|M|te|h|76|35|48|82
-Griff Garrison|M|pw|h|66|58|44|78
-Cole Karter|M|sh|h|66|62|44|78
 Luchasaurus|M|pw|h|74|40|58
-Zack Gibson|M|te|h|78|78|54
-James Drake|M|br|h|74|62|48
 Johnny TV|M|sh|h|74|76|60
 Mansoor|M|te|h|70|66|52
 Mason Madden|M|pw|h|66|55|50|78
-Aaron Solo|M|fl|h|66|55|40
-Alec Price|M|fl|f|74|62|50|86
 AR Fox|M|fl|f|78|55|52
-Anthony Henry|M|te|f|72|56|44
 Anthony Ogogo|M|pw|f|64|60|48|74
-Ariya Daivari|M|te|h|70|70|44
 Angelo Parker|M|sh|h|66|70|52
-Carlie Bravo|M|sh|h|60|66|44|76
-Jordan Oliver|M|fl|f|74|55|46|84
-Josh Woods|M|te|h|76|58|48
-Marshall Von Erich|M|pw|f|70|52|52|80
-Ross Von Erich|M|br|f|70|52|52|80
-Matt Menard|M|br|f|60|80|56
 Michael Nakazawa|M|sh|f|50|72|50
-Mike Bennett|M|br|h|70|66|44
-Nick Comoroto|M|pw|h|66|50|44|74
-Ortiz|M|br|h|70|60|48
 Peter Avalon|M|sh|h|58|66|40
-Satnam Singh|M|pw|h|56|40|56|68
-Scorpio Sky|M|te|f|78|66|56
-Serpentico|M|fl|h|62|50|40
 Shane Taylor|M|br|h|76|72|54
-Shawn Dean|M|br|f|64|50|40
 Tommy Billington|M|fl|f|80|55|60|90
 Truth Magnum|M|sh|f|66|60|48|78
 Turbo Floyd|M|sh|f|66|60|48|78
@@ -1196,15 +1164,48 @@ Zachary Wentz|M|fl|f|74|60|50
 Ruby Soho|F|br|f|76|72|70
 Kamille|F|pw|h|74|55|60|82
 Red Velvet|F|fl|f|70|60|52
-Diamanté|F|br|h|70|55|48
 Cassie Lee|F|sh|f|66|66|54
 Jessie McKay|F|sh|f|66|62|52
 Charlette Renegade|F|fl|f|62|50|42|76
 Robyn Renegade|F|fl|f|62|50|42|76
 Leila Grey|F|sh|h|58|55|44|76
 Mara Sadè|F|sh|f|62|55|46|80
-Rachel Ellering|F|pw|f|70|55|48|80
 Tatevik|F|te|h|58|50|40|74`;
+/* v151: ROH regulars — not in the AEW draft pool; they rotate through the ROH scouting board (farm.js) */
+const ROH_RAW=`Bryan Keith|M|br|h|80|60|48|86
+Zayda Steel|F|sh|h|62|65|48|82
+Billie Starkz|F|fl|h|72|60|52|90
+Jay Lethal|M|te|h|82|80|60
+Tony Nese|M|fl|h|78|62|52
+Angelico|M|te|h|74|40|44
+Evil Uno|M|sh|f|70|74|56
+Alex Reynolds|M|te|f|72|60|50
+Matt Sydal|M|fl|f|76|56|50
+Dante Martin|M|fl|f|78|55|56|88
+Darius Martin|M|fl|f|74|55|50|82
+Griff Garrison|M|pw|h|66|58|44|78
+Cole Karter|M|sh|h|66|62|44|78
+Zack Gibson|M|te|h|78|78|54
+James Drake|M|br|h|74|62|48
+Aaron Solo|M|fl|h|66|55|40
+Alec Price|M|fl|f|74|62|50|86
+Anthony Henry|M|te|f|72|56|44
+Ariya Daivari|M|te|h|70|70|44
+Carlie Bravo|M|sh|h|60|66|44|76
+Jordan Oliver|M|fl|f|74|55|46|84
+Josh Woods|M|te|h|76|58|48
+Marshall Von Erich|M|pw|f|70|52|52|80
+Ross Von Erich|M|br|f|70|52|52|80
+Matt Menard|M|br|f|60|80|56
+Mike Bennett|M|br|h|70|66|44
+Nick Comoroto|M|pw|h|66|50|44|74
+Ortiz|M|br|h|70|60|48
+Satnam Singh|M|pw|h|56|40|56|68
+Scorpio Sky|M|te|f|78|66|56
+Serpentico|M|fl|h|62|50|40
+Shawn Dean|M|br|f|64|50|40
+Diamanté|F|br|h|70|55|48
+Rachel Ellering|F|pw|f|70|55|48|80`;
 const TITLES=[
 ['world','AEW World','singles','M',['will-ospreay'],90],
 ['wworld',"Women's World",'singles','F',['mercedes-mone'],88],
@@ -2233,7 +2234,7 @@ function newGame(gm,rival,diff,online){
  RAW.trim().split('\n').forEach(l=>{const x=mkW(l.trim());S.w[x.id]=x});
  /* every title starts vacant: the first champions are crowned on TV (the real-life holders are ignored) */
  TITLES.forEach(([id,n,kind,g,h,pr])=>S.titles[id]={id,n,kind,g,holders:[],prestige:pr,since:0,last:0,inaug:1});
- TEAMS.forEach(([n,type,m])=>S.teams.push({id:'t'+(S.nid++),n,type,m:m.filter(id=>S.w[id])}));
+ TEAMS.forEach(([n,type,m])=>{const mm=m.filter(id=>S.w[id]);if(mm.length>=2)S.teams.push({id:'t'+(S.nid++),n,type,m:mm})});
  ensureTraits(S);
  /* a new game is a fresh season of TV: everyone starts healthy and there are no feuds yet (real-life feuds and injuries are not carried in) */
  S.fullShow=true;feudInit(S);S.dataV=DATA_V;
@@ -3990,7 +3991,7 @@ const HOWTO=`<p><b>Offers &amp; contracts:</b> free agents with 55+ popularity w
 <p><b>The story so far:</b> tap ⋯ on any feud to see how it was built — every match, promo, run-in and wild moment that added heat, the head-to-head record, and the biggest moment. Finished feuds (blown off, dropped or faded) live on under <b>📚 Past feuds</b>.</p>
 <p><b>Feuds</b> start and grow from matches and promos: great matches, face vs heel, title matches and messy finishes build the most heat, and the results call it out when a rivalry is brewing (20), becomes a full-blown feud (45) or a blood feud (75). <b>🔁 One repetition rule:</b> doing the same thing with the same two people two weeks in a row — the same match pairing, the same promo segment or the same run-in — builds half heat. If either week's meeting was a tag or multi-person match, it's a lighter repeat (75% heat). That's it; it never costs stars, and PPVs are exempt. <b>💥 Boiling over:</b> when two wrestlers have only been talking, the first time they get physical (a match, run-in or sneak attack) gets a bigger reaction and +50% heat. A feud that goes 8 weeks without a PPV chapter goes stale and cools off fast; a PPV match that doesn't end the feud starts a new chapter and resets the clock, so big stories can run across several PPVs. Feuds also cool off when ignored. PPVs weigh heat much more heavily, so build rivalries on TV and pay them off on PPV. A hot feud (35+) settled on PPV is over; a cooler one continues into a new chapter.</p>
 <p><b>Promos</b> play out as short scenes. Each choice tests mic skill, in-ring ability, popularity or luck. When a promo ends you see the crowd's reaction (🥶 flat to 🔥🔥🔥 unglued); its exact stars come out with the rest of the show after it airs. Promos between two wrestlers build feud heat. Every kind of promo has its own job: a <b>Callout</b> can get a match made, a <b>Sneak Attack</b> builds the most heat and counts as physical contact, a <b>Sit-Down Interview</b> lifts morale the most and sharpens mic skills fastest, a <b>Faction Rally</b> lets the bigger star (put them first) rub off on a less popular partner — or lifts the whole group's spirits if they rally alone, a <b>Backstage Vignette</b> is low risk (missed choices barely hurt) and grows lesser-known wrestlers (popularity 60 or below) faster, and a <b>Champion's Address</b> that lands raises the title's prestige. The promo picker marks ✓ Good fit when a kind suits who you've chosen. A <b>Contract Signing</b> books that match on your next PPV card (with a stipulation if you add one); a callout where you <b>lay down a challenge</b> promises the match for next week or the next PPV — your pick. While a match is promised, booking either wrestler against the other's stablemates or tag partners (🔗 proxy war) and trading promos where they take turns leading (↔️ back-and-forth) builds the feud with bonus heat. Running the promised singles match early gives it away and halves the payoff. Deliver and it pays off; skip it and you lose fans and morale. Trading promos week after week on the road to a PPV is how feuds are built: a steady weekly build earns up to +30% heat, and alternating who leads adds +15%. The only thing fans tire of is the exact same segment two weeks running (half heat). A pair can only share one promo per show. Match events work the same way — faces fly and rally the crowd, heels rake eyes and put their feet on the ropes, and some events only happen in face vs heel, face vs face or heel vs heel matches. Each promo deals fresh options: faces get crowd-pleasing moves and heels get dirty tricks (😇/😈 — playing to character gives slightly better odds), and the scene changes depending on whether it's face vs heel, heel vs heel or face vs face.</p>
-<p><b>Development:</b> wrestlers improve toward their potential by working matches (faster against better opponents) and by Performance Center training. Overworked talent gets hurt.</p><p><b>Scouting &amp; ROH:</b> Roster → Free agents → Scouting has three boards that refresh every few weeks: the <b>Indies</b> (raw prospects and gimmick acts — most upside), <b>ROH</b> (polished regulars and real ROH-level names, ready sooner) and <b>Overseas</b> (skilled imports from Japan, Mexico and the UK who are still learning promos). Sign them straight to AEW, or to your <b>🏟️ ROH</b> roster (Roster → ROH, up to 8): they don't take an AEW roster spot, earn half salary and grow every week on ROH TV. <b>Feature</b> one to grow faster and build popularity, send one on a 10-week <b>excursion</b> to NJPW, CMLL or RevPro to come back better, and <b>call up</b> anyone whenever you need them. Rookies and anyone at 45 popularity or lower can be <b>sent down</b> to develop.</p>
+<p><b>Development:</b> wrestlers improve toward their potential by working matches (faster against better opponents) and by Performance Center training. Overworked talent gets hurt.</p><p><b>Scouting &amp; ROH:</b> Roster → Free agents → Scouting has three boards that refresh every few weeks: the <b>Indies</b> (raw prospects and gimmick acts — most upside), <b>ROH</b> (polished regulars and the real ROH roster — Jay Lethal, Matt Sydal, Top Flight and more, who aren't in the AEW draft — ready sooner; real teams reunite when you call both partners up) and <b>Overseas</b> (skilled imports from Japan, Mexico and the UK who are still learning promos). Sign them straight to AEW, or to your <b>🏟️ ROH</b> roster (Roster → ROH, up to 8): they don't take an AEW roster spot, earn half salary and grow every week on ROH TV. <b>Feature</b> one to grow faster and build popularity, send one on a 10-week <b>excursion</b> to NJPW, CMLL or RevPro to come back better, and <b>call up</b> anyone whenever you need them. Rookies and anyone at 45 popularity or lower can be <b>sent down</b> to develop.</p>
 <p><b>League weeks:</b> everyone books the same week at the same time, on their own phone, whenever suits them. Make your calls, lock in, and the week airs the moment the last GM locks in — cards stay secret until then. While anyone is still booking, even smaller free agents take sealed offers instead of going to whoever taps first: if two GMs want the same wrestler, they usually pick the hotter show. (Prefer the old way? Office → League weeks → Take turns.)</p>
 <p><b>Draft board:</b> during the draft, tap <b>Draft board</b> to see every GM's roster as it fills up — round by round, newest pick on top, with payroll and cap room.</p>
 <p><b>Party night:</b> any online league can play in the same room. Start it from the league's Office and everyone locks in their card, then GMs go live one at a time: you make your promo and match calls on your phone while the TV shows every choice and outcome to the room. The week airs when the last GM wraps up. To put it on a TV, open the game there, tap <b>Show a league on this screen</b> and enter the league code — the TV shows who's still booking and plays the results head to head, alternating between shows, with the better segment in each slot winning the round. End party night any time and the league goes back to taking turns with the same save. The TV goes full screen (press <b>F</b> or tap ⛶ to switch) and shows the draft as a live board of every GM's picks.</p>
