@@ -11,7 +11,7 @@
      tour get a "what's new" replay of just those stops.
    • Run `python3 tools/check-tutorial.py` — it plays every stop and tip in a headless browser and fails on any
      missing target or stale value. */
-const TUT_REV=12;
+const TUT_REV=13;
 const TUT_KEY='tksim_tut';
 const TUT_MISS=[];
 
@@ -51,7 +51,7 @@ function tutCard(re){return [...document.querySelectorAll('main .card')].find(c=
 const TUT_STEPS=[
 /* ---- the draft ---- */
 {id:'d.hello',track:'draft',since:1,sys:['goal','calendar'],t:'Welcome to the front office',
- b:()=>`You run a wrestling brand. First you draft a roster against ${tvRival()}. Then every week you book your show head-to-head against theirs, with a PPV every 4 weeks — ${tv('SEASON',()=>SEASON,40)} weeks from ${tvPPVs()[0]||'Revolution'} to ${tvPPVs().slice(-1)[0]||'Worlds End'}.<br><br><b>You win the season by gaining more fans.</b> Great shows earn fans; bad ones lose them.`},
+ b:()=>`You run a wrestling brand. First you draft a roster against ${tvRival()}. The talent pool is AEW and WWE's rosters together. Then every week you book your show head-to-head against theirs, with a PPV every 4 weeks alternating AEW and WWE's biggest shows — ${tv('SEASON',()=>SEASON,40)} weeks from ${tvPPVs()[0]||'Royal Rumble'} to ${tvPPVs().slice(-1)[0]||'Survivor Series'}.<br><br><b>You win the season by gaining more fans.</b> Great shows earn fans; bad ones lose them.`},
 {id:'d.cap',track:'draft',since:1,sys:['draft','cap','money'],sel:'main .card.dhead',t:'The salary cap',
  b:()=>`You have ${tvCap()?tvMoney(tvCap())+' a week':'a weekly cap'} to fill ${tv('draft rounds',()=>S.draft.rounds||24,24)} spots. Top stars cost far more than the midcard, so you can't draft an all-star team.<br><br>Anything you leave under the cap goes into your bank (×4) — money you'll spend all year on signings and production.`},
 {id:'d.tape',track:'draft',since:1,sys:['ratings','popularity','alignment'],sel:'main .card.ttape',t:'Reading a wrestler',
@@ -64,6 +64,8 @@ const TUT_STEPS=[
 /* ---- the first week ---- */
 {id:'s.show',track:'season',since:1,tab:'home',sel:'main .card.showcard',sys:['shows','calendar'],t:'Your show',
  b:()=>`Each week you book ${tv('show name',()=>esc(curShow().mine),'your show')} while ${tvRival()} books ${ON()?'theirs':tv('rival show',()=>esc(curShow().theirs),'theirs')}. The better show wins the night.<br><br>${tv('next PPV',()=>{const n=nextPPV();return n?`Next PPV: <b>${esc(n.n)}</b>${n.in?` in ${n.in} week${n.in>1?'s':''}`:' — this week'}. PPVs are where feuds pay off and fans swing big.`:''},'')}`},
+{id:'s.wwe',track:'season',since:13,tab:'home',sel:'main .card.showcard',sys:['calendar','wwe','rumble','money in the bank'],t:'AEW meets WWE',
+ b:()=>`The year alternates AEW and WWE's biggest PPVs — ${tvPPVs().join(', ')}. Both brands run every one, and WWE's four world titles sit beside the AEW belts.<br><br>🏟️ <b>${tv('Rumble',()=>esc(PPVS[RR_WEEK]),'Royal Rumble')}</b> (week ${tv('RR_WEEK',()=>RR_WEEK,4)}): your men's and women's Rumbles lock onto the card, and each winner earns a world title shot at <b>${tv('Mania',()=>esc(PPVS[WM_WEEK]),'WrestleMania')}</b>.<br>💼 <b>${tv('MITB',()=>esc(PPVS[MITB_WEEK]),'Money in the Bank')}</b> (week ${tv('MITB_WEEK',()=>MITB_WEEK,20)}): the ladder match winner holds the briefcase for a year and can cash in on a world champion any time — even straight after the champion's match. Look for it in the match editor.`},
 {id:'s.war',track:'season',since:1,tab:'home',sel:()=>{const w=document.querySelector('main .war');return w&&w.closest('.card')},sys:['goal','fans'],t:'How you win',
  b:()=>`This is the scoreboard: <b>fans gained this season</b>. Your show rating earns or loses fans — the main event counts most, beating the rival's show adds a bonus, PPVs swing far more, and ${tv('All In',()=>PPVS[ALLIN_WEEK],'All In')} counts double.`},
 {id:'s.brief',track:'season',since:4,tab:'home',opt:true,sel:'main [onclick="openBrief()"]',sys:['briefing','contracts','morale'],t:'The weekly briefing',

@@ -6,12 +6,15 @@
 
 /* ===================== TOURNAMENTS ===================== */
 const TOURS={
- c2:{n:'Continental Classic',i:'♾️',g:'M',title:'cont',rr:[37,38,39],final:40,
-  d:'Round robin for the Continental title. Four of your best men wrestle three weeks of block matches (3 points a win, Continental Crown rules: no run-ins), and the top two meet at Worlds End.'},
- ohc:{n:'Owen Hart Cup',i:'🏆',g:'M',prize:'world',semi:9,final:12,
-  d:"Knockout bracket for four of your best men. The winner earns a World title shot at All In."},
- ohcw:{n:"Women's Owen Hart Cup",i:'🏆',g:'F',prize:'wworld',semi:10,final:12,
+ /* v168: the Continental Classic ends at Full Gear (a save that was already in its closing weeks when the calendar changed finishes that year's on the old schedule) */
+ c2:{n:'Continental Classic',i:'♾️',g:'M',title:'cont',get rr(){return ccLate()?[37,38,39]:[33,34,35]},get final(){return ccLate()?40:36},
+  get d(){return `Round robin for the Continental title. Four of your best men wrestle three weeks of block matches (3 points a win, Continental Crown rules: no run-ins), and the top two meet at ${PPVS[this.final]}.`}},
+ /* v168: the Owen Hart Cups end at Double or Nothing */
+ ohc:{n:'Owen Hart Cup',i:'🏆',g:'M',prize:'world',semi:13,final:16,
+  d:"Knockout bracket for four of your best men. The winner earns an AEW World title shot at All In."},
+ ohcw:{n:"Women's Owen Hart Cup",i:'🏆',g:'F',prize:'wworld',semi:14,final:16,
   d:"Knockout bracket for four of your best women. The winner earns a Women's World title shot at All In."}};
+function ccLate(){return typeof S!=='undefined'&&!!S&&S.ccLate===S.season}
 const RR4=[[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]]];
 function tourState(b,k){S.tour=S.tour||{};const T=S.tour[b]||(S.tour[b]={});let t=T[k];if(!t||t.s!==S.season)t=T[k]={s:S.season,ent:null,res:[],win:null};return t}
 /* entrants lock the first time the tournament needs them. A field the GM picked is used as chosen (anyone hurt or gone
@@ -99,16 +102,16 @@ function openXo(i){if(mpLocked())return;const sl=S.card.p[i];const used=usedIn('
  openPicker({title:'Your wrestler',cur:sl.d&&sl.d.a,clear:!!sl.d,g:'all',sort:'ovr',pool:()=>ownList('p').filter(w=>!w.inj&&!used.has(w.id)),info:w=>`${STYLE_N[w.st]} · Pop ${Math.round(w.pop)}`,back:()=>{closeModal();render()},
   onPick:a=>{if(!a){S.card.p[i].d=null;save();closeModal();render();return}const A=S.w[a];const taken=new Set(S.card.p.filter((x,j)=>j!==i&&x.k==='xo'&&x.d).map(x=>x.d.b));
    openPicker({title:`${A.name} vs… (from ${nameOf(other)})`,g:'all',sort:'chem',chem:w=>chemOpp(A,w),pool:()=>ownList(other).filter(w=>!w.inj&&!taken.has(w.id)),info:w=>`<em class="chm ${chemOpp(A,w)>=6?'cg':chemOpp(A,w)>=0?'cn':'cb'}">Chem ${Math.round(chemOpp(A,w))}</em> Pop ${Math.round(w.pop)}`,back:()=>openXo(i),
-    onPick:b=>{if(!b)return openXo(i);S.card.p[i].d={a,b};save();closeModal();render();toast(`🚪 Dream match signed: ${A.name} vs ${S.w[b].name}.`)}})}})}
+    onPick:b=>{if(!b)return openXo(i);S.card.p[i].d={a,b};save();closeModal();render();toast(`⚔️ Dream match signed: ${A.name} vs ${S.w[b].name}.`)}})}})}
 /* air the dream matches: neither GM controls both sides, so the winner is decided in the ring */
 function airXo(order,ctx,vals,extra,out){const segs=[];
  order.forEach(b=>{const other=otherBrand(b);(S.card[b]||[]).forEach(sl=>{if(sl.k!=='xo'||!sl.d)return;const A=S.w[sl.d.a];let B=S.w[sl.d.b];if(!A||A.own!==b||A.inj)return;
   const busy=new Set();((S.card[other])||[]).forEach(x=>{if(x.d&&x.k==='match')x.d.sides.flat().forEach(id=>busy.add(id));if(x.d&&x.k==='chal'&&x.d.c)busy.add(x.d.c)});segs.forEach(s=>s.ids&&s.ids.forEach(id=>busy.add(id)));
-  const notes=[];if(!B||B.own!==other||B.inj||busy.has(B.id)){const was=B;B=ownList(other).filter(w=>!w.inj&&!busy.has(w.id)&&w.g===A.g).sort((x,y)=>y.pop-x.pop)[0];if(!B)return;if(was)notes.push(`🔁 ${was.name} couldn't make it — ${B.name} steps through the Forbidden Door instead.`)}
+  const notes=[];if(!B||B.own!==other||B.inj||busy.has(B.id)){const was=B;B=ownList(other).filter(w=>!w.inj&&!busy.has(w.id)&&w.g===A.g).sort((x,y)=>y.pop-x.pop)[0];if(!B)return;if(was)notes.push(`🔁 ${was.name} couldn't make it — ${B.name} steps up for ${nameOf(other)} instead.`)}
   const m={type:'singles',stip:'std',sides:[[A.id],[B.id]],winner:0,title:'',xo:1};const sc=w=>w.ring*.4+w.pop*.4+(w.mom||0)*2+R(0,25);m.winner=sc(B)>sc(A)?1:0;
   const res=rateMatch(m,ctx);applyMatch(m,res,Object.assign({},ctx,{pos:'mid'}),notes);const W=S.w[m.sides[m.winner][0]];const L=S.w[m.sides[1-m.winner][0]];/* v106: 4K to the winner's brand; a 4★+ dream match pays the losing brand 2K too */extra[W.own]=(extra[W.own]||0)+4000;const share=res.stars>=4&&L&&L.own&&L.own!==W.own;if(share)extra[L.own]=(extra[L.own]||0)+2000;
-  W.pop=clamp(W.pop+2,1,100);vals[b].push(res.stars);segs.push({txt:matchText(m),sub:`Forbidden Door dream match · booked by ${nameOf(b)}`,stars:res.stars,notes:[`🚪 First time ever! ${W.name} wins it for ${nameOf(W.own)} (+4K fans${share?`; a dream match that delivered — ${nameOf(L.own)} gets +2K too`:''}).`].concat(notes),ids:[A.id,B.id]})})});
- if(segs.length)out.blocks.push({brand:'x',label:'🚪 Forbidden Door dream matches',segs:segs.map(s=>({txt:s.txt,sub:s.sub,stars:s.stars,notes:s.notes}))})}
+  W.pop=clamp(W.pop+2,1,100);vals[b].push(res.stars);segs.push({txt:matchText(m),sub:`${PPVS[FD_WEEK]} dream match · booked by ${nameOf(b)}`,stars:res.stars,notes:[`⚔️ First time ever! ${W.name} wins it for ${nameOf(W.own)} (+4K fans${share?`; a dream match that delivered — ${nameOf(L.own)} gets +2K too`:''}).`].concat(notes),ids:[A.id,B.id]})})});
+ if(segs.length)out.blocks.push({brand:'x',label:`⚔️ ${PPVS[FD_WEEK]} dream matches`,segs:segs.map(s=>({txt:s.txt,sub:s.sub,stars:s.stars,notes:s.notes}))})}
 
 /* ===================== NETWORK MANDATES ===================== */
 /* every PPV cycle the TV network asks each GM for something specific. Deliver for a bonus; miss it and they're disappointed. */
@@ -250,6 +253,12 @@ function suggestCard(){const sh=curShow();const c=JSON.parse(JSON.stringify(S.ca
  c.forEach(sl=>{if(!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(id=>id&&used.add(id));if(sl.k==='promo'){used.add(sl.d.a);if(sl.d.b)used.add(sl.d.b)}if(sl.k==='chal'&&sl.d.c)used.add(sl.d.c);if(sl.k==='xo')used.add(sl.d.a)});
  const gen=autoBook('p',sh,[...used],{smart:1});const ms=gen.filter(x=>x.k==='match'&&x.d),ps=gen.filter(x=>x.k==='promo'&&x.d);
  const exP=new Set();c.forEach(sl=>{if(sl.k==='promo'&&sl.d){exP.add(sl.d.a);if(sl.d.b)exP.add(sl.d.b)}});
+ /* v168: when some slots are already taken (a Rumble, a ladder match, a promised or tournament match), the assistant generates
+  more matches than it has room for — keep the best ones (it used to keep the first ones, which dropped its strongest matches),
+  put the best of them nearest the main event and the next best up front */
+ {const empty=c.map((sl,i)=>sl.k==='match'&&!sl.d&&!sl.opt?i:-1).filter(i=>i>=0);if(ms.length&&empty.length){const sc=new Map(ms.map(x=>[x,rateMatch(x.d,{ppv:sh.ppv,preview:true}).raw]));
+  const keep=ms.slice().sort((a,b)=>sc.get(b)-sc.get(a)).slice(0,empty.length).sort((a,b)=>sc.get(a)-sc.get(b));
+  const order=keep.length>=3?[keep[keep.length-2]].concat(keep.slice(0,-2),[keep[keep.length-1]]):keep;ms.splice(0,ms.length,...order)}}
  c.forEach(sl=>{if(sl.d)return;if(sl.k==='match'){if(sl.opt)return;const x=ms.shift();if(x)sl.d=x.d}
   else if(sl.k==='promo'){let x=ps.shift();while(x&&(exP.has(x.d.a)||x.d.b&&exP.has(x.d.b)))x=ps.shift();const p=x?x.d:autoPromo('p',exP);if(p){delete p.res;p.played=false;sl.d=p;exP.add(p.a);if(p.b)exP.add(p.b)}}
   else if(sl.k==='chal'){const ch=autoChal('p',used);if(ch)sl.d=ch}
@@ -257,8 +266,8 @@ function suggestCard(){const sh=curShow();const c=JSON.parse(JSON.stringify(S.ca
  /* put the strongest match last and a strong one first */
  return c}
 function suggestFill(){if(mpLocked())return;const before=S.card.p.filter(sl=>sl.d).length;S.card.p=suggestCard();const n=S.card.p.filter(sl=>sl.d).length-before;save();render();toast(n?`✨ Booked ${n} segment${n>1?'s':''} — tweak anything you like.`:'Nothing left to fill.')}
-function clearCard(){if(mpLocked())return;if(!confirm('Clear everything on this card except promised and tournament matches?'))return;
- S.card.p.forEach(sl=>{if(!sl.d)return;if(sl.k==='match'&&(sl.d.tour||promiseOf(sl.d)))return;sl.d=null});save();render()}
+function clearCard(){if(mpLocked())return;if(!confirm('Clear everything on this card except promised, tournament, Royal Rumble and Money in the Bank matches?'))return;
+ S.card.p.forEach(sl=>{if(!sl.d)return;if(sl.k==='match'&&(sl.d.tour||sl.d.sp||promiseOf(sl.d)))return;sl.d=null});save();render()}
 
 /* ===================== BIDDING WARS ===================== */
 /* when a star hits the market, the rival may want them too */
@@ -434,15 +443,17 @@ function starMigrate(st){if(!st||!st.w||st.v111)return;st.v111=1;if(st.phase!=='
    its next PPV stays its next PPV (at most 3 weeks out), the absolute week count carries on unbroken, and any
    promise, mandate or rival title shot booked for a week moves with it. */
 const OLD_PPVS={3:'WrestleDream',7:'Full Gear',11:'Worlds End',15:'Revolution',20:'Double or Nothing',22:'Forbidden Door',24:'All In'};
+/* the v113 calendar these old saves were mapped onto (v168 renamed the PPVs but kept the weeks) */
+const CAL2_PPVS={4:'Revolution',8:'Dynasty',12:'Double or Nothing',16:'Forbidden Door',20:'Redemption',24:'All In',28:'All Out',32:'WrestleDream',36:'Full Gear',40:'Worlds End'};
 function calMapWeek(w){if(w>OLD_SEASON)return SEASON+(w-OLD_SEASON);if(w<1)return w;
- let x=w;while(x<=OLD_SEASON&&!OLD_PPVS[x])x++;const nw=+Object.keys(PPVS).find(k=>PPVS[k]===OLD_PPVS[x]);return nw-Math.min(x-w,3)}
+ let x=w;while(x<=OLD_SEASON&&!OLD_PPVS[x])x++;const nw=+Object.keys(CAL2_PPVS).find(k=>CAL2_PPVS[k]===OLD_PPVS[x]);return nw-Math.min(x-w,3)}
 function calMigrate(st){if(!st||!st.w||st.cal2)return;st.cal2=1;if(st.awb==null)st.awb=(st.season-1)*OLD_SEASON;
  if(st.phase!=='season'&&st.phase!=='over')return;const w0=st.week;const nw=st.phase==='over'?SEASON+1:calMapWeek(w0);
  st.awb+=w0-nw;st.week=nw;const mv=p=>{if(p&&typeof p.week==='number')p.week=calMapWeek(p.week)};
  (st.promises||[]).forEach(mv);if(st.priv)for(const k in st.priv)if(st.priv[k])(st.priv[k].promises||[]).forEach(mv);
  if(st.mand)for(const b in st.mand){const m=st.mand[b];if(m&&typeof m.due==='number')m.due=calMapWeek(m.due)}
  if(st.aiShot)mv(st.aiShot);
- const S0=S;S=st;try{news(`📅 New calendar: the year now runs Revolution → Worlds End with a PPV every 4 weeks, adding Dynasty, Redemption and All Out. All In is the midyear supershow, and the season (awards and offseason) wraps after Worlds End. ${st.phase==='season'?`You're now in week ${nw} of ${SEASON}${(()=>{const n=nextPPV();return n?` — next up: ${n.n}${n.in?` in ${n.in} week${n.in>1?'s':''}`:' (this week)'}`:''})()}.`:''}`)}finally{S=S0}}
+ const S0=S;S=st;try{news(`📅 New calendar: the year now runs ${PPVS[4]} → ${PPVS[SEASON]} with a PPV every 4 weeks. All In is the midyear supershow, and the season (awards and offseason) wraps after ${PPVS[SEASON]}. ${st.phase==='season'?`You're now in week ${nw} of ${SEASON}${(()=>{const n=nextPPV();return n?` — next up: ${n.n}${n.in?` in ${n.in} week${n.in>1?'s':''}`:' (this week)'}`:''})()}.`:''}`)}finally{S=S0}}
 
 /* ===================== THE COUNTDOWN (v138) =====================
  The "countdown clock" promo twist now goes somewhere. A clock appears on the big screen during one of your solo

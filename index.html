@@ -924,6 +924,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 <script src="scenarios2.js"></script>
 <script src="gimmicks.js"></script>
 <script src="season.js"></script>
+<script src="wwe.js"></script>
 <script src="pitches.js"></script>
 <script src="openchal.js"></script>
 <script src="deals.js"></script>
@@ -931,14 +932,16 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v167';
-/* v113: a rolling AEW year — a PPV every 4 weeks from Revolution to Worlds End. All In is the midyear supershow;
-   the season (awards, offseason, fan-war winner) ends after Worlds End, then the calendar rolls into a new year. */
+const APP_VERSION='v168';
+/* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
+   winner) ends after the last PPV, then the calendar rolls into a new year.
+   v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
 const SEASON=40,ALLIN_WEEK=24,OLD_SEASON=24;
-const PPVS={4:'Revolution',8:'Dynasty',12:'Double or Nothing',16:'Forbidden Door',20:'Redemption',24:'All In',28:'All Out',32:'WrestleDream',36:'Full Gear',40:'Worlds End'};
+const PPVS={4:'Royal Rumble',8:'Revolution',12:'WrestleMania',16:'Double or Nothing',20:'Money in the Bank',24:'All In',28:'SummerSlam',32:'All Out',36:'Full Gear',40:'Survivor Series'};
 /* v80: themed TV specials between PPVs — hotter crowds, bigger fan swings, better gates */
 const SPECIALS={2:'Grand Slam',6:'Spring BreakThru',14:'Summer Blockbuster',18:'Beach Break',34:'Fright Night',38:'Winter Is Coming'};
-const FD_WEEK=16;
+/* v168: the crossover PPV (dream matches between brands, invasions in the weeks before it) is Survivor Series */
+const FD_WEEK=40;
 /* absolute week across seasons: seasons used to be 24 weeks, so each save carries its own running base */
 function awBase(st){st=st||S;return st.awb!=null?st.awb:(st.season-1)*OLD_SEASON}
 const STYLE_N={fl:'High-Flyer',te:'Technician',br:'Brawler',pw:'Powerhouse',sh:'Showman'};
@@ -970,10 +973,11 @@ coffin:{n:'Coffin Match',g:'big',b:{pw:5,sh:5,br:3,te:-2},inj:1.5,f:8,c:40,hb:4,
 anarchy:{n:'Anarchy in the Arena',g:'big',b:{br:6,sh:4,pw:3,fl:2,te:-2},inj:1.8,f:12,c:80,hb:5,ppv:1,mt:['trios','eight'],d:'Faction war from the moment the bell rings — the whole arena is the ring.'},
 stampede:{n:'Stadium Stampede',g:'big',b:{sh:6,br:5,pw:2,fl:2},inj:1.6,f:10,c:120,hb:3,ppv:1,dare:1,mt:['trios','eight'],d:'A cinematic brawl all over the stadium. Showmen love the spotlight.'},
 bng:{n:'Blood & Guts',g:'big',b:{br:8,pw:5,sh:1,fl:-1,te:-2},inj:2.2,f:14,c:150,hb:6,mt:['trios','eight'],d:'Two rings inside a double cage — a TV spectacle for factions at war.'}};
-/* the Casino Gauntlet is its own match: no stipulations on top of it (v95) */
-const stipOk=(k,type,ppv)=>{const s=STIPS[k];if(type==='gauntlet')return k==='std';if(type==='open')type='singles';return !!s&&(!s.ppv||ppv)&&(!s.mt||s.mt.includes(type))};
-const stipKey=m=>m&&m.type!=='gauntlet'&&STIPS[m.stip]?m.stip:'std';
-const MT={singles:{n:'Singles',sides:2,per:1},open:{n:'Open Challenge',sides:2,per:1},tag:{n:'Tag Team',sides:2,per:2},trios:{n:'Trios',sides:2,per:3},triple:{n:'Triple Threat',sides:3,per:1},four:{n:'Fatal 4-Way',sides:4,per:1},eight:{n:'8-Man Tag',sides:2,per:4},gauntlet:{n:'Casino Gauntlet',sides:6,per:1}};
+/* the Casino Gauntlet is its own match: no stipulations on top of it (v95). v168: the Royal Rumble has none either, and Money in the Bank is always a ladder match */
+const SP_STIP={gauntlet:'std',rumble:'std',mitb:'ladder'};
+const stipOk=(k,type,ppv)=>{const s=STIPS[k];if(SP_STIP[type])return k===SP_STIP[type];if(type==='open')type='singles';return !!s&&(!s.ppv||ppv)&&(!s.mt||s.mt.includes(type))};
+const stipKey=m=>m&&SP_STIP[m.type]?SP_STIP[m.type]:m&&STIPS[m.stip]?m.stip:'std';
+const MT={singles:{n:'Singles',sides:2,per:1},open:{n:'Open Challenge',sides:2,per:1},tag:{n:'Tag Team',sides:2,per:2},trios:{n:'Trios',sides:2,per:3},triple:{n:'Triple Threat',sides:3,per:1},four:{n:'Fatal 4-Way',sides:4,per:1},eight:{n:'8-Man Tag',sides:2,per:4},gauntlet:{n:'Casino Gauntlet',sides:6,per:1},rumble:{n:'Royal Rumble',sides:10,per:1,sp:1},mitb:{n:'Money in the Bank',sides:6,per:1,sp:1}};
 /* ---- economy: production upgrades, stipulation costs and PPV venue bills (all in $K) ---- */
 const PROD={std:{n:'Standard',tv:0,ppv:0,b:0,d:'The usual show. No extra cost.'},plus:{n:'Pyro & video',tv:30,ppv:75,b:.1,d:'Pyro, entrance videos and hype packages. A small bump to the show rating.'},max:{n:'Full spectacle',tv:75,ppv:180,b:.2,d:'Everything: pyro, LED stage, live band, celebrity cameos. A bigger bump — but it can\'t save a bad card.'}};
 /* how the rival GM plays at each difficulty: segment edge, draft judgement, run-ins, spending and scouting */
@@ -1023,6 +1027,7 @@ function dataUpdate(st){if(!st||!st.w||(st.dataV||1)>=DATA_V)return;let n=0;
   if(st.crisis&&(st.crisis.a===id||st.crisis.b===id))st.crisis=null;
   if(st.card)['p','ai'].forEach(b=>(st.card[b]||[]).forEach(sl=>{if(sl.d&&((sl.d.sides&&sl.d.sides.flat().includes(id))||sl.d.a===id||sl.d.b===id||sl.d.c===id))sl.d=null}))});
  RAW.trim().split('\n').forEach(l=>{const x=mkW(l.trim());if(!st.w[x.id]){if(OUT[x.id])x.inj=OUT[x.id];st.w[x.id]=x;n++}});
+ if((st.dataV||1)<7)try{wweData(st,n)}catch(e){console.warn(e)}
  st.dataV=DATA_V;if(n)st.news.push({w:st.week,t:`🆕 Roster update (${DATA_AS_OF}): ${n} new arrivals joined free agency.`})}
 function ensureTraits(st){if(!st||!st.w)return;Object.values(st.w).forEach(w=>{if(!Array.isArray(w.tr))w.tr=autoTraits(w);if(w.dur==null||(!w.cw&&!w.rookie&&(st.durV||0)<1))w.dur=durFor(w)});st.durV=1}
 // name|gender|style|align|ring|mic|pop|potential(optional)
@@ -1169,7 +1174,7 @@ Charlette Renegade|F|fl|f|62|50|42|76
 Robyn Renegade|F|fl|f|62|50|42|76
 Leila Grey|F|sh|h|58|55|44|76
 Mara Sadè|F|sh|f|62|55|46|80
-Tatevik|F|te|h|58|50|40|74`;
+Tatevik|F|te|h|58|50|40|74`+'\n'+WWE_RAW;
 /* v151: ROH regulars — not in the AEW draft pool; they rotate through the ROH scouting board (farm.js) */
 const ROH_RAW=`Bryan Keith|M|br|h|80|60|48|86
 Zayda Steel|F|sh|h|62|65|48|82
@@ -1215,7 +1220,12 @@ const TITLES=[
 ['nat','National','singles','M',['andrade-el-idolo'],55],
 ['tag','World Tag Team','tag','M',['matt-jackson','nick-jackson'],75],
 ['wtag',"Women's Tag Team",'tag','F',['jamie-hayter','alex-windsor'],60],
-['trios','World Trios','trios','M',['swerve-strickland','kofi-kingston','austin-creed'],60]];
+['trios','World Trios','trios','M',['swerve-strickland','kofi-kingston','austin-creed'],60],
+/* v168: WWE's world titles */
+['wwe','Undisputed WWE','singles','M',['sami-zayn'],92],
+['whc','World Heavyweight','singles','M',['roman-reigns'],88],
+['wwew',"WWE Women's",'singles','F',['chelsea-green'],86],
+['wwewc',"WWE Women's World",'singles','F',['liv-morgan'],85]];
 const TEAMS=[
 ['Death Riders','faction',['jon-moxley','claudio-castagnoli','wheeler-yuta','marina-shafir','daniel-garcia','gabe-kidd']],
 ['Don Callis Family','faction',['kyle-fletcher','kevin-knight','kazuchika-okada','josh-alexander','hechicero','mark-davis','lance-archer','brian-cage','wardlow','el-clon','jake-doyle','rocky-romero','trent-beretta']],
@@ -1253,11 +1263,11 @@ const TEAMS=[
 ['The Rascalz','faction',['lio-rush','dezmond-xavier','myron-reed','zachary-wentz']],
 ['RPG Vice','team',['rocky-romero','trent-beretta']],
 ['The Swirl','team',['lee-johnson','blake-christian']],
-['Shane Taylor Promotions','faction',['shane-taylor','lee-moriarty','shawn-dean','carlie-bravo']]];
+['Shane Taylor Promotions','faction',['shane-taylor','lee-moriarty','shawn-dean','carlie-bravo']]].concat(WWE_TEAMS);
 const FEUDS=[['mercedes-mone','thekla',75],['swerve-strickland','hangman-adam-page',55],['matt-jackson','dax-harwood',50],['nick-jackson','cash-wheeler',50],['matt-jackson','christian-cage',45],['nick-jackson','adam-copeland',40],['kevin-knight','steven-borden',50],['darby-allin','kyle-fletcher',55],['kyle-fletcher','matt-jackson',30],['kazuchika-okada','tommaso-ciampa',40],['samoa-joe','jack-perry',50],['jamie-hayter','megan-bayne',45],['alex-windsor','lena-kross',45],['jay-white','jon-moxley',35],['juice-robinson','david-finlay',35],['mike-bailey','gabe-kidd',30],['will-ospreay','claudio-castagnoli',30],['will-ospreay','jon-moxley',20],['willow-nightingale','thekla',30],['persephone','dani-luna',25],['persephone','hyan',25],['kris-statlander','julia-hart',30],['queen-aminata','skye-blue',30],['ricochet','swerve-strickland',30],['jon-moxley','mark-davis',55],['will-ospreay','samoa-joe',35],['will-ospreay','kazuchika-okada',40],['chris-jericho','nick-wayne',40],['kofi-kingston','bandido',40],['mercedes-mone','queen-aminata',35],['jon-moxley','jake-doyle',30]];
-const OUT={'toni-storm':14,'adam-cole':12,'mark-briscoe':8,'steven-borden':6,'kota-ibushi':10,'hologram':6,'anna-jay':6,'penelope-ford':6,'maya-world':4,'riho':4,'serena-deeb':4,'harley-cameron':2,'wardlow':2,'jay-white':8};
+const OUT=Object.assign({'toni-storm':14,'adam-cole':12,'mark-briscoe':8,'steven-borden':6,'kota-ibushi':10,'hologram':6,'anna-jay':6,'penelope-ford':6,'maya-world':4,'riho':4,'serena-deeb':4,'harley-cameron':2,'wardlow':2,'jay-white':8},WWE_OUT);
 const REMOVED=['big-bill','powerhouse-hobbs','tay-melo'];
-const DATA_V=6,DATA_AS_OF='AEW Dynamite Grand Slam France, Oct 6, 2026';
+const DATA_V=7,DATA_AS_OF='WWE Money in the Bank, Oct 10, 2026';
 /* Durability (1–99): how well a body holds up. Based on each wrestler's real injury history, current to All Out 2026. High = less stamina lost per match and fewer injuries; low = the opposite. name|durability|note */
 const DUR_RAW=`Darby Allin|95|Takes insane bumps and stunts, and almost never misses time
 Jon Moxley|92|Works hurt and keeps showing up — one of the most reliable bodies in wrestling
@@ -1350,7 +1360,7 @@ Adam Cole|20|Broken ankle, then repeated head injuries
 Kota Ibushi|20|Shoulder, then a broken femur in 2025
 Penelope Ford|20|Torn UCL in 2025, then an ankle in 2026
 Wardlow|15|Knee, then a torn pec — hurt again before he ever made it back to the ring
-Luchasaurus|15|Four surgeries in 2026 alone`;
+Luchasaurus|15|Four surgeries in 2026 alone`+'\n'+WWE_DUR;
 let DUR=null;function durData(){if(!DUR){DUR={};DUR_RAW.trim().split('\n').forEach(l=>{const [n,d,t]=l.split('|');DUR[slug(n)]={d:+d,t}})}return DUR}
 const DUR_STYLE={pw:62,br:62,te:62,sh:60,fl:55};
 /* base durability for anyone not in the table: a seeded roll around their style's norm (same result on every device) */
@@ -1715,7 +1725,7 @@ function evRoles(m,brand){const win=m.sides[m.winner];const los=m.sides.filter((
  const other=brand==='p'?'ai':'p';const ys=Object.values(S.w).filter(w=>w.own===other&&!w.inj&&w.g===A.g&&(w.al==='h'||anyHeel)&&!inFeud(w.id,[A.id,B.id])).sort((p,q)=>q.pop-p.pop).slice(0,6);
  return {A,B,A2,X:xs.length?xs[0][0]:null,Y:ys.length?pick(ys):null,T:m.title?S.titles[m.title].n:'',RIVAL:brand==='p'?S.rival:S.gm,loseIdx:m.sides.indexOf(Bs),MT:m.type,STIP:stipKey(m)}}
 function evFill(t,r){return t.replace(/\{(A2|A|B|X|Y|T|RIVAL|V|O|P)\}/g,(_,k)=>k==='T'||k==='RIVAL'?r[k]:(r[k]?r[k].name:''))}
-/* v124: Forbidden Door season — the TV weeks between the previous PPV and Forbidden Door. Only then do rival stars invade. */
+/* v124: crossover season — the TV weeks between the previous PPV and the crossover PPV (Survivor Series since v168). Only then do rival stars invade. */
 function fdSeason(){if(!S||S.week>=FD_WEEK)return false;for(let k=S.week;k<FD_WEEK;k++)if(PPVS[k])return false;return true}
 function genEvent(m,brand,big){const r=evRoles(m,brand);const bigM=big||!!m.title||heatOf(r.A.id,r.B.id)>=30;
  const opts=MEV.filter(e=>(!e.fd||fdSeason())&&(!e.need||r[e.need])&&(!e.title||m.title)&&(!e.big||bigM)&&okFor(e,r));if(!opts.length)return null;
@@ -1764,7 +1774,7 @@ function applyEv(ev,notes){const evn=(ev.notes||[]).find(n=>n.startsWith('⚡'))
  if(ev.rematch){const [a,b]=ev.rematch;const A=S.w[a],B=S.w[b];if(A&&B&&A.own==='p'&&B.own==='p'&&S.week<SEASON&&!(S.promises||[]).some(x=>key(x.a,x.b)===key(a,b)&&x.week>S.week)){const pr={kind:'callout',a,b,week:S.week+1};if(PPVS[S.week+1])pr.ppv=PPVS[S.week+1];addPromise(pr);notes.push(`📣 Nobody won, and the fans want it settled: ${A.name} vs ${B.name} is promised for ${pr.ppv||'next week'}.`)}}
  if(ev.stash){S.stash=S.stash||{};S.stash[ev.stash]=AW()}
  if(ev.xo){const [a,b]=ev.xo;const A=S.w[a],Y=S.w[b];if(A&&Y&&A.own&&Y.own&&A.own!==Y.own){S.xoSeed=(S.xoSeed||[]).filter(x=>AW()-x.w<=4&&x.a!==a&&x.b!==b);S.xoSeed.push({a,b,w:AW()});
-  const n=`🚪 The Forbidden Door just swung open: ${A.name} vs ${Y.name} is penciled in for ${PPVS[FD_WEEK]}.`;notes.push(n);if(A.own==='p'||Y.own==='p'||ON())news(n)}}
+  const n=`⚔️ Brand warfare: ${A.name} vs ${Y.name} is penciled in as a ${PPVS[FD_WEEK]} dream match.`;notes.push(n);if(A.own==='p'||Y.own==='p'||ON())news(n)}}
  (ev.beef||[]).forEach(([a,b,v])=>addBeef(a,b,v));
  (ev.mor||[]).forEach(([id,v])=>{const w=S.w[id];if(w)w.mor=clamp(w.mor+v,0,100)});
  (ev.cash||[]).forEach(([id,v])=>{const w=S.w[id];if(w&&w.own&&S.money&&S.money[w.own]!=null)S.money[w.own]+=v})}
@@ -1900,7 +1910,7 @@ function oppOf(seat,week,n){for(const [a,b] of pairings(week,n)){if(a===seat)ret
 function mapObj(o,f){if(!o||typeof o!=='object'||Array.isArray(o))return o;const n={};for(const k in o)n[BK.test(k)?f(k):k]=o[k];return n}
 function remapKeys(st,f){const rv=v=>typeof v==='string'&&BK.test(v)?f(v):v;
  Object.values(st.w||{}).forEach(w=>{if(w.own)w.own=rv(w.own)});Object.values(st.titles||{}).forEach(t=>{if(t.br)t.br=rv(t.br)});
- ['fans','fans0','money','hourWins','card','names','priv','prod','debt','sell','sold','fin','mand','tour','goal','chant','tvdeal','farm','hype'].forEach(k=>{if(st[k])st[k]=mapObj(st[k],f)});
+ ['fans','fans0','money','hourWins','card','names','priv','prod','debt','sell','sold','fin','mand','tour','goal','chant','tvdeal','farm','hype','spw'].forEach(k=>{if(st[k])st[k]=mapObj(st[k],f)});
  if(st.history)st.history=st.history.map(h=>mapObj(h,f));
  if(st.offers)for(const id in st.offers){const x=st.offers[id];if(x&&x.by)x.by=mapObj(x.by,f)}
  const L=st.last;if(L){if(L.deals)L.deals.forEach(d=>{if(d.win)d.win=rv(d.win);(d.bids||[]).forEach(x=>x.b=rv(x.b))});const one=o=>{o.fans=mapObj(o.fans,f);o.ratings=mapObj(o.ratings,f);if(o.cash)o.cash=mapObj(o.cash,f);if(o.hourWin)o.hourWin=rv(o.hourWin);(o.blocks||[]).forEach(b=>b.brand=rv(b.brand))};if(L.pairs)L.pairs.forEach(one);else one(L)}
@@ -2008,7 +2018,7 @@ function assignUnq(){openPicker({title:'Who is this?',sort:'nophoto',pool:()=>Ob
 let SF='missing';
 function openStudio(){const all=Object.values(S.w);const have=all.filter(hasPhoto).length;let l=all.filter(w=>SF==='all'||(SF==='missing'?!hasPhoto(w):w.own==='p'&&!hasPhoto(w)));l.sort((a,b)=>b.pop-a.pop);
  openModal(`<div class="h mhd">Photo Studio</div><div class="row sb"><span class="muted">${have} of ${all.length} wrestlers have photos</span><b class="gold">${Math.round(have/all.length*100)}%</b></div><div class="bar"><i style="width:${have/all.length*100}%"></i></div>
- <button class="btn mt" onclick="openQuick('missing')">⚡ Quick photo mode</button><p class="muted tiny" style="margin:6px 0 0">The fastest way on a phone: search, copy the picture, paste — no saving or renaming. Jumps to the next wrestler automatically. Switch to <b>Everyone</b> inside it to replace existing photos too.</p>
+ <button class="btn mt" onclick="openQuick('missing')">⚡ Quick photo mode</button><p class="muted tiny" style="margin:6px 0 0">The fastest way on a phone: search, copy the picture, paste — no saving or renaming. Jumps to the next wrestler automatically. WWE wrestlers search wwe.com for their official photo — tap <b>WWE</b> inside it to do just them, or <b>Everyone</b> to replace existing photos too.</p>
  <button class="btn sec mt" onclick="bulkPhotos()">📷 Bulk import photos</button>
  <details class="card mt"><summary class="h small" style="margin:0">How bulk import works</summary><p>Save photos named after each wrestler — like <b>will-ospreay.jpg</b>, <b>Mercedes Mone.png</b> or <b>adam_page.jpg</b> — then select them all at once. The game matches each file by its name and crops it to card size. Anything it can't match, you can assign by tapping the right card.</p><p>Use <b>🔍 Find</b> below to open an image search for a wrestler, save the picture to your phone with their name, and repeat. Then import them all in one go.</p><p><b>Shared photos:</b> drop pictures named after each wrestler into the <b>photos</b> folder of the game's GitHub repo. They're cropped automatically and show up on every device and every new save — no importing, and they don't use up this device's storage. A photo added here in the game always takes priority.</p></details>
  <div class="row"><button class="btn sec" onclick="exportPhotos()">Export photo pack</button><button class="btn sec" onclick="importPhotos()">Import photo pack</button></div>
@@ -2027,18 +2037,18 @@ async function pastePhoto(id,after){let src;try{src=await clipImage()}catch(e){t
  try{if(await setPhotoFrom(id,src)){toast(`📸 Photo added for ${S.w[id].name}.`);if(after)after(true)}}
  catch(e){toast(src.url?"That's a link, not the picture. Long-press the image itself and choose Copy.":"That picture couldn't be opened.")}}
 let QP=null;
-function photoSearch(w){return 'https://www.google.com/search?tbm=isch&q='+encodeURIComponent(w.cw?w.name+' wrestler':w.name+' site:allelitewrestling.com')}
+function photoSearch(w){return 'https://www.google.com/search?tbm=isch&q='+encodeURIComponent(w.cw?w.name+' wrestler':isWWE(w)?w.name+' site:wwe.com':w.name+' site:allelitewrestling.com')}
 let QM='missing';
-function openQuick(mode){QM=mode||QM;const l=Object.values(S.w).filter(w=>QM==='all'?true:QM==='mine'?w.own==='p':!hasPhoto(w)).sort((a,b)=>((b.own==='p')-(a.own==='p'))||b.pop-a.pop);
- if(!l.length){if(QM==='missing')return toast('Everyone has a photo! 🎉');return toast('Nobody to show.')}QP={ids:l.map(w=>w.id),i:0,done:0,mode:QM};renderQuick()}
-function renderQuick(){if(!QP)return;while(QP.i<QP.ids.length&&(!S.w[QP.ids[QP.i]]||(QP.mode==='missing'&&hasPhoto(S.w[QP.ids[QP.i]]))))QP.i++;
+function openQuick(mode){QM=mode||QM;const l=Object.values(S.w).filter(w=>QM==='all'?true:QM==='mine'?w.own==='p':QM==='wwe'?isWWE(w)&&!hasPhoto(w):!hasPhoto(w)).sort((a,b)=>((b.own==='p')-(a.own==='p'))||b.pop-a.pop);
+ if(!l.length){if(QM==='missing'||QM==='wwe')return toast(QM==='wwe'?'Every WWE wrestler has a photo! 🎉':'Everyone has a photo! 🎉');return toast('Nobody to show.')}QP={ids:l.map(w=>w.id),i:0,done:0,mode:QM};renderQuick()}
+function renderQuick(){if(!QP)return;while(QP.i<QP.ids.length&&(!S.w[QP.ids[QP.i]]||((QP.mode==='missing'||QP.mode==='wwe')&&hasPhoto(S.w[QP.ids[QP.i]]))))QP.i++;
  if(QP.i>=QP.ids.length){const d=QP.done;QP=null;openStudio();toast(`All done — ${d} photo${d===1?'':'s'} added.`);return}
  const w=S.w[QP.ids[QP.i]];const left=QP.ids.length-QP.i;
  openModal(`<div class="row sb"><div class="h mhd" style="margin:0">Quick photos</div><span class="muted">${left} to go${QP.done?` · ${QP.done} added`:''}</span></div>
- <div class="chips mt">${[['missing','Missing photos'],['mine','My roster'],['all','Everyone']].map(([k,n])=>`<button class="chip ${QP.mode===k?'on':''}" onclick="openQuick('${k}')">${n}</button>`).join('')}</div>${hasPhoto(w)?'<div class="muted tiny" style="margin-top:6px">Has a photo — pasting replaces it. Tap Skip to keep it.</div>':''}
+ <div class="chips mt">${[['missing','Missing photos'],['wwe','WWE'],['mine','My roster'],['all','Everyone']].map(([k,n])=>`<button class="chip ${QP.mode===k?'on':''}" onclick="openQuick('${k}')">${n}</button>`).join('')}</div>${hasPhoto(w)?'<div class="muted tiny" style="margin-top:6px">Has a photo — pasting replaces it. Tap Skip to keep it.</div>':''}
  <div class="bar mt"><i style="width:${QP.i/QP.ids.length*100}%"></i></div>
  <div class="qp"><div class="wd-pic">${portrait(w)}</div><div style="min-width:0"><div class="h wd-n">${esc(w.name)}</div><div class="muted">${w.own==='p'?'Your roster':w.own==='ai'?esc(S.rival):'Free agent'} · ${STYLE_N[w.st]}</div>
- <ol class="qsteps"><li>Tap <b>Search</b> (official AEW roster photos come up first)</li><li>Long-press a picture → <b>Copy</b></li><li>Come back and tap <b>Paste</b></li></ol></div></div>
+ <ol class="qsteps"><li>Tap <b>Search</b> (official ${isWWE(w)?'WWE':'AEW'} roster photos come up first)</li><li>Long-press a picture → <b>Copy</b></li><li>Come back and tap <b>Paste</b></li></ol></div></div>
  <div class="row"><a class="btn sec" href="${photoSearch(w)}" target="_blank" rel="noopener">🔍 Search</a><button class="btn" onclick="quickPaste()">📋 Paste</button></div>
  <div class="row" style="margin-top:8px"><button class="btn sec" onclick="quickFile()">🖼️ From Photos</button><button class="btn sec" onclick="QP.i++;renderQuick()">Skip →</button></div>
  <button class="btn ghost" onclick="QP=null;openStudio()">Done</button>`)}
@@ -2076,8 +2086,10 @@ const signCost=(w,b)=>mkt(w,b)*6+(w.fee||0);
 /* re-signing: they ask for at least their market value (never a pay cut), unhappy wrestlers ask for more */
 const askSal=w=>Math.max(sal(w),Math.round(mkt(w)*(w.mor<30?1.25:1)));
 const resignCost=w=>askSal(w)*4*(w.mor<30?2:1);
-/* the weekly salary cap for the draft: most GMs can't afford an all-star roster */
-function capFor(n){n=n||brands().length;const r=n>2?20:24;const top=Object.values(S.w).filter(w=>!w.cw).map(mkt0).sort((a,b)=>b-a).slice(0,n*r);return Math.round(top.reduce((a,b)=>a+b,0)/n*.85)}
+/* the weekly salary cap for the draft: most GMs can't afford an all-star roster. v168: it's set by the AEW market (WWE's wrestlers compete for the same budget rather
+ than raising it). The whole economy scales with the cap, so letting WWE's megastars lift it inflated every bank by 30–60%
+ a season; this keeps the cap, and the money, exactly where AEW's roster put them. */
+function capFor(n){n=n||brands().length;const r=n>2?20:24;const top=Object.values(S.w).filter(w=>!w.cw&&!(typeof isWWE==='function'&&isWWE(w))).map(mkt0).sort((a,b)=>b-a).slice(0,n*r);return Math.round(top.reduce((a,b)=>a+b,0)/n*.85)}
 function econCap(){if(!S.cap)S.cap=capFor();return S.cap}
 /* ---- revenue (all in $K). The TV deal is steady and grows with fans (more slowly the bigger you get).
  Tickets follow your buzz (last 3 shows), merch follows your stars and tonight's show, ads follow tonight's rating.
@@ -2093,7 +2105,7 @@ function opsCost(b){return Math.round(econCap()*.22*Math.max(0,fanF(S.fans[b]||0
 /* PPV buys: bigger fanbases buy more, and better shows sell a lot more */
 function ppvGross(f,r,allin){return Math.round(econCap()*.95*fanF(f)*(.15+.12*r)*(allin?1.5:1))}
 function buzzOf(b){const h=(S.history||[]).filter(x=>x[b]!=null).slice(-3);return h.length?h.reduce((a,x)=>a+x[b],0)/h.length:3}
-function starPower(b){const l=ownList(b).map(w=>w.pop).sort((x,y)=>y-x).slice(0,6);const t=Object.values(S.titles).filter(t=>t.holders.length&&t.holders.every(id=>S.w[id]&&S.w[id].own===b)).length;return clamp((l.length?l.reduce((a,x)=>a+x,0)/l.length:40)/70+t*.04,.5,1.7)}
+function starPower(b){const l=ownList(b).map(w=>w.pop).sort((x,y)=>y-x).slice(0,6);const t=Object.values(S.titles).filter(t=>t.holders.length&&t.holders.every(id=>S.w[id]&&S.w[id].own===b)).length;/* v168: gold counts as a share of all the titles (each was worth .04 when there were 10), so adding WWE's belts didn't inflate merch */return clamp((l.length?l.reduce((a,x)=>a+x,0)/l.length:40)/70+t*.4/Math.max(10,Object.keys(S.titles).length),.5,1.7)}
 function tixRev(b,ppv){return Math.round(econCap()*.18*fanF(S.fans[b])*(.1+.26*buzzOf(b))*(ppv?1.3:1))}
 function merchRev(b,r,ppv){return Math.round(econCap()*.11*starPower(b)*(.3+.2*r)*(ppv?1.2:1))}
 function adRev(b,r){return Math.round(econCap()*.12*fanF(S.fans[b])*Math.pow(Math.max(0,r)/3.5,2))}
@@ -2321,6 +2333,9 @@ function newCard(){const ppv=!!(PPVS[S.week]);const c=emptyCard(ppv);const slots
   if(h&&h.own==='p'&&h.id!==pr.a)pr.b=h.id;else{pr.void=1;if(h&&h.own&&h.own!=='p'&&chs&&!chs.d&&S.w[pr.a]&&S.w[pr.a].own==='p')chs.d={title:t.id,c:pr.a}}});
  if(S.promises)S.promises=S.promises.filter(pr=>!pr.void);
  const used=new Set();
+ /* v168: the Royal Rumbles and Money in the Bank ladder matches lock onto the card — the men's match closes the show and the
+  women's opens it hot (drag them anywhere) */
+ if(ppv)spDue('p',used,[]).forEach(m=>{if(f>bk)return;const i=SPK[m.sp].g==='M'?slots[bk--]:slots[f++];c[i].d=m});
  /* v122: on 3-match TV, tournament matches go on first so promises can't crowd them into a forfeit */
  const placeTour=()=>tourDue('p',used,[]).forEach(m=>{if(f>bk)return;const i=slots[bk--];c[i].d=m;m.sides.flat().forEach(id=>used.add(id))});
  if(!ppv)placeTour();
@@ -2330,6 +2345,7 @@ function newCard(){const ppv=!!(PPVS[S.week]);const c=emptyCard(ppv);const slots
  /* tournament matches are locked onto the card: you decide who advances */
  if(ppv)placeTour();
  if(S.week===FD_WEEK)xoSeeds('p',used).forEach(x=>{const sl=c.find(q=>q.k==='xo'&&!q.d);if(sl)sl.d=x});
+ if(S.week===WM_WEEK&&chs&&!chs.d){const x=spChalFor('p',used);if(x)chs.d=x}
  if(S.week===ALLIN_WEEK&&chs&&!chs.d)for(const k in TOURS){const t=tourState('p',k);const pz=S.titles[TOURS[k].prize];const w=t.chal&&S.w[t.chal];if(w&&w.own==='p'&&!used.has(w.id)&&pz&&pz.holders.length&&S.w[pz.holders[0]].own!=='p'){chs.d={title:pz.id,c:w.id};break}}
  return {p:c,ai:null}}
 function settlePromises(out){duePromises().forEach(pr=>{const A=S.w[pr.a],B=S.w[pr.b];if(!A||!B)return;const what=pr.kind==='contract'?'contracted':'promised';
@@ -2343,7 +2359,10 @@ function showNames(){return (S.online&&S.online.show)||{p:'Dynamite',ai:'Collisi
 function curShow(){if(PPVS[S.week])return {name:PPVS[S.week],ppv:true,mine:PPVS[S.week],theirs:PPVS[S.week],fd:S.week===FD_WEEK};const n=showNames();return {name:n.p,ppv:false,mine:n.p,theirs:n.ai,special:SPECIALS[S.week]||null}}
 /* TV: 3 matches + 2 promos, plus an optional bonus promo (the '?' slot). PPV: 7 matches + an optional title challenge. */
 const CARD_TV=['promo','match','promo','match','match?','promo?','match'],CARD_PPV=['match','match','match','match','match','match','match','chal'],CARD_FD=['match','match','xo?','match','match','xo?','match','chal'];
-const cardOf=ppv=>ppv?(S&&S.week===FD_WEEK?CARD_FD:CARD_PPV):CARD_TV;
+/* v168: the Royal Rumble and Money in the Bank cards are shorter — the Rumbles and ladder matches already use most of the roster
+ (5 matches at the Royal Rumble, both Rumbles included; 6 at Money in the Bank, both ladder matches included) */
+const CARD_RR=['match','match','match','match','match','chal'],CARD_MITB=['match','match','match','match','match','match','chal'];
+const cardOf=ppv=>ppv?(S&&S.week===FD_WEEK?CARD_FD:S&&S.week===RR_WEEK?CARD_RR:S&&S.week===MITB_WEEK?CARD_MITB:CARD_PPV):CARD_TV;
 const cardMatches=ppv=>cardOf(ppv).filter(k=>k==='match').length;
 function emptyCard(ppv){return cardOf(ppv).map(k=>k.endsWith('?')?{k:k.slice(0,-1),d:null,opt:true}:{k,d:null})}
 /* v133: weekly TV has an optional bonus match. Labels: required matches are numbered, the last match slot is always the
@@ -2373,12 +2392,12 @@ function cardMigrate(){if(!S||S.phase!=='season'||!S.card)return;const sh=curSho
  if(drop)setTimeout(()=>toast(`TV shows are 3 matches now — ${drop} booked segment${drop>1?'s were':' was'} taken off this week's card.`),1200)}
 const fixedK=sl=>!!sl&&(sl.k==='chal'||sl.k==='xo');
 /* ---- stamina: matches drain it, a week off (or a promo-only week) restores it ---- */
-const FAT_MT={singles:16,triple:14,four:12,tag:11,trios:10,eight:9,gauntlet:10},FAT_OK=35,FAT_RISK=55,REC_WORK=10,REC_REST=25;
+const FAT_MT={singles:16,triple:14,four:12,tag:11,trios:10,eight:9,gauntlet:10,rumble:8,mitb:10},FAT_OK=35,FAT_RISK=55,REC_WORK=10,REC_REST=25;
 const sta=w=>Math.round(clamp(100-w.fat,0,100));
 const staCls=v=>v>=100-FAT_OK?'ok':v>=100-FAT_RISK?'mid':'low';
 const staWord=v=>v>=100-FAT_OK?'Fresh':v>=100-FAT_RISK?'Tired':'Exhausted';
 /* v128: in a match with 3+ people the top star can take a breather while everyone else works */
-function restsStar(w,m){const f=(m.sides||[]).flat().filter(id=>id&&S.w[id]);if(f.length<3||m.type==='gauntlet'||!f.includes(w.id))return false;return f.slice().sort((a,b)=>S.w[b].pop-S.w[a].pop)[0]===w.id}
+function restsStar(w,m){const f=(m.sides||[]).flat().filter(id=>id&&S.w[id]);if(f.length<3||m.type==='gauntlet'||m.type==='rumble'||!f.includes(w.id))return false;return f.slice().sort((a,b)=>S.w[b].pop-S.w[a].pop)[0]===w.id}
 function fatGain(w,m,ppv){return Math.round(((FAT_MT[m.type]||14)+((STIPS[stipKey(m)]||{}).f||0)+(ppv?4:0))*(hasT(w,'work')?.6:1)*durFat(w)*(restsStar(w,m)?.7:1))}
 /* double duty: a wrestler can work up to DD_MAX matches on one show; every match after the first drains DD_FAT× the stamina.
    The title challenge and Forbidden Door dream matches stay one-and-done. */
@@ -2399,7 +2418,8 @@ function validMatch(m){const f=m.sides.flat();return f.length&&f.every(id=>id&&S
 function kindOk(kind,type){return kind==='singles'?['singles','triple','four'].includes(type):kind==='tag'?type==='tag':type==='trios'}
 /* v140: titles are split evenly between the shows when a game starts, instead of first come, first served.
  Each brand can only crown (or re-crown) its own vacant titles; a title can still change brands through a PPV title challenge. */
-const TITLE_SPLIT=[['world','cont','nat','tbs','tag'],['intl','tnt','wworld','wtag','trios']];
+/* v168: seven each — WWE's four world titles split two and two, so every brand has two world titles for each division's top stars to chase */
+const TITLE_SPLIT=[['world','cont','nat','tbs','tag','whc','wwew'],['intl','tnt','wworld','wtag','trios','wwe','wwewc']];
 function titleSplit(st,bs){const ts=st.titles;bs=bs.slice();
  if(bs.length===2&&TITLE_SPLIT.flat().every(id=>ts[id])){const f=Math.random()<.5?bs:bs.reverse();TITLE_SPLIT.forEach((l,i)=>l.forEach(id=>ts[id].br=f[i]))}
  else{const l=Object.values(ts).sort((a,b)=>b.prestige-a.prestige);let i=0,d=1;l.forEach(t=>{t.br=bs[i];if(i+d<0||i+d>=bs.length)d=-d;else i+=d})}
@@ -2467,7 +2487,7 @@ function roleMix(all,m){if(all.length<3)return {v:0,t:''};const cnt={};all.forEa
  let v=d>=4?2:d>=3?1.5:d===2?0:-1.5;if(mx>=3&&all.length<=4||mx>=4)v-=1.5;const multi=!TAG_T.includes(m.type);const both=new Set(all.map(w=>w.al)).size>1;if(multi&&both)v+=.5;
  const t=v>=2?'Great mix of styles':v>=1?'Good mix of styles':v>=0?'Similar styles':`Too many ${STYLE_N[Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0][0]]}s`;return {v,t}}
 /* v128: chaos — triple threats and 4-ways reward high-flyers and showmen */
-function chaosB(all,m){const multi=m.type==='triple'||m.type==='four'||m.type==='gauntlet';if(!multi)return 0;return Math.min(3,all.filter(w=>w.st==='fl').length*1.25+all.filter(w=>w.st==='sh').length*.5)}
+function chaosB(all,m){const multi=m.type==='triple'||m.type==='four'||m.type==='gauntlet'||isSp(m);if(!multi)return 0;return Math.min(3,all.filter(w=>w.st==='fl').length*1.25+all.filter(w=>w.st==='sh').length*.5)}
 function rateMatch(m,ctx){ctx=ctx||{};
  const sides=m.sides.map(s=>s.map(id=>S.w[id]));const all=sides.flat();const n=all.length;const big=n>=3;const tagT=TAG_T.includes(m.type);
  const mean=f=>all.reduce((s,w)=>s+f(w),0)/n;
@@ -2485,10 +2505,10 @@ function rateMatch(m,ctx){ctx=ctx||{};
  for(let i=0;i<sides.length;i++)for(let j=i+1;j<sides.length;j++)for(const a of sides[i])for(const b of sides[j]){if(!ctx.ppv&&repMatch(a.id,b.id)&&(!rep||(repLight&&repFull(a.id,b.id,m.type)))){rep=true;repLight=!repFull(a.id,b.id,m.type);repWhy=`${a.name} vs ${b.name}`}if(!boil&&boilingOver(a.id,b.id))boil=`${a.name} and ${b.name}`;if(isStale(a.id,b.id))stale=true}
  const sk=stipKey(m),st=STIPS[sk]||STIPS.std;const stipB=mean(w=>st.b[w.st]||0)+(sk!=='std'&&heat>=50?(st.hb==null?3:st.hb):0);
  const t=m.title?S.titles[m.title]:null;const titleB=t?t.prestige*.05:0;
- const multi=m.type==='triple'||m.type==='four'||m.type==='gauntlet';const typeB=chaosB(all,m);const role=roleMix(all,m);
+ const multi=m.type==='triple'||m.type==='four'||m.type==='gauntlet'||isSp(m);const typeB=chaosB(all,m);const role=roleMix(all,m);
  const traitB=mean(w=>(ctx.ppv&&hasT(w,'bigm')?3:0)+((multi||st.dare)&&hasT(w,'dare')?4:0));
  const fatT=-(()=>{const px=ctx.preview?preFat(m,ctx.ppv):null;return mean(w=>Math.max(0,w.fat+(px&&px[w.id]||0)-FAT_OK))})()*.08;
- const heatT=heat*(ctx.ppv?.25:.15);const occ=(ctx.ppv?4:0)+(ctx.allin?4:0)+(ctx.special?1:0)+(m.tour?1.5:0)+(m.xo?3:0);
+ const heatT=heat*(ctx.ppv?.25:.15);const occ=(ctx.ppv?4:0)+(ctx.allin?4:0)+(ctx.special?1:0)+(m.tour?1.5:0)+(m.xo?3:0)+(isSp(m)?1:0);
  const base=ring*.5+pop*.2;
  /* v80: hot streaks get the crowd invested, the finish shapes how the match lands, and specials/tournaments raise the stakes */
  const momB=mean(w=>w.mom||0)*.15;const finB=finScore(m,heat,ctx);
@@ -2548,7 +2568,7 @@ const FINS={
  co:{n:'Count-out',i:'🚪',d:'Someone can\'t beat the ten count. Builds heat and protects the loser. Titles don\'t change hands on a count-out.'}};
 const FIN_HEAT={clean:1,cheat:1.35,upset:1.2,dq:1.5,co:1.3};
 function finWhy(m,k){if(k==='clean')return '';const win=(m.sides[m.winner]||[]).map(id=>S.w[id]).filter(Boolean);const los=m.sides.filter((s,i)=>i!==m.winner).flat().map(id=>S.w[id]).filter(Boolean);if(!win.length||!los.length)return 'Pick the wrestlers first';
- if(m.type==='gauntlet'||m.tour&&(k==='dq'||k==='co'))return m.type==='gauntlet'?'A gauntlet needs a clean winner':'Tournament matches need a winner who can advance';
+ if(m.type==='gauntlet'||isSp(m)||m.tour&&(k==='dq'||k==='co'))return m.type==='gauntlet'?'A gauntlet needs a clean winner':isSp(m)?`The ${spName(m)} needs a clean winner`:'Tournament matches need a winner who can advance';
  if(k==='cheat'&&!win.some(w=>w.al==='h'))return 'Only a heel winner can cheat to win';
  if(k==='upset'&&avg(win.map(w=>w.pop))>Math.max(...los.map(w=>w.pop))-8)return 'The winner has to be the clear underdog (8+ less popular)';
  if((k==='dq'||k==='co')&&(m.sides.length!==2))return 'Only in a match with two sides';
@@ -2562,11 +2582,11 @@ function finScore(m,heat,ctx){const k=finOf(m);const hot=heat>=30;const blow=ctx
  if(k==='dq')return blow?-2:hot?-.5:-2;
  return blow?-2:hot?-.5:-1.5}
 function finText(m){const k=finOf(m);return k==='dq'?' by DQ':k==='co'?' by count-out':k==='upset'?' (upset)':k==='cheat'?' (with help)':''}
-function matchText(m){if(m.nc)return m.sides.map(sideName).join(' vs ')+' — No contest';const win=m.sides[m.winner];return `${sideName(win)} def. ${m.sides.filter((s,i)=>i!==m.winner).map(sideName).join(', ')}${finText(m)}`}
-function matchSub(m){return (m.bo?'💥 Blow-off · ':'')+(m.tour&&TOURS[m.tour.k]?TOURS[m.tour.k].n+' · '+m.tour.lab+' · ':'')+MT[m.type].n+(stipKey(m)!=='std'?' · '+STIPS[m.stip].n:'')+(m.title?' · '+S.titles[m.title].n+' title':'')+(finOf(m)!=='clean'?' · '+FINS[finOf(m)].n:'')}
-function vsLine(m){if(ocPending(m)){const I=ocIssuer(m);return I?`${I.name}'s open challenge`:'Open challenge'}return m.sides.map(s=>s.every(Boolean)?sideName(s):'TBD').join(' vs ')}
+function matchText(m){if(m.nc)return m.sides.map(sideName).join(' vs ')+' — No contest';if(isSp(m)){const W=sideName(m.sides[m.winner]);const L=m.sides.length>=3?pinOf(m):null;return m.type==='rumble'?`${W} wins the ${spName(m)}${L&&S.w[L]?` (last eliminated: ${S.w[L].name})`:''}`:`${W} wins ${spName(m)}${L&&S.w[L]?` (beating ${S.w[L].name} to the briefcase)`:''}`}const win=m.sides[m.winner];return `${sideName(win)} def. ${m.sides.filter((s,i)=>i!==m.winner).map(sideName).join(', ')}${finText(m)}`}
+function matchSub(m){if(isSp(m))return `${spName(m)} · ${m.sides.length} entrants${m.type==='mitb'?' · Ladder match':''}${m.cash?' · 💼 Cash-in':''}`;return (m.bo?'💥 Blow-off · ':'')+(m.cash?'💼 Cash-in · ':'')+(m.tour&&TOURS[m.tour.k]?TOURS[m.tour.k].n+' · '+m.tour.lab+' · ':'')+MT[m.type].n+(stipKey(m)!=='std'?' · '+STIPS[m.stip].n:'')+(m.title?' · '+S.titles[m.title].n+' title':'')+(finOf(m)!=='clean'?' · '+FINS[finOf(m)].n:'')}
+function vsLine(m){if(ocPending(m)){const I=ocIssuer(m);return I?`${I.name}'s open challenge`:'Open challenge'}if(isSp(m))return `${spName(m)}: `+m.sides.map(s=>s[0]&&S.w[s[0]]?S.w[s[0]].name:'TBD').join(', ');return m.sides.map(s=>s.every(Boolean)?sideName(s):'TBD').join(' vs ')}
 function applyMatch(m,res,ctx,notes){
- if(m.type==='gauntlet')m.stip='std';const st=STIPS[stipKey(m)]||STIPS.std;const win=m.nc?[]:m.sides[m.winner];const all=m.sides.flat();
+ if(SP_STIP[m.type])m.stip=SP_STIP[m.type];const st=STIPS[stipKey(m)]||STIPS.std;const win=m.nc?[]:m.sides[m.winner];const all=m.sides.flat();
  const maxRing=Math.max(...all.map(i=>S.w[i].ring));
  const fin=m.nc?'clean':finOf(m);const prot=fin!=='clean';/* a non-clean finish protects the loser */
  const losers=m.nc?[]:all.filter(id=>!win.includes(id));let losePop=losers.length?Math.max(...losers.map(id=>S.w[id].pop)):0;
@@ -2578,7 +2598,7 @@ function applyMatch(m,res,ctx,notes){
  /* v129: winning a multi-person match isn't the same as pinning the top star — the rub mostly comes from who you actually beat */
  if(pinned){const pp=S.w[pinned].pop;losePop=pp+(losePop-pp)*.3}
  all.forEach(id=>{const w=S.w[id];const won=win.includes(id);const safe=prot||protM.has(id);
-  const dd=ctx.worked&&ctx.worked.has(id);if(ctx.worked)ctx.worked.add(id);w.fat=clamp(w.fat+Math.round(fatGain(w,m,ctx.ppv)*(dd?DD_FAT:1)),0,100);w.last=S.week;w.lm=S.week;
+  const dd=ctx.worked&&ctx.worked.has(id);if(ctx.worked)ctx.worked.add(id);w.fat=clamp(w.fat+Math.round(fatGain(w,m,ctx.ppv)*(dd?DD_FAT:1)*(m.quick?.35:1)),0,100);w.last=S.week;w.lm=S.week;
   if(m.nc){w.mor+=2}else if(won){w.w++;w.mor+=5;w.mom=Math.min(5,w.mom+1);w.strk=Math.max(0,w.strk||0)+1}
   else{w.l++;if(!safe){w.mom=Math.max(-5,w.mom-1);w.strk=Math.min(0,w.strk||0)-1}}
   w.mor=clamp(w.mor,0,100);
@@ -2618,13 +2638,14 @@ function applyMatch(m,res,ctx,notes){
   if(res.rep)g*=repMult(a,b,m.type);
   if(boilingOver(a,b)){g*=1.5;why.push('boiling over after weeks of talk')}
   if(!m.nc&&fin!=='clean'){g*=FIN_HEAT[fin];if(!said.has(k))why.push(FINS[fin].n.toLowerCase())}
-  if(m.type==='gauntlet')g*=.3;
+  if(m.type==='gauntlet')g*=.3;if(m.type==='rumble')g*=.2;if(m.type==='mitb')g*=.35;
   /* 50/50 booking: trading clean wins back and forth cools a feud off */
   if(m.type==='singles'&&!m.nc){if(!S.h2h)S.h2h={};const l=S.h2h[k]||[];const last=l[l.length-1];const wid=win.includes(a)?a:b;
    if(fin==='clean'&&!m.tour&&last&&last.c&&last.x!==wid&&AW()-last.w<=4){g*=.6;if(!said.has(k)&&mine(A.own))notes.push(`⚖️ Trading wins: ${A.name} and ${B.name} keep beating each other — 50/50 booking is cooling this feud off.`)}
    S.h2h[k]=l.concat([{w:AW(),x:wid,c:fin==='clean'?1:0}]).slice(-4)}
   const tvBo=!ctx.ppv&&m.bo&&(S.heat[k]||0)>=35&&!((S.fs&&S.fs[k]||{}).paid);
-  if(!ctx.ppv&&!tvBo)bumpHeat(a,b,g,said.has(k)?[]:notes,why.join(', ')||(first?'their first encounter':'the rivalry grows'));
+  /* v168: a Rumble or a ladder match builds rivalries — it never settles one, even on a PPV */
+  if((!ctx.ppv||isSp(m))&&!tvBo)bumpHeat(a,b,g,said.has(k)?[]:notes,why.join(', ')||(first?'their first encounter':'the rivalry grows'));
   else if(tvBo){const f=S.fs&&S.fs[k];const h=S.heat[k]||0;const show=ctx.name||'TV';
    /* v152: blowing a feud off on weekly TV — a dirty finish or no contest leaves it unsettled; a clean one ends it, for a smaller reward than a PPV */
    if(m.nc||(fin!=='clean'&&fin!=='upset')){S.heat[k]=Math.round(h*.9);if(f){f.start=AW();f.stale=false}fhLog(a,b,{ic:'😈',n:`Meant to end it on ${show} — ${m.nc?'no contest':FINS[fin].n.toLowerCase()}, so it isn't settled`,h:S.heat[k]});touch(k);
@@ -2832,8 +2853,10 @@ function autoBook(brand,show,extUsed,opt){opt=opt||{};
  const chal0=show.ppv?autoChal(brand,used):null;if(chal0)used.add(chal0.c);
  /* tournament matches this brand owes come first */
  if(!opt.noTour)tourDue(brand,used).forEach(m=>{winPick(m,m.title?S.titles[m.title]:null);if(m.fin==='dq'||m.fin==='co')m.fin='clean';m.sides.flat().forEach(i=>used.add(i));card.push({k:'match',d:m})});
+ /* v168: Royal Rumble and Money in the Bank (skipped when the card already has them) */
+ if(!opt.noSp)spDue(brand,used,(S.card&&S.card[brand])||[]).forEach(m=>{winPick(m,null);m.fin='clean';card.push({k:'match',d:m})});
  /* a title shot the rival earned (Casino Gauntlet or Owen Hart Cup) gets booked when it comes due */
- if(brand==='ai'&&!ON()){const shots=[];if(S.aiShot&&S.aiShot.week===S.week)shots.push(S.aiShot);if(S.week===ALLIN_WEEK)for(const k in TOURS){const t=tourState(brand,k);if(t.shot)shots.push({a:t.shot,title:TOURS[k].prize})}
+ if(brand==='ai'&&!ON()){const shots=[];if(S.aiShot&&S.aiShot.week===S.week)shots.push(S.aiShot);spShotsFor(brand).forEach(x=>shots.push(x));if(S.week===ALLIN_WEEK)for(const k in TOURS){const t=tourState(brand,k);if(t.shot)shots.push({a:t.shot,title:TOURS[k].prize})}
   shots.forEach(x=>{const t=S.titles[x.title];const h=t&&t.holders[0];if(!h||used.has(h)||used.has(x.a)||!S.w[h]||S.w[h].own!==brand||S.w[h].inj||!S.w[x.a]||S.w[x.a].own!==brand||S.w[x.a].inj||card.length>=nM)return;mk('singles',[[h],[x.a]],t.id)})}
  const teamUnits=(pool,per,exclude)=>S.teams.map(tt=>tt.m.filter(id=>pool.some(w=>w.id===id)&&!(exclude||[]).includes(id))).filter(a=>a.length>=per).map(a=>a.slice(0,per));
  const tl=shuffle(Object.values(S.titles).filter(t=>t.holders.length&&t.holders.every(h=>S.w[h]&&S.w[h].own===brand&&S.w[h].inj===0)&&(show.ppv||S.week-t.last>=3||Math.random()<.25)));
@@ -2867,7 +2890,7 @@ function autoBook(brand,show,extUsed,opt){opt=opt||{};
  const exP=new Set();
  const out=[];let mi=0;CARD_TV.forEach(k=>{if(k==='match'){if(ms[mi])out.push(ms[mi++])}else if(k==='match?'){out.push({k:'match',d:null,opt:true})}else{const p=autoPromo(brand,exP);if(p){exP.add(p.a);if(p.b)exP.add(p.b)}const sl={k:'promo',d:p};if(k.endsWith('?'))sl.opt=true;out.push(sl)}});
  while(mi<ms.length)out.push(ms[mi++]);return out}
-function autoChal(brand,used){if(S.week===ALLIN_WEEK)for(const k in TOURS){const t=tourState(brand,k);const pz=S.titles[TOURS[k].prize];const c=t.chal&&S.w[t.chal];if(c&&pz&&pz.holders.length&&c.own===brand&&!c.inj&&!used.has(c.id)&&S.w[pz.holders[0]].own!==brand)return {title:pz.id,c:c.id}}
+function autoChal(brand,used){{const x=spChalFor(brand,used);if(x)return x}if(S.week===ALLIN_WEEK)for(const k in TOURS){const t=tourState(brand,k);const pz=S.titles[TOURS[k].prize];const c=t.chal&&S.w[t.chal];if(c&&pz&&pz.holders.length&&c.own===brand&&!c.inj&&!used.has(c.id)&&S.w[pz.holders[0]].own!==brand)return {title:pz.id,c:c.id}}
  if(Math.random()>.6)return null;const other=brand==='p'?'ai':'p';
  const ts=Object.values(S.titles).filter(t=>t.kind==='singles'&&t.holders.length&&S.w[t.holders[0]].own===other&&!S.w[t.holders[0]].inj).sort((a,b)=>b.prestige-a.prestige);
  for(const t of ts){const c=Object.values(S.w).filter(w=>w.own===brand&&!w.inj&&w.g===t.g&&!used.has(w.id)&&!isChamp(w.id)).sort((a,b)=>(b.pop+b.ring)-(a.pop+a.ring))[0];if(c)return {title:t.id,c:c.id}}return null}
@@ -2893,6 +2916,8 @@ function airShow(){if(ON())return mpAirWeek();const out=airPair();S.showIdx=0;en
 function airPair(){
  const show=curShow();const ctx={ppv:show.ppv,allin:show.ppv&&S.week===ALLIN_WEEK,name:show.special?show.special+' '+show.name:show.name,special:!!show.special};const bye=ON()&&!S._view.opp;
  if(!bye&&!S.card.ai)S.card.ai=autoBook('ai',show,(S.card.p||[]).filter(sl=>sl.k==='xo'&&sl.d).map(sl=>sl.d.b));
+ /* v168: the rival decides on the night whether to cash in a Money in the Bank briefcase */
+ if(!ON()&&S.card.ai)try{aiCash('ai',S.card.ai,show)}catch(e){console.warn(e)}
  if(!ON()){const ams=S.card.ai.filter(sl=>sl.k==='match'&&sl.d&&validMatch(sl.d));ams.forEach((sl,j)=>{if(sl.d.ev&&sl.d.ev.hit)return;const main=j===ams.length-1;const g=matchEvent(sl.d,'ai',show.ppv||main,main?.45:.3);if(g)runEvAI(g,sl.d)})}
  const out={title:show.ppv?show.name:`${showNames().p}${bye?'':' vs '+showNames().ai}`,week:S.week,ppv:show.ppv,blocks:[],notes:[],fans:{},ratings:{}};
  const adj=b=>b==='ai'&&!ON()?aiq('ai').adj:0;
@@ -2905,7 +2930,7 @@ function airPair(){
   const mIdx=S.card[b].map((sl,i)=>sl.k==='match'&&sl.d&&validMatch(sl.d)&&!sl.d.sides.flat().some(id=>S.w[id].inj)?i:-1).filter(i=>i>=0);
   S.card[b].forEach((sl,si)=>{if(!sl.d)return;
    const shw=show.ppv?show.name:(showNames()[b]||show.name);
-   if(sl.k==='match'){const m=sl.d;ctx.worked=ctx.worked||new Set();if(validMatch(m)){const hurt=m.sides.flat().filter(id=>S.w[id].inj&&ctx.worked.has(id));if(hurt.length&&(b==='p'||ON()))news(`🚑 ${hurt.map(id=>S.w[id].name).join(' and ')} got hurt earlier tonight, so their second match was scrapped.`)}if(!validMatch(m)||m.sides.flat().some(id=>S.w[id].inj))return;const mctx=Object.assign({},ctx,{pos:mIdx.length>=3&&si===mIdx[mIdx.length-1]?'me':mIdx.length>=3&&si===mIdx[0]?'open':'mid'});const cc=ccFinish(m,b);const res=rateMatch(m,mctx);res.u=uStars(res.raw)+adj(b)+(m.ev?m.ev.stars:0)-(cc?cc.pen:0);res.bdx=[['In-match moments',m.ev?m.ev.stars:0],['Creative control',cc?-cc.pen:0],['House edge',adj(b)]];res.stars=clamp(res.u,.25,5);const notes=m.ev?m.ev.notes.slice():[];if(cc)notes.push(cc.note);dl.on.push(...m.sides.flat());if(si===mIdx[mIdx.length-1])dl.me.push(...m.sides.flat());if(m.title)dl.ttl.push(...m.sides.flat());{const ch=chantHit(b,m.sides.flat());if(ch){res.u+=.25;res.stars=clamp(res.u,.25,5);df+=2000;notes.push(ch);res.bdx.push(['Crowd chant',.25])}}{const sh=stashHit(m);if(sh){res.u+=.25;res.stars=clamp(res.u,.25,5);notes.push(sh);res.bdx.push(['Fresh return',.25])}}if(res.boil)notes.push(`💥 Boiling over! After weeks of talk, ${res.boil} finally got their hands on each other (+¼★, +50% heat).`);if(res.rep)notes.push(`🔁 ${res.repWhy} again — they met last week, so it builds ${res.repLight?'75% heat (a tag or multi-person rematch is a lighter repeat)':'half heat'}.`);{const db=debut(m.sides.flat().map(id=>S.w[id]),notes);if(db){res.u+=db;res.stars=clamp(res.u,.25,5);res.bdx.push(['Debut pop',db])}}const txt=matchText(m);SEG={t:`${shw} · ${txt} ${stars(res.stars)}`,win:m.nc?[]:(m.sides[m.winner]||[]),sides:m.sides};const th=m.title&&S.titles[m.title]?S.titles[m.title].holders.join('|'):null;applyMatch(m,res,mctx,notes);if(m.ev)applyEv(m.ev,notes);applyRunIn(m,res,notes);if(m.tour)tourResult(b,m,notes);if(m.type==='gauntlet')gauntletPrize(b,m,notes);{const ov=overflowRewards(b,m,res,mctx,notes,OVF_FAN_CAP(show.ppv)*(ctx.allin?1.5:1)-(inf.ovFans||0));if(ov.o){inf.ovf+=ov.o;df+=ov.fans;inf.ovFans=(inf.ovFans||0)+ov.fans}}try{ocAfter(b,m,res,notes)}catch(e){console.warn(e)}try{pitchSeg({kind:'match',sides:m.sides,stars:res.stars,pos:mctx.pos,title:m.title||null,won:m.nc?[]:m.sides[m.winner]},notes)}catch(e){console.warn(e)}SEG=null;segs.push({txt,sub:matchSub(m),stars:res.stars,notes,bd:bdReveal(res)});v.push(res.stars);meta.push(segMeta(sl,res.stars));
+   if(sl.k==='match'){const m=sl.d;spHeal(m);ctx.worked=ctx.worked||new Set();if(validMatch(m)){const hurt=m.sides.flat().filter(id=>S.w[id].inj&&ctx.worked.has(id));if(hurt.length&&(b==='p'||ON()))news(`🚑 ${hurt.map(id=>S.w[id].name).join(' and ')} got hurt earlier tonight, so their second match was scrapped.`)}if(!validMatch(m)||m.sides.flat().some(id=>S.w[id].inj))return;const mctx=Object.assign({},ctx,{pos:mIdx.length>=3&&si===mIdx[mIdx.length-1]?'me':mIdx.length>=3&&si===mIdx[0]?'open':'mid'});const cc=ccFinish(m,b);const res=rateMatch(m,mctx);res.u=uStars(res.raw)+adj(b)+(m.ev?m.ev.stars:0)-(cc?cc.pen:0);res.bdx=[['In-match moments',m.ev?m.ev.stars:0],['Creative control',cc?-cc.pen:0],['House edge',adj(b)]];res.stars=clamp(res.u,.25,5);const notes=m.ev?m.ev.notes.slice():[];if(cc)notes.push(cc.note);dl.on.push(...m.sides.flat());if(si===mIdx[mIdx.length-1])dl.me.push(...m.sides.flat());if(m.title)dl.ttl.push(...m.sides.flat());{const ch=chantHit(b,m.sides.flat());if(ch){res.u+=.25;res.stars=clamp(res.u,.25,5);df+=2000;notes.push(ch);res.bdx.push(['Crowd chant',.25])}}{const sh=stashHit(m);if(sh){res.u+=.25;res.stars=clamp(res.u,.25,5);notes.push(sh);res.bdx.push(['Fresh return',.25])}}if(res.boil)notes.push(`💥 Boiling over! After weeks of talk, ${res.boil} finally got their hands on each other (+¼★, +50% heat).`);if(res.rep)notes.push(`🔁 ${res.repWhy} again — they met last week, so it builds ${res.repLight?'75% heat (a tag or multi-person rematch is a lighter repeat)':'half heat'}.`);{const db=debut(m.sides.flat().map(id=>S.w[id]),notes);if(db){res.u+=db;res.stars=clamp(res.u,.25,5);res.bdx.push(['Debut pop',db])}}const txt=matchText(m);SEG={t:`${shw} · ${txt} ${stars(res.stars)}`,win:m.nc?[]:(m.sides[m.winner]||[]),sides:m.sides};const th=m.title&&S.titles[m.title]?S.titles[m.title].holders.join('|'):null;applyMatch(m,res,mctx,notes);if(m.ev)applyEv(m.ev,notes);applyRunIn(m,res,notes);if(m.tour)tourResult(b,m,notes);if(m.type==='gauntlet')gauntletPrize(b,m,notes);if(m.type==='rumble')rumblePrize(b,m,notes);if(m.type==='mitb')mitbPrize(b,m,notes);if(m.cash)try{cashAfter(b,m,res,notes,mctx)}catch(e){console.warn(e)}{const ov=overflowRewards(b,m,res,mctx,notes,OVF_FAN_CAP(show.ppv)*(ctx.allin?1.5:1)-(inf.ovFans||0));if(ov.o){inf.ovf+=ov.o;df+=ov.fans;inf.ovFans=(inf.ovFans||0)+ov.fans}}try{ocAfter(b,m,res,notes)}catch(e){console.warn(e)}try{pitchSeg({kind:'match',sides:m.sides,stars:res.stars,pos:mctx.pos,title:m.title||null,won:m.nc?[]:m.sides[m.winner]},notes)}catch(e){console.warn(e)}SEG=null;segs.push({txt,sub:matchSub(m),stars:res.stars,notes,bd:bdReveal(res)});v.push(res.stars);meta.push(segMeta(sl,res.stars));
     /* what the show delivered, for the network's mandates and the year-end awards */
     const ws=m.sides.flat().map(id=>S.w[id]);if(ws.some(w=>w.g==='F'))inf.women++;inf.nm++;inf.lo=Math.min(inf.lo,res.stars);if(m.title)inf.title++;if(m.type==='tag'||m.type==='trios'||m.type==='tag8'||m.sides[0].length>1)inf.tag++;if(stipKey(m)!=='std')inf.stip++;if(si===mIdx[mIdx.length-1]){inf.me=res.stars;if(!S.meh)S.meh={};S.meh[b]=((S.meh[b]||[]).filter(x=>AW()-x.w<4).concat([{w:AW(),ids:m.sides.flat()}]))}if(res.stars>=3&&ws.some(w=>w.rookie&&w.own===b))inf.rk=true;
     if(th!=null){const t=S.titles[m.title];const now=t.holders.join('|');if(now!==th&&t.holders.length&&S.w[t.holders[0]].own===b)inf.newch=true;if(now===th&&t.kind!=='singles'&&!m.nc&&t.holders.length&&S.w[t.holders[0]].own===b)inf.tagdef=true}
@@ -2980,7 +3005,7 @@ function popTaper(){const W=S.popW;if(!W)return;Object.values(S.w).forEach(w=>{c
 function popUpkeep(){const a=AW();Object.values(S.w).forEach(w=>{if(!w.own||w.inj||w.pop<UPKEEP_AT||w.feat===a)return;w.pop=clamp(w.pop-.4*(w.pop-80)/10*(w.carry===a?.5:1),1,100)})}
 function popSnap(){S.popW={};Object.values(S.w).forEach(w=>S.popW[w.id]=Math.round(w.pop*100)/100)}
 function endWeek(notes){
- const wk=S.week;const T=new Set(S.touched);popTaper();popUpkeep();beefTick(notes);
+ const wk=S.week;const T=new Set(S.touched);popTaper();popUpkeep();beefTick(notes);try{spWeek(notes)}catch(e){console.warn(e)}
  bothSides(()=>{S.training=S.training.filter(t=>S.w[t.id]&&S.w[t.id].own==='p');
  S.training.forEach(t=>{const w=S.w[t.id];if(w.inj)return;if(t.f==='ring')w.ring=Math.min(Math.max(w.ring,w.pot),w.ring+Math.max(.3,(w.pot-w.ring)*.06));else w.mic=Math.min(Math.max(w.mic,w.potM),w.mic+Math.max(.3,(w.potM-w.mic)*.06));w.fat=clamp(w.fat+6,0,100)})});
  if(!ON())ownList('ai').filter(w=>!w.inj&&w.pot>w.ring).sort((a,b)=>(b.pot-b.ring)-(a.pot-a.ring)).slice(0,2).forEach(w=>w.ring=Math.min(w.pot,w.ring+Math.max(.3,(w.pot-w.ring)*.06)));
@@ -3382,7 +3407,7 @@ function inaugCard(){const v=inaugList();if(!v.length||S.phase!=='season')return
 const GRIP='<span class="grip" aria-hidden="true"></span>';
 function dgA(i){return `data-dg="slot:${i}" data-dp="slot:${i}"`}
 function dnm(w,pos){return `<span class="dn" data-dg="${pos}" data-dp="${pos}">${alSpan(w)}</span>`}
-function vsLineD(m,i){if(ocPending(m)){const I=ocIssuer(m);return I?`${dnm(I,`w:${i}:0:0`)} <span class="muted">· open challenge</span>`:'Open challenge'}return m.sides.map((s,si)=>s.every(Boolean)?s.map((id,pi)=>dnm(S.w[id],`w:${i}:${si}:${pi}`)).join(' &amp; '):'TBD').join(' <span class="muted">vs</span> ')}
+function vsLineD(m,i){if(ocPending(m)){const I=ocIssuer(m);return I?`${dnm(I,`w:${i}:0:0`)} <span class="muted">· open challenge</span>`:'Open challenge'}if(isSp(m))return m.sides.map((s,si)=>s[0]&&S.w[s[0]]?dnm(S.w[s[0]],`w:${i}:${si}:0`):'TBD').join('<span class="muted">, </span>');return m.sides.map((s,si)=>s.every(Boolean)?s.map((id,pi)=>dnm(S.w[id],`w:${i}:${si}:${pi}`)).join(' &amp; '):'TBD').join(' <span class="muted">vs</span> ')}
 /* a wrestler's top rival on your roster who passes ok(). Stale feuds count for less. */
 function rivalFor(id,ok){let best=null,bv=0;for(const k in S.heat){const h=S.heat[k];if(h<5)continue;const p=k.split('|');if(!p.includes(id))continue;const oid=p[0]===id?p[1]:p[0];const o=S.w[oid];if(!o||o.own!=='p'||o.inj||!ok(o))continue;const v=h*(isStale(id,oid)?.5:1);if(v>bv){bv=v;best=o}}return best}
 function edAutoRival(si,id){const m=ED.m;const per=MT[m.type].per;const tgt=m.sides.findIndex((s,i)=>i!==si&&s.every(x=>!x));if(tgt<0)return;
@@ -3540,9 +3565,9 @@ function bookView(){const sh=curShow();const c=S.card.p;const ready=c.every(sl=>
    return `<button class="slot done${me}" ${dgA(i)} onclick="openMatch(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">${lbl}${sl.d.tour&&TOURS[sl.d.tour.k]?` · ${TOURS[sl.d.tour.k].i} ${esc(TOURS[sl.d.tour.k].n)} ${esc(sl.d.tour.lab)}`:''}${pr?(pr.kind==='contract'?' · Contracted':pr.kind==='shot'?' · Earned title shot':' · Promised'):''}</div><div><b>${sl.d.tour?vsLine(sl.d):vsLineD(sl.d,i)}</b></div>${slotTags(sl.d,sh.ppv)}<div class="muted">${esc(matchSub(sl.d))} · Winner: ${esc(sideName(sl.d.sides[sl.d.winner]))}</div><div class="tellrow">${tellHtml(r)}</div></button>`}
   if(sl.k==='promo'){if(!sl.d)return `<button class="slot ${sl.opt?'opt':''}" ${dgA(i)} onclick="openPromo(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">${sl.opt?'Bonus promo (optional)':'Promo segment'}</div><div class="add">+ Book a promo${sl.opt?' — or leave it empty':''}</div></button>`;
    const p=sl.d;const pdb=debutTag([S.w[p.a],p.b&&S.w[p.b]].filter(Boolean),sh.ppv);return `<button class="slot done" ${dgA(i)} onclick="openPromo(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">Promo · ${PT[p.type].n}</div><div><b>${dnm(S.w[p.a],`pw:${i}:a`)}${p.b&&S.w[p.b]?' <span class="muted">&amp;</span> '+dnm(S.w[p.b],`pw:${i}:b`):''}</b></div>${(p.b&&S.w[p.b]&&heatOf(p.a,p.b)>=1)||pdb?`<div class="tags">${pdb}${p.b&&S.w[p.b]&&heatOf(p.a,p.b)>=1?`<span class="fdt t${heatTier(heatOf(p.a,p.b))+1}">Heat ${Math.round(heatOf(p.a,p.b))}</span>`:''}</div>`:''}<div class="muted">Plays out live when you go live</div></button>`}
-  if(sl.k==='xo'){const d=sl.d;return `<button class="slot ${d?'done':'opt'}" onclick="openXo(${i})"><span class="num">${i+1}</span><div class="lbl">🚪 Forbidden Door dream match (optional)</div>${d&&S.w[d.a]&&S.w[d.b]?`<div><b>${alSpan(S.w[d.a])} <span class="muted">vs</span> ${alSpan(S.w[d.b])}</b></div><div class="muted">First time ever · ${esc(nameOf(S.w[d.b].own||'ai'))}'s star · the winner is decided in the ring</div>`:`<div class="add">+ Pick one of yours vs one of ${esc(S.rival)}'s</div>`}</button>`}
+  if(sl.k==='xo'){const d=sl.d;return `<button class="slot ${d?'done':'opt'}" onclick="openXo(${i})"><span class="num">${i+1}</span><div class="lbl">⚔️ ${esc(PPVS[FD_WEEK])} dream match (optional)</div>${d&&S.w[d.a]&&S.w[d.b]?`<div><b>${alSpan(S.w[d.a])} <span class="muted">vs</span> ${alSpan(S.w[d.b])}</b></div><div class="muted">First time ever · ${esc(nameOf(S.w[d.b].own||'ai'))}'s star · the winner is decided in the ring</div>`:`<div class="add">+ Pick one of yours vs one of ${esc(S.rival)}'s</div>`}</button>`}
   const d=sl.d;return `<button class="slot ${d?'done':''}" onclick="openChal(${i})"><span class="num">${i+1}</span><div class="lbl">Title challenge (optional)</div>${d?`<div><b>${esc(S.w[d.c].name)}</b> challenges for the <b>${esc(S.titles[d.title].n)}</b> title</div>`:'<div class="add">+ Challenge for a title the rival brand holds</div>'}</button>`}).join('');
- const um=unmetPromises(c);return `${inaugCard()}${poster(sh,sh.ppv?`<div class="venue mt" style="color:#e9d9b0">Your full PPV card</div>`:'',{kick:`Now booking · Week ${S.week}`,compact:true})}${um.length?`<div class="card warn">${um.map(pr=>`<div>⚠️ Fans were ${pr.kind==='contract'?'contracted':'promised'} <b>${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)}</b> this week. Skip it and you'll lose fans and morale.</div>`).join('')}</div>`:''}${rivalAdHtml('line')}${weekGoalsCard()}${mandCard()}${dealBookCard(c)}${typeof conBook==='function'?conBook():''}<div class="row" style="gap:8px">${c.some(sl=>!sl.d&&!sl.opt)||c.some(sl=>!sl.d&&sl.k==='promo')?`<button class="btn sec" style="margin:0" onclick="suggestFill()">✨ Suggest the rest</button>`:''}${c.some(sl=>sl.d&&!(sl.k==='match'&&(sl.d.tour||promiseOf(sl.d))))?`<button class="btn ghost" style="margin:0" onclick="clearCard()">Clear card</button>`:''}</div><div class="h small" style="margin-top:14px">The running order</div><p class="muted tiny center dghint">Drag segments to reorder, or drag wrestlers to swap.</p>${slots}${flowCard(sh)}${prodCard(sh)}${feudBoard()}${lockerRoom()}
+ const um=unmetPromises(c);return `${inaugCard()}${poster(sh,sh.ppv?`<div class="venue mt" style="color:#e9d9b0">Your full PPV card</div>`:'',{kick:`Now booking · Week ${S.week}`,compact:true})}${um.length?`<div class="card warn">${um.map(pr=>`<div>⚠️ Fans were ${pr.kind==='contract'?'contracted':'promised'} <b>${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)}</b> this week. Skip it and you'll lose fans and morale.</div>`).join('')}</div>`:''}${rivalAdHtml('line')}${weekGoalsCard()}${mandCard()}${dealBookCard(c)}${typeof conBook==='function'?conBook():''}${typeof mitbBook==='function'?mitbBook():''}<div class="row" style="gap:8px">${c.some(sl=>!sl.d&&!sl.opt)||c.some(sl=>!sl.d&&sl.k==='promo')?`<button class="btn sec" style="margin:0" onclick="suggestFill()">✨ Suggest the rest</button>`:''}${c.some(sl=>sl.d&&!(sl.k==='match'&&(sl.d.tour||promiseOf(sl.d))))?`<button class="btn ghost" style="margin:0" onclick="clearCard()">Clear card</button>`:''}</div><div class="h small" style="margin-top:14px">The running order</div><p class="muted tiny center dghint">Drag segments to reorder, or drag wrestlers to swap.</p>${slots}${flowCard(sh)}${prodCard(sh)}${feudBoard()}${lockerRoom()}
  ${partyOn()?partyBookBtn(ready):ON()&&S.online.booked.p?`<div class="card"><b>Card locked in ✓</b><div class="muted">It airs when ${esc(S.rival)} books ${sh.ppv?'theirs':esc(sh.theirs)}.</div></div>`:`<button class="btn live" ${ready&&myTurn()?'':'disabled'} onclick="goLive()">${ON()&&!S.online.booked.ai?'Go live & lock in ▸':'Go live ▸'}</button>`}<p class="muted center">${ready?'':'Fill every slot to go live. '}${esc(S.rival)} books their own ${sh.ppv?'card':'show, '+esc(sh.theirs)}. The best overall show wins the week.${ON()&&!S.online.booked.p&&!S.online.booked.ai?' Your segments play out now; the ratings come in once they book too.':''}</p>`}
 function prodCard(sh){const k=prodOf('p',sh);const sc=stipCost(S.card.p);const bank=S.money.p;const pc=prodCost(k,sh);
  const est=sh.ppv?ppvGross(S.fans.p,3.5,S.week===ALLIN_WEEK):0;
@@ -3657,7 +3682,7 @@ function renderOpenEd(keep){const {m}=ED;const sh=curShow();const I=ocIssuer(m);
  const card=S.card.p.map((x,j)=>j===ED.i?null:x);if(I&&m.open.for!==I.id){const h=ocHope(I,'p',card);m.open.for=I.id;m.open.hope=h?h.id:null}
  const hope=m.open.hope&&S.w[m.open.hope];const et=I?eligibleTitles(m):[];if(m.title&&!et.includes(m.title))m.title='';
  const slot0=I?wcard(I,{on:'edPick(0,0)',info:'The challenger'}):emptySlot('edPick(0,0)','Challenger');
- openModal(`<div class="h mhd">Book a match</div><div class="chips">${Object.entries(MT).map(([k,t])=>`<button class="chip ${k===m.type?'on':''}" onclick="edType('${k}')">${t.n}</button>`).join('')}</div>
+ openModal(`<div class="h mhd">Book a match</div><div class="chips">${Object.entries(MT).filter(([k,t])=>!t.sp).map(([k,t])=>`<button class="chip ${k===m.type?'on':''}" onclick="edType('${k}')">${t.n}</button>`).join('')}</div>
  <div class="note tiny">🎤 Pick a challenger and throw the door open. Someone answers — from your roster or the free agents — usually someone at the challenger's level. You'll find out who live, then call the finish from gorilla. A free agent who impresses can be signed at a discount afterwards.</div>
  <div class="vsrow"><div class="vscol">${slot0}</div><div class="vs">VS</div><div class="vscol"><div class="wc empty ocq"><span>?</span><small>Whoever answers</small></div></div></div>
  ${I?`<div class="card" style="margin:10px 0"><div class="tiny muted">📣 The crowd is hoping for</div>${hope?`<div class="row" style="gap:8px;margin-top:4px">${face(hope)}<span><b>${esc(hope.name)}</b> <span class="muted tiny">· POP ${Math.round(hope.pop)}${hope.own?'':' · free agent'}</span></span></div><div class="muted tiny" style="margin-top:6px">Give them that (or someone bigger) and the place erupts. Someone they didn't want falls flat.${hope.own==='p'?` Booking ${esc(hope.name)} elsewhere on the card means they can't answer.`:''}</div>`:'<div class="muted">Nobody in particular — any answer will do.</div>'}</div>`:''}
@@ -3675,19 +3700,19 @@ function renderMatchEd(keep){if(ED.m.type==='open')return renderOpenEd(keep);con
  if(per===1)sides=`<div class="vsrow${m.sides.length>4?' many':''}">${m.sides.map((s,si)=>`${si&&m.sides.length===2?'<div class="vs">VS</div>':''}<div class="vscol">${slot(si,0)}${crown(si)}</div>`).join('')}</div>`;
  else sides=m.sides.map((s,si)=>{const u=S.teams.filter(t=>t.m.filter(id=>av.some(w=>w.id===id)).length>=per);
   return `${si?'<div class="vs">VS</div>':''}<div class="side">${u.length?`<div class="tsel">${dd('team'+si,{title:'Quick-pick a team',sub:`${u.length} available`,cls:'sm',rerender:()=>renderMatchEd(true),opts:u.map(t=>({t:esc(t.n),sub:t.m.filter(id=>av.some(w=>w.id===id)).map(id=>esc(S.w[id].name)).join(', '),right:t.type==='team'?'Tag team':'Faction',pick:()=>edTeam(si,t.id)}))})}</div>`:''}<div class="row sb"><span class="h small" style="margin:0">Side ${si?'B':'A'}</span>${crown(si)}</div><div class="trow">${s.map((_,pi)=>slot(si,pi)).join('')}</div></div>`}).join('');
- const TD=m.tour&&TOURS[m.tour.k];
- openModal(`<div class="h mhd">${TD?`${TD.i} ${esc(TD.n)} · ${esc(m.tour.lab)}`:'Book a match'}</div>${ED.auto&&m.sides.flat().includes(ED.auto)?`<div class="note tiny">${esc(S.w[ED.auto].name)} was added as the rival. Tap their card to change it.</div>`:''}
- ${TD?`<div class="note tiny">The bracket is set — you decide who advances${m.tour.k==='c2'?'. Continental Crown rules: no run-ins':''}.</div>`:`<div class="chips">${Object.entries(MT).map(([k,t])=>`<button class="chip ${k===m.type?'on':''}" onclick="edType('${k}')">${t.n}</button>`).join('')}</div>`}
+ const TD=m.tour&&TOURS[m.tour.k];const SD=m.sp&&SPK[m.sp];
+ openModal(`<div class="h mhd">${TD?`${TD.i} ${esc(TD.n)} · ${esc(m.tour.lab)}`:SD?`${SD.i} ${esc(SD.n)}`:'Book a match'}</div>${ED.auto&&m.sides.flat().includes(ED.auto)?`<div class="note tiny">${esc(S.w[ED.auto].name)} was added as the rival. Tap their card to change it.</div>`:''}
+ ${SD?`<div class="note tiny">${m.type==='rumble'?`${SD.i} ${m.sides.length} enter one at a time and go over the top rope. Pick the entrants, who wins and who's eliminated last — everyone else stays protected. The winner earns a world title shot at ${esc(PPVS[WM_WEEK]||'WrestleMania')} (against your own champion, or as your title challenge if the rival holds the belt).`:`${SD.i} A ${m.sides.length}-way ladder match for the briefcase. The winner can cash in for a world title shot any time in the next year — even straight after a match the champion is in. Flyers and Daredevils steal the show.`}</div>`:''}${TD?`<div class="note tiny">The bracket is set — you decide who advances${m.tour.k==='c2'?'. Continental Crown rules: no run-ins':''}.</div>`:SD?'':`<div class="chips">${Object.entries(MT).filter(([k,t])=>!t.sp).map(([k,t])=>`<button class="chip ${k===m.type?'on':''}" onclick="edType('${k}')">${t.n}</button>`).join('')}</div>`}
  ${m.type==='gauntlet'?'<div class="note tiny">🎰 Six enter one at a time, and the first to be pinned or submitted loses — everyone else stays protected. Flyers and showmen shine in the chaos. With six people involved, heat builds slowly, but the winner earns a title shot at the next PPV against your top champion in their division.</div>':''}
  ${sides}${dup?'<div class="err">Someone is booked twice.</div>':''}${matchupHtml(m,sh.ppv)}
- ${m.type==='gauntlet'?'':`<label>Stipulation</label>${stipDD(m,sh,complete&&!dup)}`}
+ ${m.type==='gauntlet'||m.type==='rumble'?'':m.type==='mitb'?'<label>Stipulation</label><div class="muted tiny">Ladder match — the briefcase hangs high above the ring.</div>':`<label>Stipulation</label>${stipDD(m,sh,complete&&!dup)}`}
  <label>Championship</label>${titleDD(m,et,sh,complete&&!dup)}
- <label>Finish</label>${finDD(m,sh,complete&&!dup)}${complete&&!dup?pinRow(m):''}
+ <label>Finish</label>${finDD(m,sh,complete&&!dup)}${complete&&!dup?pinRow(m):''}${cashRow(m,complete&&!dup)}
  ${TD&&m.tour.k==='c2'?'':`<label>Run-in</label>${riSection(m,sh,complete&&!dup)}`}${boRow(m,sh,complete&&!dup)}
- ${(()=>{const card=S.card.p.map((x,j)=>j===ED.i?{k:'match',d:complete?m:null}:x);const um=unmetPromises(card);return um.length?`<div class="err mt">⚠️ ${um.map(pr=>`${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)} was ${pr.kind==='contract'?'contracted':'promised'} for this week`).join('; ')}. Leaving it off the card breaks the promise.</div>`:''})()}${proj}<div class="row mt">${TD?'':'<button class="btn sec" onclick="clearSlot()">Clear</button>'}<button class="btn" ${complete&&!dup?'':'disabled'} onclick="saveMatch()">Save</button></div><button class="btn ghost" onclick="closeModal()">Cancel</button>`,keep)}
+ ${(()=>{const card=S.card.p.map((x,j)=>j===ED.i?{k:'match',d:complete?m:null}:x);const um=unmetPromises(card);return um.length?`<div class="err mt">⚠️ ${um.map(pr=>`${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)} was ${pr.kind==='contract'?'contracted':'promised'} for this week`).join('; ')}. Leaving it off the card breaks the promise.</div>`:''})()}${proj}<div class="row mt">${TD||SD?'':'<button class="btn sec" onclick="clearSlot()">Clear</button>'}<button class="btn" ${complete&&!dup?'':'disabled'} onclick="saveMatch()">Save</button></div><button class="btn ghost" onclick="closeModal()">Cancel</button>`,keep)}
 /* v152: blow a hot feud off on weekly TV */
 function boPairs(m){const out=[];if(!m||!m.sides||m.sides.length<2)return out;for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)m.sides[i].forEach(a=>m.sides[j].forEach(b=>{if(!a||!b||!S.w[a]||!S.w[b])return;const fi=feudInfo(a,b);if(fi&&fi.h>=35&&!fi.paid)out.push([a,b,fi.h])}));return out}
-function boRow(m,sh,ok){if(!ok||sh.ppv||m.tour||m.type==='gauntlet'){if(m.bo&&!sh.ppv)delete m.bo;return ''}const l=boPairs(m);if(!l.length){delete m.bo;return ''}
+function boRow(m,sh,ok){if(!ok||sh.ppv||m.tour||m.type==='gauntlet'||isSp(m)){if(m.bo&&!sh.ppv)delete m.bo;return ''}const l=boPairs(m);if(!l.length){delete m.bo;return ''}
  const nm=l.map(([a,b])=>`${esc(S.w[a].name)} vs ${esc(S.w[b].name)}`).join(', ');const gim=stipKey(m)!=='std';
  return `<label>Blow-off</label><div class="card" style="margin:0 0 6px;padding:10px 12px"><div class="row sb" style="gap:10px"><div style="min-width:0"><b>💥 End the feud tonight</b><div class="muted tiny">${nm} (🔥${Math.round(Math.max(...l.map(x=>x[2])))})</div></div><button class="mini ${m.bo?'on':''}" onclick="ED.m.bo=!ED.m.bo;if(!ED.m.bo)delete ED.m.bo;renderMatchEd(true)">${m.bo?'✓ Blow-off':'Make it the blow-off'}</button></div>
  ${m.bo?`<div class="tiny" style="margin-top:6px">A clean win (or an upset) ends the feud here. ${gim?`<span class="good">A ${esc(STIPS[stipKey(m)].n)} makes it a fitting end.</span>`:'<span class="gold">Tip: a gimmick stipulation makes it a more fitting end (bigger morale and popularity boost).</span>'} A dirty finish or no contest leaves it unsettled. Either way it's a smaller payoff than ending it on a PPV.</div>`:''}</div>`}
@@ -3718,7 +3743,7 @@ function pinOf(m){const l=pinCands(m);return m.pin&&l.includes(m.pin)?m.pin:pinA
 function pinRub(m,id){const win=m.sides[m.winner]||[];const wp=Math.min(...win.map(x=>S.w[x].pop));const l=pinCands(m);const top=Math.max(...l.map(x=>S.w[x].pop));const pp=S.w[id].pop;const lp=pp+(top-pp)*.3;const gp=lp-wp;
  return gp>20?['good','Big rub for the winner']:gp>5?['good','Some rub for the winner']:gp>0?['','A little rub for the winner']:['','No rub — the winner is the bigger name']}
 function pinRow(m){const l=pinCands(m);if(l.length<2)return '';const cur=pinOf(m);const auto=!m.pin||!l.includes(m.pin);const W=S.w[cur];const [rc,rt]=pinRub(m,cur);
- return `<label>Who takes the pin</label>`+dd('pin',{title:esc(W.name)+(auto?' <span class="muted">(lowest billed)</span>':''),sub:`Takes the loss — everyone else stays protected · ${rt}`,rerender:()=>renderMatchEd(true),
+ return `<label>${m.type==='rumble'?'Who\'s eliminated last':m.type==='mitb'?'Who comes closest (takes the loss)':'Who takes the pin'}</label>`+dd('pin',{title:esc(W.name)+(auto?' <span class="muted">(lowest billed)</span>':''),sub:`Takes the loss — everyone else stays protected · ${rt}`,rerender:()=>renderMatchEd(true),
   opts:l.slice().sort((a,b)=>S.w[a].pop-S.w[b].pop).map(id=>{const w=S.w[id];const [c,t]=pinRub(m,id);const cc=w.own==='p'&&typeof ccOn==='function'&&ccOn(w);
    return {t:esc(w.name),right:'POP '+Math.round(w.pop),on:id===cur,sub:`${t}${cc?' · 🎬 has creative control — won\'t agree to it':''}${(w.strk||0)<=-3?` · already lost ${-w.strk} straight`:''}`,pick:()=>{ED.m.pin=id;renderMatchEd(true)}}})})}
 /* ---- in-game dropdowns for the match editor (stipulation + championship) ---- */
@@ -3730,7 +3755,7 @@ function ddDelta(d){if(d==null||isNaN(d))return '';return nudge(d/STAR_PER)}
  specialties are their best (up to SPEC_TOP) stipulations available for this match type and show, among those that suit
  their style (+4 or more in the stip's style table). Ones that fight their style (−3 or worse) are flagged too. */
 const SPEC_MIN=4,SPEC_TOP=3,TOUGH_MAX=-3;
-function stipAvail(st,m,ppv){return (!st.ppv||ppv)&&(!st.mt||st.mt.includes(m.type))&&m.type!=='gauntlet'}
+function stipAvail(st,m,ppv){return (!st.ppv||ppv)&&(!st.mt||st.mt.includes(m.type))&&!SP_STIP[m.type]}
 function wSpecs(w,m,ppv){return Object.entries(STIPS).filter(([k,st])=>k!=='std'&&stipAvail(st,m,ppv)&&((st.b||{})[w.st]||0)>=SPEC_MIN).sort((a,b)=>(b[1].b[w.st]-a[1].b[w.st])||((a[1].c||0)-(b[1].c||0))).slice(0,SPEC_TOP).map(e=>e[0])}
 function stipFits(st,m,ppv){if(ppv===undefined)ppv=!!(typeof curShow==='function'&&curShow().ppv);const k=Object.keys(STIPS).find(x=>STIPS[x]===st);const ws=(m&&m.sides?m.sides.flat():[]).map(id=>S.w[id]).filter(Boolean);const b=(st&&st.b)||{};
  return {spec:ws.filter(w=>wSpecs(w,m,ppv).includes(k)),tough:ws.filter(w=>(b[w.st]||0)<=TOUGH_MAX)}}
@@ -3789,11 +3814,11 @@ function riPick(){const m=ED.m;const parts=m.sides.flat().filter(Boolean);openPi
 function edPick(si,pi){const m=ED.m;const ub=usedIn('p',ED.i);if(m.tour)return toast('The bracket is set — tap 👑 to choose who advances.');const cur=m.sides[si][pi];const taken=new Set(m.sides.flat().filter(x=>x&&x!==cur));const fg=m.sides.flat().find(x=>x&&x!==cur);
  const opps=m.sides.filter((s,i)=>i!==si).flat().filter(x=>x&&x!==cur).map(x=>S.w[x]);
  openPicker({title:'Choose a wrestler',cur,clear:!!cur,bk:true,except:ED.i,rival:w=>pkRival(w,opps),bkNote:`Anyone can work up to ${DD_MAX} matches a show — the second costs ${DD_FAT}× the stamina.`,lockPool:()=>{const f=fullIn('p',ED.i);return ownList('p').filter(w=>!w.inj&&f.has(w.id)&&!taken.has(w.id))},lockWhy:w=>{const b=bookedOn(w.id,ED.i);return b.includes('Title challenge')?'Title challenge · no 2nd match':b.includes('Dream match')?'Dream match · no 2nd match':`Already in ${DD_MAX} matches`},fl:w=>activeFeuds(w,opps.length?opps:null),g:'all',sort:opps.length?'chem':'ovr',chem:opps.length?w=>opps.reduce((a,o)=>a+chemOpp(w,o),0)/opps.length:null,pool:()=>avForMatch(ED.i).filter(w=>!taken.has(w.id)),info:w=>mInfo(w,si),feud:w=>opps.length?feudVs(w,opps):hotFeud(w),gain:w=>Math.round(fatGain(w,m,curShow().ppv)*(ub.has(w.id)?DD_FAT:1)),onPick:id=>{m.sides[si][pi]=id;if(id&&id!==cur)edAutoRival(si,id);renderMatchEd(false)},back:()=>renderMatchEd(false)})}
-function edType(t){if(ED.m.tour)return;const o=ED.m.sides;if(t==='open'){ED.m.type='open';ED.m.sides=[[(o[0]||[])[0]||''],['']];ED.m.winner=0;ED.m.title='';ED.m.fin='clean';delete ED.m.ri;if(!stipOk(ED.m.stip||'std','singles',curShow().ppv))ED.m.stip='std';ED.m.open={};renderMatchEd(true);return}if(ED.m.type==='open'){delete ED.m.open}ED.m.type=t;if(!stipOk(ED.m.stip||'std',t,curShow().ppv))ED.m.stip='std';ED.m.sides=Array.from({length:MT[t].sides},(_,i)=>Array.from({length:MT[t].per},(_,j)=>(o[i]||[])[j]||''));ED.m.winner=0;ED.m.title='';renderMatchEd(true)}
+function edType(t){if(ED.m.tour||ED.m.sp)return;const o=ED.m.sides;if(t==='open'){ED.m.type='open';ED.m.sides=[[(o[0]||[])[0]||''],['']];ED.m.winner=0;ED.m.title='';ED.m.fin='clean';delete ED.m.ri;if(!stipOk(ED.m.stip||'std','singles',curShow().ppv))ED.m.stip='std';ED.m.open={};renderMatchEd(true);return}if(ED.m.type==='open'){delete ED.m.open}ED.m.type=t;if(!stipOk(ED.m.stip||'std',t,curShow().ppv))ED.m.stip='std';ED.m.sides=Array.from({length:MT[t].sides},(_,i)=>Array.from({length:MT[t].per},(_,j)=>(o[i]||[])[j]||''));ED.m.winner=0;ED.m.title='';renderMatchEd(true)}
 function edP(si,pi,v){ED.m.sides[si][pi]=v;renderMatchEd(true)}
 function edTeam(si,tid){const t=S.teams.find(x=>x.id===tid);if(!t)return;const av=avForMatch(ED.i);const mem=t.m.filter(id=>av.some(w=>w.id===id)).slice(0,MT[ED.m.type].per);ED.m.sides[si]=mem;renderMatchEd(true)}
 function saveMatch(){const ri=ED.m.ri;if(ri){const all=ED.m.sides.flat();if(!ri.x||!ri.t||!all.includes(ri.t)||all.includes(ri.x))delete ED.m.ri;else if(ri.k==='cost'&&(ED.m.sides[ED.m.winner]||[]).includes(ri.t))return toast(`${S.w[ri.t].name} wins this match — they can't be cost it. Pick a new target or change the winner.`)}S.card.p[ED.i].d=ED.m;save();closeModal();render()}
-function clearSlot(){if(mpLocked())return;if(S.card.p[ED.i].d&&S.card.p[ED.i].d.tour)return toast('Tournament matches stay on the card.');S.card.p[ED.i].d=null;save();closeModal();render()}
+function clearSlot(){if(mpLocked())return;if(S.card.p[ED.i].d&&S.card.p[ED.i].d.tour)return toast('Tournament matches stay on the card.');if(S.card.p[ED.i].d&&S.card.p[ED.i].d.sp)return toast(`The ${spName(S.card.p[ED.i].d)} stays on the card.`);S.card.p[ED.i].d=null;save();closeModal();render()}
 
 function openPromo(i){if(mpLocked())return;DDO=null;const sl=S.card.p[i];PE=sl.d?{i,type:sl.d.type,a:sl.d.a,b:sl.d.b||''}:{i,type:'callout',a:'',b:''};renderPromoEd(false)}
 function renderPromoEd(keep){const pt=PT[PE.type];
@@ -4018,15 +4043,18 @@ const HOWTO=`<p><b>Offers &amp; contracts:</b> free agents with 55+ popularity w
 <p><b>Who wins matters:</b> beating someone more popular than you gives you <b>the rub</b> (an upset even more so) — beating someone far below you does little. Winning streaks build momentum, and a hot streak gets the crowd invested in a wrestler's matches. Lose four in a row clean and fans stop believing in a star (enhancement talent under 45 popularity is fine). Trading clean wins back and forth within a month is 50/50 booking and cools the feud off.</p>
 <p><b>Title reigns:</b> every successful defense adds to a champion's credibility and the title's prestige, and the wrestler who ends a long reign gets a bigger boost. Swap a belt again within 3 weeks and it's a hot potato: the title loses 8 prestige and the new champ gets little out of it.</p>
 <p><b>Card position:</b> main-eventing boosts morale (and popularity after a great match). Stars who want the spotlight don't sulk — they pitch you: a main event slot or a shot at a belt. The unhappier they are, the more often they knock on your door.</p>
-<p><b>The calendar:</b> each season is a full AEW year of ${SEASON} weeks with a PPV every 4 weeks — Revolution, Dynasty, Double or Nothing, Forbidden Door, Redemption, <b>All In</b> (the midyear supershow, week ${ALLIN_WEEK}), All Out, WrestleDream, Full Gear and Worlds End, which closes the year. Then the awards and offseason, and the calendar rolls on into a new year. Plus 📺 <b>TV specials</b> (${Object.values(SPECIALS).join(', ')}) with hotter crowds, 50% bigger fan swings and better gates. <b>Forbidden Door</b> is a crossover PPV: alongside your card you can sign up to two dream matches between one of your stars and one of the rival's. Neither GM controls both sides, so the winner is decided in the ring, and the winner's brand earns extra fans (4K; a 4★+ dream match pays the losing brand 2K too).</p>
-<p><b>Tournaments</b> lock onto your card — you decide who advances. Tournament rules are about winning, not good vs evil: face vs face and heel vs heel pairings rate and build heat like face vs heel, and the repetition rule, trading-wins cooling, feud-check warnings and promised-match giveaways don't apply to bracket matches. From three weeks out until the first matches air, tap <b>Pick your field</b> on the Home screen to choose your four entrants (and the seeding for the Owen Hart Cups); if you don't, your four best are entered automatically. ♾️ The <b>Continental Classic</b> (weeks ${TOURS.c2.rr[0]}–${TOURS.c2.rr[2]}) is a round robin for your four best men (3 points a win, no run-ins), and the top two meet at Worlds End for the Continental title if your brand holds it or it's vacant. 🏆 The <b>Owen Hart Cups</b> (men's semi-finals week ${TOURS.ohc.semi}, women's week ${TOURS.ohcw.semi}, both finals at Double or Nothing) send the winners to All In with a World title shot — against your champion, or as your title challenge if the rival holds the belt. Injured entrants forfeit.</p>
-<p><b>Who takes the pin:</b> in a triple threat, 4-way, gauntlet or any tag match, only one wrestler on the losing end takes the fall — everyone else stays protected. Pick who in the match editor (the default is the lowest-billed). Pinning a bigger name gives the winner a bigger rub, and a wrestler with creative control only fights the finish if they're the one taking the pin.</p><p><b>Titles:</b> a new game splits the titles evenly between the two shows — five each, with a top men's and a top women's title on each side. Your titles start vacant and only you can crown them. A vacated title stays on its brand, and a PPV title challenge is the way to take gold from the rival.</p><p><b>Casino Gauntlet:</b> six wrestlers enter one at a time and the first to be pinned or submitted loses, so only that one takes the loss. It rates like any other multi-person match (flyers and showmen love the chaos), but it can't take a stipulation, needs a clean finish and builds heat slowly. The winner gets the rub from whoever they pinned and earns a title shot at the next PPV against your top champion in their division.</p>
+<p><b>The calendar:</b> each season is a ${SEASON}-week year with a PPV every 4 weeks, alternating the biggest AEW and WWE shows — ${Object.values(PPVS).map(n=>n===PPVS[ALLIN_WEEK]?`<b>${n}</b> (the midyear supershow, week ${ALLIN_WEEK})`:n).join(', ')}, which closes the year. Both brands run every PPV head to head. Then the awards and offseason, and the calendar rolls on into a new year. Plus 📺 <b>TV specials</b> (${Object.values(SPECIALS).join(', ')}) with hotter crowds, 50% bigger fan swings and better gates. <b>${PPVS[FD_WEEK]}</b> is the crossover PPV: alongside your card you can sign up to two dream matches between one of your stars and one of the rival's, and in the TV weeks before it rival stars may invade your shows. Neither GM controls both sides of a dream match, so the winner is decided in the ring, and the winner's brand earns extra fans (4K; a 4★+ dream match pays the losing brand 2K too).</p>
+<p><b>WWE:</b> WWE's Raw and SmackDown stars are in the same talent pool as AEW's — draft them, sign them in free agency, put them in a ring with anyone. WWE's four world titles (Undisputed WWE, World Heavyweight, WWE Women's and WWE Women's World) sit alongside the AEW belts. Photos for WWE wrestlers search wwe.com.</p>
+<p><b>🏟️ Royal Rumble</b> (week ${RR_WEEK}): a men's Rumble (${SPK.rr.size} entrants) and a women's Rumble (${SPK.rrw.size}) lock onto your card. You pick the entrants, the winner and who's eliminated last — everyone else stays protected. The winner earns a world title shot at <b>${PPVS[WM_WEEK]}</b> against your best world champion in their division, or, if the rival holds those belts, it becomes your ${PPVS[WM_WEEK]} title challenge.</p>
+<p><b>💼 Money in the Bank</b> (week ${MITB_WEEK}): a men's (${SPK.mitb.size}) and a women's (${SPK.mitbw.size}) ladder match lock onto your card. The winner holds the briefcase for a year and can cash in on a world champion of their division on your brand at any time: book them against the champion and make it the cash-in, or — the classic — open any match the champion is in and have the holder cash in right after it, on a worn-out champion. You decide whether the cash-in works. It lifts that match (+½★ when it succeeds), and a briefcase that's never used expires at the next Money in the Bank. The rival cashes in too.</p>
+<p><b>Tournaments</b> lock onto your card — you decide who advances. Tournament rules are about winning, not good vs evil: face vs face and heel vs heel pairings rate and build heat like face vs heel, and the repetition rule, trading-wins cooling, feud-check warnings and promised-match giveaways don't apply to bracket matches. From three weeks out until the first matches air, tap <b>Pick your field</b> on the Home screen to choose your four entrants (and the seeding for the Owen Hart Cups); if you don't, your four best are entered automatically. ♾️ The <b>Continental Classic</b> (weeks ${TOURS.c2.rr[0]}–${TOURS.c2.rr[2]}) is a round robin for your four best men (3 points a win, no run-ins), and the top two meet at ${PPVS[TOURS.c2.final]} for the Continental title if your brand holds it or it's vacant. 🏆 The <b>Owen Hart Cups</b> (men's semi-finals week ${TOURS.ohc.semi}, women's week ${TOURS.ohcw.semi}, both finals at ${PPVS[TOURS.ohc.final]}) send the winners to All In with an AEW World title shot — against your champion, or as your title challenge if the rival holds the belt. Injured entrants forfeit.</p>
+<p><b>Who takes the pin:</b> in a triple threat, 4-way, gauntlet or any tag match, only one wrestler on the losing end takes the fall — everyone else stays protected. Pick who in the match editor (the default is the lowest-billed). Pinning a bigger name gives the winner a bigger rub, and a wrestler with creative control only fights the finish if they're the one taking the pin.</p><p><b>Titles:</b> a new game splits the titles evenly between the two shows — seven each, with at least one men's and one women's world title on each side (AEW's and WWE's world titles are spread across both). Your titles start vacant and only you can crown them. A vacated title stays on its brand, and a PPV title challenge is the way to take gold from the rival.</p><p><b>Casino Gauntlet:</b> six wrestlers enter one at a time and the first to be pinned or submitted loses, so only that one takes the loss. It rates like any other multi-person match (flyers and showmen love the chaos), but it can't take a stipulation, needs a clean finish and builds heat slowly. The winner gets the rub from whoever they pinned and earns a title shot at the next PPV against your top champion in their division.</p>
 <p><b>Network mandates:</b> after each PPV the TV network asks for something specific by the next one — a 4★ main event, two women's matches on one show, a new champion, a debut and so on. Deliver for a cash and fan bonus; miss it and you lose 5K fans. Check the Home or Book screen for your current one.</p>
 <p><b>🎯 Weekly goals &amp; 📣 crowd chants:</b> each week the Book screen gives you one small goal (hit it for a little cash and 3K fans — no penalty for missing it; a live ✅/🤞/⏳ line tells you if the card you've booked is on track), and the crowd starts chanting for someone on your roster. Book them in a match or promo that week and their segment gets +¼★, they gain popularity and you get 2K fans.</p>
 <p><b>Head to head:</b> in solo play the rival's card stays a surprise until the show airs. On TV, whoever's main event rates higher wins the main event war (+3K fans). When you sign a big free agent (70+ popularity), the rival may start a <b>bidding war</b>: pay 35% more (and a 20% higher salary) or let them go.</p>
 <p><b>✨ Suggest the rest</b> on the Book screen fills any empty slots with a sensible card — it keeps everything you've already booked, promised or entered in a tournament. <b>Clear card</b> wipes everything else.</p>
 <p><b>Difficulty:</b> no rival gets free stars any more. Hard rivals book like pros — they rest stars before PPVs, order their card for the ratings, protect new champions and pay off feuds cleanly. Easy rivals book sloppily.</p>
-<p><b>The offseason:</b> after Worlds End, the season ends with an awards show (Wrestler and Women's Wrestler of the Year, Breakout Star, Rookie, Tag Team, Feud, Match and Promo of the Year — winners start next season with a boost). Veterans feel Father Time: they lose a little in-ring each year and may retire. Prospects ready for the main roster (60+ in-ring) get called up with debut buzz. Re-sign anyone whose contract is running out before you start the new season.</p>`;
+<p><b>The offseason:</b> after ${PPVS[SEASON]}, the season ends with an awards show (Wrestler and Women's Wrestler of the Year, Breakout Star, Rookie, Tag Team, Feud, Match and Promo of the Year — winners start next season with a boost). Veterans feel Father Time: they lose a little in-ring each year and may retire. Prospects ready for the main roster (60+ in-ring) get called up with debut buzz. Re-sign anyone whose contract is running out before you start the new season.</p>`;
 /* the rival scouts too: harder rivals invest in better prospects more often */
 function aiScout(notes){if(ON())return;const q=aiq();const aiN=ownList('ai').length;if(aiN>=28||Math.random()>q.scout)return;const w=genProspect();if(q.tier==='top'&&w.tier==='prospect'){w.tier='bluechip';w.fee=TIERS.bluechip.cost}
  const c=w.fee+mkt(w)*4;if(S.money.ai<c*3)return;S.money.ai-=c;w.id='rk'+partyNid();w.own='ai';w.con=52;w.sal=mkt(w);w.fee=0;S.w[w.id]=w;const n=`🌱 ${S.rival} signed ${TIERS[w.tier].n.toLowerCase()} prospect ${w.name}.`;news(n);notes.push(n)}
@@ -4178,7 +4206,7 @@ function simSet(on){if(!ON()||!LMP||partyOn())return;if(!mpAvail()||!navigator.o
 /* ---- create / join ---- */
 function mpNeedSetup(){openModal(`<div class="h mhd">Online play isn't set up yet</div><p>Online leagues need a free Firebase project. Follow <b>ONLINE-SETUP.md</b> in the game's GitHub repo, paste your settings into <b>firebase-config.js</b>, and this button will light up.</p><button class="btn" onclick="closeModal()">OK</button>`)}
 let MPN=2;
-function mpHostForm(){if(!mpAvail())return mpNeedSetup();openModal(`<div class="h mhd">Host an online league</div><p class="muted">Each GM runs their own brand. Every week you go head-to-head with a different GM, and the most fans gained by Worlds End wins. Everyone books the same week at the same time, whenever suits them, and it airs once the last GM locks in. Cards stay secret until then.</p>
+function mpHostForm(){if(!mpAvail())return mpNeedSetup();openModal(`<div class="h mhd">Host an online league</div><p class="muted">Each GM runs their own brand. Every week you go head-to-head with a different GM, and the most fans gained by ${PPVS[SEASON]} wins. Everyone books the same week at the same time, whenever suits them, and it airs once the last GM locks in. Cards stay secret until then.</p>
  <label>Your GM name</label><input id="mpName" maxlength="24" value="${esc(S&&!ON()?S.gm:LS.get('tksim_name')||'')}" placeholder="Your name">
  <label>Your show's name</label><input id="mpShow" maxlength="24" value="${esc(LS.get('tksim_show')||'')}" placeholder="e.g. Monday Mayhem">
  <label>League size</label><div class="chips" id="mpN">${[2,3,4].map(n=>`<button class="chip ${MPN===n?'on':''}" onclick="MPN=${n};document.querySelectorAll('#mpN .chip').forEach((c,i)=>c.classList.toggle('on',i===${n-2}))">${n} GMs</button>`).join('')}</div>

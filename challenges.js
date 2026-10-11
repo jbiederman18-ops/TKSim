@@ -16,6 +16,8 @@ const store=()=>{try{return JSON.parse(localStorage.getItem(CS_KEY)||'{}')||{}}c
 const keep=o=>{try{localStorage.setItem(CS_KEY,JSON.stringify(o))}catch(e){}};
 const mineL=()=>ownList('p');
 const avgMor=()=>{const l=mineL();return l.length?l.reduce((a,w)=>a+w.mor,0)/l.length:100};
+/* v168: Gold Rush scales with the number of titles (7 of 10 before the WWE belts arrived, 10 of 14 now) */
+const goldT=()=>typeof S!=='undefined'&&S&&S.titles?Object.keys(S.titles).length:TITLES.length,goldN=()=>Math.ceil(goldT()*.7);
 const heldN=()=>Object.values(S.titles).filter(t=>t.holders.length&&t.holders.every(h=>S.w[h]&&S.w[h].own==='p')).length;
 const C=()=>S&&S.chal;
 const W=id=>id&&S.w[id];
@@ -43,10 +45,10 @@ const CHALS=[
  prog(){const c=C();return {txt:`Current streak ${c.run||0} · best ${c.best||0} / 6`,pct:pct(c.run||0,6)}},
  won(){return (C().run||0)>=6}},
 {id:'gold',i:'🏆',t:'Gold Rush',diff:'normal',by:32,
- d:'Five belts each to start. The rival won\'t give theirs up easily.',
- goal:'Hold 7 of the 10 championships at once by week 32. Take them on PPV with title challenges.',
- prog(){const n=heldN();return {txt:`You hold ${n} of ${Object.keys(S.titles).length} titles`,pct:pct(n,7)}},
- won(){return heldN()>=7}},
+ d:'Seven belts each to start. The rival won\'t give theirs up easily.',
+ get goal(){return `Hold ${goldN()} of the ${goldT()} championships at once by week 32. Take them on PPV with title challenges.`},
+ prog(){const n=heldN();return {txt:`You hold ${n} of ${goldT()} titles`,pct:pct(n,goldN())}},
+ won(){return heldN()>=goldN()}},
 {id:'five',i:'✨',t:'Five-Star Factory',diff:'normal',by:ALLIN_WEEK,
  d:'Fans will forgive a lot for a match they\'ll talk about for years.',
  goal:'Put on 12 matches rated 5★ or better (your own wrestlers only) before All In.',
@@ -77,7 +79,7 @@ window.CHALS=CHALS;
 window.openChallenges=function(){const rec=store();
  openModal(`<div class="h mhd">🎯 Challenge scenarios</div><p class="muted" style="margin-top:0">A solo season with one goal and a deadline. Win or lose, the save keeps going as a normal game afterward.</p>
  ${CHALS.map(c=>{const r=rec[c.id];return `<div class="card"><div class="row sb"><b>${c.i} ${esc(c.t)}</b>${r&&r.won?`<span class="tg good">✅ Beaten · wk ${r.wk}</span>`:r?'<span class="tg">Tried</span>':''}</div>
-  <p class="muted" style="margin:6px 0">${esc(c.d)}</p><div><b class="gold">Goal:</b> ${c.goal}</div><div class="muted tiny" style="margin-top:4px">${DIFFS[c.diff][0]} · deadline week ${c.by}${c.by===ALLIN_WEEK?' (All In)':c.by===SEASON?' (Worlds End)':''}</div>
+  <p class="muted" style="margin:6px 0">${esc(c.d)}</p><div><b class="gold">Goal:</b> ${c.goal}</div><div class="muted tiny" style="margin-top:4px">${DIFFS[c.diff][0]} · deadline week ${c.by}${c.by===ALLIN_WEEK?' (All In)':c.by===SEASON?` (${PPVS[SEASON]})`:''}</div>
   <button class="btn" style="margin-top:10px" onclick="chalStart('${c.id}')">Start</button></div>`}).join('')}
  <button class="btn ghost" onclick="closeModal()">Close</button>`)};
 window.chalStart=function(id){const c=CH(id);if(!c)return;

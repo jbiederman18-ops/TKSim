@@ -44,7 +44,7 @@ window.beltPaste=async function(id){let src;try{src=await clipImage()}catch(e){r
  if(!src.blob&&!src.url)return toast('No picture copied. Long-press an image and choose Copy.');if(await setBelt(id,src)){toast('🏆 Belt photo added.');openBelts()}};
 window.beltAdd=function(id){const i=fileInput();i.accept='image/*';i.onchange=async()=>{const f=i.files[0];if(!f)return;if(await setBelt(id,{blob:f})){toast('🏆 Belt photo added.');openBelts()}};i.click()};
 window.beltDel=function(id){delete IMG[K(id)];saveImg();openBelts();render()};
-const search=n=>'https://www.google.com/search?tbm=isch&q='+encodeURIComponent((/^ROH/.test(n)?'':'AEW ')+n+' championship belt');
+const search=n=>'https://www.google.com/search?tbm=isch&q='+encodeURIComponent((/^ROH|WWE/.test(n)?'':/World Heavyweight/.test(n)?'WWE ':'AEW ')+n+' championship belt');
 
 /* ---------------- the belt studio ---------------- */
 window.openBelts=function(){const l=allTitles();const have=l.filter(t=>beltImg(t.id)).length;

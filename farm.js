@@ -41,7 +41,6 @@ Krule|M|pw|h|74|50|36|84|indie||GCW|96
 Matt Riddle|M|te|f|84|74|60|86|indie||MLW|106
 Joey Janela|M|br|f|74|80|50|78|indie||GCW|109
 Joshua Bishop|M|pw|f|72|58|34|84|indie||Indies|122
-Matt Cardona|M|sh|h|72|82|58|76|indie||Indies|155
 Kerry Morton|M|sh|h|72|70|38|84|indie||Indies|169
 Trevor Lee|M|fl|h|80|62|40|84|indie||TNA|205
 Eddie Edwards|M|te|f|80|66|48|82|indie||TNA|222
