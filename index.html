@@ -932,7 +932,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v171';
+const APP_VERSION='v172';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -1995,12 +1995,12 @@ function emptySlot(on,label,attr){return `<button class="wc empty" ${attr||''} o
 /* iOS Safari can drop a detached <input type=file> while the picker is open, so keep it in the DOM. */
 let FIN=null;
 function fileInput(){if(FIN)FIN.remove();const i=document.createElement('input');i.type='file';i.style.cssText='position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0';document.body.appendChild(i);FIN=i;return i}
-async function bitmapToPhoto(blob){const bm=await createImageBitmap(blob);const W=240,H=320,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');const sc=Math.max(W/bm.width,H/bm.height);const dw=bm.width*sc,dh=bm.height*sc;x.drawImage(bm,(W-dw)/2,(H-dh)*.2,dw,dh);bm.close&&bm.close();return photoURL(c)}
+async function bitmapToPhoto(blob){const bm=await createImageBitmap(blob);const [W,H]=typeof cutWork==='function'?cutWork():[240,320],c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');const sc=Math.max(W/bm.width,H/bm.height);const dw=bm.width*sc,dh=bm.height*sc;x.drawImage(bm,(W-dw)/2,(H-dh)*.2,dw,dh);bm.close&&bm.close();return photoURL(c)}
 /* v170: a picture that's already a cut-out (see-through background) keeps its transparency */
 function photoURL(c){try{if(typeof photoHasAlpha==='function'&&photoHasAlpha(c))return c.toDataURL('image/png')}catch(e){}return c.toDataURL('image/jpeg',.7)}
 function fileToPhoto(f,isUrl){if(!isUrl&&typeof createImageBitmap==='function')return fileToPhoto0(f,false).catch(()=>bitmapToPhoto(f));return fileToPhoto0(f,isUrl)}
 function fileToPhoto0(f,isUrl){return new Promise((res,rej)=>{const img=new Image();if(isUrl)img.crossOrigin='anonymous';const u=isUrl?f:URL.createObjectURL(f);
- img.onload=()=>{const W=240,H=320,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');const sc=Math.max(W/img.width,H/img.height);const dw=img.width*sc,dh=img.height*sc;x.drawImage(img,(W-dw)/2,(H-dh)*.2,dw,dh);if(!isUrl)URL.revokeObjectURL(u);try{res(photoURL(c))}catch(e){rej(e)}};
+ img.onload=()=>{const [W,H]=typeof cutWork==='function'?cutWork():[240,320],c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');const sc=Math.max(W/img.width,H/img.height);const dw=img.width*sc,dh=img.height*sc;x.drawImage(img,(W-dw)/2,(H-dh)*.2,dw,dh);if(!isUrl)URL.revokeObjectURL(u);try{res(photoURL(c))}catch(e){rej(e)}};
  img.onerror=()=>{if(!isUrl)URL.revokeObjectURL(u);rej()};img.src=u})}
 function addPhoto(id){const i=fileInput();i.accept='image/*';i.onchange=async()=>{const f=i.files[0];if(!f)return;
  try{const old=IMG[id];IMG[id]=await cutIn(await fileToPhoto(f),id);if(!saveImg()){if(old)IMG[id]=old;else delete IMG[id]}}catch(e){toast("That image couldn't be opened.")}showW(id);render()};i.click()}

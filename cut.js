@@ -27,35 +27,68 @@ const canvas=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height
 /* is this picture already a cut-out? (a meaningful share of see-through pixels) */
 function hasAlpha(c){const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=3;i<d.length;i+=16)if(d[i]<200)n++;return n>d.length/16*.04}
 window.photoHasAlpha=hasAlpha;
-/* the subject mask (0–255 alpha) for a picture, from the model */
-async function maskFor(src){const S0=320;const s=await session();const c=canvas(S0,S0);const x=c.getContext('2d');x.drawImage(src,0,0,S0,S0);const d=x.getImageData(0,0,S0,S0).data;
+/* v172: the cut-out pipeline.
+   1. The model gives a rough subject probability at 320×320.
+   2. A guided filter snaps that rough mask to the real edges of the photo at full resolution (keeps hair and
+      shoulders, drops the blocky edge the low-resolution mask leaves).
+   3. The edge is choked a touch, so there's no halo of the old background around the head.
+   4. Edge pixels are re-coloured from the subject just inside them ("decontamination"), which removes the light
+      fringe a bright background leaves around hair and skin.
+   The work is done on a larger crop (480×640) and the finished card is scaled down to 240×320. */
+async function probFor(src){const S0=320;const s=await session();const c=canvas(S0,S0);const x=c.getContext('2d');x.drawImage(src,0,0,S0,S0);const d=x.getImageData(0,0,S0,S0).data;
  const n=S0*S0,inp=new Float32Array(3*n),M=[.485,.456,.406],SD=[.229,.224,.225];
  for(let i=0;i<n;i++)for(let k=0;k<3;k++)inp[k*n+i]=(d[i*4+k]/255-M[k])/SD[k];
  const out=await s.run({[s.inputNames[0]]:new ort.Tensor('float32',inp,[1,3,S0,S0])});const o=out[s.outputNames[0]].data;
  let lo=Infinity,hi=-Infinity;for(let i=0;i<n;i++){if(o[i]<lo)lo=o[i];if(o[i]>hi)hi=o[i]}const r=hi-lo||1;
  const m=canvas(S0,S0);const mx=m.getContext('2d');const md=mx.createImageData(S0,S0);
- /* firm up the edges: faint haze becomes background, the body stays solid */
- for(let i=0;i<n;i++){const v=(o[i]-lo)/r;const a=Math.max(0,Math.min(1,(v-.12)/.6));md.data[i*4+3]=Math.round(a*255)}
+ for(let i=0;i<n;i++){const v=Math.round((o[i]-lo)/r*255);md.data[i*4]=md.data[i*4+1]=md.data[i*4+2]=v;md.data[i*4+3]=255}
  mx.putImageData(md,0,0);return m}
+/* mean over a (2r+1)² window, clamped at the edges, via an integral image */
+function box(a,W,H,r){const I=new Float64Array((W+1)*(H+1));for(let y=0;y<H;y++){let row=0;for(let x=0;x<W;x++){row+=a[y*W+x];I[(y+1)*(W+1)+x+1]=I[y*(W+1)+x+1]+row}}
+ const o=new Float32Array(W*H);for(let y=0;y<H;y++){const y0=Math.max(0,y-r),y1=Math.min(H,y+r+1);for(let x=0;x<W;x++){const x0=Math.max(0,x-r),x1=Math.min(W,x+r+1);
+  o[y*W+x]=(I[y1*(W+1)+x1]-I[y0*(W+1)+x1]-I[y1*(W+1)+x0]+I[y0*(W+1)+x0])/((y1-y0)*(x1-x0))}}return o}
+/* cut the subject out of canvas `sub` in place (its pixels get an alpha channel) */
+async function cutOut(sub){const W=sub.width,H=sub.height,n=W*H;const sx=sub.getContext('2d');const img=sx.getImageData(0,0,W,H);const d=img.data;
+ /* rough mask, scaled up to the photo */
+ const pm=await probFor(sub);const up=canvas(W,H);const ux=up.getContext('2d');ux.imageSmoothingQuality='high';ux.drawImage(pm,0,0,W,H);const ud=ux.getImageData(0,0,W,H).data;
+ const p=new Float32Array(n),I=new Float32Array(n);for(let i=0;i<n;i++){p[i]=ud[i*4]/255;I[i]=(d[i*4]*.299+d[i*4+1]*.587+d[i*4+2]*.114)/255}
+ /* guided filter (He et al.): the rough mask, refined to follow the photo's own edges */
+ const r=Math.max(3,Math.round(W/70)),eps=.006;
+ const mI=box(I,W,H,r),mp=box(p,W,H,r),II=new Float32Array(n),Ip=new Float32Array(n);for(let i=0;i<n;i++){II[i]=I[i]*I[i];Ip[i]=I[i]*p[i]}
+ const cII=box(II,W,H,r),cIp=box(Ip,W,H,r),A=new Float32Array(n),B=new Float32Array(n);
+ for(let i=0;i<n;i++){const v=cII[i]-mI[i]*mI[i],c=cIp[i]-mI[i]*mp[i];A[i]=c/(v+eps);B[i]=mp[i]-A[i]*mI[i]}
+ const mA=box(A,W,H,r),mB=box(B,W,H,r);const a=new Float32Array(n);
+ /* choke: the faint haze outside the body goes, and the edge sits just inside the old background */
+ for(let i=0;i<n;i++){const q=mA[i]*I[i]+mB[i];const blend=.65*q+.35*p[i];a[i]=Math.max(0,Math.min(1,(blend-.3)/.5))}
+ /* decontaminate: edge pixels take the colour of the subject just inside them */
+ const rr=Math.max(2,Math.round(W/120));const ch=[0,1,2].map(k=>{const f=new Float32Array(n);for(let i=0;i<n;i++)f[i]=d[i*4+k]*a[i]*a[i];return box(f,W,H,rr)});const wa=new Float32Array(n);for(let i=0;i<n;i++)wa[i]=a[i]*a[i];const mw=box(wa,W,H,rr);
+ for(let i=0;i<n;i++){const al=a[i];if(al<.98&&al>0&&mw[i]>1e-3){const t=1-al;for(let k=0;k<3;k++)d[i*4+k]=Math.round(d[i*4+k]*(1-t)+(ch[k][i]/mw[i])*t)}d[i*4+3]=Math.round(al*255)}
+ sx.putImageData(img,0,0)}
 /* the backdrop: the card's own style gradient with the gold streaks, same as the photo-less silhouettes */
 function backdrop(x,W,H,w){const c=(typeof SCOL!=='undefined'&&w&&SCOL[w.st])||['#6a5a3a','#140f08'];
  const g=x.createRadialGradient(W*.5,H*.3,0,W*.5,H*.3,Math.hypot(W,H)*.8);g.addColorStop(0,c[0]);g.addColorStop(1,c[1]);x.fillStyle=g;x.fillRect(0,0,W,H);
  x.save();x.strokeStyle='rgba(243,215,122,.16)';x.lineWidth=W*7/120;const k=W/120;x.beginPath();x.moveTo(-20*k,130*k);x.lineTo(140*k,20*k);x.moveTo(-20*k,152*k);x.lineTo(140*k,42*k);x.stroke();x.restore()}
 /* subject (a canvas with transparency) → finished card photo */
+const PW=240,PH=320;
 function compose(sub,w){const W=sub.width,H=sub.height;const c=canvas(W,H);const x=c.getContext('2d');backdrop(x,W,H,w);
- x.save();x.shadowColor='rgba(0,0,0,.6)';x.shadowBlur=Math.round(W/18);x.shadowOffsetY=Math.round(W/80);x.drawImage(sub,0,0);x.restore();
- return c.toDataURL('image/jpeg',.72)}
-/* cut out one card photo (a data URL from fileToPhoto). Returns a new data URL. */
+ x.save();x.shadowColor='rgba(0,0,0,.55)';x.shadowBlur=Math.round(W/16);x.shadowOffsetY=Math.round(W/90);x.drawImage(sub,0,0);x.restore();
+ if(W===PW&&H===PH)return c.toDataURL('image/jpeg',.72);
+ const o=canvas(PW,PH);const ox=o.getContext('2d');ox.imageSmoothingQuality='high';ox.drawImage(c,0,0,PW,PH);return o.toDataURL('image/jpeg',.72)}
+/* cut out one card photo (a data URL from fileToPhoto — 480×640 for new photos, 240×320 for ones already saved).
+   Returns the finished 240×320 card photo as a data URL. */
 async function cutPhoto(url,id){const w=S&&S.w&&S.w[id];const im=await imgOf(url);const W=im.naturalWidth||im.width,H=im.naturalHeight||im.height;
  const sub=canvas(W,H);const sx=sub.getContext('2d');sx.drawImage(im,0,0,W,H);
- if(!hasAlpha(sub)){const m=await maskFor(im);sx.globalCompositeOperation='destination-in';sx.imageSmoothingQuality='high';sx.drawImage(m,0,0,W,H);sx.globalCompositeOperation='source-over'}
+ if(!hasAlpha(sub))await cutOut(sub);
  return compose(sub,w)}
+/* a big intake photo that couldn't be cut out still gets saved at the usual card size */
+async function small(url){const im=await imgOf(url);if((im.naturalWidth||im.width)<=PW)return url;const c=canvas(PW,PH);const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(im,0,0,PW,PH);return c.toDataURL(url.startsWith('data:image/png')?'image/png':'image/jpeg',.7)}
+window.cutWork=()=>cutOn()?[480,640]:[240,320];
 window.cutPhoto=cutPhoto;
 /* the hook every photo goes through on its way in: cut it out if the setting is on. Never loses the photo — if the
    cut-out can't run (no connection the first time, an old browser), the photo is kept as it was. */
 let warned=false;
-window.cutIn=async function(url,id){if(!url||!cutOn()||!S||!S.w||!S.w[id])return url;try{const out=await cutPhoto(url,id);markCut(id,out);return out}
- catch(e){console.warn('cut-out',e);if(!warned){warned=true;toast("Couldn't cut out the background this time (the cut-out tool needs a connection the first time). The photo was kept as is.")}return url}};
+window.cutIn=async function(url,id){if(!url)return url;if(!cutOn()||!S||!S.w||!S.w[id])return small(url).catch(()=>url);try{const out=await cutPhoto(url,id);markCut(id,out);return out}
+ catch(e){console.warn('cut-out',e);if(!warned){warned=true;toast("Couldn't cut out the background this time (the cut-out tool needs a connection). The photo was kept as is.")}try{return await small(url)}catch(x){return url}}};
 /* which photos are already cut out (keyed by length + a few characters, so a replaced photo counts as new) */
 const sig=u=>u?u.length+':'+u.slice(-24):'';
 function done(){return prefs().done||{}}
