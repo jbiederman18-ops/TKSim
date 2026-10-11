@@ -932,7 +932,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v176';
+const APP_VERSION='v177';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -2271,11 +2271,13 @@ function newGame(gm,rival,diff,online){
  stars. The economy is anchored separately (S.cap, which revenue scales with) and only rises ECON_X, so the extra payroll
  is a real cost and money stays meaningful. */
 const CAP_X=1.2,ECON_X=1.1;
-function startDraft(){S.phase='draft';const ord=shuffle(brands().slice());const base=capFor(ord.length);S.cap=Math.round(base*ECON_X);S.draft={round:1,pick:0,order:ord,rounds:ord.length>2?20:24,log:[],cap:Math.round(base*CAP_X)};save()}
+function startDraft(){S.phase='draft';const ord=shuffle(brands().slice());const base=capFor(ord.length);S.cap=Math.round(base*ECON_X);S.draft={round:1,pick:0,order:ord,rounds:ord.length>2?20:24,log:[],cap:Math.round(base*CAP_X)};S.suppDone=1;save()}
 /* ---- draft salary cap ---- */
 function picksLeft(b){const d=S.draft;if(!d)return 0;const o=d.order||[];const i=o.indexOf(b);if(i<0)return 0;const pos=i;return Math.max(0,d.rounds-(d.round-1)-(pos<d.pick?1:0))}
-function capRoom(b){const d=S.draft;return d&&d.cap?d.cap-payroll(b):Infinity}
-function minAsk(){const l=Object.values(S.w).filter(w=>!w.own&&!w.cw&&!w.rookie).map(mkt);return l.length?Math.min(...l):4}
+/* v177: who's in the draft pool — everyone unsigned, or just the WWE free agents during the supplemental draft */
+function inPool(w){return !w.own&&!w.cw&&!w.rookie&&(!S.draft||!S.draft.supp||S.draft.supp.includes(w.id))}
+function capRoom(b){const d=S.draft;return d&&d.capB?(d.capB[b]||0)-payroll(b):d&&d.cap?d.cap-payroll(b):Infinity}
+function minAsk(){const l=Object.values(S.w).filter(w=>inPool(w)).map(mkt);return l.length?Math.min(...l):4}
 /* can this brand take w and still fill every remaining pick with the cheapest wrestler left? */
 /* v170: what the rest of a brand's picks will really cost. It used to assume every remaining pick could be had at the single
  cheapest price on the board, but only a handful of wrestlers sit at that price and every GM is after them — so both GMs
@@ -2284,14 +2286,14 @@ function minAsk(){const l=Object.values(S.w).filter(w=>!w.own&&!w.cw&&!w.rookie)
 let RSV=null;
 function capReserve(b){const d=S.draft;const k=Math.max(0,picksLeft(b)-1);if(!k)return 0;const key=(d.pk||0)+'|'+b;if(RSV&&RSV.k===key)return RSV.v;
  const need=(d.order||[b]).reduce((a,x)=>a+Math.max(0,picksLeft(x)-(x===b?1:0)),0)||k;
- const l=Object.values(S.w).filter(w=>!w.own&&!w.cw&&!w.rookie).map(w=>mkt(w,b)).sort((x,y)=>x-y).slice(0,Math.max(k,need));
+ const l=Object.values(S.w).filter(w=>inPool(w)).map(w=>mkt(w,b)).sort((x,y)=>x-y).slice(0,Math.max(k,need));
  const v=l.length?Math.round(l.reduce((a,x)=>a+x,0)/l.length*k):k*4;RSV={k:key,v};return v}
-function capOk(w,b){const d=S.draft;if(!d||!d.cap)return true;return mkt(w)<=capRoom(b)-capReserve(b)}
+function capOk(w,b){const d=S.draft;if(!d||!(d.cap||d.capB))return true;return mkt(w)<=capRoom(b)-capReserve(b)}
 /* late in a draft the cheap wrestlers can all be gone, so nobody fits: then the cheapest one left is always allowed (never a dead end) */
-function capStuck(b){return !Object.values(S.w).some(w=>!w.own&&!w.cw&&!w.rookie&&capOk(w,b))}
+function capStuck(b){return !Object.values(S.w).some(w=>inPool(w)&&capOk(w,b))}
 /* v171: once nobody fits, the last picks are minimum deals — any of the cheapest wrestlers left (twice as many as you have
  picks), not just the single cheapest one, so you still get a real choice */
-function minTier(b){const l=Object.values(S.w).filter(w=>!w.own&&!w.cw&&!w.rookie).map(w=>mkt(w,b)).sort((x,y)=>x-y);return l.length?l[Math.min(l.length-1,Math.max(2,picksLeft(b)*2)-1)]:4}
+function minTier(b){const l=Object.values(S.w).filter(w=>inPool(w)).map(w=>mkt(w,b)).sort((x,y)=>x-y);return l.length?l[Math.min(l.length-1,Math.max(2,picksLeft(b)*2)-1)]:4}
 function draftOk(w,b){return capOk(w,b)||capStuck(b)&&mkt(w)<=minTier(b)}
 /* straight draft: the same order every round (1-2-3, 1-2-3…) */
 function onClock(){const d=S.draft;const o=d.order||(d.order=d.first==='p'?['p','ai']:['ai','p']);return o[d.pick]}
@@ -2320,16 +2322,16 @@ function openScout(){scoutFresh();if(!S.scout)scoutTick(true);const s=S.scout;
  ${s.l.length?s.l.map(scoutCard).join(''):'<p class="muted center">You signed everyone on this board. New prospects arrive next week.</p>'}
  <button class="btn sec" onclick="openCreate()">✏️ Design your own prospect</button><button class="btn ghost" onclick="closeModal()">Close</button>`)}
 function draftChoice(brand){
- let pool=Object.values(S.w).filter(w=>!w.own&&!w.cw&&!w.rookie);const mine=ownList(brand);
+ let pool=Object.values(S.w).filter(w=>inPool(w));const mine=ownList(brand);
  const fit=pool.filter(w=>capOk(w,brand));pool=fit.length?fit:pool.sort((a,b)=>mkt(a)-mkt(b)).slice(0,1);
- const allow=S.draft&&S.draft.cap?capRoom(brand)/Math.max(1,picksLeft(brand)):Infinity;
+ const allow=S.draft&&(S.draft.cap||S.draft.capB)?capRoom(brand)/Math.max(1,picksLeft(brand)):Infinity;
  const wn=mine.filter(w=>w.g==='F').length;const needF=mine.length>=3&&wn/mine.length<.3;
  const cand=needF?pool.filter(w=>w.g==='F'):pool;const list=cand.length?cand:pool;
  let best=null,bv=-1;list.forEach(w=>{const v=w.pop*.5+w.ring*.35+w.mic*.15+(w.pot-w.ring)*.3+(isChamp(w.id)?8:0)+(mine.some(o=>inTeam(o.id,w.id))?6:0)+R(0,aiq(brand).noise)-Math.max(0,mkt(w)-allow)*.9;if(v>bv){bv=v;best=w}});return best}
 function draftPick(id,brand){const d=S.draft,w=S.w[id];if(!w||w.own)return;w.sal=mkt(w);w.own=brand;w.con=RI(14,40);w.fee=0;
  d.log.unshift(`R${d.round} · ${nameOf(brand)}: ${w.name}`);d.last=id;d.pk=(d.pk||0)+1;w.dr=d.pk;w.drr=d.round;d.pick++;if(d.pick>=(d.order||[1,1]).length){d.pick=0;d.round++}
  if(d.round>d.rounds)finishDraft();save()}
-function finishDraft(){S.phase='season';bothSides(()=>scoutTick(true));
+function finishDraft(){if(S.draft&&S.draft.supp)return finishSupp();S.phase='season';bothSides(()=>scoutTick(true));
  if(S.draft&&S.draft.cap)brands().forEach(b=>{const left=S.draft.cap-payroll(b);if(left>0){const bonus=Math.round(left*4);S.money[b]+=bonus;news(`💼 ${nameOf(b)} came in ${money(left)}/wk under the cap — ${money(bonus)} goes into the bank.`)}});
  Object.values(S.w).forEach(w=>{if(!w.own)w.con=0;w.pop0=w.pop});
  Object.values(S.titles).forEach(t=>{if(!t.holders.length)return;const os=t.holders.map(h=>S.w[h].own);if(os.some(o=>!o)||os.some(o=>o!==os[0])){t.holders=[];news(`🏆 The ${t.n} title is vacant — the draft split up the champions.`)}});
@@ -3359,7 +3361,7 @@ function draftTeamsHtml(){const d=S.draft,oc=onClock(),bs=brands().slice().sort(
   <div class="muted tiny">${l.length} picked · ${m} men / ${l.length-m} women · payroll ${money(payroll(b))}/wk${d.cap?` · ${money(capRoom(b))} cap room`:''}</div>
   <div class="dtl">${l.length?l.map(w=>`<button class="dtr ${w.al==='f'?'fc':'hl'} ${w.id===d.last?'new':''}" onclick="showW('${w.id}')"><span class="dtk">${w.drr?'R'+w.drr:'★'}</span><span class="dtn">${esc(w.name)}</span><span class="dts">${STYLE_N[w.st]||''}</span><span class="dto">${ovr(w)}</span></button>`).join(''):'<div class="muted">No picks yet.</div>'}</div></div>`}).join('')}
 function draftView(){const d=S.draft;const oc=onClock();
- const all=Object.values(S.w).filter(w=>!w.own&&!w.cw&&!w.rookie);
+ const all=Object.values(S.w).filter(w=>inPool(w));
  let pool=all.slice();if(df!=='all'&&df!=='cw')pool=pool.filter(w=>w.g===df);pool.sort(sorter(ds));
  const ranked=all.slice().sort((a,b)=>ovr(b)-ovr(a)||b.pop-a.pop);const best=ranked.find(w=>draftOk(w,'p'))||ranked[0];
  const board=ranked.map((w,k)=>({w,r:k+1})).filter(x=>!best||x.w.id!==best.id).slice(0,6);
@@ -3367,7 +3369,7 @@ function draftView(){const d=S.draft;const oc=onClock();
  const tape=best?`<div class="card ttape"><div class="tt-bg">${ovr(best)}</div><div class="tt-pic" onclick="showW('${best.id}')">${portrait(best)}</div><div class="tt-k">Tale of the tape <span class="tt-al ${best.al==='f'?'fc':'hl'}">${best.al==='f'?'Face':'Heel'}</span></div><div class="tt-n">${esc(best.name)}</div><div class="tt-s">${STYLE_N[best.st]||''} · best available${capOk(best,'p')?'':draftOk(best,'p')?' · <span class="gold">minimum deal</span>':' · <span class="bad">over your cap</span>'}</div>
  <div class="tt-g"><div><small>Ring</small><b>${Math.round(best.ring)}</b></div><div><small>Mic</small><b>${Math.round(best.mic)}</b></div><div><small>Pop</small><b>${Math.round(best.pop)}</b></div><div><small>Salary</small><b class="gold">${money(mkt(best))}</b></div></div>
  <div class="row mt"><button class="btn" style="flex:2" ${oc==='p'&&draftOk(best,'p')?'':'disabled'} onclick="pDraft('${best.id}')">Make the pick</button><button class="btn sec" style="flex:1" onclick="showW('${best.id}')">Details</button></div></div>`:'';
- return `<div class="card dhead"><div class="row sb"><span class="dk">The Draft · ${d.rounds} rounds</span>${oc==='p'?'<span class="livebug"><b>● On the clock</b></span>':`<span class="livebug wait"><b>${esc(nameOf(oc))}</b><span>picking…</span></span>`}</div><div class="dround">Round ${d.round}</div><div class="rticks">${ticks}</div><div class="muted">${brands().map(b=>`${b==='p'?'You':esc(nameOf(b))}: ${cnt(ownList(b))}`).join(' · ')}</div>${d.cap?(()=>{const room=capRoom('p'),pl=picksLeft('p'),rsv=capReserve('p'),can=room-rsv,stuck=pl>0&&capStuck('p');return `<div class="capbox mt"><div class="row sb"><span>💼 Salary cap <b>${money(d.cap)}</b>/wk</span><span class="${stuck?'bad':'gold'}"><b>${money(room)}</b> left</span></div><div class="bar"><i style="width:${clamp(payroll('p')/d.cap*100,0,100)}%"></i></div><div class="muted tiny">${pl} pick${pl===1?'':'s'} left · ${stuck?`your cap is spent — your last ${pl>1?pl+' picks are':'pick is a'} minimum deal${pl>1?'s':''} (any of the cheapest wrestlers left).`:pl>1?`spend up to <b>${money(Math.max(0,can))}</b> on this pick and keep ${money(rsv)} for the other ${pl-1} (the cheapest wrestlers left cost about ${money(Math.round(rsv/(pl-1)))} each).`:`spend up to ${money(room)}.`} Anything left under the cap goes into your bank (×4).</div></div>`})():''}
+ return `<div class="card dhead"><div class="row sb"><span class="dk">${d.supp?"WWE Supplemental Draft":"The Draft"} · ${d.rounds} rounds</span>${oc==='p'?'<span class="livebug"><b>● On the clock</b></span>':`<span class="livebug wait"><b>${esc(nameOf(oc))}</b><span>picking…</span></span>`}</div><div class="dround">Round ${d.round}</div><div class="rticks">${ticks}</div><div class="muted">${brands().map(b=>`${b==='p'?'You':esc(nameOf(b))}: ${cnt(ownList(b))}`).join(' · ')}</div>${d.cap||d.capB?(()=>{const room=capRoom('p'),pl=picksLeft('p'),rsv=capReserve('p'),can=room-rsv,stuck=pl>0&&capStuck('p');return `<div class="capbox mt"><div class="row sb"><span>💼 ${d.supp?"Budget":"Salary cap"} <b>${money(d.supp?d.capB.p:d.cap)}</b>/wk</span><span class="${stuck?'bad':'gold'}"><b>${money(room)}</b> left</span></div><div class="bar"><i style="width:${clamp(payroll('p')/(d.supp?d.capB.p:d.cap)*100,0,100)}%"></i></div><div class="muted tiny">${pl} pick${pl===1?'':'s'} left · ${stuck?`your cap is spent — your last ${pl>1?pl+' picks are':'pick is a'} minimum deal${pl>1?'s':''} (any of the cheapest wrestlers left).`:pl>1?`spend up to <b>${money(Math.max(0,can))}</b> on this pick and keep ${money(rsv)} for the other ${pl-1} (the cheapest wrestlers left cost about ${money(Math.round(rsv/(pl-1)))} each).`:`spend up to ${money(room)}.`}${d.supp?' The budget is your current payroll plus what this draft lets you add.':' Anything left under the cap goes into your bank (×4).'}</div></div>`})():''}
  <div class="row mt"><button class="btn sec" ${oc!=='p'?'disabled':''} onclick="autoPick()">Auto-pick</button><button class="btn sec" onclick="simDraft()">${ON()?(S.online.auto&&S.online.auto.p?'🤖 Stop auto-drafting':'Auto-draft me'):'Sim rest'}</button></div><button class="btn sec" onclick="openStudio()">📷 Photo Studio</button></div>
  ${chips('dv',[['pick','Make a pick'],['teams','Draft board']],dv).replace('class="chips"','class="chips dvtab"')}${dv==='teams'?draftTeamsHtml()+(d.log.length?`<div class="pickin"><span class="pt">Pick is in</span><span class="pl">${esc(d.log[0])}</span></div>`:''):`${tape}
  ${board.length?`<div class="h small">The big board</div><div class="bboard">${board.map(x=>`<button class="bbr ${x.w.al==='f'?'fc':'hl'}" onclick="showW('${x.w.id}')"><span class="bbk">${x.r}</span><span class="bbn">${esc(x.w.name)}</span><span class="bbs">${x.w.al==='f'?'Face':'Heel'}</span><span class="bbo">${ovr(x.w)}</span><span class="bbm ${capOk(x.w,'p')?'':'bad'}">${money(mkt(x.w))}</span></button>`).join('')}</div>`:''}
@@ -3414,7 +3416,7 @@ function homeView(){const sh=curShow();const np=nextPPV();const gp=fanGain('p'),
  {const n=Object.values(S.w).filter(w=>!w.own&&!w.cw&&onMarket(w));const last=n.filter(w=>faLeft(w)<=1);if(n.length)al.push(`🆕 ${n.length} free agents on the market${last.length?` · last chance: ${last.slice(0,3).map(w=>esc(w.name)).join(', ')}`:''} — <a href="#" onclick="rf='fa';go('roster');return false" style="color:var(--gold2)">browse</a>`)}
  const fs=feudList('p').slice(0,5);
  const held=Object.values(S.titles).filter(t=>t.holders.length&&S.w[t.holders[0]]&&S.w[t.holders[0]].own==='p').length;
- return `${poster(sh,`${sh.ppv||sh.special?`<div class="venue mt" style="color:#e9d9b0">${sh.ppv?`Each side books a full card · ${cardMatches(true)} matches${sh.fd?' + 2 crossover dream matches':''} + a title challenge`:'📺 TV special · hotter crowd, bigger fan swings'}</div>`:''}<button class="btn mt" onclick="go('book')">${ON()&&S.online.booked.p?'Card locked in ✓':'Book the show ▸'}</button>${np&&!sh.ppv?`<div class="venue mt">Next PPV: <b>${np.n}</b> · ${np.in===0?'this Saturday':`in ${np.in} week${np.in>1?'s':''}`}</div>`:''}`)}${conHome()}${tonightCard(sh)}${rivalAdHtml()}
+ return `${poster(sh,`${sh.ppv||sh.special?`<div class="venue mt" style="color:#e9d9b0">${sh.ppv?`Each side books a full card · ${cardMatches(true)} matches${sh.fd?' + 2 crossover dream matches':''} + a title challenge`:'📺 TV special · hotter crowd, bigger fan swings'}</div>`:''}<button class="btn mt" onclick="go('book')">${ON()&&S.online.booked.p?'Card locked in ✓':'Book the show ▸'}</button>${np&&!sh.ppv?`<div class="venue mt">Next PPV: <b>${np.n}</b> · ${np.in===0?'this Saturday':`in ${np.in} week${np.in>1?'s':''}`}</div>`:''}`)}${typeof suppCard==='function'?suppCard():''}${conHome()}${tonightCard(sh)}${rivalAdHtml()}
  ${S.crisis&&S.w[S.crisis.a]&&CRISES[S.crisis.k]?`<div class="card warn" onclick="openCrisis()" style="cursor:pointer"><b>${CRISES[S.crisis.k].i} ${CRISES[S.crisis.k].good?'Opportunity':'Front office situation'}: ${esc(CRISES[S.crisis.k].t)}</b><div class="muted">Needs your decision before the next show — tap to handle it.</div></div>`:''}${S.phase==='season'?`<button class="btn sec" style="margin:0 0 12px" onclick="openBrief()">📰 This week's briefing${(()=>{try{const n=briefItems().filter(x=>x.u).length;return n?` · <b class="bad">${n} need${n>1?'':'s'} action</b>`:''}catch(e){return ''}})()}</button>`:''}<div class="tiles">${tile("go('roster')",ICON.roster,'Roster',`${mine.length} signed · ${mine.filter(w=>w.inj).length} injured`,mine.length)}${tile("go('titles')",ICON.titles,'Titles',`You hold ${held} of ${Object.keys(S.titles).length}`,held)}${tile("go('office')",ICON.office,'Front Office',`Bank ${money(S.money.p)}`,'$')}${S.last?tile('showResults()',ICON.star,'Last Show',(()=>{const L=S.last.pairs?(S.last.pairs.find(p=>p.ratings.p!=null)||{}):S.last;const R=L.ratings||{};return `${R.ai!=null&&!S.last.ppv?(R.p>=R.ai?'Won':'Lost')+' · ':''}<b style="display:inline;font:inherit;color:var(--gold2);margin:0;text-transform:none">${stars(R.p||0)}</b>`})(),'★'):tile("tutStart('season')",ICON.star,'How to Play','Take the 2-minute tour','?')}</div>
  ${mpStandings()}${ON()&&!S._view.opp?`<div class="card"><div class="h small">Bye week</div><div class="muted">No head-to-head this week — your show airs on its own. Next week you face <b>${esc(nameOf(localKey(oppOf(S._view.me,S.week+1,nSeats()))||'p'))}</b>.</div></div>`:''}<div class="card" ${ON()&&!S._view.opp?'style="display:none"':''}><div class="h small">${ON()&&nSeats()>2?'This week':'Brand war'}</div><div class="warnames"><div><div class="muted tiny">YOU</div><b class="gold">${esc(S.gm)}</b></div><span class="vsdot">VS</span><div class="r"><div class="muted tiny">${ON()?'FRIEND':'RIVAL'}</div><b>${esc(S.rival)}</b></div></div><div class="war"><i style="width:${pp}%"></i></div><div class="row sb muted"><span><b class="gold">${gp>=0?'+':''}${fmtFans(gp)}</b> fans</span><span>Ratings wins ${S.hourWins.p||0}–${S.hourWins.ai||0}</span><span>${ga>=0?'+':''}${fmtFans(ga)} fans</span></div><div class="muted tiny center" style="margin-top:4px">Fans gained this season · all-time ${fmtFans(S.fans.p)} vs ${fmtFans(S.fans.ai||0)}</div></div>
  ${al.length?`<div class="card warn">${al.map(a=>`<div style="margin:3px 0">${a}</div>`).join('')}</div>`:''}
@@ -4000,7 +4002,7 @@ function showW(id){const w=S.w[id];if(!w)return;const own=w.own==='p';const ts=t
  const chem=w.own?Object.values(S.w).filter(o=>o.id!==id&&o.own===w.own).map(o=>[o,chemOpp(w,o)]).sort((a,b)=>b[1]-a[1]).slice(0,3):[];
  const teams=S.teams.filter(t=>t.m.includes(id)).map(t=>t.n);const tr=S.training.find(t=>t.id===id);
  let acts='';
- if(S.phase==='draft'){if(!w.own&&!w.cw&&!w.rookie&&onClock()==='p')acts=draftOk(w,'p')?`<button class="btn" onclick="pDraft('${id}')">Draft ${esc(w.name)} · ${money(mkt(w))}/wk</button>`:`<div class="err center">🚫 ${money(mkt(w))}/wk doesn't fit — you have ${money(capRoom('p'))} of cap room for ${picksLeft('p')} picks.</div>`}
+ if(S.phase==='draft'){if(inPool(w)&&onClock()==='p')acts=draftOk(w,'p')?`<button class="btn" onclick="pDraft('${id}')">Draft ${esc(w.name)} · ${money(mkt(w))}/wk</button>`:`<div class="err center">🚫 ${money(mkt(w))}/wk doesn't fit — you have ${money(capRoom('p'))} of cap room for ${picksLeft('p')} picks.</div>`}
  else if(own){acts=`<div class="row mt"><button class="btn sec" onclick="train('${id}','ring')">${tr&&tr.f==='ring'?'✓ ':''}Train ring</button><button class="btn sec" onclick="train('${id}','mic')">${tr&&tr.f==='mic'?'✓ ':''}Train mic</button></div>${dealActive(w).length?`<div class="card"><div class="h small">📜 In their contract</div>${dealActive(w).map(k=>`<div class="tiny">${dealTermTxt(w,k)}</div>`).join('')}</div>`:''}${w.con<=8?`<button class="btn" onclick="dealNegotiate('${id}')">✍️ Negotiate a new deal · ${w.con} wk${w.con===1?'':'s'} left</button>`:''}<button class="btn sec" onclick="offTurn('${id}')">🔄 Turn ${w.al==='f'?'heel':'face'} off-screen</button><div class="muted center tiny">Instant, but fans shrug (−4 popularity). For a turn that pays off, book a <b>Heel / Face Turn</b> promo.</div><button class="btn ghost danger" onclick="release('${id}')">Release</button>`}
  else if(!w.own&&S.phase==='season'&&!onMarket(w))acts=`<div class="card" style="margin-top:12px"><b>Not on the market</b><div class="muted">${esc(w.name)} is unsigned but not taking offers right now. Free agents rotate every week — check back.</div></div>`;
  else if(!w.own&&S.phase==='season')acts=`${!w.cw&&faLeft(w)?`<div class="gold center" style="margin-top:10px">⏳ On the market ${faLeft(w)<=1?'— <b>last week</b> to sign':'for '+faLeft(w)+' more weeks'}</div>`:''}${dealQuickNeeded(w)?dealQuickHtml(w):dealNeedsOffer(w)?`<button class="btn" onclick="dealOffer('${id}')">${myBid(id)?'📝 Revise my sealed offer':offerOf(id)?'📝 Send a sealed counter':'📝 Make an offer'} · asks ${money(signCost(w))}</button><div class="muted center tiny">${dealHints(w).join(' · ')}</div>`:`<button class="btn" onclick="sign('${id}')">Sign · ${money(signCost(w))}</button>`}${w.fee?`<div class="muted center tiny">Includes a ${money(w.fee)} development fee for this rookie.</div>`:''}${w.inj?'<div class="muted center">Currently injured.</div>':''}`;
@@ -4208,7 +4210,7 @@ function rookiesDone(){if(!ON()){startDraft();render();return}if(mpLocked())retu
 function mpDraftStep(){const o=S.online;
  while(S.phase==='draft'){const oc=onClock();if(!o.auto[oc])break;const c=draftChoice(oc);if(!c){finishDraft();break}draftPick(c.id,oc)}
  if(S.phase==='draft'){const oc=onClock();if(oc!=='p')mpPass(`${S.gm} made their pick — you're on the clock in round ${S.draft.round}.`,oc);else mpPush()}
- else{tab='home';o.booked={};o.order=bookingOrder();mpPush()}}
+ else{tab='home';if(S.suppEnd)delete S.suppEnd;else{o.booked={};o.order=bookingOrder()}mpPush()}}
 function mpLockCard(){if(partyOn())return partyLockCard();if(simOn())return simLockCard();const o=S.online;const sh=curShow();o.booked.p=true;
  const next=(o.order&&o.order.length?o.order:bookingOrder()).find(k=>!o.booked[k]);
  if(!next){const wk=S.week;airShow();o.booked={};o.order=bookingOrder();mpMarkSeen();mpPush(`Week ${wk} results are in!`);showResults();render();return}

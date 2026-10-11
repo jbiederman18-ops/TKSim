@@ -68,7 +68,7 @@ function partyAdvance(st,me){const keep=S,keepTab=typeof tab!=='undefined'?tab:n
      clock, so auto-draft keeps going even when that GM's phone is closed */
   if(S.phase==='draft'&&o.auto[onClock()]){const was=onClock();let guard=0;while(S.phase==='draft'&&guard++<400){const oc=onClock();if(!o.auto[oc])break;const c=draftChoice(oc);if(!c){finishDraft();break}draftPick(c.id,oc)}
    if(S.phase==='draft'){o.turn=onClock();if(o.turn!==was)msg=`The auto-drafters have picked — you're on the clock in round ${S.draft.round}.`}
-   else{o.booked={};o.order=bookingOrder();o.turn='p';msg='The draft is complete — time to book week 1!'}}
+   else if(S.suppEnd){delete S.suppEnd;o.turn='p';msg='The WWE Supplemental Draft is complete — back to booking.'}else{o.booked={};o.order=bookingOrder();o.turn='p';msg='The draft is complete — time to book week 1!'}}
   if(!o.party){/* v126: booking at the same time — the last GM to lock in airs the week right here */
    if(simOn()&&S.phase==='season'&&localSeats().every(k=>o.booked[k])){const wk=S.week;airShow();o.booked={};o.order=bookingOrder();o.turn='p';msg=`Week ${wk} results are in!`}
    return {st:canonState(),msg}}

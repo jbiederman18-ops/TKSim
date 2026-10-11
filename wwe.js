@@ -303,3 +303,37 @@ function wweData(st){if(!st||!st.w)return;const T=st.titles=st.titles||{};
  st.news=st.news||[];
  if(added.length)st.news.push({w:st.week,t:`🏆 WWE's world titles have arrived: ${added.map(t=>t.n).join(', ')} — all vacant, ${brs.length===2?'two for each brand':'split between the brands'}. Crown your first champions on TV.`});
  if(st.phase==='season'||st.phase==='over')st.news.push({w:st.week,t:`📅 New calendar: the year now alternates AEW and WWE's biggest shows — ${Object.values(PPVS).join(', ')}. The Royal Rumble earns a WrestleMania title shot, Money in the Bank hands out a briefcase, and Survivor Series is the crossover show (and the end of the year).`})}
+
+/* ===================== v177: THE WWE SUPPLEMENTAL DRAFT (saves from before the WWE update) =====================
+   A save that started before v168 got the WWE roster dumped into free agency. Once, it can hold a supplemental draft
+   instead: only the unsigned WWE wrestlers are in the pool, the brand behind in the fan war picks first, the same order every
+   round, and each brand gets a supplemental budget on top of its current payroll. It runs on the normal draft screen
+   (auto-pick, sim, league auto-draft all work), then drops straight back into the same week of the season. Whoever isn't
+   picked stays in free agency. */
+const SUPP_ROUNDS=3,SUPP_BUD=.9;
+function suppPool(st){st=st||S;return Object.values(st.w).filter(w=>isWWE(w)&&!w.own&&!w.rookie)}
+/* only saves where WWE wasn't part of the original draft (no WWE wrestler carries a draft pick) */
+function suppDue(){if(!S||S.phase!=='season'||S.suppDone||!S.w)return false;if(Object.values(S.w).some(w=>isWWE(w)&&w.dr))return false;
+ return suppPool().length>=brands().length*3}
+function suppRounds(){return Math.max(1,Math.min(SUPP_ROUNDS,Math.floor(suppPool().length/brands().length)))}
+/* the budget: 90% of what each brand's share of the top WWE names would cost — room for two big stars and a solid third pick.
+   Six full-price rounds added ~$170K/wk of payroll mid-season and drained the bank within 16 weeks; this adds ~$85K/wk and
+   money still trends up. */
+function suppBudget(r){const n=brands().length;const top=suppPool().map(w=>mkt(w)).sort((a,b)=>b-a).slice(0,n*r);return Math.round(top.reduce((a,b)=>a+b,0)/n*SUPP_BUD)}
+function suppCard(){if(!suppDue())return '';const n=suppPool().length,r=suppRounds();const ord=suppOrder();
+ return `<div class="card warn"><b>🌍 WWE Supplemental Draft</b><div class="muted" style="margin:4px 0 8px">${n} WWE wrestlers are sitting in free agency. Hold a one-time supplemental draft for them: ${r} rounds, ${ord[0]==='p'?'you pick first (you\'re behind in the fan war)':`${esc(nameOf(ord[0]))} picks first (they're behind in the fan war)`}, with ${money(suppBudget(r))}/wk to spend on top of your payroll. Anyone not picked stays a free agent.</div>
+ <div class="row" style="gap:8px"><button class="btn" style="flex:1" onclick="startSupp()">Start the draft</button><button class="btn sec" style="flex:1" onclick="skipSupp()">Skip it</button></div></div>`}
+function suppOrder(){return brands().slice().sort((a,b)=>((S.fans&&S.fans[a])||0)-((S.fans&&S.fans[b])||0))}
+function startSupp(){if(typeof mpLocked==='function'&&mpLocked())return;if(!suppDue())return;
+ const pool=suppPool();const r=suppRounds();const bud=suppBudget(r);const ord=suppOrder();const capB={};ord.forEach(b=>capB[b]=payroll(b)+bud);
+ let lost=0;pool.forEach(w=>{if(S.offers&&S.offers[w.id]){delete S.offers[w.id];lost++}if(S.fa)delete S.fa[w.id]});
+ S.draft={supp:pool.map(w=>w.id),round:1,pick:0,order:ord,rounds:r,log:[],capB,pk:(S.draft&&S.draft.pk)||0,prev:S.draft||null};
+ S.phase='draft';S.suppDone=1;dv='pick';
+ news(`🌍 The WWE Supplemental Draft is on: ${r} rounds for ${pool.length} WWE free agents.${lost?' Open offers on them were withdrawn.':''}`);
+ save();tab='home';if(ON()){S.online.auto=S.online.auto||{};if(onClock()!=='p')mpPass(`${S.gm} started the WWE Supplemental Draft — you're on the clock.`,onClock());else mpPush()}render()}
+function skipSupp(){if(typeof mpLocked==='function'&&mpLocked())return;if(!confirm('Skip the supplemental draft? The WWE wrestlers stay in free agency, and this can\'t be undone.'))return;S.suppDone=1;save();if(ON())mpPush();render()}
+/* called from finishDraft: back to the same week, nothing about the season resets */
+function finishSupp(){const d=S.draft;const got={};d.supp.forEach(id=>{const w=S.w[id];if(!w)return;if(w.own){w.pop0=w.pop;w.mor=Math.max(w.mor||0,70);(got[w.own]=got[w.own]||[]).push(w.name)}else w.con=0});
+ S.draft=d.prev||null;S.phase='season';S.suppEnd=1;
+ brands().forEach(b=>{if(got[b])news(`🌍 ${nameOf(b)} drafted ${got[b].join(', ')}.`)});
+ news(`📋 The WWE Supplemental Draft is complete — back to week ${S.week}. The WWE wrestlers who weren't picked are still free agents.`);save()}
