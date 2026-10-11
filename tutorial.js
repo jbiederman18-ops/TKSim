@@ -11,7 +11,7 @@
      tour get a "what's new" replay of just those stops.
    • Run `python3 tools/check-tutorial.py` — it plays every stop and tip in a headless browser and fails on any
      missing target or stale value. */
-const TUT_REV=13;
+const TUT_REV=14;
 const TUT_KEY='tksim_tut';
 const TUT_MISS=[];
 
@@ -66,8 +66,8 @@ const TUT_STEPS=[
  b:()=>`Each week you book ${tv('show name',()=>esc(curShow().mine),'your show')} while ${tvRival()} books ${ON()?'theirs':tv('rival show',()=>esc(curShow().theirs),'theirs')}. The better show wins the night.<br><br>${tv('next PPV',()=>{const n=nextPPV();return n?`Next PPV: <b>${esc(n.n)}</b>${n.in?` in ${n.in} week${n.in>1?'s':''}`:' — this week'}. PPVs are where feuds pay off and fans swing big.`:''},'')}`},
 {id:'s.wwe',track:'season',since:13,tab:'home',sel:'main .card.showcard',sys:['calendar','wwe','rumble','money in the bank'],t:'AEW meets WWE',
  b:()=>`The year alternates AEW and WWE's biggest PPVs — ${tvPPVs().join(', ')}. Both brands run every one, and WWE's four world titles sit beside the AEW belts.<br><br>🏟️ <b>${tv('Rumble',()=>esc(PPVS[RR_WEEK]),'Royal Rumble')}</b> (week ${tv('RR_WEEK',()=>RR_WEEK,4)}): your men's and women's Rumbles lock onto the card, and each winner earns a world title shot at <b>${tv('Mania',()=>esc(PPVS[WM_WEEK]),'WrestleMania')}</b>.<br>💼 <b>${tv('MITB',()=>esc(PPVS[MITB_WEEK]),'Money in the Bank')}</b> (week ${tv('MITB_WEEK',()=>MITB_WEEK,20)}): the ladder match winner holds the briefcase for a year and can cash in on a world champion any time — even straight after the champion's match. Look for it in the match editor.`},
-{id:'s.war',track:'season',since:1,tab:'home',sel:()=>{const w=document.querySelector('main .war');return w&&w.closest('.card')},sys:['goal','fans'],t:'How you win',
- b:()=>`This is the scoreboard: <b>fans gained this season</b>. Your show rating earns or loses fans — the main event counts most, beating the rival's show adds a bonus, PPVs swing far more, and ${tv('All In',()=>PPVS[ALLIN_WEEK],'All In')} counts double.`},
+{id:'s.war',track:'season',since:14,tab:'home',sel:()=>{const w=document.querySelector('main .war');return w&&w.closest('.card')},sys:['goal','fans'],t:'How you win',
+ b:()=>`This is the scoreboard: <b>fans gained this season</b>. Your show rating earns or loses fans — the main event counts most, beating the rival's show adds a bonus, PPVs swing far more, and the supershows — ${tv('Mania',()=>PPVS[WM_WEEK],'WrestleMania')} and ${tv('All In',()=>PPVS[ALLIN_WEEK],'All In')} — count double.`},
 {id:'s.brief',track:'season',since:4,tab:'home',opt:true,sel:'main [onclick="openBrief()"]',sys:['briefing','contracts','morale'],t:'The weekly briefing',
  b:()=>`The first time you open Home each week you get a rundown — <b>expiring contracts always come first</b> — then unhappy talent, injuries and what's coming. A <b>✍️ Contract countdown</b> card sits on Home whenever a deal is ${tv('CON_SOON',()=>CON_SOON,5)} weeks or less from ending (stars sooner), and you'll get a warning before you go live on anyone's last show. Wrestlers who want more will <b>pitch you</b> — a main event, a title shot, mic time, a raise. The unhappier they are, the more they ask.`},
 {id:'s.mand',track:'season',since:1,tab:'home',opt:true,sel:'main .card.mand',sys:['mandates'],t:'Network mandates',

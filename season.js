@@ -180,7 +180,7 @@ function weekGoalsCard(){if(S.phase!=='season')return '';if(!S.goal||!S.goal.p||
 /* ===================== LIVE GOAL TRACKER (v92) =====================
  Reads the card as it's booked right now and says whether the weekly goal and the network mandate are on track.
  Matches use their projected range, promos a guess from mic skill, the show the same weighting the ratings use. */
-function cardProj(){const sh=curShow();const c=(S.card&&S.card.p)||[];const ctx={ppv:sh.ppv,allin:sh.ppv&&S.week===ALLIN_WEEK,preview:true};
+function cardProj(){const sh=curShow();const c=(S.card&&S.card.p)||[];const ctx={ppv:sh.ppv,allin:sh.ppv&&SUPER(S.week),preview:true};
  const P={sh,booked:0,me:null,women:0,title:0,tag:0,stip:0,pr:null,nm:0,loMid:5,loHi:5,rk:0,newch:false,tagdef:false,deb:false,show:null};
  const ch=S.chant&&S.chant.p&&S.chant.p.w===AW()?S.chant.p.id:null;let chUsed=false;
  const meSlot=c.map((sl,i)=>sl.k==='match'?i:-1).filter(i=>i>=0).pop();
