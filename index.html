@@ -932,7 +932,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v169';
+const APP_VERSION='v170';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -1990,13 +1990,15 @@ function emptySlot(on,label,attr){return `<button class="wc empty" ${attr||''} o
 /* iOS Safari can drop a detached <input type=file> while the picker is open, so keep it in the DOM. */
 let FIN=null;
 function fileInput(){if(FIN)FIN.remove();const i=document.createElement('input');i.type='file';i.style.cssText='position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0';document.body.appendChild(i);FIN=i;return i}
-async function bitmapToPhoto(blob){const bm=await createImageBitmap(blob);const W=240,H=320,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');const sc=Math.max(W/bm.width,H/bm.height);const dw=bm.width*sc,dh=bm.height*sc;x.drawImage(bm,(W-dw)/2,(H-dh)*.2,dw,dh);bm.close&&bm.close();return c.toDataURL('image/jpeg',.7)}
+async function bitmapToPhoto(blob){const bm=await createImageBitmap(blob);const W=240,H=320,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');const sc=Math.max(W/bm.width,H/bm.height);const dw=bm.width*sc,dh=bm.height*sc;x.drawImage(bm,(W-dw)/2,(H-dh)*.2,dw,dh);bm.close&&bm.close();return photoURL(c)}
+/* v170: a picture that's already a cut-out (see-through background) keeps its transparency */
+function photoURL(c){try{if(typeof photoHasAlpha==='function'&&photoHasAlpha(c))return c.toDataURL('image/png')}catch(e){}return c.toDataURL('image/jpeg',.7)}
 function fileToPhoto(f,isUrl){if(!isUrl&&typeof createImageBitmap==='function')return fileToPhoto0(f,false).catch(()=>bitmapToPhoto(f));return fileToPhoto0(f,isUrl)}
 function fileToPhoto0(f,isUrl){return new Promise((res,rej)=>{const img=new Image();if(isUrl)img.crossOrigin='anonymous';const u=isUrl?f:URL.createObjectURL(f);
- img.onload=()=>{const W=240,H=320,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');const sc=Math.max(W/img.width,H/img.height);const dw=img.width*sc,dh=img.height*sc;x.drawImage(img,(W-dw)/2,(H-dh)*.2,dw,dh);if(!isUrl)URL.revokeObjectURL(u);try{res(c.toDataURL('image/jpeg',.7))}catch(e){rej(e)}};
+ img.onload=()=>{const W=240,H=320,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');const sc=Math.max(W/img.width,H/img.height);const dw=img.width*sc,dh=img.height*sc;x.drawImage(img,(W-dw)/2,(H-dh)*.2,dw,dh);if(!isUrl)URL.revokeObjectURL(u);try{res(photoURL(c))}catch(e){rej(e)}};
  img.onerror=()=>{if(!isUrl)URL.revokeObjectURL(u);rej()};img.src=u})}
 function addPhoto(id){const i=fileInput();i.accept='image/*';i.onchange=async()=>{const f=i.files[0];if(!f)return;
- try{const old=IMG[id];IMG[id]=await fileToPhoto(f);if(!saveImg()){if(old)IMG[id]=old;else delete IMG[id]}}catch(e){toast("That image couldn't be opened.")}showW(id);render()};i.click()}
+ try{const old=IMG[id];IMG[id]=await cutIn(await fileToPhoto(f),id);if(!saveImg()){if(old)IMG[id]=old;else delete IMG[id]}}catch(e){toast("That image couldn't be opened.")}showW(id);render()};i.click()}
 /* ---------- Photo Studio ---------- */
 let UNQ=[];
 function matchFile(name){const f='-'+slug(name.replace(/\.[^.]+$/,'').replace(/([a-z])([A-Z])/g,'$1 $2').replace(/[_+.]/g,' '))+'-';let best=null,bl=0;
@@ -2009,19 +2011,19 @@ function matchFile(name){const f='-'+slug(name.replace(/\.[^.]+$/,'').replace(/(
  return hits.length===1?hits[0]:null}
 function bulkPhotos(){const i=fileInput();i.accept='image/*';i.multiple=true;i.onchange=async()=>{const fs=[...i.files];if(!fs.length)return;
  openModal(`<div class="h mhd">Importing…</div><p class="muted">Processing ${fs.length} photo${fs.length>1?'s':''}.</p>`);let ok=0,bad=0;UNQ=[];const backup=Object.assign({},IMG);
- for(const f of fs){let url;try{url=await fileToPhoto(f)}catch(e){bad++;continue}const w=matchFile(f.name);if(w){IMG[w.id]=url;ok++}else UNQ.push({name:f.name,url})}
+ for(const f of fs){let url;try{url=await fileToPhoto(f)}catch(e){bad++;continue}const w=matchFile(f.name);if(w){IMG[w.id]=await cutIn(url,w.id);ok++}else UNQ.push({name:f.name,url})}
  if(!saveImg()){IMG=backup;return openModal(`<div class="h mhd">Storage full</div><p class="muted">Your device ran out of space for photos. Try importing fewer at a time.</p><button class="btn" onclick="openStudio()">Back to Photo Studio</button>`)}
  render();toast(`${ok} photo${ok===1?'':'s'} matched${bad?` · ${bad} unreadable`:''}`);if(UNQ.length)renderUnq();else openStudio()};i.click()}
 function renderUnq(){const u=UNQ[0];if(!u)return openStudio();
  openModal(`<div class="h mhd">Who is this?</div><p class="muted">${UNQ.length} photo${UNQ.length>1?'s':''} couldn't be matched by filename.</p><div class="wd-top"><div class="wd-pic"><img src="${u.url}" alt=""></div><div style="min-width:0"><div class="muted tiny">File</div><div style="overflow-wrap:anywhere;font-weight:700">${esc(u.name)}</div></div></div>
  <button class="btn" onclick="assignUnq()">Assign to a wrestler</button><button class="btn sec" onclick="UNQ.shift();renderUnq()">Skip this photo</button><button class="btn ghost" onclick="UNQ=[];openStudio()">Skip all</button>`)}
 function assignUnq(){openPicker({title:'Who is this?',sort:'nophoto',pool:()=>Object.values(S.w).sort((a,b)=>hasPhoto(a)-hasPhoto(b)),info:w=>hasPhoto(w)?'Has photo — replace':(w.own==='p'?'Yours':w.own==='ai'?'Rival':'Free agent'),
- onPick:id=>{if(id){const u=UNQ.shift();IMG[id]=u.url;saveImg();render()}renderUnq()},back:renderUnq})}
+ onPick:async id=>{if(id){const u=UNQ.shift();IMG[id]=await cutIn(u.url,id);saveImg();render()}renderUnq()},back:renderUnq})}
 let SF='missing';
 function openStudio(){const all=Object.values(S.w);const have=all.filter(hasPhoto).length;let l=all.filter(w=>SF==='all'||(SF==='missing'?!hasPhoto(w):w.own==='p'&&!hasPhoto(w)));l.sort((a,b)=>b.pop-a.pop);
  openModal(`<div class="h mhd">Photo Studio</div><div class="row sb"><span class="muted">${have} of ${all.length} wrestlers have photos</span><b class="gold">${Math.round(have/all.length*100)}%</b></div><div class="bar"><i style="width:${have/all.length*100}%"></i></div>
  <button class="btn mt" onclick="openQuick('missing')">⚡ Quick photo mode</button><p class="muted tiny" style="margin:6px 0 0">The fastest way on a phone: search, copy the picture, paste — no saving or renaming. Jumps to the next wrestler automatically. WWE wrestlers search wwe.com for their official photo — tap <b>WWE</b> inside it to do just them, or <b>Everyone</b> to replace existing photos too.</p>
- <button class="btn sec mt" onclick="bulkPhotos()">📷 Bulk import photos</button>
+ <button class="btn sec mt" onclick="bulkPhotos()">📷 Bulk import photos</button>${typeof cutCard==='function'?cutCard():''}
  <details class="card mt"><summary class="h small" style="margin:0">How bulk import works</summary><p>Save photos named after each wrestler — like <b>will-ospreay.jpg</b>, <b>Mercedes Mone.png</b> or <b>adam_page.jpg</b> — then select them all at once. The game matches each file by its name and crops it to card size. Anything it can't match, you can assign by tapping the right card.</p><p>Use <b>🔍 Find</b> below to open an image search for a wrestler, save the picture to your phone with their name, and repeat. Then import them all in one go.</p><p><b>Shared photos:</b> drop pictures named after each wrestler into the <b>photos</b> folder of the game's GitHub repo. They're cropped automatically and show up on every device and every new save — no importing, and they don't use up this device's storage. A photo added here in the game always takes priority.</p></details>
  <div class="row"><button class="btn sec" onclick="exportPhotos()">Export photo pack</button><button class="btn sec" onclick="importPhotos()">Import photo pack</button></div>
  <div class="h small mt">Checklist</div><div class="chips">${[['missing','Missing'],['mine','My roster · missing'],['all','Everyone']].map(([k,n])=>`<button class="chip ${SF===k?'on':''}" onclick="SF='${k}';openStudio()">${n}</button>`).join('')}</div>
@@ -2033,7 +2035,7 @@ async function clipImage(){
  for(const it of items){const t=it.types.find(x=>x.startsWith('image/'));if(t)return {blob:await it.getType(t)}}
  for(const it of items){if(it.types.includes('text/plain')){const tx=(await (await it.getType('text/plain')).text()).trim();if(/^https?:\/\/\S+$/.test(tx))return {url:tx}}}
  return {}}
-async function setPhotoFrom(id,src){const old=IMG[id];const url=src.blob?await fileToPhoto(src.blob):await fileToPhoto(src.url,true);IMG[id]=url;if(!saveImg()){if(old)IMG[id]=old;else delete IMG[id];return false}render();return true}
+async function setPhotoFrom(id,src){const old=IMG[id];const url=await cutIn(src.blob?await fileToPhoto(src.blob):await fileToPhoto(src.url,true),id);IMG[id]=url;if(!saveImg()){if(old)IMG[id]=old;else delete IMG[id];return false}render();return true}
 async function pastePhoto(id,after){let src;try{src=await clipImage()}catch(e){toast(e==='unsupported'?"Pasting isn't supported in this browser — use Add photo instead.":'Allow paste to use the copied picture.');return}
  if(!src.blob&&!src.url)return toast('No picture copied. Long-press an image and choose Copy.');
  try{if(await setPhotoFrom(id,src)){toast(`📸 Photo added for ${S.w[id].name}.`);if(after)after(true)}}
@@ -2057,7 +2059,7 @@ function renderQuick(){if(!QP)return;while(QP.i<QP.ids.length&&(!S.w[QP.ids[QP.i
 function quickOk(){QP.done++;QP.i++;renderQuick()}
 function quickPaste(){if(!QP)return;pastePhoto(QP.ids[QP.i],quickOk)}
 function quickFile(){const id=QP.ids[QP.i];const i=fileInput();i.accept='image/*';i.onchange=async()=>{const f=i.files[0];if(!f)return;try{if(await setPhotoFrom(id,{blob:f})){toast(`📸 Photo added for ${S.w[id].name}.`);quickOk()}}catch(e){toast("That image couldn't be opened.")}};i.click()}
-function studioAdd(id){const i=fileInput();i.accept='image/*';i.onchange=async()=>{const f=i.files[0];if(!f)return;try{const old=IMG[id];IMG[id]=await fileToPhoto(f);if(!saveImg()){if(old)IMG[id]=old;else delete IMG[id]}else toast(`Photo added for ${S.w[id].name}.`)}catch(e){toast("That image couldn't be opened.")}render();openStudio()};i.click()}
+function studioAdd(id){const i=fileInput();i.accept='image/*';i.onchange=async()=>{const f=i.files[0];if(!f)return;try{const old=IMG[id];IMG[id]=await cutIn(await fileToPhoto(f),id);if(!saveImg()){if(old)IMG[id]=old;else delete IMG[id]}else toast(`Photo added for ${S.w[id].name}.`)}catch(e){toast("That image couldn't be opened.")}render();openStudio()};i.click()}
 function exportPhotos(){const n=Object.keys(IMG).length;if(!n)return toast('No photos to export yet.');const names={};Object.keys(IMG).forEach(id=>{if(S.w[id])names[id]=S.w[id].name});
  const blob=new Blob([JSON.stringify({type:'all-elite-gm-photos',v:1,names,img:IMG})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`tony-khan-sim-photos-${n}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);toast(`Exported ${n} photos.`)}
 function importPhotos(){const i=fileInput();i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);const src=d.img||d.__img;if(!src)throw 0;
@@ -2266,7 +2268,16 @@ function picksLeft(b){const d=S.draft;if(!d)return 0;const o=d.order||[];const i
 function capRoom(b){const d=S.draft;return d&&d.cap?d.cap-payroll(b):Infinity}
 function minAsk(){const l=Object.values(S.w).filter(w=>!w.own&&!w.cw&&!w.rookie).map(mkt);return l.length?Math.min(...l):4}
 /* can this brand take w and still fill every remaining pick with the cheapest wrestler left? */
-function capOk(w,b){const d=S.draft;if(!d||!d.cap)return true;return mkt(w)<=capRoom(b)-Math.max(0,picksLeft(b)-1)*minAsk()}
+/* v170: what the rest of a brand's picks will really cost. It used to assume every remaining pick could be had at the single
+ cheapest price on the board, but only a handful of wrestlers sit at that price and every GM is after them — so both GMs
+ ran dry with picks to spare. Now it prices the remaining picks at the average of the cheapest wrestlers left, counting
+ enough of them to cover every brand's remaining picks. */
+let RSV=null;
+function capReserve(b){const d=S.draft;const k=Math.max(0,picksLeft(b)-1);if(!k)return 0;const key=(d.pk||0)+'|'+b;if(RSV&&RSV.k===key)return RSV.v;
+ const need=(d.order||[b]).reduce((a,x)=>a+Math.max(0,picksLeft(x)-(x===b?1:0)),0)||k;
+ const l=Object.values(S.w).filter(w=>!w.own&&!w.cw&&!w.rookie).map(w=>mkt(w,b)).sort((x,y)=>x-y).slice(0,Math.max(k,need));
+ const v=l.length?Math.round(l.reduce((a,x)=>a+x,0)/l.length*k):k*4;RSV={k:key,v};return v}
+function capOk(w,b){const d=S.draft;if(!d||!d.cap)return true;return mkt(w)<=capRoom(b)-capReserve(b)}
 /* late in a draft the cheap wrestlers can all be gone, so nobody fits: then the cheapest one left is always allowed (never a dead end) */
 function capStuck(b){return !Object.values(S.w).some(w=>!w.own&&!w.cw&&!w.rookie&&capOk(w,b))}
 function draftOk(w,b){return capOk(w,b)||mkt(w)<=minAsk()&&capStuck(b)}
@@ -4661,6 +4672,7 @@ if(typeof document!=='undefined'&&document.getElementById('app')){
 <script src="tutorial.js"></script>
 <script src="fx.js"></script>
 <script src="belts.js"></script>
+<script src="cut.js"></script>
 <script type="module" src="online.js"></script>
 </body>
 </html>

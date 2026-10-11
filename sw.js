@@ -1,9 +1,11 @@
 // Tony Khan Simulator — offline support. Bump VERSION whenever you upload a new index.html (and APP_VERSION in index.html to match — that's the label shown in the game).
-const VERSION = 'aegm-v169';
+const VERSION = 'aegm-v170';
+// The photo cut-out tool (vendor/cut, ~15MB) is downloaded the first time it's used and kept across updates in its own cache.
+const CUT_CACHE = 'tksim-cut-v1';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './icon-maskable-512.png',
   './online.js', './firebase-sdk.js', './firebase-config.js',
   './party.js', './scenarios.js', './scenarios2.js', './gimmicks.js', './season.js', './pitches.js', './openchal.js', './deals.js', './vendor/qrcode.js',
-  './crises2.js', './tutorial.js', './challenges.js', './farm.js', './rohleague.js', './morale.js', './frontoffice.js', './history.js', './trades.js', './hype.js', './fx.js', './belts.js', './wwe.js'];
+  './crises2.js', './tutorial.js', './challenges.js', './farm.js', './rohleague.js', './morale.js', './frontoffice.js', './history.js', './trades.js', './hype.js', './fx.js', './belts.js', './wwe.js', './cut.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)));
@@ -12,7 +14,7 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys()
-    .then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k))))
+    .then(keys => Promise.all(keys.filter(k => k !== VERSION && k !== CUT_CACHE).map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
 
@@ -21,6 +23,16 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;
+  if (url.pathname.includes('/vendor/cut/')) {
+    e.respondWith(caches.open(CUT_CACHE).then(async cache => {
+      const hit = await cache.match(url.pathname);
+      if (hit) return hit;
+      const res = await fetch(e.request);
+      if (res.ok) cache.put(url.pathname, res.clone());
+      return res;
+    }));
+    return;
+  }
   // The photo list and the Firebase settings open instantly from the cache too (firebase-config.js blocks the page
   // while it loads, so waiting on a slow connection here froze the whole launch). A fresh copy is fetched in the
   // background every launch, so a change still shows up on the next open. Only the very first visit waits on the network.
