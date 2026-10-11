@@ -932,7 +932,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v174';
+const APP_VERSION='v175';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -2267,7 +2267,11 @@ function newGame(gm,rival,diff,online){
  news(`🎤 A new era begins. Rosters and champions are current as of ${DATA_AS_OF}, and everyone starts the season healthy with a clean slate. Draft your roster and win the fan war on the road to WrestleMania and All In.`);
  save();
 }
-function startDraft(){S.phase='draft';const ord=shuffle(brands().slice());S.cap=capFor(ord.length);S.draft={round:1,pick:0,order:ord,rounds:ord.length>2?20:24,log:[],cap:S.cap};save()}
+/* v175: with 3-match TV and a much bigger roster, the draft cap is raised (CAP_X) so each brand can afford more top
+ stars. The economy is anchored separately (S.cap, which revenue scales with) and only rises ECON_X, so the extra payroll
+ is a real cost and money stays meaningful. */
+const CAP_X=1.2,ECON_X=1.1;
+function startDraft(){S.phase='draft';const ord=shuffle(brands().slice());const base=capFor(ord.length);S.cap=Math.round(base*ECON_X);S.draft={round:1,pick:0,order:ord,rounds:ord.length>2?20:24,log:[],cap:Math.round(base*CAP_X)};save()}
 /* ---- draft salary cap ---- */
 function picksLeft(b){const d=S.draft;if(!d)return 0;const o=d.order||[];const i=o.indexOf(b);if(i<0)return 0;const pos=i;return Math.max(0,d.rounds-(d.round-1)-(pos<d.pick?1:0))}
 function capRoom(b){const d=S.draft;return d&&d.cap?d.cap-payroll(b):Infinity}
