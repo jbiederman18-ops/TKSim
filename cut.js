@@ -86,10 +86,14 @@ async function cutOut(sub,opt){opt=opt||{};const W=sub.width,H=sub.height,n=W*H;
  const rr=Math.max(2,Math.round(W/120));const ch=[0,1,2].map(k=>{const f=new Float32Array(n);for(let i=0;i<n;i++)f[i]=d[i*4+k]*a[i]*a[i];return box(f,W,H,rr)});const wa=new Float32Array(n);for(let i=0;i<n;i++)wa[i]=a[i]*a[i];const mw=box(wa,W,H,rr);
  for(let i=0;i<n;i++){const al=a[i];if(al<.98&&al>0&&mw[i]>1e-3){const t=1-al;for(let k=0;k<3;k++)d[i*4+k]=Math.round(d[i*4+k]*(1-t)+(ch[k][i]/mw[i])*t)}d[i*4+3]=Math.round(al*255)}
  sx.putImageData(img,0,0)}
-/* the backdrop: the card's own style gradient with the gold streaks, same as the photo-less silhouettes */
-function backdrop(x,W,H,w){const c=(typeof SCOL!=='undefined'&&w&&SCOL[w.st])||['#6a5a3a','#140f08'];
- const g=x.createRadialGradient(W*.5,H*.3,0,W*.5,H*.3,Math.hypot(W,H)*.8);g.addColorStop(0,c[0]);g.addColorStop(1,c[1]);x.fillStyle=g;x.fillRect(0,0,W,H);
- x.save();x.strokeStyle='rgba(243,215,122,.16)';x.lineWidth=W*7/120;const k=W/120;x.beginPath();x.moveTo(-20*k,130*k);x.lineTo(140*k,20*k);x.moveTo(-20*k,152*k);x.lineTo(140*k,42*k);x.stroke();x.restore()}
+/* v176: the backdrop is AEW's own black-and-gold card art (card-bg.jpg), the same one behind every card slot.
+   The old per-style gradient stays only as a fallback if the image can't load. */
+let BG=null,BGP=null;
+function bgReady(){if(BG)return Promise.resolve(BG);if(!BGP)BGP=new Promise(res=>{const im=new Image();im.onload=()=>{BG=im;res(im)};im.onerror=()=>{BGP=null;res(null)};im.src='card-bg.jpg'});return BGP}
+bgReady();
+function backdrop(x,W,H,w){if(BG){const iw=BG.naturalWidth,ih=BG.naturalHeight,s=Math.max(W/iw,H/ih);x.drawImage(BG,(W-iw*s)/2,(H-ih*s)/2,iw*s,ih*s);return}
+ const c=(typeof SCOL!=='undefined'&&w&&SCOL[w.st])||['#6a5a3a','#140f08'];
+ const g=x.createRadialGradient(W*.5,H*.3,0,W*.5,H*.3,Math.hypot(W,H)*.8);g.addColorStop(0,c[0]);g.addColorStop(1,c[1]);x.fillStyle=g;x.fillRect(0,0,W,H)}
 /* subject (a canvas with transparency) → finished card photo */
 const PW=240,PH=320;
 function compose(sub,w){const W=sub.width,H=sub.height;const c=canvas(W,H);const x=c.getContext('2d');backdrop(x,W,H,w);
@@ -101,7 +105,7 @@ function compose(sub,w){const W=sub.width,H=sub.height;const c=canvas(W,H);const
 async function cutPhoto(url,id,opt){const w=S&&S.w&&S.w[id];const im=await imgOf(url);const W=im.naturalWidth||im.width,H=im.naturalHeight||im.height;
  const sub=canvas(W,H);const sx=sub.getContext('2d');sx.drawImage(im,0,0,W,H);
  if(!hasAlpha(sub))await cutOut(sub,opt);
- return compose(sub,w)}
+ await bgReady();return compose(sub,w)}
 /* a big intake photo that couldn't be cut out still gets saved at the usual card size */
 async function small(url){const im=await imgOf(url);if((im.naturalWidth||im.width)<=PW)return url;const c=canvas(PW,PH);const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(im,0,0,PW,PH);return c.toDataURL(url.startsWith('data:image/png')?'image/png':'image/jpeg',.7)}
 window.cutWork=()=>cutOn()?[480,640]:[240,320];
@@ -115,29 +119,32 @@ window.cutIn=async function(url,id){if(!url)return url;if(!cutOn()||!S||!S.w||!S
 const sig=u=>u?u.length+':'+u.slice(-24):'';
 function done(){return prefs().done||{}}
 /* clean: cut out with the v172+ edges (no halo). Photos cut out before that can be cleaned up in place. */
-function markCut(id,u){const d=done(),c=prefs().clean||{};d[id]=c[id]=sig(u);setPrefs({done:d,clean:c})}
+function markCut(id,u){const d=done(),c=prefs().clean||{},b=prefs().bg||{};d[id]=c[id]=b[id]=sig(u);setPrefs({done:d,clean:c,bg:b})}
 const isCut=id=>!!IMG[id]&&done()[id]===sig(IMG[id]);
 const isClean=id=>!!IMG[id]&&(prefs().clean||{})[id]===sig(IMG[id]);
 const needsClean=id=>isCut(id)&&!isClean(id);
+/* v176: cut-outs made on the old generated gradients get re-set on the AEW backdrop */
+const needsBg=id=>isCut(id)&&(prefs().bg||{})[id]!==sig(IMG[id]);
 /* v173: an older cut-out is re-done from the card itself: the wrestler is cut out again from their backdrop, and the
    light ring the old edges left is peeled off (two passes) — no need to re-paste the original */
 async function cleanPhoto(url,id){const a=await cutPhoto(url,id,{halo:true});return cutPhoto(a,id,{halo:true})}
 window.photoIsCut=isCut;
+window.cutNeedsBg=()=>S&&S.w?Object.values(S.w).filter(w=>needsBg(w.id)).length:0;
 /* batch: every photo on this device, plus shared repo photos (those get a cut-out copy saved on this device) */
 let RUN=null;
-window.cutAll=async function(mode){if(RUN)return;const clean=mode==='clean';const ws=Object.values(S.w).filter(w=>clean?needsClean(w.id):(IMG[w.id]&&!isCut(w.id))||(!IMG[w.id]&&typeof repoPhoto==='function'&&repoPhoto(w)));
- if(!ws.length)return toast(clean?'Every cut-out already has clean edges. ✂️':'Every photo is already cut out. ✂️');RUN={n:ws.length,i:0,ok:0,bad:0,stop:false};const backup=Object.assign({},IMG);
- const draw=()=>openModal(`<div class="h mhd">✂️ ${clean?'Cleaning up edges':'Cutting out photos'}</div><p class="muted">${RUN.i<1&&!SESS?'Loading the cut-out tool (about 15MB)…':`${RUN.i} of ${RUN.n} done${RUN.bad?` · ${RUN.bad} skipped`:''}`}</p><div class="bar"><i style="width:${RUN.i/RUN.n*100}%"></i></div><p class="muted tiny">Keep the game open — it runs on this device. You can stop any time; the ones already done are kept.</p><button class="btn ghost" onclick="cutStop()">Stop</button>`,true);
+window.cutAll=async function(mode){if(RUN)return;const clean=mode==='clean',bgm=mode==='bg';const ws=Object.values(S.w).filter(w=>bgm?needsBg(w.id):clean?needsClean(w.id):(IMG[w.id]&&!isCut(w.id))||(!IMG[w.id]&&typeof repoPhoto==='function'&&repoPhoto(w)));
+ if(!ws.length)return toast(bgm?'Every cut-out is already on the AEW backdrop. ✂️':clean?'Every cut-out already has clean edges. ✂️':'Every photo is already cut out. ✂️');RUN={n:ws.length,i:0,ok:0,bad:0,stop:false};const backup=Object.assign({},IMG);
+ const draw=()=>openModal(`<div class="h mhd">✂️ ${bgm?'Moving cut-outs to the new backdrop':clean?'Cleaning up edges':'Cutting out photos'}</div><p class="muted">${RUN.i<1&&!SESS?'Loading the cut-out tool (about 15MB)…':`${RUN.i} of ${RUN.n} done${RUN.bad?` · ${RUN.bad} skipped`:''}`}</p><div class="bar"><i style="width:${RUN.i/RUN.n*100}%"></i></div><p class="muted tiny">Keep the game open — it runs on this device. You can stop any time; the ones already done are kept.</p><button class="btn ghost" onclick="cutStop()">Stop</button>`,true);
  draw();
  try{await session()}catch(e){RUN=null;return openModal(`<div class="h mhd">Couldn't load the cut-out tool</div><p class="muted">It needs an internet connection the first time. Try again when you're online.</p><button class="btn" onclick="openStudio()">Back to Photo Studio</button>`)}
  /* v171: each photo is saved before moving on, so a full device stops the batch cleanly instead of losing photos silently */
  let full=false;
- for(const w of ws){if(RUN.stop)break;const prev=IMG[w.id];let out=null;try{const src=prev||await fileToPhoto(new URL(repoPhoto(w),location.href).href,true);out=clean?await cleanPhoto(src,w.id):await cutPhoto(src,w.id)}catch(e){console.warn(e);RUN.bad++}
+ for(const w of ws){if(RUN.stop)break;const prev=IMG[w.id];let out=null;try{const src=prev||await fileToPhoto(new URL(repoPhoto(w),location.href).href,true);out=bgm?await cutPhoto(src,w.id,{halo:true}):clean?await cleanPhoto(src,w.id):await cutPhoto(src,w.id)}catch(e){console.warn(e);RUN.bad++}
   if(out){IMG[w.id]=out;if(await saveImgNow()){markCut(w.id,out);RUN.ok++}else{if(prev)IMG[w.id]=prev;else delete IMG[w.id];full=true;break}}
   RUN.i++;if(RUN.i%3===0||RUN.i===RUN.n)draw()}
  const r=RUN;RUN=null;render();
  if(full)return openModal(`<div class="h mhd">Device storage is full</div><p class="muted">${r.ok} photo${r.ok===1?'':'s'} were cut out and saved before this device ran out of room; the rest keep their old photos. ${await storeLine()}</p><p class="muted tiny">Free some space on the phone (or remove photos of wrestlers you don't use), then run it again — it picks up where it stopped.</p><button class="btn" onclick="openStudio()">Back to Photo Studio</button>`);
- toast(`✂️ ${r.ok} photo${r.ok===1?'':'s'} ${clean?'cleaned up':'cut out'}${r.bad?` · ${r.bad} skipped`:''}.`);openStudio()};
+ toast(`✂️ ${r.ok} photo${r.ok===1?'':'s'} ${bgm?'moved to the new backdrop':clean?'cleaned up':'cut out'}${r.bad?` · ${r.bad} skipped`:''}.`);openStudio()};
 /* how much of the device's storage the game is using */
 async function storeLine(){try{const e=await navigator.storage.estimate();if(!e||!e.quota)return '';const mb=x=>x>=1e9?(x/1e9).toFixed(1)+' GB':Math.round(x/1e6)+' MB';return `The game is using ${mb(e.usage||0)} of the ${mb(e.quota)} this device allows it.`}catch(e){return ''}}
 window.cutStore=async function(){const el=document.getElementById('cutstore');if(el)el.textContent=await storeLine()};
@@ -146,6 +153,8 @@ window.cutStop=function(){if(RUN)RUN.stop=true};
 window.cutCard=function(){const all=Object.values(S.w);const mine=all.filter(w=>IMG[w.id]);const cut=mine.filter(w=>isCut(w.id)).length;const left=all.filter(w=>(IMG[w.id]&&!isCut(w.id))||(!IMG[w.id]&&typeof repoPhoto==='function'&&repoPhoto(w))).length;
  return `<div class="card mt"><div class="row sb" style="gap:10px"><div style="min-width:0"><b>✂️ Cut out backgrounds</b><div class="muted tiny">Removes the background and sets every wrestler on the same card backdrop, so the whole roster matches.</div></div><button class="mini ${cutOn()?'on':''}" onclick="cutToggle()">${cutOn()?'✓ On':'Off'}</button></div>
  <div class="muted tiny" style="margin-top:6px">${cutOn()?'New photos are cut out automatically.':'New photos keep their background.'} Already have a cut-out? A PNG with a see-through background is used as is.${cut?` · ${cut} cut out so far`:''}</div>
- ${left?`<button class="btn sec" style="margin:8px 0 0" onclick="cutAll()">✂️ Cut out ${left} existing photo${left===1?'':'s'}</button>`:''}${(()=>{const k=mine.filter(w=>needsClean(w.id)).length;return k?`<button class="btn sec" style="margin:8px 0 0" onclick="cutAll('clean')">🧹 Clean up the edges on ${k} earlier cut-out${k===1?'':'s'}</button><div class="muted tiny">Removes the light outline the first version of the cut-out left around heads and hair. Takes a few seconds each.</div>`:''})()}<div class="muted tiny" id="cutstore" style="margin-top:6px"></div></div>${setTimeout(()=>window.cutStore&&cutStore(),0)?'':''}`};
+ ${left?`<button class="btn sec" style="margin:8px 0 0" onclick="cutAll()">✂️ Cut out ${left} existing photo${left===1?'':'s'}</button>`:''}${(()=>{const k=mine.filter(w=>needsBg(w.id)).length;return k?`<button class="btn sec" style="margin:8px 0 0" onclick="cutAll('bg')">🖤 Put ${k} cut-out${k===1?'':'s'} on the new AEW backdrop</button><div class="muted tiny">Swaps the old coloured backgrounds for the black-and-gold card art. Takes a few seconds each.</div>`:''})()}${(()=>{const k=mine.filter(w=>needsClean(w.id)).length;return k?`<button class="btn sec" style="margin:8px 0 0" onclick="cutAll('clean')">🧹 Clean up the edges on ${k} earlier cut-out${k===1?'':'s'}</button><div class="muted tiny">Removes the light outline the first version of the cut-out left around heads and hair. Takes a few seconds each.</div>`:''})()}<div class="muted tiny" id="cutstore" style="margin-top:6px"></div></div>${setTimeout(()=>window.cutStore&&cutStore(),0)?'':''}`};
+/* v176: one-time heads-up that older cut-outs can move to the new backdrop */
+setTimeout(()=>{try{if(prefs().bgNudged)return;const k=window.cutNeedsBg();if(!k)return;setPrefs({bgNudged:1});typeof toast==='function'&&toast(`New AEW card backdrop! Open Photo Studio to move your ${k} cut-out${k===1?'':'s'} onto it.`)}catch(e){}},3000);
 window.cutToggle=function(){setPrefs({auto:!cutOn()});openStudio()};
 })();

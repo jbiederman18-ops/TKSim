@@ -253,7 +253,7 @@ details p{font-size:14.5px;color:#d0cabc}
 @keyframes foil{from{background-position:120% 0}to{background-position:-120% 0}}
 .wc.champ .o{background:linear-gradient(180deg,#fbe7a1,#c99a33);color:#1a1203}
 .wc.sel{outline:3px solid var(--gold2);outline-offset:-3px}
-.wc .pic{position:absolute;inset:0}
+.wc .pic{position:absolute;inset:0}.wc .pic,.wd-pic,.tt-pic,.fav{background:#0c0c0e url(card-bg.jpg) center/cover no-repeat}
 .wc .pic>*,.fav>*,.wd-pic>*{width:100%;height:100%;object-fit:cover;display:block}
 .wc .al{position:absolute;left:0;top:0;bottom:0;width:4px;z-index:2}
 .al.fc{background:var(--face)}.al.hl{background:var(--heel)}
@@ -932,7 +932,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v175';
+const APP_VERSION='v176';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -1972,8 +1972,8 @@ function saveImg(){const cur=IMG;(IMGREADY||Promise.resolve()).then(async()=>{
  return true}
 const SCOL={fl:['#3d93cc','#0b1e2e'],te:['#8a76cc','#1a1433'],br:['#c95a4c','#2c0f0d'],pw:['#cc8d3e','#2e1b08'],sh:['#c35ba5','#2c1027']};
 function initials(n){return n.normalize('NFD').replace(/[^A-Za-z ]/g,'').split(' ').filter(Boolean).map(x=>x[0]).join('').slice(0,2).toUpperCase()}
-function portrait(w){if(IMG[w.id])return `<img src="${IMG[w.id]}" alt="">`;const rp=repoPhoto(w);if(rp)return `<img src="${rp}" alt="" loading="lazy">`;const c=SCOL[w.st]||SCOL.sh;const sw=w.st==='pw'?42:w.st==='fl'?30:35;const f=w.g==='F';
- return `<svg viewBox="0 0 120 160" preserveAspectRatio="xMidYMid slice"><defs><radialGradient id="pg-${w.st}" cx="50%" cy="30%" r="80%"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></radialGradient></defs><rect width="120" height="160" fill="url(#pg-${w.st})"/><path d="M-20 130 L140 20 M-20 152 L140 42" stroke="#f3d77a" stroke-opacity=".16" stroke-width="7"/><text x="60" y="64" text-anchor="middle" font-family="Impact,Arial Black,sans-serif" font-size="60" fill="#fff" fill-opacity=".2">${initials(w.name)}</text><g fill="#070707" fill-opacity=".88">${f?'<path d="M60 52c-17 0-25 13-25 28 0 12-3 22-7 32h64c-4-10-7-20-7-32 0-15-8-28-25-28z"/>':''}<circle cx="60" cy="${f?77:75}" r="${f?17:19}"/><path d="M${60-sw} 162C${60-sw} 120 ${60-sw*.55} 102 60 101C${60+sw*.55} 102 ${60+sw} 120 ${60+sw} 162Z"/></g></svg>`}
+function portrait(w){if(IMG[w.id])return `<img src="${IMG[w.id]}" alt="">`;const rp=repoPhoto(w);if(rp)return `<img src="${rp}" alt="" loading="lazy">`;const sw=w.st==='pw'?42:w.st==='fl'?30:35;const f=w.g==='F';
+ return `<svg viewBox="0 0 120 160" preserveAspectRatio="xMidYMid slice"><text x="60" y="64" text-anchor="middle" font-family="Impact,Arial Black,sans-serif" font-size="60" fill="#f3d77a" fill-opacity=".2">${initials(w.name)}</text><g fill="#2b2b30" fill-opacity=".95" stroke="#f3d77a" stroke-opacity=".35" stroke-width="1">${f?'<path d="M60 52c-17 0-25 13-25 28 0 12-3 22-7 32h64c-4-10-7-20-7-32 0-15-8-28-25-28z"/>':''}<circle cx="60" cy="${f?77:75}" r="${f?17:19}"/><path d="M${60-sw} 162C${60-sw} 120 ${60-sw*.55} 102 60 101C${60+sw*.55} 102 ${60+sw} 120 ${60+sw} 162Z"/></g></svg>`}
 let REPO={};
 function repoKey(w){return slug(w.name)}
 function repoPhoto(w){return REPO[repoKey(w)]||null}
