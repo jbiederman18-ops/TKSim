@@ -6,7 +6,7 @@
      • A picture that's already a cut-out (a PNG with a see-through background) is used as is — no AI needed.
      • "Cut out all my photos" runs through every photo on this device, plus the shared repo photos.
    The cut-out runs on the phone itself: U²-Netp (Apache-2.0, 4.5MB) on onnxruntime-web (MIT, WebAssembly). The files live
-   in vendor/cut and are only downloaded the first time a photo is cut out; after that they're cached for offline use.
+   in vendor/cut and are downloaded when a photo is cut out (not stored on the device, which keeps room for photos).
    Loaded after the main script. */
 'use strict';
 (function(){
@@ -44,7 +44,7 @@ function backdrop(x,W,H,w){const c=(typeof SCOL!=='undefined'&&w&&SCOL[w.st])||[
 /* subject (a canvas with transparency) → finished card photo */
 function compose(sub,w){const W=sub.width,H=sub.height;const c=canvas(W,H);const x=c.getContext('2d');backdrop(x,W,H,w);
  x.save();x.shadowColor='rgba(0,0,0,.6)';x.shadowBlur=Math.round(W/18);x.shadowOffsetY=Math.round(W/80);x.drawImage(sub,0,0);x.restore();
- return c.toDataURL('image/jpeg',.82)}
+ return c.toDataURL('image/jpeg',.72)}
 /* cut out one card photo (a data URL from fileToPhoto). Returns a new data URL. */
 async function cutPhoto(url,id){const w=S&&S.w&&S.w[id];const im=await imgOf(url);const W=im.naturalWidth||im.width,H=im.naturalHeight||im.height;
  const sub=canvas(W,H);const sx=sub.getContext('2d');sx.drawImage(im,0,0,W,H);
@@ -69,14 +69,22 @@ window.cutAll=async function(){if(RUN)return;const ws=Object.values(S.w).filter(
  const draw=()=>openModal(`<div class="h mhd">✂️ Cutting out photos</div><p class="muted">${RUN.i<1&&!SESS?'Loading the cut-out tool (about 15MB, only the first time)…':`${RUN.i} of ${RUN.n} done${RUN.bad?` · ${RUN.bad} skipped`:''}`}</p><div class="bar"><i style="width:${RUN.i/RUN.n*100}%"></i></div><p class="muted tiny">Keep the game open — it runs on this device. You can stop any time; the ones already done are kept.</p><button class="btn ghost" onclick="cutStop()">Stop</button>`,true);
  draw();
  try{await session()}catch(e){RUN=null;return openModal(`<div class="h mhd">Couldn't load the cut-out tool</div><p class="muted">It needs an internet connection the first time. Try again when you're online.</p><button class="btn" onclick="openStudio()">Back to Photo Studio</button>`)}
- for(const w of ws){if(RUN.stop)break;try{const src=IMG[w.id]||await fileToPhoto(new URL(repoPhoto(w),location.href).href,true);const out=await cutPhoto(src,w.id);IMG[w.id]=out;markCut(w.id,out);RUN.ok++}catch(e){console.warn(e);RUN.bad++}
-  RUN.i++;if(RUN.i%5===0||RUN.i===RUN.n){if(!saveImg()){IMG=backup;break}draw()}}
- saveImg();const r=RUN;RUN=null;render();toast(`✂️ ${r.ok} photo${r.ok===1?'':'s'} cut out${r.bad?` · ${r.bad} skipped`:''}.`);openStudio()};
+ /* v171: each photo is saved before moving on, so a full device stops the batch cleanly instead of losing photos silently */
+ let full=false;
+ for(const w of ws){if(RUN.stop)break;const prev=IMG[w.id];let out=null;try{const src=prev||await fileToPhoto(new URL(repoPhoto(w),location.href).href,true);out=await cutPhoto(src,w.id)}catch(e){console.warn(e);RUN.bad++}
+  if(out){IMG[w.id]=out;if(await saveImgNow()){markCut(w.id,out);RUN.ok++}else{if(prev)IMG[w.id]=prev;else delete IMG[w.id];full=true;break}}
+  RUN.i++;if(RUN.i%3===0||RUN.i===RUN.n)draw()}
+ const r=RUN;RUN=null;render();
+ if(full)return openModal(`<div class="h mhd">Device storage is full</div><p class="muted">${r.ok} photo${r.ok===1?'':'s'} were cut out and saved before this device ran out of room; the rest keep their old photos. ${await storeLine()}</p><p class="muted tiny">Free some space on the phone (or remove photos of wrestlers you don't use), then run it again — it picks up where it stopped.</p><button class="btn" onclick="openStudio()">Back to Photo Studio</button>`);
+ toast(`✂️ ${r.ok} photo${r.ok===1?'':'s'} cut out${r.bad?` · ${r.bad} skipped`:''}.`);openStudio()};
+/* how much of the device's storage the game is using */
+async function storeLine(){try{const e=await navigator.storage.estimate();if(!e||!e.quota)return '';const mb=x=>x>=1e9?(x/1e9).toFixed(1)+' GB':Math.round(x/1e6)+' MB';return `The game is using ${mb(e.usage||0)} of the ${mb(e.quota)} this device allows it.`}catch(e){return ''}}
+window.cutStore=async function(){const el=document.getElementById('cutstore');if(el)el.textContent=await storeLine()};
 window.cutStop=function(){if(RUN)RUN.stop=true};
 /* the Photo Studio card */
 window.cutCard=function(){const all=Object.values(S.w);const mine=all.filter(w=>IMG[w.id]);const cut=mine.filter(w=>isCut(w.id)).length;const left=all.filter(w=>(IMG[w.id]&&!isCut(w.id))||(!IMG[w.id]&&typeof repoPhoto==='function'&&repoPhoto(w))).length;
  return `<div class="card mt"><div class="row sb" style="gap:10px"><div style="min-width:0"><b>✂️ Cut out backgrounds</b><div class="muted tiny">Removes the background and sets every wrestler on the same card backdrop, so the whole roster matches.</div></div><button class="mini ${cutOn()?'on':''}" onclick="cutToggle()">${cutOn()?'✓ On':'Off'}</button></div>
  <div class="muted tiny" style="margin-top:6px">${cutOn()?'New photos are cut out automatically.':'New photos keep their background.'} Already have a cut-out? A PNG with a see-through background is used as is.${cut?` · ${cut} cut out so far`:''}</div>
- ${left?`<button class="btn sec" style="margin:8px 0 0" onclick="cutAll()">✂️ Cut out ${left} existing photo${left===1?'':'s'}</button>`:''}</div>`};
+ ${left?`<button class="btn sec" style="margin:8px 0 0" onclick="cutAll()">✂️ Cut out ${left} existing photo${left===1?'':'s'}</button>`:''}<div class="muted tiny" id="cutstore" style="margin-top:6px"></div></div>${setTimeout(()=>window.cutStore&&cutStore(),0)?'':''}`};
 window.cutToggle=function(){setPrefs({auto:!cutOn()});openStudio()};
 })();

@@ -932,7 +932,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v170';
+const APP_VERSION='v171';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -1960,6 +1960,11 @@ function loadImg(){IMGREADY=(async()=>{let fromLS={};try{fromLS=JSON.parse(local
   IMG=db;PSAVED=Object.assign({},db);try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
  }catch(e){IMG=fromLS;PSAVED=null}
  if(S)render()})();return IMGREADY}
+/* v171: save the photos now and report whether it worked (for batches that must stop when the device is full) */
+function saveImgNow(){return (IMGREADY||Promise.resolve()).then(async()=>{const cur=IMG;
+  if(PSAVED===null){try{localStorage.setItem(KEY+'_img',JSON.stringify(cur));return true}catch(e){return false}}
+  const puts=Object.entries(cur).filter(([k,v])=>PSAVED[k]!==v),dels=Object.keys(PSAVED).filter(k=>!(k in cur));if(!puts.length&&!dels.length)return true;
+  try{await idbWrite(puts,dels);puts.forEach(([k,v])=>PSAVED[k]=v);dels.forEach(k=>delete PSAVED[k]);return true}catch(e){return false}})}
 function saveImg(){const cur=IMG;(IMGREADY||Promise.resolve()).then(async()=>{
   if(PSAVED===null){try{localStorage.setItem(KEY+'_img',JSON.stringify(cur))}catch(e){toast('Device storage is full — remove some photos.')}return}
   const puts=Object.entries(cur).filter(([k,v])=>PSAVED[k]!==v),dels=Object.keys(PSAVED).filter(k=>!(k in cur));if(!puts.length&&!dels.length)return;
@@ -2280,7 +2285,10 @@ function capReserve(b){const d=S.draft;const k=Math.max(0,picksLeft(b)-1);if(!k)
 function capOk(w,b){const d=S.draft;if(!d||!d.cap)return true;return mkt(w)<=capRoom(b)-capReserve(b)}
 /* late in a draft the cheap wrestlers can all be gone, so nobody fits: then the cheapest one left is always allowed (never a dead end) */
 function capStuck(b){return !Object.values(S.w).some(w=>!w.own&&!w.cw&&!w.rookie&&capOk(w,b))}
-function draftOk(w,b){return capOk(w,b)||mkt(w)<=minAsk()&&capStuck(b)}
+/* v171: once nobody fits, the last picks are minimum deals — any of the cheapest wrestlers left (twice as many as you have
+ picks), not just the single cheapest one, so you still get a real choice */
+function minTier(b){const l=Object.values(S.w).filter(w=>!w.own&&!w.cw&&!w.rookie).map(w=>mkt(w,b)).sort((x,y)=>x-y);return l.length?l[Math.min(l.length-1,Math.max(2,picksLeft(b)*2)-1)]:4}
+function draftOk(w,b){return capOk(w,b)||capStuck(b)&&mkt(w)<=minTier(b)}
 /* straight draft: the same order every round (1-2-3, 1-2-3…) */
 function onClock(){const d=S.draft;const o=d.order||(d.order=d.first==='p'?['p','ai']:['ai','p']);return o[d.pick]}
 /* ===================== SCOUTING: developing talent ===================== */
@@ -3352,10 +3360,10 @@ function draftView(){const d=S.draft;const oc=onClock();
  const ranked=all.slice().sort((a,b)=>ovr(b)-ovr(a)||b.pop-a.pop);const best=ranked.find(w=>draftOk(w,'p'))||ranked[0];
  const board=ranked.map((w,k)=>({w,r:k+1})).filter(x=>!best||x.w.id!==best.id).slice(0,6);
  const ticks=Array.from({length:d.rounds},(_,k)=>`<i class="${k<d.round-1?'done':k===d.round-1?'now':''}"></i>`).join('');
- const tape=best?`<div class="card ttape"><div class="tt-bg">${ovr(best)}</div><div class="tt-pic" onclick="showW('${best.id}')">${portrait(best)}</div><div class="tt-k">Tale of the tape <span class="tt-al ${best.al==='f'?'fc':'hl'}">${best.al==='f'?'Face':'Heel'}</span></div><div class="tt-n">${esc(best.name)}</div><div class="tt-s">${STYLE_N[best.st]||''} · best available${capOk(best,'p')?'':' · <span class="bad">over your cap</span>'}</div>
+ const tape=best?`<div class="card ttape"><div class="tt-bg">${ovr(best)}</div><div class="tt-pic" onclick="showW('${best.id}')">${portrait(best)}</div><div class="tt-k">Tale of the tape <span class="tt-al ${best.al==='f'?'fc':'hl'}">${best.al==='f'?'Face':'Heel'}</span></div><div class="tt-n">${esc(best.name)}</div><div class="tt-s">${STYLE_N[best.st]||''} · best available${capOk(best,'p')?'':draftOk(best,'p')?' · <span class="gold">minimum deal</span>':' · <span class="bad">over your cap</span>'}</div>
  <div class="tt-g"><div><small>Ring</small><b>${Math.round(best.ring)}</b></div><div><small>Mic</small><b>${Math.round(best.mic)}</b></div><div><small>Pop</small><b>${Math.round(best.pop)}</b></div><div><small>Salary</small><b class="gold">${money(mkt(best))}</b></div></div>
  <div class="row mt"><button class="btn" style="flex:2" ${oc==='p'&&draftOk(best,'p')?'':'disabled'} onclick="pDraft('${best.id}')">Make the pick</button><button class="btn sec" style="flex:1" onclick="showW('${best.id}')">Details</button></div></div>`:'';
- return `<div class="card dhead"><div class="row sb"><span class="dk">The Draft · ${d.rounds} rounds</span>${oc==='p'?'<span class="livebug"><b>● On the clock</b></span>':`<span class="livebug wait"><b>${esc(nameOf(oc))}</b><span>picking…</span></span>`}</div><div class="dround">Round ${d.round}</div><div class="rticks">${ticks}</div><div class="muted">${brands().map(b=>`${b==='p'?'You':esc(nameOf(b))}: ${cnt(ownList(b))}`).join(' · ')}</div>${d.cap?(()=>{const room=capRoom('p'),pl=picksLeft('p');return `<div class="capbox mt"><div class="row sb"><span>💼 Salary cap <b>${money(d.cap)}</b>/wk</span><span class="${room<pl*minAsk()?'bad':'gold'}"><b>${money(room)}</b> left</span></div><div class="bar"><i style="width:${clamp(payroll('p')/d.cap*100,0,100)}%"></i></div><div class="muted tiny">${pl} pick${pl===1?'':'s'} left · about ${money(pl?room/pl:0)} per pick. Anything left under the cap goes into your bank (×4).</div></div>`})():''}
+ return `<div class="card dhead"><div class="row sb"><span class="dk">The Draft · ${d.rounds} rounds</span>${oc==='p'?'<span class="livebug"><b>● On the clock</b></span>':`<span class="livebug wait"><b>${esc(nameOf(oc))}</b><span>picking…</span></span>`}</div><div class="dround">Round ${d.round}</div><div class="rticks">${ticks}</div><div class="muted">${brands().map(b=>`${b==='p'?'You':esc(nameOf(b))}: ${cnt(ownList(b))}`).join(' · ')}</div>${d.cap?(()=>{const room=capRoom('p'),pl=picksLeft('p'),rsv=capReserve('p'),can=room-rsv,stuck=pl>0&&capStuck('p');return `<div class="capbox mt"><div class="row sb"><span>💼 Salary cap <b>${money(d.cap)}</b>/wk</span><span class="${stuck?'bad':'gold'}"><b>${money(room)}</b> left</span></div><div class="bar"><i style="width:${clamp(payroll('p')/d.cap*100,0,100)}%"></i></div><div class="muted tiny">${pl} pick${pl===1?'':'s'} left · ${stuck?`your cap is spent — your last ${pl>1?pl+' picks are':'pick is a'} minimum deal${pl>1?'s':''} (any of the cheapest wrestlers left).`:pl>1?`spend up to <b>${money(Math.max(0,can))}</b> on this pick and keep ${money(rsv)} for the other ${pl-1} (the cheapest wrestlers left cost about ${money(Math.round(rsv/(pl-1)))} each).`:`spend up to ${money(room)}.`} Anything left under the cap goes into your bank (×4).</div></div>`})():''}
  <div class="row mt"><button class="btn sec" ${oc!=='p'?'disabled':''} onclick="autoPick()">Auto-pick</button><button class="btn sec" onclick="simDraft()">${ON()?(S.online.auto&&S.online.auto.p?'🤖 Stop auto-drafting':'Auto-draft me'):'Sim rest'}</button></div><button class="btn sec" onclick="openStudio()">📷 Photo Studio</button></div>
  ${chips('dv',[['pick','Make a pick'],['teams','Draft board']],dv).replace('class="chips"','class="chips dvtab"')}${dv==='teams'?draftTeamsHtml()+(d.log.length?`<div class="pickin"><span class="pt">Pick is in</span><span class="pl">${esc(d.log[0])}</span></div>`:''):`${tape}
  ${board.length?`<div class="h small">The big board</div><div class="bboard">${board.map(x=>`<button class="bbr ${x.w.al==='f'?'fc':'hl'}" onclick="showW('${x.w.id}')"><span class="bbk">${x.r}</span><span class="bbn">${esc(x.w.name)}</span><span class="bbs">${x.w.al==='f'?'Face':'Heel'}</span><span class="bbo">${ovr(x.w)}</span><span class="bbm ${capOk(x.w,'p')?'':'bad'}">${money(mkt(x.w))}</span></button>`).join('')}</div>`:''}
