@@ -11,7 +11,7 @@
 'use strict';
 (function(){
 const CUT_KEY='tksim_cut',CUT_DIR='vendor/cut/';
-let SESS=null,LOADING=null;
+let SESS=null,PSESS=null,LOADING=null;
 function prefs(){try{return JSON.parse(localStorage.getItem(CUT_KEY)||'{}')}catch(e){return {}}}
 function setPrefs(p){try{localStorage.setItem(CUT_KEY,JSON.stringify(Object.assign(prefs(),p)))}catch(e){}}
 /* on by default */
@@ -20,7 +20,10 @@ window.cutOn=cutOn;
 function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('load '+src));document.head.appendChild(s)})}
 async function session(){if(SESS)return SESS;if(LOADING)return LOADING;
  LOADING=(async()=>{if(!window.ort)await loadScript(CUT_DIR+'ort.wasm.min.js');ort.env.wasm.wasmPaths=new URL(CUT_DIR,location.href).href;ort.env.wasm.numThreads=1;ort.env.wasm.proxy=false;
-  SESS=await ort.InferenceSession.create(CUT_DIR+'u2netp.onnx',{executionProviders:['wasm'],graphOptimizationLevel:'all'});return SESS})();
+  const o={executionProviders:['wasm'],graphOptimizationLevel:'all'};
+  /* v174: two models — U²-Netp finds the subject (and anything they're holding), and a person model (MediaPipe's
+   selfie segmenter, Apache-2.0) knows what a body is, so dark suits, jackets and gear against a dark background stay in */
+  const [a,b]=await Promise.all([ort.InferenceSession.create(CUT_DIR+'u2netp.onnx',o),ort.InferenceSession.create(CUT_DIR+'person.onnx',o).catch(()=>null)]);PSESS=b;SESS=a;return SESS})();
  try{return await LOADING}catch(e){LOADING=null;throw e}}
 function imgOf(url){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url})}
 const canvas=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};
@@ -40,9 +43,19 @@ async function probFor(src){const S0=320;const s=await session();const c=canvas(
  for(let i=0;i<n;i++)for(let k=0;k<3;k++)inp[k*n+i]=(d[i*4+k]/255-M[k])/SD[k];
  const out=await s.run({[s.inputNames[0]]:new ort.Tensor('float32',inp,[1,3,S0,S0])});const o=out[s.outputNames[0]].data;
  let lo=Infinity,hi=-Infinity;for(let i=0;i<n;i++){if(o[i]<lo)lo=o[i];if(o[i]>hi)hi=o[i]}const r=hi-lo||1;
+ const per=PSESS?await personFor(src,S0):null;
  const m=canvas(S0,S0);const mx=m.getContext('2d');const md=mx.createImageData(S0,S0);
- for(let i=0;i<n;i++){const v=Math.round((o[i]-lo)/r*255);md.data[i*4]=md.data[i*4+1]=md.data[i*4+2]=v;md.data[i*4+3]=255}
+ /* the union: anything either model is sure about stays. The person model only counts where it's fairly confident and
+  right next to the main subject — so a shirt or tie the first model missed comes back, but people in the crowd don't */
+ let gate=null;if(per){const core=new Float32Array(n);for(let i=0;i<n;i++)core[i]=(o[i]-lo)/r>.5?1:0;gate=box(core,S0,S0,Math.round(S0/28))}
+ for(let i=0;i<n;i++){let v=(o[i]-lo)/r;if(per&&gate[i]>.02)v=Math.max(v,Math.min(1,Math.max(0,(per[i]-.45)/.45)));v=Math.round(v*255);md.data[i*4]=md.data[i*4+1]=md.data[i*4+2]=v;md.data[i*4+3]=255}
  mx.putImageData(md,0,0);return m}
+/* the person model: 256×256 RGB in 0–1 (NHWC) → probability of a person, scaled up to S0×S0 */
+async function personFor(src,S0){const P=256,c=canvas(P,P);const x=c.getContext('2d');x.drawImage(src,0,0,P,P);const d=x.getImageData(0,0,P,P).data;const inp=new Float32Array(P*P*3);
+ for(let i=0;i<P*P;i++){inp[i*3]=d[i*4]/255;inp[i*3+1]=d[i*4+1]/255;inp[i*3+2]=d[i*4+2]/255}
+ const out=await PSESS.run({[PSESS.inputNames[0]]:new ort.Tensor('float32',inp,[1,P,P,3])});const o=out[PSESS.outputNames[0]].data;
+ const m=canvas(P,P);const mx=m.getContext('2d');const md=mx.createImageData(P,P);for(let i=0;i<P*P;i++){const v=Math.round(Math.max(0,Math.min(1,o[i]))*255);md.data[i*4]=md.data[i*4+1]=md.data[i*4+2]=v;md.data[i*4+3]=255}mx.putImageData(md,0,0);
+ const u=canvas(S0,S0);const ux=u.getContext('2d');ux.imageSmoothingQuality='high';ux.drawImage(m,0,0,S0,S0);const ud=ux.getImageData(0,0,S0,S0).data;const r=new Float32Array(S0*S0);for(let i=0;i<S0*S0;i++)r[i]=ud[i*4]/255;return r}
 /* mean over a (2r+1)² window, clamped at the edges, via an integral image */
 function box(a,W,H,r){const I=new Float64Array((W+1)*(H+1));for(let y=0;y<H;y++){let row=0;for(let x=0;x<W;x++){row+=a[y*W+x];I[(y+1)*(W+1)+x+1]=I[y*(W+1)+x+1]+row}}
  const o=new Float32Array(W*H);for(let y=0;y<H;y++){const y0=Math.max(0,y-r),y1=Math.min(H,y+r+1);for(let x=0;x<W;x++){const x0=Math.max(0,x-r),x1=Math.min(W,x+r+1);

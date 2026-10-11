@@ -932,7 +932,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v173';
+const APP_VERSION='v174';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -2057,7 +2057,7 @@ function renderQuick(){if(!QP)return;while(QP.i<QP.ids.length&&(!S.w[QP.ids[QP.i
  <div class="chips mt">${[['missing','Missing photos'],['wwe','WWE'],['mine','My roster'],['all','Everyone']].map(([k,n])=>`<button class="chip ${QP.mode===k?'on':''}" onclick="openQuick('${k}')">${n}</button>`).join('')}</div>${hasPhoto(w)?'<div class="muted tiny" style="margin-top:6px">Has a photo — pasting replaces it. Tap Skip to keep it.</div>':''}
  <div class="bar mt"><i style="width:${QP.i/QP.ids.length*100}%"></i></div>
  <div class="qp"><div class="wd-pic">${portrait(w)}</div><div style="min-width:0"><div class="h wd-n">${esc(w.name)}</div><div class="muted">${w.own==='p'?'Your roster':w.own==='ai'?esc(S.rival):'Free agent'} · ${STYLE_N[w.st]}</div>
- <ol class="qsteps"><li>Tap <b>Search</b> (official ${isWWE(w)?'WWE':'AEW'} roster photos come up first)</li><li>Long-press a picture → <b>Copy</b></li><li>Come back and tap <b>Paste</b></li></ol></div></div>
+ <ol class="qsteps"><li>Tap <b>Search</b> (official ${isWWE(w)?'WWE':'AEW'} roster photos come up first)</li><li>Long-press a picture → <b>Copy</b> (on an iPhone, <b>Copy Subject</b> gives the cleanest cut-out)</li><li>Come back and tap <b>Paste</b></li></ol></div></div>
  <div class="row"><a class="btn sec" href="${photoSearch(w)}" target="_blank" rel="noopener">🔍 Search</a><button class="btn" onclick="quickPaste()">📋 Paste</button></div>
  <div class="row" style="margin-top:8px"><button class="btn sec" onclick="quickFile()">🖼️ From Photos</button><button class="btn sec" onclick="QP.i++;renderQuick()">Skip →</button></div>
  <button class="btn ghost" onclick="QP=null;openStudio()">Done</button>`)}
