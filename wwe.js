@@ -337,3 +337,43 @@ function finishSupp(){const d=S.draft;const got={};d.supp.forEach(id=>{const w=S
  S.draft=d.prev||null;S.phase='season';S.suppEnd=1;
  brands().forEach(b=>{if(got[b])news(`🌍 ${nameOf(b)} drafted ${got[b].join(', ')}.`)});
  news(`📋 The WWE Supplemental Draft is complete — back to week ${S.week}. The WWE wrestlers who weren't picked are still free agents.`);save()}
+
+/* ===================== v178: PPV CARDS DEALT BEFORE THE NEW CALENDAR =====================
+   A save that was sitting on a PPV week when the WWE update arrived kept the card it had been dealt under the old calendar —
+   so Revolution's week became the Royal Rumble with no Rumbles on it (and Forbidden Door's week became Double or Nothing
+   with dream-match slots). This re-deals that one card under the new layout: the Rumbles / ladder matches go on, the
+   matches you'd booked stay (promised and tournament matches first, then your main event), and anything that no longer
+   fits comes off. Runs once per PPV week. */
+function ppvFit(c){if(!Array.isArray(c))return null;const tpl=emptyCard(true);const sig=a=>a.map(x=>x&&x.k+(x.opt?'?':'')).sort().join(',');
+ const need=spKeysFor(S.week);const has=new Set(c.filter(x=>x&&x.d&&x.d.sp).map(x=>x.d.sp));
+ if(sig(c)===sig(tpl)&&need.every(k=>has.has(k)))return null;
+ const slots=tpl.map((x,i)=>x.k==='match'?i:-1).filter(i=>i>=0);
+ const spOld=c.filter(x=>x&&x.k==='match'&&x.d&&x.d.sp&&need.includes(x.d.sp)).map(x=>x.d);
+ const reg=c.filter(x=>x&&x.k==='match'&&x.d&&!x.d.sp);const last=reg[reg.length-1];
+ const pri=x=>(x.d.tour||(typeof promiseOf==='function'&&promiseOf(x.d)))?3:x===last?2:1;
+ const used=new Set();spOld.forEach(m=>m.sides.flat().forEach(id=>used.add(id)));
+ /* keep the best of what was booked (promised and tournament matches, then your main event), leaving room for the sp
+  matches; the Rumble field is then drawn from everyone who's free — and if it comes up short, the leftover slots go back to your matches */
+ const rank=reg.map((x,i)=>({x,i})).sort((a,b)=>pri(b.x)-pri(a.x)||b.i-a.i);
+ let keep=rank.slice(0,Math.max(0,slots.length-need.length));const u2=new Set(used);keep.forEach(o=>o.x.d.sides.flat().forEach(id=>u2.add(id)));
+ const sp=spOld.concat(spDue('p',u2,spOld.map(d=>({d}))));
+ if(sp.length<need.length)keep=rank.filter(o=>!sp.some(m=>m.sides.flat().some(id=>o.x.d.sides.flat().includes(id)))).slice(0,Math.max(0,slots.length-sp.length));
+ keep=keep.sort((a,b)=>a.i-b.i).map(o=>o.x.d);
+ const out=tpl.map(x=>Object.assign({},x));let f=0,bk=slots.length-1;
+ sp.forEach(m=>{const D=SPK[m.sp];if(f>bk)return;const i=D&&D.g==='M'?slots[bk--]:slots[f++];out[i].d=m});
+ /* your old main event stays the main event when there's no men's match to close the show */
+ const free=slots.filter(i=>!out[i].d);keep.forEach((m,j)=>{if(free[j]!=null)out[free[j]].d=m});
+ const chal=c.find(x=>x&&x.k==='chal'&&x.d);const oc=out.find(x=>x.k==='chal');if(chal&&oc)oc.d=chal.d;
+ const xo=c.filter(x=>x&&x.k==='xo'&&x.d);const ox=out.filter(x=>x.k==='xo');xo.forEach((x,j)=>{if(ox[j])ox[j].d=x.d});
+ const drop=reg.length-keep.length+Math.max(0,xo.length-ox.length);
+ return {c:out,drop,sp:sp.length}}
+function ppvMigrate(){if(!S||S.phase!=='season'||!S.card)return;
+ /* promises made for a PPV under its old name show the new one */
+ (S.promises||[]).forEach(pr=>{if(pr.ppv&&PPVS[pr.week]&&pr.ppv!==PPVS[pr.week])pr.ppv=PPVS[pr.week]});
+ if(!PPVS[S.week])return;
+ if(S.card.p&&!(ON()&&S.online&&S.online.booked&&S.online.booked.p)){const r=ppvFit(S.card.p);
+  /* (a roster too thin for a Rumble re-deals to the same card every time — only act on a real change) */
+  if(r&&JSON.stringify(r.c)!==JSON.stringify(S.card.p)){S.card.p=r.c;
+   const sh=PPVS[S.week];const what=r.sp?(S.week===RR_WEEK?'the Royal Rumbles are':S.week===MITB_WEEK?'the Money in the Bank ladder matches are':'it\'s')+' on the card now':'the card has been reset to the new layout';
+   setTimeout(()=>toast(`This week is ${sh} on the new calendar — ${what}${r.drop?`. ${r.drop} booked match${r.drop>1?'es':''} came off to make room`:''}.`),1200)}}
+ if(!ON()&&S.card.ai&&spKeysFor(S.week).some(k=>!S.card.ai.some(sl=>sl&&sl.d&&sl.d.sp===k)))try{const a=autoBook('ai',curShow(),null);if(a.some(sl=>sl&&sl.d&&sl.d.sp))S.card.ai=a}catch(e){console.warn(e)}}
