@@ -337,7 +337,7 @@ function offseasonHtml(){const o=S.offs;if(!o)return '';const nm=id=>S.w[id]?esc
  ${ret.length?`<div class="mur"><div class="muh">🎖️ Retirements</div>${ret.map(id=>`<div class="tiny">${nm(id)} <span class="muted">(age ${ageOf(S.w[id],S.season+1)}${own(id)?' · '+esc(nameOf(own(id))):''})</span> is hanging up the boots.</div>`).join('')}</div>`:''}
  ${dec.length?`<div class="mur"><div class="muh">⏳ Father Time</div>${dec.map(x=>`<div class="tiny">${nm(x.id)} loses ${x.d} in-ring (age ${ageOf(S.w[x.id],S.season+1)}).</div>`).join('')}</div>`:''}
  ${call.length?`<div class="mur"><div class="muh">📣 Called up from developmental</div>${call.map(id=>`<div class="tiny">${nm(id)} — debut buzz and a popularity bump next season.</div>`).join('')}</div>`:''}
- <div class="mur"><div class="muh">✍️ Contracts expiring soon</div>${exp.length?exp.map(w=>`<div class="row sb" style="margin:4px 0"><span class="tiny"><b>${esc(w.name)}</b> · ${Math.max(0,w.con)} wk${w.con===1?'':'s'} left · asks ${money(askSal(w))}/wk</span><button class="mini" onclick="resign('${w.id}')">Re-sign ${money(resignCost(w))}</button></div>`).join(''):'<div class="tiny muted">Nobody — your roster is locked up.</div>'}</div>
+ <div class="mur"><div class="muh">✍️ Contracts expiring soon</div>${exp.length?exp.map(w=>`<div class="row sb" style="margin:4px 0"><span class="tiny"><b>${esc(w.name)}</b> · ${Math.max(0,w.con)} wk${w.con===1?'':'s'} left · asks ${money(askSal(w))}/wk</span><button class="mini" onclick="resign('${w.id}')">Re-sign ${money(resignCost(w))}</button></div>`).join(''):(ownList('p').length<Math.round(((S.draft&&S.draft.rounds)||24)*.75)?`<div class="tiny bad">No deals ending — but your roster is down to ${ownList('p').length}. Sign free agents before the new season.</div>`:'<div class="tiny muted">Nobody — your roster is locked up.</div>')}</div>
  ${!ret.length&&!dec.length&&!call.length?'<div class="tiny muted">A quiet offseason: no retirements or call-ups this year.</div>':''}</div>`}
 
 /* ===================== PICK YOUR OWN FIELD ===================== */
@@ -414,7 +414,7 @@ function briefItems(){const mine=ownList('p');const sec=cdBrief().concat(typeof 
  /* calendar */
  const cal=[];{const l=cdLeft();if(l!=null&&S.w[S.cdown.a])cal.push(`⏳ The countdown from ${esc(S.w[S.cdown.a].name)}'s promo hits zero ${l?`in <b>${l} week${l>1?'s':''}</b>`:'<b>after this show</b>'}`)}const np=nextPPV();if(np)cal.push(`📅 <b>${esc(np.n)}</b> ${np.in?`in ${np.in} week${np.in===1?'':'s'}`:'is <b>this week</b>'}`);
  for(const k in TOURS){const D=TOURS[k];const first=tourFirst(D);const d=first-S.week;if(d>=0&&d<=3)cal.push(`${D.i} <b>${esc(D.n)}</b> ${d?`starts in ${d} week${d===1?'':'s'} — pick your field`:'starts <b>this week</b>'}`);else if(S.week>first&&S.week<=D.final)cal.push(`${D.i} <b>${esc(D.n)}</b> is under way${S.week===D.final?' — the final is this week':''}`)}
- const vac=Object.values(S.titles).filter(t=>!t.holders.length);if(vac.length)cal.push(`👑 Vacant: ${vac.map(t=>esc(t.n)).join(', ')}`);
+ const vac=Object.values(S.titles).filter(t=>!t.holders.length&&t.br==='p');if(vac.length)cal.push(`👑 Yours to crown: ${vac.map(t=>esc(t.n)).join(', ')}`);
  mine.filter(w=>w.inj).sort((a,b)=>a.inj-b.inj).slice(0,5).forEach(w=>cal.push(`🚑 ${nm(w)} ${w.susp?'is suspended':'is injured'} — back in ${w.inj} week${w.inj===1?'':'s'}`));
  if(cal.length)sec.push({i:'🗓️',t:'On the calendar',rows:cal.map(x=>`<div class="brow">${x}</div>`)});
  /* health */

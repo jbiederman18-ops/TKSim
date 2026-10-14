@@ -84,6 +84,13 @@ function attnItems(){if(!S||S.phase!=='season')return [];
  const out=[];const sh=curShow();const mine=ownList('p');const c=card();const add=x=>{out.push(x);return x};
 
  /* ---------- before you go live ---------- */
+ /* v185: slots that still need booking — go-live won't run until every required slot is filled */
+ {const emp=c.map((sl,i)=>sl&&!sl.d&&!sl.opt&&(sl.k==='match'||sl.k==='promo')?i:-1).filter(i=>i>=0);
+  if(emp.length){const nm=emp.filter(i=>c[i].k==='match').length,np=emp.length-nm;const i0=emp[0];
+   const what=[nm?`${nm} match${nm>1?'es':''}`:'',np?`${np} promo${np>1?'s':''}`:''].filter(Boolean).join(' and ');
+   const names=emp.map(i=>c[i].k==='match'?(mLab(c,i).main?'Main event':mLab(c,i).lab):'Promo');
+   add({id:'empty',g:A_MUST,i:'📝',h:`Still to book: ${what}`,d:`Every slot not marked optional needs filling before you can go live — or tap ✨ Suggest the rest to fill the gaps.`,
+    s:['b',`Empty: ${names.join(', ')}`],a:[c[i0].k==='match'?'Book a match':'Book a promo',c[i0].k==='match'?`openMatch(${i0})`:`openPromo(${i0})`,1],gate:false,where:null})}}
  if(S.crisis&&typeof CRISES!=='undefined'&&CRISES[S.crisis.k]&&S.w[S.crisis.a]&&S.w[S.crisis.a].own==='p'){const C=CRISES[S.crisis.k];
   add({id:'crisis',g:A_MUST,i:C.i,h:`${C.good?'An opportunity':'A situation'}: ${C.t}`,d:`${S.w[S.crisis.a].name} is involved. It needs a decision before the show.`,s:['b','Waiting on you'],a:['Decide','openCrisis()',1],gate:false,who:[S.crisis.a],where:'🚨 Backstage'})}
 
@@ -189,6 +196,13 @@ function attnItems(){if(!S||S.phase!=='season')return [];
    say:[[a,fill(pickS(SAY.stale,'stale'+k),{B:B.name})]]})}
 
  /* ---------- front office ---------- */
+ /* v185: a roster that's running thin — expired deals and walkouts add up quietly */
+ {const full=(S.draft&&S.draft.rounds)||24;const n=mine.length;const nW=mine.filter(w=>w.g==='F').length;const nM=n-nW;
+  if(n<Math.round(full*.75)){const crit=n<Math.round(full*.5);
+   const thin=[nM<6?`${nM} men`:'',nW<4?`${nW} women`:''].filter(Boolean).join(' and ');
+   add({id:'thin',g:crit?A_MUST:A_OFF,i:'📋',h:`Your roster is down to ${n} wrestler${n===1?'':'s'}`,d:`You drafted ${full}. ${thin?`Only ${thin} left — some divisions can't fill a card. `:''}Sign free agents or prospects to fill it back up, and re-sign the deals that are ending.`,
+    s:[crit?'b':'w',crit?'Too thin to book a full show':'Running thin'],a:['Browse free agents',"closeModal();rf='fa';go('roster')",crit?1:0],gate:false,where:'📋 The locker room',
+    say:[['Your assistant',crit?`We're down to ${n} wrestlers. We can barely fill a card — we need bodies, now.`:`Heads up: we're down to ${n} wrestlers. A few signings would give us room to breathe.`]]})}}
  (typeof conWatch==='function'?conWatch():[]).filter(w=>w.con>1).forEach(w=>{const blk=w.neg&&w.neg.no>AW();
   add({id:'con'+w.id,g:A_OFF,i:'✍️',h:`${w.name}'s contract ends in ${w.con} weeks`,d:blk?`They walked away from talks — back at the table week ${wkOf(w.neg.no)}.`:`They want about ${money(askSal(w))}/wk. Talks get pricier near the deadline.`,
    s:[w.con<=CON_URGENT?'w':'n',conTxt(w)],a:blk?[`Re-sign ${money(resignCost(w))}`,`attnResign('${w.id}')`]:['Negotiate',`attnNeg('${w.id}')`],gate:false,who:[w.id],where:'📞 On the phone',say:[[`${w.name}'s agent`,sayW('agent_soon',w,{A:w.name})]]})});
