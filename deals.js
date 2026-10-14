@@ -226,6 +226,6 @@ function dealBrief(){const sec=[];const nm=w=>`<a href="#" onclick="closeModal()
    return `<div class="row sb brow"><span>${nm(w)} · POP ${Math.round(w.pop)}<br><span class="muted tiny">${ks.length} sealed offer${ks.length>1?'s':''}${mine?' (one is yours)':''} · decides when week ${wkOf(o.due)} airs</span></span><button class="mini" onclick="closeModal();dealOffer('${id}')">${mine?'Revise':'Counter'}</button></div>`}).filter(Boolean);
   if(rows.length)sec.push({i:'📨',t:'Sealed offers on the table',u:rows.length&&Object.values(S.offers).some(o=>!o.by.p&&o.due<=AW()),rows})}
  const owed=dealOwed().filter(({w,k})=>!w.inj&&(k!=='ppv'||curShow().ppv));
- if(owed.length)sec.push({i:'📜',t:'Contract promises',rows:owed.map(({w,k})=>`<div class="brow">${nm(w)} · ${dealTermTxt(w,k)}</div>`)});
+ if(owed.length)sec.push({rep:1,i:'📜',t:'Contract promises',rows:owed.map(({w,k})=>`<div class="brow">${nm(w)} · ${dealTermTxt(w,k)}</div>`)});
  return sec}
 function dealRevealHtml(ds){return `<div class="card rv-deal"><div class="h small">🤝 Signing war</div>${ds.map((d,i)=>`<div class="rv-seg" id="rv-d-${i}"><div class="rv-txt">${esc(d.name)}</div>${d.bids.map(x=>`<div class="${x.b===d.win?'gold':'muted'}" style="font-size:.8em">${x.b===d.win?'✍️ ':''}${esc(nameOf(x.b))}: ${esc(x.s)}</div>`).join('')}<div class="note">${d.win?`${esc(d.name)} signs with ${esc(nameOf(d.win))}${d.why?' — for '+esc(d.why):''}.`:`${esc(d.name)} turned everyone down.`}</div></div>`).join('')}</div>`}

@@ -30,7 +30,7 @@ function pRaiseOK(w){return mkt(w)>=sal(w)*1.15&&w.pop>=60&&payroll('p')+pRaiseA
 function pRaise(w){const inc=pRaiseAmt(w);if(payroll('p')+inc>econCap())return 0;w.sal=sal(w)+inc;return inc}
 /* a real tag team (both on your roster, healthy, no trial) and a tag belt they could chase */
 function pTagShots(r){const l=[];S.teams.forEach(tm=>{if(tm.type!=='team'||tm.trialOf||tm.m.length!==2)return;const [a,b]=tm.m.map(id=>S.w[id]);if(!a||!b||!r.includes(a)||!r.includes(b)||a.pop<50)return;
-  Object.values(S.titles).forEach(t=>{if(t.kind!=='tag')return;if(t.holders.length&&(t.holders.some(h=>!S.w[h]||S.w[h].own!=='p'||h===a.id||h===b.id||S.w[h].inj)))return;const lo=a.mor<=b.mor?[a,b]:[b,a];l.push({a:lo[0].id,b:lo[1].id,title:t.id})})});return l}
+  Object.values(S.titles).forEach(t=>{if(t.kind!=='tag'||(t.g&&a.g&&t.g!==a.g))return;if(t.holders.length&&(t.holders.some(h=>!S.w[h]||S.w[h].own!=='p'||h===a.id||h===b.id||S.w[h].inj)))return;const lo=a.mor<=b.mor?[a,b]:[b,a];l.push({a:lo[0].id,b:lo[1].id,title:t.id})})});return l}
 function pNextPPV(){return PPVS[S.week]?{w:S.week,n:PPVS[S.week]}:nextPPVAfter(S.week)}
 /* someone in the midcard who wants a match with a bigger star on your roster (not a partner, not already feuding) */
 function pDreams(r){const l=[];r.forEach(a=>{if(a.pop<40||a.pop>72)return;r.forEach(b=>{if(a===b||a.g!==b.g||b.pop<75||b.pop<a.pop+12||inTeam(a.id,b.id)||heatOf(a.id,b.id)>=15)return;l.push({a:a.id,b:b.id})})});return l}
@@ -252,11 +252,11 @@ function pitchSeg(seg,notes0){const ids=seg.sides.flat().filter(Boolean);ids.for
   if(hit){t.have=(t.have||0)+1;if(t.have>=t.need){notes.push(P.ok(t));return false}}return true})}
 /* ---- briefing sections ---- */
 function pitchBrief(){const sec=[];const p=S.pitch;
- if(p&&PITCHES[p.k]&&pOwn(p.a)&&(!p.b||S.w[p.b])){const P=PITCHES[p.k],x=pCtx(p);sec.push({i:'📨',t:'A pitch for you',tag:'New',rows:[`<div class="brow pitchrow" onclick="openPitch()"><span>${face(x.A)}</span><span><b>${esc(P.head(x))}</b><br><span class="muted tiny">${esc(P.cat)} · answer this week or they'll take it as a no</span></span><span class="gold">›</span></div>`]})}
+ if(p&&PITCHES[p.k]&&pOwn(p.a)&&(!p.b||S.w[p.b])){const P=PITCHES[p.k],x=pCtx(p);sec.push({rep:1,i:'📨',t:'A pitch for you',tag:'New',rows:[`<div class="brow pitchrow" onclick="openPitch()"><span>${face(x.A)}</span><span><b>${esc(P.head(x))}</b><br><span class="muted tiny">${esc(P.cat)} · answer this week or they'll take it as a no</span></span><span class="gold">›</span></div>`]})}
  const tl=(S.trials||[]).filter(t=>PITCHES[t.k]&&pOwn(t.a)&&(!t.b||S.w[t.b]));
- if(tl.length)sec.push({i:'🧪',t:'Trials and promises',rows:tl.map(t=>{const A=S.w[t.a],B=t.b&&S.w[t.b];const left=t.end-AW()+1;const P=PITCHES[t.k];
+ if(tl.length)sec.push({rep:1,i:'🧪',t:'Trials and promises',rows:tl.map(t=>{const A=S.w[t.a],B=t.b&&S.w[t.b];const left=t.end-AW()+1;const P=PITCHES[t.k];
    const prog=t.goal==='rest'||t.goal==='avoid'?'':` · <b>${t.have||0}/${t.need}</b>`;
    return `<div class="brow"><b>${esc(P.head(pCtx(t)))}</b><br><span class="muted tiny">Goal: ${esc(t.txt)}${prog} · ${left<=1?'<b class="bad">last week</b>':`${left} weeks left`}${t.big?' · 🚀 you promised':''}</span></div>`})});
  const nw=(S.pitchNews||[]).filter(n=>AW()-n.w<=1&&n.w<AW());
- if(nw.length)sec.push({i:'📬',t:'How last week\'s calls turned out',rows:nw.map(n=>`<div class="brow tiny">${esc(n.t)}</div>`)});
+ if(nw.length)sec.push({i:'📬',t:'Last week: how your calls turned out',rows:nw.map(n=>`<div class="brow tiny">${esc(n.t)}</div>`)});
  return sec}
