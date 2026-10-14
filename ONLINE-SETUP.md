@@ -1,6 +1,6 @@
 # Online leagues: one-time Firebase setup
 
-Online leagues let 2–4 friends play together. Each GM runs their own brand (Dynamite, Collision, Rampage, Ring of Honor), and every week you go head-to-head with a different GM. You take turns whenever you like. The game still works fully offline. A turn taken without a connection is saved on the phone and syncs when it's back online.
+Online leagues let 2–4 friends play together. Each GM runs their own brand (Dynamite, Collision, Rampage, Ring of Honor), and every week you go head-to-head with a different GM. Everyone books each week at the same time and the draft goes in order, with a pick queue so nobody waits on you. The game still works fully offline. A turn taken without a connection is saved on the phone and syncs when it's back online.
 
 Firebase holds the shared league. It's free at this size. Setup takes about 15 minutes and only has to be done once. Your friends don't need to do any of this.
 

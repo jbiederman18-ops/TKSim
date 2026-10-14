@@ -63,11 +63,11 @@ function mpBase(){if(MP_BASE&&LMP&&MP_BASE.code===LMP.code)return MP_BASE;
 function partyAdvance(st,me){const keep=S,keepTab=typeof tab!=='undefined'?tab:null;let msg='';MP_TX=true;
  try{S=viewFor(st,me);ensureTraits(S);const o=S.online;
   o.rk=o.rk||{};o.booked=o.booked||{};o.auto=o.auto||{};
-  if(o.party&&S.phase==='rookies'&&localSeats().every(k=>o.rk[k])){startDraft();o.turn=onClock();msg=`Party night: the draft is on and ${nameOf(o.turn)} picks first!`}
+  if(S.phase==='rookies'&&localSeats().every(k=>o.rk[k])){startDraft();o.turn=onClock();msg=`${o.party?'Party night: t':'T'}he draft is on and ${nameOf(o.turn)} picks first!`}
   /* league drafts (party night or not): whoever saves next makes the picks for any GM on auto-draft who's on the
      clock, so auto-draft keeps going even when that GM's phone is closed */
-  if(S.phase==='draft'&&o.auto[onClock()]){const was=onClock();let guard=0;while(S.phase==='draft'&&guard++<400){const oc=onClock();if(!o.auto[oc])break;const c=draftChoice(oc);if(!c){finishDraft();break}draftPick(c.id,oc)}
-   if(S.phase==='draft'){o.turn=onClock();if(o.turn!==was)msg=`The auto-drafters have picked — you're on the clock in round ${S.draft.round}.`}
+  if(S.phase==='draft'&&(o.auto[onClock()]||dqNext(onClock()))){const was=onClock();let guard=0;while(S.phase==='draft'&&guard++<400){const oc=onClock();if(!o.auto[oc]){const q=dqNext(oc);if(!q)break;o.dq[oc].shift();draftPick(q,oc);continue}const c=draftChoice(oc);if(!c){finishDraft();break}draftPick(c.id,oc)}
+   if(S.phase==='draft'){o.turn=onClock();if(o.turn!==was)msg=`Picks are in from the queue — you're on the clock in round ${S.draft.round}.`}
    else if(S.suppEnd){delete S.suppEnd;o.turn='p';msg='The WWE Supplemental Draft is complete — back to booking.'}else{o.booked={};o.order=bookingOrder();o.turn='p';msg='The draft is complete — time to book week 1!'}}
   if(!o.party){/* v126: booking at the same time — the last GM to lock in airs the week right here */
    if(simOn()&&S.phase==='season'&&localSeats().every(k=>o.booked[k])){const wk=S.week;airShow();o.booked={};o.order=bookingOrder();o.turn='p';msg=`Week ${wk} results are in!`}
