@@ -415,10 +415,10 @@ window.promoPips=function(p,i){const d=pdOf(p);if(!d)return '';const ch=attnChip
  return `<div class="mpip"><div>Talent${pipH(d.p.talent)}</div><div>Fit${pipH(d.p.fit)}</div><div>Story${pipH(d.p.story)}</div><div>Your calls${pipH(0,1).replace('? ? ? ? ?','? ? ?')}</div></div>${ch||d.back.length?`<div class="tags">${ch}${d.back.slice(0,2).map(([k,t])=>`<span class="tg ${k==='b'?'bad':'warnt'}">${esc(t)}</span>`).join('')}</div>`:''}<div class="tellrow">${tellSpan(promoEst(p))}</div>`};
 
 /* the strip under each wrestler in an editor: ability pips, morale, stamina, and what they're asking for */
-window.edInfo=function(w,promo,gain){if(!w)return '';const m=attnMood(w.mor);const mc=w.mor>=65?'good':w.mor>=50?'':w.mor>=35?'warnt':'bad';
+window.edInfo=function(w,promo,gain,extra){if(!w)return '';const m=attnMood(w.mor);const mc=w.mor>=65?'good':w.mor>=50?'':w.mor>=35?'warnt':'bad';
  const sw=v=>v>=80?['Fresh','good']:v>=100-FAT_OK?['Worn','']:v>=100-FAT_RISK?['Tired','warnt']:['Exhausted','bad'];const s=sw(sta(w));const after=gain?sw(sta(w)-gain):null;
  const ask=typeof attnAsk==='function'?attnAsk(w.id):null;
- return `<div class="edi">${promo?`<span>Mic</span>${pipH(statP(w.mic))}`:`<span>Ring</span>${pipH(statP(w.ring))}`}<span>Star</span>${pipH(statP(w.pop))}<span>Morale</span><span class="${mc}">${m}</span><span>Stamina</span><span class="${s[1]}">${s[0]}${after&&after[0]!==s[0]?` <span class="muted">→ ${after[0]}</span>`:''}</span>${ask?`<span class="ask">🎤 ${esc(ask.t)}</span>`:''}</div>`};
+ return `<div class="edi">${promo?`<span>Mic</span>${pipH(statP(w.mic))}`:`<span>Ring</span>${pipH(statP(w.ring))}`}<span>Star</span>${pipH(statP(w.pop))}<span>Morale</span><span class="${mc}">${m}</span><span>Stamina</span><span class="${s[1]} stv">${s[0]}${after&&after[0]!==s[0]?`<span class="muted"> → </span><span class="${after[1]}">${after[0]}</span>`:''}</span>${extra||''}${ask?`<span class="ask">🎤 ${esc(ask.t)}</span>`:''}</div>`};
 
 /* the style chart behind Chemistry's "?" */
 window.styChart=function(){const m=ED&&ED.m;const ws=m?m.sides.map(s=>s.map(id=>S.w[id]).filter(Boolean)):[];const a=ws[0]&&ws[0][0],b=ws[1]&&ws[1][0];const ks=Object.keys(STYLE_N);
