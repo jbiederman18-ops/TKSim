@@ -160,11 +160,6 @@ function attnItems(){if(!S||S.phase!=='season')return [];
  {const a=typeof rivalAd==='function'?rivalAd():null;if(a){const P=cardProj();const mine2=P.me?P.me.mid:null;const theirs=(a.lo+a.hi)/2;
   add({id:'rival',g:A_CH,i:'📻',h:`Beat ${sh.theirs||'the rival'}'s main event for +3K fans`,d:`${vsLine(a.m)} · ${tellWord(theirs)}`,s:mine2==null?['n','Book your main event to compare']:tellStar(mine2)>=tellStar(theirs)?['ok',`Yours: ${tellWord(mine2)}`]:['w',`Yours: ${tellWord(mine2)}`],a:null,where:'📻 Across the dial',
    say:[['The dirt sheets',`${sh.theirs||'The other show'} goes big this week: ${vsLine(a.m)}.`]]})}}
- /* hot feuds ready to pay off */
- feudList('p').filter(f=>f.h>=35&&!f.a.inj&&!f.b.inj).slice(0,3).forEach(f=>{const fi=feudInfo(f.a.id,f.b.id);if(!fi||fi.paid)return;const on=against(f.a.id,f.b.id)||together(f.a.id,f.b.id);const np=nextPPV();
-  add({id:'hot'+key(f.a.id,f.b.id),g:A_CH,i:'🔥',h:`${f.a.name} vs ${f.b.name} is hot (heat ${Math.round(f.h)})`,d:sh.ppv?'Settle it tonight with a clean finish to end it for good.':`Ready to pay off${np&&np.in?` at ${np.n}`:''}, or blow it off on TV.`,
-   s:on?['ok','On tonight\'s card']:['n','Not tonight'],a:on?null:['Book it',`feudBook('match','${f.a.id}','${f.b.id}')`],who:[f.a.id,f.b.id],where:'🔥 The fans want it',
-   say:[[f.a.id,sayW('hot',f.a,{BL:L(f.b)})],[f.b.id,sayW('hot',f.b,{BL:L(f.a)})]]})});
  /* Money in the Bank */
  if(S.mitb)Object.keys(S.mitb).forEach(id=>{const w=S.w[id];if(!w||w.own!=='p'||w.inj)return;const x=S.mitb[id];const left=SEASON-(AW()-x.aw);
   add({id:'mitb'+id,g:A_CH,i:'💼',h:`${w.name} can cash in Money in the Bank`,d:`${left} week${left===1?'':'s'} left. Open any match with one of your world champions and pick the cash-in.`,s:left<=1?['w','Last chance']:['n',`${left} weeks left`],a:null,who:[id],where:'💼 The briefcase',say:[[id,sayW('mitb',w)]]})});
@@ -188,7 +183,7 @@ function attnItems(){if(!S||S.phase!=='season')return [];
  mine.filter(w=>typeof ccOn==='function'&&ccOn(w)&&!w.inj).forEach(w=>{const s=segs(w.id).find(x=>x.k==='match');if(!s)return;const win=s.d.sides[s.d.winner]&&s.d.sides[s.d.winner].includes(w.id);
   add({id:'cc'+w.id,g:A_MIND,i:'🎬',h:`${w.name} has creative control`,d:'They won\'t agree to lose. Book them to lose and expect a fight over the finish.',s:win?['ok','Booked to win']:['w','Booked to lose'],a:win?null:['Open it',`openMatch(${s.i})`],gate:false,who:[w.id],where:'📜 The fine print',say:[[w.id,sayW('cc',w)]],chip:i=>i===s.i&&!win?['w',`${L(w)} has creative control`]:null})});
  /* feuds going stale */
- let nStale=0;const isHot=k=>out.some(x=>x.id==='hot'+k);
+ let nStale=0;const isHot=()=>false;
  for(const k of Object.keys(S.heat).sort((x,y)=>{const fx=S.fs&&S.fs[x],fy=S.fs&&S.fs[y];return (fx?fx.start:1e9)-(fy?fy.start:1e9)})){const f=S.fs&&S.fs[k];if(isHot(k)||nStale>=2)continue;const [a,b]=k.split('|');const A=S.w[a],B=S.w[b];if(!f||f.paid||!A||!B||A.own!=='p'||B.own!=='p'||S.heat[k]<20)continue;const age=AW()-f.start;if(!f.stale&&age<5)continue;const left=8-age;nStale++;
   add({id:'stale'+k,g:A_MIND,i:'🥱',h:`${A.name} vs ${B.name} ${f.stale?'has gone stale':`goes stale in ${Math.max(1,left)} week${left===1?'':'s'}`}`,d:'Pay it off at a PPV, or blow it off on TV, before the crowd stops caring.',s:against(a,b)?['ok','On tonight\'s card']:['n','Not tonight'],a:null,gate:false,who:[a,b],where:'🥱 The crowd is restless',
    say:[[a,fill(pickS(SAY.stale,'stale'+k),{B:B.name})]]})}
@@ -214,13 +209,17 @@ let OPEN=null;
 function stHtml(s){if(!s||!s[1])return '';const k=s[0];return ` · <span class="${k==='ok'?'good':k==='b'?'bad':k==='w'?'warnt':'muted'}">${k==='ok'?'✓ ':k==='b'?'✗ ':''}${esc(s[1])}</span>`}
 function rowHtml(x){return `<div class="atr ${x.s&&x.s[0]==='b'?'bad':''}"><div class="atb"><b>${x.i} ${esc(x.h)}</b><div class="tiny muted">${esc(x.d)}${stHtml(x.s)}</div></div>${x.a?`<button class="mini ${x.a[2]?'on':''}" onclick="${x.a[1]}">${esc(x.a[0])}</button>`:''}</div>`}
 function attnPanel(){if(!S||S.phase!=='season'||mpLocked&&mpLocked())return '';let l;try{l=attnItems()}catch(e){console.warn(e);return ''}
- if(!OPEN)OPEN={[A_MUST]:true,[A_CH]:true,[A_MIND]:true,[A_OFF]:false};
- const n=l.filter(x=>x.g===A_MUST&&x.s[0]==='b').length;
- const secs=GRP.map(([g,t])=>{const xs=l.filter(x=>x.g===g);if(!xs.length)return '';
-  const sub=g===A_MUST?(xs.filter(x=>x.s[0]==='b').length?`${xs.filter(x=>x.s[0]==='b').length} of ${xs.length} still open`:'All handled ✓'):g===A_CH?`${xs.filter(x=>x.s[0]==='ok').length} of ${xs.length} taken`:g===A_MIND?'Risks on tonight\'s card':'Deadlines that aren\'t on the card';
-  return `<details class="atg" ${OPEN[g]?'open':''} ontoggle="attnOpen('${g}',this.open)"><summary><span>${t}</span><span class="tiny muted">${sub}</span></summary><div class="atl">${xs.map(rowHtml).join('')}</div></details>`}).join('');
- return `<div class="card attn"><div class="row sb"><div class="h small" style="margin:0">Needs your attention</div>${n?`<span class="tg bad">${n} to fix</span>`:l.length?'<span class="tg good">Ready</span>':''}</div>
- ${secs||'<div class="muted mt">Nothing needs you this week. Go book a great show.</div>'}<div class="tiny muted" style="margin-top:6px"><a href="#" onclick="openBrief();return false" style="color:var(--gold2)">📰 Read this week's briefing</a></div></div>`}
+ if(!OPEN)OPEN={more:false,[A_MUST]:true,[A_CH]:true,[A_MIND]:true,[A_OFF]:true};
+ /* on top: only what still blocks a clean go-live. Everything else waits behind one dropdown. */
+ const top=l.filter(x=>x.g===A_MUST&&x.s[0]==='b');const rest=l.filter(x=>!top.includes(x));
+ const subOf=(g,xs)=>g===A_MUST?'Handled':g===A_CH?`${xs.filter(x=>x.s[0]==='ok').length} of ${xs.length} taken`:g===A_MIND?'Risks on tonight\'s card':'Deadlines that aren\'t on the card';
+ const secs=GRP.map(([g,t])=>{const xs=rest.filter(x=>x.g===g);if(!xs.length)return '';
+  return `<details class="atg" ${OPEN[g]?'open':''} ontoggle="attnOpen('${g}',this.open)"><summary><span>${t}</span><span class="tiny muted">${subOf(g,xs)}</span></summary><div class="atl">${xs.map(rowHtml).join('')}</div></details>`}).join('');
+ const cnt=GRP.map(([g,t])=>{const n=rest.filter(x=>x.g===g).length;return n?`${n} ${g===A_MUST?'handled':g===A_CH?(n>1?'chances':'chance'):g===A_MIND?'to keep in mind':'front office'}`:''}).filter(Boolean).join(' · ');
+ return `<div class="card attn"><div class="row sb"><div class="h small" style="margin:0">Needs your attention</div>${top.length?`<span class="tg bad">${top.length} to fix</span>`:'<span class="tg good">Ready</span>'}</div>
+ ${top.length?`<div class="atl attop">${top.map(rowHtml).join('')}</div>`:'<div class="muted tiny" style="margin-top:6px">✓ Nothing is blocking tonight\'s show.</div>'}
+ ${rest.length?`<details class="atmore" ${OPEN.more?'open':''} ontoggle="attnOpen('more',this.open)"><summary><span>Everything else</span><span class="tiny muted">${cnt}</span></summary>${secs}</details>`:''}
+ <div class="tiny muted" style="margin-top:8px"><a href="#" onclick="openBrief();return false" style="color:var(--gold2)">📰 Read this week's briefing</a></div></div>`}
 window.attnPanel=attnPanel;
 window.attnOpen=(g,o)=>{if(OPEN)OPEN[g]=o};
 /* chips on each segment of the running order: promises it keeps or breaks, heat, creative control */
