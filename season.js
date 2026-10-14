@@ -249,7 +249,86 @@ function rivalAdHtml(mode){const a=rivalAd();if(!a)return '';const nm=esc(curSho
 
 /* ===================== SUGGEST A CARD ===================== */
 /* the GM's assistant books the empty slots — keeps everything you've already booked, promised or entered in a tournament */
+/* ===== Suggest the rest (v187): housekeeping, not creative booking =====
+   It covers the must-dos — promised and contracted matches, contract clauses, promises from pitches, the most overdue
+   title defense, the weekly goal where it's about who's on the card, the crowd chant — then fills the rest with a plain,
+   sensible card. The creative side stays with the GM: every match it books is a standard match with a clean finish, no
+   run-ins, no PPV announcements, no title challenge, no dream match, and the bonus slots stay empty. Its strength is tuned
+   with tools/balance-sweep.py (a Suggest-only GM should win roughly 35–45% of nights on Normal). */
 function suggestCard(){const sh=curShow();const c=JSON.parse(JSON.stringify(S.card.p));const used=new Set();
+ c.forEach(sl=>{if(!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(id=>id&&used.add(id));if(sl.k==='promo'){used.add(sl.d.a);if(sl.d.b)used.add(sl.d.b)}if(sl.k==='chal'&&sl.d.c)used.add(sl.d.c);if(sl.k==='xo')used.add(sl.d.a)});
+ (S.trials||[]).forEach(t=>{if(t.goal==='rest')used.add(t.a)});
+ const W=id=>S.w[id];const ok=id=>{const w=W(id);return !!(w&&w.own==='p'&&!w.inj&&!used.has(id))};
+ const mIdx=()=>c.map((sl,i)=>sl.k==='match'&&!sl.opt?i:-1).filter(i=>i>=0);const mainI=()=>{const l=mIdx();return l[l.length-1]};
+ const empty=()=>mIdx().filter(i=>!c[i].d);
+ const cardIds=()=>{const o=new Set();c.forEach(sl=>{if(!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(id=>o.add(id));if(sl.k==='promo'){o.add(sl.d.a);if(sl.d.b)o.add(sl.d.b)}});return o};
+ const onCard=id=>cardIds().has(id);
+ const fit=w=>sta(w)>=100-FAT_RISK;
+ const pool=(g,ex)=>ownList('p').filter(w=>ok(w.id)&&(!g||w.g===g)&&fit(w)&&!(ex||[]).includes(w.id)).sort((a,b)=>b.pop-a.pop);
+ /* the best opponent by what's known on paper: popularity, feud heat and style fit — and not a rerun of last week */
+ const oppFor=(a,ex,g)=>{let bo=null,bv=-1e9;pool(g||W(a).g,[a].concat(ex||[])).slice(0,12).forEach(w=>{if(inTeam(a,w.id))return;const v=w.pop+heatOf(a,w.id)*1.2+chemOpp(W(a),w)*1.2-recentMeets(a,w.id).length*25;if(v>bv){bv=v;bo=w}});return bo};
+ const winner=(sides,force)=>{if(force!=null)return force;let bi=0,bv=-1e9;sides.forEach((sd,i)=>{const v=avg(sd.map(id=>W(id).pop+(W(id).mom||0)*3))+(sd.some(id=>typeof ccOn==='function'&&ccOn(W(id)))?50:0);if(v>bv){bv=v;bi=i}});return bi};
+ const put=(i,type,sides,o)=>{o=o||{};const m={type,stip:o.stip||'std',sides,winner:winner(sides,o.win),title:o.title||''};c[i].d=m;sides.flat().forEach(id=>used.add(id));return m};
+ const slotFor=main=>{const e=empty();if(!e.length)return -1;const mi=mainI();if(main)return e.includes(mi)?mi:-1;const nm=e.filter(i=>i!==mi);return nm.length?nm[0]:e[0]};
+ const singlesTitle=(a,b)=>{const et=eligibleTitles({type:'singles',sides:[[a],[b]]}).filter(t=>S.titles[t].kind==='singles'&&S.titles[t].holders.length);return et[0]||''};
+
+ /* 1 · promised and contracted matches due tonight */
+ duePromises().forEach(pr=>{if(!ok(pr.a)||!ok(pr.b))return;const big=pr.kind==='contract'||pr.kind==='shot'||pr.ppv;let i=slotFor(big);if(i<0)i=slotFor(false);if(i<0)return;
+  const t=pr.title&&S.titles[pr.title]&&S.titles[pr.title].holders.length?pr.title:singlesTitle(pr.a,pr.b);put(i,'singles',[[pr.a],[pr.b]],{stip:pr.stip||'std',title:t})});
+ /* 2 · contract clauses: a main event owed, a title shot owed, every PPV */
+ if(typeof dealOwed==='function')dealOwed().forEach(({w,k})=>{if(!ok(w.id)&&!(k==='me'&&onCard(w.id)))return;const d=w.deal;
+  if(k==='me'&&!onCard(w.id)&&d.me.need-d.me.got>=d.me.by-AW()+1){const i=slotFor(true);const o=oppFor(w.id);if(i>=0&&o)put(i,'singles',[[w.id],[o.id]])}
+  else if(k==='shot'&&AW()>=d.shot.by-1&&!onCard(w.id)){const t=Object.values(S.titles).find(t=>t.kind==='singles'&&t.g===w.g&&t.holders.length===1&&ok(t.holders[0]));const i=slotFor(false);if(t&&i>=0)put(i,'singles',[[t.holders[0]],[w.id]],{title:t.id})}
+  else if(k==='ppv'&&sh.ppv&&!onCard(w.id)){const i=slotFor(false);const o=oppFor(w.id);if(i>=0&&o)put(i,'singles',[[w.id],[o.id]])}});
+ /* 3 · promises from pitches that a match can keep */
+ (S.trials||[]).forEach(t=>{const A=W(t.a);if(!A||A.own!=='p'||A.inj||onCard(t.a)||!ok(t.a))return;const B=t.b&&W(t.b);
+  if(t.goal==='vs'&&B&&ok(t.b)){const i=slotFor(false);if(i>=0)put(i,'singles',[[t.a],[t.b]])}
+  else if(t.goal==='me'){const i=slotFor(true);const o=oppFor(t.a);if(i>=0&&o)put(i,'singles',[[t.a],[o.id]])}
+  else if(t.goal==='wins'){const i=slotFor(false);const l=pool(A.g,[t.a]).filter(w=>w.pop<=A.pop+5);const o=l[l.length>3?2:0]||oppFor(t.a);if(i>=0&&o)put(i,'singles',[[t.a],[o.id]],{win:0})}
+  else if(t.goal==='title'&&t.title&&S.titles[t.title]){const T=S.titles[t.title];if(T.kind==='singles'&&T.holders.length===1&&ok(T.holders[0])){const i=slotFor(false);if(i>=0)put(i,'singles',[[T.holders[0]],[t.a]],{title:T.id})}}
+  else if(t.goal==='team'&&B&&ok(t.b)){const opp=pool(A.g,[t.a,t.b]).slice(0,2);const i=slotFor(false);if(i>=0&&opp.length===2)put(i,'tag',[[t.a,t.b],opp.map(w=>w.id)])}});
+ /* 4 · the most overdue title defense (more on a PPV) */
+ {const idle=Object.values(S.titles).filter(t=>t.holders.length&&t.holders.every(h=>W(h)&&W(h).own==='p')&&t.last!=null&&S.week-t.last>=(sh.ppv?2:4)).sort((a,b)=>a.last-b.last);
+  let n=c.filter(sl=>sl.k==='match'&&sl.d&&sl.d.title).length;const max=sh.ppv?3:1;
+  for(const t of idle){if(n>=max)break;if(c.some(sl=>sl.k==='match'&&sl.d&&sl.d.title===t.id))continue;
+   if(t.holders.some(h=>onCard(h))){const sl=c.find(sl=>sl.k==='match'&&sl.d&&!sl.d.title&&!sl.d.sp&&!sl.d.tour&&t.holders.every(h=>sl.d.sides.some(sd=>sd.includes(h)))&&eligibleTitles(sl.d).includes(t.id));if(sl){sl.d.title=t.id;n++}continue}
+   if(!t.holders.every(ok))continue;const per=t.holders.length;const i=slotFor(false);if(i<0)break;
+   if(per===1){const o=oppFor(t.holders[0],[],t.g);if(o){put(i,'singles',[t.holders.slice(),[o.id]],{title:t.id});n++}}
+   else{const opp=pool(t.g,t.holders).slice(0,per).map(w=>w.id);if(opp.length===per){put(i,per===2?'tag':'trios',[t.holders.slice(),opp],{title:t.id});n++}}}}
+ /* 5 · the weekly goal, when it's about who's on the card */
+ {const g=S.goal&&S.goal.p;const has=f=>c.some(sl=>sl.k==='match'&&sl.d&&f(sl.d));
+  if(g&&g.w===AW()&&!g.done){
+   if(g.k==='women'&&!has(m=>m.sides.flat().every(id=>W(id)&&W(id).g==='F'))){const l=pool('F');const i=slotFor(false);if(i>=0&&l.length>=2){const o=oppFor(l[0].id,[],'F');if(o)put(i,'singles',[[l[0].id],[o.id]])}}
+   if(g.k==='tag'&&!has(m=>m.type==='tag'||m.type==='trios')){const i=slotFor(false);const tm=S.teams.map(tt=>tt.m.filter(ok)).filter(a=>a.length>=2&&S.w[a[0]].g===S.w[a[1]].g).map(a=>a.slice(0,2));
+    if(i>=0){let sides=null;if(tm.length>=2)sides=[tm[0],tm.find(a=>!a.some(id=>tm[0].includes(id)))].filter(Boolean);if(!sides||sides.length<2){const l=pool('M');if(l.length>=4)sides=[[l[0].id,l[3].id],[l[1].id,l[2].id]]}if(sides&&sides.length===2)put(i,'tag',sides)}}
+   if(g.k==='title'&&!has(m=>m.title)){const t=Object.values(S.titles).find(t=>t.kind==='singles'&&t.holders.length===1&&ok(t.holders[0]));const i=slotFor(false);if(t&&i>=0){const o=oppFor(t.holders[0],[],t.g);if(o)put(i,'singles',[[t.holders[0]],[o.id]],{title:t.id})}}
+   if(g.k==='rookie'&&!c.some(sl=>sl.k==='match'&&sl.d&&sl.d.sides.flat().some(id=>W(id)&&W(id).rookie))){const r=ownList('p').find(w=>w.rookie&&ok(w.id)&&fit(w));const i=slotFor(false);if(r&&i>=0){const o=oppFor(r.id);if(o)put(i,'singles',[[r.id],[o.id]])}}}}
+
+ /* 5b · the crowd's chant: a spot in a match (a promo for an unknown just falls flat) */
+ {const ch=S.chant&&S.chant.p;if(ch&&ch.w===AW()&&!ch.hit&&ok(ch.id)&&!onCard(ch.id)&&fit(W(ch.id))){const i=slotFor(false);const o=oppFor(ch.id);if(i>=0&&o)put(i,'singles',[[ch.id],[o.id]])}}
+ /* 6 · the rest: a plain card from the booker, with the creative extras taken off */
+ if(empty().length){const gen=autoBook('p',sh,[...used],{smart:0});const ms=gen.filter(x=>x.k==='match'&&x.d&&!x.d.sp&&!x.d.tour);
+  const e=empty();const sc=new Map(ms.map(x=>[x,rateMatch(x.d,{ppv:sh.ppv,preview:true}).raw]));
+  const keep=ms.slice().sort((a,b)=>sc.get(b)-sc.get(a)).filter(x=>!x.d.sides.flat().some(id=>used.has(id))).slice(0,e.length).sort((a,b)=>sc.get(a)-sc.get(b));
+  /* the main event gets the strongest, the opener the next best */
+  const mi=mainI();const order=e.slice();if(order.includes(mi)){order.splice(order.indexOf(mi),1);order.push(mi)}
+  const ord=keep.length>=2?[keep[keep.length-2]].concat(keep.slice(0,-2),[keep[keep.length-1]]):keep;
+  order.forEach((i,j)=>{const x=ord[j];if(!x)return;const m=x.d;m.stip='std';delete m.fin;delete m.ri;c[i].d=m;m.sides.flat().forEach(id=>used.add(id))})}
+ /* a match still empty (a thin roster): any two healthy wrestlers who can go */
+ empty().forEach(i=>{const l=ownList('p').filter(w=>ok(w.id)).sort((a,b)=>b.pop-a.pop);const a=l[0];const o=a&&(oppFor(a.id)||l.find(w=>w.id!==a.id));if(a&&o)put(i,'singles',[[a.id],[o.id]])});
+
+ /* 7 · promos: the crowd's chant gets a spot if nobody gave them one, then the usual picks — but no contract signings
+    (announcing PPV matches is the GM's call) */
+ const exP=new Set();c.forEach(sl=>{if(sl.k==='promo'&&sl.d){exP.add(sl.d.a);if(sl.d.b)exP.add(sl.d.b)}});
+ const ch=S.chant&&S.chant.p;const chW=ch&&ch.w===AW()&&!ch.hit&&W(ch.id)&&W(ch.id).own==='p'&&!W(ch.id).inj?ch.id:null;
+ const want=new Set((S.trials||[]).filter(t=>t.goal==='seg'&&(!t.kind||t.kind==='promo')).map(t=>t.a).filter(id=>W(id)&&W(id).own==='p'&&!W(id).inj&&!onCard(id)));if(chW&&!onCard(chW))want.add(chW);
+ c.forEach(sl=>{if(sl.d||sl.k!=='promo'||sl.opt)return;let p=null;const w=[...want].find(id=>!exP.has(id));
+  if(w){want.delete(w);p={type:W(w).mic>=70?'callout':'vignette',a:w,b:null}}else p=autoPromo('p',exP);
+  if(p){if(p.type==='contract')p.type='callout';delete p.res;p.played=false;sl.d=p;exP.add(p.a);if(p.b)exP.add(p.b)}});
+ return c}
+/* the old assistant: books like a sharp rival (stips, finishes, run-ins, the title challenge). Kept for the balance
+   sweep's "engaged booker" bot, so tuning can check that a hands-on GM clearly beats Suggest the rest. */
+function suggestCardEngaged(){const sh=curShow();const c=JSON.parse(JSON.stringify(S.card.p));const used=new Set();
  c.forEach(sl=>{if(!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(id=>id&&used.add(id));if(sl.k==='promo'){used.add(sl.d.a);if(sl.d.b)used.add(sl.d.b)}if(sl.k==='chal'&&sl.d.c)used.add(sl.d.c);if(sl.k==='xo')used.add(sl.d.a)});
  const gen=autoBook('p',sh,[...used],{smart:1});const ms=gen.filter(x=>x.k==='match'&&x.d),ps=gen.filter(x=>x.k==='promo'&&x.d);
  const exP=new Set();c.forEach(sl=>{if(sl.k==='promo'&&sl.d){exP.add(sl.d.a);if(sl.d.b)exP.add(sl.d.b)}});
@@ -265,7 +344,7 @@ function suggestCard(){const sh=curShow();const c=JSON.parse(JSON.stringify(S.ca
   else if(sl.k==='xo'){const x=xoAuto('p',used,1)[0];if(x)sl.d=x}});
  /* put the strongest match last and a strong one first */
  return c}
-function suggestFill(){if(mpLocked())return;const before=S.card.p.filter(sl=>sl.d).length;S.card.p=suggestCard();const n=S.card.p.filter(sl=>sl.d).length-before;save();render();toast(n?`✨ Booked ${n} segment${n>1?'s':''} — tweak anything you like.`:'Nothing left to fill.')}
+function suggestFill(){if(mpLocked())return;const before=S.card.p.filter(sl=>sl.d).length;S.card.p=suggestCard();const n=S.card.p.filter(sl=>sl.d).length-before;save();render();toast(n?`✨ Booked ${n} segment${n>1?'s':''} — your must-dos are covered. Stipulations, finishes and run-ins are up to you.`:'Nothing left to fill.')}
 function clearCard(){if(mpLocked())return;if(!confirm('Clear everything on this card except promised, tournament, Royal Rumble and Money in the Bank matches?'))return;
  S.card.p.forEach(sl=>{if(!sl.d)return;if(sl.k==='match'&&(sl.d.tour||sl.d.sp||promiseOf(sl.d)))return;sl.d=null});save();render()}
 

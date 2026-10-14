@@ -45,7 +45,7 @@ window.SIM = async function (opt) {
       // free agency: top up a thin roster from the market
       if (owned('p').length < 22) { const fa = Object.values(S.w).filter(w => !w.own && onMarket(w) && !dealNeedsOffer(w)).sort((a, b) => ovr(b) - ovr(a))[0]; if (fa && S.money.p > signCost(fa) * 3) { S.money.p -= signCost(fa); fa.sal = mkt(fa); fa.own = 'p'; fa.con = 26; fa.mor = 80; fa.fee = 0 } }
       // book: the in-game "Suggest the rest" assistant
-      suggestFill();
+      if (opt.engaged && typeof suggestCardEngaged === 'function') S.card.p = suggestCardEngaged(); else suggestFill();
       // Money in the Bank: cash in by the same rules the rival uses
       if (typeof aiCash === 'function') aiCash('p', S.card.p, curShow());
       if (opt.spend) { S.prod = S.prod || {}; const m = S.money.p / econCap(); S.prod.p = curShow().ppv ? (m > 5 ? 'max' : m > 2 ? 'plus' : 'std') : (m > 6 ? 'max' : m > 3.2 ? 'plus' : 'std') }
