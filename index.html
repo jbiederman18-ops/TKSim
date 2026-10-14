@@ -960,6 +960,13 @@ body.tv.fs:not(.tvmove){cursor:none}
 .edi .pips{white-space:nowrap;font-size:inherit;letter-spacing:-.5px}.edi .stv{white-space:nowrap}.edi>span{min-width:0}
 .trow.n3 .edi{font-size:10.5px;padding:5px 5px;gap:1px 4px}.trow.n3 .edi .pips{letter-spacing:-1.5px;font-size:9px}.trow.n3 .edi .stv{white-space:normal}.edi .ft{font-style:normal;color:var(--mut);font-size:.9em;white-space:nowrap}.edi .ft b{font-weight:400}.edi .ft u{display:none;text-decoration:none}.trow.n3 .edi .ft b{display:none}.trow.n3 .edi .ft u{display:inline}
 .edi .ask.bad{color:#ff8a82;background:rgba(255,90,82,.12)}.edi .ask.good{color:var(--good);background:rgba(79,213,133,.12)}
+/* v190: the wrestler box hangs off the card — same alignment color on top, silver dots; matchup rows get their own divider */
+.eslot>.edi{margin-top:0;border-top:2px solid var(--line);border-radius:0 0 6px 6px;background:rgba(255,255,255,.035)}.eslot>.edi.af{border-top-color:var(--face)}.eslot>.edi.ah{border-top-color:var(--heel)}
+.edi .pips b{color:#dfe3ea}.edi .pips i{color:#3a3d45}
+.edi .edd{grid-column:1/-1;margin:5px 0 1px;padding-top:5px;border-top:1px dashed #3a3c44;font:800 italic 10.5px/1 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.seg{display:inline-flex;gap:2px;vertical-align:middle}.seg i{display:block;width:13px;height:7px;background:#34363d;clip-path:polygon(3px 0,100% 0,calc(100% - 3px) 100%,0 100%)}.seg i.on{background:linear-gradient(90deg,#f6dd8e,#d8a43a)}.seg.q i{background:repeating-linear-gradient(90deg,#3a3c44 0 2px,transparent 2px 4px)}
+.buzzbar .seg i{width:11px;height:6px}.mpip .seg i{width:9px;height:5px}.drow .seg{padding-top:3px}.drow .seg i{width:15px;height:8px}
+.buzzbar .bzk{font:800 italic 11px/1 'BC',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-right:4px}
 .edi .ask{grid-column:1/-1;color:var(--gold2);background:rgba(207,171,85,.1);border-radius:4px;padding:3px 5px;margin-top:3px}
 .wc .askb{position:absolute;left:0;right:0;top:58px;z-index:3;background:rgba(40,30,8,.9);border-block:1px solid var(--gold);color:var(--gold2);font:800 10px/1.15 'BC',Impact,sans-serif;text-transform:uppercase;letter-spacing:.05em;text-align:center;padding:3px 4px}
 .stygrid{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
@@ -3810,12 +3817,12 @@ function mInfo(w,si){const opp=ED.m.sides.filter((s,i)=>i!==si).flat().filter(Bo
 /* v189 preview: the crowd buzz and the four ingredients in one bar at the top of the editor. It pins to the top of the
    sheet as you scroll, so every change below it (stipulation, title, finish, run-in) shows its effect right away. */
 function buzzBar(m,sh){let d;try{d=mdOf(m,sh)}catch(e){return ''}const r=d.r;
- const mini=(k,v)=>`<span class="bzi"><small>${k}</small>${pipH(v)}</span>`;
- return `<div class="buzzbar"><div class="bzt">${tellHtml(r,true)}</div>${d.sq?'':`<div class="bzp">${mini('Talent',d.p.talent)}${mini('Chem',d.p.chem)}${mini('Story',d.p.story)}${mini('Extras',d.p.extras)}</div>`}</div>`}
+ const mini=(k,v)=>`<span class="bzi"><small>${k}</small>${segH(v)}</span>`;
+ return `<div class="buzzbar"><div class="bzt"><span class="bzk">This match</span>${tellHtml(r,true)}</div>${d.sq?'':`<div class="bzp">${mini('Talent',d.p.talent)}${mini('Chem',d.p.chem)}${mini('Story',d.p.story)}${mini('Extras',d.p.extras)}</div>`}</div>`}
 function mRows(w,si){const opp=ED.m.sides.filter((s,i)=>i!==si).flat().filter(Boolean).map(i=>S.w[i]);if(!opp.length)return '';
  const c=opp.reduce((a,o)=>a+chemOpp(w,o),0)/opp.length;const nw=opp.some(o=>!metPair(w.id,o.id));const rm=!curShow().ppv&&opp.some(o=>repMatch(w.id,o.id,ED.m.type));
  const px=opp.some(o=>pendingPromises().some(pr=>[[pr.a,pr.b],[pr.b,pr.a]].some(([me,foe])=>o.id===me&&w.id!==foe&&inTeam(w.id,foe))));const f=feudVs(w,opp);
- return `<span>Chem</span><span class="${c>=6?'good':c>=0?'':'bad'}">${chemWord(c)}${nw?'<i class="ft" title="They haven\'t shared a ring yet — real chemistry shows after the first match"> · <b>first meeting</b><u>new</u></i>':''}</span>${f?`<span>Feud</span><span class="${heatTier(f.h)>=1?'warnt':''}">🔥 ${Math.round(f.h)} vs ${esc(f.o.name.split(' ').slice(-1)[0])}</span>`:''}${rm?'<span class="ask bad" title="Met last week — less heat this week">🔁 Met last week</span>':''}${px?'<span class="ask good">🔗 Proxy war</span>':''}`}
+ return `<span class="edd">vs ${opp.length===1?esc(opp[0].name.split(' ').slice(-1)[0]):'the other side'}</span><span hidden></span><span>Chem</span><span class="${c>=6?'good':c>=0?'':'bad'}">${chemWord(c)}${nw?'<i class="ft" title="They haven\'t shared a ring yet — real chemistry shows after the first match"> · <b>first meeting</b><u>new</u></i>':''}</span>${f?`<span>Feud</span><span class="${heatTier(f.h)>=1?'warnt':''}">🔥 ${Math.round(f.h)} vs ${esc(f.o.name.split(' ').slice(-1)[0])}</span>`:''}${rm?'<span class="ask bad" title="Met last week — less heat this week">🔁 Met last week</span>':''}${px?'<span class="ask good">🔗 Proxy war</span>':''}`}
 function edFeud(w,si){const opp=ED.m.sides.filter((s,i)=>i!==si).flat().filter(Boolean).map(i=>S.w[i]);return opp.length?feudVs(w,opp):hotFeud(w)}
 /* the at-a-glance strip in the match editor: alignment matchup, feud status, stamina cost */
 function matchupHtml(m,ppv){const ws=m.sides.map(s=>s.filter(Boolean).map(id=>S.w[id]));const all=ws.flat();if(!all.length)return '';let h='';

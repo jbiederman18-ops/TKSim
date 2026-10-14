@@ -336,6 +336,10 @@ window.briefStory=function(){const sh=curShow();let l=[];try{l=attnItems()}catch
 (function(){
 const pipH=(n,q)=>{if(q)return '<span class="pips q">? ? ? ? ?</span>';n=clamp(Math.round(n),0,5);return `<span class="pips"><b>${'●'.repeat(n)}</b><i>${'●'.repeat(5-n)}</i></span>`};
 window.pipH=pipH;
+/* v190: match ingredients are a segmented meter in gold, wrestler stats stay as silver dots — two shapes, two colors,
+   so it's clear which numbers describe the match and which describe a wrestler */
+const segH=(n,q)=>{if(q)return '<span class="seg q">'+'<i></i>'.repeat(5)+'</span>';n=clamp(Math.round(n),0,5);return `<span class="seg">${'<i class="on"></i>'.repeat(n)}${'<i></i>'.repeat(5-n)}</span>`};
+window.segH=segH;
 const statP=v=>clamp(Math.round((v-55)/8),1,5);
 window.statP=statP;
 const chemP=c=>c>=10?5:c>=6?4:c>=3?3:c>=0?2:1;
@@ -368,7 +372,7 @@ function mdOf(m,sh){const r=rateMatch(m,{ppv:sh.ppv,allin:sh.ppv&&SUPER(S.week),
  if(sk==='std'&&!m.tour&&!isSp(m)&&m.type!=='gauntlet'){const best=Object.entries(STIPS).filter(([k,s])=>k!=='std'&&stipOk(k,m.type,sh.ppv)).map(([k,s])=>[k,ws.reduce((a,w)=>a+(s.b[w.st]||0),0)/ws.length]).sort((a,b)=>b[1]-a[1])[0];if(best&&best[1]>=3)extrasW+=` · ${STIPS[best[0]].n} would suit them`}
  return {r,p,back,talentW,storyW,extrasW}}
 window.mdOf=mdOf;
-const row=(k,pp,why,help,q)=>`<div class="drow"><span class="k">${k}${help?` <button class="qm" onclick="${help}" aria-label="How ${k.toLowerCase()} works">?</button>`:''}</span>${pipH(pp,q)}<span class="w">${why}</span></div>`;
+const row=(k,pp,why,help,q)=>`<div class="drow"><span class="k">${k}${help?` <button class="qm" onclick="${help}" aria-label="How ${k.toLowerCase()} works">?</button>`:''}</span>${segH(pp,q)}<span class="w">${why}</span></div>`;
 const chipRow=(lab,l,g)=>l.length?`<div class="drow2"><span class="k ${g?'g':''}">${lab}</span><span>${l.map(([k,t])=>`<span class="tg ${k==='ok'?'good':k==='b'?'bad':'warnt'}" style="margin:2px 4px 2px 0">${k==='ok'?'✓ ':k==='b'?'✗ ':''}${esc(t)}</span>`).join('')}</span></div>`:'';
 /* chips for a segment that isn't saved yet: try it on the card for a moment */
 function chipsWith(i,seg){const c=S.card&&S.card.p;if(!c||i==null||!c[i])return [];const sv=c[i];let out=[];c[i]=Object.assign({},sv,{d:seg});
@@ -391,7 +395,7 @@ window.matchDetails=function(m,sh,notes){const d=mdOf(m,sh);const r=d.r;
  <details class="whyd" style="margin-top:8px"><summary>Full chemistry breakdown</summary>${whyMatch(m,sh)}</details></div>`};
 /* the small pip strip on a booked slot */
 window.slotPips=function(m,sh,i){let d;try{d=mdOf(m,sh)}catch(e){return ''}const ch=attnChips(i);
- return `${d.sq?'':`<div class="mpip"><div>Talent${pipH(d.p.talent)}</div><div>Chemistry${pipH(d.p.chem)}</div><div>Story${pipH(d.p.story)}</div><div>Extras${pipH(d.p.extras)}</div></div>`}${ch||(!d.sq&&d.back.length)?`<div class="tags">${ch}${d.sq?'':d.back.slice(0,2).map(([k,t])=>`<span class="tg ${k==='b'?'bad':'warnt'}">${esc(t)}</span>`).join('')}</div>`:''}`};
+ return `${d.sq?'':`<div class="mpip"><div>Talent${segH(d.p.talent)}</div><div>Chemistry${segH(d.p.chem)}</div><div>Story${segH(d.p.story)}</div><div>Extras${segH(d.p.extras)}</div></div>`}${ch||(!d.sq&&d.back.length)?`<div class="tags">${ch}${d.sq?'':d.back.slice(0,2).map(([k,t])=>`<span class="tg ${k==='b'?'bad':'warnt'}">${esc(t)}</span>`).join('')}</div>`:''}`};
 
 /* promos: talent on the mic, how well the segment fits them, the story behind it, and your live calls */
 function pdOf(p){const A=S.w[p.a],B=p.b&&S.w[p.b];if(!A)return null;const mm=w=>w.mic+(hasT(w,'mouth')?8:0);
@@ -412,13 +416,13 @@ window.promoDetails=function(p){const d=pdOf(p);if(!d)return '';const req=chipsW
  ${chipRow('Requests',req,1)}${chipRow('Holding back',d.back)}
  <div class="row sb" style="padding-top:10px;margin-top:4px;border-top:1px solid var(--line)"><span class="muted">Crowd buzz</span>${tellSpan(promoEst(p))}</div></div>`};
 window.promoPips=function(p,i){const d=pdOf(p);if(!d)return '';const ch=attnChips(i);
- return `<div class="mpip"><div>Talent${pipH(d.p.talent)}</div><div>Fit${pipH(d.p.fit)}</div><div>Story${pipH(d.p.story)}</div><div>Your calls${pipH(0,1).replace('? ? ? ? ?','? ? ?')}</div></div>${ch||d.back.length?`<div class="tags">${ch}${d.back.slice(0,2).map(([k,t])=>`<span class="tg ${k==='b'?'bad':'warnt'}">${esc(t)}</span>`).join('')}</div>`:''}<div class="tellrow">${tellSpan(promoEst(p))}</div>`};
+ return `<div class="mpip"><div>Talent${segH(d.p.talent)}</div><div>Fit${segH(d.p.fit)}</div><div>Story${segH(d.p.story)}</div><div>Your calls${pipH(0,1).replace('? ? ? ? ?','? ? ?')}</div></div>${ch||d.back.length?`<div class="tags">${ch}${d.back.slice(0,2).map(([k,t])=>`<span class="tg ${k==='b'?'bad':'warnt'}">${esc(t)}</span>`).join('')}</div>`:''}<div class="tellrow">${tellSpan(promoEst(p))}</div>`};
 
 /* the strip under each wrestler in an editor: ability pips, morale, stamina, and what they're asking for */
 window.edInfo=function(w,promo,gain,extra){if(!w)return '';const m=attnMood(w.mor);const mc=w.mor>=65?'good':w.mor>=50?'':w.mor>=35?'warnt':'bad';
  const sw=v=>v>=80?['Fresh','good']:v>=100-FAT_OK?['Worn','']:v>=100-FAT_RISK?['Tired','warnt']:['Exhausted','bad'];const s=sw(sta(w));const after=gain?sw(sta(w)-gain):null;
  const ask=typeof attnAsk==='function'?attnAsk(w.id):null;
- return `<div class="edi">${promo?`<span>Mic</span>${pipH(statP(w.mic))}`:`<span>Ring</span>${pipH(statP(w.ring))}`}<span>Star</span>${pipH(statP(w.pop))}<span>Morale</span><span class="${mc}">${m}</span><span>Stamina</span><span class="${s[1]} stv">${s[0]}${after&&after[0]!==s[0]?`<span class="muted"> → </span><span class="${after[1]}">${after[0]}</span>`:''}</span>${extra||''}${ask?`<span class="ask">🎤 ${esc(ask.t)}</span>`:''}</div>`};
+ return `<div class="edi a${w.al}">${promo?`<span>Mic</span>${pipH(statP(w.mic))}`:`<span>Ring</span>${pipH(statP(w.ring))}`}<span>Star</span>${pipH(statP(w.pop))}<span>Morale</span><span class="${mc}">${m}</span><span>Stamina</span><span class="${s[1]} stv">${s[0]}${after&&after[0]!==s[0]?`<span class="muted"> → </span><span class="${after[1]}">${after[0]}</span>`:''}</span>${extra||''}${ask?`<span class="ask">🎤 ${esc(ask.t)}</span>`:''}</div>`};
 
 /* the style chart behind Chemistry's "?" */
 window.styChart=function(){const m=ED&&ED.m;const ws=m?m.sides.map(s=>s.map(id=>S.w[id]).filter(Boolean)):[];const a=ws[0]&&ws[0][0],b=ws[1]&&ws[1][0];const ks=Object.keys(STYLE_N);
