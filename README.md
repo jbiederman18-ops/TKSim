@@ -38,6 +38,9 @@ The tour reads its numbers straight from the game and is checked automatically o
 - **Survivor Series is the crossover show** (it took Forbidden Door's place): up to two dream matches against the rival's stars, and rival invasions in the TV weeks before it.
 - **Existing saves** keep their week: the WWE wrestlers arrive in free agency, WWE's titles start vacant (two for each brand), and the PPVs take their new names from here on.
 
+## The calendar
+- **📅 Always know where you are.** The strip on the Home screen shows every week of the year (PPVs in gold, supershows brightest, this week outlined). Tap it, or **WK** in the header, for the full calendar: each PPV and what's special about it, TV specials, tournament rounds, crossover season, promised matches and the week each of your contracts runs out.
+
 ## The countdown
 
 Now and then a countdown clock appears during a solo promo. Three weeks later a free agent from the other side of the face/heel line debuts and goes after the wrestler who had the mic (instant heat), and you get one week to sign them at a discount — bigger if the promo hyped the clock. Sign them early, or let the rival, and they debut for whoever did.

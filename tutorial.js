@@ -11,7 +11,7 @@
      tour get a "what's new" replay of just those stops.
    • Run `python3 tools/check-tutorial.py` — it plays every stop and tip in a headless browser and fails on any
      missing target or stale value. */
-const TUT_REV=15;
+const TUT_REV=16;
 const TUT_KEY='tksim_tut';
 const TUT_MISS=[];
 
@@ -62,8 +62,8 @@ const TUT_STEPS=[
  b:()=>`<b>Auto-pick</b> takes the best fit for one pick. <b>Sim rest</b> drafts the rest of your roster for you.<br><br>When the draft ends, the tour picks up with your first week.`},
 
 /* ---- the first week ---- */
-{id:'s.show',track:'season',since:1,tab:'home',sel:'main .card.showcard',sys:['shows','calendar'],t:'Your show',
- b:()=>`Each week you book ${tv('show name',()=>esc(curShow().mine),'your show')} while ${tvRival()} books ${ON()?'theirs':tv('rival show',()=>esc(curShow().theirs),'theirs')}. The better show wins the night.<br><br>${tv('next PPV',()=>{const n=nextPPV();return n?`Next PPV: <b>${esc(n.n)}</b>${n.in?` in ${n.in} week${n.in>1?'s':''}`:' — this week'}. PPVs are where feuds pay off and fans swing big.`:''},'')}`},
+{id:'s.show',track:'season',since:16,tab:'home',sel:'main .card.showcard',sys:['shows','calendar'],t:'Your show',
+ b:()=>`Each week you book ${tv('show name',()=>esc(curShow().mine),'your show')} while ${tvRival()} books ${ON()?'theirs':tv('rival show',()=>esc(curShow().theirs),'theirs')}. The better show wins the night.<br><br>${tv('next PPV',()=>{const n=nextPPV();return n?`Next PPV: <b>${esc(n.n)}</b>${n.in?` in ${n.in} week${n.in>1?'s':''}`:' — this week'}. PPVs are where feuds pay off and fans swing big.`:''},'')}<br><br>The 📅 <b>calendar</b> strip below (or <b>WK</b> in the header) shows the whole year: every PPV, TV special and tournament round, plus promised matches and contracts running out.`},
 {id:'s.wwe',track:'season',since:13,tab:'home',sel:'main .card.showcard',sys:['calendar','wwe','rumble','money in the bank'],t:'AEW meets WWE',
  b:()=>`The year alternates AEW and WWE's biggest PPVs — ${tvPPVs().join(', ')}. Both brands run every one, and WWE's four world titles sit beside the AEW belts.<br><br>🏟️ <b>${tv('Rumble',()=>esc(PPVS[RR_WEEK]),'Royal Rumble')}</b> (week ${tv('RR_WEEK',()=>RR_WEEK,4)}): your men's and women's Rumbles lock onto the card, and each winner earns a world title shot at <b>${tv('Mania',()=>esc(PPVS[WM_WEEK]),'WrestleMania')}</b>.<br>💼 <b>${tv('MITB',()=>esc(PPVS[MITB_WEEK]),'Money in the Bank')}</b> (week ${tv('MITB_WEEK',()=>MITB_WEEK,20)}): the ladder match winner holds the briefcase for a year and can cash in on a world champion any time — even straight after the champion's match. Look for it in the match editor.`},
 {id:'s.war',track:'season',since:14,tab:'home',sel:()=>{const w=document.querySelector('main .war');return w&&w.closest('.card')},sys:['goal','fans'],t:'How you win',
