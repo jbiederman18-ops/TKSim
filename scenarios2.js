@@ -186,114 +186,132 @@ const MEV2=[
  {t:"Target {B}'s legs to slow them down",always:1,st:.25,ok:"Smart. {B} is limping by the finish."}]}];
 
 const TW2=[
-{when:'solo',text:"The crowd starts a chant for {A}'s old tag team partner.",ch:[{t:"Acknowledge them with a smile",s:'pop',d:.05,p:3,ok:"A nice moment of nostalgia."},{t:"Tell the crowd that chapter is closed",s:'mic',d:.1,p:2},{al:'h',t:"Tell the crowd their old partner held them back",s:'mic',d:.1,p:3,ok:"Cold. The boos rain down."}]},
-{when:'solo',text:"The ring announcer's mic is the only one working — and {A} has to share it.",ch:[{t:"Make the announcer do the talking",s:'mic',d:.1,p:3,ok:"A hilarious double act. The crowd is in stitches."},{t:"Wait for the tech crew",s:'luck',d:0,p:1},{al:'h',t:"Snatch it and shove the announcer out",s:'mic',d:.05,p:2,ok:"Rude, abrupt and very heel."}]},
-{when:'solo',text:"Someone in the upper deck holds up a sign: '{A} CAN'T WIN THE BIG ONE.'",ch:[{t:"Read the sign out loud and promise to prove it wrong",s:'mic',d:.1,p:3,ok:"A fire is lit under {A}."},{t:"Laugh it off",s:'pop',d:.05,p:2},{al:'h',t:"Demand security remove the fan",s:'mic',d:.05,p:2,ok:"Petty, insecure and hilarious."}]},
-{when:'solo',cd:1,w:1,text:"The countdown clock on the big screen glitches and starts counting toward... something.",ch:[{t:"Stare at the screen until it stops",s:'pop',d:.05,p:2,cdh:1,ok:"Creepy. Fans start theorising immediately.",no:"The clock blinks out before anyone notices."},{t:"Ignore it and keep talking",s:'mic',d:.1,p:2,ok:"Business as usual — but the clock keeps ticking in the corner of the screen.",no:"Nobody's listening. Everyone is watching the clock."},{t:"Tell everyone it's counting down to something big",s:'mic',d:.15,p:4,cdh:2,ok:"Speculation runs wild online.",no:"It sounds like {A} has no idea either."},{al:'h',t:"Demand to know who's behind it",s:'mic',d:.1,p:3,cdh:1,ok:"{A} looks rattled for the first time in months.",no:"The clock just keeps counting. {A} storms off."}]},
-{when:'solo',star:1,text:"A section of the crowd chants 'ONE MORE YEAR!' at {A}.",ch:[{t:"Promise them a lot more than one",s:'mic',d:.1,p:4,ok:"Huge pop."},{t:"Take it all in, quietly",s:'pop',d:.05,p:3},{al:'h',t:"Tell them they don't deserve one more year",s:'mic',d:.1,p:3,ok:"Mean and memorable."}]},
-{when:'solo',und:1,text:"A small but loud group of fans has made custom shirts for {A}.",ch:[{t:"Point them out and thank them",s:'pop',d:.05,p:4,ok:"The section goes wild. More fans want those shirts."},{t:"Promise to make them proud",s:'mic',d:.1,p:3},{al:'h',t:"Tell them to buy official merch instead",s:'mic',d:.05,p:2,ok:"Hilariously petty."}]},
-{when:'duo',text:"{B} snatches the mic out of {A}'s hand mid-sentence.",ch:[{t:"Snatch it right back",s:'mic',d:.1,h:10,p:2,ok:"A tug-of-war over a microphone. The tension is real."},{t:"Grab a second mic from the timekeeper",s:'mic',d:.05,h:6,p:3},{t:"Shove {B} into the ropes",nff:1,s:'ring',d:.05,h:14,p:1}]},
-{when:'duo',text:"{B} walks out holding a stack of old photos of {A}.",ch:[{t:"Laugh along — they were a great look",s:'pop',d:.05,h:6,p:3,ok:"The crowd loves {A}'s sense of humor."},{t:"Grab the photos and rip them up",s:'luck',d:.05,h:12,p:2},{t:"Pull out embarrassing photos of {B}",s:'mic',d:.15,h:12,p:3,ok:"Turnabout is fair play. The crowd howls."}]},
-{when:'duo',nff:1,text:"{B} spits at {A}'s feet.",ch:[{t:"Go after {B} right now",s:'ring',d:.1,h:16,p:2},{t:"Stay cool and promise payback",s:'mic',d:.1,h:10,p:3,ok:"Composure. The crowd knows what's coming."},{t:"Wipe it up with {B}'s jacket",s:'luck',d:.05,h:12,p:3}]},
-{when:'duo',al:'f',vs:'f',text:"The crowd starts chanting 'WE WANT BOTH!' — they want a match between {A} and {B}.",ch:[{t:"Give the crowd what they want — make it official",s:'mic',d:.1,h:8,p:3,ok:"Everyone wants to see this one."},{t:"Shake hands and save it for later",s:'pop',d:.05,h:4,p:3,c:1},{t:"Tease a tag team instead",s:'mic',d:.1,p:2,c:2,ok:"Wait — the crowd likes that too."}]},
-{when:'duo',al:'h',vs:'h',text:"{A} and {B} realize they're wearing the same jacket.",ch:[{t:"Demand {B} take theirs off",s:'mic',d:.1,h:10,p:3,ok:"Ridiculous and perfect."},{t:"Suggest they're clearly meant to be a team",s:'mic',d:.1,c:2,p:2},{t:"Walk off in disgust",s:'luck',d:0,h:6,p:1}]},
-{when:'duo',text:"The lights go out. When they come back on, {B} is standing right behind {A}.",ch:[{t:"Turn slowly and stare them down",s:'pop',d:.05,h:10,p:3,ok:"Nobody blinks. The crowd is holding its breath."},{t:"Spin around swinging",nff:1,s:'ring',d:.1,h:14,p:2},{t:"Act like nothing happened",s:'mic',d:.1,h:8,p:2}]},
-{when:'any',text:"Someone in the crowd throws a replica of {A}'s gear into the ring.",ch:[{t:"Put it on and pose",s:'pop',d:.05,p:3,ok:"A perfect fit. The crowd cheers."},{t:"Throw it back with a wink",s:'pop',d:.05,p:2},{al:'h',t:"Tear it apart in front of the fan",s:'mic',d:.05,p:2,ok:"Heartless. The boos are loud."}]},
-{when:'any',text:"The production truck accidentally plays the wrong entrance music.",ch:[{t:"Dance to it anyway",s:'pop',d:.1,p:3,ok:"The crowd sings along. A viral moment."},{t:"Glare at the stage until it stops",s:'mic',d:.05,p:2},{t:"Pretend it's the new theme",s:'mic',d:.15,p:3,ok:"The internet loves the commitment."}]},
-{when:'any',x:1,text:"{X} is sitting in the front row with a bag of popcorn, watching.",ch:[{t:"Call {X} out by name",s:'mic',d:.1,hx:10,p:3},{t:"Ignore {X} completely",s:'luck',d:0,hx:4,p:1},{t:"Walk over and take some popcorn",s:'pop',d:.05,hx:8,p:3,ok:"The crowd laughs. {X} doesn't."}]},
-{when:'any',x:1,text:"A backstage camera catches {X} smashing a monitor while {A} talks.",ch:[{t:"Tell {X} to come out and say it to their face",s:'mic',d:.1,hx:12,p:3},{t:"Ask the crowd if they want to see {X} get hurt",s:'pop',d:.1,hx:10,p:3},{t:"Keep going like nothing happened",s:'luck',d:0,hx:4,p:1}]},
-{when:'any',text:"The crowd breaks into an impromptu sing-along of {A}'s entrance theme.",ch:[{t:"Conduct the crowd",s:'pop',d:.05,p:4,ok:"A goosebumps moment."},{t:"Wait for it to finish, smiling",s:'pop',d:0,p:2},{al:'h',t:"Tell them to stop — they're off-key",s:'mic',d:.1,p:3,ok:"Insulting, and the crowd sings louder."}]},
-{when:'any',held:1,text:"The {T} title plate catches the spotlight and nearly blinds the front row.",ch:[{t:"Point it at the crowd like a mirror",s:'pop',d:.05,p:3,ok:"Pure showmanship."},{t:"Tell the fans this is what they all want",s:'mic',d:.1,p:3},{al:'h',t:"Blind the camera on purpose",s:'luck',d:.05,p:2,ok:"Annoying and funny."}]},
-{when:'any',fac:1,text:"Only half of {F} comes out to support {A}. Where are the rest?",ch:[{t:"Ask the crowd if they've seen them",s:'mic',d:.1,p:2},{t:"Promise there's no trouble in {F}",s:'mic',d:.15,p:3,ok:"Nobody believes it — which makes it great TV."},{t:"Keep going like nothing's wrong",s:'luck',d:0,p:1}]},
-{when:'any',al:'h',text:"The crowd is chanting so loud {A} can't hear themselves.",ch:[{t:"Wait them out with folded arms",s:'mic',d:.1,p:3,ok:"An endless stand-off. The crowd eventually gives up."},{t:"Shout over them until they're hoarse",s:'mic',d:.1,p:2},{t:"Leave and come back later",s:'luck',d:0,p:1}]},
-{when:'any',al:'f',text:"A veteran fan in the front row has been at every show since day one.",ch:[{t:"Give them a hug over the barricade",s:'pop',d:.05,p:4,ok:"A lovely moment. The crowd cheers."},{t:"Dedicate the night to them",s:'mic',d:.1,p:3},{t:"Shake their hand and get back to business",s:'pop',d:0,p:2}]}];
+{hk:'live',when:'solo',text:"The crowd starts a chant for {A}'s old tag team partner.",ch:[{t:"Acknowledge them with a smile",s:'pop',d:.05,p:3,ok:"A nice moment of nostalgia."},{t:"Tell the crowd that chapter is closed",s:'mic',d:.1,p:2},{al:'h',t:"Tell the crowd their old partner held them back",s:'mic',d:.1,p:3,ok:"Cold. The boos rain down."}]},
+{hk:'live',when:'solo',text:"The ring announcer's mic is the only one working — and {A} has to share it.",ch:[{t:"Make the announcer do the talking",s:'mic',d:.1,p:3,ok:"A hilarious double act. The crowd is in stitches."},{t:"Wait for the tech crew",s:'luck',d:0,p:1},{al:'h',t:"Snatch it and shove the announcer out",s:'mic',d:.05,p:2,ok:"Rude, abrupt and very heel."}]},
+{hk:'live',when:'solo',text:"Someone in the upper deck holds up a sign: '{A} CAN'T WIN THE BIG ONE.'",ch:[{t:"Read the sign out loud and promise to prove it wrong",s:'mic',d:.1,p:3,ok:"A fire is lit under {A}."},{t:"Laugh it off",s:'pop',d:.05,p:2},{al:'h',t:"Demand security remove the fan",s:'mic',d:.05,p:2,ok:"Petty, insecure and hilarious."}]},
+{hk:'live',when:'solo',cd:1,w:1,text:"The countdown clock on the big screen glitches and starts counting toward... something.",ch:[{t:"Stare at the screen until it stops",s:'pop',d:.05,p:2,cdh:1,ok:"Creepy. Fans start theorising immediately.",no:"The clock blinks out before anyone notices."},{t:"Ignore it and keep talking",s:'mic',d:.1,p:2,ok:"Business as usual — but the clock keeps ticking in the corner of the screen.",no:"Nobody's listening. Everyone is watching the clock."},{t:"Tell everyone it's counting down to something big",s:'mic',d:.15,p:4,cdh:2,ok:"Speculation runs wild online.",no:"It sounds like {A} has no idea either."},{al:'h',t:"Demand to know who's behind it",s:'mic',d:.1,p:3,cdh:1,ok:"{A} looks rattled for the first time in months.",no:"The clock just keeps counting. {A} storms off."}]},
+{hk:'live',when:'solo',star:1,text:"A section of the crowd chants 'ONE MORE YEAR!' at {A}.",ch:[{t:"Promise them a lot more than one",s:'mic',d:.1,p:4,ok:"Huge pop."},{t:"Take it all in, quietly",s:'pop',d:.05,p:3},{al:'h',t:"Tell them they don't deserve one more year",s:'mic',d:.1,p:3,ok:"Mean and memorable."}]},
+{hk:'live',when:'solo',und:1,text:"A small but loud group of fans has made custom shirts for {A}.",ch:[{t:"Point them out and thank them",s:'pop',d:.05,p:4,ok:"The section goes wild. More fans want those shirts."},{t:"Promise to make them proud",s:'mic',d:.1,p:3},{al:'h',t:"Tell them to buy official merch instead",s:'mic',d:.05,p:2,ok:"Hilariously petty."}]},
+{nhk:'attack',hk:'live',when:'duo',text:"{B} snatches the mic out of {A}'s hand mid-sentence.",ch:[{t:"Snatch it right back",s:'mic',d:.1,h:10,p:2,ok:"A tug-of-war over a microphone. The tension is real."},{t:"Grab a second mic from the timekeeper",s:'mic',d:.05,h:6,p:3},{t:"Shove {B} into the ropes",nff:1,s:'ring',d:.05,h:14,p:1}]},
+{nhk:'attack|tape',when:'duo',text:"{B} walks out holding a stack of old photos of {A}.",ch:[{t:"Laugh along — they were a great look",s:'pop',d:.05,h:6,p:3,ok:"The crowd loves {A}'s sense of humor."},{t:"Grab the photos and rip them up",s:'luck',d:.05,h:12,p:2},{t:"Pull out embarrassing photos of {B}",s:'mic',d:.15,h:12,p:3,ok:"Turnabout is fair play. The crowd howls."}]},
+{nhk:'absent',when:'duo',nff:1,text:"{B} spits at {A}'s feet.",ch:[{t:"Go after {B} right now",s:'ring',d:.1,h:16,p:2},{t:"Stay cool and promise payback",s:'mic',d:.1,h:10,p:3,ok:"Composure. The crowd knows what's coming."},{t:"Wipe it up with {B}'s jacket",s:'luck',d:.05,h:12,p:3}]},
+{hk:'live',when:'duo',al:'f',vs:'f',text:"The crowd starts chanting 'WE WANT BOTH!' — they want a match between {A} and {B}.",ch:[{t:"Give the crowd what they want — make it official",s:'mic',d:.1,h:8,p:3,ok:"Everyone wants to see this one."},{t:"Shake hands and save it for later",s:'pop',d:.05,h:4,p:3,c:1},{t:"Tease a tag team instead",s:'mic',d:.1,p:2,c:2,ok:"Wait — the crowd likes that too."}]},
+{nhk:'attack|absent',when:'duo',al:'h',vs:'h',text:"{A} and {B} realize they're wearing the same jacket.",ch:[{t:"Demand {B} take theirs off",s:'mic',d:.1,h:10,p:3,ok:"Ridiculous and perfect."},{t:"Suggest they're clearly meant to be a team",s:'mic',d:.1,c:2,p:2},{t:"Walk off in disgust",s:'luck',d:0,h:6,p:1}]},
+{nhk:'absent',when:'duo',text:"The lights go out. When they come back on, {B} is standing right behind {A}.",ch:[{t:"Turn slowly and stare them down",s:'pop',d:.05,h:10,p:3,ok:"Nobody blinks. The crowd is holding its breath."},{t:"Spin around swinging",nff:1,s:'ring',d:.1,h:14,p:2},{t:"Act like nothing happened",s:'mic',d:.1,h:8,p:2}]},
+{hk:'live',when:'any',text:"Someone in the crowd throws a replica of {A}'s gear into the ring.",ch:[{t:"Put it on and pose",s:'pop',d:.05,p:3,ok:"A perfect fit. The crowd cheers."},{t:"Throw it back with a wink",s:'pop',d:.05,p:2},{al:'h',t:"Tear it apart in front of the fan",s:'mic',d:.05,p:2,ok:"Heartless. The boos are loud."}]},
+{hk:'live',when:'any',text:"The production truck accidentally plays the wrong entrance music.",ch:[{t:"Dance to it anyway",s:'pop',d:.1,p:3,ok:"The crowd sings along. A viral moment."},{t:"Glare at the stage until it stops",s:'mic',d:.05,p:2},{t:"Pretend it's the new theme",s:'mic',d:.15,p:3,ok:"The internet loves the commitment."}]},
+{hk:'live',when:'any',x:1,text:"{X} is sitting in the front row with a bag of popcorn, watching.",ch:[{t:"Call {X} out by name",s:'mic',d:.1,hx:10,p:3},{t:"Ignore {X} completely",s:'luck',d:0,hx:4,p:1},{t:"Walk over and take some popcorn",s:'pop',d:.05,hx:8,p:3,ok:"The crowd laughs. {X} doesn't."}]},
+{nhk:'tape',when:'any',x:1,text:"A backstage camera catches {X} smashing a monitor while {A} talks.",ch:[{t:"Tell {X} to come out and say it to their face",s:'mic',d:.1,hx:12,p:3},{hk:'live',t:"Ask the crowd if they want to see {X} get hurt",s:'pop',d:.1,hx:10,p:3},{t:"Keep going like nothing happened",s:'luck',d:0,hx:4,p:1}]},
+{hk:'live',when:'any',text:"The crowd breaks into an impromptu sing-along of {A}'s entrance theme.",ch:[{t:"Conduct the crowd",s:'pop',d:.05,p:4,ok:"A goosebumps moment."},{t:"Wait for it to finish, smiling",s:'pop',d:0,p:2},{al:'h',t:"Tell them to stop — they're off-key",s:'mic',d:.1,p:3,ok:"Insulting, and the crowd sings louder."}]},
+{hk:'live',when:'any',held:1,text:"The {T} title plate catches the spotlight and nearly blinds the front row.",ch:[{t:"Point it at the crowd like a mirror",s:'pop',d:.05,p:3,ok:"Pure showmanship."},{t:"Tell the fans this is what they all want",s:'mic',d:.1,p:3},{al:'h',t:"Blind the camera on purpose",s:'luck',d:.05,p:2,ok:"Annoying and funny."}]},
+{hk:'live',when:'any',fac:1,text:"Only half of {F} comes out to support {A}. Where are the rest?",ch:[{t:"Ask the crowd if they've seen them",s:'mic',d:.1,p:2},{t:"Promise there's no trouble in {F}",s:'mic',d:.15,p:3,ok:"Nobody believes it — which makes it great TV."},{t:"Keep going like nothing's wrong",s:'luck',d:0,p:1}]},
+{hk:'live',when:'any',al:'h',text:"The crowd is chanting so loud {A} can't hear themselves.",ch:[{t:"Wait them out with folded arms",s:'mic',d:.1,p:3,ok:"An endless stand-off. The crowd eventually gives up."},{t:"Shout over them until they're hoarse",s:'mic',d:.1,p:2},{t:"Leave and come back later",s:'luck',d:0,p:1}]},
+{hk:'live',when:'any',al:'f',text:"A veteran fan in the front row has been at every show since day one.",ch:[{t:"Give them a hug over the barricade",s:'pop',d:.05,p:4,ok:"A lovely moment. The crowd cheers."},{t:"Dedicate the night to them",s:'mic',d:.1,p:3},{t:"Shake their hand and get back to business",s:'pop',d:0,p:2}]}];
 
 /* promo scenes: openers (texts) and choices (ch) by promo type and solo/duo */
 const SC2={
 callout:{solo:{texts:[
- {t:"{A} walks out with a stack of printed rankings and drops them on the mat."},
- {al:'h',t:"{A} has the house lights cut so the only thing on is a spotlight on them."},
- {al:'f',t:"{A} jogs out wearing a fan-made shirt and grabs the mic with a grin."}],ch:[
+ {kk:'rankings',t:"{A} walks out with a stack of printed rankings and drops them on the mat."},
+ {kk:'spotlight',al:'h',t:"{A} has the house lights cut so the only thing on is a spotlight on them."},
+ {kk:'shirt',al:'f',t:"{A} jogs out wearing a fan-made shirt and grabs the mic with a grin."}],ch:[
  {t:"Call out whoever thinks they're next in line",s:'mic',d:.1,x:1,hx:10,p:2,ok:"{X} heard it. Everyone backstage did.",no:"The challenge goes unanswered."},
  {t:"Read out their win-loss record like a resume",s:'mic',d:.15,p:3,ok:"The numbers speak for themselves.",no:"The record is a bit worse than they remember."},
  {t:"Promise a surprise at the next PPV",s:'mic',d:.1,p:3,ok:"Fans start guessing right away.",no:"It's so vague no one cares."},
  {al:'f',t:"Bring a kid from the front row into the ring to help",s:'pop',d:.05,p:4,ok:"The cutest callout in history.",no:"The kid freezes. Adorable, but the promo stalls."},
  {al:'h',t:"Rank the whole locker room — and put everyone below {A}",s:'mic',d:.15,p:3,ok:"Insulting everyone at once. Impressive.",no:"The list gets too long."},
- {al:'h',t:"Tell the crowd they're lucky {A} showed up tonight",s:'mic',d:.05,p:2,ok:"Arrogant and infuriating.",no:"The crowd yells back 'GO HOME!' and it sticks."}]},
+ {hk:'rankings',t:"Tear up the rankings — {A} is done waiting for a number",s:'pop',d:.05,p:3,ok:"Confetti of paper. The crowd loves it.",no:"The paper is too thick to tear. Awkward."},
+ {hk:'rankings',t:"Read the rankings out loud — with {A} at number one",s:'mic',d:.1,p:3,ok:"Page by page, the whole locker room gets put in its place.",no:"Somebody in the back printed the real rankings. {A} isn't number one."},
+ {al:'h',t:"Tell the crowd they're lucky {A} showed up tonight",s:'mic',d:.05,p:2,ok:"Arrogant and infuriating.",no:"The crowd yells back 'GO HOME!' and it sticks."},
+ {hk:'headset',t:"Keep the headset on and do commentary on their own promo",s:'mic',d:.15,p:3,ok:"Play-by-play of their own greatness. It works.",no:"The commentary team unplugs the headset."},
+ {hk:'security',al:'h',t:"Have the security team form a wall around the ring",s:'luck',d:.05,p:2,ok:"Nobody gets near {A}. The crowd hates every second.",no:"Half the security guards wander off for a break."},
+ {hk:'shirt',al:'f',t:"Find the fan who made the shirt and bring them up front",s:'pop',d:.05,p:3,ok:"The fan is in tears. So is half the building.",no:"Security can't find them in the crowd."},
+ {hk:'spotlight',al:'h',t:"Talk only from the spotlight — never once stepping out of it",s:'mic',d:.1,p:3,ok:"Eerie and magnetic. Nobody can look away.",no:"The spotlight operator loses them. {A} is talking to the dark."}]},
  duo:{texts:[
- {t:"{A} walks out with a rolled-up poster of {B} and unrolls it slowly."},
- {nff:1,t:"{A} interrupts {B}'s entrance halfway down the ramp."},
- {al:'f',vs:'h',t:"{A} walks out to a roar and stares straight at {B} on the big screen."}],ch:[
+ {kk:'poster',t:"{A} walks out with a rolled-up poster of {B} and unrolls it slowly."},
+ {kk:'here ramp',nff:1,t:"{A} interrupts {B}'s entrance halfway down the ramp."},
+ {kk:'screen',al:'f',vs:'h',t:"{A} walks out to a roar and stares straight at {B} on the big screen."}],ch:[
  {t:"Tell {B} exactly when and where it'll happen",ch:1,s:'mic',d:.05,h:10,p:2,ok:"A date and a place. It's on.",no:"{B} isn't paying attention."},
  {t:"Point out every time {B} has dodged {A}",s:'mic',d:.1,h:12,p:3,ok:"The list is long. {B} looks scared.",no:"{B} has an answer for every one."},
- {nff:1,t:"Tear the poster of {B} in half",s:'pop',d:.05,h:12,p:2,ok:"A simple, effective message.",no:"The poster is laminated. It won't tear."},
+ {hk:'poster',nff:1,t:"Tear the poster of {B} in half",s:'pop',d:.05,h:12,p:2,ok:"A simple, effective message.",no:"The poster is laminated. It won't tear."},
+ {hk:'poster',t:"Draw a target on {B}'s face on the poster",s:'mic',d:.1,h:12,p:2,ok:"Simple, menacing, and it's all over social media.",no:"The marker runs dry halfway through."},
+ {hk:'poster',al:'f',vs:'f',t:"Sign the poster of {B} and hand it to a fan",s:'pop',d:.05,h:8,p:3,ok:"A respectful jab. The fan is thrilled, and {B} gets the message.",no:"The fan wanted {B}'s autograph, not {A}'s."},
  {al:'f',vs:'h',t:"Promise the fans {B} won't escape this time",s:'mic',d:.1,h:12,p:3,ok:"The crowd roars. {B} is cornered.",no:"{B} slips out the back."},
  {al:'h',vs:'f',t:"Mock {B}'s catchphrase in front of their fans",s:'mic',d:.1,h:14,p:2,ok:"Pure disrespect. The crowd boos every word.",no:"The crowd chants the catchphrase back louder."},
- {al:'f',vs:'f',t:"Ask the crowd who they'd rather see win",s:'pop',d:.1,h:8,p:3,ok:"An even split. Everyone wants this match.",no:"The crowd clearly picks {B}. Awkward."}]}},
+ {al:'f',vs:'f',t:"Ask the crowd who they'd rather see win",s:'pop',d:.1,h:8,p:3,ok:"An even split. Everyone wants this match.",no:"The crowd clearly picks {B}. Awkward."},
+ {hk:'sign',al:'f',vs:'f',t:"Point up at the sign and ask the crowd to answer it",s:'pop',d:.1,h:8,p:3,ok:"The building splits down the middle, screaming. Everyone wants to know.",no:"The crowd answers {B}. Loudly."}]}},
 attack:{duo:{texts:[
- {nff:1,t:"{B} is warming up backstage when the lights in the hallway go out."},
- {al:'h',t:"{B} is signing autographs at ringside when {A} jumps the barricade from the crowd."},
- {al:'f',vs:'h',t:"{B} is in the middle of mocking {A} on the big screen when {A} appears behind them."}],ch:[
+ {kk:'back dark',nff:1,t:"{B} is warming up backstage when the lights in the hallway go out."},
+ {kk:'ring autographs',al:'h',t:"{B} is signing autographs at ringside when {A} jumps the barricade from the crowd."},
+ {kk:'ring gloat',al:'f',vs:'h',t:"{B} is in the middle of mocking {A} on the big screen when {A} appears behind them."}],ch:[
  {t:"Leave {B} laid out with a calling card",s:'mic',d:.1,h:14,p:2,ok:"A chilling message. Everyone knows who did it.",no:"The calling card blows away."},
- {nff:1,t:"Drag {B} into the arena and finish the job in front of everyone",s:'ring',d:.15,h:18,p:2,ok:"The fans watch helplessly. Brutal.",no:"Security pulls {A} away halfway up the ramp."},
- {nff:1,t:"Attack from the crowd, then disappear back into it",s:'luck',d:.05,h:16,p:2,ok:"In and out. A ghost.",no:"Fans block the escape route."},
- {al:'h',t:"Hit {B} with a ring bell",s:'ring',d:.1,h:20,p:1,ok:"A horrible sound. The crowd is outraged.",no:"{B} dodges and grabs the bell."},
- {al:'f',vs:'h',t:"Turn the tables on {B} mid-gloat",s:'pop',d:.05,h:12,p:4,ok:"Poetic justice. The crowd erupts.",no:"{B} escapes over the barricade."},
- {sty:'br|pw',nff:1,t:"Throw {B} through the backstage curtain",s:'ring',d:.1,h:16,p:2,ok:"The curtain comes down with {B} in it.",no:"{B} holds on to the curtain rail."}]}},
+ {hk:'back|lot',nff:1,t:"Drag {B} into the arena and finish the job in front of everyone",s:'ring',d:.15,h:18,p:2,ok:"The fans watch helplessly. Brutal.",no:"Security pulls {A} away halfway up the ramp."},
+ {hk:'ring',nff:1,t:"Attack from the crowd, then disappear back into it",s:'luck',d:.05,h:16,p:2,ok:"In and out. A ghost.",no:"Fans block the escape route."},
+ {hk:'ring',al:'h',t:"Hit {B} with a ring bell",s:'ring',d:.1,h:20,p:1,ok:"A horrible sound. The crowd is outraged.",no:"{B} dodges and grabs the bell."},
+ {hk:'gloat',al:'f',vs:'h',t:"Turn the tables on {B} mid-gloat",s:'pop',d:.05,h:12,p:4,ok:"Poetic justice. The crowd erupts.",no:"{B} escapes over the barricade."},
+ {hk:'back|ramp',sty:'br|pw',nff:1,t:"Throw {B} through the backstage curtain",s:'ring',d:.1,h:16,p:2,ok:"The curtain comes down with {B} in it.",no:"{B} holds on to the curtain rail."},
+ {hk:'entrance',nff:1,t:"Hit {B} with the finisher in the middle of their own entrance",s:'ring',d:.1,h:16,p:2,ok:"{B}'s music is still playing over a body on the stage.",no:"{B}'s music cuts and they spin around just in time."},
+ {hk:'autographs',nff:1,t:"Sweep the autograph table clean — then put {B} on it",s:'ring',d:.1,h:15,p:2,ok:"Photos and Sharpies everywhere. The fans scatter.",no:"The table holds. {B} rolls off it and escapes."},
+ {hk:'dark',nff:1,t:"Strike in the dark and be gone when the lights come back",s:'luck',d:.05,h:15,p:2,ok:"Lights up: {B} is down and nobody saw a thing.",no:"The lights flick on too soon. {A} is caught red-handed."},
+ {hk:'interview',nff:1,t:"Wrap the interviewer's mic cable around {B}'s throat",s:'ring',d:.1,h:16,p:2,ok:"The interviewer flees. The camera keeps rolling on a nasty scene.",no:"The cable comes unplugged — {B} slips free."}]}},
 interview:{solo:{texts:[
- {t:"{A} sits down for a pre-tape at the gym where they started."},
+ {kk:'gym home',t:"{A} sits down for a pre-tape at the gym where they started."},
  {al:'h',t:"{A} insists the interview be done in a dark room with a single lamp."},
- {al:'f',t:"{A} brings their family to the interview."}],ch:[
+ {kk:'family',al:'f',t:"{A} brings their family to the interview."}],ch:[
  {t:"Tell the story of their first-ever match",s:'mic',d:.1,p:3,ok:"Funny, sweet and real.",no:"It goes on a bit long."},
  {t:"Reveal a goal they've never said out loud",s:'mic',d:.15,p:4,ok:"Fans lean in. Now everyone wants to see it happen.",no:"It sounds a little unrealistic."},
  {t:"Talk about the one match they want before they're done",s:'mic',d:.1,x:1,hx:8,p:3,ok:"{X} is listening. A dream match is born.",no:"Nobody backstage reacts."},
- {al:'f',t:"Introduce their family to the fans",s:'pop',d:.05,p:4,ok:"The crowd at home falls in love.",no:"Sweet, but the segment drags."},
+ {hk:'family',al:'f',t:"Introduce their family to the fans",s:'pop',d:.05,p:4,ok:"The crowd at home falls in love.",no:"Sweet, but the segment drags."},
  {al:'h',t:"Refuse to answer anything that isn't about winning",s:'mic',d:.1,p:2,ok:"Cold and single-minded. Intimidating.",no:"The interview goes nowhere."},
  {al:'h',t:"Turn the questions back on the interviewer",s:'mic',d:.15,p:3,ok:"The interviewer squirms. Fans love it.",no:"The interviewer handles it well."}]},
  duo:{texts:[
  {t:"Two chairs, a table and an interviewer who clearly regrets taking this job."},
  {al:'h',vs:'h',t:"{A} and {B} sit down, both refusing to look at each other."},
- {al:'f',vs:'h',t:"{A} sits calmly while {B} keeps checking their phone."}],ch:[
+ {kk:'phone',al:'f',vs:'h',t:"{A} sits calmly while {B} keeps checking their phone."}],ch:[
  {t:"Lay out exactly why {A} wins the match",s:'mic',d:.1,h:10,p:3,ok:"Clear, confident and convincing.",no:"{B} pokes holes in every point."},
  {t:"Bring up something personal about {B}",nff:1,s:'mic',d:.15,h:14,p:2,ok:"The temperature in the room drops.",no:"{B} laughs it off."},
  {t:"Stay silent until {B} cracks",s:'luck',d:.05,h:8,p:2,ok:"{B} rants for a minute and looks unhinged.",no:"{B} is happy to stay silent too. Long pause."},
- {al:'f',vs:'h',t:"Take {B}'s phone and read their messages",s:'luck',d:.1,h:12,p:3,ok:"Embarrassing texts. The crowd howls.",no:"The phone is locked. Of course."},
+ {hk:'phone',al:'f',vs:'h',t:"Take {B}'s phone and read their messages",s:'luck',d:.1,h:12,p:3,ok:"Embarrassing texts. The crowd howls.",no:"The phone is locked. Of course."},
  {al:'f',vs:'f',t:"Say this is the match they've wanted their whole career",s:'mic',d:.1,h:6,p:3,c:1,ok:"Respect. This match just got bigger.",no:"{B} takes it as a weakness."},
  {al:'h',t:"Flip the table and walk out",nff:1,s:'ring',d:.05,h:14,p:2,ok:"The interviewer dives for cover. Great TV.",no:"The table is bolted down."}]}},
 contract:{duo:{texts:[
- {t:"The contract signing is in the middle of the ring — and the table has already been checked for weapons."},
- {al:'h',t:"{A} shows up with a pen that's clearly been sharpened."},
+ {kk:'checked',t:"The contract signing is in the middle of the ring — and the table has already been checked for weapons."},
+ {kk:'pen',al:'h',t:"{A} shows up with a pen that's clearly been sharpened."},
  {al:'f',vs:'f',t:"{A} and {B} both arrive early. They sit in silence."}],ch:[
  {t:"Read the contract out loud, slowly",s:'mic',d:.1,h:10,p:3,ok:"Every clause lands. The stakes feel enormous.",no:"The legal language bores the crowd."},
  {t:"Sign — then demand a bigger stage for the match",stp:1,s:'mic',d:.15,h:12,p:3,ok:"Done. The match just got upgraded.",no:"The demand falls flat."},
  {t:"Sign, stand, and stare {B} down until they leave",s:'pop',d:.05,h:10,p:2,ok:"{B} blinks first. Advantage {A}.",no:"{B} stares back. Nobody leaves."},
  {al:'f',vs:'h',t:"Make {B} sign first so they can't back out",s:'mic',d:.1,h:12,p:3,ok:"{B} signs. No escape now.",no:"{B} signs with an 'X'. Is that legal?"},
  {al:'h',t:"Sign with {B}'s pen, then snap it",s:'luck',d:.05,h:12,p:2,ok:"A small, petty act. The crowd hates it.",no:"The pen won't snap."},
- {al:'h',vs:'f',t:"Hide a weapon under the table",s:'luck',d:.1,h:18,p:2,ok:"{B} goes down hard. The signing ends in chaos.",no:"{B} finds it first."}]}},
+ {nhk:'checked',al:'h',vs:'f',t:"Hide a weapon under the table",s:'luck',d:.1,h:18,p:2,ok:"{B} goes down hard. The signing ends in chaos.",no:"{B} finds it first."}]}},
 rally:{solo:{texts:[
  {t:"{A} stands in the middle of the ring as {F} fill the entrance ramp."},
- {al:'h',t:"{F} have taken over the ring. {A} sits on a throne in the middle."}],ch:[
+ {kk:'throne',al:'h',t:"{F} have taken over the ring. {A} sits on a throne in the middle."}],ch:[
  {t:"Lay out the group's goals for the year",s:'mic',d:.1,p:3,ok:"Clear, ambitious and a little scary.",no:"Nobody remembers the goals."},
  {t:"Have each member say one word",s:'pop',d:.1,p:2,ok:"A perfect, chilling moment.",no:"Someone forgets their word."},
  {t:"Debut new matching entrance music",s:'pop',d:.05,p:3,ok:"The crowd sings along immediately.",no:"The music is a little too long."},
  {al:'f',t:"Invite the crowd to join the group's chant",s:'pop',d:.05,p:4,ok:"Thousands chanting together.",no:"The chant is too complicated."},
- {al:'h',t:"Make a rival group's tag champions bow",s:'ring',d:.1,x:1,hx:12,p:3,ok:"{X} is furious at the disrespect.",no:"Nobody bows."}]},
+ {al:'h',t:"Make a rival group's tag champions bow",s:'ring',d:.1,x:1,hx:12,p:3,ok:"{X} is furious at the disrespect.",no:"Nobody bows."},
+ {hk:'throne',al:'h',t:"Hold court from the throne — make each member kneel in turn",s:'mic',d:.1,p:3,ok:"A coronation. The crowd boos every bow.",no:"The throne wobbles. Not very regal."}]},
  duo:{texts:[
- {t:"{A} and {B} come out in matching jackets."},
- {al:'f',t:"{A} and {B} come out through the crowd, high-fiving everyone."}],ch:[
+ {kk:'jackets',t:"{A} and {B} come out in matching jackets."},
+ {kk:'crowd',al:'f',t:"{A} and {B} come out through the crowd, high-fiving everyone."}],ch:[
  {t:"Name their team",s:'mic',d:.1,p:3,c:2,ok:"The name sticks. Merch is coming.",no:"Nobody likes the name."},
  {t:"Challenge the tag champions",s:'mic',d:.15,p:3,c:1,ok:"A real contender.",no:"The champions just laugh."},
  {t:"Do a synchronized pose",s:'pop',d:.05,p:2,c:2,ok:"Perfectly in sync. The crowd loves it.",no:"One of them is a beat late."},
  {al:'f',t:"Tell the story of how they met",s:'mic',d:.1,p:3,c:2,ok:"Funny and heartfelt.",no:"Their stories don't match."},
- {al:'h',t:"Promise to embarrass everyone in their way",s:'mic',d:.1,p:2,c:1,ok:"Two of the most hated people in the building.",no:"They argue over who gets to embarrass them first."}]}},
+ {al:'h',t:"Promise to embarrass everyone in their way",s:'mic',d:.1,p:2,c:1,ok:"Two of the most hated people in the building.",no:"They argue over who gets to embarrass them first."},
+ {hk:'crowd',al:'f',t:"Stop halfway through the crowd and cut the promo from the stands",s:'pop',d:.1,p:4,ok:"Surrounded by fans, with fans. Electric.",no:"Nobody can hear a word over the cheering."},
+ {hk:'jackets',t:"Toss a matching jacket to a kid in the front row",s:'pop',d:.05,p:3,ok:"A new member, age nine. The cameras love it.",no:"The jacket lands on the wrong kid."}]}},
 champ:{solo:{texts:[
- {t:"{A} walks out to the ring and lays the {T} title on the mat before speaking."},
- {al:'h',t:"{A} arrives with the {T} title in a velvet bag."}],ch:[
+ {kk:'mat',t:"{A} walks out to the ring and lays the {T} title on the mat before speaking."},
+ {kk:'bag',al:'h',t:"{A} arrives with the {T} title in a velvet bag."}],ch:[
  {t:"Talk about what the {T} title means",s:'mic',d:.1,p:3,ok:"Heartfelt and powerful.",no:"It sounds rehearsed."},
  {t:"Count down the days of the reign",s:'pop',d:.05,p:2,ok:"The fans cheer every milestone.",no:"The reign isn't that long yet."},
  {t:"Name the next challenger themselves",s:'mic',d:.1,x:1,hx:12,p:3,ok:"{X} has a title shot — and a target on their back.",no:"{X} doesn't take the bait."},
  {al:'f',t:"Hand the title to a fan to hold for a moment",s:'pop',d:.1,p:4,ok:"Pure joy. A lifetime memory.",no:"The fan won't give it back."},
- {al:'h',t:"Make the ring announcer introduce them as 'the greatest'",s:'mic',d:.1,p:3,ok:"The announcer is mortified. The crowd boos.",no:"The announcer refuses."}]},
+ {al:'h',t:"Make the ring announcer introduce them as 'the greatest'",s:'mic',d:.1,p:3,ok:"The announcer is mortified. The crowd boos.",no:"The announcer refuses."},
+ {hk:'mat',t:"Kneel beside the title and talk to it, not the crowd",s:'mic',d:.1,p:3,ok:"An odd, intimate moment. You could hear a pin drop.",no:"It just looks strange."},
+ {hk:'bag',al:'h',t:"Make the crowd beg before taking the title out of the bag",s:'mic',d:.1,p:3,ok:"They wait. They boo. They wait some more. It's maddening.",no:"The crowd chants 'WHO CARES' until {A} gives up."}]},
  duo:{texts:[
  {t:"{A} and {B} meet face to face, the {T} title between them."},
  {al:'f',vs:'f',t:"{A} invites {B} into the ring to talk about the {T} title."}],ch:[
@@ -308,7 +326,7 @@ turn:{solo:{texts:[
  {al:'h',t:"{A} walks out without their usual entourage."},
  {al:'h',t:"{A} kneels in the middle of the ring."}],ch:[
  {al:'f',t:"Tell the fans they've been taking {A} for granted",s:'mic',d:.1,p:3,ok:"Bitter and believable.",no:"The crowd isn't sure what's happening."},
- {al:'f',t:"Attack the backstage interviewer",s:'ring',d:.05,p:2,ok:"Shocking and cruel. A new heel is born.",no:"The interviewer runs away."},
+ {al:'f',t:"Attack the ring announcer",s:'ring',d:.05,p:2,ok:"Shocking and cruel. A new heel is born.",no:"The interviewer runs away."},
  {al:'h',t:"Tell the crowd they changed {A}'s mind",s:'mic',d:.1,p:4,ok:"A redemption story. The crowd embraces it.",no:"Feels a little sudden."},
  {al:'h',t:"Apologize to the people they've hurt by name",s:'mic',d:.15,p:4,ok:"Powerful and sincere. The fans believe.",no:"The list is so long it gets awkward."}]},
  duo:{texts:[
@@ -319,27 +337,79 @@ turn:{solo:{texts:[
  {al:'h',t:"Clear the ring and help {B} up",s:'ring',d:.05,h:2,p:4,c:2,ok:"A hero's welcome. The crowd erupts.",no:"Just a step too late — but the intention is clear."},
  {al:'h',t:"Stand between {B} and their attackers",s:'pop',d:.05,h:2,p:3,c:2,ok:"The crowd roars. Allies at last.",no:"The attackers retreat before anything happens."}]}},
 vignette:{solo:{texts:[
- {t:"The camera follows {A} on a long drive at night."},
- {al:'f',t:"{A} shows up at a local wrestling school to help train students."},
- {al:'h',t:"{A} is sitting in an empty arena, staring at the ring."}],ch:[
+ {kk:'tape car',t:"The camera follows {A} on a long drive at night."},
+ {kk:'tape school',al:'f',t:"{A} shows up at a local wrestling school to help train students."},
+ {kk:'tape arena',al:'h',t:"{A} is sitting in an empty arena, staring at the ring."}],ch:[
  {t:"Talk to the camera about what drives them",s:'mic',d:.1,p:3,ok:"Raw and personal.",no:"A bit flat."},
- {t:"Show off a new move in the training ring",s:'ring',d:.1,p:2,ok:"The fans can't wait to see it.",no:"It doesn't look finished yet."},
+ {hk:'gym|school|arena',t:"Show off a new move in the training ring",s:'ring',d:.1,p:2,ok:"The fans can't wait to see it.",no:"It doesn't look finished yet."},
  {t:"A cryptic hint about the next PPV",s:'mic',d:.15,p:3,ok:"Fans are already theorising.",no:"Too vague to care about."},
- {al:'f',t:"Spar with a student — and let them win",s:'pop',d:.05,p:4,ok:"A lovely moment. The student is beaming.",no:"The student gets carried away."},
+ {hk:'school',al:'f',t:"Spar with a student — and let them win",s:'pop',d:.05,p:4,ok:"A lovely moment. The student is beaming.",no:"The student gets carried away."},
  {al:'h',t:"Sit in silence until the camera crew leaves",s:'mic',d:.1,p:3,ok:"Unsettling and memorable.",no:"It just looks like a blank tape."},
- {al:'h',t:"Burn their old gear in a trash can",s:'luck',d:.05,p:3,ok:"A dark, defining image.",no:"The fire alarm goes off."}]},
+ {al:'h',t:"Burn their old gear in a trash can",s:'luck',d:.05,p:3,ok:"A dark, defining image.",no:"The fire alarm goes off."},
+ {hk:'stage',t:"Debut the new entrance in full — lights, music, everything",s:'pop',d:.1,p:4,ok:"The rehearsal is better than most real entrances.",no:"The pyro misfires. Back to the drawing board."},
+ {hk:'study',t:"Freeze the tape on an opponent's weakness and circle it",s:'mic',d:.05,p:3,ok:"One frame, one red circle. Somebody in the back just got nervous.",no:"The tape is so grainy nobody can see what's circled."},
+ {hk:'truck',t:"Drag the truck across the finish line and collapse beside it",s:'ring',d:.1,p:3,ok:"Raw, real effort. You can feel it through the screen.",no:"The truck barely moves. The editors do their best."},
+ {hk:'roof',t:"Land the last flip right in front of the camera at sunrise",s:'ring',d:.15,p:4,ok:"The sun comes up behind them. A poster shot.",no:"{A} lands short and the clip ends fast."},
+ {hk:'dayoff',al:'f',t:"Coach a kids' football team on their day off",s:'pop',d:.05,p:4,ok:"Orange slices, high fives and a lot of new fans.",no:"The team loses 31–0. Still cute."},
+ {hk:'trespass',al:'h',t:"Get chased off by security — and laugh the whole way",s:'luck',d:.05,p:3,ok:"Chaotic, dangerous and very {A}. People can't stop sharing it.",no:"Security catches them. The footage ends abruptly."},
+ {hk:'arena',al:'h',t:"Promise the empty seats will be full of people paying to watch {A} win",s:'mic',d:.1,p:3,ok:"Echoing through an empty arena, it sounds like a threat.",no:"A cleaner wanders through the shot."},
+ {hk:'car',t:"Talk to the camera from the driver's seat about what's driving them",s:'mic',d:.05,p:3,ok:"Headlights, white lines and a quiet, honest voice. Compelling.",no:"Mostly road noise. Hard to hear."}]},
  duo:{texts:[
- {t:"{A} and {B} end up in the same backstage hallway, alone."},
- {al:'h',vs:'f',t:"{A} watches {B} warm up from the shadows."},
- {al:'f',vs:'h',t:"{A} catches {B} talking about them to another wrestler."}],ch:[
- {t:"A long, silent stare-down",s:'pop',d:.05,h:8,p:2,ok:"The tension is unbearable.",no:"Someone walks between them and the moment is lost."},
- {t:"Throw a towel in {B}'s face",nff:1,s:'luck',d:.05,h:10,p:2,ok:"A small insult with big consequences.",no:"{B} catches it."},
- {t:"Offer {B} a drink — then pour it out",s:'mic',d:.05,h:10,p:2,ok:"Petty and perfect.",no:"{B} declines before {A} can pour it."},
- {al:'f',vs:'h',t:"Confront {B} about what they said",s:'mic',d:.1,h:12,p:3,ok:"{B} has no answer.",no:"{B} denies everything."},
+ {kk:'tape back hall',t:"{A} and {B} end up in the same backstage hallway, alone."},
+ {kk:'tape back shadows',al:'h',vs:'f',t:"{A} watches {B} warm up from the shadows."},
+ {kk:'tape back',al:'f',vs:'h',t:"{A} catches {B} talking about them to another wrestler."}],ch:[
+ {nhk:'absent',t:"A long, silent stare-down",s:'pop',d:.05,h:8,p:2,ok:"The tension is unbearable.",no:"Someone walks between them and the moment is lost."},
+ {nhk:'absent',t:"Throw a towel in {B}'s face",nff:1,s:'luck',d:.05,h:10,p:2,ok:"A small insult with big consequences.",no:"{B} catches it."},
+ {nhk:'absent',t:"Offer {B} a drink — then pour it out",s:'mic',d:.05,h:10,p:2,ok:"Petty and perfect.",no:"{B} declines before {A} can pour it."},
+ {nhk:'absent',al:'f',vs:'h',t:"Confront {B} about what they said",s:'mic',d:.1,h:12,p:3,ok:"{B} has no answer.",no:"{B} denies everything."},
  {al:'h',vs:'f',t:"Sabotage {B}'s gear before their match",s:'luck',d:.05,h:12,p:2,ok:"{B}'s boot laces are cut. Diabolical.",no:"{B} catches {A} in the act."},
- {al:'f',vs:'f',t:"Help {B} tape their wrists before their match",s:'pop',d:.05,p:3,c:2,ok:"A sign of respect. The fans love it.",no:"{B} doesn't seem to want the help."}]}}};
+ {nhk:'absent',al:'f',vs:'f',t:"Help {B} tape their wrists before their match",s:'pop',d:.05,p:3,c:2,ok:"A sign of respect. The fans love it.",no:"{B} doesn't seem to want the help."},
+ {hk:'shadows',nff:1,t:"Step out of the shadows the moment {B} turns around",s:'luck',d:.05,h:12,p:2,ok:"{B} jumps a foot in the air. {A} doesn't say a word.",no:"{B} saw them the whole time."},
+ {hk:'absent',t:"Rewind {B}'s best move again and again until {A} finds the flaw",s:'mic',d:.05,h:10,p:3,ok:"Click. Rewind. Click. {A} smiles. They've found it.",no:"The tape keeps jamming."},
+ {hk:'catering',nff:1,t:"Knock {B}'s plate out of their hands",s:'luck',d:.05,h:12,p:2,ok:"Pasta everywhere. The whole room goes quiet.",no:"{B} catches the plate. Smooth."}]}}};
 
 if(typeof MEV_MORE!=='undefined')MEV_MORE.push(...MEV2);
+TW2.push({when:'any',hk:'tape',text:"A stagehand walks right through the shot carrying a ladder.",ch:[
+ {t:"Stay in character like nothing happened",s:'mic',d:.1,p:3,ok:"Total commitment. The editors leave it in because it's somehow better.",no:"{A} cracks a smile. Take two."},
+ {t:"Turn it into part of the bit",s:'pop',d:.05,p:3,ok:"Improvised and funny. Fans love the behind-the-scenes feel.",no:"The bit goes nowhere."},
+ {al:'h',t:"Yell at the stagehand until they leave",s:'mic',d:.05,p:2,ok:"A real glimpse of the monster. Uncomfortable — in a good way.",no:"It just looks mean."}]},
+/* v179: twists for promos away from a live crowd — interviews, taped vignettes and backstage ambushes */
+{when:'any',hk:'studio',text:"The interviewer asks a question {A} clearly wasn't expecting.",ch:[
+ {t:"Answer it honestly",s:'mic',d:.1,p:3,ok:"A real answer. The fans see a different side of {A}.",no:"{A} rambles and never really answers."},
+ {t:"Deflect with a joke",s:'pop',d:.05,p:2,ok:"Smooth. The interviewer laughs and moves on.",no:"The joke doesn't land and the silence is painful."},
+ {al:'h',t:"Demand that question be cut from the broadcast",s:'mic',d:.05,p:2,ok:"They leave it in. {A} looks furious — perfect.",no:"It just looks like {A} has something to hide."}]},
+{when:'any',hk:'studio',text:"A producer waves from behind the camera: thirty seconds left.",ch:[
+ {t:"Land one perfect closing line",s:'mic',d:.1,p:3,ok:"Cut to black on the best line of the night.",no:"Cut off mid-sentence."},
+ {t:"Ignore the clock and keep going",s:'luck',d:.05,p:2,ok:"They let it run. It was worth it.",no:"The feed cuts away."},
+ {al:'h',t:"Grab the camera and keep talking straight into it",s:'pop',d:.1,p:3,ok:"Shaky, close and intense. Great TV.",no:"The camera operator grabs it back."}]},
+{when:'duo',hk:'studio',text:"The interviewer asks who's walking out with the win.",ch:[
+ {t:"Point at themselves without a word",s:'pop',d:.05,h:8,p:2,ok:"No words needed. {B} bristles.",no:"{B} points at themselves too. Stalemate."},
+ {t:"Let {B} answer first, then laugh",s:'mic',d:.1,h:10,p:3,ok:"{B}'s answer suddenly sounds very small.",no:"{B}'s answer was actually good."},
+ {nff:1,t:"Lean across the table and get in {B}'s face",s:'ring',d:.05,h:12,p:2,ok:"The interviewer scoots their chair back. It's on.",no:"{B} doesn't flinch."}]},
+{when:'any',hk:'tape',text:"The camera operator asks {A} to do it again — 'one more take.'",ch:[
+ {t:"Nail it on the second take",s:'mic',d:.1,p:3,ok:"Even better the second time. That's the one.",no:"Worse. They use the first take."},
+ {t:"Break character and laugh with the crew",s:'pop',d:.05,p:2,ok:"The blooper makes the final cut. Fans love it.",no:"It just looks unprofessional."},
+ {al:'h',t:"Refuse — the first one was perfect",s:'luck',d:.05,p:2,ok:"It was. They use it.",no:"It wasn't. The editors make do."}]},
+{hk:'roof|truck|dayoff|trespass|car',when:'any',text:"Rain starts pouring halfway through the shoot.",ch:[
+ {t:"Finish the shoot soaked to the bone",s:'ring',d:.1,p:3,ok:"Drenched and determined. It looks like a movie.",no:"Mostly just looks wet and cold."},
+ {t:"Move inside and improvise",s:'mic',d:.05,p:2,ok:"The new setting works even better.",no:"The new setting is a broom closet."},
+ {t:"Stare up into the rain like it's the climax of a film",s:'pop',d:.1,p:3,ok:"Slow motion makes it iconic.",no:"Someone's umbrella drifts into the shot."}]},
+{when:'solo',hk:'tape',text:"A fan spots {A} mid-shoot and asks for a photo.",ch:[
+ {al:'f',t:"Take the photo — and put the fan in the vignette",s:'pop',d:.05,p:3,ok:"The fan's reaction is the best part of the video.",no:"The fan freezes up on camera."},
+ {al:'h',t:"Have the crew shoo them away on camera",s:'mic',d:.05,p:2,ok:"Cold. The fans watching at home hate it.",no:"The fan films it on their phone. Not a great look."},
+ {t:"Keep shooting like they aren't there",s:'luck',d:0,p:1,ok:"Focused. The fan waits patiently.",no:"The fan waves in the background of every shot."}]},
+{nff:1,when:'duo',hk:'back|lot',text:"Agents and backstage staff come running from every direction.",ch:[
+ {nff:1,t:"Fight through the agents to get one more shot in",s:'ring',d:.1,h:14,p:2,ok:"Bodies everywhere — and {A} still gets to {B}.",no:"The agents hold {A} back."},
+ {t:"Let them drag {A} away, smiling the whole time",s:'pop',d:.05,h:10,p:3,ok:"That smile is going to keep {B} up at night.",no:"It just looks like {A} got caught."},
+ {al:'h',t:"Slip away in the chaos before anyone sees who did it",s:'luck',d:.05,h:12,p:2,ok:"Gone. Everyone knows, but nobody can prove it.",no:"A camera catches {A} on the way out."}]},
+{when:'duo',hk:'attack',nff:1,text:"A camera crew catches all of it — {B} is down, and {A} is standing over them.",ch:[
+ {t:"Look straight into the lens",s:'mic',d:.05,h:12,p:3,ok:"No words. That look says everything.",no:"The camera was pointed at the wrong person."},
+ {t:"Send a message to the rest of the locker room",s:'mic',d:.1,h:10,p:3,ok:"Everyone backstage just heard it.",no:"The camera runs out of battery."},
+ {al:'h',t:"Kick the camera away",s:'luck',d:.05,h:12,p:2,ok:"The last shot is a spinning ceiling. Terrifying.",no:"The crew keeps rolling on a phone."}]},
+{when:'duo',hk:'lot',nff:1,text:"Car alarms are blaring across the parking lot.",ch:[
+ {t:"Leave {B} lying between the cars and drive off",s:'luck',d:.05,h:14,p:2,ok:"Tail lights fade out of frame. Cold-blooded.",no:"{A}'s car won't start."},
+ {t:"Wait for {B} to get up — this isn't over",s:'ring',d:.1,h:12,p:2,ok:"{B} crawls up and gets knocked right back down.",no:"{B} stays down. The moment fizzles."},
+ {al:'h',t:"Slap {B}'s phone away so they can't call for help",s:'mic',d:.05,h:14,p:2,ok:"Petty and cruel. Fans are furious.",no:"{B} had a second phone."}]});
 if(typeof TWISTS_MORE!=='undefined')TWISTS_MORE.push(...TW2);
 if(typeof SCENES_MORE!=='undefined')for(const k in SC2)for(const sd in SC2[k]){const x=SC2[k][sd];SCENES_MORE[k]=SCENES_MORE[k]||{};const b=SCENES_MORE[k][sd];
  if(!b){SCENES_MORE[k][sd]={texts:x.texts||[],ch:x.ch||[]};continue}
