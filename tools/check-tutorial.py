@@ -94,6 +94,18 @@ async def main(shots):
                 problems.append('t.ppv: coach tip could not find its target')
             else:
                 visited.append('t.ppv'); await shot('t.ppv'); await pg.evaluate('tutNext()')
+            # v186: coach tips that used to be tour stops — each must find its target on its screen
+            for tid, prep in [('t.wwe', "go('home')"), ('t.card', "go('book')"), ('t.flow', "go('book')"), ('t.stam', "go('book')"),
+                              ('t.stars', "rf='mine';go('roster')"), ('t.morale', "rf='mine';go('roster')"), ('t.fa', "rf='fa';go('roster')"),
+                              ('t.titles', "go('titles')"), ('t.money', "go('office')")]:
+                await pg.evaluate(prep); await pg.wait_for_timeout(500)
+                if await pg.evaluate('!!TUT'): await pg.evaluate('tutNext()'); await pg.wait_for_timeout(200)
+                await pg.evaluate(f"tutTip('{tid}',true)"); await pg.wait_for_timeout(800)
+                if await pg.evaluate(f"!(TUT&&TUT.steps[0].id==='{tid}')"):
+                    problems.append(f'{tid}: coach tip could not find its target')
+                else:
+                    visited.append(tid); await shot(tid); await pg.evaluate('tutNext()')
+            await pg.evaluate("rf='mine';go('book')"); await pg.wait_for_timeout(400)
             await pg.evaluate('goLive()'); await pg.wait_for_timeout(300)
             await pg.evaluate('finishLive()'); await pg.wait_for_timeout(300)
             await pg.evaluate("typeof srSkip==='function'&&srSkip()"); await pg.wait_for_timeout(300)

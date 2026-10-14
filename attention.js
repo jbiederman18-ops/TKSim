@@ -68,6 +68,7 @@ const SAY={
  beef_hot:['{A} and {B} had to be pulled apart in catering. Nobody wants to be in that ring if they\'re in it together.','Security had to separate {A} and {B} after the last show. It\'s getting personal.'],
  beef_warm:['There\'s tension between {A} and {B}. Keep an eye on it.','{A} and {B} aren\'t speaking. It hasn\'t boiled over yet.'],
  agent_last:['Our client\'s deal is up after this show. We\'ve had calls. Make us an offer.','After this show, {A} is a free agent. Your move.'],
+ agent_urgent:['{A}\'s deal is almost up. We need an answer soon.','Clock\'s running on {A}\'s contract. Let\'s get this done.'],
  agent_soon:['No rush, but we\'d like to talk about {A}\'s future in the next few weeks.','{A}\'s deal is up soon. Better to talk now than at the deadline.'],
  agent_fa:['{A} has other offers. If we don\'t hear from you this week, we sign elsewhere.'],
  net_goal:['This week, the network wants this: {n}.','Ratings meeting was blunt. They want this: {n}.'],
@@ -136,17 +137,21 @@ function attnItems(){if(!S||S.phase!=='season')return [];
    say:[[t.a,fill(pickS(SAY['t_'+t.goal]||SAY.t_seg,'tr'+t.a),{B:B?B.name:''})]],request:t.a,askT:'Promised: '+t.txt,
    chip:i=>{const s=sg.find(x=>x.i===i);if(!s)return null;return t.goal==='rest'?(s.k==='match'?['b',`${L(A)} was promised the week off`]:null):t.goal==='avoid'?(B&&together(t.a,t.b)&&together(t.a,t.b).i===i?['b',`${L(A)} wanted to avoid ${L(B)}`]:null):ok?['ok',`Counts toward ${L(A)}'s promise`]:null}})});
 
- /* titles going stale */
- Object.entries(S.titles||{}).forEach(([tid,t])=>{if(!t.holders.length)return;const H=S.w[t.holders[0]];if(!H||H.own!=='p'||H.inj||t.last==null||S.week-t.last<4)return;
-  const s=c.findIndex(sl=>sl&&sl.k==='match'&&sl.d&&sl.d.title===tid);const hs=segs(H.id).find(x=>x.k==='match');
-  add({id:'idle'+tid,g:A_MUST,i:'🏆',h:`${t.n} title: ${S.week-t.last} weeks without a defense`,d:'An idle title loses prestige every week it isn\'t defended.',
-   s:s>=0?['ok',`Defended tonight in ${segName(s)}`]:hs?['b',`${L(H)} is booked, but the title isn't on the line`]:['b',`${t.holders.map(id=>S.w[id]?L(S.w[id]):'').join(' & ')} ${t.holders.length>1?'aren\'t':'isn\'t'} on the card`],
-   a:s>=0?null:hs?['Put it on the line',`openMatch(${hs.i})`]:bookBtn(H.id,'Book a defense'),who:t.holders.slice(),where:'🏆 The champion',
-   say:[[H.id,sayW('title_idle',H,{n:S.week-t.last})]],chip:i=>i===s?['ok','Title defense'] :null})});
+ /* titles going stale — v186: one row for all of them, under Keep in mind, led by the most overdue */
+ {const st=Object.entries(S.titles||{}).map(([tid,t])=>{if(!t.holders.length)return null;const H=S.w[t.holders[0]];if(!H||H.own!=='p'||H.inj||t.last==null||S.week-t.last<4)return null;
+   const s=c.findIndex(sl=>sl&&sl.k==='match'&&sl.d&&sl.d.title===tid);return {tid,t,H,wk:S.week-t.last,s,hs:segs(H.id).find(x=>x.k==='match')}}).filter(Boolean).sort((a,b)=>b.wk-a.wk);
+  if(st.length){const open=st.filter(x=>x.s<0);const top=open[0]||st[0];const one=st.length===1;
+   const who=x=>x.t.holders.map(id=>S.w[id]?L(S.w[id]):'').join(' & ');
+   const fix=!open.length?null:top.hs?['Put it on the line',`openMatch(${top.hs.i})`]:bookBtn(top.H.id,'Book a defense');
+   add({id:'idle',g:A_MIND,i:'🏆',h:one?`${top.t.n} title: ${top.wk} weeks without a defense`:`${st.length} titles need defending`,
+    d:one?'An idle title loses prestige every week it isn\'t defended.':`Most overdue: ${open.map(x=>`${x.t.n} (${x.wk} wks)`).slice(0,3).join(', ')||'none tonight'}. Idle titles lose prestige every week — rotate defenses.`,
+    s:!open.length?['ok',one?`Defended tonight in ${segName(top.s)}`:'All defended tonight']:open.length<st.length?['w',`${st.length-open.length} of ${st.length} defended tonight`]:top.hs?['w',`${who(top)} ${top.t.holders.length>1?'are':'is'} booked, but the ${top.t.n} title isn't on the line`]:['w',`${who(top)} ${top.t.holders.length>1?'aren\'t':'isn\'t'} on the card`],
+    a:fix,gate:false,who:st.flatMap(x=>x.t.holders),where:'🏆 The champions',
+    say:open.slice(0,2).map(x=>[x.H.id,sayW('title_idle',x.H,{n:x.wk})]),chip:i=>st.some(x=>x.s===i)?['ok','Title defense']:null})}}
 
  /* contracts ending after this show — the go-live contract check already stops you, so this doesn't double up */
  mine.filter(w=>w.con<=1).forEach(w=>{const blk=w.neg&&w.neg.no>AW();
-  add({id:'conlast'+w.id,g:A_MUST,i:'✍️',h:`${w.name}'s contract ends after this show`,d:`Re-sign them now or they become a free agent. ${blk?'They walked away from talks — re-signing means paying their price.':`They want about ${money(askSal(w))}/wk.`}`,s:['b','Not re-signed'],
+  add({id:'conlast'+w.id,g:A_MUST,i:'✍️',h:`${w.name}'s contract ends after this show`,d:`${conStakes(w)?conStakes(w)+' ':''}Re-sign them now or they become a free agent. ${blk?'They walked away from talks — re-signing means paying their price.':`They want about ${money(askSal(w))}/wk.`}`,s:['b','Not re-signed'],
    a:blk?[`Re-sign ${money(resignCost(w))}`,`attnResign('${w.id}')`,1]:['Negotiate',`attnNeg('${w.id}')`,1],gate:false,who:[w.id],where:'📞 On the phone',say:[[`${w.name}'s agent`,sayW('agent_last',w,{A:w.name})]]})});
 
  /* network mandate, due tonight */
@@ -204,10 +209,15 @@ function attnItems(){if(!S||S.phase!=='season')return [];
     s:[crit?'b':'w',crit?'Too thin to book a full show':'Running thin'],a:['Browse free agents',"closeModal();rf='fa';go('roster')",crit?1:0],gate:false,where:'📋 The locker room',
     say:[['Your assistant',crit?`We're down to ${n} wrestlers. We can barely fill a card — we need bodies, now.`:`Heads up: we're down to ${n} wrestlers. A few signings would give us room to breathe.`]]})}}
  (typeof conWatch==='function'?conWatch():[]).filter(w=>w.con>1).forEach(w=>{const blk=w.neg&&w.neg.no>AW();
-  add({id:'con'+w.id,g:A_OFF,i:'✍️',h:`${w.name}'s contract ends in ${w.con} weeks`,d:blk?`They walked away from talks — back at the table week ${wkOf(w.neg.no)}.`:`They want about ${money(askSal(w))}/wk. Talks get pricier near the deadline.`,
-   s:[w.con<=CON_URGENT?'w':'n',conTxt(w)],a:blk?[`Re-sign ${money(resignCost(w))}`,`attnResign('${w.id}')`]:['Negotiate',`attnNeg('${w.id}')`],gate:false,who:[w.id],where:'📞 On the phone',say:[[`${w.name}'s agent`,sayW('agent_soon',w,{A:w.name})]]})});
+  add({id:'con'+w.id,g:A_OFF,i:'✍️',h:`${w.name}'s contract ends ${conWhen(w)}`,d:(conStakes(w)?conStakes(w)+' ':'')+(blk?`They walked away from talks — back at the table week ${wkOf(w.neg.no)}.`:`They want about ${money(askSal(w))}/wk. Talks get pricier near the deadline.`),
+   s:[w.con<=CON_URGENT?'w':'n',conTxt(w)],a:blk?[`Re-sign ${money(resignCost(w))}`,`attnResign('${w.id}')`]:['Negotiate',`attnNeg('${w.id}')`],gate:false,who:[w.id],where:'📞 On the phone',say:[[`${w.name}'s agent`,sayW(w.con<=CON_URGENT?'agent_urgent':'agent_soon',w,{A:w.name})]]})});
  Object.values(S.w).filter(w=>typeof onMarket==='function'&&onMarket(w)&&!w.cw&&faLeft(w)===1&&w.pop>=55).sort((a,b)=>b.pop-a.pop).slice(0,3).forEach(w=>{
   add({id:'fa'+w.id,g:A_OFF,i:'🆕',h:`Last week to sign ${w.name}`,d:`Free agent · POP ${Math.round(w.pop)} · signs for ${money(signCost(w))}`,s:['w','Gone after this week'],a:['See them',`showW('${w.id}')`],gate:false,who:[w.id],where:'🆕 The free-agent market',say:[[`${w.name}'s agent`,sayW('agent_fa',w,{A:w.name})]]})});
+ /* v186: a big name just hit the market — said the week they arrive, not only on their last week */
+ {const arr=Object.keys(S.faNew||{}).filter(id=>S.faNew[id]===AW()).map(id=>S.w[id]).filter(w=>w&&onMarket(w)&&!w.cw&&w.pop>=70).sort((a,b)=>b.pop-a.pop);
+  if(arr.length){const w=arr[0];
+   add({id:'arrive',g:A_OFF,i:'🆕',h:arr.length>1?`Big names on the market: ${arr.map(x=>x.name).join(', ')}`:`${w.name} just hit the market`,d:`${arr.map(x=>`${x.name} · POP ${Math.round(x.pop)} · ${faLeft(x)} week${faLeft(x)===1?'':'s'} to decide`).join(' · ')}. Stars want an offer — money plus promises — and ${S.rival||'the rival'} can bid too.`,
+    s:['n','New this week'],a:['See them',`showW('${w.id}')`],gate:false,who:arr.map(x=>x.id),where:'🆕 The free-agent market',say:[[`${w.name}'s agent`,`${w.name} is a free agent as of this week. We're taking offers.`]]})}}
  {const n=(S.injq||[]).filter(q=>S.w[q.id]&&S.w[q.id].own==='p'&&S.w[q.id].inj>0).length;if(n)add({id:'med',g:A_OFF,i:'🚑',h:`${n} medical decision${n>1?'s':''} waiting`,d:'Let it heal, rush them back, or send them for surgery.',s:['w','Undecided'],a:['Decide','openBrief()'],gate:false,where:null})}
  {const T=S.tamp||{};const n=Object.keys(T).filter(id=>S.w[id]&&S.w[id].own==='p'&&!T[id].let&&!T[id].calm).length;if(n)add({id:'tamp',g:A_OFF,i:'🕵️',h:`${n} tampering rumor${n>1?'s':''}`,d:'The rival is courting someone on your roster.',s:['w','Undecided'],a:['Decide','openBrief()'],gate:false,where:null})}
  if(typeof cdOfferLive==='function'&&cdOfferLive())add({id:'cdoffer',g:A_OFF,i:'⏳',h:'A signing offer from the countdown debut',d:'Decide in the briefing.',s:['w','Undecided'],a:['Decide','openBrief()'],gate:false,where:null});
@@ -259,16 +269,63 @@ const TAG={[A_MUST]:'On your checklist',[A_CH]:'Chance tonight',[A_MIND]:'Keep i
 function sceneHtml(x){const says=(x.say||[]).filter(s=>s&&s[1]);
  return `<div class="scene ${x.g===A_MUST&&x.s[0]==='b'?'hot':''}"><div class="scw">${esc(x.where||x.i)}</div>${says.map(([sp,line])=>{const w=S.w[sp];return `<div class="scs">${av(sp)}<div class="scq"><b class="${w?(w.al==='f'?'face':'heel'):''}">${esc(w?w.name:sp)}</b><q>${esc(line)}</q></div></div>`}).join('')}
  <div class="scm"><span>${x.i} ${esc(x.h)}. <span class="muted">${esc(x.d)}</span></span><span class="sct">${TAG[x.g]}</span></div>${x.a&&x.a[1]!=='openBrief()'?`<div class="row" style="margin-top:8px"><button class="mini" onclick="closeModal();${x.a[1]}">${esc(x.a[0])}</button></div>`:''}</div>`}
-/* the briefing: scenes first (in checklist order), then the front-office desk (decisions with their own buttons), then the calendar and last week */
+/* v186: the briefing stays short.
+   - Same-place scenes merge: every agent call is one "On the phone" scene, every free agent's last week one market scene.
+   - A scene only comes back when something about it changed (a new name, a deadline crossing into urgent, a mandate
+     coming due). Anything blocking tonight's show always shows. Whatever was left out is summed up in one line at the end.
+   The "what changed" check compares against the signatures seen when last week's briefing was written (S.brSig), and
+   the base for this week is kept in S.brBase so reopening the briefing shows the same scenes. */
+const MERGE={conlast:'phone',con:'phone',fa:'fa'};
+const mergeKey=x=>{const m=/^(conlast|con|fa)(?=[a-z0-9])/i.exec(x.id);return m&&MERGE[m[1]]?MERGE[m[1]]:null};
+function sigOf(x){const id=x.id;
+ if(id==='mand'){const md=S.mand&&S.mand.p;return md?md.k+(md.due-S.week<=0?'|due':''):''}
+ if(id==='idle'){return (x.who||[]).join(',')}
+ if(id==='tired')return (x.who||[]).slice().sort().join(',');
+ if(/^mor/.test(id))return x.h;
+ if(/^mitb/.test(id))return x.s&&x.s[0];
+ if(/^stale/.test(id))return x.h.includes('has gone stale')?'stale':'soon';
+ if(/^con/.test(id)){const w=S.w[(x.who||[])[0]];return w?(w.con<=1?'last':w.con<=CON_URGENT?'urgent':'soon'):x.h}
+ return x.h}
+function phoneScene(xs,isNew){const all=xs.map(x=>S.w[x.who[0]]).filter(Boolean);const ws=xs.filter(isNew).map(x=>S.w[x.who[0]]).filter(Boolean).sort((a,b)=>a.con-b.con);const more=all.length-ws.length;if(!ws.length)return '';const lead=ws[0];
+ const line=ws[0].con<=1?sayW('agent_last',lead,{A:lead.name}):sayW(lead.con<=CON_URGENT?'agent_urgent':'agent_soon',lead,{A:lead.name});
+ const hot=ws.some(w=>w.con<=1);
+ return `<div class="scene ${hot?'hot':''}"><div class="scw">📞 On the phone</div><div class="scs">${av(lead.name+"'s agent")}<div class="scq"><b>${esc(lead.name)}'s agent</b><q>${esc(line)}</q></div></div>
+ ${ws.map(w=>{const blk=w.neg&&w.neg.no>AW();const st=conStakes(w);return `<div class="scm" style="border-top:1px solid var(--line);padding-top:8px"><span>✍️ <b>${esc(w.name)}</b> — deal ends ${conWhen(w)} · asks about ${money(askSal(w))}/wk${st?`<br><span class="${w.con<=1?'bad':'muted'} tiny">${esc(st)}</span>`:''}</span>
+  <button class="mini ${w.con<=1?'on':''}" onclick="closeModal();${blk?`attnResign('${w.id}')`:`attnNeg('${w.id}')`}">${blk?'Re-sign '+money(resignCost(w)):'Negotiate'}</button></div>`}).join('')}
+ <div class="scm"><span class="muted tiny">${more?`Plus ${more} other deal${more>1?'s':''} you've already heard about — all in Needs your attention. `:''}Talks get pricier near the deadline.</span><span class="sct">${hot?TAG[A_MUST]:TAG[A_OFF]}</span></div></div>`}
+function faScene(xs){const ws=xs.map(x=>S.w[x.who[0]]).filter(Boolean);if(!ws.length)return '';
+ return `<div class="scene"><div class="scw">🆕 The free-agent market</div><div class="scs">${av(ws[0].name+"'s agent")}<div class="scq"><b>${ws.length>1?'The agents':esc(ws[0].name)+"'s agent"}</b><q>${esc(ws.length>1?'Our clients have other offers. If we don\'t hear from you this week, they sign elsewhere.':sayW('agent_fa',ws[0],{A:ws[0].name}))}</q></div></div>
+ ${ws.map(w=>`<div class="scm" style="border-top:1px solid var(--line);padding-top:8px"><span>🆕 <b>${esc(w.name)}</b> · POP ${Math.round(w.pop)} — last week on the market</span><button class="mini" onclick="closeModal();showW('${w.id}')">See them</button></div>`).join('')}
+ <div class="scm"><span></span><span class="sct">${TAG[A_OFF]}</span></div></div>`}
 window.briefStory=function(){const sh=curShow();let l=[];try{l=attnItems()}catch(e){console.warn(e)}
  const scenes=l.filter(x=>x.where&&x.say&&x.say.length);
  const order=[A_MUST,A_CH,A_MIND,A_OFF];scenes.sort((a,b)=>order.indexOf(a.g)-order.indexOf(b.g));
- /* group scenes that happen in the same place */
+ /* what changed since last week's briefing */
+ if(!S.brBase||S.brBase.w!==AW()){S.brBase={w:AW(),sig:Object.assign({},S.brSig||{})};}
+ const base=S.brBase.sig;const first=!S.brSig;const urgent=x=>x.g===A_MUST&&x.s&&x.s[0]==='b';
+ const isNew=x=>first||urgent(x)||base[x.id]!==sigOf(x);
+ S.brSig=S.brSig||{};scenes.forEach(x=>S.brSig[x.id]=sigOf(x));
+ /* merged groups show when any member is new; their members all show together */
+ const groups={};const solo=[];const held=[];
+ scenes.forEach(x=>{const k=mergeKey(x);if(k)(groups[k]=groups[k]||[]).push(x);else (isNew(x)?solo:held).push(x)});
+ const out=[];
+ solo.forEach(x=>out.push(sceneHtml(x)));
+ const gHtml=[];
+ if(groups.phone){if(groups.phone.some(isNew))gHtml.push([groups.phone.some(urgent)?0:3,phoneScene(groups.phone,isNew)]);else held.push({h:`${groups.phone.length} contract talk${groups.phone.length>1?'s':''}`,grp:1})}
+ if(groups.fa){if(groups.fa.some(isNew))gHtml.push([3,faScene(groups.fa)]);else held.push({h:`${groups.fa.length} free agent${groups.fa.length>1?'s':''} in their last week`,grp:1})}
+ /* place merged scenes: urgent phone calls first, the rest after the solo scenes */
+ const pre=gHtml.filter(g=>g[0]===0).map(g=>g[1]),post=gHtml.filter(g=>g[0]!==0).map(g=>g[1]);
  const np=nextPPV();
  const head=`<div class="kick">Week ${S.week}${np?` · ${np.in?`${np.in} week${np.in===1?'':'s'} to ${esc(np.n)}`:`${esc(np.n)} is this week`}`:''}</div><div class="h mhd" style="margin-top:2px">📰 The briefing</div><p class="muted" style="margin-top:0">${sh.ppv?`${esc(sh.name)} is tonight. Here's what happened backstage.`:"What happened backstage since the last show."}</p>`;
  let secs=[];try{secs=briefItems().filter(s=>!s.rep)}catch(e){console.warn(e)}
+ /* desk sections come back only when their names change (or something needs acting on now) */
+ const dsig=s=>s.t.replace(/\d+/g,'')+'|'+s.rows.join('').replace(/<[^>]+>/g,' ').replace(/[\d$K%,.+−-]+/g,'').replace(/\s+/g,' ');
+ secs=secs.filter(s=>{const k='desk:'+s.t.replace(/[\d·\s]+$/,'');const g=dsig(s);const nw=first||s.u||base[k]!==g;S.brSig[k]=g;if(!nw&&!/calendar/i.test(s.t))held.push({h:s.t.replace(/\s*·\s*\d+.*$/,''),grp:1});return nw||/calendar/i.test(s.t)});
  const desk=secs.map(s=>`<div class="scene brief ${s.u?'hot':''}"><div class="scw">${s.i} ${s.t}${s.u?' <span class="tg bad">Act now</span>':''}${s.tag?` <span class="tg good">${s.tag}</span>`:''}</div>${s.rows.join('')}</div>`).join('');
- return `${head}${scenes.map(sceneHtml).join('')}${desk}${!scenes.length&&!desk?'<div class="card"><div class="muted">All quiet backstage. Go book a great show.</div></div>':''}
+ const heldTxt=held.map(x=>x.h).filter(Boolean);
+ const still=heldTxt.length?`<div class="scene"><div class="scw">📋 Still on your desk</div><div class="tiny muted" style="margin-top:6px">Nothing new on these since last week: ${esc(heldTxt.slice(0,5).join(' · '))}${heldTxt.length>5?` and ${heldTxt.length-5} more`:''}. They're all in <b>Needs your attention</b> on the Book screen.</div></div>`:'';
+ const body=pre.join('')+out.join('')+post.join('');
+ return `${head}${body}${desk}${still}${!body&&!desk&&!still?'<div class="card"><div class="muted">All quiet backstage. Go book a great show.</div></div>':''}
  <button class="btn" onclick="closeModal();go('book')">Start booking ▸</button><button class="btn sec" onclick="closeModal()">Close</button>`};
 })();
 

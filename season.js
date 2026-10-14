@@ -123,7 +123,7 @@ const MANDS={
  debut:{n:'Debut a new signing',i:'✨',ok:b=>(S.money[b]||0)>300},
  tagdef:{n:'Successfully defend a tag or trios title',i:'🤝',ok:b=>Object.values(S.titles).some(t=>t.kind!=='singles'&&t.holders.length&&S.w[t.holders[0]]&&S.w[t.holders[0]].own===b)},
  rookie:{n:'Give a developing prospect a 3★ match',i:'🌱',ok:b=>ownList(b).some(w=>w.rookie&&!w.inj)},
- nosell:{n:"Don't sell out before the next PPV",i:'🙅',ok:()=>true,end:1},
+ nosell:{n:"No Sell Out options (sponsors, price hikes, merch blitzes) until the PPV",i:'🙅',ok:()=>true,end:1},
  win2:{n:'Win the ratings war two weeks in a row',i:'📈',ok:()=>!ON()||nSeats()===2}};
 const mandReward=()=>({cash:Math.round(econCap()*.3),fans:10000});
 function mandNew(b,notes){const np=nextPPVAfter(S.week-1);if(!np)return;S.mand=S.mand||{};const last=S.mand[b]&&S.mand[b].k;
@@ -384,6 +384,14 @@ function briefMark(){try{const m=JSON.parse(localStorage.getItem(BRIEF_KEY)||'{}
 const CON_SOON=5,CON_STAR=9,CON_URGENT=3;
 function conWatch(){return ownList('p').filter(w=>w.con<=CON_SOON||(w.con<=CON_STAR&&w.pop>=70)).sort((a,b)=>a.con-b.con||b.pop-a.pop)}
 function conLvl(w){return w.con<=1?'bad':w.con<=CON_URGENT?'warnt':''}
+/* v186: one way to say when a deal runs out. con counts shows left including tonight's. */
+function conWhen(w){return w.con<=1?'after this show':w.con===2?"after next week's show":`in ${w.con-1} weeks`}
+/* what walks out the door with them — said wherever a deal is about to end */
+function conStakes(w){const out=[];const ts=titlesOf(w.id);if(ts.length)out.push(`they hold the ${ts.map(t=>t.n).join(' and ')} title${ts.length>1?'s':''} — ${ts.length>1?'they\'re':'it\'s'} vacated if they leave`);
+ if(S.mitb&&S.mitb[w.id])out.push('the Money in the Bank briefcase goes with them');
+ let hot=null;for(const k in S.heat){if(S.heat[k]<35)continue;const [a,b]=k.split('|');const o=a===w.id?b:b===w.id?a:null;if(o&&S.w[o]&&S.w[o].own==='p'&&(!hot||S.heat[k]>hot[1]))hot=[o,S.heat[k]]}
+ if(hot)out.push(`their feud with ${S.w[hot[0]].name} ends unpaid`);
+ return out.length?out.join('; ').replace(/^./,c=>c.toUpperCase())+'.':''}
 function conTxt(w){return w.con<=1?'last show':`${Math.max(0,w.con)} wk${w.con===1?'':'s'} left`}
 function conTag(w){return `<span class="tg ${conLvl(w)}">⏳ ${conTxt(w)}</span>`}
 function conHome(){if(!S||S.phase!=='season')return '';const l=conWatch();if(!l.length)return '';const hot=l.filter(w=>w.con<=CON_URGENT);
