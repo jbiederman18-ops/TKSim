@@ -326,7 +326,7 @@ function suppCard(){if(!suppDue())return '';const n=suppPool().length,r=suppRoun
 function suppOrder(){return brands().slice().sort((a,b)=>((S.fans&&S.fans[a])||0)-((S.fans&&S.fans[b])||0))}
 function startSupp(){if(typeof mpLocked==='function'&&mpLocked())return;if(!suppDue())return;
  const pool=suppPool();const r=suppRounds();const bud=suppBudget(r);const ord=suppOrder();const capB={};ord.forEach(b=>capB[b]=payroll(b)+bud);
- let lost=0;pool.forEach(w=>{if(S.offers&&S.offers[w.id]){delete S.offers[w.id];lost++}if(S.fa)delete S.fa[w.id]});
+ let lost=0;pool.forEach(w=>{/* v180: nobody enters the draft hurt from real life */if(w.inj>0&&!w.w&&!w.l&&!w.lm)w.inj=0;if(S.offers&&S.offers[w.id]){delete S.offers[w.id];lost++}if(S.fa)delete S.fa[w.id]});
  S.draft={supp:pool.map(w=>w.id),round:1,pick:0,order:ord,rounds:r,log:[],capB,pk:(S.draft&&S.draft.pk)||0,prev:S.draft||null};
  S.phase='draft';S.suppDone=1;dv='pick';
  news(`🌍 The WWE Supplemental Draft is on: ${r} rounds for ${pool.length} WWE free agents.${lost?' Open offers on them were withdrawn.':''}`);

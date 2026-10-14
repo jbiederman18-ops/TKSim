@@ -933,7 +933,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v179';
+const APP_VERSION='v180';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -1029,7 +1029,11 @@ function dataUpdate(st){if(!st||!st.w||(st.dataV||1)>=DATA_V)return;let n=0;
   ['heat','chem','mh','ph','fs'].forEach(k=>{if(st[k])for(const x in st[k])if(x.split('|').includes(id))delete st[k][x]});if(st.fa)delete st.fa[id];st.training=(st.training||[]).filter(t=>t.id!==id);st.promises=(st.promises||[]).filter(p=>p.a!==id&&p.b!==id);
   if(st.crisis&&(st.crisis.a===id||st.crisis.b===id))st.crisis=null;
   if(st.card)['p','ai'].forEach(b=>(st.card[b]||[]).forEach(sl=>{if(sl.d&&((sl.d.sides&&sl.d.sides.flat().includes(id))||sl.d.a===id||sl.d.b===id||sl.d.c===id))sl.d=null}))});
- RAW.trim().split('\n').forEach(l=>{const x=mkW(l.trim());if(!st.w[x.id]){if(OUT[x.id])x.inj=OUT[x.id];st.w[x.id]=x;n++}});
+ /* v180: new arrivals join healthy — real-life injuries (OUT) are never carried into a save, same as a new game */
+ RAW.trim().split('\n').forEach(l=>{const x=mkW(l.trim());if(!st.w[x.id]){st.w[x.id]=x;n++}});
+ /* v180: saves that picked up the WWE update before this fix got those wrestlers' real injuries: anyone who arrived hurt
+  and hasn't wrestled a match in this save is healed */
+ if((st.dataV||1)<8)Object.values(st.w).forEach(w=>{if(w.inj>0&&OUT[w.id]&&!w.w&&!w.l&&!w.lm)w.inj=0});
  if((st.dataV||1)<7)try{wweData(st,n)}catch(e){console.warn(e)}
  st.dataV=DATA_V;if(n)st.news.push({w:st.week,t:`🆕 Roster update (${DATA_AS_OF}): ${n} new arrivals joined free agency.`})}
 function ensureTraits(st){if(!st||!st.w)return;Object.values(st.w).forEach(w=>{if(!Array.isArray(w.tr))w.tr=autoTraits(w);if(w.dur==null||(!w.cw&&!w.rookie&&(st.durV||0)<1))w.dur=durFor(w)});st.durV=1}
@@ -1270,7 +1274,7 @@ const TEAMS=[
 const FEUDS=[['mercedes-mone','thekla',75],['swerve-strickland','hangman-adam-page',55],['matt-jackson','dax-harwood',50],['nick-jackson','cash-wheeler',50],['matt-jackson','christian-cage',45],['nick-jackson','adam-copeland',40],['kevin-knight','steven-borden',50],['darby-allin','kyle-fletcher',55],['kyle-fletcher','matt-jackson',30],['kazuchika-okada','tommaso-ciampa',40],['samoa-joe','jack-perry',50],['jamie-hayter','megan-bayne',45],['alex-windsor','lena-kross',45],['jay-white','jon-moxley',35],['juice-robinson','david-finlay',35],['mike-bailey','gabe-kidd',30],['will-ospreay','claudio-castagnoli',30],['will-ospreay','jon-moxley',20],['willow-nightingale','thekla',30],['persephone','dani-luna',25],['persephone','hyan',25],['kris-statlander','julia-hart',30],['queen-aminata','skye-blue',30],['ricochet','swerve-strickland',30],['jon-moxley','mark-davis',55],['will-ospreay','samoa-joe',35],['will-ospreay','kazuchika-okada',40],['chris-jericho','nick-wayne',40],['kofi-kingston','bandido',40],['mercedes-mone','queen-aminata',35],['jon-moxley','jake-doyle',30]];
 const OUT=Object.assign({'toni-storm':14,'adam-cole':12,'mark-briscoe':8,'steven-borden':6,'kota-ibushi':10,'hologram':6,'anna-jay':6,'penelope-ford':6,'maya-world':4,'riho':4,'serena-deeb':4,'harley-cameron':2,'wardlow':2,'jay-white':8},WWE_OUT);
 const REMOVED=['big-bill','powerhouse-hobbs','tay-melo'];
-const DATA_V=7,DATA_AS_OF='WWE Money in the Bank, Oct 10, 2026';
+const DATA_V=8,DATA_AS_OF='WWE Money in the Bank, Oct 10, 2026';
 /* Durability (1–99): how well a body holds up. Based on each wrestler's real injury history, current to All Out 2026. High = less stamina lost per match and fewer injuries; low = the opposite. name|durability|note */
 const DUR_RAW=`Darby Allin|95|Takes insane bumps and stunts, and almost never misses time
 Jon Moxley|92|Works hurt and keeps showing up — one of the most reliable bodies in wrestling
