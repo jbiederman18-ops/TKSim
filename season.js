@@ -220,7 +220,7 @@ function goalLive(k){const P=cardProj();if(!P.booked)return LV('n','Nothing book
   case 'women':return P.women?LV('y',`${P.women} women's match${P.women>1?'es':''} booked`):LV('n',"No women's match booked");
   case 'tag':return P.tag?LV('y','Tag/trios match booked'):LV('n','No tag or trios match booked');
   case 'stip':return P.stip?LV('y','Stipulation match booked'):LV('n','No stipulation match booked');
-  case 'promo':{if(P.pr==null)return LV('n','No promo booked');const v=tellLv(P.pr,3.5);return LV(v,`Best promo: ${tellWord(P.pr)}${v==='m'?" — promos are live, so it's up to you":''}`)}
+  case 'promo':{if(P.pr==null)return LV('n','No promo booked');const v=tellLv(P.pr,3.5);return LV(v,`Best promo: ${tellWord(P.pr,1)}${v==='m'?" — promos are live, so it's up to you":''}`)}
   case 'show':return starLive(P.show,3.5,'the show');
   case 'floor':{if(!P.nm)return LV('n','No matches booked');const v=tellLv(P.loMid,2.5);return LV(v,`Weakest match: ${tellWord(P.loMid)}${v==='m'?' — could go either way':''}`)}
   case 'rookie':return P.rk>=2?LV('y','Your prospect looks ready to deliver'):P.rk>=1?LV('m','Your prospect is on the edge'):P.rk?LV('n',"Your prospect's match doesn't look ready"):LV('n','No prospect booked')}

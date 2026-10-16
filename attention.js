@@ -398,6 +398,11 @@ window.slotPips=function(m,sh,i){let d;try{d=mdOf(m,sh)}catch(e){return ''}const
  return `${d.sq?'':`<div class="mpip"><div>Talent${segH(d.p.talent)}</div><div>Chemistry${segH(d.p.chem)}</div><div>Story${segH(d.p.story)}</div><div>Extras${segH(d.p.extras)}</div></div>`}${ch||(!d.sq&&d.back.length)?`<div class="tags">${ch}${d.sq?'':d.back.slice(0,2).map(([k,t])=>`<span class="tg ${k==='b'?'bad':'warnt'}">${esc(t)}</span>`).join('')}</div>`:''}`};
 
 /* promos: talent on the mic, how well the segment fits them, the story behind it, and your live calls */
+/* the Talent line reads off the same blend as its pips: both talkers (60/40), the gift of gab, and star power */
+function talkW(A,B,mm,mic,pop,pip){const sp=pop>=80&&mic<80?'star power does the rest':'';
+ if(!B){const w=['will struggle out there',"isn't a natural talker yet",'gets by on the mic','is comfortable on the mic','can hold any crowd'][pip-1];return `${A.name} ${w}${sp&&pip>=3?` — ${sp}`:''}`}
+ const lead=mm(B)>mm(A)?B:A,gap=Math.abs(mm(A)-mm(B));const base=['Neither will connect much',"Neither is a natural talker yet",'They get by on the mic','A good pair on the mic','A pairing that can hold any crowd'][pip-1];
+ const bits=[gap>=10?`${lead.name} carries the talking`:'',pip>=3?sp:''].filter(Boolean);return base+(bits.length?' — '+bits.join(', '):'')}
 function pdOf(p){const A=S.w[p.a],B=p.b&&S.w[p.b];if(!A)return null;const mm=w=>w.mic+(hasT(w,'mouth')?8:0);
  const mic=B?mm(A)*.6+mm(B)*.4:mm(A),pop=B?(A.pop+B.pop)/2:A.pop;const t=mic*.45+pop*.3;const h=B?heatOf(A.id,B.id):0;
  const fitT=typeof promoFit==='function'?promoFit(p.type,A,B):'';const f=typeof promoFatigue==='function'&&B?promoFatigue({a:p.a,b:p.b,type:p.type}):{};
@@ -405,11 +410,11 @@ function pdOf(p){const A=S.w[p.a],B=p.b&&S.w[p.b];if(!A)return null;const mm=w=>
  const back=[];if(f.rep)back.push(['b',`${f.msg||'Same segment as last week'} — half heat`]);[A,B].filter(Boolean).filter(w=>w.mor<SIT_MOR).forEach(w=>back.push(['w',`${L(w)} is unhappy and may go off-script`]));
  if(PT[p.type]&&PT[p.type].turn&&typeof turnWhip==='function'&&turnWhip(A))back.push(['b','Turned too recently — fans will have whiplash']);
  return {A,B,h,f,p:{talent:clamp(Math.round((t-40)/5),1,5),fit,story:B?(h<1?0:clamp(Math.ceil(h/20),1,5)):0},
-  talentW:A.mic>=90?`${A.name} is one of your best talkers`:A.mic>=80?'Comfortable on the mic':A.mic>=70?'Gets by on the mic':'Not a natural talker yet',
+  talentW:talkW(A,B,mm,mic,pop,clamp(Math.round((t-40)/5),1,5)),
   fitW:f.rep?'Same pairing and segment as last week':fitT||'Works fine. Nothing about this segment suits them especially',
   storyW:!B?'Solo segment — no rivalry to build':h>=35?`Hot feud (heat ${Math.round(h)})`:h>=1?`Feud heat ${Math.round(h)}`:'No feud between them yet',back}}
 window.pdOf=pdOf;
-const tellSpan=st=>{const t=tellOf(st);return `<span class="tell ${t[3]} big">${t[1]} ${t[2]}</span>`};
+const tellSpan=st=>{const t=tellOf(st,1);return `<span class="tell ${t[3]} big">${t[1]} ${t[2]}</span>`};
 window.promoDetails=function(p){const d=pdOf(p);if(!d)return '';const req=chipsWith(typeof PE!=='undefined'&&PE?PE.i:null,{type:p.type,a:p.a,b:p.b||''});
  return `<div class="det"><div class="dh">Promo details</div>
  ${row('Talent',d.p.talent,esc(d.talentW))}${row('Fit',d.p.fit,esc(d.fitW))}${row('Story',d.p.story,esc(d.storyW))}${row('Your calls',0,'Decided live: the choices you make when it airs swing the rating up or down',null,1)}

@@ -1011,7 +1011,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v191';
+const APP_VERSION='v192';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -2328,8 +2328,10 @@ function stars(s){const f=Math.floor(s+1e-9),r=s-f;const fr=r>=.74?'¾':r>=.49?'
 function chemWord(c){return c>=10?'Electric':c>=6?'Great':c>=3?'Good':c>=0?'Okay':'Poor'}
 /* v128: booking shows tells, not star math. The exact numbers come out after the show (bdReveal). */
 const TELLS=[[4.25,'🔥🔥🔥','Could steal the show','good'],[3.75,'🔥🔥','Big-match feel','good'],[3.25,'🔥','Should deliver','good'],[2.5,'👍','Solid','muted'],[1.75,'😐','Filler','muted'],[-9,'🥶',"Crowd won't care",'bad']];
-function tellOf(mid){return TELLS.find(t=>mid>=t[0])||TELLS[TELLS.length-1]}
-function tellWord(mid){const t=tellOf(mid);return t[1]+' '+t[2]}
+/* promos get the same bands, worded for a talking segment */
+const PROMO_TELLS=TELLS.map(t=>t[2]==='Big-match feel'?[t[0],t[1],'Must-see segment',t[3]]:t[2]==='Should deliver'?[t[0],t[1],'Should connect',t[3]]:t);
+function tellOf(mid,pr){const L=pr?PROMO_TELLS:TELLS;return L.find(t=>mid>=t[0])||L[L.length-1]}
+function tellWord(mid,pr){const t=tellOf(mid,pr);return t[1]+' '+t[2]}
 /* v136: anything shown before the show airs works from the tell alone, never the exact projection — otherwise a status line,
  a bar height or a heat number turns into a star readout. tellBand = the star range a tell covers; tellStar = its stand-in value. */
 function tellBand(mid){const i=TELLS.indexOf(tellOf(mid));return [i===TELLS.length-1?0:TELLS[i][0],i?TELLS[i-1][0]:5]}
