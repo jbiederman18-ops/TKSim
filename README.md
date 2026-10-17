@@ -129,6 +129,7 @@ History is recorded from v157 on (existing champions are picked up the first tim
 
 ## The road to the PPV
 - Every PPV has a **hype meter** (Home and the Book screen) that builds over the weeks before it: good TV shows add hype and flat ones cost some, hot feuds you keep going add a little, and **announced PPV matches** (Contract Signings, or callouts booked for the PPV) add a lot — up to four.
+- **🎟️ The title picture** (top of the Titles screen) lists every title shot you owe — Rumble, tournament and Casino Gauntlet winners, title-shot pitches you agree to ("win two and you're next" makes them the #1 contender), contract clauses — with the date and the feud heat against the champion. Earning a shot starts the rivalry (🔥15). Build it past the gold line (🔥35) before the night: inside 4 weeks the Book screen checklist and the weekly briefing remind you, **🎤 Build it** books a face-to-face promo, and Suggest the rest gives them a promo slot. If the belt changes hands first, the shot follows it. The Home screen's Titles tile shows how many shots you owe and how many are behind.
 - The **go-home show** right before the PPV matters most: a strong one adds a lot, a flat one costs you.
 - On the night, hype moves **ticket sales** (−15% to +15%) and the crowd: a hot build brings extra fans, a cold one costs some. Then the meter resets.
 

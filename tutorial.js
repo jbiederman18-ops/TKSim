@@ -11,7 +11,7 @@
      tour get a "what's new" replay of just those stops.
    • Run `python3 tools/check-tutorial.py` — it plays every stop and tip in a headless browser and fails on any
      missing target or stale value. */
-const TUT_REV=19;
+const TUT_REV=20;
 const TUT_KEY='tksim_tut';
 const TUT_MISS=[];
 
@@ -72,6 +72,8 @@ const TUT_STEPS=[
  b:()=>`Tap a slot to book it. Every match shows what goes into it with up to five pips: <b>Talent</b>, <b>Chemistry</b>, <b>Story</b> and <b>Extras</b> — no star math until after the show. 🎲 means it could land big or fall flat.<br><br>The <b>last match is your main event</b> and counts the most: put your biggest names and hottest feud there.`},
 {id:'s.feuds',track:'season',since:9,tab:'book',sel:()=>tutCard(/your feuds/i),sys:['feuds','heat','repetition'],t:'Feuds are the engine',
  b:()=>`Put the same two people in matches and promos week after week and heat builds — face vs heel and title matches build the most. When a feud is hot (35+), pay it off at a PPV with a clean finish. Don't run the exact same thing two weeks running — the crowd tires of it.`},
+{id:'s.tpic',track:'season',since:20,tab:'titles',sel:'main .card.tpic',sys:['titles','title shots','feuds','heat'],t:'The title picture',
+ b:()=>`Every title shot you owe lives here: Rumble, tournament and Casino Gauntlet winners, title-shot pitches you agree to and contract clauses — with when it's due and how hot the feud with the champion is. Earning a shot starts the rivalry (🔥${tv('TP_SEED',()=>TP_SEED,15)}). Build it past the gold line (🔥${tv('TP_READY',()=>TP_READY,35)}) before the night — your checklist on the Book screen reminds you once it's ${tv('TP_NUDGE',()=>TP_NUDGE,4)} weeks out, and <b>🎤 Build it</b> books them face to face.`},
 {id:'s.live',track:'season',since:7,tab:'book',sel:'main .btn.live',sys:['live','calls','injuries'],t:'Go live',
  b:()=>`When the card is full, go live. Promos and matches throw you decisions as they happen, and your calls stick. Then the results play out against the rival's show, and <b>Why that rating?</b> shows what each part was worth.<br><br>That's all you need for week 1. New things get a quick tip the first time they come up, and the ⚙️ menu has the full rulebook.`},
 

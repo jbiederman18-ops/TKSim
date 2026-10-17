@@ -41,6 +41,7 @@ window.attnMood=moodW;
 
 /* ---- what people say (templates; {A} {B} = names, {L}/{BL} = last names, {n} = a number) ---- */
 const SAY={
+ tp:{f:['{B} knows I\'m coming for that {T} title. Put us face to face before it\'s on the line.','I earned this shot. Let me tell {B} to their face what happens when I get it.'],h:['{B} has been hiding behind that {T} title. Give me a microphone and I\'ll drag them out.','Everyone\'s going to know {B}\'s days with the {T} title are numbered. Put me out there.']},
  deal_me:{f:['I signed here because you promised me main events. I\'m still owed {n}.','The contract says main events. I\'m not asking for a favor.'],h:['My contract says main events. I can read. Can you?','{n} more main events. It\'s in writing, so don\'t make me get the lawyers.']},
  deal_shot:{f:['There\'s a title match in my contract, and the clock is ticking.','You promised me a shot at the gold. I\'m holding you to it.'],h:['Read the fine print. I get my title shot, or I get my lawyer.','My title shot is overdue. Fix it.']},
  deal_ppv:{f:['Every pay-per-view. That was the deal.','I\'m on every big show this year. That\'s what we agreed.'],h:['Every PPV. It\'s in writing, so don\'t get cute.','No PPV goes on without me. Read the contract.']},
@@ -136,6 +137,13 @@ function attnItems(){if(!S||S.phase!=='season')return [];
   add({id:'trial'+t.a+t.k,g:A_MUST,i:'🧪',h:`${A.name}: ${t.txt}`,d:`${prog}${left<=1?'last week to hit it':`${left} weeks left`}${t.big?' · you promised':''}`,s:[k,txt],a:ok?null:fix,who:[t.a,t.b].filter(Boolean),where:'🎤 Promises you\'re keeping',
    say:[[t.a,fill(pickS(SAY['t_'+t.goal]||SAY.t_seg,'tr'+t.a),{B:B?B.name:''})]],request:t.a,askT:'Promised: '+t.txt,
    chip:i=>{const s=sg.find(x=>x.i===i);if(!s)return null;return t.goal==='rest'?(s.k==='match'?['b',`${L(A)} was promised the week off`]:null):t.goal==='avoid'?(B&&together(t.a,t.b)&&together(t.a,t.b).i===i?['b',`${L(A)} wanted to avoid ${L(B)}`]:null):ok?['ok',`Counts toward ${L(A)}'s promise`]:null}})});
+
+ /* v193: the title picture — earned shots coming up soon that still need their feud built */
+ if(typeof tpList==='function')tpList().forEach(e=>{if(!tpNeedsBuild(e))return;const C=e.champ[0];const tg=together(e.a,C.id);const behind=e.heat+TP_PACE*e.in<TP_READY;const ep=emptyPromo();
+  add({id:'tp'+e.a+e.title,g:A_CH,i:'🎟️',h:`Build ${e.w.name} vs ${C.name}`,d:`${e.lab}: ${e.t.n} title ${e.ppv?'at '+e.ppv:'by week '+e.week}, ${e.in} week${e.in>1?'s':''} away. Heat 🔥${Math.round(e.heat)} — aim for ${TP_READY} before the night. A face-to-face promo builds it without giving the match away.`,
+   s:tg?['ok','Together tonight']:[behind?'w':'n',behind?'Running out of time — not together tonight':'Not together tonight'],a:tg?null:[ep>=0?'Book a promo':'Book a match',ep>=0?`feudBook('promo','${e.a}','${C.id}')`:`feudBook('match','${e.a}','${C.id}')`],
+   who:[e.a,C.id],where:'🎟️ The title picture',say:[[e.a,sayW('tp',e.w,{B:C.name,T:e.t.n})]],
+   chip:i=>segs(e.a).some(x=>x.i===i)&&segs(C.id).some(x=>x.i===i)?['ok',`Building to the ${e.t.n} title`]:null})});
 
  /* titles going stale — v186: one row for all of them, under Keep in mind, led by the most overdue */
  {const st=Object.entries(S.titles||{}).map(([tid,t])=>{if(!t.holders.length)return null;const H=S.w[t.holders[0]];if(!H||H.own!=='p'||H.inj||t.last==null||S.week-t.last<4)return null;

@@ -125,10 +125,10 @@ const PITCHES={
   pick:r=>{const l=pTagShots(r);return l.length?wpick(l,c=>pWant(S.w[c.a])):null},
   text:x=>{const t=S.titles[x.title],n=t.n,v=!t.holders.length;return x.A.mor<45?[`"${pLast(x.B)} and I are tired of waiting. Give us the ${n} shot."`]:v?[`"The ${n} titles are sitting there empty. ${pLast(x.B)} and I want them."`]:[`"${pLast(x.B)} and I have been the best team here for weeks. Give us a shot at the ${n} titles."`,`"Put the ${n} titles on the line against us. We'll take them."`]},
   head:x=>`${x.A.name} & ${x.B.name} want the ${S.titles[x.title]?S.titles[x.title].n:''} titles`,
-  try:{d:x=>`"Win two matches in ${PITCH_LEN} weeks and you're next in line." They'll feel it's earned.`,start:x=>({goal:'wins',need:2,txt:'2 wins'})},
+  try:{d:x=>`"Win two matches in ${PITCH_LEN} weeks and you're next in line." They'll feel it's earned — and they become the #1 contender, with a rivalry to build.`,start:x=>({goal:'wins',need:2,txt:'2 wins',title:x.title})},
   go:{d:x=>`"You've got it." Put them in a match for the ${S.titles[x.title].n} titles within ${PITCH_LEN} weeks — a big boost for both if you deliver, a broken promise if you don't.`,
    start:x=>({goal:'title',need:1,title:x.title,txt:`a match for the ${S.titles[x.title].n} titles`,big:1}),fx:null},
-  ok:t=>{const A=pOwn(t.a),B=pOwn(t.b);mor(A,t.big?15:10);if(B)mor(B,t.big?10:6);popx(A,2);return t.big?`🏆 ${A.name} & ${B?B.name:'partner'} got their tag title shot, as promised.`:`🏆 ${A.name} & ${B?B.name:'partner'} earned it — they're the clear top contenders (+2 popularity).`},
+  ok:t=>{const A=pOwn(t.a),B=pOwn(t.b);mor(A,t.big?15:10);if(B)mor(B,t.big?10:6);popx(A,2);if(!t.big&&t.title&&typeof tpContender==='function')tpContender(t.title,t.a,t.b);return t.big?`🏆 ${A.name} & ${B?B.name:'partner'} got their tag title shot, as promised.`:`🏆 ${A.name} & ${B?B.name:'partner'} earned it — they're the clear top contenders (+2 popularity).`},
   fail:t=>{const A=pOwn(t.a),B=pOwn(t.b);mor(A,t.big?-15:-6);if(B)mor(B,t.big?-8:-3);return t.big?`🏆 You never gave ${A.name} & ${B?B.name:'partner'} the tag title shot you promised.`:`🏆 ${A.name} & ${B?B.name:'partner'} came up short of earning a tag title shot.`},
   no:3},
  raise:{cat:'💰 Contract',w:r=>{const l=r.filter(pRaiseOK);return l.length?1+Math.min(3,l.filter(w=>w.mor<55).length):0},
@@ -155,10 +155,10 @@ const PITCHES={
   pick:r=>{const l=[];r.forEach(w=>{if(w.pop<62||isChamp(w.id))return;Object.values(S.titles).forEach(t=>{if(t.kind!=='singles')return;if(t.holders.length){const h=S.w[t.holders[0]];if(!h||h.own!=='p'||h===w||h.inj)return}l.push({a:w.id,title:t.id})})});return l.length?wpick(l,c=>pWant(S.w[c.a])):null},
   text:x=>{const t=S.titles[x.title],n=t.n;const v=!t.holders.length;const low=x.A.mor<45;return v?[`"The ${n} title is sitting there empty. Put me in the hunt for it."`,low?`"I'm tired of watching other people chase that vacant ${n} title. Let me chase it."`:`"Somebody has to be the face of the ${n} title. Why not me?"`]:[`"I've beaten everyone you've put in front of me. I want a shot at the ${n} title."`,low?`"I'm done waiting my turn. Give me the ${n} title shot or tell me where I stand."`:`"The ${n} title should be around my waist. Give me one shot."`]},
   head:x=>`${x.A.name} wants a shot at the ${S.titles[x.title]?S.titles[x.title].n:''} title`,
-  try:{d:x=>`"Win two matches in ${PITCH_LEN} weeks and you're next in line." They'll feel it's earned.`,start:x=>({goal:'wins',need:2,txt:'2 wins'})},
+  try:{d:x=>`"Win two matches in ${PITCH_LEN} weeks and you're next in line." They'll feel it's earned — and they become the #1 contender, with a rivalry to build.`,start:x=>({goal:'wins',need:2,txt:'2 wins',title:x.title})},
   go:{d:x=>`"You've got it." Put them in a match for the ${S.titles[x.title].n} title within ${PITCH_LEN} weeks — a huge boost if you deliver, a broken promise if you don't.`,
    start:x=>({goal:'title',need:1,title:x.title,txt:`a match for the ${S.titles[x.title].n} title`,big:1}),fx:null},
-  ok:t=>{const A=pOwn(t.a);mor(A,t.big?15:10);popx(A,2);return t.big?`🏆 ${A.name} got their title shot, as promised.`:`🏆 ${A.name} earned it — they're the clear number one contender (+2 popularity).`},
+  ok:t=>{const A=pOwn(t.a);mor(A,t.big?15:10);popx(A,2);if(!t.big&&t.title&&typeof tpContender==='function')tpContender(t.title,t.a);return t.big?`🏆 ${A.name} got their title shot, as promised.`:`🏆 ${A.name} earned it — they're the clear number one contender (+2 popularity).`},
   fail:t=>{const A=pOwn(t.a);mor(A,t.big?-15:-6);return t.big?`🏆 ${A.name} never got the title shot you promised.`:`🏆 ${A.name} came up short of earning a title shot.`},
   no:3},
  ppv:{cat:'📺 Big-show spot',w:r=>{const np=pNextPPV();if(!np||np.w-S.week>4)return 0;const l=r.filter(w=>w.pop>=50);return l.length?1.5+Math.min(3,l.filter(w=>w.mor<60).length):0},
@@ -218,7 +218,7 @@ function pitchGen(){const r=pPool();if(r.length<4)return;const keys=Object.keys(
 /* ---- answering ---- */
 function pitchChoices(p){const P=PITCHES[p.k],x=pCtx(p);const A=x.A;const cut=pMorCut(A,P.no*3);
  return [{k:'try',d:P.try.d(x)},{k:'go',d:P.go.d(x),cost:P.go.cost?P.go.cost():0},{k:'no',d:`${A.name} loses ${cut} morale${A.mor>=75?' (they\'re happy enough to shrug it off)':A.mor<40?' (they\'re already unhappy, so it stings)':''}.`}]}
-function pitchStart(p,spec){const len=spec.len||PITCH_LEN;const t=Object.assign({k:p.k,a:p.a,b:p.b||null,start:AW(),end:AW()+len-1,have:0,al:S.w[p.a].al},spec);S.trials=(S.trials||[]).concat([t]);return t}
+function pitchStart(p,spec){const len=spec.len||PITCH_LEN;const t=Object.assign({k:p.k,a:p.a,b:p.b||null,start:AW(),end:AW()+len-1,have:0,al:S.w[p.a].al},spec);S.trials=(S.trials||[]).concat([t]);if(t.goal==='title'&&typeof tpSync==='function')tpSync([]);return t}
 function pitchChoose(k){if(typeof mpLocked==='function'&&mpLocked())return;const p=S.pitch;if(!p||!PITCHES[p.k])return closeModal();const P=PITCHES[p.k];const x=pCtx(p);if(!x.A||x.A.own!=='p'){S.pitch=null;save();return closeModal()}
  let txt='';x.prevT=x.A.turnW;
  if(k==='try'){const sp=P.try.start(x);sp.prevT=x.prevT;const t=pitchStart(p,sp);mor(x.A,4);txt=`${PCH.try.i} Trial on: ${x.A.name} has ${t.end-t.start+1} week${t.end>t.start?'s':''} — the goal is ${t.txt}. You'll see the progress in your weekly briefing.`}

@@ -56,7 +56,7 @@ function tourRecord(b,x,w,notes,how){const t=tourState(b,x.k);if(t.res.some(r=>r
  if(!D.prize)return;const pz=S.titles[D.prize];const h=pz&&pz.holders[0]&&S.w[pz.holders[0]];
  if(!pz||!h){W.pop=clamp(W.pop+2,1,100);return}
  if(h.id===w){notes.push(`👑 The champion proves the point — ${W.name} already holds the ${pz.n} title.`);return}
- if(h.own===b){if(b==='p'){addPromise({kind:'shot',a:w,b:h.id,week:ALLIN_WEEK,ppv:PPVS[ALLIN_WEEK],title:pz.id});notes.push(`🎟️ ${W.name} has earned a ${pz.n} title shot against ${h.name} at ${PPVS[ALLIN_WEEK]}.${ON()?'':" It'll be waiting on your card."}`)}else t.shot=w}
+ if(h.own===b){if(b==='p'){addPromise({kind:'shot',a:w,b:h.id,week:ALLIN_WEEK,ppv:PPVS[ALLIN_WEEK],title:pz.id,why:`${D.n} winner`});notes.push(`🎟️ ${W.name} has earned a ${pz.n} title shot against ${h.name} at ${PPVS[ALLIN_WEEK]}.${ON()?'':" It'll be waiting on your card."}`)}else t.shot=w}
  else{t.chal=w;if(mine)notes.push(`🎟️ ${W.name} has earned a shot at ${nameOf(h.own)}'s ${pz.n} champion ${h.name} — it's booked as ${ON()?nameOf(b)+"'s":'your'} title challenge at ${PPVS[ALLIN_WEEK]}.`)}}
 function tourMatch(x){const m={type:'singles',stip:'std',sides:[[x.a],[x.b]],winner:0,title:'',tour:{k:x.k,id:x.id,lab:x.lab}};
  if(x.lab==='Final'&&TOURS[x.k].title&&eligibleTitles(m).includes(TOURS[x.k].title))m.title=TOURS[x.k].title;return m}
@@ -85,7 +85,7 @@ function gauntletPrize(b,m,notes){if(m.nc)return;const W=S.w[m.sides[m.winner][0
  W.pop=clamp(W.pop+2,1,100);W.mor=clamp(W.mor+6,0,100);
  if(!np||!ts.length){if(mine)notes.push(`🎰 ${W.name} wins the Casino Gauntlet — bragging rights, and the crowd is buzzing.`);return}
  const t=ts[0],h=S.w[t.holders[0]];
- if(b==='p'){addPromise({kind:'shot',a:W.id,b:h.id,week:np.w,ppv:np.n,title:t.id});notes.push(`🎰 ${W.name} wins the Casino Gauntlet and earns a ${t.n} title shot against ${h.name} at ${np.n}!`)}
+ if(b==='p'){addPromise({kind:'shot',a:W.id,b:h.id,week:np.w,ppv:np.n,title:t.id,why:'Casino Gauntlet winner'});notes.push(`🎰 ${W.name} wins the Casino Gauntlet and earns a ${t.n} title shot against ${h.name} at ${np.n}!`)}
  else{S.aiShot={a:W.id,title:t.id,week:np.w};if(mine)notes.push(`🎰 ${W.name} wins the Casino Gauntlet and earns a ${t.n} title shot at ${np.n}!`)}}
 
 /* ===================== FORBIDDEN DOOR: crossover dream matches ===================== */
@@ -323,7 +323,8 @@ function suggestCard(){const sh=curShow();const c=JSON.parse(JSON.stringify(S.ca
  const ch=S.chant&&S.chant.p;const chW=ch&&ch.w===AW()&&!ch.hit&&W(ch.id)&&W(ch.id).own==='p'&&!W(ch.id).inj?ch.id:null;
  const want=new Set((S.trials||[]).filter(t=>t.goal==='seg'&&(!t.kind||t.kind==='promo')).map(t=>t.a).filter(id=>W(id)&&W(id).own==='p'&&!W(id).inj&&!onCard(id)));if(chW&&!onCard(chW))want.add(chW);
  c.forEach(sl=>{if(sl.d||sl.k!=='promo'||sl.opt)return;let p=null;const w=[...want].find(id=>!exP.has(id));
-  if(w){want.delete(w);p={type:W(w).mic>=70?'callout':'vignette',a:w,b:null}}else p=autoPromo('p',exP);
+  const tpp=typeof tpPromos==='function'?tpPromos(exP):[];
+  if(w){want.delete(w);p={type:W(w).mic>=70?'callout':'vignette',a:w,b:null}}else if(tpp.length)p=tpp[0];else p=autoPromo('p',exP);
   if(p){if(p.type==='contract')p.type='callout';delete p.res;p.played=false;sl.d=p;exP.add(p.a);if(p.b)exP.add(p.b)}});
  return c}
 /* the old assistant: books like a sharp rival (stips, finishes, run-ins, the title challenge). Kept for the balance

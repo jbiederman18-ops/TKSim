@@ -232,7 +232,7 @@ function rumblePrize(b,m,notes){if(m.nc)return;const W=S.w[(m.sides[m.winner]||[
  W.pop=clamp(W.pop+3,1,100);W.mor=clamp(W.mor+10,0,100);
  if(WORLD_T[W.g].some(id=>S.titles[id]&&S.titles[id].holders.includes(W.id))){const n=`${D.i} ${W.name} wins the ${D.n} — as a world champion, they head to ${wm} with all the momentum in the world.`;notes.push(n);news(n);return}
  const own=worldFor(W.g,b,false,W.id);
- if(own){const h=S.w[own.holders[0]];if(b==='p')addPromise({kind:'shot',a:W.id,b:h.id,week:WM_WEEK,ppv:wm,title:own.id});else spw(b).shot.push({a:W.id,title:own.id});
+ if(own){const h=S.w[own.holders[0]];if(b==='p')addPromise({kind:'shot',a:W.id,b:h.id,week:WM_WEEK,ppv:wm,title:own.id,why:'Royal Rumble winner'});else spw(b).shot.push({a:W.id,title:own.id});
   const n=`${D.i} ${W.name} wins the ${D.n}! They'll challenge ${h.name} for the ${own.n} title at ${wm}.${b==='p'&&!ON()?" It'll be waiting on your card.":''}`;notes.push(n);if(mine||W.own==='p')news(n);return}
  const oth=worldFor(W.g,b,true,W.id);
  if(oth){spw(b).chal.push({a:W.id,title:oth.id});const h=S.w[oth.holders[0]];const n=`${D.i} ${W.name} wins the ${D.n}! ${nameOf(h.own)}'s ${h.name} holds the ${oth.n} title, so ${W.name} challenges for it as ${b==='p'?'your':nameOf(b)+"'s"} title challenge at ${wm}.`;notes.push(n);news(n);return}
