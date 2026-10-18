@@ -89,7 +89,7 @@ if(typeof briefItems==='function'){const b0=briefItems;window.briefItems=briefIt
 
 /* ---------------- entry points ---------------- */
 if(typeof officeView==='function'){const o0=officeView;officeView=function(){const out=o0.apply(this,arguments);const n=(S.trades||[]).filter(t=>t.to===me()).length;
- const b=`<div class="card"><div class="h small">🔁 Trades</div><div class="muted" style="margin-bottom:8px">Swap up to two wrestlers each way, with cash either way. Champions can't be traded.${n?` <b class="gold">${n} offer${n>1?'s':''} waiting in your briefing.</b>`:''}</div><button class="btn" onclick="openTrade()">Propose a trade</button></div>`;
- const i=out.indexOf('<div class="card"><div class="h small">📖 History book');return i<0?out+b:out.slice(0,i)+b+out.slice(i)}}
+ const b=`<button class="card otool" onclick="openTrade()"><span class="oti">🔁</span><span class="ott"><b>Trades</b><span>Up to two wrestlers each way, plus cash · champions can't move${n?` · <b class="gold">${n} offer${n>1?'s':''} waiting</b>`:''}</span></span><span class="otc">›</span></button>`;
+ const i=out.indexOf('<button class="card otool"');return i<0?out+b:out.slice(0,i)+b+out.slice(i)}}
 if(typeof showW==='function'){const s0=showW;showW=function(id){const out=s0.apply(this,arguments);try{const w=S.w[id];if(w&&w.own&&w.own!=='p'&&S.phase==='season'&&!isChamp(id)){const m=document.querySelector('#modal .sheet')||document.querySelector('#modal');const btn=`<button class="btn sec" style="margin-top:10px" onclick="openTrade('${id}')">🔁 Trade for ${esc(w.name)}</button>`;const a=m&&m.querySelector('.wd-top');if(a)a.insertAdjacentHTML('afterend',btn)}}catch(e){}return out}}
 })();

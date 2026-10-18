@@ -396,7 +396,7 @@ const pipH=(n,q)=>{if(q)return '<span class="pips q">? ? ? ? ?</span>';n=clamp(M
 window.pipH=pipH;
 /* v190: match ingredients are a segmented meter in gold, wrestler stats stay as silver dots — two shapes, two colors,
    so it's clear which numbers describe the match and which describe a wrestler */
-const segH=(n,q)=>{if(q)return '<span class="seg q">'+'<i></i>'.repeat(5)+'</span>';n=clamp(Math.round(n),0,5);return `<span class="seg">${'<i class="on"></i>'.repeat(n)}${'<i></i>'.repeat(5-n)}</span>`};
+const segH=(n,q)=>{if(q)return '<span class="pipm q">'+'<i></i>'.repeat(5)+'</span>';n=clamp(Math.round(n),0,5);return `<span class="pipm">${'<i class="on"></i>'.repeat(n)}${'<i></i>'.repeat(5-n)}</span>`};
 window.segH=segH;
 const statP=v=>clamp(Math.round((v-55)/8),1,5);
 window.statP=statP;

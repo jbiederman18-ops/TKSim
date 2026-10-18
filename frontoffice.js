@@ -76,6 +76,5 @@ function brief(){const out=[];tampPrune();
  return out}
 if(typeof briefItems==='function'){const b0=briefItems;window.briefItems=briefItems=function(){const sec=b0.apply(this,arguments);try{const x=brief();if(x.length)sec.unshift(...x)}catch(e){console.warn(e)}return sec}}
 /* a red card on Home too, so a decision is never missed */
-if(typeof homeView==='function'){const h0=homeView;homeView=function(){const out=h0.apply(this,arguments);try{const n=(S.injq||[]).filter(q=>mineW(q.id)).length+tampOpen().length;
- if(!n)return out;const k=`<div class="card warn" onclick="openBrief()" style="cursor:pointer"><b>🚑🕵️ ${n} front-office decision${n>1?'s':''} waiting</b><div class="muted">Injuries and tampering rumors — tap to open the briefing.</div></div>`;const i=out.indexOf('<div class="tiles">');return i<0?k+out:out.slice(0,i)+k+out.slice(i)}catch(e){return out}}}
+/* v201: front-office decisions are counted in the briefing strip on Home */
 })();

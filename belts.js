@@ -75,9 +75,7 @@ if(typeof wcard==='function'){const w0=wcard;wcard=function(w,o){let h=w0.apply(
  const strip=`<span class="inf btlb" title="${esc(t.n)} champion">${b?`<img src="${b}" alt="">`:'🏆'}<i>${o&&o.tight?esc(TIGHT[t.id]||SHORT[t.id]||t.n):esc(SHORT[t.id]||t.n)+' champ'}</i></span>`;
  if(/<span class="inf">[^<]*<\/span>/.test(h))h=h.replace(/<span class="inf">[^<]*<\/span>/,strip);else{const i=h.lastIndexOf('</div></button>');if(i>0)h=h.slice(0,i)+strip+h.slice(i)}}catch(e){}return h}}
 /* Titles screen: the belt on each title card, plus the studio button */
-if(typeof titlesView==='function'){const t0=titlesView;titlesView=function(){let out=t0.apply(this,arguments);try{
- Object.values(S.titles).forEach(t=>{const p=plate(t.id,84);if(!p)return;const mark=`<div class="h">${t.n}</div>`;const i=out.indexOf(mark);if(i<0)return;const j=out.indexOf('<div class="champ">',i);if(j>0)out=out.slice(0,j)+p+out.slice(j)});
- const b=`<button class="btn sec" style="margin:0 0 12px" onclick="openBelts()">🏆 Belt photos — add the real belts</button>`;const k=out.indexOf('<p class="muted">The titles were split');out=k<0?out+b:out.slice(0,k)+b+out.slice(k)}catch(e){console.warn(e)}return out}}
+/* v201: the Titles screen draws a small belt on each row itself and has its own Belt photos chip */
 /* Office → Photo Studio gets a shortcut too */
 if(typeof openStudio==='function'){const s0=openStudio;openStudio=function(){const out=s0.apply(this,arguments);try{const m=document.querySelector('#modal .mhd');if(m&&!document.getElementById('beltBtn'))m.insertAdjacentHTML('afterend',`<button id="beltBtn" class="btn sec" style="margin:8px 0" onclick="openBelts()">🏆 Belt photos</button>`)}catch(e){}return out}}
 /* ROH champions card: a small belt next to each title */

@@ -31,17 +31,19 @@ function calStrip(){if(!S||S.phase!=='season')return '';const np=nextPPV();let c
  const left=SEASON-S.week;
  return `<div class="card seascal" onclick="openCal()" role="button" aria-label="Open the season calendar"><div class="row sb"><span class="h small" style="margin:0">📅 Week ${Math.min(S.week,SEASON)} of ${SEASON}</span><span class="muted tiny">${np?(np.in===0?`<b class="gold">${esc(np.n)} this week</b>`:`<b class="gold">${esc(np.n)}</b> in ${np.in} wk${np.in>1?'s':''}`):''} · ${left?`${left} to go`:'last week'} ▸</span></div><div class="calstrip">${cells}</div></div>`}
 /* the full calendar */
-function openCal(){if(!S||!S.w)return;const names=showNames();const out=[];let lastBlock=-1;
- for(let w=1;w<=SEASON;w++){const blk=Math.ceil(w/4);
-  if(blk!==lastBlock){lastBlock=blk;const end=blk*4;out.push(`<div class="calhd${end<S.week?' past':''}">${PPVS[end]?`Road to ${esc(PPVS[end])}`:`Weeks ${end-3}–${end}`}</div>`)}
+function openCal(){if(!S||!S.w)return;const names=showNames();const out=[],pastOut=[];let lastBlock=-1;
+ /* v201: weeks already played fold into one line; quiet weeks are slim rows */
+ for(let w=1;w<=SEASON;w++){const blk=Math.ceil(w/4);const dst=w<S.week?pastOut:out;
+  if(blk!==lastBlock){lastBlock=blk;const end=blk*4;dst.push(`<div class="calhd${end<S.week?' past':''}">${PPVS[end]?`Road to ${esc(PPVS[end])}`:`Weeks ${end-3}–${end}`}</div>`)}
   const past=w<S.week,now=w===S.week;const ppv=PPVS[w];const sp=SPECIALS[w];const k=calKind(w);
   const name=ppv?ppv:sp?`${sp} <span class="muted">(${esc(names.p)} special)</span>`:`${esc(names.p)}`;
   const notes=(ppv?calPPVNote(w):[]).concat(calWeekNotes(w));const cons=past?[]:calCons(w);
   if(cons.length)notes.push(`⏳ Last week under contract: ${cons.map(x=>x.name).join(', ')}`);
   const away=w-S.week;
-  out.push(`<div class="calrow ${k}${past?' past':''}${now?' now':''}"><div class="calwk">W${w}</div><div class="calbody"><div class="row sb" style="gap:8px"><b class="${ppv?'gold':''}">${ppv?(SUPER(w)?'🌟 ':'🏆 '):sp?'📺 ':''}${ppv?esc(ppv):name}</b><span class="muted tiny" style="flex:none">${now?'<b class="gold">This week</b>':past?'':away===1?'Next week':`In ${away} wks`}</span></div>${ppv?`<div class="tiny muted">${CAL_WWE.has(ppv)?'WWE':'AEW'} pay-per-view</div>`:''}${notes.length&&!past?notes.map(x=>`<div class="tiny">${esc(x)}</div>`).join(''):''}</div></div>`)}
+  const plain=!ppv&&!sp&&(!notes.length||past)&&!now;
+  dst.push(`<div class="calrow ${k}${past?' past':''}${now?' now':''}${plain?' plain':''}"><div class="calwk">W${w}</div><div class="calbody"><div class="row sb" style="gap:8px"><b class="${ppv?'gold':''}">${ppv?(SUPER(w)?'🌟 ':'🏆 '):sp?'📺 ':''}${ppv?esc(ppv):name}</b><span class="muted tiny" style="flex:none">${now?'<b class="gold">This week</b>':past?'':away===1?'Next week':`In ${away} wks`}</span></div>${ppv?`<div class="tiny muted">${CAL_WWE.has(ppv)?'WWE':'AEW'} pay-per-view</div>`:''}${notes.length&&!past?notes.map(x=>`<div class="tiny">${esc(x)}</div>`).join(''):''}</div></div>`)}
  const np=nextPPV();
- openModal(`<div class="h mhd">📅 Season ${S.season} calendar</div><div class="muted" style="margin:-4px 0 8px">Week ${Math.min(S.week,SEASON)} of ${SEASON}${np?` · next PPV: <b class="gold">${esc(np.n)}</b>${np.in?` in ${np.in} week${np.in>1?'s':''}`:' this week'}`:''}. After week ${SEASON} the year ends: awards, then the offseason.</div><div class="calstrip big">${Array.from({length:SEASON},(_,i)=>{const w=i+1;return `<i class="cw ${calKind(w)}${w<S.week?' past':''}${w===S.week?' now':''}"></i>`}).join('')}</div><div class="callist">${out.join('')}</div><button class="btn mt" onclick="closeModal()">Close</button>`);
+ openModal(`<div class="h mhd">📅 Season ${S.season} calendar</div><div class="muted" style="margin:-4px 0 8px">Week ${Math.min(S.week,SEASON)} of ${SEASON}${np?` · next PPV: <b class="gold">${esc(np.n)}</b>${np.in?` in ${np.in} week${np.in>1?'s':''}`:' this week'}`:''}. After week ${SEASON} the year ends: awards, then the offseason.</div><div class="calstrip big">${Array.from({length:SEASON},(_,i)=>{const w=i+1;return `<i class="cw ${calKind(w)}${w<S.week?' past':''}${w===S.week?' now':''}"></i>`}).join('')}</div><div class="callist">${pastOut.length?`<details class="calpast"><summary><span>Weeks 1–${S.week-1}</span><span class="muted tiny">${esc(Object.entries(PPVS).filter(([w])=>+w<S.week).map(([,n])=>n).join(' · ')||'played')}</span></summary>${pastOut.join('')}</details>`:''}${out.join('')}</div><button class="btn mt" onclick="closeModal()">Close</button>`);
  /* open on this week, not week 1 */
  setTimeout(()=>{const el=document.querySelector('#modal .calrow.now');if(el&&el.scrollIntoView)el.scrollIntoView({block:'center'})},60)}
 /* styles */
@@ -57,6 +59,8 @@ function openCal(){if(!S||!S.w)return;const names=showNames();const out=[];let l
 .calhd{font:700 12px 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--gold2);margin:12px 0 4px}
 .calhd.past{color:var(--mut)}
 .calrow{display:flex;gap:10px;padding:7px 8px;border-radius:8px;margin:2px 0}
+.calrow.plain{padding:3px 8px;font-size:13px}.calrow.plain b{font-weight:500;color:var(--mut)}
+details.calpast{background:#141519;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:6px 0}details.calpast>summary{display:flex;justify-content:space-between;gap:10px;cursor:pointer;font-weight:700;list-style:none}details.calpast>summary::-webkit-details-marker{display:none}details.calpast>summary .tiny{text-align:right}
 .calrow.ppv,.calrow.sup{background:rgba(216,180,73,.08);border:1px solid rgba(216,180,73,.25)}
 .calrow.past{opacity:.45}
 .calrow.now{outline:2px solid var(--gold2)}
