@@ -159,9 +159,14 @@ Party night is a way to play an online league, not a separate game. It uses the 
 ## Your games
 Tap **⇄** at the top to see every game on this device — several solo games plus any online leagues — and switch between them. When you have more than one, the game opens on this list (tap outside it to carry on where you left off).
 
-**Move a game to your home-screen app or another device:** in ⇄ Your games, tap **⋯ → Move**. A league gives you its seat code; a solo game makes a one-time move code. Open the game where you want it, tap **⇄ → Receive a game**, and paste the code. Mid-draft is fine. Cloud save follows one solo game at a time — the Office shows which.
+**Move a game to your home-screen app or another device:** in ⇄ Your games, tap **⋯ → Move**. A league gives you its seat code; a solo game makes a one-time move code. Open the game where you want it, tap **⇄ → Receive a game**, and paste the code. Mid-draft is fine.
 
 ## Your saves
 Turn on **Office → Cloud save** to back up automatically and continue on any device with your sync code (needs the one-time Firebase setup in [ONLINE-SETUP.md](ONLINE-SETUP.md)). The game also keeps automatic backups of your last few weeks under **Office → Backups**.
+
+- **Every solo game syncs both ways.** Each game has its own slot under your sync code. Enter the code on another device and all your games appear in ⇄ Your games there; play any of them anywhere and the others catch up.
+- **Saving stays safe.** Everything saves on the device first and the cloud catches up in the background (offline play queues). An upload only lands if nobody else saved that game since this device last synced it, so nothing is overwritten blindly. If both devices played the same game before syncing, you're asked which save to keep — never decided for you — and the other is kept as a backup. A newer cloud save never replaces unsynced play on this device, the game you're playing gets a backup first, and nothing swaps while you're mid-show or mid-edit.
+- **Deleting is reversible.** Deleting a game removes it from your other devices, but its cloud copy stays: **Backups → Deleted games** brings it back everywhere. A device that played a game after it was deleted elsewhere keeps it and puts it back.
+- **Updating from v195 or earlier** is automatic: the game cloud save used to follow keeps one shared id on every device, games that already had a cloud copy are matched up instead of uploaded twice, and a device still on an older version keeps syncing until it updates. No Firebase rule changes are needed.
 
 Saves and photos live on each device, inside the installed app. The installed app does **not** share saves with a copy opened from Files or a browser tab, so use **Office → Export** in the old copy and **Import** in the new one to move a season over (and **Export Photo Pack / Import Photo Pack** for pictures). Exporting now and then is a good backup.

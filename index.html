@@ -1036,7 +1036,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v195';
+const APP_VERSION='v196';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4230,7 +4230,7 @@ const HOWTO=`<p><b>📅 The calendar:</b> the strip on the Home screen (or <b>WK
 <p><b>League weeks:</b> everyone books the same week at the same time, on their own phone, whenever suits them. Make your calls, lock in, and the week airs the moment the last GM locks in — cards stay secret until then. While anyone is still booking, even smaller free agents take sealed offers instead of going to whoever taps first: if two GMs want the same wrestler, they usually pick the hotter show. (Prefer the old way? Office → League weeks → Take turns.)</p><p><b>League drafts:</b> everyone creates wrestlers at the same time, and the draft starts once the last GM is ready. Picks still go in order — but you can line up to 10 picks in <b>Your queue</b> (open a wrestler and tap <b>Add to my queue</b>). When you're on the clock, the first one still available and under your cap is picked for you, even with the app closed.</p>
 <p><b>Draft board:</b> during the draft, tap <b>Draft board</b> to see every GM's roster as it fills up — round by round, newest pick on top, with payroll and cap room.</p>
 <p><b>Party night:</b> any online league can play in the same room. Start it from the league's Office and everyone locks in their card, then GMs go live one at a time: you make your promo and match calls on your phone while the TV shows every choice and outcome to the room. The week airs when the last GM wraps up. To put it on a TV, open the game there, tap <b>Show a league on this screen</b> and enter the league code — the TV shows who's still booking and plays the results head to head, alternating between shows, with the better segment in each slot winning the round. End party night any time and the league goes back to taking turns with the same save. The TV goes full screen (press <b>F</b> or tap ⛶ to switch) and shows the draft as a live board of every GM's picks.</p>
-<p><b>Cloud save &amp; backups:</b> turn on cloud save in the ⚙️ Game menu to back up automatically and continue on any device with your sync code. Everything still saves on the device first, so offline play just works and syncs later. The game also keeps automatic backups of your last few weeks (Office → Backups).</p>
+<p><b>Cloud save &amp; backups:</b> turn on cloud save in the ⚙️ Game menu and every solo game you play backs up automatically and syncs both ways with your other devices — enter your sync code on another device and all your games show up in ⇄ Your games there, kept in step whichever one you play. Everything still saves on the device first, so offline play just works and syncs later. If the same game was played on two devices before they synced, you're asked which save to keep and the other is kept as a backup. Deleting a game removes it from your other devices too, but its cloud copy stays under Backups → Deleted games. The game also keeps automatic backups of your last few weeks (Office → Backups).</p>
 <p><b>Show structure</b> counts toward the show rating, the way AEW's quarter-hour numbers reward it: open hot with a strong segment, keep the middle moving (back-to-back promos and dead spots cost you), build through the second half, and make the main event the best thing on the show. Every show needs something for the women's division if you have one. The Show flow card on the booking screen previews it — hold and drag segments to change the running order.</p>
 <p><b>Debuts:</b> anyone you sign during the season arrives with debut buzz. Their first appearance on your show — match or promo — pops the crowd: the bigger the star, the bigger the bump in stars and fans (a PPV debut is bigger still). Wait more than a few weeks and the buzz wears off.</p>
 <p><b>Quick booking:</b> hold and drag segments to reorder the card, drag one wrestler's name onto another's to swap them between segments, or drag someone from the locker room onto a name or an empty slot. When you add a wrestler to a match or promo, their top rival is added as the opponent automatically — tap to change it.</p>
@@ -4549,11 +4549,9 @@ function soloSid(){const m=soloMeta();if(!m.sid){m.sid=newCode(8);LS.set('tksim_
 const inApp=()=>!!(window.matchMedia&&matchMedia('(display-mode: standalone)').matches||navigator.standalone);
 /* put the solo game you're playing on the shelf (nothing is lost if this fails: it throws before touching your save) */
 async function shelveSolo(){if(S&&!ON()&&!TV)saveLocal();const st=soloState();if(!st||!st.w)return;const sid=soloSid(),m=soloMeta();
- /* the cloud copy follows this game: send its last changes up before it goes on the shelf (the upload reads the save right away) */
- if(cloudOn()&&(CL_T||(cloudCfg()||{}).pending)&&cloudMode()==='linked')cloudPush();
- const at=m.at||Date.now(),data=JSON.stringify(st);await shelfPut(sid,data);const l=shelfList().filter(x=>x.id!==sid);l.unshift({id:sid,label:saveLabel(st),t:soloTitle(st),sub:stageTxt(st),at,meta:m,cl:m.cl||0});shelfSet(l);
- cgUp(sid,data,st,at).then(ok=>{if(ok)cgMark(sid,at)});
- try{localStorage.removeItem(KEY)}catch(e){}LS.set('tksim_meta','{}')}
+ /* it keeps its id and save time on the shelf, so cloud sync carries on with it there */
+ const at=m.at||0,data=JSON.stringify(st);await shelfPut(sid,data);const l=shelfList().filter(x=>x.id!==sid);l.unshift({id:sid,label:saveLabel(st),t:soloTitle(st),sub:stageTxt(st),at,meta:m});shelfSet(l);
+ try{localStorage.removeItem(KEY)}catch(e){}LS.set('tksim_meta','{}');cloudSoon()}
 function leaveLeagueView(){if(!ON()||TV)return;if(typeof MP_UNSUB!=='undefined'&&MP_UNSUB){MP_UNSUB();MP_UNSUB=null}saveLocal();LMP=null;LS.del('tksim_active')}
 function afterSoloLoad(){S=load();if(S&&(!S.w||!S.phase))S=null;if(S){dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);showMigrate()}closeModal();tab='home';ANIM=true;render();if(S)loadRepoPhotos();cloudCheck()}
 /* Order matters in the switches below: shelve the solo game first (it throws before touching anything), and only then
@@ -4564,7 +4562,7 @@ async function openSolo(id){if(TV)return toast('Exit TV mode first (top right).'
  try{await shelveSolo()}catch(e){console.warn(e);return toast("Couldn't switch games — your device may be out of storage.")}
  leaveLeagueView();
  try{localStorage.setItem(KEY,data)}catch(e){console.warn(e);afterSoloLoad();return toast("Couldn't switch games — your device may be out of storage. Both games are safe in ⇄ Your games.")}
- LS.set('tksim_meta',JSON.stringify(Object.assign({},ent.meta||{},{sid:id,cl:ent.cl||0})));
+ LS.set('tksim_meta',JSON.stringify(Object.assign({},ent.meta||{},{sid:id,at:ent.at||0})));
  try{shelfSet(shelfList().filter(x=>x.id!==id));await shelfDel(id)}catch(e){}afterSoloLoad()}
 function openActiveSolo(){if(TV)return toast('Exit TV mode first (top right).');if(ON())return mpSolo();closeModal()}
 async function newSolo(){if(TV)return toast('Exit TV mode first (top right).');try{await shelveSolo()}catch(e){return toast("Couldn't put your current game away — your device may be out of storage.")}leaveLeagueView();S=null;closeModal();tab='home';ANIM=true;render();toast('Your other games are saved in ⇄ Your games.')}
@@ -4620,7 +4618,7 @@ async function restoreAll2(d){openModal(`<div class="h mhd">Restoring…</div><p
  /* league seats: add any this device doesn't already know */
  try{const bg=JSON.parse(ls.tksim_games||'[]');const l=mpGames();const codes=new Set(l.map(g=>g.code));bg.forEach(g=>{if(!codes.has(g.code)){l.push(g);added++}});if(bg.length)put('tksim_games',JSON.stringify(l))}catch(e){}
  /* everything else (league copies, device id, name, alerts, cloud link…) only fills gaps — nothing here is replaced */
- for(const k of Object.keys(ls)){if(k===KEY||k===SHELF||k==='tksim_games'||k==='tksim_meta'||BK_SKIP(k))continue;if(localStorage.getItem(k)==null)put(k,ls[k])}
+ for(const k of Object.keys(ls)){if(k===KEY||k===SHELF||k==='tksim_games'||k==='tksim_meta'||k==='tksim_dev'||BK_SKIP(k))continue;if(localStorage.getItem(k)==null)put(k,ls[k])}
  /* photos */
  const img=d.img||{};const puts=Object.entries(img).filter(([k,v])=>typeof v==='string'&&v.startsWith('data:image/')&&!IMG[k]);
  if(puts.length){try{await IMGREADY}catch(e){}puts.forEach(([k,v])=>IMG[k]=v);
@@ -4684,139 +4682,222 @@ async function delGame(k,id,cur){const g=gamesList().find(x=>x.k===k&&x.id===id)
  if(k==='league'){if(ON()&&LMP&&LMP.code===id)return mpLeave();const gm=mpGames().find(x=>x.code===id);if(!confirm(`Remove ${g.t} from this device? The other GMs keep playing; you can rejoin with your seat code${gm&&gm.key?` (${id}-${gm.key})`:''}.`))return;
   LS.del('tksim_game_'+id);LS.del(mpUnsentKey(id));LS.del(mpUnsentKey(id)+'_n');LS.set('tksim_games',JSON.stringify(mpGames().filter(x=>x.code!==id)));LS.set('tksim_gone',JSON.stringify(mpGone().filter(c=>c!==id).concat([id]).slice(-30)));cloudSoon();return openGames()}
  if(!confirm(`Delete ${g.t} (${g.sub})? ${cur?'A copy is kept under Backups for a while.':'This can\'t be undone.'}`))return;
- if(cloudOn()&&TKO.cloudGameDrop)TKO.cloudGameDrop(cloudCfg().id,cur?soloSid():id).catch(()=>{});
- if(cur){localBackup('Before deleting this game');try{localStorage.removeItem(KEY)}catch(e){}LS.set('tksim_meta','{}');if(!ON()){S=null;render()}}
+ /* other devices drop it too; its cloud copy stays under Backups → Deleted games */
+ {const sid=cur?soloSid():id;if(cloudCfg()){syncPut(sid,{del:true});if(cloudOn()&&TKO.cloudGameDrop)TKO.cloudGameDrop(cloudCfg().id,sid).catch(()=>{})}}
+ if(cur){localBackup('Before deleting this game',null,soloSid());try{localStorage.removeItem(KEY)}catch(e){}LS.set('tksim_meta','{}');if(!ON()){S=null;render()}}
  else{await shelfDel(id);try{shelfSet(shelfList().filter(x=>x.id!==id))}catch(e){}}
  openGames()}
 
 
 /* ---- automatic local backups (last 5 weeks + a snapshot before anything replaces your save) ---- */
 function localBackups(){try{return JSON.parse(LS.get('tksim_bk')||'[]')}catch(e){return []}}
-function localBackup(why,st){st=st||soloState();if(!st||!st.w)return;const l=localBackups();const tag=`${st.season}-${st.week}`;
- const rest=l.filter(b=>!(b.tag===tag&&!b.why&&!why));rest.unshift({tag,why:why||'',at:Date.now(),label:saveLabel(st),data:JSON.stringify(st)});
+function localBackup(why,st,sid){st=st||soloState();if(!st||!st.w)return;if(!sid&&st===soloState())sid=soloMeta().sid;const l=localBackups();const tag=`${st.season}-${st.week}`;
+ const rest=l.filter(b=>!(b.tag===tag&&(b.sid||'')===(sid||'')&&!b.why&&!why));rest.unshift({tag,why:why||'',at:Date.now(),label:saveLabel(st),t:soloTitle(st),sid:sid||'',data:JSON.stringify(st)});
  const keep=[];let auto=0,manual=0;for(const b of rest){if(b.why?manual++<3:auto++<CLOUD_BK)keep.push(b)}
  for(let n=keep.length;n>0;n--){try{LS.set('tksim_bk',JSON.stringify(keep.slice(0,n)));return}catch(e){}}}
 
-/* ---- cloud sync ---- */
-let CL_T=null,CL_BUSY=false,CL_STATUS='';
-function cloudSoon(){if(!cloudOn())return;if(cloudMode()==='other'){clearTimeout(CG_T);CG_T=setTimeout(cgActive,4000);return}clearTimeout(CL_T);CL_T=setTimeout(cloudPush,2500)}
-/* ---- a cloud copy of every solo game ----
- Cloud save follows one game live. Every other solo game on the device gets its own cloud copy too: when it goes
- into ⇄ Your games, and as you play it when cloud save is following a different game. Those copies can be added
- to any device from Backups. Uploads queue while offline; anything that didn't make it is retried on the next sync. */
-let CG_T=null,CG_SWEEP=false;
-function cgUp(sid,data,st,at){if(!cloudOn()||!TKO.cloudGamePut)return Promise.resolve(false);const c=cloudCfg();
- return TKO.cloudGamePut(c.id,sid,{state:data,label:saveLabel(st),t:soloTitle(st),sub:stageTxt(st),at,dev:devId(),game:sid===c.sid&&c.game||''}).then(()=>true,e=>{console.warn('cloud copy failed',e);return false})}
-function cgMark(sid,at){try{const l=shelfList();const x=l.find(e=>e.id===sid);if(x&&(x.at||0)<=at){x.cl=at;shelfSet(l)}}catch(e){}}
-function cgActive(){clearTimeout(CG_T);CG_T=null;if(!cloudOn()||cloudMode()!=='other')return;if(S&&!ON()&&!TV)saveLocal();const st=soloState();if(!st||!st.w)return;
- const m=soloMeta(),at=m.at||Date.now();if((m.cl||0)>=at)return;const sid=soloSid();
- cgUp(sid,JSON.stringify(st),st,at).then(ok=>{if(!ok)return;const m2=soloMeta();if(m2.sid===sid){m2.cl=Math.max(m2.cl||0,at);LS.set('tksim_meta',JSON.stringify(m2))}})}
-async function cgSweep(){if(CG_SWEEP||!cloudOn())return;CG_SWEEP=true;
- try{if(cloudMode()==='other')cgActive();
-  for(const x of shelfList()){if((x.cl||0)>=(x.at||1))continue;const data=await shelfGet(x.id);let st=null;try{st=JSON.parse(data)}catch(e){}if(!st||!st.w)continue;
-   if(await cgUp(x.id,data,st,x.at||Date.now()))cgMark(x.id,x.at||0);else break}}
- finally{CG_SWEEP=false}}
-/* with several solo games, cloud save follows one of them: the one it was turned on with */
-function cloudMode(){const c=cloudCfg();if(!c)return 'none';const st=soloState();if(st&&st.w){const sid=soloSid();if(!c.sid){c.sid=sid;cloudSet(c)}return c.sid===sid?'linked':'other'}return c.sid&&shelfList().some(x=>x.id===c.sid)?'other':'none'}
-/* `game` tags which game the cloud copy is. When another device switches cloud save to a different game ("Sync this
- game instead"), the tag changes, and this device puts its own game on the shelf instead of overwriting it. */
-function cloudPayload(){const md=cloudMode();const st=md==='linked'?soloState():null,m=soloMeta();const c=cloudCfg()||{};const p={state:st?JSON.stringify(st):'',label:saveLabel(st),at:m.at||Date.now(),rev:(m.rev||0),dev:devId(),leagues:JSON.stringify(mpGames())};if(c.game)p.game=c.game;p._bk=st&&st.w?`${st.season}-${st.week}`:'';return p}
-/* writes are queued by Firebase while offline and sent later, so don't wait on them forever */
-/* one upload at a time: a second request while one is in flight just runs again afterwards */
-let CL_PUSHING=null,CL_AGAIN=false;
-function cloudPush(){if(CL_PUSHING){CL_AGAIN=true;return CL_PUSHING}
- CL_PUSHING=cloudPush0().finally(()=>{CL_PUSHING=null;if(CL_AGAIN){CL_AGAIN=false;cloudPush()}});return CL_PUSHING}
-async function cloudPush0(){clearTimeout(CL_T);CL_T=null;
- /* cloudMode() may record which game cloud save follows, so read the settings after it */
- if(!cloudCfg()||!cloudOn()||cloudMode()==='other')return;const c=cloudCfg();
- const base=c.rev||0;const p=cloudPayload();const bk=p._bk;delete p._bk;p.rev=base+1;const at0=soloMeta().at||0;c.pending=true;cloudSet(c);CL_STATUS='syncing';let ok=0;
- try{const r=await TKO.cloudPut(c.id,p,base);if(typeof r==='number')p.rev=r;ok=1}catch(e){if(String(e&&e.message).includes('conflict')){CL_STATUS='';if(!CL_BUSY)setTimeout(()=>cloudCheck(),0);return}console.warn('cloud save failed',e)}
- const c2=cloudCfg();if(ok&&c2&&c2.id===c.id){c2.rev=Math.max(p.rev,c2.rev||0);c2.at=p.at;c2.synced=Date.now();
-  /* anything saved while the upload was in flight still needs to go up */
-  c2.pending=(soloMeta().at||0)>at0;if(c2.pending)CL_AGAIN=true;
-  /* weekly cloud backup (5 rotating slots) */
-  if(bk&&c2.lastBk!==bk){c2.lastBk=bk;c2.bkn=((c2.bkn||0)+1)%CLOUD_BK;TKO.cloudBackup(c2.id,c2.bkn,{state:p.state,label:p.label,at:p.at}).catch(()=>{})}
-  cloudSet(c2);CL_STATUS=''}else CL_STATUS='offline';
- if(tab==='office'&&$('#modal').classList.contains('hidden')&&S)render()}
+/* ===================== CLOUD SYNC (v196): every solo game, both ways =====================
+ Your sync code holds every solo game you play, each in its own slot (saves/{code}/games/{id}), and every device on
+ the code keeps all of them up to date. The rules that keep saves safe:
+   • Everything saves on the device first. The cloud catches up in the background and nothing waits on it.
+   • An upload only lands if nobody else saved that game since this device last synced it. If both sides changed,
+     you're asked which to keep — never decided silently — and the other version is kept as a backup.
+   • A newer cloud version only replaces a game that has no unsynced changes on this device, and the game you're
+     playing gets a backup first. Nothing is applied while you're mid-show or mid-edit.
+   • Deleting a game hides it from your other devices, but its cloud copy stays: Backups → Deleted games brings it back.
+   • Uploads and checks run one at a time, so two of them never race on the same game.
+ Saves from older versions of the app (one game in the main save document) are brought over once, and a device still
+ on an older version keeps working: its uploads are picked up and passed on. */
+let CL_T=null,CL_BUSY=false,CL_STATUS='',CL_DEFER=false,CL_PEND=null,CL_BIG='';
+const SYNC='tksim_sync';
+/* per-game sync records for this sync code: rev = the cloud version we last saw, at = the local save time that
+   version matches (newer local saves are unsynced), try = the save time of an upload whose answer we never got */
+function syncMap(){const c=cloudCfg();let s=null;try{s=JSON.parse(LS.get(SYNC)||'null')}catch(e){}if(!s||!s.g||!c||s.code!==c.id)s={code:c?c.id:'',g:{}};return s}
+function syncRec(sid){return syncMap().g[sid]||null}
+function syncPut(sid,rec){const s=syncMap();if(rec===null)delete s.g[sid];else s.g[sid]=Object.assign({},s.g[sid]||{},rec);try{localStorage.setItem(SYNC,JSON.stringify(s))}catch(e){console.warn('sync record',e)}}
+function activeSid(){const st=soloState();return st&&st.w?soloSid():null}
+/* every solo game on this device */
+function localGames(){const out=[];const a=activeSid();if(a)out.push({sid:a,at:soloMeta().at||0,active:true});shelfList().forEach(x=>{if(x&&x.id&&x.id!==a)out.push({sid:x.id,at:x.at||0})});return out}
+function isDirty(g){const r=syncRec(g.sid);return !r||r.at==null||(g.at||0)>r.at}
+function cloudPendingAny(){if(!cloudCfg())return false;try{return localGames().some(isDirty)||LS.get('tksim_lgsent')!==JSON.stringify(mpGames())}catch(e){return false}}
+/* read by id at the moment of use: the game may have moved between playing and the shelf since the list was made */
+async function localData(g){if(activeSid()===g.sid){if(S&&!ON()&&!TV)saveLocal();const st=soloState();return st&&st.w&&soloMeta().sid===g.sid?JSON.stringify(st):null}return shelfGet(g.sid)}
+/* one sync job at a time */
+let CL_Q=Promise.resolve();
+function syncQ(fn){const p=CL_Q.then(fn,fn);CL_Q=p.catch(()=>{});return p}
+function clRender(){if(tab==='office'&&$('#modal').classList.contains('hidden')&&S)render()}
+
+/* ---- uploading ---- */
+async function pushOne(g){const c=cloudCfg();if(!c||!cloudOn())return 'off';
+ const data=await localData(g);if(!data)return 'nodata';let st=null;try{st=JSON.parse(data)}catch(e){}if(!st||!st.w)return 'bad';
+ const r=syncRec(g.sid)||{};const at=g.at||Date.now();syncPut(g.sid,{try:at});
+ try{const rev=await TKO.cloudSlotPut(c.id,g.sid,{state:data,label:saveLabel(st),t:soloTitle(st),sub:stageTxt(st),at,dev:devId()},r.rev||0);
+  /* anything saved while this was in flight has a newer time than `at`, so it stays unsynced and goes up next */
+  syncPut(g.sid,{rev,at,try:null,mig:false,del:false,synced:Date.now()});cloudBk(c.id,g.sid,st,data,at);return 'ok'}
+ catch(e){const m=String(e&&e.message||e);if(m.includes('conflict'))return 'conflict';console.warn('cloud save failed',e);
+  /* a save too big for one cloud document can't go up at all: say so instead of waiting forever */
+  if(/exceed|maximum|too large|size/i.test(m)){CL_BIG=soloTitle(st);}return 'fail'}}
+/* weekly cloud backups (5 rotating slots, shared by all your games) */
+function cloudBk(id,sid,st,data,at){const c=cloudCfg();if(!c||c.id!==id)return;const tag=`${st.season}-${st.week}`;c.bkTag=c.bkTag||{};if(c.bkTag[sid]===tag)return;
+ c.bkTag[sid]=tag;c.bkn=((c.bkn||0)+1)%CLOUD_BK;cloudSet(c);TKO.cloudBackup(id,c.bkn,{state:data,label:saveLabel(st),t:soloTitle(st),at,sid}).catch(()=>{})}
+async function pushLeagues(){const c=cloudCfg();if(!c||!cloudOn()||!TKO.cloudLeaguesPut)return;const l=JSON.stringify(mpGames());if(LS.get('tksim_lgsent')===l)return;
+ try{await TKO.cloudLeaguesPut(c.id,l);LS.set('tksim_lgsent',l)}catch(e){}}
+async function pushDirty(){const c=cloudCfg();if(!c||!cloudOn())return;if(c.v!==2)return cloudCheck0();
+ CL_STATUS='syncing';let bad=0,clash=0;
+ for(const g of localGames()){if(!isDirty(g))continue;const r=await pushOne(g);if(r==='conflict')clash++;else if(r==='fail')bad++}
+ await pushLeagues();
+ if(clash)return cloudCheck0();
+ const c2=cloudCfg();if(c2&&!bad){c2.synced=Date.now();cloudSet(c2)}CL_STATUS=bad?'offline':'';clRender()}
+function cloudPush(){clearTimeout(CL_T);CL_T=null;return syncQ(pushDirty)}
+function cloudSoon(){if(!cloudOn())return;clearTimeout(CL_T);CL_T=setTimeout(cloudPush,2500)}
+
+/* ---- bringing a cloud version onto this device ---- */
+function applyCloud(d,sid,why){if(TV)return false;if(!ON()&&(PS||ME||LQ||ED||PE||CE))return false;
+ const st=JSON.parse(d.state);const cur=soloState();if(cur&&cur.w)localBackup(why||'Replaced by cloud save',cur,sid);
+ try{localStorage.setItem(KEY,d.state)}catch(e){console.warn(e);return false}
+ LS.set('tksim_meta',JSON.stringify({at:d.at||Date.now(),sid}));
+ if(!ON()){S=st;dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);showMigrate();closeModal();tab='home';ANIM=true;render();loadRepoPhotos()}return true}
+/* put a cloud version of a game on this device: the game you're playing, or one in ⇄ Your games */
+async function putLocal(sid,d,o){o=o||{};const st=JSON.parse(d.state);if(!st||!st.w||!st.phase)throw new Error('bad');const at=o.at!=null?o.at:(d.at||Date.now());
+ if(activeSid()===sid){if(!applyCloud(Object.assign({},d,{at}),sid,o.why))return false}
+ else{if(o.why){const old=await shelfGet(sid);if(old){try{localBackup(o.why,JSON.parse(old),sid)}catch(e){}}}await shelfPut(sid,d.state);const l=shelfList();const ent={id:sid,label:saveLabel(st),t:soloTitle(st),sub:stageTxt(st),at,meta:{at,sid}};const i=l.findIndex(x=>x.id===sid);if(i>=0)l[i]=ent;else l.push(ent);shelfSet(l)}
+ syncPut(sid,{rev:o.rev!=null?o.rev:(d.rev||0),at:o.dirty?-1:at,try:null,mig:false,lpend:false,del:false,synced:Date.now()});return true}
+/* a game deleted on another device leaves this one too (its cloud copy stays, under Backups → Deleted games) */
+async function dropLocal(sid){if(activeSid()===sid)return false;await shelfDel(sid);try{shelfSet(shelfList().filter(x=>x.id!==sid))}catch(e){}syncPut(sid,{del:true});return true}
+
+/* ---- checking the cloud: on open, coming back to the app, and Sync now ---- */
+function cloudCheck(manual){return syncQ(()=>cloudCheck0(manual))}
+async function cloudCheck0(manual){const c=cloudCfg();if(!c||!cloudOn())return;
+ /* a question is waiting on you; if its sheet was closed without an answer, ask again below */
+ if(CL_PEND){if(/two different saves/i.test($('#modal').textContent||''))return;CL_PEND=null}CL_BUSY=true;CL_STATUS='syncing';const note={got:0,add:0,drop:0};
+ try{const [d,idx]=await Promise.all([TKO.cloudGet(c.id),TKO.cloudGameList(c.id)]);
+  if(d)mergeLeagues(d.leagues);
+  if(cloudCfg().v!==2)await cloudMigrate(d);
+  /* a device still on an older version saves into the main document: bring that save in */
+  {const b=await legacyBridge(d,idx,manual);if(b==='stop')return}
+  const me=devId();const seen=new Set();
+  for(const g of localGames()){seen.add(g.sid);const m=idx[g.sid]&&!(idx[g.sid].game&&idx[g.sid].game!==g.sid)?idx[g.sid]:null;let r=syncRec(g.sid);const rev=(m&&m.rev)||0;
+   /* our own upload landed even though the answer never came back */
+   if(m&&r&&r.try!=null&&m.dev===me&&m.at===r.try&&rev>(r.rev||0)){syncPut(g.sid,{rev,at:r.try,try:null});r=syncRec(g.sid)}
+   /* first sync after the update: this game was already in the cloud, so settle it by save time instead of asking */
+   if(r&&r.mig&&m&&!m.gone){
+    /* it had changes the old version never uploaded, and the cloud copy differs: that's for you to decide */
+    if(r.lpend&&(m.at||0)!==(g.at||0)){if(busy()&&!manual){CL_DEFER=true;continue}const doc=await TKO.cloudGameGet(c.id,g.sid);if(doc&&doc.state){cloudConflict(g,doc);return}continue}
+    if((m.at||0)>(g.at||0)){const doc=await TKO.cloudGameGet(c.id,g.sid);if(doc&&doc.state){if(g.active&&busy()&&!manual){CL_DEFER=true;continue}if(await putLocal(g.sid,doc,{why:'Older than the cloud copy'}))note.got++}continue}
+    /* an old-style copy without a version number: upload this one over it to give it one */
+    if(!m.rev){syncPut(g.sid,{rev:0,at:-1,mig:false,lpend:false});const res=await pushOne(g);if(res==='fail')CL_STATUS='offline';continue}
+    /* same save as the cloud copy: in step; otherwise this device's is newer and goes up */
+    syncPut(g.sid,{rev,at:(m.at||0)===(g.at||0)?g.at:-1,mig:false,lpend:false});r=syncRec(g.sid)}
+   if(m&&m.gone&&!g.active&&r&&!r.mig&&!isDirty(g)){if(await dropLocal(g.sid))note.drop++;continue}
+   const known=(r&&r.rev)||0;
+   /* an old-style copy (no version number) from another device counts as newer only if it's newer than what we last synced */
+   const newer=!!(m&&!m.gone&&(rev>known||!m.rev&&m.dev!==me&&r&&r.at>=0&&(m.at||0)>r.at));
+   const dirty=isDirty(g);
+   if(newer&&dirty){if(busy()&&!manual){CL_DEFER=true;continue}const doc=await TKO.cloudGameGet(c.id,g.sid);if(doc&&doc.state){cloudConflict(g,doc);return}}
+   else if(newer){if(g.active&&busy()&&!manual){CL_DEFER=true;continue}const doc=await TKO.cloudGameGet(c.id,g.sid);if(doc&&doc.state){if(await putLocal(g.sid,doc))note.got++;else CL_DEFER=true}}
+   else if(dirty||m&&m.gone){const res=await pushOne(g);if(res==='conflict'){setTimeout(()=>cloudCheck(),1500)}else if(res==='fail'){CL_STATUS='offline'}}}
+  /* games in the cloud this device doesn't have yet */
+  for(const sid of Object.keys(idx)){const m=idx[sid];if(seen.has(sid)||!m||m.gone||sid==='INDEX000'||sid.length!==8||m.game&&m.game!==sid)continue;const r=syncRec(sid);
+   if(r&&r.del&&(m.rev||0)<=(r.rev||0)){TKO.cloudGameDrop(c.id,sid).catch(()=>{});continue}
+   const doc=await TKO.cloudGameGet(c.id,sid);if(doc&&doc.state){try{if(await putLocal(sid,doc))note.add++}catch(e){console.warn('cloud game',e)}}}
+  await pushLeagues();
+  const c2=cloudCfg();if(c2&&CL_STATUS!=='offline'){c2.synced=Date.now();cloudSet(c2);CL_STATUS=''}
+  const msg=[note.got?`${note.got} game${note.got>1?'s':''} updated`:'',note.add?`${note.add} added to ⇄ Your games`:'',note.drop?`${note.drop} deleted on another device (kept under Backups)`:''].filter(Boolean);
+  if(msg.length)toast('☁️ '+msg.join(' · ')+'.');else if(manual&&CL_STATUS!=='offline')toast('☁️ Everything is synced.')}
+ catch(e){console.warn('cloud check',e);CL_STATUS='offline';if(manual)toast('You’re offline — your games are safe on this device and will sync later.')}
+ finally{CL_BUSY=false;clRender()}}
+
+/* ---- saves from older versions ---- */
+/* once per device: the game the old cloud save followed takes the id the old version tagged it with (the same on every
+   device), and games that already had a cloud copy are settled by save time instead of being uploaded twice */
+async function cloudMigrate(d){const c=cloudCfg();if(!c)return;const gid=(d&&d.game)||c.game||c.sid||newCode(8);
+ if(c.sid&&c.sid!==gid&&!(d&&d.game&&c.game&&d.game!==c.game)){
+  if(soloMeta().sid===c.sid&&activeSid()){const m=soloMeta();m.sid=gid;LS.set('tksim_meta',JSON.stringify(m))}
+  else{const e=shelfList().find(x=>x.id===c.sid);if(e&&!shelfList().some(x=>x.id===gid)){const v=await shelfGet(c.sid);if(v){await shelfPut(gid,v);const l=shelfList().map(x=>x.id===c.sid?Object.assign({},x,{id:gid,meta:Object.assign({},x.meta||{},{sid:gid})}):x);shelfSet(l);await shelfDel(c.sid)}}}}
+ const linked=c.sid?(c.sid===gid||!(d&&d.game&&c.game&&d.game!==c.game)?gid:c.sid):null;
+ for(const g of localGames()){const r=syncRec(g.sid);if(r)continue;
+  if(g.sid===linked){/* settled against the main save just below (the bridge), then by time against any slot */
+   syncPut(g.sid,{mig:true,at:-1,lpend:!!c.pending||(g.at||0)>(c.synced||0)})}
+  else{const e=shelfList().find(x=>x.id===g.sid);const cl=g.active?soloMeta().cl:e&&e.cl;if(cl&&cl>=(g.at||0))syncPut(g.sid,{mig:true,at:-1})}}
+ const c2=cloudCfg();c2.v=2;c2.game=gid;c2.lrev=(d&&d.game&&c.game&&d.game!==c.game)?0:(c.rev||0);delete c2.pending;cloudSet(c2)}
+/* a device on an older version saved into the main document: treat that as a cloud version of its game */
+async function legacyBridge(d,idx,manual){const c=cloudCfg();if(!d||!d.state||!c)return;const gid=d.game||c.game;if(!gid||gid.length!==8)return;
+ if((d.rev||0)<=(c.lrev||0))return;
+ const slot=idx[gid];const done=()=>{const c2=cloudCfg();if(c2){c2.lrev=d.rev||0;cloudSet(c2)}};
+ if(d.dev===devId()||slot&&!slot.gone&&(slot.at||0)>=(d.at||0)){done();return}
+ const g=localGames().find(x=>x.sid===gid);const doc={state:d.state,label:d.label,at:d.at,rev:(slot&&slot.rev)||0};
+ const gr=syncRec(gid)||{};if(g&&(gr.mig?gr.lpend:isDirty(g))){if(busy()&&!manual){CL_DEFER=true;return 'stop'}cloudConflict(g,doc,{bridge:d.rev||0});return 'stop'}
+ if(g&&g.active&&busy()&&!manual){CL_DEFER=true;return 'stop'}
+ /* bring it in, then send it on to the game's own slot so newer devices see it too */
+ if(await putLocal(gid,doc,{rev:(slot&&slot.rev)||0,dirty:true,why:'Replaced by cloud save'}))done();else{CL_DEFER=true;return 'stop'}}
+
+/* ---- when both sides changed ---- */
+function cloudConflict(g,d,o){CL_PEND={sid:g.sid,d,o:o||{}};CL_BUSY=false;
+ let here=null;const ent=shelfList().find(x=>x.id===g.sid);
+ const hereLab=g.active?saveLabel(soloState()):ent?ent.label:'This device';const hereT=g.active?soloTitle(soloState()):ent?ent.t:'';
+ openModal(`<div class="h mhd">Two different saves</div><p>${hereT?`<b>${esc(hereT)}</b> was`:'This game was'} played on this device and on another one since they last synced. Which one do you want to keep playing?</p>
+ <button class="choice" onclick="cloudResolve('here')"><span class="key"><span>A</span></span><div><b>This device</b> — ${esc(hereLab)}</div><div class="muted tiny">Saved ${whenTxt2(g.at)}</div></button>
+ <button class="choice" onclick="cloudResolve('cloud')"><span class="key"><span>B</span></span><div><b>Cloud</b> — ${esc(d.label||'')}</div><div class="muted tiny">Saved ${whenTxt2(d.at)} on another device</div></button>
+ <p class="muted tiny">The one you don't pick is kept as a backup (Office → Cloud save → Backups).</p>`)}
+async function cloudResolve(which){const P=CL_PEND;closeModal();if(!P){CL_PEND=null;return}const {sid,d,o}=P;
+ await syncQ(async()=>{
+  if(which==='cloud'){
+   const g=localGames().find(x=>x.sid===sid);if(g){const v=await localData(g);try{localBackup('This device’s version (not kept)',JSON.parse(v),sid)}catch(e){}}
+   CL_PEND=null;const ok=await putLocal(sid,d,o.bridge!=null?{rev:d.rev||0,dirty:true,why:'This device’s version (not kept)'}:{why:'This device’s version (not kept)'});
+   if(o.bridge!=null){const c=cloudCfg();if(c){c.lrev=o.bridge;cloudSet(c)}}
+   toast(ok?'☁️ Switched to the cloud save. This device’s version is in Backups.':'Couldn’t switch right now — nothing was changed.')}
+  else{try{localBackup('Cloud version (not kept)',JSON.parse(d.state),sid)}catch(e){}
+   /* upload over the cloud version you saw (and only that one) */
+   syncPut(sid,{rev:Math.max((syncRec(sid)||{}).rev||0,d.rev||0),mig:false,lpend:false,at:-1});if(o.bridge!=null){const c=cloudCfg();if(c){c.lrev=o.bridge;cloudSet(c)}}
+   CL_PEND=null;const g=localGames().find(x=>x.sid===sid);const r=g?await pushOne(g):'nodata';
+   toast(r==='ok'?'Kept this device’s save and uploaded it.':r==='conflict'?'The cloud changed again — checking…':'Kept this device’s save. It will upload when you’re back online.')}});
+ setTimeout(()=>cloudCheck(),300)}
+
 /* leagues removed on this device stay removed, even though the cloud list still has them */
 function mpGone(){try{return JSON.parse(LS.get('tksim_gone')||'[]')}catch(e){return []}}
 function mergeLeagues(json){let l=[];try{l=JSON.parse(json||'[]')}catch(e){}if(!l.length)return;const mine=mpGames(),gone=mpGone();l.forEach(g=>{if(g&&g.code&&!gone.includes(g.code)&&!mine.some(x=>x.code===g.code))mine.push(g)});LS.set('tksim_games',JSON.stringify(mine.slice(0,12)))}
-/* check the cloud when the game opens or comes back to the foreground */
 /* something on screen that a save swap would pull out from under the player */
 function busy(){return !!(PS||ME||LQ||ED||PE||CE||PK||CF||QP)||!$('#modal').classList.contains('hidden')}
-let CL_DEFER=false;
-async function cloudCheck(manual){if(cloudCfg())cloudMode();const c=cloudCfg();if(!c||!cloudOn()||CL_BUSY)return;CL_BUSY=true;
- try{const d=await TKO.cloudGet(c.id);if(!d){if(manual)toast('Cloud save not found — uploading this device’s copy.');CL_BUSY=false;return cloudPush()}
-  mergeLeagues(d.leagues);if(cloudMode()==='other'){CL_STATUS='';cgSweep();return}
-  /* another device switched cloud save to a different game: keep this device's game on the shelf and follow the new one */
-  if(d.state&&d.game&&d.game!==c.game){if(!ON()&&(busy()&&!manual||PS||ME||LQ||ED||PE||CE)){CL_DEFER=true;return}await cloudAdopt(d);CL_STATUS='';return}
-  if(d.dev===devId()&&(d.rev||0)>(c.rev||0)){c.rev=d.rev;cloudSet(c)}const m=soloMeta();const localDirty=!!c.pending||(m.at||0)>(c.synced||0);const cloudNewer=(d.rev||0)>(c.rev||0)&&d.dev!==devId();
-  /* the other device only changed its league list: take its version number and carry on */
-  if(cloudNewer&&!d.state){c.rev=d.rev;cloudSet(c);if(localDirty)await cloudPush();CL_STATUS='';return}
-  /* mid-show or mid-edit: don't swap saves now — try again when the screen closes */
-  if(cloudNewer&&!ON()&&busy()&&!manual){CL_DEFER=true;return}
-  if(cloudNewer&&localDirty&&soloState()&&d.state)return cloudConflict(d);
-  if(cloudNewer&&d.state){applyCloud(d,false);toast(`☁️ Loaded your latest save from the cloud (${d.label}).`)}
-  else if(localDirty||(d.rev||0)<(c.rev||0))await cloudPush();
-  else if(manual)toast('☁️ Everything is synced.');
-  const c2=cloudCfg();if(c2){c2.synced=Date.now();cloudSet(c2)}CL_STATUS='';cgSweep()}
- catch(e){CL_STATUS='offline';if(manual)toast('You’re offline — your save is safe on this device and will sync later.')}
- finally{CL_BUSY=false;if(tab==='office'&&$('#modal').classList.contains('hidden')&&S)render()}}
-function applyCloud(d,backupFirst){if(TV){CL_DEFER=false;return}if(!ON()&&(PS||ME||LQ||ED||PE||CE)){CL_DEFER=true;return}const cur=soloState();if(cur&&backupFirst!==false)localBackup('Before loading the cloud save',cur);else if(cur)localBackup('Replaced by cloud save',cur);
- const st=JSON.parse(d.state);try{localStorage.setItem(KEY,d.state)}catch(e){}LS.set('tksim_meta',JSON.stringify({at:d.at,rev:d.rev,sid:(cloudCfg()||{}).sid||soloMeta().sid}));
- const c=cloudCfg();if(c){c.rev=d.rev;c.at=d.at;c.pending=false;c.synced=Date.now();cloudSet(c)}
- if(!ON()){S=st;dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);showMigrate();closeModal();tab='home';ANIM=true;render();loadRepoPhotos()}}
-async function cloudAdopt(d){const had=soloState();
- /* this device's unsent changes belong to its own game, not the new cloud one */
- clearTimeout(CL_T);CL_T=null;{const c0=cloudCfg();if(c0){c0.pending=false;cloudSet(c0)}}
- if(had&&had.w){try{await shelveSolo()}catch(e){console.warn(e);CL_STATUS='offline';toast('☁️ Cloud save moved to another game, but this device is out of storage. Your game here is untouched — export it from the ⚙️ menu to be safe.');return}}
- const c=cloudCfg();if(!c)return;c.sid=newCode(8);c.game=d.game;cloudSet(c);applyCloud(d,false);
- toast(had&&had.w?`☁️ Cloud save now follows ${d.label}. ${soloTitle(had)} is kept in ⇄ Your games.`:`☁️ Loaded ${d.label} from the cloud.`)}
-let CL_PEND=null;
-function cloudConflict(d){CL_PEND=d;CL_BUSY=false;const here=soloState();
- openModal(`<div class="h mhd">Two different saves</div><p>This device and the cloud were both played since they last synced. Which one do you want to keep playing?</p>
- <button class="choice" onclick="cloudResolve('here')"><span class="key"><span>A</span></span><div><b>This device</b> — ${esc(saveLabel(here))}</div><div class="muted tiny">Saved ${whenTxt2(soloMeta().at)}</div></button>
- <button class="choice" onclick="cloudResolve('cloud')"><span class="key"><span>B</span></span><div><b>Cloud</b> — ${esc(d.label)}</div><div class="muted tiny">Saved ${whenTxt2(d.at)} on another device</div></button>
- <p class="muted tiny">The one you don't pick is kept as a backup (Office → Cloud save → Backups).</p>`)}
-async function cloudResolve(which){const d=CL_PEND;CL_PEND=null;closeModal();if(!d)return;
- if(which==='cloud'){applyCloud(d,true);toast('☁️ Switched to the cloud save. This device’s version is in Backups.')}
- else{localBackup('Cloud version (not kept)',JSON.parse(d.state));const c=cloudCfg();if(c){c.rev=Math.max(c.rev||0,d.rev||0);cloudSet(c)}await cloudPush();toast('Kept this device’s save and uploaded it.')}}
 
 /* ---- turning it on / linking another device ---- */
-async function cloudEnable(){if(!mpAvail())return mpNeedSetup();const id=newCode(12);const c0={id,rev:0,game:newCode(8)};{const st=soloState();if(st&&st.w)c0.sid=soloSid()}cloudSet(c0);touchSolo();CL_STATUS='syncing';render();
- try{await cloudPush();const c=cloudCfg();if(c&&c.pending)throw new Error('offline');cloudShowCode(true)}catch(e){toast('Cloud save is on — it will upload when you’re back online.');render()}}
-function cloudShowCode(first){const c=cloudCfg();if(!c)return;openModal(`<div class="h mhd">${first?'Cloud save is on ☁️':'Your sync code'}</div><p>Your save now backs up automatically. To play on another phone, tablet or computer, open the game there, go to <b>Cloud save</b> and enter this code:</p><div class="mpcode" style="font-size:24px;letter-spacing:3px">${fmtCode(c.id)}</div><p class="muted">Keep it somewhere safe — it's the key to your save. Anyone with it can load and change it.</p><button class="btn" onclick="cloudCopy()">Copy code</button><button class="btn ghost" onclick="closeModal()">Done</button>`)}
+async function cloudEnable(){if(!mpAvail())return mpNeedSetup();const id=newCode(12);cloudSet({id,v:2,lrev:0});LS.del('tksim_lgsent');CL_STATUS='syncing';render();
+ await cloudPush();if(cloudPendingAny()){toast('Cloud save is on — it will upload when you’re back online.');render()}else cloudShowCode(true)}
+function cloudShowCode(first){const c=cloudCfg();if(!c)return;openModal(`<div class="h mhd">${first?'Cloud save is on ☁️':'Your sync code'}</div><p>Every solo game you play now backs up automatically and stays in step on every device. To play on another phone, tablet or computer, open the game there, go to <b>Cloud save</b> and enter this code:</p><div class="mpcode" style="font-size:24px;letter-spacing:3px">${fmtCode(c.id)}</div><p class="muted">Keep it somewhere safe — it's the key to your saves. Anyone with it can load and change them.</p><button class="btn" onclick="cloudCopy()">Copy code</button><button class="btn ghost" onclick="closeModal()">Done</button>`)}
 async function cloudCopy(){const c=cloudCfg();try{await navigator.clipboard.writeText(fmtCode(c.id));toast('Code copied.')}catch(e){toast(fmtCode(c.id))}}
-function cloudLinkForm(){if(!mpAvail())return mpNeedSetup();openModal(`<div class="h mhd">Load a cloud save</div><p class="muted">Enter the sync code from your other device. ${soloState()?"The game on this device stays in ⇄ Your games.":''}</p>
+function cloudLinkForm(){if(!mpAvail())return mpNeedSetup();openModal(`<div class="h mhd">Load a cloud save</div><p class="muted">Enter the sync code from your other device. Its games are added to ⇄ Your games${soloState()?', and the games on this device are added to the cloud too':''} — nothing here is replaced.</p>
  <label>Sync code</label><input id="clCode" maxlength="20" autocapitalize="characters" placeholder="ABCD-EFGH-JKLM" style="text-transform:uppercase;letter-spacing:2px">
  <button class="btn mt" id="clGo" onclick="cloudLink()">Load my save</button><button class="btn ghost" onclick="closeModal()">Cancel</button>`)}
 async function cloudLink(){const id=($('#clCode').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(id.length!==12)return toast('Sync codes have 12 letters and numbers.');const b=$('#clGo');b.disabled=true;b.textContent='Loading…';
- try{const d=await TKO.cloudGet(id);if(!d)throw new Error('nosave');
-  /* the game already on this device goes on the shelf (⇄ Your games) rather than being replaced */
-  const had=d.state&&soloState();if(had&&had.w){try{await shelveSolo()}catch(e){b.disabled=false;b.textContent='Load my save';return toast('This device is out of storage — export or delete a game first, then try again.')}}
-  const nc={id,rev:d.rev||0,synced:Date.now()};if(d.game)nc.game=d.game;if(d.state)nc.sid=newCode(8);cloudSet(nc);mergeLeagues(d.leagues);
-  if(d.state){if(ON())mpSolo();applyCloud(d,true);toast(had&&had.w?`☁️ Loaded ${d.label}. Your other game is in ⇄ Your games.`:`☁️ Loaded ${d.label}. This device now syncs too.`)}else{closeModal();render();toast('Linked. Your online leagues are listed under Online league.')}}
+ try{const d=await TKO.cloudGet(id);let idx={};try{idx=await TKO.cloudGameList(id)}catch(e){}if(!d&&!Object.keys(idx).length)throw new Error('nosave');
+  const before=localGames().length;cloudSet({id,v:2,lrev:0,game:d&&d.game||''});LS.del('tksim_lgsent');if(d)mergeLeagues(d.leagues);closeModal();
+  await cloudCheck(true);
+  /* nothing being played here: open the most recent game from the cloud */
+  if(!activeSid()&&!ON()){const l=shelfList().slice().sort((a,b)=>(b.at||0)-(a.at||0));if(l[0])await openSolo(l[0].id)}
+  const n=localGames().length-before;toast(n>0?`☁️ Linked — ${n} game${n>1?'s':''} added from the cloud. This device now syncs too.`:'☁️ Linked. This device now syncs too.');render()}
  catch(e){console.warn(e);b.disabled=false;b.textContent='Load my save';toast(String(e.message).includes('nosave')?'No cloud save with that code.':navigator.onLine?"Couldn't load it — check the code.":'You need a connection to load a cloud save.')}}
-function cloudOff(){if(!confirm('Stop syncing this device? Your cloud save stays put, and you can reconnect any time with your sync code.'))return;cloudSet(null);render();toast('Cloud save is off on this device.')}
+function cloudOff(){if(!confirm('Stop syncing this device? Your games stay on this device and in the cloud, and you can reconnect any time with your sync code.'))return;cloudSet(null);render();toast('Cloud save is off on this device.')}
 
 /* ---- backups ---- */
-async function openBackups(){const loc=localBackups();let cl=[],cg=null;const c=cloudCfg();
- const row=(b,src,i)=>`<div class="row sb" style="margin:8px 0;gap:10px"><span><b>${esc(b.label)}</b><br><span class="muted tiny">${src==='cloud'?'☁️ Cloud':'📱 This device'} · ${whenTxt2(b.at)}${b.why?' · '+esc(b.why):''}</span></span><button class="mini" onclick="restoreBackup('${src}',${i})">Restore</button></div>`;
- const draw=()=>openModal(`<div class="row sb"><div class="h mhd" style="margin:0">Backups</div><button class="mini" onclick="closeModal()">Close</button></div><p class="muted">Backups are made automatically every week, and whenever something is about to replace your save. Restoring keeps your current save as a backup too.</p>
-  <div class="card">${loc.length?loc.map((b,i)=>row(b,'local',i)).join(''):'<div class="muted">No backups on this device yet.</div>'}</div>${c?`<div class="card">${cl.length?cl.map((b,i)=>row(b,'cloud',i)).join(''):`<div class="muted">${navigator.onLine?'Loading cloud backups…':'Cloud backups need a connection.'}</div>`}</div>`:''}${cg&&cg.length?`<div class="h small mt">Your games in the cloud</div><p class="muted tiny" style="margin-top:0">Every solo game you've played with cloud save on. Add one to put it in ⇄ Your games on this device.</p><div class="card">${cg.map(cgRow).join('')}</div>`:''}`);
+async function openBackups(){const loc=localBackups();let cl=[],gone=null;const c=cloudCfg();
+ const row=(b,src,i)=>`<div class="row sb" style="margin:8px 0;gap:10px"><span><b>${esc(b.t||b.label)}</b><br><span class="muted tiny">${src==='cloud'?'☁️ Cloud':'📱 This device'}${b.t?' · '+esc(String(b.label||'').replace(/^.*? · /,'')):''} · ${whenTxt2(b.at)}${b.why?' · '+esc(b.why):''}</span></span><button class="mini" onclick="restoreBackup('${src}',${i})">Restore</button></div>`;
+ const draw=()=>openModal(`<div class="row sb"><div class="h mhd" style="margin:0">Backups</div><button class="mini" onclick="closeModal()">Close</button></div><p class="muted">Backups are made automatically every week, and whenever something is about to replace a save. Restoring keeps the current save as a backup too.</p>
+  <div class="card">${loc.length?loc.map((b,i)=>row(b,'local',i)).join(''):'<div class="muted">No backups on this device yet.</div>'}</div>${c?`<div class="card">${cl.length?cl.map((b,i)=>row(b,'cloud',i)).join(''):`<div class="muted">${navigator.onLine?'Loading cloud backups…':'Cloud backups need a connection.'}</div>`}</div>`:''}${gone&&gone.length?`<div class="h small mt">Deleted games</div><p class="muted tiny" style="margin-top:0">Games deleted on any of your devices. Their cloud copy is kept — bring one back to put it in ⇄ Your games everywhere.</p><div class="card">${gone.map(cgRow).join('')}</div>`:''}`);
  draw();if(c&&cloudOn()){try{cl=(await TKO.cloudBackups(c.id,CLOUD_BK)).sort((a,b)=>b.at-a.at);window._clbk=cl;draw()}catch(e){}
-  if(TKO.cloudGameList&&$('#modal').innerHTML.includes('Backups')){try{const g=await TKO.cloudGameList(c.id);cg=Object.entries(g).filter(([,v])=>v&&!v.gone&&!(v.game&&v.game===c.game)).map(([id,v])=>Object.assign({id},v)).sort((a,b)=>(b.at||0)-(a.at||0));draw()}catch(e){}}}}
-function cgRow(g){const here=shelfList().find(x=>x.id===g.id),cur=soloState()&&soloMeta().sid===g.id;
- const act=cur?'<span class="muted tiny">Playing now</span>':here&&(here.at||0)>=(g.at||0)?'<span class="muted tiny">On this device</span>':`<button class="mini" onclick="cgRestore('${g.id}')">${here?'Use cloud copy':'Add'}</button>`;
- return `<div class="row sb" style="margin:8px 0;gap:10px"><span><b>${esc(g.t||g.label||'Solo game')}</b><br><span class="muted tiny">☁️ ${esc(g.sub||g.label||'')} · ${whenTxt2(g.at)}${here&&(here.at||0)<(g.at||0)?' · newer than this device':''}</span></span>${act}</div>`}
+  if(TKO.cloudGameList&&$('#modal').innerHTML.includes('Backups')){try{const g=await TKO.cloudGameList(c.id);const here=new Set(localGames().map(x=>x.sid));gone=Object.entries(g).filter(([id,v])=>v&&v.gone&&!here.has(id)&&id.length===8&&id!=='INDEX000').map(([id,v])=>Object.assign({id},v)).sort((a,b)=>(b.at||0)-(a.at||0));draw()}catch(e){}}}}
+function cgRow(g){return `<div class="row sb" style="margin:8px 0;gap:10px"><span><b>${esc(g.t||g.label||'Solo game')}</b><br><span class="muted tiny">☁️ ${esc(g.sub||g.label||'')} · deleted ${whenTxt2(g.at)}</span></span><button class="mini" onclick="cgRestore('${g.id}')">Bring back</button></div>`}
 async function cgRestore(sid){const c=cloudCfg();if(!c||!cloudOn())return;
  try{const d=await TKO.cloudGameGet(c.id,sid);if(!d||!d.state)throw new Error('nogame');const st=JSON.parse(d.state);if(!st.w||!st.phase)throw new Error('bad');
-  const old=await shelfGet(sid);if(old){try{localBackup('Before using the cloud copy',JSON.parse(old))}catch(e){}}
-  await shelfPut(sid,d.state);const l=shelfList().filter(x=>x.id!==sid);const at=d.at||Date.now();l.unshift({id:sid,label:saveLabel(st),t:soloTitle(st),sub:stageTxt(st),at,meta:{at,sid},cl:at});shelfSet(l);
-  toast(`☁️ ${soloTitle(st)} is in ⇄ Your games.`);openBackups()}
- catch(e){console.warn(e);toast(navigator.onLine?"Couldn't get that game from the cloud.":'You need a connection to add a game from the cloud.')}}
-function restoreBackup(src,i){const b=src==='cloud'?(window._clbk||[])[i]:localBackups()[i];if(!b)return;if(!confirm(`Restore ${b.label}? Your current save is kept as a backup.`))return;
- const cur=soloState();if(cur)localBackup('Before restoring a backup',cur);const st=JSON.parse(b.data||b.state);if(ON())mpSolo();
+  /* back on this device, then uploaded again so it returns everywhere */
+  await syncQ(async()=>{await putLocal(sid,d,{rev:d.rev||0,dirty:true,at:Date.now()});await pushOne({sid,at:(shelfList().find(x=>x.id===sid)||{}).at||Date.now()})});
+  toast(`☁️ ${soloTitle(st)} is back in ⇄ Your games.`);openBackups()}
+ catch(e){console.warn(e);toast(navigator.onLine?"Couldn't get that game from the cloud.":'You need a connection to bring a game back.')}}
+/* a backup goes back into the game it came from: the one you're playing, one in ⇄ Your games, or a new entry there */
+async function restoreBackup(src,i){const b=src==='cloud'?(window._clbk||[])[i]:localBackups()[i];if(!b)return;if(!confirm(`Restore ${b.t?b.t+' · ':''}${b.label}? The current save of that game is kept as a backup.`))return;
+ const data=b.data||b.state;const st=JSON.parse(data);const a=activeSid();
+ if(b.sid&&b.sid!==a){const old=await shelfGet(b.sid);if(old){try{localBackup('Before restoring a backup',JSON.parse(old),b.sid)}catch(e){}}
+  await shelfPut(b.sid,data);const l=shelfList();const at=Date.now();const ent={id:b.sid,label:saveLabel(st),t:soloTitle(st),sub:stageTxt(st),at,meta:{at,sid:b.sid}};const k=l.findIndex(x=>x.id===b.sid);if(k>=0)l[k]=ent;else l.unshift(ent);shelfSet(l);
+  cloudSoon();closeModal();toast(`Backup restored — ${soloTitle(st)} is in ⇄ Your games.`);return}
+ const cur=soloState();if(cur)localBackup('Before restoring a backup',cur,a);if(ON())mpSolo();
  S=st;dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);showMigrate();touchSolo();saveLocal();cloudSoon();closeModal();tab='home';ANIM=true;render();toast('Backup restored.')}
 
 /* ---- Office → Test connection ---- */
@@ -4827,14 +4908,13 @@ async function fbTest(){
  show([{ok:true,name:'Settings file',detail:'Project '+TK_FIREBASE.projectId}],'Checking sign-in and the database…');
  try{show(await TKO.diagnose())}catch(e){show([{ok:false,name:'Check',detail:String(e&&e.message||e)}])}}
 /* ---- Office card ---- */
-async function cloudRelink(){const c=cloudCfg();if(!c||!soloState())return;if(!confirm('Sync this game to the cloud instead? It replaces the cloud copy of your other game (that game stays on this device).'))return;
- try{const d=await TKO.cloudGet(c.id);if(d&&d.rev)c.rev=d.rev}catch(e){return toast('You need a connection to do that.')}c.sid=soloSid();c.game=newCode(8);c.pending=true;cloudSet(c);touchSolo();await cloudPush();toast('☁️ Cloud save now follows this game.');render()}
 function cloudCard(){const c=cloudCfg();
- if(!c)return `<div class="card mt"><div class="h small">Cloud save</div><p class="muted" style="margin-top:0">Back up your save automatically and pick up on any device — phone, tablet or computer. You can still play offline; it syncs when you're back online.</p><button class="btn" onclick="cloudEnable()">☁️ Turn on cloud save</button><button class="btn sec" onclick="cloudLinkForm()">I have a sync code</button><button class="btn ghost" onclick="openBackups()">Backups on this device</button><button class="btn ghost" onclick="fbTest()">🔌 Test connection</button></div>`;
- const st=CL_STATUS==='syncing'?'Syncing…':c.pending||CL_STATUS==='offline'?'⏳ Waiting to sync — saved on this device':`✓ Synced ${whenTxt2(c.synced)}`;
- if(cloudMode()==='other'){const o=shelfList().find(x=>x.id===c.sid);return `<div class="card mt"><div class="h small">Cloud save ☁️</div><p class="muted" style="margin-top:0">Cloud save is following ${o?'<b>'+esc(o.label)+'</b>':'another of your games'}. Switch to it in ⇄ Your games, or sync this game instead.</p><button class="btn sec" onclick="cloudRelink()">Sync this game instead</button><button class="btn ghost" onclick="openBackups()">Backups</button></div>`}
+ if(!c)return `<div class="card mt"><div class="h small">Cloud save</div><p class="muted" style="margin-top:0">Back up every solo game automatically and pick up on any device — phone, tablet or computer. You can still play offline; it syncs when you're back online.</p><button class="btn" onclick="cloudEnable()">☁️ Turn on cloud save</button><button class="btn sec" onclick="cloudLinkForm()">I have a sync code</button><button class="btn ghost" onclick="openBackups()">Backups on this device</button><button class="btn ghost" onclick="fbTest()">🔌 Test connection</button></div>`;
+ const n=localGames().length;const pend=cloudPendingAny();
+ const st=CL_STATUS==='syncing'?'Syncing…':pend||CL_STATUS==='offline'?'⏳ Waiting to sync — saved on this device':`✓ Synced ${whenTxt2(c.synced)}`;
  return `<div class="card mt"><div class="h small">Cloud save ☁️</div><div class="row sb" style="margin-bottom:6px"><span class="muted">${st}</span><button class="mini" onclick="cloudCheck(true)">Sync now</button></div>
- <div class="muted tiny">Sync code · ${fmtCode(c.id)}</div>
+ ${CL_BIG?`<div class="bad tiny" style="margin-bottom:4px">${esc(CL_BIG)} is too big to upload. It's safe on this device — use 💾 Back up all in ⇄ Your games to keep a copy.</div>`:''}
+ <div class="muted tiny">${n>1?`All ${n} solo games on this device sync both ways`:n?'Your solo game syncs both ways — new ones join automatically':'Your solo games sync both ways'} · Sync code ${fmtCode(c.id)}</div>
  <div class="row"><button class="btn sec" onclick="cloudShowCode()">Use on another device</button><button class="btn sec" onclick="openBackups()">Backups</button></div>
  <button class="btn ghost" onclick="fbTest()">🔌 Test connection</button><button class="btn ghost" onclick="cloudOff()">Stop syncing this device</button></div>`}
 
@@ -4849,10 +4929,10 @@ if(typeof document!=='undefined'&&document.getElementById('app')){
  window.addEventListener('tko-ready',()=>{mpConnect();tvConnect();cloudCheck();render()});if(window.TKO)setTimeout(()=>{mpConnect();tvConnect();cloudCheck()},0);
  let lastCk=Date.now();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&TV)partyWake();if(document.visibilityState==='visible'&&Date.now()-lastCk>20000){lastCk=Date.now();cloudCheck();if(ON())mpConnect()}else if(document.visibilityState==='hidden')flush()});
  /* slow or patchy connections often never fire 'online': keep nudging anything still waiting to sync while the app is open */
- setInterval(()=>{if(!navigator.onLine||document.visibilityState!=='visible'||!window.TKO||!TKO.ready)return;if(cloudCfg()&&cloudCfg().pending&&!CL_PUSHING)cloudPush();if(ON()&&MP_PENDING&&!MPX&&!mpT)mpPush(S.online&&S.online.msg)},60000);
- window.addEventListener('online',()=>{if(cloudCfg()&&cloudCfg().pending)cloudPush();if(ON()&&(MP_PENDING||mpHasUnsent()))mpPush(S.online&&S.online.msg)});
+ setInterval(()=>{if(!navigator.onLine||document.visibilityState!=='visible'||!window.TKO||!TKO.ready)return;if(cloudCfg()&&cloudPendingAny()&&!CL_BUSY)cloudPush();if(ON()&&MP_PENDING&&!MPX&&!mpT)mpPush(S.online&&S.online.msg)},60000);
+ window.addEventListener('online',()=>{if(cloudCfg()&&cloudPendingAny())cloudPush();if(ON()&&(MP_PENDING||mpHasUnsent()))mpPush(S.online&&S.online.msg)});
  /* leaving the app: send anything still waiting on its timer right away */
- const flush=()=>{if(mpT&&ON())mpPush();if(CL_T)cloudPush();if(CG_T)cgActive()};window.addEventListener('pagehide',flush);
+ const flush=()=>{if(mpT&&ON())mpPush();if(CL_T)cloudPush()};window.addEventListener('pagehide',flush);
  /* a new version finished installing in the background: offer a one-tap reload instead of making people close the app */
  if('serviceWorker' in navigator&&navigator.serviceWorker.controller){let shown=false;window.updNow=()=>{flush();setTimeout(()=>location.reload(),400)};
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(shown)return;shown=true;const d=document.createElement('div');d.id='upd';d.innerHTML='New version ready <button class="mini" onclick="updNow()">Update</button>';document.body.appendChild(d)})}

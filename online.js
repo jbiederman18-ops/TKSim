@@ -132,6 +132,28 @@ if (!cfg.apiKey || !cfg.projectId) {
         setDoc(doc(db, 'saves', id, 'games', 'INDEX000'), { g: { [sid]: meta } }, { merge: true }),
       ]);
     },
+    // v196: every solo game syncs both ways in its own slot (saves/{code}/games/{sid}), with the same rule as cloudPut:
+    // only save if nobody else saved since this device last synced that game (base = the version we last saw).
+    // The line in the shared list (INDEX000) is written in the same transaction, so the list never runs ahead of or
+    // behind the save it describes. Saving a game that was deleted elsewhere brings it back (gone: false).
+    cloudSlotPut(id, sid, data, base) {
+      return timed(runTransaction(db, async tx => {
+        const ref = doc(db, 'saves', id, 'games', sid);
+        const cur = await tx.get(ref);
+        const c = cur.exists() ? cur.data() : null;
+        const curRev = (c && c.rev) || 0;
+        if (c && curRev > (base || 0) && c.dev !== data.dev) throw new Error('conflict');
+        if (!data.state) throw new Error('nostate');
+        const rev = Math.max(curRev, base || 0) + 1;
+        tx.set(ref, { ...data, rev, gone: false, updated: serverTimestamp() });
+        const meta = { t: data.t || '', sub: data.sub || '', label: data.label || '', at: data.at || Date.now(), rev, dev: data.dev || '', gone: false, game: '' };
+        tx.set(doc(db, 'saves', id, 'games', 'INDEX000'), { g: { [sid]: meta } }, { merge: true });
+        return rev;
+      }), 20000);
+    },
+    // The list of online leagues rides on the main save document without touching its version number, so older
+    // versions of the app never mistake a league-list change for a newer save.
+    cloudLeaguesPut(id, leagues) { return setDoc(doc(db, 'saves', id), { leagues, lgAt: Date.now() }, { merge: true }); },
     cloudGameDrop(id, sid) { return setDoc(doc(db, 'saves', id, 'games', 'INDEX000'), { g: { [sid]: { gone: true, at: Date.now() } } }, { merge: true }); },
     cloudGameList(id) { return timed(getDocFromServer(doc(db, 'saves', id, 'games', 'INDEX000')).then(s => (s.exists() && s.data().g) || {}), 12000); },
     cloudGameGet(id, sid) { return timed(getDocFromServer(doc(db, 'saves', id, 'games', sid)).then(s => (s.exists() ? s.data() : null)), 12000); },
