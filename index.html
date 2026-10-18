@@ -218,7 +218,8 @@ details.mmore>summary{cursor:pointer;color:var(--gold2);font-weight:700;font-siz
 .hfr{display:flex;align-items:center;gap:10px;width:100%;padding:9px 0;border:0;border-top:1px solid var(--line);background:none;color:var(--text);font:inherit;text-align:left;cursor:pointer}
 .card .hfr:first-of-type{border-top:0}.hfn{flex:1;min-width:0;font-weight:600}.hfb{flex:none;width:70px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}.hfb i{display:block;height:100%;background:linear-gradient(90deg,#c96b2b,#ff6b3b)}.hfr b{flex:none;font:800 15px 'BC',sans-serif;min-width:42px;text-align:right}
 .rord:not(.pips) .slot .mpip{display:none}
-.lvdock{position:sticky;bottom:calc(64px + max(6px,env(safe-area-inset-bottom) - 8px));z-index:4;display:flex;align-items:center;gap:10px;margin:10px -16px 0;padding:10px 16px;background:linear-gradient(180deg,rgba(9,9,11,0),rgba(9,9,11,.97) 16%)}
+.lvdock{position:sticky;bottom:var(--navh,72px);z-index:4;display:flex;align-items:center;gap:10px;margin:10px -16px 0;padding:8px 16px;background:#09090b;box-shadow:0 -14px 14px -2px #09090b}
+.lvdock .btn.live:disabled{opacity:1;filter:saturate(.25) brightness(.55)}
 .lvdock .btn.live{flex:1;margin:0}.lvst{flex:none;display:flex;flex-direction:column;font-size:12.5px;line-height:1.25}.lvst span{color:var(--mut)}
 .prodf .prods{margin-top:2px}
 .hyps>summary{gap:10px}.hyb{flex:1;min-width:30px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}.hyb i{display:block;height:100%;background:var(--gold2)}
@@ -1120,7 +1121,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v201';
+const APP_VERSION='v202';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -3525,7 +3526,10 @@ function navView(){return `<nav class="tabs">${[['home','Home'],['book','Book'],
  it hides while you're typing (when the keyboard covers it anyway) and sits flush at the bottom otherwise. */
 function typingNow(){const a=document.activeElement;if(!a||a===document.body)return false;if(a.isContentEditable)return true;
  if(a.tagName==='TEXTAREA'||a.tagName==='SELECT')return true;return a.tagName==='INPUT'&&!/^(button|checkbox|radio|range|submit|reset|file|color|image)$/i.test(a.type||'')}
-function pinNav(){const n=document.querySelector('nav.tabs');if(!n)return;if(n.style.transform)n.style.transform='';n.classList.toggle('kb',typingNow())}
+function pinNav(){const n=document.querySelector('nav.tabs');if(!n)return;if(n.style.transform)n.style.transform='';n.classList.toggle('kb',typingNow());navH()}
+/* v202: how much of the screen the tab bar covers (it varies with the phone's home-indicator area), so things pinned above it sit flush */
+function navH(){const n=document.querySelector('nav.tabs');if(!n)return;const h=Math.max(0,Math.round(window.innerHeight-n.getBoundingClientRect().top));if(h&&h<200)document.documentElement.style.setProperty('--navh',h+'px')}
+window.addEventListener('resize',()=>{try{navH()}catch(e){}});
 if(typeof window!=='undefined'){const vv=window.visualViewport;if(vv){vv.addEventListener('resize',pinNav);vv.addEventListener('scroll',pinNav)}window.addEventListener('scroll',pinNav,{passive:true});window.addEventListener('orientationchange',()=>setTimeout(pinNav,300));document.addEventListener('focusin',pinNav);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(pinNav,60)});
  document.addEventListener('focusout',e=>{if(!/^(INPUT|TEXTAREA|SELECT)$/.test(e.target&&e.target.tagName||''))return;setTimeout(()=>{if(/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||''))return;window.scrollTo(window.scrollX,window.scrollY);pinNav()},120);setTimeout(pinNav,500)})}
 function render(){const app=$('#app');
