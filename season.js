@@ -11,9 +11,12 @@ const TOURS={
   get d(){return `Round robin for the Continental title. Four of your best men wrestle three weeks of block matches (3 points a win, Continental Crown rules: no run-ins), and the top two meet at ${PPVS[this.final]}.`}},
  /* v168: the Owen Hart Cups end at Double or Nothing */
  ohc:{n:'Owen Hart Cup',i:'🏆',g:'M',prize:'world',semi:13,final:16,
-  d:"Knockout bracket for four of your best men. The winner earns an AEW World title shot at All In."},
+  d:"Knockout bracket for four of your best men. The winner earns a world title shot at All In against your own show's champion."},
  ohcw:{n:"Women's Owen Hart Cup",i:'🏆',g:'F',prize:'wworld',semi:14,final:16,
-  d:"Knockout bracket for four of your best women. The winner earns a Women's World title shot at All In."}};
+  d:"Knockout bracket for four of your best women. The winner earns a Women's World title shot at All In against your own show's champion."}};
+/* v197: belts never leave their show, so a tournament's world-title prize is the winner's own show's best world title of the division */
+function tourPz(b,k){const D=TOURS[k];if(!D||!D.prize)return null;const pz=S.titles[D.prize];if(!pz||!pz.br||pz.br===b)return pz||null;
+ return (typeof WORLD_T!=='undefined'&&WORLD_T[D.g]||[]).map(id=>S.titles[id]).filter(x=>x&&x.br===b).sort((x,y)=>y.prestige-x.prestige)[0]||null}
 function ccLate(){return typeof S!=='undefined'&&!!S&&S.ccLate===S.season}
 const RR4=[[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]]];
 function tourState(b,k){S.tour=S.tour||{};const T=S.tour[b]||(S.tour[b]={});let t=T[k];if(!t||t.s!==S.season)t=T[k]={s:S.season,ent:null,res:[],win:null};return t}
@@ -53,11 +56,10 @@ function tourRecord(b,x,w,notes,how){const t=tourState(b,x.k);if(t.res.some(r=>r
  if(x.lab==='Semi-final'&&mine&&W)notes.push(`${D.i} ${W.name} is through to the ${D.n} final at ${PPVS[D.final]||'week '+D.final}.`);
  if(x.lab!=='Final'||!W)return;
  t.win=w;W.pop=clamp(W.pop+4,1,100);W.mor=clamp(W.mor+10,0,100);const n=`${D.i} ${W.name} wins the ${D.n}!`;news(n);notes.push(n);
- if(!D.prize)return;const pz=S.titles[D.prize];const h=pz&&pz.holders[0]&&S.w[pz.holders[0]];
- if(!pz||!h){W.pop=clamp(W.pop+2,1,100);return}
+ if(!D.prize)return;const pz=tourPz(b,x.k);const h=pz&&pz.holders[0]&&S.w[pz.holders[0]];
+ if(!pz||!h||h.own!==b){W.pop=clamp(W.pop+2,1,100);if(mine&&pz&&!h)notes.push(`🎟️ The ${pz.n} title is vacant, so ${W.name} is first in line when it's crowned.`);return}
  if(h.id===w){notes.push(`👑 The champion proves the point — ${W.name} already holds the ${pz.n} title.`);return}
- if(h.own===b){if(b==='p'){addPromise({kind:'shot',a:w,b:h.id,week:ALLIN_WEEK,ppv:PPVS[ALLIN_WEEK],title:pz.id,why:`${D.n} winner`});notes.push(`🎟️ ${W.name} has earned a ${pz.n} title shot against ${h.name} at ${PPVS[ALLIN_WEEK]}.${ON()?'':" It'll be waiting on your card."}`)}else t.shot=w}
- else{t.chal=w;if(mine)notes.push(`🎟️ ${W.name} has earned a shot at ${nameOf(h.own)}'s ${pz.n} champion ${h.name} — it's booked as ${ON()?nameOf(b)+"'s":'your'} title challenge at ${PPVS[ALLIN_WEEK]}.`)}}
+ if(b==='p'){addPromise({kind:'shot',a:w,b:h.id,week:ALLIN_WEEK,ppv:PPVS[ALLIN_WEEK],title:pz.id,why:`${D.n} winner`});notes.push(`🎟️ ${W.name} has earned a ${pz.n} title shot against ${h.name} at ${PPVS[ALLIN_WEEK]}.${ON()?'':" It'll be waiting on your card."}`)}else{t.shot=w;t.stitle=pz.id}}
 function tourMatch(x){const m={type:'singles',stip:'std',sides:[[x.a],[x.b]],winner:0,title:'',tour:{k:x.k,id:x.id,lab:x.lab}};
  if(x.lab==='Final'&&TOURS[x.k].title&&eligibleTitles(m).includes(TOURS[x.k].title))m.title=TOURS[x.k].title;return m}
 /* this week's tournament matches as booked matches; injured entrants forfeit before the show */
@@ -341,7 +343,6 @@ function suggestCardEngaged(){const sh=curShow();const c=JSON.parse(JSON.stringi
   const order=keep.length>=3?[keep[keep.length-2]].concat(keep.slice(0,-2),[keep[keep.length-1]]):keep;ms.splice(0,ms.length,...order)}}
  c.forEach(sl=>{if(sl.d)return;if(sl.k==='match'){if(sl.opt)return;const x=ms.shift();if(x)sl.d=x.d}
   else if(sl.k==='promo'){let x=ps.shift();while(x&&(exP.has(x.d.a)||x.d.b&&exP.has(x.d.b)))x=ps.shift();const p=x?x.d:autoPromo('p',exP);if(p){delete p.res;p.played=false;sl.d=p;exP.add(p.a);if(p.b)exP.add(p.b)}}
-  else if(sl.k==='chal'){const ch=autoChal('p',used);if(ch)sl.d=ch}
   else if(sl.k==='xo'){const x=xoAuto('p',used,1)[0];if(x)sl.d=x}});
  /* put the strongest match last and a strong one first */
  return c}
@@ -369,7 +370,7 @@ function seasonMigrate(st){if(!st||!st.w||st.v80)return;st.v80=1;const S0=S;S=st
  if(st.phase==='season'&&!st.mand)mandTick();
  if(st.phase==='over'&&!st.awards){st.awards=seasonAwards();st.offs=offseasonPlan()}
  /* a save sitting on Forbidden Door week was dealt a TV card before it became a PPV: deal the PPV card */
- if(st.phase==='season'&&!ON()&&st.week===FD_WEEK&&st.card&&st.card.p&&!st.card.p.some(sl=>sl.k==='chal')){st.card={p:newCard().p,ai:null}}
+ if(st.phase==='season'&&!ON()&&st.week===FD_WEEK&&st.card&&st.card.p&&!st.card.p.some(sl=>sl.k==='xo')){st.card={p:newCard().p,ai:null}}
  if(st.phase==='season'||st.phase==='over')news('🆕 New in this version: match finishes, the rub, title reigns, TV specials, tournaments, the Casino Gauntlet, Forbidden Door, network mandates and an offseason. Each season\'s fan war is now decided by fans gained that season. See How to Play.')}finally{S=S0}}
 
 /* ===================== AWARDS & THE OFFSEASON ===================== */
@@ -427,7 +428,7 @@ function tourCanPick(k){const D=TOURS[k];if(!D||!S||S.phase!=='season')return fa
 let TP=null;
 function openTourPick(k){if(mpLocked())return;if(!tourCanPick(k))return toast('That field is already set.');const t=tourState('p',k);
  TP={k,sel:(t.ent||[]).filter(id=>S.w[id]&&S.w[id].own==='p')};renderTourPick()}
-function renderTourPick(){const D=TOURS[TP.k];const ct=D.title&&S.titles[D.title];const pz=D.prize&&S.titles[D.prize];
+function renderTourPick(){const D=TOURS[TP.k];const ct=D.title&&S.titles[D.title];const pz=tourPz('p',TP.k);
  const l=ownList('p').filter(w=>w.g===D.g).sort((a,b)=>(a.inj?1:0)-(b.inj?1:0)||(b.pop+b.ring)-(a.pop+a.ring));
  const row=w=>{const i=TP.sel.indexOf(w.id);const on=i>=0;const champ=ct&&ct.holders.includes(w.id);const isPz=pz&&pz.holders.includes(w.id);const dis=w.inj||isPz;
   return `<button class="lr ${dis?'out':''}" style="width:100%;margin:4px 0;${on?'box-shadow:inset 0 0 0 2px var(--gold);background:rgba(232,190,90,.12)':''}" ${dis?'disabled':''} onclick="tpToggle('${w.id}')">${face(w)}<span class="lrn"><b class="${w.al==='f'?'face':'heel'}">${esc(w.name)}</b><span class="muted tiny">${STYLE_N[w.st]} · Pop ${Math.round(w.pop)} · Ring ${Math.round(w.ring)}${champ?` · 🏆 ${esc(ct.n)} champ`:''}${isPz?` · already ${esc(pz.n)} champ`:''}</span></span><span class="lrs">${w.inj?'OUT':on?`<b class="gold">${D.rr?'✓ IN':'#'+(i+1)}</b>`:''}</span></button>`};
@@ -437,7 +438,7 @@ function renderTourPick(){const D=TOURS[TP.k];const ct=D.title&&S.titles[D.title
  <div>${l.map(row).join('')}</div>
  <button class="btn" ${ready?'':'disabled'} onclick="tpSave()">Lock in the field</button><button class="btn ghost" onclick="TP=null;closeModal();render()">Cancel</button>`)}
 function tpToggle(id){const i=TP.sel.indexOf(id);if(i>=0)TP.sel.splice(i,1);else if(TP.sel.length<4)TP.sel.push(id);else return toast('Four is a full field — tap someone to take them out first.');renderTourPick()}
-function tpAuto(){const D=TOURS[TP.k];const pz=D.prize&&S.titles[D.prize];const champ=pz&&pz.holders[0];const ct=D.title&&S.titles[D.title];const sel=[];
+function tpAuto(){const D=TOURS[TP.k];const pz=tourPz('p',TP.k);const champ=pz&&pz.holders[0];const ct=D.title&&S.titles[D.title];const sel=[];
  const th=ct&&ct.holders[0]&&S.w[ct.holders[0]];if(th&&th.own==='p'&&!th.inj&&th.g===D.g)sel.push(th.id);
  ownList('p').filter(w=>w.g===D.g&&!w.inj&&w.id!==champ).sort((x,y)=>(y.pop+y.ring)-(x.pop+x.ring)).forEach(w=>{if(sel.length<4&&!sel.includes(w.id))sel.push(w.id)});TP.sel=sel;renderTourPick()}
 function tpSave(){if(!TP||TP.sel.length!==4)return;const k=TP.k,D=TOURS[k];const t=tourState('p',k);t.ent=TP.sel.slice();t.pick=1;t.lock=S.week>=tourFirst(D)?1:0;TP=null;

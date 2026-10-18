@@ -3,7 +3,7 @@
    AEW belts, and the calendar alternates the biggest AEW and WWE PPVs. Royal Rumble and Money in the Bank bring their
    signature matches:
      • Royal Rumble (week RR_WEEK): a men's and a women's Rumble lock onto every brand's card. The winner earns a world title
-       shot at WrestleMania — against their own brand's champion, or as the WrestleMania title challenge if the rival holds it.
+       shot at WrestleMania — against their own brand's champion (belts never leave their show; if their brand's world titles are vacant they're first in line).
      • Money in the Bank (week MITB_WEEK): a men's and a women's ladder match. The winner holds the briefcase for a year and
        can cash in on a world champion of their division at any time — booked as its own match, or straight after any match
        the champion is in. Unused briefcases expire at the next Money in the Bank.
@@ -224,8 +224,8 @@ function spDue(b,used,have){if(!S||S.phase!=='season'||!PPVS[S.week])return [];c
 /* before the bell: anyone hurt earlier in the night is pulled out (the match goes on without them) */
 function spHeal(m){if(!isSp(m)||!m.sides)return;const D=SPK[m.sp]||{min:3};const ok=m.sides.filter(s=>s[0]&&S.w[s[0]]&&!S.w[s[0]].inj);if(ok.length===m.sides.length||ok.length<Math.max(2,D.min-1))return;
  const W=m.sides[m.winner]&&m.sides[m.winner][0];m.sides=ok;let wi=m.sides.findIndex(s=>s[0]===W);if(wi<0)wi=m.sides.map((s,i)=>[i,S.w[s[0]].pop]).sort((a,b)=>b[1]-a[1])[0][0];m.winner=wi;if(m.pin&&!m.sides.some(s=>s[0]===m.pin))delete m.pin}
-/* per-brand state for this year's Rumble winners: shot = a shot at their own brand's champion, chal = the WrestleMania title challenge */
-function spw(b){S.spw=S.spw||{};let x=S.spw[b];if(!x||x.s!==S.season)x=S.spw[b]={s:S.season,shot:[],chal:[]};return x}
+/* per-brand state for this year's Rumble winners: shot = a shot at their own brand's champion */
+function spw(b){S.spw=S.spw||{};let x=S.spw[b];if(!x||x.s!==S.season)x=S.spw[b]={s:S.season,shot:[]};return x}
 /* the best world title of a division held on brand b (or anywhere but b, with other=true) */
 function worldFor(g,b,other,not){return WORLD_T[g].map(id=>S.titles[id]).filter(t=>t&&t.holders.length===1&&S.w[t.holders[0]]&&t.holders[0]!==not&&(other?S.w[t.holders[0]].own&&S.w[t.holders[0]].own!==b:S.w[t.holders[0]].own===b)).sort((x,y)=>y.prestige-x.prestige)[0]||null}
 function rumblePrize(b,m,notes){if(m.nc)return;const W=S.w[(m.sides[m.winner]||[])[0]];if(!W)return;const mine=b==='p'||ON();const D=SPK[m.sp]||SPK.rr;const wm=PPVS[WM_WEEK]||'WrestleMania';
@@ -234,13 +234,7 @@ function rumblePrize(b,m,notes){if(m.nc)return;const W=S.w[(m.sides[m.winner]||[
  const own=worldFor(W.g,b,false,W.id);
  if(own){const h=S.w[own.holders[0]];if(b==='p')addPromise({kind:'shot',a:W.id,b:h.id,week:WM_WEEK,ppv:wm,title:own.id,why:'Royal Rumble winner'});else spw(b).shot.push({a:W.id,title:own.id});
   const n=`${D.i} ${W.name} wins the ${D.n}! They'll challenge ${h.name} for the ${own.n} title at ${wm}.${b==='p'&&!ON()?" It'll be waiting on your card.":''}`;notes.push(n);if(mine||W.own==='p')news(n);return}
- const oth=worldFor(W.g,b,true,W.id);
- if(oth){spw(b).chal.push({a:W.id,title:oth.id});const h=S.w[oth.holders[0]];const n=`${D.i} ${W.name} wins the ${D.n}! ${nameOf(h.own)}'s ${h.name} holds the ${oth.n} title, so ${W.name} challenges for it as ${b==='p'?'your':nameOf(b)+"'s"} title challenge at ${wm}.`;notes.push(n);news(n);return}
- const n=`${D.i} ${W.name} wins the ${D.n} — with every world title in the division vacant, they're the favorite to be crowned at ${wm}.`;notes.push(n);news(n)}
-/* WrestleMania: the Rumble winner's title challenge, if their champion is on another brand */
-function spChalFor(b,used){if(S.week!==WM_WEEK)return null;const x=spw(b);for(const c of x.chal){const w=S.w[c.a];const t=S.titles[c.title];if(!w||w.own!==b||w.inj||(used&&used.has(w.id)))continue;
-  /* the belt may have moved since the Rumble: aim at whoever holds the best title of the division now */
-  const tt=t&&t.holders.length===1&&S.w[t.holders[0]]&&S.w[t.holders[0]].own&&S.w[t.holders[0]].own!==b?t:worldFor(w.g,b,true,w.id);if(tt)return {title:tt.id,c:w.id}}return null}
+ const n=`${D.i} ${W.name} wins the ${D.n} — with their show's world titles vacant, they're the favorite to be crowned at ${wm}.`;notes.push(n);news(n)}
 /* WrestleMania: the rival's Rumble winner gets their shot at the rival's own champion */
 function spShotsFor(b){if(S.week!==WM_WEEK)return [];return spw(b).shot.map(x=>{const w=S.w[x.a];if(!w||w.own!==b)return null;const t=S.titles[x.title];const tt=t&&t.holders.length===1&&S.w[t.holders[0]]&&S.w[t.holders[0]].own===b&&t.holders[0]!==w.id?t:worldFor(w.g,b,false,w.id);return tt?{a:w.id,title:tt.id}:null}).filter(Boolean)}
 
@@ -363,7 +357,6 @@ function ppvFit(c){if(!Array.isArray(c))return null;const tpl=emptyCard(true);co
  sp.forEach(m=>{const D=SPK[m.sp];if(f>bk)return;const i=D&&D.g==='M'?slots[bk--]:slots[f++];out[i].d=m});
  /* your old main event stays the main event when there's no men's match to close the show */
  const free=slots.filter(i=>!out[i].d);keep.forEach((m,j)=>{if(free[j]!=null)out[free[j]].d=m});
- const chal=c.find(x=>x&&x.k==='chal'&&x.d);const oc=out.find(x=>x.k==='chal');if(chal&&oc)oc.d=chal.d;
  const xo=c.filter(x=>x&&x.k==='xo'&&x.d);const ox=out.filter(x=>x.k==='xo');xo.forEach((x,j)=>{if(ox[j])ox[j].d=x.d});
  const drop=reg.length-keep.length+Math.max(0,xo.length-ox.length);
  return {c:out,drop,sp:sp.length}}
