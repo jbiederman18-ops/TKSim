@@ -185,7 +185,7 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),l
 .wc.champ{margin:0;font-size:inherit;font-weight:inherit}
 .seg{padding:10px 0;border-top:1px solid rgba(255,255,255,.06)}
 .note{font-size:13.5px;color:var(--gold2);margin-top:3px;font-weight:600}
-.eddock{position:sticky;bottom:-24px;z-index:3;display:flex;gap:8px;margin:12px -4px 0;padding:10px 4px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(18,19,23,0),#121317 30%)}.eddock .btn{margin:0}.eddock .btn.ghost{flex:none;width:auto;padding-left:14px;padding-right:14px}.eddock .btn.sec{flex:none;width:auto;padding-left:14px;padding-right:14px}
+.eddock{position:sticky;bottom:var(--edb,-24px);z-index:3;display:flex;gap:8px;margin:12px -16px 0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:#121317;box-shadow:0 -14px 14px -2px #121317}.eddock .btn{margin:0}.eddock .btn.ghost{flex:none;width:auto;padding-left:14px;padding-right:14px}.eddock .btn.sec{flex:none;width:auto;padding-left:14px;padding-right:14px}
 .hp .hpc{flex:none;margin-left:auto;margin-right:10px;font-size:12px;font-weight:700}.hp .hpc i{font-style:normal;margin-left:2px}
 .pln{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:13px}.pln span:last-child{color:var(--mut)}
 .card.scout{padding-top:10px;padding-bottom:10px}
@@ -278,7 +278,7 @@ nav.tabs.kb{display:none}
 .hero .kicker{justify-content:center}
 .hero-t{font:900 italic 64px/.88 'BC',Impact,sans-serif;text-transform:uppercase;margin:12px 0 10px;background:linear-gradient(180deg,#fff 0%,#ffe9a8 40%,#d99b2b 62%,#fff0c2 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 rgba(0,0,0,.8)) drop-shadow(0 0 30px rgba(255,150,60,.35))}
 .hero p{max-width:420px;margin:0 auto}
-#toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:30;background:linear-gradient(180deg,#26272d,#15161a);box-shadow:inset 0 0 0 1px var(--gold);color:var(--text);padding:11px 20px;font-size:14.5px;font-weight:600;max-width:90vw;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;clip-path:var(--slant)}
+#toast{position:fixed;left:50%;bottom:calc(var(--navh,72px) + 14px);transform:translateX(-50%);z-index:30;background:linear-gradient(180deg,#26272d,#15161a);box-shadow:inset 0 0 0 1px var(--gold);color:var(--text);padding:11px 20px;font-size:14.5px;font-weight:600;max-width:90vw;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;clip-path:var(--slant)}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(-4px)}
 details summary{cursor:pointer;margin:0}
 .prow{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)}.prow .wl{flex:1;min-width:0}.prow .wn{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.prow a.mini{text-decoration:none}
@@ -421,7 +421,7 @@ nav.tabs button.on{text-shadow:none}nav.tabs button.on svg{filter:none}nav.tabs 
 .why.up{color:var(--good);background:rgba(101,201,143,.11)}.why.dn{color:var(--bad);background:rgba(226,117,108,.11)}
 .wc .nm b.ln{font-size:13.5px}.wc .nm b.xl{font-size:11.5px;letter-spacing:0}
 @media(min-width:700px){nav.tabs{padding-left:calc(50% - 320px);padding-right:calc(50% - 320px)}}
-#upd{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:31;display:flex;gap:10px;align-items:center;background:linear-gradient(180deg,#26272d,#15161a);box-shadow:inset 0 0 0 1px var(--gold);padding:8px 8px 8px 16px;font-size:14px;font-weight:600;white-space:nowrap;clip-path:var(--slant)}
+#upd{position:fixed;left:50%;bottom:calc(var(--navh,72px) + 10px);transform:translateX(-50%);z-index:31;display:flex;gap:10px;align-items:center;background:linear-gradient(180deg,#26272d,#15161a);box-shadow:inset 0 0 0 1px var(--gold);padding:8px 8px 8px 16px;font-size:14px;font-weight:600;white-space:nowrap;clip-path:var(--slant)}
 
 /* ===== Booking clarity: alignment, stamina, feuds ===== */
 .fav.af{box-shadow:0 0 0 2px var(--face)}.fav.ah{box-shadow:0 0 0 2px var(--heel)}
@@ -1121,7 +1121,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v202';
+const APP_VERSION='v203';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -3483,7 +3483,16 @@ function pkPick(id){const p=PK;PK=null;p.onPick(id)}
 function pkBack(){const p=PK;PK=null;p.back()}
 function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),2200)}
 let MODAL_AT=0;
-function openModal(html,keep){keep=keep||DDKEEP;MODAL_AT=Date.now();const m=$('#modal');const was=m.classList.contains('hidden');const sh=m.querySelector('.sheet');const st=keep&&sh?sh.scrollTop:0;m.classList.toggle('lobbyM',html.startsWith('<div id="games"'));m.innerHTML=`<div class="sheet ${was?'in':keep?'':'swap'}"><div class="sbody">${html}</div></div>`;m.classList.remove('hidden');document.body.classList.add('lock');pageLock();const ns=m.querySelector('.sheet');if(keep)ns.scrollTop=st;sheetScrollFix(ns);if(LIVE&&partyLiveTurn())partyFeed(html)}
+function openModal(html,keep){keep=keep||DDKEEP;MODAL_AT=Date.now();const m=$('#modal');const was=m.classList.contains('hidden');const sh=m.querySelector('.sheet');const st=keep&&sh?sh.scrollTop:0;m.classList.toggle('lobbyM',html.startsWith('<div id="games"'));m.innerHTML=`<div class="sheet ${was?'in':keep?'':'swap'}"><div class="sbody">${html}</div></div>`;m.classList.remove('hidden');document.body.classList.add('lock');pageLock();const ns=m.querySelector('.sheet');if(keep)ns.scrollTop=st;sheetScrollFix(ns);pinDocks(ns);if(LIVE&&partyLiveTurn())partyFeed(html)}
+/* v203: buttons pinned to the bottom of a pop-up sit on the screen's real bottom edge. The sheet runs past the
+   bottom of the screen (for iOS) and pads itself, and how far differs by phone, so measure where a pinned dock
+   actually lands and correct its offset once — sticky offsets move it one-for-one. */
+function pinDocks(sh){const go=()=>{try{sh.querySelectorAll('.eddock').forEach(d=>{const cs=getComputedStyle(d);if(cs.position!=='sticky')return;
+  const cur=parseFloat(cs.bottom)||0;d.style.position='relative';d.style.bottom='auto';const nat=d.getBoundingClientRect().bottom;d.style.position='';d.style.bottom='';
+  const vh=window.visualViewport?visualViewport.height:window.innerHeight;if(nat<=vh)return;/* not pinned right now: it already rests in view */
+  const got=d.getBoundingClientRect().bottom;const fix=cur-(vh-got);sh.style.setProperty('--edb',fix+'px')})}catch(e){}};
+ requestAnimationFrame(go);setTimeout(go,380);sh.addEventListener('animationend',go,{once:true})}
+window.addEventListener('resize',()=>{const sh=document.querySelector('#modal .sheet');if(sh){sh.style.removeProperty('--edb');pinDocks(sh)}});
 /* iOS WebKit sometimes doesn't treat the sheet as scrollable when its content grows after it opens
    (animation finishing, photos loading, a "Why?" expanding, the picker grid refilling) until it's reopened.
    Whenever the content height changes, briefly toggle overflow so WebKit rebuilds the scroll area. */
