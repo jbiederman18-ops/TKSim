@@ -792,7 +792,7 @@ span.smeter.smeter{position:relative;display:inline-block;line-height:1;letter-s
 .sr-half.x{box-shadow:inset 3px 0 0 var(--red)}
 .sr-half.empty{opacity:.45}
 .sr-half.won{border-color:var(--gold);background:linear-gradient(90deg,rgba(216,180,73,.2),rgba(0,0,0,.25) 70%);box-shadow:inset 3px 0 0 var(--gold2),0 0 22px rgba(216,180,73,.18)}
-.sr-half.won .sr-tag::after{content:' · ▲ Wins the round';color:var(--gold2)}
+.sr-half.won .sr-tag::after{content:' · ▲ Wins the round';color:var(--gold2)}.sr-half.hasc.won .sr-tag::after{content:' · ▲ Wins'}
 .sr-card.tie .sr-rd::after{content:' · Dead even';color:var(--gold2)}
 .sr-tag{font:700 11px 'BC',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sr-txt{font-weight:700;font-size:17px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -808,26 +808,47 @@ span.smeter.smeter{position:relative;display:inline-block;line-height:1;letter-s
 .sr-btns{display:grid;grid-template-columns:1.4fr 1fr;gap:8px;margin-top:14px}
 .sr-btns .btn{margin:0;padding:12px 8px;font-size:16px}
 .sr-run{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
-.sr-low{position:relative;min-height:156px}
-.sr-low .sr-run{opacity:0;visibility:hidden;transition:opacity .45s ease .15s,visibility 0s .6s}
-.sr-low.fin .sr-run{opacity:1;visibility:visible;transition:opacity .45s ease .15s}
-.sr-cast{position:absolute;inset:0;display:flex;flex-direction:column;transition:opacity .22s ease,transform .22s ease}
-.sr-cast.out{opacity:0;transform:translateX(-24px)}.sr-cast.pre{opacity:0;transform:translateX(24px);transition:none}
-.sr-low.fin .sr-cast{opacity:0;pointer-events:none;transition:opacity .3s}
-.sr-ci{font:700 11px 'BC',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);text-align:center;margin-bottom:4px}
-.sr-cg{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.sr-cg.one{grid-template-columns:minmax(0,1fr)}
-.sr-cc{min-width:0;display:flex;flex-direction:column}.sr-cc.empty{opacity:.45}.sr-cc.ai .sr-ch{color:var(--text)}.sr-cc.x .sr-ch{color:var(--red)}
-.sr-cards{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:4px}
-.sr-cg.one .sr-cards{gap:10px}
-.srwc.wc{flex:1 1 0;min-width:0;max-width:104px;cursor:inherit;transition:opacity .45s,filter .45s,transform .45s}
-.sr-cards.n1 .srwc.wc{max-width:96px}
+.sr-stage{position:relative;height:var(--sh,440px);margin-bottom:2px}
+.sr-stage>.sr-card{position:absolute;left:0;right:0;top:0;height:var(--sh,440px);transition:opacity .22s ease,transform .22s ease,height .5s cubic-bezier(.2,.8,.2,1)}
+.sr-stage.fin>.sr-card{height:var(--ch,268px)}
+.sr-stage>.sr-run{position:absolute;left:0;right:0;bottom:0;opacity:0;visibility:hidden;transform:translateY(10px);transition:opacity .45s ease .2s,transform .45s ease .2s,visibility 0s .65s}
+.sr-stage.fin>.sr-run{opacity:1;visibility:visible;transform:none;transition:opacity .45s ease .2s,transform .45s ease .2s}
+.sr-kick{font:800 italic 12px 'BC',sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--red)}
+.sr-imes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:14px}
+.sr-ime{min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px 8px;border:1px solid var(--line);background:rgba(0,0,0,.22)}
+.sr-ime.p{box-shadow:inset 0 2px 0 var(--gold)}.sr-ime.ai{box-shadow:inset 0 2px 0 var(--mut)}
+.sr-ime .sr-tag{margin:0;max-width:100%}
+.sr-imt{font-size:12px;font-weight:700;line-height:1.25;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sr-imes:only-child,.sr-imes .sr-ime:only-child{grid-column:1/-1}
+/* the segment panels: cards on the left, the call on the right */
+.sr-half.hasc{flex-direction:row;align-items:center;gap:12px;padding:10px 12px 10px 14px}
+.sr-hi{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.sr-half.hasc .sr-txt{-webkit-line-clamp:3;font-size:16px}
+.sr-half.hasc .sr-line{flex-wrap:wrap;row-gap:2px}.sr-half.hasc .sr-line .smeter{font-size:23px}
+.sr-half.hasc .sr-note{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.sr-half.solo.hasc{flex-direction:column;justify-content:center;text-align:center}.sr-half.solo.hasc .sr-line{justify-content:center}.sr-half.solo.hasc .sr-hi{flex:none;width:100%}
+.sr-hc{flex:none;display:flex;align-items:center;justify-content:center}
+.sr-hc .srwc.wc{width:82px;flex:none;max-width:none}
+.sr-hc.big .srwc.wc{width:108px}
+.sr-hc.n1 .srwc.wc{width:92px}.sr-hc.big.n1 .srwc.wc{width:120px}
+.srwc.wc{cursor:inherit;transition:opacity .45s,filter .45s,transform .45s cubic-bezier(.2,.8,.2,1),box-shadow .45s;animation:srIn .5s cubic-bezier(.2,.8,.2,1) backwards}
+.sr-hc>.srwc:first-child{--dx:-16px;animation-delay:.18s}.sr-hc>.srwc:last-child{--dx:16px;animation-delay:.28s}
+@keyframes srIn{from{opacity:0;transform:translateX(var(--dx,0)) scale(.92)}}
 .srwc.wc:active{transform:none}
-.srwc .nm{padding:22px 6px 6px 7px}.srwc .nm b{font-size:13px}.srwc .nm b.ln{font-size:11.5px}.srwc .nm b.xl{font-size:10px}.srwc .nm span.inf{font-size:9.5px;margin-top:2px}
-.srwc .o{font-size:14px;top:4px;left:5px}.srwc .alb{display:none}
-.sr-vs{flex:none;font:900 italic 14px 'BC',sans-serif;color:var(--gold2);text-transform:uppercase}
-.sr-cc.dn .srwc.rw{transform:scale(1.04);box-shadow:0 0 0 2px var(--gold2),0 0 18px rgba(216,180,73,.45)}
-.srwin{position:absolute;top:5px;right:5px;z-index:4;background:var(--gold2);color:#111;font:900 italic 11px/1 'BC',sans-serif;padding:3px 6px 2px 5px;clip-path:var(--slant);opacity:0;transition:opacity .3s}.sr-cc.dn .srwin{opacity:1}
-.sr-cc.dn .srwc.rl{opacity:.5;filter:grayscale(.8)}
+.srwc .nm{padding:20px 5px 5px 7px}.srwc .nm b{font-size:12px}.srwc .nm b.ln{font-size:10.5px}.srwc .nm b.xl{font-size:9.5px}.srwc .nm span.inf{font-size:9px;margin-top:2px}
+.sr-hc.big .srwc .nm b{font-size:15px}.sr-hc.big .srwc .nm b.ln{font-size:13px}.sr-hc.big .srwc .nm b.xl{font-size:11px}
+.srwc .o{font-size:13px;top:4px;left:5px;padding:2px 5px 1px 4px}.srwc .alb{display:none}
+.sr-vs{flex:none;position:relative;z-index:6;margin:0 -9px;width:24px;height:24px;display:grid;place-items:center;background:linear-gradient(180deg,var(--gold2),#a8842e);transform:rotate(45deg);box-shadow:0 2px 8px rgba(0,0,0,.6);animation:srVs .35s ease .42s backwards}
+.sr-vs b{transform:rotate(-45deg);font:900 italic 10px/1 'BC',sans-serif;color:#141210;letter-spacing:.02em}
+.sr-hc.big .sr-vs{width:30px;height:30px;margin:0 -11px}.sr-hc.big .sr-vs b{font-size:12px}
+@keyframes srVs{from{opacity:0;transform:rotate(45deg) scale(.3)}}
+.sr-half.dn .srwc.rw{transform:scale(1.06);z-index:5;box-shadow:0 0 0 2px var(--gold2),0 0 22px rgba(216,180,73,.5)}
+.sr-half.dn .srwc.rl{opacity:.45;filter:grayscale(.9) brightness(.8);transform:scale(.94)}
+.srwin{position:absolute;top:5px;right:5px;z-index:4;background:var(--gold2);color:#111;font:900 italic 10px/1 'BC',sans-serif;padding:3px 6px 2px 5px;clip-path:var(--slant);opacity:0;transform:translateY(-4px);transition:opacity .3s,transform .3s}.sr-half.dn .srwin{opacity:1;transform:none}
+.sr-half{position:relative;overflow:hidden}
+.sr-half.p.hasc:before,.sr-half.ai.hasc:before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 0% 50%,rgba(216,180,73,.08),transparent 60%)}
+.sr-half.ai.hasc:before{background:radial-gradient(120% 90% at 0% 50%,rgba(255,255,255,.05),transparent 60%)}
+.sr-motn{display:flex;flex-direction:column;align-items:center;gap:2px;margin:2px 0 4px}.sr-motn span{font:700 10px 'BC',sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--red)}.sr-motn b{font-size:13px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sr-motn .smeter{font-size:16px}
 .sr-run.one{grid-template-columns:minmax(0,1fr)}
 .sr-ch{font:800 italic 13px 'BC',sans-serif;text-transform:uppercase;color:var(--gold2);border-bottom:1px solid var(--line);padding-bottom:4px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sr-col.theirs .sr-ch{color:var(--text)}
@@ -842,7 +863,7 @@ span.smeter.smeter{position:relative;display:inline-block;line-height:1;letter-s
 .sr-rep{margin:-4px 0 12px}
 .srfade{animation:srFade .45s ease-out}
 @keyframes srFade{from{opacity:0}to{opacity:1}}
-@media (max-height:740px){.sr-low{min-height:132px}.srwc.wc{max-width:88px}.sr-top{margin-bottom:4px}.sr-title{font-size:21px;margin-top:5px}.srv .score{margin:4px 0 8px}.sr-spot{height:250px;margin-bottom:8px}.sr-txt{font-size:15px}.sr-line .smeter{font-size:22px}.sr-note{display:none}.sr-row{padding:2px 6px}.sr-ctl{margin-top:8px}}
+@media (max-height:740px){.sr-hc .srwc.wc{width:64px}.sr-hc.big .srwc.wc{width:92px}.sr-half.hasc .sr-txt{-webkit-line-clamp:2;font-size:15px}.sr-top{margin-bottom:4px}.sr-title{font-size:21px;margin-top:5px}.srv .score{margin:4px 0 8px}.sr-spot{height:250px;margin-bottom:8px}.sr-txt{font-size:15px}.sr-line .smeter{font-size:22px}.sr-note{display:none}.sr-row{padding:2px 6px}.sr-ctl{margin-top:8px}}
 @media (prefers-reduced-motion:reduce){.srv *,.smeter *{animation:none!important;transition:none!important}}
 .seg.best{position:relative;margin:4px -15px;padding:10px 15px;border-top:0;background:linear-gradient(90deg,rgba(226,51,43,.18),transparent 70%);box-shadow:inset 3px 0 0 var(--red)}
 .motn{display:inline-block;margin-bottom:4px;padding:1px 12px 1px 8px;background:var(--red);color:#fff;font:900 italic 12px/1.3 'BC','Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;clip-path:polygon(0 0,100% 0,86% 100%,0 100%)}
@@ -1057,7 +1078,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v199';
+const APP_VERSION='v200';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4130,54 +4151,51 @@ function srRounds(o){const P=o.blocks.findIndex(b=>b.brand==='p'),A=o.blocks.fin
  const pp=pad(p),qq=pad(q),out=[];for(let i=0;i<n;i++)out.push({p:pp[i]||null,ai:qq[i]||null,main:i===n-1&&n>1});
  o.blocks.forEach((b,bi)=>{if(b.brand==='x')b.segs.forEach((s,si)=>out.push({x:{bi,si,b,s}}))});return out}
 function srStage(o){const best=srBest(o),q='<span class="srq">?</span>';const rounds=srRounds(o);
- SRV={o,rounds,solo:o.blocks.filter(b=>b.brand==='p'||b.brand==='ai').length<2};
  const hasCast=o.blocks.some(b=>b.segs.some(x=>x.sd));const introRd=rounds.filter(r=>!r.x).pop()||rounds[0];
  const cols=o.blocks.map((b,bi)=>bi).filter(bi=>o.blocks[bi].brand==='p'||o.blocks[bi].brand==='ai').sort((x,y)=>(o.blocks[x].brand==='p'?0:1)-(o.blocks[y].brand==='p'?0:1));
  const who=b=>b.brand==='p'?S.gm:S.rival;
  openModal(`<div id="srv" class="srv" onclick="srTap(event)">
  <div class="sr-top"><span class="livebug"><b>On air</b><span>Week ${o.week}</span></span><div class="sr-title">${esc(o.title)}</div></div>
  ${o.ratings?`<div class="score"><div class="me" id="srs-p"><span>${esc(S.gm)}</span><div class="stars">${q}</div></div><i>VS</i><div id="srs-ai"><span>${esc(S.rival)}</span><div class="stars">${q}</div></div></div>`:''}
- <div class="sr-spot"><div class="sr-card" id="sr-card"><div class="sr-intro"><div class="sr-tag">Tonight</div><div class="sr-txt">${esc(o.title)}</div><div class="muted">${rounds.length} round${rounds.length>1?'s':''}, segment against segment. Here's how they landed.</div></div></div></div>
- <div class="sr-low${hasCast?'':' fin'}"><div class="sr-cast" id="sr-cast">${hasCast?srCastHtml(introRd,true):''}</div>
+ <div class="sr-stage${hasCast?' cast':' fin'}" id="sr-stage"><div class="sr-card" id="sr-card">${srIntro(o,rounds,introRd,hasCast)}</div>
  <div class="sr-run${cols.length<2?' one':''}">${cols.map(bi=>{const b=o.blocks[bi];return `<div class="sr-col ${b.brand==='p'?'mine':'theirs'}"><div class="sr-ch">${esc(who(b))}</div>${b.segs.map((s,si)=>`<div class="sr-row" id="srw-${bi}-${si}"><span class="sr-n">${esc(s.txt)}</span><span class="sr-v">·</span></div>`).join('')||'<div class="muted tiny">Nothing aired.</div>'}</div>`}).join('')}</div></div>
  <div class="sr-ctl" id="sr-ctl"><span class="muted tiny">Tap to speed it up</span><button class="mini" onclick="event.stopPropagation();srSkip()">Skip ▸▸</button></div></div>`);
  let bk=null;o.blocks.forEach((b,bi)=>b.segs.forEach((s,si)=>{if(s===best)bk=`srw-${bi}-${si}`}));
- SRV={o,rounds,i:0,t:null,tt:[],cur:null,best:bk,done:false,seen:[],solo:SRV.solo};SRV.t=setTimeout(srNext,1400)}
+ SRV={o,rounds,i:0,t:null,tt:[],cur:null,best:bk,done:false,seen:[]};srFit();SRV.t=setTimeout(srNext,hasCast?2200:1400)}
+/* v200: size the stage once — the rundown's height plus the usual spotlight. During the reveal the spotlight fills all of it
+ (room for the wrestler cards); for the finale it shrinks back to the top and the rundown slides in underneath */
+function srFit(){const st=document.getElementById('sr-stage');if(!st)return;const run=st.querySelector('.sr-run');const rh=run?run.offsetHeight:0;
+ const base=window.innerHeight<=740?232:268;st.style.setProperty('--ch',base+'px');st.style.setProperty('--sh',(base+14+Math.max(rh,120))+'px')}
+function srCards(s,big){const cs=srPick(s);if(!cs)return '';return `<div class="sr-hc n${cs.length}${big?' big':''}">${cs.map((c,i)=>(i?`<span class="sr-vs"><b>${s.wi==null?'&amp;':'VS'}</b></span>`:'')+srCardW(c)).join('')}</div>`}
+function srIntro(o,rounds,rd,cast){const n=rounds.length;
+ const me=cast&&rd?[rd.p,rd.ai].filter(Boolean).map(it=>`<div class="sr-ime ${it.b.brand}"><div class="sr-tag">${esc(it.b.brand==='p'?S.gm:S.rival)} · main event</div>${srCards(it.s)}<div class="sr-imt">${esc(it.s.txt)}</div></div>`).join(''):'';
+ return `<div class="sr-intro"><div class="sr-kick">Tonight</div><div class="sr-txt">${esc(o.title)}</div><div class="muted">${n} round${n>1?'s':''}, segment against segment. Here's how they landed.</div>${me?`<div class="sr-imes">${me}</div>`:''}</div>`}
 function srOn(){return !!(SRV&&document.getElementById('srv'))}
 /* a segment is "done" once its stars are in: its rundown row fills and its show's running score updates (safe to call twice) */
-function srDone(it){if(!it||it.ok)return;it.ok=true;SRV.seen.push(it);{const cc=document.querySelector(`#sr-cast .sr-cc[data-k="${it.bi}-${it.si}"]`);if(cc)cc.classList.add('dn')}const r=document.getElementById(`srw-${it.bi}-${it.si}`);
+function srDone(it){if(!it||it.ok)return;it.ok=true;SRV.seen.push(it);{const h=document.querySelector(`#sr-card .sr-half[data-k="${it.bi}-${it.si}"]`);if(h)h.classList.add('dn')}const r=document.getElementById(`srw-${it.bi}-${it.si}`);
  if(r){r.classList.remove('cur');r.classList.add('on');const v=r.querySelector('.sr-v');v.textContent=stars(it.s.stars);v.classList.remove('srfade');void v.offsetWidth;v.classList.add('srfade')}
  const br=it.b.brand;if(br!=='p'&&br!=='ai')return;const box=document.getElementById(br==='p'?'srs-p':'srs-ai');if(!box)return;
  const v=SRV.seen.filter(x=>x.b.brand===br).map(x=>x.s.stars);const st=box.querySelector('.stars');st.innerHTML=`<em class="srso">SO FAR</em> ${stars(avg(v))}`;st.classList.remove('srfade');void st.offsetWidth;st.classList.add('srfade')}
 /* swap the spotlight: the old round slides out left, the new one slides in from the right — same box, so nothing below moves */
 function srSwap(html,cls,then){const c=document.getElementById('sr-card');if(!c)return;c.classList.add('out');
  srLater(()=>{if(!c.isConnected)return;c.className='sr-card pre '+cls;c.innerHTML=html;void c.offsetWidth;c.classList.remove('pre');if(then)then(c)},230)}
-function srHalf(it,br,solo){if(!it)return `<div class="sr-half ${br} empty"><div class="sr-tag">${esc(br==='p'?S.gm:S.rival)}</div><div class="muted">Nothing in this slot.</div></div>`;
+function srHalf(it,br,solo){if(!it)return `<div class="sr-half ${br} empty"><div class="sr-hi"><div class="sr-tag">${esc(br==='p'?S.gm:S.rival)}</div><div class="muted">Nothing in this slot.</div></div></div>`;
  const b=it.b,s=it.s,tag=b.brand==='x'?(()=>{const t=String(s.sub||b.label).split(' · ').pop();return t.charAt(0).toUpperCase()+t.slice(1)})():(b.brand==='p'?S.gm:S.rival)+' · '+(b.label.split(' — ')[0]||b.label);
- return `<div class="sr-half ${b.brand}${solo?' solo':''}" id="srh-${br}"><div class="sr-tag">${esc(tag)}</div><div class="sr-txt">${esc(s.txt)}</div><div class="sr-line">${starMeter(s.stars)}<span class="muted tiny sr-sub">${esc(s.sub)}</span></div>${s.notes.length?`<div class="sr-note note">${esc(s.notes[0])}</div>`:''}</div>`}
-/* v199: the cast — wrestler cards for the round on screen, in the space the rundown uses during the reveal.
- The rundown keeps filling in underneath and takes the space back for the finale. Winners light up and losers dim once
+ const cards=srCards(s,solo);
+ return `<div class="sr-half ${b.brand}${solo?' solo':''}${cards?' hasc':''}" id="srh-${br}" data-k="${it.bi}-${it.si}">${cards}<div class="sr-hi"><div class="sr-tag">${esc(tag)}</div><div class="sr-txt">${esc(s.txt)}</div><div class="sr-line">${starMeter(s.stars)}<span class="muted tiny sr-sub">${esc(s.sub)}</span></div>${s.notes.length?`<div class="sr-note note">${esc(s.notes[0])}</div>`:''}</div></div>`}
+/* v199/v200: wrestler cards for each segment, inside its spotlight panel. The rundown keeps filling in out of sight and slides in for the finale. Winners light up and losers dim once
  the segment's stars are in. Tags show each side's biggest name (partners on the card); multi-person matches show the
  winner and the biggest name they beat. Results saved before v199 have no cast, so they play with the rundown as before. */
 function srCardW(c){const w=S.w[c.id];if(!w)return '';return wcard(w,{noSta:true,on:'',info:c.info?esc(c.info):''}).replace(/^<button/,'<div').replace(/<\/button>$/,'</div>').replace(/ onclick="[^"]*"/,'').replace('class="wc ',`class="wc srwc ${c.r?'r'+c.r:''} `).replace('<div class="pic">',c.r==='w'?'<span class="srwin">WIN</span><div class="pic">':'<div class="pic">')}
 function srPick(s){if(!s||!s.sd)return null;const sd=s.sd.map(x=>x.filter(id=>S.w[id]));if(!sd.some(x=>x.length))return null;
  const lead=x=>x.slice().sort((a,b)=>S.w[b].pop-S.w[a].pop)[0];const ln=id=>S.w[id].name.split(' ').slice(-1)[0];const part=(x,L)=>x.length>1?'& '+x.filter(id=>id!==L).map(ln).join(', '):'';
  const wi=s.wi==null?-1:s.wi;
- if(sd.length<=2)return sd.map((x,i)=>{if(!x.length)return null;const L=lead(x);return {id:L,r:wi<0?'':wi===i?'w':'l',info:part(x,L)}}).filter(Boolean);
+ if(sd.length<=2){const l=sd.map((x,i)=>{if(!x.length)return null;const L=lead(x);return {id:L,r:wi<0?'':wi===i?'w':'l',info:part(x,L)}}).filter(Boolean);return wi>0?l.sort((a,b)=>(a.r==='w'?0:1)-(b.r==='w'?0:1)):l}
  const W=sd[wi]||sd[0];const L=lead(W);const others=sd.filter(x=>x!==W).flat();const top=lead(others);const more=others.length-1;
  return [{id:L,r:wi>=0?'w':'',info:part(W,L)},{id:top,r:wi>=0?'l':'',info:more>0?`+${more} more`:''}]}
-function srCastCol(it,br){const lab=br==='x'?(it?String(it.b.label).replace(/^\S+\s/,''):''):br==='p'?S.gm:S.rival;const cs=it&&srPick(it.s);
- if(!cs)return `<div class="sr-cc ${br} empty"><div class="sr-ch">${esc(lab)}</div><div class="muted tiny">${it?esc(it.s.txt):'Nothing in this slot.'}</div></div>`;
- const join=it.s.wi==null?'&amp;':'vs';
- return `<div class="sr-cc ${br}${it.ok?' dn':''}" data-k="${it.bi}-${it.si}"><div class="sr-ch">${esc(lab)}</div><div class="sr-cards n${cs.length}">${cs.map((c,i)=>(i?`<span class="sr-vs">${join}</span>`:'')+srCardW(c)).join('')}</div></div>`}
-function srCastHtml(rd,intro){if(!rd)return '';if(rd.x)return `<div class="sr-cg one">${srCastCol(rd.x,'x')}</div>`;
- return `${intro?'<div class="sr-ci">Tonight\'s main events</div>':''}<div class="sr-cg${SRV.solo?' one':''}">${srCastCol(rd.p,'p')}${SRV.solo?'':srCastCol(rd.ai,'ai')}</div>`}
-function srCast(rd){const c=document.getElementById('sr-cast');if(!c||c.parentNode.classList.contains('fin'))return;c.classList.add('out');
- srLater(()=>{if(!c.isConnected)return;c.innerHTML=srCastHtml(rd);c.classList.add('pre');c.classList.remove('out');void c.offsetWidth;c.classList.remove('pre')},230)}
 function srRound(rd){srDone(SRV.cur&&SRV.cur.p);srDone(SRV.cur&&SRV.cur.ai);srDone(SRV.cur&&SRV.cur.x);SRV.cur=rd;const k=SRV.i;
  document.querySelectorAll('#srv .sr-row.cur').forEach(r=>r.classList.remove('cur'));[rd.p,rd.ai,rd.x].forEach(it=>{if(!it)return;const r=document.getElementById(`srw-${it.bi}-${it.si}`);if(r)r.classList.add('cur')});
- srCast(rd);
- if(rd.x){srSwap(`<div class="sr-rd">${esc(rd.x.b.label)}</div>${srHalf(rd.x,'x',true)}`,'one',c=>srGo(c.querySelector('.smeter'),false,()=>{srDone(rd.x);c.classList.add('notes')}));return 4200}
+  if(rd.x){srSwap(`<div class="sr-rd">${esc(rd.x.b.label)}</div>${srHalf(rd.x,'x',true)}`,'one',c=>srGo(c.querySelector('.smeter'),false,()=>{srDone(rd.x);c.classList.add('notes')}));return 4200}
  const n=SRV.rounds.filter(r=>!r.x).length;
  srSwap(`<div class="sr-rd">${rd.main?'<b>Main event</b>':`Round ${k} of ${n}`}</div>${srHalf(rd.p,'p')}${srHalf(rd.ai,'ai')}`,'pair',c=>{
   const mp=c.querySelector('#srh-p .smeter'),ma=c.querySelector('#srh-ai .smeter');
@@ -4187,9 +4205,10 @@ function srRound(rd){srDone(SRV.cur&&SRV.cur.p);srDone(SRV.cur&&SRV.cur.ai);srDo
  const d=it=>it?.55+it.s.stars*.2:0;return Math.min(7500,Math.round(1000+(d(rd.p)+d(rd.ai))*1000+1000+((rd.p&&rd.p.s.notes.length)||(rd.ai&&rd.ai.s.notes.length)?1600:500)))}
 function srFinal(instant){const o=SRV.o;srClear();SRV.rounds.forEach(r=>[r.p,r.ai,r.x].forEach(srDone));SRV.cur=null;SRV.done=true;
  document.querySelectorAll('#srv .sr-row.cur').forEach(r=>r.classList.remove('cur'));if(SRV.best){const r=document.getElementById(SRV.best);if(r)r.classList.add('best')}
- const v=document.getElementById('srv');{const lo=v&&v.querySelector('.sr-low');if(lo)lo.classList.add('fin')}const lb=v&&v.querySelector('.livebug b');if(lb)lb.textContent='Final';const ctl=document.getElementById('sr-ctl');if(ctl)ctl.style.visibility='hidden';
+ const v=document.getElementById('srv');{const st=document.getElementById('sr-stage');if(st)st.classList.add('fin')}const lb=v&&v.querySelector('.livebug b');if(lb)lb.textContent='Final';const ctl=document.getElementById('sr-ctl');if(ctl)ctl.style.visibility='hidden';
  const pb=o.blocks.find(b=>b.brand==='p'),fl=pb&&pb.flow&&pb.flow.mod;
  const html=`<div class="sr-fin">${o.ratings&&o.hourWin?`<div class="winban ${o.hourWin==='p'?'w':'l'}">${o.hourWin==='p'?'You win the night!':esc(S.rival)+' takes the night'}</div>`:o.ratings?'':`<div class="sr-txt">Show's in the books</div><div class="sr-line" style="justify-content:center">${pb&&pb.rating!=null?starMeter(pb.rating,'go now'):''}</div>`}
+  ${(()=>{const bs=srBest(o);return bs?`<div class="sr-motn"><span>Best of the night</span><b>${esc(bs.txt)}</b>${starMeter(bs.stars,'go now')}</div>`:''})()}
   ${fl?`<div class="muted tiny">Show structure ${fl>0?'+':'−'}${Math.abs(fl).toFixed(2)}★ · ${esc(flowWord(fl))}</div>`:''}
   <div class="sr-btns"><button class="btn" onclick="event.stopPropagation();showResults()">Full results ▸</button><button class="btn sec" onclick="event.stopPropagation();closeModal();go('home');if(S.crisis)setTimeout(openCrisis,250)">Continue</button></div></div>`;
  const fill=()=>{if(o.ratings)[['p','srs-p'],['ai','srs-ai']].forEach(([k,id])=>{const box=document.getElementById(id);if(!box)return;const st=box.querySelector('.stars');st.innerHTML=starMeter(o.ratings[k]);
