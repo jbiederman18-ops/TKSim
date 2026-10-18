@@ -106,3 +106,14 @@ function moodHtml(w){const [ic,wd]=moodWord(w.mor);const l=moodTop(w,4);
 window.moodHtml=moodHtml;
 if(typeof showW==='function'){const s0=showW;showW=function(id){const out=s0.apply(this,arguments);try{const w=S.w[id];if(w&&w.own==='p'&&(S.phase==='season'||S.phase==='over')){const t=document.querySelector('#modal .wd-top');if(t)t.insertAdjacentHTML('afterend',moodHtml(w))}}catch(e){console.warn(e)}return out}}
 })();
+
+/* v195: creative-control deals — a promised win is kept when it happens and broken when the deadline passes (deals.js) */
+if(typeof applyMatch==='function'){const a0=applyMatch;applyMatch=function(m,res,ctx,notes){const out=a0.apply(this,arguments);
+ try{if(S.ccOwe&&S.ccOwe.length&&m&&!m.nc&&m.sides&&m.sides[m.winner]){const win=m.sides[m.winner];const sh=curShow();
+  S.ccOwe=S.ccOwe.filter(x=>{const w=S.w[x.a];if(!w||!win.includes(x.a)||AW()<=x.made)return true;
+   const ok=x.k==='big'?(ctx&&ctx.pos==='me')||!!sh.ppv:m.sides.some((s,i)=>i!==m.winner&&s.includes(x.b));
+   if(!ok)return true;kept(w,`got ${ccOweLabel(x)}, as you promised`,notes||[]);return false})}}catch(e){console.warn('cc owe',e)}
+ return out}}
+if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){try{if(S.ccOwe&&S.ccOwe.length){const n=notes||[];
+  S.ccOwe=S.ccOwe.filter(x=>{const w=S.w[x.a];if(!w||!w.own)return false;if(AW()<x.by)return true;breach(w,w.own,`the ${x.k==='big'?'big win':ccOweLabel(x).replace(/^a /,'')} you promised for doing the job never came`,n);return false})}}catch(e){console.warn('cc owe',e)}
+ return e0.apply(this,arguments)}}

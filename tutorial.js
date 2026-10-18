@@ -11,7 +11,7 @@
      tour get a "what's new" replay of just those stops.
    • Run `python3 tools/check-tutorial.py` — it plays every stop and tip in a headless browser and fails on any
      missing target or stale value. */
-const TUT_REV=20;
+const TUT_REV=21;
 const TUT_KEY='tksim_tut';
 const TUT_MISS=[];
 
@@ -64,8 +64,8 @@ const TUT_STEPS=[
 /* ---- the first week (v186: the essentials only — everything else is a coach tip the first time it comes up) ---- */
 {id:'s.show',track:'season',since:16,tab:'home',sel:'main .card.showcard',sys:['shows','calendar','goal','fans'],t:'Your show',
  b:()=>`Each week you book ${tv('show name',()=>esc(curShow().mine),'your show')} while ${tvRival()} books ${ON()?'theirs':tv('rival show',()=>esc(curShow().theirs),'theirs')}. The better show wins the night.<br><br><b>You win the season by gaining more fans.</b> Great shows earn them, bad ones lose them — the main event counts most, and PPVs swing far more. ${tv('next PPV',()=>{const n=nextPPV();return n?`Next up: <b>${esc(n.n)}</b> in ${n.in} week${n.in===1?'':'s'}.`:''},'')}`},
-{id:'s.attn',track:'season',since:18,tab:'book',sel:'main .card.attn',sys:['weekly goals','chants','promises','pitches','contracts','titles','morale','backstage heat','briefing','mandates'],t:'Needs your attention',
- b:()=>`Your to-do list for tonight, checked live as you book. What still blocks the show sits on top — empty slots, a promised match, a wrestler waiting on an answer. Everything else (chances for bonus fans, tired wrestlers, contracts coming up) waits underneath.<br><br>Each item turns ✓ when it's handled, and most have a button that takes you straight to the fix. The weekly <b>briefing</b> on Home tells the same news backstage, in your wrestlers' own words.`},
+{id:'s.attn',track:'season',since:21,tab:'book',sel:'main .card.attn',sys:['weekly goals','chants','promises','pitches','contracts','titles','morale','backstage heat','briefing','mandates'],t:'Needs your attention',
+ b:()=>`Your to-do list for tonight, checked live as you book. What still blocks the show sits on top — empty slots, a promised match, a wrestler waiting on an answer. Everything else (chances for bonus fans, tired wrestlers, contracts coming up) waits underneath.<br><br>Each item turns ✓ when it's handled, and most have a button that takes you straight to the fix — including <b>Talk to them</b> when someone with creative control is booked to lose (offer a protected finish, a big win later or their win back). The weekly <b>briefing</b> on Home runs the same news as a rundown, card by card, in your wrestlers' own words.`},
 {id:'s.suggest',track:'season',since:19,tab:'book',opt:true,sel:'main [onclick="suggestFill()"]',sys:['booking'],t:'Need a starting point?',
  b:()=>`<b>Suggest the rest</b> fills the empty slots and keeps anything you've already booked. It covers your must-dos — promised matches, overdue title defenses, the crowd's chant — with a safe card. Stipulations, finishes, run-ins and feud payoffs are where great shows come from, and those are yours.`},
 {id:'s.buzz',track:'season',since:17,tab:'book',sel:()=>document.querySelector('main .slot .mpip')||document.querySelector('main .slot .tellrow')||document.querySelector('main .slot:not(.done)'),sys:['ratings','chemistry','risk','card'],t:'Booking by feel',

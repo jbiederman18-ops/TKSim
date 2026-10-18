@@ -77,17 +77,67 @@ function dealAir(b,info,show,notes){if(!(b==='p'||ON()))return;const now=AW();
   if(w.own===b&&!ccOn(w)&&!d.me&&!d.shot&&d.ppv!==S.season)delete w.deal})}
 
 /* ---------- creative control ---------- */
-function ccLosers(m,b){if(!m||!m.sides||m.nc||m.type==='open'&&!(m.open&&m.open.who))return [];/* v140: in a 3+ person match only the one taking the pin is really losing */const ids=m.sides.flat().length>=3&&typeof pinOf==='function'?[pinOf(m)].filter(Boolean):m.sides.flatMap((s,i)=>i===m.winner?[]:s);return ids.map(id=>S.w[id]).filter(w=>w&&w.own===b&&ccOn(w)&&!w.inj)}
+/* v195: a wrestler with creative control who's booked to take the fall can be talked round before the show. Three offers,
+   each easier to accept than the last: protect them in the finish (they lose to a cheat, a roll-up or a count-out), a big
+   win down the line (a main-event or PPV win within CC_BIG weeks), or their win back over the same opponent by the next
+   PPV. Their answer depends on the usual things — morale, trust (broken promises), how hot your show is, and who they're
+   losing to. Agree and they do the job quietly; a promised win that never comes is a broken promise. */
+const CC_BIG=4;
+const CC_OFF={prot:{n:'Protect them in the finish',i:'🛡️',base:.35},big:{n:'A big win down the line',i:'⭐',base:.55},back:{n:'Their win back',i:'🔁',base:.75}};
+const ccDeal=(m,id)=>m&&m.ccOk&&m.ccOk[id];
+function ccLosers(m,b){if(!m||!m.sides||m.nc||m.type==='open'&&!(m.open&&m.open.who))return [];/* v140: in a 3+ person match only the one taking the pin is really losing */const ids=m.sides.flat().length>=3&&typeof pinOf==='function'?[pinOf(m)].filter(Boolean):m.sides.flatMap((s,i)=>i===m.winner?[]:s);return ids.map(id=>S.w[id]).filter(w=>w&&w.own===b&&ccOn(w)&&!w.inj&&!ccHeld(m,w))}
+/* an agreement only holds while the booking still matches it (a protected finish must still be protected) */
+function ccHeld(m,w){const d=ccDeal(m,w.id);if(!d)return false;if(d.k==='prot')return finOf(m)!=='clean';return true}
 function ccTag(m){const l=ccLosers(m,'p');return l.length?`<span class="tg bad">🎬 ${esc(l.map(w=>w.name.split(' ').slice(-1)[0]).join(', '))} won't agree to lose</span>`:''}
-/* at air time: they either take over the finish or do the job under protest */
-function ccFinish(m,b){if(!(b==='p'||ON()))return null;const l=ccLosers(m,b);if(!l.length)return null;const w=l.sort((x,y)=>y.pop-x.pop)[0];
+function ccOpp(m,w){const win=(m.sides[m.winner]||[]).map(id=>S.w[id]).filter(Boolean);return win.sort((a,b)=>b.pop-a.pop)[0]||null}
+/* the finish that protects them in this match, or why there isn't one */
+function ccProtFin(m){const cur=finOf(m);if(cur!=='clean')return {k:cur};const ks=m.title?['cheat','upset']:['cheat','upset','co','dq'];const k=ks.find(k=>FINS[k]&&!finWhy(m,k));
+ return k?{k}:{why:m.title?'With a title changing hands, only a heel cheating or an upset roll-up protects them — neither fits this match':'This match needs a clean finish'}}
+function ccBy(){const np=nextPPV();if(np&&np.in>0)return {wk:AW()+np.in,n:np.n};const nx=nextPPVAfter(S.week);return nx?{wk:AW()+nx.w-S.week,n:nx.n}:{wk:AW()+CC_BIG,n:'week '+wkOf(AW()+CC_BIG)}}
+function ccWhy(m,w,k){if(k==='prot'){const f=ccProtFin(m);return f.why||''}if(k==='back'){const o=ccOpp(m,w);if(!o)return 'Nobody to beat back';if(o.own!==w.own)return `${o.name} isn't on your roster`;}return ''}
+function ccOdds(w,m,k){const o=ccOpp(m,w);let p=CC_OFF[k].base+(w.mor-55)/150+dealShow(w.own)-.08*(w.trust||0)-(w.pop>=85?.05:0);
+ if(o)p+=o.pop>=w.pop+10?.1:o.pop<=w.pop-10?-.12:0;return clamp(p,.05,.95)}
+const ccWord=p=>p>=.7?['good','Likely']:p>=.45?['warnt','Could go either way']:['bad','Unlikely'];
+function ccDesc(m,w,k){const o=ccOpp(m,w);if(k==='prot'){const f=ccProtFin(m);return f.k?`They lose by ${FINS[f.k].n.toLowerCase()} — no clean pin`:''}
+ if(k==='big')return `A main-event or PPV win within ${CC_BIG} weeks`;const by=ccBy();return o?`Beat ${o.name} by ${by.n}`:''}
+function ccRow(i,m,w,gate){const d=ccDeal(m,w.id);const tried=(m.ccTried&&m.ccTried[w.id])||[];const o=ccOpp(m,w);
+ if(ccHeld(m,w))return `<div class="card"><b>${esc(w.name)}</b> <span class="tg good">Agreed</span><div class="muted tiny">${CC_OFF[d.k].i} ${esc(CC_OFF[d.k].n)} — ${esc(d.t)}</div></div>`;
+ const opts=Object.keys(CC_OFF).map(k=>{const why=ccWhy(m,w,k);const no=tried.includes(k);const [c,word]=ccWord(ccOdds(w,m,k));
+  if(why||no)return `<div class="choice" style="opacity:.55"><span class="key"><span>${no?'✕':CC_OFF[k].i}</span></span><div><b>${CC_OFF[k].n}</b><div class="muted tiny">${no?'They turned this down':esc(why)}</div></div></div>`;
+  return `<button class="choice" onclick="ccTry(${i},'${w.id}','${k}',${gate?1:0})"><span class="key"><span>${CC_OFF[k].i}</span></span><div><b>${CC_OFF[k].n}</b> <span class="tg ${c}">${word}</span><div class="muted tiny">${esc(ccDesc(m,w,k))}</div></div></button>`}).join('');
+ return `<div class="card warn"><b>${esc(w.name)}</b> is booked to lose${o?' to '+esc(o.name):''}, but has creative control.<div class="muted tiny" style="margin:2px 0 6px">Morale ${Math.round(w.mor)}${w.trust?` · ${w.trust} broken promise${w.trust>1?'s':''}`:''} · offer them something to do the job — or go live and they fight the finish (half the time they go over, −¼★; otherwise morale −18).</div>${opts}</div>`}
+function ccNegHtml(gate,only){const c=S.card.p||[];const l=[];c.forEach((sl,i)=>{if(!sl||sl.k!=='match'||!sl.d||sl.d.nc)return;const m=sl.d;
+  const ids=m.sides.flat().length>=3&&typeof pinOf==='function'?[pinOf(m)].filter(Boolean):m.sides.flatMap((s,j)=>j===m.winner?[]:s);
+  ids.map(id=>S.w[id]).filter(w=>w&&w.own==='p'&&ccOn(w)&&!w.inj&&(!only||w.id===only)).forEach(w=>l.push(ccRow(i,m,w,gate)))});
+ const open=ccIssues(c).length;
+ return `<div class="h mhd">🎬 Creative control</div>${l.join('')||'<div class="muted">Nobody with creative control is booked to lose.</div>'}
+ ${gate?(open?`<button class="btn" onclick="closeModal();go('book')">Change the card</button><button class="btn sec" onclick="GL_OK=true;closeModal();goLive()">Go live anyway</button>`:`<button class="btn" onclick="GL_OK=true;closeModal();goLive()">Go live ▸</button><button class="btn sec" onclick="closeModal()">Back</button>`):`<button class="btn" onclick="closeModal();render()">Done</button>`}`}
+function ccTalk(i,id){openModal(ccNegHtml(false,id))}
+function ccTry(i,id,k,gate){if(mpLocked&&mpLocked())return;const sl=S.card.p[i];const m=sl&&sl.d;const w=S.w[id];if(!m||!w||ccWhy(m,w,k))return;
+ m.ccTried=m.ccTried||{};const tr=m.ccTried[id]=m.ccTried[id]||[];if(tr.includes(k))return;
+ if(Math.random()<ccOdds(w,m,k)){m.ccOk=m.ccOk||{};const o=ccOpp(m,w);let t='';
+  if(k==='prot'){const f=ccProtFin(m);m.fin=f.k;t=`they'll lose by ${FINS[f.k].n.toLowerCase()}`}
+  else if(k==='big')t=`you owe them a main-event or PPV win within ${CC_BIG} weeks`;
+  else {const by=ccBy();t=`you owe them a win over ${o.name} by ${by.n}`}
+  m.ccOk[id]={k,t,b:o?o.id:null};toast(`🤝 ${w.name} agrees: ${t}.`)}
+ else{tr.push(k);toast(`🚫 ${w.name} turns it down.`)}
+ save();openModal(ccNegHtml(!!gate,gate?null:id))}
+window.ccTalk=ccTalk;window.ccTry=ccTry;
+/* at air time: they either take over the finish or do the job under protest — unless you made a deal */
+function ccFinish(m,b){if(!(b==='p'||ON()))return null;
+ /* deals made before the show: the job happens quietly, and any promised win is now owed */
+ m.sides.flat().map(id=>S.w[id]).filter(w=>w&&w.own===b&&ccOn(w)&&ccHeld(m,w)).forEach(w=>{const d=ccDeal(m,w.id);const lost=!(m.sides[m.winner]||[]).includes(w.id);if(!lost||d.k==='prot')return;
+  S.ccOwe=(S.ccOwe||[]).filter(x=>x.a!==w.id).concat([{a:w.id,k:d.k,b:d.b,made:AW(),by:d.k==='big'?AW()+CC_BIG:ccBy().wk}])});
+ const l=ccLosers(m,b);if(!l.length)return null;const w=l.sort((x,y)=>y.pop-x.pop)[0];
  if(Math.random()<.5){m.winner=m.sides.findIndex(s=>s.includes(w.id));return {pen:.25,note:`🎬 Creative control: ${w.name} refused the finish and went over instead (−¼★).`}}
  w.mor=clamp(w.mor-18,0,100);w.trust=(w.trust||0)+1;return {pen:0,note:`🎬 ${w.name} did the job under protest — they have creative control and you overruled them (morale −18).`}}
 function ccIssues(c){return (c||[]).filter(sl=>sl&&sl.k==='match'&&sl.d).flatMap(sl=>ccLosers(sl.d,'p').map(w=>({w,m:sl.d})))}
-/* checked when you lock in or go live */
-function ccGate(c){if(GL_OK){GL_OK=false;return false}const l=ccIssues(c);if(!l.length)return false;
- openModal(`<div class="h mhd">🎬 Creative control</div>${l.map(x=>`<div class="card warn"><b>${esc(x.w.name)}</b> is booked to lose to ${esc(sideName(x.m.sides[x.m.winner]))}, but their contract gives them creative control. They won't go along with it quietly: about half the time they change the finish and go over (a messier match). Otherwise they do the job under protest and morale drops hard.</div>`).join('')}
- <button class="btn" onclick="closeModal();go('book')">Change the card</button><button class="btn sec" onclick="GL_OK=true;closeModal();goLive()">Go live anyway</button>`);return true}
+/* checked when you lock in or go live: talk them round, change the card, or go live anyway */
+function ccGate(c){if(GL_OK){GL_OK=false;return false}const l=ccIssues(c);if(!l.length)return false;openModal(ccNegHtml(true));return true}
+/* promised wins: kept when they get it, broken when the deadline passes */
+function ccOweLabel(x){const B=x.b&&S.w[x.b];return x.k==='big'?'a big win (main event or PPV)':`a win over ${B?B.name:'their opponent'}`}
+window.ccOweLabel=ccOweLabel;
+/* the applyMatch/endWeek hooks that settle promised wins live in morale.js (loaded after the main script) */
 
 /* ---------- what's owed this week (Book screen + briefing) ---------- */
 function dealOwed(){const out=[];ownList('p').forEach(w=>{dealActive(w).forEach(k=>{if(k!=='cc')out.push({w,k})})});return out}
