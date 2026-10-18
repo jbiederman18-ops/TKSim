@@ -61,8 +61,8 @@ main.enter>*:nth-child(2){animation-delay:.05s}main.enter>*:nth-child(3){animati
 /* nav */
 nav.tabs{position:fixed;bottom:-120px;left:0;right:0;z-index:6;display:flex;padding:6px 6px calc(120px + max(6px,env(safe-area-inset-bottom) - 8px));background:linear-gradient(180deg,#0e0e11,#050506);box-shadow:0 -10px 30px rgba(0,0,0,.7)}
 nav.tabs:before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold) 30%,var(--red) 70%,transparent)}
-nav.tabs button{flex:1;position:relative;background:none;border:0;color:#77736b;padding:7px 0 3px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
-nav.tabs svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button{flex:1;position:relative;background:none;border:0;color:#77736b;padding:5px 0 2px;font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+nav.tabs svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 nav.tabs button.on{color:var(--gold2);text-shadow:0 0 12px rgba(246,221,142,.5)}
 nav.tabs button.on svg{filter:drop-shadow(0 0 6px rgba(246,221,142,.55))}
 nav.tabs button.on:before{content:"";position:absolute;top:-6px;left:22%;right:22%;height:3px;background:var(--gold2);clip-path:var(--slant);box-shadow:0 0 10px var(--gold)}
@@ -185,7 +185,7 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),l
 .wc.champ{margin:0;font-size:inherit;font-weight:inherit}
 .seg{padding:10px 0;border-top:1px solid rgba(255,255,255,.06)}
 .note{font-size:13.5px;color:var(--gold2);margin-top:3px;font-weight:600}
-.eddock{position:sticky;bottom:var(--edb,-24px);z-index:3;display:flex;gap:8px;margin:12px -16px 0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:#121317;box-shadow:0 -14px 14px -2px #121317}.eddock .btn{margin:0}.eddock .btn.ghost{flex:none;width:auto;padding-left:14px;padding-right:14px}.eddock .btn.sec{flex:none;width:auto;padding-left:14px;padding-right:14px}
+.eddock{position:sticky;bottom:var(--edb,-24px);z-index:3;display:flex;gap:8px;margin:12px -16px 0;padding:7px 16px max(8px,calc(env(safe-area-inset-bottom) - 12px));background:#121317;box-shadow:0 -14px 14px -2px #121317}.eddock .btn{margin:0;font-size:18px;padding:11px 14px 9px}.eddock .btn.ghost{flex:none;width:auto;padding-left:14px;padding-right:14px}.eddock .btn.sec{flex:none;width:auto;padding-left:14px;padding-right:14px}
 .hp .hpc{flex:none;margin-left:auto;margin-right:10px;font-size:12px;font-weight:700}.hp .hpc i{font-style:normal;margin-left:2px}
 .pln{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:13px}.pln span:last-child{color:var(--mut)}
 .card.scout{padding-top:10px;padding-bottom:10px}
@@ -218,9 +218,9 @@ details.mmore>summary{cursor:pointer;color:var(--gold2);font-weight:700;font-siz
 .hfr{display:flex;align-items:center;gap:10px;width:100%;padding:9px 0;border:0;border-top:1px solid var(--line);background:none;color:var(--text);font:inherit;text-align:left;cursor:pointer}
 .card .hfr:first-of-type{border-top:0}.hfn{flex:1;min-width:0;font-weight:600}.hfb{flex:none;width:70px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}.hfb i{display:block;height:100%;background:linear-gradient(90deg,#c96b2b,#ff6b3b)}.hfr b{flex:none;font:800 15px 'BC',sans-serif;min-width:42px;text-align:right}
 .rord:not(.pips) .slot .mpip{display:none}
-.lvdock{position:sticky;bottom:var(--navh,72px);z-index:4;display:flex;align-items:center;gap:10px;margin:10px -16px 0;padding:8px 16px;background:#09090b;box-shadow:0 -14px 14px -2px #09090b}
+.lvdock{position:sticky;bottom:var(--navh,72px);z-index:4;display:flex;align-items:center;gap:10px;margin:10px -16px 0;padding:6px 16px;background:#09090b;box-shadow:0 -14px 14px -2px #09090b}
 .lvdock .btn.live:disabled{opacity:1;filter:saturate(.25) brightness(.55)}
-.lvdock .btn.live{flex:1;margin:0}.lvst{flex:none;display:flex;flex-direction:column;font-size:12.5px;line-height:1.25}.lvst span{color:var(--mut)}
+.lvdock .btn.live{flex:1;margin:0;font-size:20px;padding:11px 14px 9px}.lvst{flex:none;display:flex;flex-direction:column;font-size:12.5px;line-height:1.25}.lvst span{color:var(--mut)}
 .prodf .prods{margin-top:2px}
 .hyps>summary{gap:10px}.hyb{flex:1;min-width:30px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}.hyb i{display:block;height:100%;background:var(--gold2)}
 .fb .fbn{font-weight:700}
@@ -823,7 +823,7 @@ span.smeter.smeter{position:relative;display:inline-block;line-height:1;letter-s
 .srso{font:700 10px 'BC',sans-serif;font-style:normal;letter-spacing:.14em;color:var(--mut);vertical-align:middle;text-shadow:none}
 .sr-spot{display:flex;height:286px;margin-bottom:12px}
 .sr-card{flex:1;min-width:0;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:6px;transition:opacity .22s ease,transform .22s ease}
-.sr-card.out{opacity:0;transform:translateX(-24px)}
+.sr-card.out{opacity:0;transform:translateX(-24px);transition-duration:.15s}
 .sr-card.pre{opacity:0;transform:translateX(24px);transition:none}
 .sr-intro,.sr-fin,.sr-half{border:1px solid var(--line);clip-path:var(--cut);background:var(--grunge),linear-gradient(180deg,var(--st1),var(--st2))}
 .sr-intro,.sr-fin{flex:1;display:flex;flex-direction:column;justify-content:center;padding:14px 16px}
@@ -906,6 +906,20 @@ span.smeter.smeter{position:relative;display:inline-block;line-height:1;letter-s
 .sr-rep{margin:-4px 0 12px}
 .srfade{animation:srFade .45s ease-out}
 @keyframes srFade{from{opacity:0}to{opacity:1}}
+/* v205: stars stamp in one by one */
+.sst .sst-f{position:absolute;left:0;top:0;white-space:nowrap}
+.sst .sst-f i{display:inline-block;font-style:normal;opacity:0;clip-path:inset(-30% calc(100% - var(--f) * 100%) -30% 0)}
+.sst.go .sst-f i{animation:sstIn .34s cubic-bezier(.25,1.5,.45,1) calc(var(--i) * .13s) both}
+.sst.now .sst-f i{animation:none;opacity:1}
+@keyframes sstIn{0%{opacity:0;transform:scale(2.2);text-shadow:0 0 18px #fff3c4}55%{opacity:1}100%{opacity:1;transform:none;text-shadow:0 0 0 transparent}}
+/* v205: the winner's spotlight is its own moment — the card pops, WIN slams on, a light sweeps the panel */
+.sr-half.spot .srwc.rw{animation:srPop .6s cubic-bezier(.2,.9,.3,1)}
+@keyframes srPop{0%{transform:none}35%{transform:scale(1.15);box-shadow:0 0 0 3px #fff3c4,0 0 36px rgba(246,221,142,.85)}100%{transform:scale(1.06)}}
+.sr-half.spot .srwin{animation:srSlam .38s cubic-bezier(.3,1.6,.5,1) .1s backwards}
+@keyframes srSlam{from{opacity:0;transform:scale(2.4) rotate(-8deg)}}
+.sr-half.spot::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:7;background:linear-gradient(100deg,transparent 35%,rgba(246,221,142,.24) 50%,transparent 65%);transform:translateX(-110%);animation:srSweep .75s ease-out forwards}
+@keyframes srSweep{to{transform:translateX(110%)}}
+@media (prefers-reduced-motion:reduce){.sst.go .sst-f i{animation:none;opacity:1}.sr-half.spot .srwc.rw,.sr-half.spot .srwin,.sr-half.spot::after{animation:none}}
 @media (max-height:740px){.sr-hc .srwc.wc{width:64px}.sr-hc.big .srwc.wc{width:92px}.sr-half.hasc .sr-txt{-webkit-line-clamp:2;font-size:15px}.sr-top{margin-bottom:4px}.sr-title{font-size:21px;margin-top:5px}.srv .score{margin:4px 0 8px}.sr-spot{height:250px;margin-bottom:8px}.sr-txt{font-size:15px}.sr-line .smeter{font-size:22px}.sr-note{display:none}.sr-row{padding:2px 6px}.sr-ctl{margin-top:8px}}
 @media (prefers-reduced-motion:reduce){.srv *,.smeter *{animation:none!important;transition:none!important}}
 .seg.best{position:relative;margin:4px -15px;padding:10px 15px;border-top:0;background:linear-gradient(90deg,rgba(226,51,43,.18),transparent 70%);box-shadow:inset 3px 0 0 var(--red)}
@@ -1121,7 +1135,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v204';
+const APP_VERSION='v205';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4223,6 +4237,10 @@ function showResults(rv){const o=S.last;if(!o)return;if(o.pairs)return openModal
 /* v145: a star meter — five dim stars with a gold layer that sweeps across to the exact rating (¼ steps show as part of a
    star). Add .go (or sit inside a revealed TV segment) to start the sweep. Shared by the solo stage and the TV reveal. */
 function starMeter(v,cls){v=clamp(+v||0,0,5);return `<span class="smeter ${cls||''}" style="--v:${(v/5).toFixed(4)};--d:${(.55+v*.2).toFixed(2)}s" role="img" aria-label="${stars(v)}"><span class="sm-b">★★★★★</span><span class="sm-f">★★★★★</span></span>`}
+/* v205: solo reveal stars stamp in one at a time (a quarter star shows as part of the last one) instead of sweeping */
+function sstDur(v){const n=Math.max(1,Math.ceil(clamp(+v||0,0,5)-.001));return (n-1)*.13+.34}
+function starStamp(v,cls){v=clamp(+v||0,0,5);let f='';for(let i=0;i<5;i++){const x=clamp(v-i,0,1);if(x>0)f+=`<i style="--i:${i};--f:${x.toFixed(2)}">★</i>`}
+ return `<span class="smeter sst ${cls||''}" style="--d:${sstDur(v).toFixed(2)}s" role="img" aria-label="${stars(v)}"><span class="sm-b">★★★★★</span><span class="sst-f">${f}</span></span>`}
 function srGo(el,instant,cb){if(!el)return;if(instant){el.classList.add('now','go');if(cb)cb();return}void el.offsetWidth;el.classList.add('go');
  if(cb){const d=parseFloat(getComputedStyle(el).getPropertyValue('--d'))||1;srLater(cb,d*1000+120)}}
 function srLater(f,ms){const t=setTimeout(()=>{if(SRV)SRV.tt=SRV.tt.filter(x=>x!==t);f()},ms);if(SRV)SRV.tt.push(t);return t}
@@ -4261,11 +4279,11 @@ function srDone(it){if(!it||it.ok)return;it.ok=true;SRV.seen.push(it);{const h=d
  const v=SRV.seen.filter(x=>x.b.brand===br).map(x=>x.s.stars);const st=box.querySelector('.stars');st.innerHTML=`<em class="srso">SO FAR</em> ${stars(avg(v))}`;st.classList.remove('srfade');void st.offsetWidth;st.classList.add('srfade')}
 /* swap the spotlight: the old round slides out left, the new one slides in from the right — same box, so nothing below moves */
 function srSwap(html,cls,then){const c=document.getElementById('sr-card');if(!c)return;c.classList.add('out');
- srLater(()=>{if(!c.isConnected)return;c.className='sr-card pre '+cls;c.innerHTML=html;void c.offsetWidth;c.classList.remove('pre');if(then)then(c)},230)}
+ srLater(()=>{if(!c.isConnected)return;c.className='sr-card pre '+cls;c.innerHTML=html;void c.offsetWidth;c.classList.remove('pre');if(then)then(c)},SR_T.swap)}
 function srHalf(it,br,solo){if(!it)return `<div class="sr-half ${br} empty"><div class="sr-hi"><div class="sr-tag">${esc(br==='p'?S.gm:S.rival)}</div><div class="muted">Nothing in this slot.</div></div></div>`;
  const b=it.b,s=it.s,tag=b.brand==='x'?(()=>{const t=String(s.sub||b.label).split(' · ').pop();return t.charAt(0).toUpperCase()+t.slice(1)})():(b.brand==='p'?S.gm:S.rival)+' · '+(b.label.split(' — ')[0]||b.label);
  const cards=srCards(s,solo);
- return `<div class="sr-half ${b.brand}${solo?' solo':''}${cards?' hasc':''}" id="srh-${br}" data-k="${it.bi}-${it.si}">${cards}<div class="sr-hi"><div class="sr-tag">${esc(tag)}</div><div class="sr-txt">${esc(s.txt)}</div><div class="sr-line">${starMeter(s.stars)}<span class="muted tiny sr-sub">${esc(s.sub)}</span></div>${s.notes.length?`<div class="sr-note note">${esc(s.notes[0])}</div>`:''}</div></div>`}
+ return `<div class="sr-half ${b.brand}${solo?' solo':''}${cards?' hasc':''}" id="srh-${br}" data-k="${it.bi}-${it.si}">${cards}<div class="sr-hi"><div class="sr-tag">${esc(tag)}</div><div class="sr-txt">${esc(s.txt)}</div><div class="sr-line">${starStamp(s.stars)}<span class="muted tiny sr-sub">${esc(s.sub)}</span></div>${s.notes.length?`<div class="sr-note note">${esc(s.notes[0])}</div>`:''}</div></div>`}
 /* v199/v200: wrestler cards for each segment, inside its spotlight panel. The rundown keeps filling in out of sight and slides in for the finale. Winners light up and losers dim once
  the segment's stars are in. Tags show each side's biggest name (partners on the card); multi-person matches show the
  winner and the biggest name they beat. Results saved before v199 have no cast, so they play with the rundown as before. */
@@ -4282,9 +4300,9 @@ function srRound(rd){srDone(SRV.cur&&SRV.cur.p);srDone(SRV.cur&&SRV.cur.ai);srDo
    spotlight, a short pause, then the stars sweep (both sides at once, so it reads as a race). Promos and segments with
    no winner skip the spotlight beat. SR_T holds the pauses. */
   const its=[rd.p,rd.ai,rd.x].filter(Boolean),win=it=>{const cs=srPick(it.s);return !!(cs&&cs.some(x=>x.r==='w'))},anyWin=its.some(win);
-  const spotAt=SR_T.read,starsAt=anyWin?spotAt+SR_T.spot:SR_T.readNoWin,dur=it=>it?.55+it.s.stars*.2:0;
+  const spotAt=SR_T.read,starsAt=anyWin?spotAt+SR_T.spot:SR_T.readNoWin,dur=it=>it?sstDur(it.s.stars):0;
   const sweepMs=Math.max(...its.map(dur))*1000+120;
-  const beats=(c,halves,after)=>{if(anyWin)srLater(()=>halves.forEach(([it,h])=>{if(it&&win(it)&&h)h.classList.add('dn')}),spotAt);
+  const beats=(c,halves,after)=>{if(anyWin)srLater(()=>halves.forEach(([it,h])=>{if(it&&win(it)&&h)h.classList.add('dn','spot')}),spotAt);
    srLater(()=>{let left=0;halves.forEach(([it,h])=>{const m=h&&h.querySelector('.smeter');if(!it||!m)return;left++;srGo(m,false,()=>{srDone(it);if(--left===0)srLater(after,250)})});if(!left)after()},starsAt)};
   const notes=its.some(it=>it.s.notes.length)?SR_T.notes:SR_T.noNotes,total=Math.round(SR_T.swap+starsAt+sweepMs+250+notes);
   if(rd.x){srSwap(`<div class="sr-rd">${esc(rd.x.b.label)}</div>${srHalf(rd.x,'x',true)}`,'one',c=>beats(c,[[rd.x,c.querySelector('#srh-x')]],()=>c.classList.add('notes')));return total}
@@ -4294,7 +4312,7 @@ function srRound(rd){srDone(SRV.cur&&SRV.cur.p);srDone(SRV.cur&&SRV.cur.ai);srDo
   beats(c,[[rd.p,c.querySelector('#srh-p')],[rd.ai,c.querySelector('#srh-ai')]],cmp)});
  return total}
 /* reveal pacing (ms after the round has slid in): time to read the match, then the spotlight, then the stars */
-const SR_T={swap:230,read:1100,spot:850,readNoWin:900,notes:1700,noNotes:700};
+const SR_T={swap:160,read:950,spot:700,readNoWin:750,notes:1700,noNotes:700};
 function srFinal(instant){const o=SRV.o;srClear();SRV.rounds.forEach(r=>[r.p,r.ai,r.x].forEach(srDone));SRV.cur=null;SRV.done=true;
  document.querySelectorAll('#srv .sr-row.cur').forEach(r=>r.classList.remove('cur'));if(SRV.best){const r=document.getElementById(SRV.best);if(r)r.classList.add('best')}
  const v=document.getElementById('srv');{const st=document.getElementById('sr-stage');if(st)st.classList.add('fin')}const lb=v&&v.querySelector('.livebug b');if(lb)lb.textContent='Final';const ctl=document.getElementById('sr-ctl');if(ctl)ctl.style.visibility='hidden';
@@ -4303,7 +4321,7 @@ function srFinal(instant){const o=SRV.o;srClear();SRV.rounds.forEach(r=>[r.p,r.a
   ${(()=>{const bs=srBest(o);return bs?`<div class="sr-motn"><span>Best of the night</span><b>${esc(bs.txt)}</b>${starMeter(bs.stars,'go now')}</div>`:''})()}
   ${fl?`<div class="muted tiny">Show structure ${fl>0?'+':'−'}${Math.abs(fl).toFixed(2)}★ · ${esc(flowWord(fl))}</div>`:''}
   <div class="sr-btns"><button class="btn" onclick="event.stopPropagation();showResults()">Full results ▸</button><button class="btn sec" onclick="event.stopPropagation();closeModal();go('home');if(S.crisis)setTimeout(openCrisis,250)">Continue</button></div></div>`;
- const fill=()=>{if(o.ratings)[['p','srs-p'],['ai','srs-ai']].forEach(([k,id])=>{const box=document.getElementById(id);if(!box)return;const st=box.querySelector('.stars');st.innerHTML=starMeter(o.ratings[k]);
+ const fill=()=>{if(o.ratings)[['p','srs-p'],['ai','srs-ai']].forEach(([k,id])=>{const box=document.getElementById(id);if(!box)return;const st=box.querySelector('.stars');st.innerHTML=starStamp(o.ratings[k]);
   const m=st.querySelector('.smeter');const win=()=>{if(o.hourWin===k)box.classList.add('win')};if(instant){srGo(m,true);win()}else setTimeout(()=>srGo(m,false,win),350)})};
  if(instant){const c=document.getElementById('sr-card');if(c){c.className='sr-card fin';c.innerHTML=html}fill()}else{srSwap(html,'fin');fill()}}
 function srNext(){if(!srOn()||SRV.done)return;srClear();const rd=SRV.rounds[SRV.i++];if(!rd)return srFinal(false);SRV.t=setTimeout(srNext,srRound(rd))}
