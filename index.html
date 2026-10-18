@@ -874,14 +874,14 @@ span.smeter.smeter{position:relative;display:inline-block;line-height:1;letter-s
 .sr-hc .srwc.wc{width:82px;flex:none;max-width:none}
 .sr-hc.big .srwc.wc{width:108px}
 .sr-hc.n1 .srwc.wc{width:92px}.sr-hc.big.n1 .srwc.wc{width:120px}
-.srwc.wc{cursor:inherit;transition:opacity .45s,filter .45s,transform .45s cubic-bezier(.2,.8,.2,1),box-shadow .45s;animation:srIn .5s cubic-bezier(.2,.8,.2,1) backwards}
-.sr-hc>.srwc:first-child{--dx:-16px;animation-delay:.18s}.sr-hc>.srwc:last-child{--dx:16px;animation-delay:.28s}
+.srwc.wc{cursor:inherit;transition:opacity .55s,filter .55s,transform .55s cubic-bezier(.2,.8,.2,1),box-shadow .45s;animation:srIn .38s cubic-bezier(.2,.8,.2,1) backwards}
+.sr-hc>.srwc:first-child{--dx:-12px;animation-delay:.02s}.sr-hc>.srwc:last-child{--dx:12px;animation-delay:.06s}
 @keyframes srIn{from{opacity:0;transform:translateX(var(--dx,0)) scale(.92)}}
 .srwc.wc:active{transform:none}
 .srwc .nm{padding:20px 5px 5px 7px}.srwc .nm b{font-size:12px}.srwc .nm b.ln{font-size:10.5px}.srwc .nm b.xl{font-size:9.5px}.srwc .nm span.inf{font-size:9px;margin-top:2px}
 .sr-hc.big .srwc .nm b{font-size:15px}.sr-hc.big .srwc .nm b.ln{font-size:13px}.sr-hc.big .srwc .nm b.xl{font-size:11px}
 .srwc .o{font-size:13px;top:4px;left:5px;padding:2px 5px 1px 4px}.srwc .alb{display:none}
-.sr-vs{flex:none;position:relative;z-index:6;margin:0 -9px;width:24px;height:24px;display:grid;place-items:center;background:linear-gradient(180deg,var(--gold2),#a8842e);transform:rotate(45deg);box-shadow:0 2px 8px rgba(0,0,0,.6);animation:srVs .35s ease .42s backwards}
+.sr-vs{flex:none;position:relative;z-index:6;margin:0 -9px;width:24px;height:24px;display:grid;place-items:center;background:linear-gradient(180deg,var(--gold2),#a8842e);transform:rotate(45deg);box-shadow:0 2px 8px rgba(0,0,0,.6);animation:srVs .3s ease .16s backwards}
 .sr-vs b{transform:rotate(-45deg);font:900 italic 10px/1 'BC',sans-serif;color:#141210;letter-spacing:.02em}
 .sr-hc.big .sr-vs{width:30px;height:30px;margin:0 -11px}.sr-hc.big .sr-vs b{font-size:12px}
 @keyframes srVs{from{opacity:0;transform:rotate(45deg) scale(.3)}}
@@ -1121,7 +1121,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v203';
+const APP_VERSION='v204';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4278,14 +4278,23 @@ function srPick(s){if(!s||!s.sd)return null;const sd=s.sd.map(x=>x.filter(id=>S.
  return [{id:L,r:wi>=0?'w':'',info:part(W,L)},{id:top,r:wi>=0?'l':'',info:more>0?`+${more} more`:''}]}
 function srRound(rd){srDone(SRV.cur&&SRV.cur.p);srDone(SRV.cur&&SRV.cur.ai);srDone(SRV.cur&&SRV.cur.x);SRV.cur=rd;const k=SRV.i;
  document.querySelectorAll('#srv .sr-row.cur').forEach(r=>r.classList.remove('cur'));[rd.p,rd.ai,rd.x].forEach(it=>{if(!it)return;const r=document.getElementById(`srw-${it.bi}-${it.si}`);if(r)r.classList.add('cur')});
-  if(rd.x){srSwap(`<div class="sr-rd">${esc(rd.x.b.label)}</div>${srHalf(rd.x,'x',true)}`,'one',c=>srGo(c.querySelector('.smeter'),false,()=>{srDone(rd.x);c.classList.add('notes')}));return 4200}
+  /* v204: three beats per round — the match and its wrestlers land together, a pause to take it in, the winner's
+   spotlight, a short pause, then the stars sweep (both sides at once, so it reads as a race). Promos and segments with
+   no winner skip the spotlight beat. SR_T holds the pauses. */
+  const its=[rd.p,rd.ai,rd.x].filter(Boolean),win=it=>{const cs=srPick(it.s);return !!(cs&&cs.some(x=>x.r==='w'))},anyWin=its.some(win);
+  const spotAt=SR_T.read,starsAt=anyWin?spotAt+SR_T.spot:SR_T.readNoWin,dur=it=>it?.55+it.s.stars*.2:0;
+  const sweepMs=Math.max(...its.map(dur))*1000+120;
+  const beats=(c,halves,after)=>{if(anyWin)srLater(()=>halves.forEach(([it,h])=>{if(it&&win(it)&&h)h.classList.add('dn')}),spotAt);
+   srLater(()=>{let left=0;halves.forEach(([it,h])=>{const m=h&&h.querySelector('.smeter');if(!it||!m)return;left++;srGo(m,false,()=>{srDone(it);if(--left===0)srLater(after,250)})});if(!left)after()},starsAt)};
+  const notes=its.some(it=>it.s.notes.length)?SR_T.notes:SR_T.noNotes,total=Math.round(SR_T.swap+starsAt+sweepMs+250+notes);
+  if(rd.x){srSwap(`<div class="sr-rd">${esc(rd.x.b.label)}</div>${srHalf(rd.x,'x',true)}`,'one',c=>beats(c,[[rd.x,c.querySelector('#srh-x')]],()=>c.classList.add('notes')));return total}
  const n=SRV.rounds.filter(r=>!r.x).length;
  srSwap(`<div class="sr-rd">${rd.main?'<b>Main event</b>':`Round ${k} of ${n}`}</div>${srHalf(rd.p,'p')}${srHalf(rd.ai,'ai')}`,'pair',c=>{
-  const mp=c.querySelector('#srh-p .smeter'),ma=c.querySelector('#srh-ai .smeter');
   const cmp=()=>{c.classList.add('notes');if(!rd.p||!rd.ai)return;const d=rd.p.s.stars-rd.ai.s.stars;if(Math.abs(d)<.01)return c.classList.add('tie');const w=c.querySelector(d>0?'#srh-p':'#srh-ai');if(w)w.classList.add('won')};
-  const two=()=>{if(ma)srGo(ma,false,()=>{srDone(rd.ai);srLater(cmp,250)});else srLater(cmp,250)};
-  if(mp)srLater(()=>srGo(mp,false,()=>{srDone(rd.p);srLater(two,350)}),250);else srLater(two,250)});
- const d=it=>it?.55+it.s.stars*.2:0;return Math.min(7500,Math.round(1000+(d(rd.p)+d(rd.ai))*1000+1000+((rd.p&&rd.p.s.notes.length)||(rd.ai&&rd.ai.s.notes.length)?1600:500)))}
+  beats(c,[[rd.p,c.querySelector('#srh-p')],[rd.ai,c.querySelector('#srh-ai')]],cmp)});
+ return total}
+/* reveal pacing (ms after the round has slid in): time to read the match, then the spotlight, then the stars */
+const SR_T={swap:230,read:1100,spot:850,readNoWin:900,notes:1700,noNotes:700};
 function srFinal(instant){const o=SRV.o;srClear();SRV.rounds.forEach(r=>[r.p,r.ai,r.x].forEach(srDone));SRV.cur=null;SRV.done=true;
  document.querySelectorAll('#srv .sr-row.cur').forEach(r=>r.classList.remove('cur'));if(SRV.best){const r=document.getElementById(SRV.best);if(r)r.classList.add('best')}
  const v=document.getElementById('srv');{const st=document.getElementById('sr-stage');if(st)st.classList.add('fin')}const lb=v&&v.querySelector('.livebug b');if(lb)lb.textContent='Final';const ctl=document.getElementById('sr-ctl');if(ctl)ctl.style.visibility='hidden';
