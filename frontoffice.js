@@ -14,14 +14,20 @@ const TAMP_WIN=8,RUSH_WK=6,RUSH_DUR=25;
 const W=id=>S.w[id];
 const mineW=id=>{const w=W(id);return w&&w.own==='p'?w:null};
 const who=()=>ON()?'another company':S.rival;
+/* v198: a rumor ends the moment the deal it was about is gone — re-signed (any way: Negotiate, the roster, matching),
+   traded, released or gone. It used to linger until the end of the week, so the briefing kept asking. */
+function tampPrune(){const T=S&&S.tamp;if(!T)return;for(const id in T){const t=T[id],w=mineW(id);
+ if(!w||(t.end!=null?AW()+w.con>t.end:w.con>TAMP_WIN+2))delete T[id]}}
+window.tampPrune=tampPrune;
+window.tampOpen=function(){tampPrune();const T=S.tamp||{};return Object.keys(T).filter(id=>mineW(id)&&!T[id].let&&!T[id].calm)};
 
 /* ---------------- tampering ---------------- */
-function tampTick(notes){if(S.phase!=='season'||S.week<3)return;S.tamp=S.tamp||{};const a=AW();
+function tampTick(notes){if(S.phase!=='season'||S.week<3)return;S.tamp=S.tamp||{};const a=AW();tampPrune();
  for(const id in S.tamp){const t=S.tamp[id],w=mineW(id);if(!w||w.con>TAMP_WIN+2||(t.calm&&a>=t.calm)){delete S.tamp[id]}}
  if(Object.keys(S.tamp).length>=2)return;
  const l=ownList('p').filter(w=>!S.tamp[w.id]&&w.con>1&&w.con<=TAMP_WIN&&w.pop>=45&&(w.mor<55||sal(w)<mkt(w)*.85));
  for(const w of shuffle(l)){const p=Math.min(.5,.08+Math.max(0,55-w.mor)/80+(w.pop>=70?.08:0));if(Math.random()>p)continue;
-  const offer=Math.max(askSal(w),Math.round(mkt(w)*1.2));S.tamp[w.id]={at:a,offer};
+  const offer=Math.max(askSal(w),Math.round(mkt(w)*1.2));S.tamp[w.id]={at:a,offer,end:a+w.con};
   const n=`🕵️ Rumor: ${who()} has been in contact with ${w.name}. Their deal ends ${conWhen(w)}.`;news(n);notes.push(n);break}}
 window.tampMatch=function(id){if(typeof mpLocked==='function'&&mpLocked())return;const w=mineW(id),t=S.tamp&&S.tamp[id];if(!w||!t)return;const c=t.offer*4;
  if(S.money.p<c)return toast('Not enough money.');if(S.money.p<0)return toast("You can't sign anyone while you're in the red.");
@@ -58,7 +64,7 @@ if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){const o
 if(typeof airShow==='function'){const a0=airShow;airShow=function(){const out=a0.apply(this,arguments);try{injScan()}catch(e){}return out}}
 
 /* ---------------- briefing ---------------- */
-function brief(){const out=[];
+function brief(){const out=[];tampPrune();
  const inj=(S.injq||[]).map(q=>({q,w:mineW(q.id)})).filter(x=>x.w&&x.w.inj>0);
  if(inj.length)out.push({i:'🚑',t:`Medical decisions · ${inj.length}`,u:1,rows:inj.map(({w})=>{const c=surgCost();const long=w.inj>=5;
   return `<div class="brow"><b>${esc(w.name)}</b> <span class="muted tiny">· out ${w.inj} week${w.inj===1?'':'s'}${isChamp(w.id)?' · champion':''}</span>
@@ -70,6 +76,6 @@ function brief(){const out=[];
  return out}
 if(typeof briefItems==='function'){const b0=briefItems;window.briefItems=briefItems=function(){const sec=b0.apply(this,arguments);try{const x=brief();if(x.length)sec.unshift(...x)}catch(e){console.warn(e)}return sec}}
 /* a red card on Home too, so a decision is never missed */
-if(typeof homeView==='function'){const h0=homeView;homeView=function(){const out=h0.apply(this,arguments);try{const n=(S.injq||[]).filter(q=>mineW(q.id)).length+Object.keys(S.tamp||{}).filter(id=>mineW(id)&&!S.tamp[id].let&&!S.tamp[id].calm).length;
+if(typeof homeView==='function'){const h0=homeView;homeView=function(){const out=h0.apply(this,arguments);try{const n=(S.injq||[]).filter(q=>mineW(q.id)).length+tampOpen().length;
  if(!n)return out;const k=`<div class="card warn" onclick="openBrief()" style="cursor:pointer"><b>🚑🕵️ ${n} front-office decision${n>1?'s':''} waiting</b><div class="muted">Injuries and tampering rumors — tap to open the briefing.</div></div>`;const i=out.indexOf('<div class="tiles">');return i<0?k+out:out.slice(0,i)+k+out.slice(i)}catch(e){return out}}}
 })();
