@@ -112,8 +112,8 @@ function airXo(order,ctx,vals,extra,out){const segs=[];
   const notes=[];if(!B||B.own!==other||B.inj||busy.has(B.id)){const was=B;B=ownList(other).filter(w=>!w.inj&&!busy.has(w.id)&&w.g===A.g).sort((x,y)=>y.pop-x.pop)[0];if(!B)return;if(was)notes.push(`🔁 ${was.name} couldn't make it — ${B.name} steps up for ${nameOf(other)} instead.`)}
   const m={type:'singles',stip:'std',sides:[[A.id],[B.id]],winner:0,title:'',xo:1};const sc=w=>w.ring*.4+w.pop*.4+(w.mom||0)*2+R(0,25);m.winner=sc(B)>sc(A)?1:0;
   const res=rateMatch(m,ctx);applyMatch(m,res,Object.assign({},ctx,{pos:'mid'}),notes);const W=S.w[m.sides[m.winner][0]];const L=S.w[m.sides[1-m.winner][0]];/* v106: 4K to the winner's brand; a 4★+ dream match pays the losing brand 2K too */extra[W.own]=(extra[W.own]||0)+4000;const share=res.stars>=4&&L&&L.own&&L.own!==W.own;if(share)extra[L.own]=(extra[L.own]||0)+2000;
-  W.pop=clamp(W.pop+2,1,100);vals[b].push(res.stars);segs.push({txt:matchText(m),sub:`${PPVS[FD_WEEK]} dream match · booked by ${nameOf(b)}`,stars:res.stars,notes:[`⚔️ First time ever! ${W.name} wins it for ${nameOf(W.own)} (+4K fans${share?`; a dream match that delivered — ${nameOf(L.own)} gets +2K too`:''}).`].concat(notes),ids:[A.id,B.id]})})});
- if(segs.length)out.blocks.push({brand:'x',label:`⚔️ ${PPVS[FD_WEEK]} dream matches`,segs:segs.map(s=>({txt:s.txt,sub:s.sub,stars:s.stars,notes:s.notes}))})}
+  W.pop=clamp(W.pop+2,1,100);vals[b].push(res.stars);segs.push({sd:m.sides.map(x=>x.slice()),wi:m.winner,txt:matchText(m),sub:`${PPVS[FD_WEEK]} dream match · booked by ${nameOf(b)}`,stars:res.stars,notes:[`⚔️ First time ever! ${W.name} wins it for ${nameOf(W.own)} (+4K fans${share?`; a dream match that delivered — ${nameOf(L.own)} gets +2K too`:''}).`].concat(notes),ids:[A.id,B.id]})})});
+ if(segs.length)out.blocks.push({brand:'x',label:`⚔️ ${PPVS[FD_WEEK]} dream matches`,segs:segs.map(s=>({txt:s.txt,sub:s.sub,stars:s.stars,notes:s.notes,sd:s.sd,wi:s.wi}))})}
 
 /* ===================== NETWORK MANDATES ===================== */
 /* every PPV cycle the TV network asks each GM for something specific. Deliver for a bonus; miss it and they're disappointed. */

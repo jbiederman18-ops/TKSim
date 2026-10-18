@@ -808,6 +808,26 @@ span.smeter.smeter{position:relative;display:inline-block;line-height:1;letter-s
 .sr-btns{display:grid;grid-template-columns:1.4fr 1fr;gap:8px;margin-top:14px}
 .sr-btns .btn{margin:0;padding:12px 8px;font-size:16px}
 .sr-run{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.sr-low{position:relative;min-height:156px}
+.sr-low .sr-run{opacity:0;visibility:hidden;transition:opacity .45s ease .15s,visibility 0s .6s}
+.sr-low.fin .sr-run{opacity:1;visibility:visible;transition:opacity .45s ease .15s}
+.sr-cast{position:absolute;inset:0;display:flex;flex-direction:column;transition:opacity .22s ease,transform .22s ease}
+.sr-cast.out{opacity:0;transform:translateX(-24px)}.sr-cast.pre{opacity:0;transform:translateX(24px);transition:none}
+.sr-low.fin .sr-cast{opacity:0;pointer-events:none;transition:opacity .3s}
+.sr-ci{font:700 11px 'BC',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);text-align:center;margin-bottom:4px}
+.sr-cg{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.sr-cg.one{grid-template-columns:minmax(0,1fr)}
+.sr-cc{min-width:0;display:flex;flex-direction:column}.sr-cc.empty{opacity:.45}.sr-cc.ai .sr-ch{color:var(--text)}.sr-cc.x .sr-ch{color:var(--red)}
+.sr-cards{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:4px}
+.sr-cg.one .sr-cards{gap:10px}
+.srwc.wc{flex:1 1 0;min-width:0;max-width:104px;cursor:inherit;transition:opacity .45s,filter .45s,transform .45s}
+.sr-cards.n1 .srwc.wc{max-width:96px}
+.srwc.wc:active{transform:none}
+.srwc .nm{padding:22px 6px 6px 7px}.srwc .nm b{font-size:13px}.srwc .nm b.ln{font-size:11.5px}.srwc .nm b.xl{font-size:10px}.srwc .nm span.inf{font-size:9.5px;margin-top:2px}
+.srwc .o{font-size:14px;top:4px;left:5px}.srwc .alb{display:none}
+.sr-vs{flex:none;font:900 italic 14px 'BC',sans-serif;color:var(--gold2);text-transform:uppercase}
+.sr-cc.dn .srwc.rw{transform:scale(1.04);box-shadow:0 0 0 2px var(--gold2),0 0 18px rgba(216,180,73,.45)}
+.srwin{position:absolute;top:5px;right:5px;z-index:4;background:var(--gold2);color:#111;font:900 italic 11px/1 'BC',sans-serif;padding:3px 6px 2px 5px;clip-path:var(--slant);opacity:0;transition:opacity .3s}.sr-cc.dn .srwin{opacity:1}
+.sr-cc.dn .srwc.rl{opacity:.5;filter:grayscale(.8)}
 .sr-run.one{grid-template-columns:minmax(0,1fr)}
 .sr-ch{font:800 italic 13px 'BC',sans-serif;text-transform:uppercase;color:var(--gold2);border-bottom:1px solid var(--line);padding-bottom:4px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sr-col.theirs .sr-ch{color:var(--text)}
@@ -822,7 +842,7 @@ span.smeter.smeter{position:relative;display:inline-block;line-height:1;letter-s
 .sr-rep{margin:-4px 0 12px}
 .srfade{animation:srFade .45s ease-out}
 @keyframes srFade{from{opacity:0}to{opacity:1}}
-@media (max-height:740px){.sr-top{margin-bottom:4px}.sr-title{font-size:21px;margin-top:5px}.srv .score{margin:4px 0 8px}.sr-spot{height:250px;margin-bottom:8px}.sr-txt{font-size:15px}.sr-line .smeter{font-size:22px}.sr-note{display:none}.sr-row{padding:2px 6px}.sr-ctl{margin-top:8px}}
+@media (max-height:740px){.sr-low{min-height:132px}.srwc.wc{max-width:88px}.sr-top{margin-bottom:4px}.sr-title{font-size:21px;margin-top:5px}.srv .score{margin:4px 0 8px}.sr-spot{height:250px;margin-bottom:8px}.sr-txt{font-size:15px}.sr-line .smeter{font-size:22px}.sr-note{display:none}.sr-row{padding:2px 6px}.sr-ctl{margin-top:8px}}
 @media (prefers-reduced-motion:reduce){.srv *,.smeter *{animation:none!important;transition:none!important}}
 .seg.best{position:relative;margin:4px -15px;padding:10px 15px;border-top:0;background:linear-gradient(90deg,rgba(226,51,43,.18),transparent 70%);box-shadow:inset 3px 0 0 var(--red)}
 .motn{display:inline-block;margin-bottom:4px;padding:1px 12px 1px 8px;background:var(--red);color:#fff;font:900 italic 12px/1.3 'BC','Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;clip-path:polygon(0 0,100% 0,86% 100%,0 100%)}
@@ -1037,7 +1057,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v198';
+const APP_VERSION='v199';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -3121,12 +3141,12 @@ function airPair(){
   const mIdx=S.card[b].map((sl,i)=>sl.k==='match'&&sl.d&&validMatch(sl.d)&&!sl.d.sides.flat().some(id=>S.w[id].inj)?i:-1).filter(i=>i>=0);
   S.card[b].forEach((sl,si)=>{if(!sl.d)return;
    const shw=show.ppv?show.name:(showNames()[b]||show.name);
-   if(sl.k==='match'){const m=sl.d;spHeal(m);ctx.worked=ctx.worked||new Set();if(validMatch(m)){const hurt=m.sides.flat().filter(id=>S.w[id].inj&&ctx.worked.has(id));if(hurt.length&&(b==='p'||ON()))news(`🚑 ${hurt.map(id=>S.w[id].name).join(' and ')} got hurt earlier tonight, so their second match was scrapped.`)}if(!validMatch(m)||m.sides.flat().some(id=>S.w[id].inj))return;const mctx=Object.assign({},ctx,{pos:mIdx.length>=3&&si===mIdx[mIdx.length-1]?'me':mIdx.length>=3&&si===mIdx[0]?'open':'mid'});const cc=ccFinish(m,b);const res=rateMatch(m,mctx);res.u=uStars(res.raw)+adj(b)+(m.ev?m.ev.stars:0)-(cc?cc.pen:0);res.bdx=[['In-match moments',m.ev?m.ev.stars:0],['Creative control',cc?-cc.pen:0],['House edge',adj(b)]];res.stars=clamp(res.u,.25,5);const notes=m.ev?m.ev.notes.slice():[];if(cc)notes.push(cc.note);dl.on.push(...m.sides.flat());if(si===mIdx[mIdx.length-1])dl.me.push(...m.sides.flat());if(m.title)dl.ttl.push(...m.sides.flat());{const ch=chantHit(b,m.sides.flat());if(ch){res.u+=.25;res.stars=clamp(res.u,.25,5);df+=2000;notes.push(ch);res.bdx.push(['Crowd chant',.25])}}{const sh=stashHit(m);if(sh){res.u+=.25;res.stars=clamp(res.u,.25,5);notes.push(sh);res.bdx.push(['Fresh return',.25])}}if(res.boil)notes.push(`💥 Boiling over! After weeks of talk, ${res.boil} finally got their hands on each other (+¼★, +50% heat).`);if(res.rep)notes.push(`🔁 ${res.repWhy} again — they met last week, so it builds ${res.repLight?'75% heat (a tag or multi-person rematch is a lighter repeat)':'half heat'}.`);{const db=debut(m.sides.flat().map(id=>S.w[id]),notes);if(db){res.u+=db;res.stars=clamp(res.u,.25,5);res.bdx.push(['Debut pop',db])}}const txt=matchText(m);SEG={t:`${shw} · ${txt} ${stars(res.stars)}`,win:m.nc?[]:(m.sides[m.winner]||[]),sides:m.sides};const th=m.title&&S.titles[m.title]?S.titles[m.title].holders.join('|'):null;applyMatch(m,res,mctx,notes);if(m.ev)applyEv(m.ev,notes);applyRunIn(m,res,notes);if(m.tour)tourResult(b,m,notes);if(m.type==='gauntlet')gauntletPrize(b,m,notes);if(m.type==='rumble')rumblePrize(b,m,notes);if(m.type==='mitb')mitbPrize(b,m,notes);if(m.cash)try{cashAfter(b,m,res,notes,mctx)}catch(e){console.warn(e)}{const ov=overflowRewards(b,m,res,mctx,notes,OVF_FAN_CAP(show.ppv)*(ctx.allin?1.5:1)-(inf.ovFans||0));if(ov.o){inf.ovf+=ov.o;df+=ov.fans;inf.ovFans=(inf.ovFans||0)+ov.fans}}try{ocAfter(b,m,res,notes)}catch(e){console.warn(e)}try{sqAfter(b,m,res,notes)}catch(e){console.warn(e)}try{pitchSeg({kind:'match',sides:m.sides,stars:res.stars,pos:mctx.pos,title:m.title||null,won:m.nc?[]:m.sides[m.winner]},notes)}catch(e){console.warn(e)}SEG=null;segs.push({txt,sub:matchSub(m),stars:res.stars,notes,bd:bdReveal(res)});v.push(res.stars);meta.push(segMeta(sl,res.stars));
+   if(sl.k==='match'){const m=sl.d;spHeal(m);ctx.worked=ctx.worked||new Set();if(validMatch(m)){const hurt=m.sides.flat().filter(id=>S.w[id].inj&&ctx.worked.has(id));if(hurt.length&&(b==='p'||ON()))news(`🚑 ${hurt.map(id=>S.w[id].name).join(' and ')} got hurt earlier tonight, so their second match was scrapped.`)}if(!validMatch(m)||m.sides.flat().some(id=>S.w[id].inj))return;const mctx=Object.assign({},ctx,{pos:mIdx.length>=3&&si===mIdx[mIdx.length-1]?'me':mIdx.length>=3&&si===mIdx[0]?'open':'mid'});const cc=ccFinish(m,b);const res=rateMatch(m,mctx);res.u=uStars(res.raw)+adj(b)+(m.ev?m.ev.stars:0)-(cc?cc.pen:0);res.bdx=[['In-match moments',m.ev?m.ev.stars:0],['Creative control',cc?-cc.pen:0],['House edge',adj(b)]];res.stars=clamp(res.u,.25,5);const notes=m.ev?m.ev.notes.slice():[];if(cc)notes.push(cc.note);dl.on.push(...m.sides.flat());if(si===mIdx[mIdx.length-1])dl.me.push(...m.sides.flat());if(m.title)dl.ttl.push(...m.sides.flat());{const ch=chantHit(b,m.sides.flat());if(ch){res.u+=.25;res.stars=clamp(res.u,.25,5);df+=2000;notes.push(ch);res.bdx.push(['Crowd chant',.25])}}{const sh=stashHit(m);if(sh){res.u+=.25;res.stars=clamp(res.u,.25,5);notes.push(sh);res.bdx.push(['Fresh return',.25])}}if(res.boil)notes.push(`💥 Boiling over! After weeks of talk, ${res.boil} finally got their hands on each other (+¼★, +50% heat).`);if(res.rep)notes.push(`🔁 ${res.repWhy} again — they met last week, so it builds ${res.repLight?'75% heat (a tag or multi-person rematch is a lighter repeat)':'half heat'}.`);{const db=debut(m.sides.flat().map(id=>S.w[id]),notes);if(db){res.u+=db;res.stars=clamp(res.u,.25,5);res.bdx.push(['Debut pop',db])}}const txt=matchText(m);SEG={t:`${shw} · ${txt} ${stars(res.stars)}`,win:m.nc?[]:(m.sides[m.winner]||[]),sides:m.sides};const th=m.title&&S.titles[m.title]?S.titles[m.title].holders.join('|'):null;applyMatch(m,res,mctx,notes);if(m.ev)applyEv(m.ev,notes);applyRunIn(m,res,notes);if(m.tour)tourResult(b,m,notes);if(m.type==='gauntlet')gauntletPrize(b,m,notes);if(m.type==='rumble')rumblePrize(b,m,notes);if(m.type==='mitb')mitbPrize(b,m,notes);if(m.cash)try{cashAfter(b,m,res,notes,mctx)}catch(e){console.warn(e)}{const ov=overflowRewards(b,m,res,mctx,notes,OVF_FAN_CAP(show.ppv)*(ctx.allin?1.5:1)-(inf.ovFans||0));if(ov.o){inf.ovf+=ov.o;df+=ov.fans;inf.ovFans=(inf.ovFans||0)+ov.fans}}try{ocAfter(b,m,res,notes)}catch(e){console.warn(e)}try{sqAfter(b,m,res,notes)}catch(e){console.warn(e)}try{pitchSeg({kind:'match',sides:m.sides,stars:res.stars,pos:mctx.pos,title:m.title||null,won:m.nc?[]:m.sides[m.winner]},notes)}catch(e){console.warn(e)}SEG=null;segs.push({txt,sub:matchSub(m),stars:res.stars,notes,bd:bdReveal(res),sd:m.sides.map(x=>x.slice()),wi:m.nc?-1:m.winner});v.push(res.stars);meta.push(segMeta(sl,res.stars));
     /* what the show delivered, for the network's mandates and the year-end awards */
     const ws=m.sides.flat().map(id=>S.w[id]);if(ws.some(w=>w.g==='F'))inf.women++;inf.nm++;inf.lo=Math.min(inf.lo,res.stars);if(m.title)inf.title++;if(m.type==='tag'||m.type==='trios'||m.type==='tag8'||m.sides[0].length>1)inf.tag++;if(stipKey(m)!=='std')inf.stip++;if(si===mIdx[mIdx.length-1]){inf.me=res.stars;if(!S.meh)S.meh={};S.meh[b]=((S.meh[b]||[]).filter(x=>AW()-x.w<4).concat([{w:AW(),ids:m.sides.flat()}]))}if(res.stars>=3&&ws.some(w=>w.rookie&&w.own===b))inf.rk=true;
     if(th!=null){const t=S.titles[m.title];const now=t.holders.join('|');if(now!==th&&t.holders.length&&S.w[t.holders[0]].own===b)inf.newch=true;if(now===th&&t.kind!=='singles'&&!m.nc&&t.holders.length&&S.w[t.holders[0]].own===b)inf.tagdef=true}
     if(!m.nc&&(m.type==='tag')){const wk=m.sides[m.winner].slice().sort().join('|');S.tagW=S.tagW||{};S.tagW[wk]=(S.tagW[wk]||0)+1}}
-   else if(sl.k==='promo'&&sl.d.res&&!sl.d.cut){const p=sl.d;const notes=[];let st=clamp(p.res.stars+adj(b)+debut([S.w[p.a],p.b&&S.w[p.b]],notes),.5,5);{const ch=chantHit(b,[p.a,p.b].filter(Boolean));if(ch){st=clamp(st+.25,.5,5);df+=2000;notes.push(ch)}}inf.pr=Math.max(inf.pr,st);dl.on.push(p.a);if(p.b)dl.on.push(p.b);SEG={t:`${shw} · ${PT[p.type].n}: ${S.w[p.a].name}${p.b&&S.w[p.b]?' & '+S.w[p.b].name:''} ${stars(st)}`};applyPromo(p,notes);if(st>=3.5)[p.a,p.b].forEach(id=>{if(id&&S.w[id])S.w[id].feat=AW()});try{pitchSeg({kind:'promo',sides:[[p.a],[p.b].filter(Boolean)],stars:st},notes)}catch(e){console.warn(e)}SEG=null;segs.push({txt:S.w[p.a].name+(p.b&&S.w[p.b]?' & '+S.w[p.b].name:''),sub:PT[p.type].n,stars:st,notes});v.push(st);meta.push(segMeta(sl,st));
+   else if(sl.k==='promo'&&sl.d.res&&!sl.d.cut){const p=sl.d;const notes=[];let st=clamp(p.res.stars+adj(b)+debut([S.w[p.a],p.b&&S.w[p.b]],notes),.5,5);{const ch=chantHit(b,[p.a,p.b].filter(Boolean));if(ch){st=clamp(st+.25,.5,5);df+=2000;notes.push(ch)}}inf.pr=Math.max(inf.pr,st);dl.on.push(p.a);if(p.b)dl.on.push(p.b);SEG={t:`${shw} · ${PT[p.type].n}: ${S.w[p.a].name}${p.b&&S.w[p.b]?' & '+S.w[p.b].name:''} ${stars(st)}`};applyPromo(p,notes);if(st>=3.5)[p.a,p.b].forEach(id=>{if(id&&S.w[id])S.w[id].feat=AW()});try{pitchSeg({kind:'promo',sides:[[p.a],[p.b].filter(Boolean)],stars:st},notes)}catch(e){console.warn(e)}SEG=null;segs.push({sd:[[p.a]].concat(p.b&&S.w[p.b]?[[p.b]]:[]),txt:S.w[p.a].name+(p.b&&S.w[p.b]?' & '+S.w[p.b].name:''),sub:PT[p.type].n,stars:st,notes});v.push(st);meta.push(segMeta(sl,st));
     if(!S.bestP||st>S.bestP.s)S.bestP={s:st,t:`${PT[p.type].n}: ${S.w[p.a].name}${p.b&&S.w[p.b]?' & '+S.w[p.b].name:''} (${shw}, W${S.week})`}}});
   {const tn=[];tourSweep(b,tn);if(tn.length)out.notes.push(...tn)}
   inf.dl=dl;return {segs,v,df,inf,flow:flowScore(meta,show.ppv,b)}};
@@ -4110,19 +4130,22 @@ function srRounds(o){const P=o.blocks.findIndex(b=>b.brand==='p'),A=o.blocks.fin
  const pp=pad(p),qq=pad(q),out=[];for(let i=0;i<n;i++)out.push({p:pp[i]||null,ai:qq[i]||null,main:i===n-1&&n>1});
  o.blocks.forEach((b,bi)=>{if(b.brand==='x')b.segs.forEach((s,si)=>out.push({x:{bi,si,b,s}}))});return out}
 function srStage(o){const best=srBest(o),q='<span class="srq">?</span>';const rounds=srRounds(o);
+ SRV={o,rounds,solo:o.blocks.filter(b=>b.brand==='p'||b.brand==='ai').length<2};
+ const hasCast=o.blocks.some(b=>b.segs.some(x=>x.sd));const introRd=rounds.filter(r=>!r.x).pop()||rounds[0];
  const cols=o.blocks.map((b,bi)=>bi).filter(bi=>o.blocks[bi].brand==='p'||o.blocks[bi].brand==='ai').sort((x,y)=>(o.blocks[x].brand==='p'?0:1)-(o.blocks[y].brand==='p'?0:1));
  const who=b=>b.brand==='p'?S.gm:S.rival;
  openModal(`<div id="srv" class="srv" onclick="srTap(event)">
  <div class="sr-top"><span class="livebug"><b>On air</b><span>Week ${o.week}</span></span><div class="sr-title">${esc(o.title)}</div></div>
  ${o.ratings?`<div class="score"><div class="me" id="srs-p"><span>${esc(S.gm)}</span><div class="stars">${q}</div></div><i>VS</i><div id="srs-ai"><span>${esc(S.rival)}</span><div class="stars">${q}</div></div></div>`:''}
  <div class="sr-spot"><div class="sr-card" id="sr-card"><div class="sr-intro"><div class="sr-tag">Tonight</div><div class="sr-txt">${esc(o.title)}</div><div class="muted">${rounds.length} round${rounds.length>1?'s':''}, segment against segment. Here's how they landed.</div></div></div></div>
- <div class="sr-run${cols.length<2?' one':''}">${cols.map(bi=>{const b=o.blocks[bi];return `<div class="sr-col ${b.brand==='p'?'mine':'theirs'}"><div class="sr-ch">${esc(who(b))}</div>${b.segs.map((s,si)=>`<div class="sr-row" id="srw-${bi}-${si}"><span class="sr-n">${esc(s.txt)}</span><span class="sr-v">·</span></div>`).join('')||'<div class="muted tiny">Nothing aired.</div>'}</div>`}).join('')}</div>
+ <div class="sr-low${hasCast?'':' fin'}"><div class="sr-cast" id="sr-cast">${hasCast?srCastHtml(introRd,true):''}</div>
+ <div class="sr-run${cols.length<2?' one':''}">${cols.map(bi=>{const b=o.blocks[bi];return `<div class="sr-col ${b.brand==='p'?'mine':'theirs'}"><div class="sr-ch">${esc(who(b))}</div>${b.segs.map((s,si)=>`<div class="sr-row" id="srw-${bi}-${si}"><span class="sr-n">${esc(s.txt)}</span><span class="sr-v">·</span></div>`).join('')||'<div class="muted tiny">Nothing aired.</div>'}</div>`}).join('')}</div></div>
  <div class="sr-ctl" id="sr-ctl"><span class="muted tiny">Tap to speed it up</span><button class="mini" onclick="event.stopPropagation();srSkip()">Skip ▸▸</button></div></div>`);
  let bk=null;o.blocks.forEach((b,bi)=>b.segs.forEach((s,si)=>{if(s===best)bk=`srw-${bi}-${si}`}));
- SRV={o,rounds,i:0,t:null,tt:[],cur:null,best:bk,done:false,seen:[]};SRV.t=setTimeout(srNext,1400)}
+ SRV={o,rounds,i:0,t:null,tt:[],cur:null,best:bk,done:false,seen:[],solo:SRV.solo};SRV.t=setTimeout(srNext,1400)}
 function srOn(){return !!(SRV&&document.getElementById('srv'))}
 /* a segment is "done" once its stars are in: its rundown row fills and its show's running score updates (safe to call twice) */
-function srDone(it){if(!it||it.ok)return;it.ok=true;SRV.seen.push(it);const r=document.getElementById(`srw-${it.bi}-${it.si}`);
+function srDone(it){if(!it||it.ok)return;it.ok=true;SRV.seen.push(it);{const cc=document.querySelector(`#sr-cast .sr-cc[data-k="${it.bi}-${it.si}"]`);if(cc)cc.classList.add('dn')}const r=document.getElementById(`srw-${it.bi}-${it.si}`);
  if(r){r.classList.remove('cur');r.classList.add('on');const v=r.querySelector('.sr-v');v.textContent=stars(it.s.stars);v.classList.remove('srfade');void v.offsetWidth;v.classList.add('srfade')}
  const br=it.b.brand;if(br!=='p'&&br!=='ai')return;const box=document.getElementById(br==='p'?'srs-p':'srs-ai');if(!box)return;
  const v=SRV.seen.filter(x=>x.b.brand===br).map(x=>x.s.stars);const st=box.querySelector('.stars');st.innerHTML=`<em class="srso">SO FAR</em> ${stars(avg(v))}`;st.classList.remove('srfade');void st.offsetWidth;st.classList.add('srfade')}
@@ -4132,8 +4155,28 @@ function srSwap(html,cls,then){const c=document.getElementById('sr-card');if(!c)
 function srHalf(it,br,solo){if(!it)return `<div class="sr-half ${br} empty"><div class="sr-tag">${esc(br==='p'?S.gm:S.rival)}</div><div class="muted">Nothing in this slot.</div></div>`;
  const b=it.b,s=it.s,tag=b.brand==='x'?(()=>{const t=String(s.sub||b.label).split(' · ').pop();return t.charAt(0).toUpperCase()+t.slice(1)})():(b.brand==='p'?S.gm:S.rival)+' · '+(b.label.split(' — ')[0]||b.label);
  return `<div class="sr-half ${b.brand}${solo?' solo':''}" id="srh-${br}"><div class="sr-tag">${esc(tag)}</div><div class="sr-txt">${esc(s.txt)}</div><div class="sr-line">${starMeter(s.stars)}<span class="muted tiny sr-sub">${esc(s.sub)}</span></div>${s.notes.length?`<div class="sr-note note">${esc(s.notes[0])}</div>`:''}</div>`}
+/* v199: the cast — wrestler cards for the round on screen, in the space the rundown uses during the reveal.
+ The rundown keeps filling in underneath and takes the space back for the finale. Winners light up and losers dim once
+ the segment's stars are in. Tags show each side's biggest name (partners on the card); multi-person matches show the
+ winner and the biggest name they beat. Results saved before v199 have no cast, so they play with the rundown as before. */
+function srCardW(c){const w=S.w[c.id];if(!w)return '';return wcard(w,{noSta:true,on:'',info:c.info?esc(c.info):''}).replace(/^<button/,'<div').replace(/<\/button>$/,'</div>').replace(/ onclick="[^"]*"/,'').replace('class="wc ',`class="wc srwc ${c.r?'r'+c.r:''} `).replace('<div class="pic">',c.r==='w'?'<span class="srwin">WIN</span><div class="pic">':'<div class="pic">')}
+function srPick(s){if(!s||!s.sd)return null;const sd=s.sd.map(x=>x.filter(id=>S.w[id]));if(!sd.some(x=>x.length))return null;
+ const lead=x=>x.slice().sort((a,b)=>S.w[b].pop-S.w[a].pop)[0];const ln=id=>S.w[id].name.split(' ').slice(-1)[0];const part=(x,L)=>x.length>1?'& '+x.filter(id=>id!==L).map(ln).join(', '):'';
+ const wi=s.wi==null?-1:s.wi;
+ if(sd.length<=2)return sd.map((x,i)=>{if(!x.length)return null;const L=lead(x);return {id:L,r:wi<0?'':wi===i?'w':'l',info:part(x,L)}}).filter(Boolean);
+ const W=sd[wi]||sd[0];const L=lead(W);const others=sd.filter(x=>x!==W).flat();const top=lead(others);const more=others.length-1;
+ return [{id:L,r:wi>=0?'w':'',info:part(W,L)},{id:top,r:wi>=0?'l':'',info:more>0?`+${more} more`:''}]}
+function srCastCol(it,br){const lab=br==='x'?(it?String(it.b.label).replace(/^\S+\s/,''):''):br==='p'?S.gm:S.rival;const cs=it&&srPick(it.s);
+ if(!cs)return `<div class="sr-cc ${br} empty"><div class="sr-ch">${esc(lab)}</div><div class="muted tiny">${it?esc(it.s.txt):'Nothing in this slot.'}</div></div>`;
+ const join=it.s.wi==null?'&amp;':'vs';
+ return `<div class="sr-cc ${br}${it.ok?' dn':''}" data-k="${it.bi}-${it.si}"><div class="sr-ch">${esc(lab)}</div><div class="sr-cards n${cs.length}">${cs.map((c,i)=>(i?`<span class="sr-vs">${join}</span>`:'')+srCardW(c)).join('')}</div></div>`}
+function srCastHtml(rd,intro){if(!rd)return '';if(rd.x)return `<div class="sr-cg one">${srCastCol(rd.x,'x')}</div>`;
+ return `${intro?'<div class="sr-ci">Tonight\'s main events</div>':''}<div class="sr-cg${SRV.solo?' one':''}">${srCastCol(rd.p,'p')}${SRV.solo?'':srCastCol(rd.ai,'ai')}</div>`}
+function srCast(rd){const c=document.getElementById('sr-cast');if(!c||c.parentNode.classList.contains('fin'))return;c.classList.add('out');
+ srLater(()=>{if(!c.isConnected)return;c.innerHTML=srCastHtml(rd);c.classList.add('pre');c.classList.remove('out');void c.offsetWidth;c.classList.remove('pre')},230)}
 function srRound(rd){srDone(SRV.cur&&SRV.cur.p);srDone(SRV.cur&&SRV.cur.ai);srDone(SRV.cur&&SRV.cur.x);SRV.cur=rd;const k=SRV.i;
  document.querySelectorAll('#srv .sr-row.cur').forEach(r=>r.classList.remove('cur'));[rd.p,rd.ai,rd.x].forEach(it=>{if(!it)return;const r=document.getElementById(`srw-${it.bi}-${it.si}`);if(r)r.classList.add('cur')});
+ srCast(rd);
  if(rd.x){srSwap(`<div class="sr-rd">${esc(rd.x.b.label)}</div>${srHalf(rd.x,'x',true)}`,'one',c=>srGo(c.querySelector('.smeter'),false,()=>{srDone(rd.x);c.classList.add('notes')}));return 4200}
  const n=SRV.rounds.filter(r=>!r.x).length;
  srSwap(`<div class="sr-rd">${rd.main?'<b>Main event</b>':`Round ${k} of ${n}`}</div>${srHalf(rd.p,'p')}${srHalf(rd.ai,'ai')}`,'pair',c=>{
@@ -4144,7 +4187,7 @@ function srRound(rd){srDone(SRV.cur&&SRV.cur.p);srDone(SRV.cur&&SRV.cur.ai);srDo
  const d=it=>it?.55+it.s.stars*.2:0;return Math.min(7500,Math.round(1000+(d(rd.p)+d(rd.ai))*1000+1000+((rd.p&&rd.p.s.notes.length)||(rd.ai&&rd.ai.s.notes.length)?1600:500)))}
 function srFinal(instant){const o=SRV.o;srClear();SRV.rounds.forEach(r=>[r.p,r.ai,r.x].forEach(srDone));SRV.cur=null;SRV.done=true;
  document.querySelectorAll('#srv .sr-row.cur').forEach(r=>r.classList.remove('cur'));if(SRV.best){const r=document.getElementById(SRV.best);if(r)r.classList.add('best')}
- const v=document.getElementById('srv');const lb=v&&v.querySelector('.livebug b');if(lb)lb.textContent='Final';const ctl=document.getElementById('sr-ctl');if(ctl)ctl.style.visibility='hidden';
+ const v=document.getElementById('srv');{const lo=v&&v.querySelector('.sr-low');if(lo)lo.classList.add('fin')}const lb=v&&v.querySelector('.livebug b');if(lb)lb.textContent='Final';const ctl=document.getElementById('sr-ctl');if(ctl)ctl.style.visibility='hidden';
  const pb=o.blocks.find(b=>b.brand==='p'),fl=pb&&pb.flow&&pb.flow.mod;
  const html=`<div class="sr-fin">${o.ratings&&o.hourWin?`<div class="winban ${o.hourWin==='p'?'w':'l'}">${o.hourWin==='p'?'You win the night!':esc(S.rival)+' takes the night'}</div>`:o.ratings?'':`<div class="sr-txt">Show's in the books</div><div class="sr-line" style="justify-content:center">${pb&&pb.rating!=null?starMeter(pb.rating,'go now'):''}</div>`}
   ${fl?`<div class="muted tiny">Show structure ${fl>0?'+':'−'}${Math.abs(fl).toFixed(2)}★ · ${esc(flowWord(fl))}</div>`:''}
