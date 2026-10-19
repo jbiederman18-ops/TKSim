@@ -1127,14 +1127,6 @@ html.lk-hy .war{height:20px;margin:10px 2px 6px;overflow:visible;clip-path:none;
 html.lk-hy .war:before{content:"";position:absolute;left:50%;top:-5px;bottom:-5px;width:2px;background:var(--mut)}
 html.lk-hy .war>i{background:none}
 html.lk-hy .war>i:after{right:-8px;top:50%;bottom:auto;width:16px;height:16px;margin-top:-8px;background:var(--gold2);transform:rotate(45deg);box-shadow:0 0 12px rgba(246,221,142,.6)}
-/* card slots: the number stays big; gold number once booked, red block for the main event */
-html.lk-hy .slot{border:1px solid var(--line);background:linear-gradient(180deg,#16171b,#0f1013)}
-html.lk-hy .slot.done{border-color:#3c3320;background:linear-gradient(90deg,rgba(216,180,73,.08),transparent 55%),linear-gradient(180deg,#1b1c21,#111216);box-shadow:inset 3px 0 0 var(--gold)}
-html.lk-hy .slot .num,html.lk-hy .slot.done .num{background:#111216;color:var(--gold2)}
-html.lk-hy .slot:not(.done) .num{background:#111216;color:#4a4b52}
-html.lk-hy .slot.me .num,html.lk-hy .slot.me:not(.done) .num{background:linear-gradient(180deg,#ff6a55,var(--red) 60%,#8f0f0b);color:#fff}
-html.lk-hy .slot.me.done{border-color:rgba(226,51,43,.55);box-shadow:inset 3px 0 0 var(--red)}
-html.lk-hy .slot .lbl{font:700 11px 'BC',sans-serif;letter-spacing:.16em;color:var(--mut)}
 /* photo cards, tidied: the face/heel stripe replaces the FACE/HEEL tag and champions get a gold frame (the gold title strip is the existing one) */
 html.lk-hy .wc .alb{display:none}
 html.lk-hy .wc .al{width:4px;box-shadow:none}
@@ -1144,38 +1136,11 @@ html.lk-hy .wc.champ .o{background:#000;color:var(--gold2)}
 /* filter chips read like the reveal's labels */
 html.lk-hy .chip{font:700 12px 'BC',sans-serif;letter-spacing:.12em;padding:6px 11px 5px}
 /* v213: Hybrid — name plates on the Book screen, segmented hype meter */
-html.lk-hy .hyps2{display:flex;flex-direction:column;gap:3px;margin:6px 0 4px}
-html.lk-hy .hypl{grid-template-columns:auto minmax(0,1fr) auto;cursor:grab}
-html.lk-hy .hypl .twn span .dn{margin:0;padding:0}
 .hych{font:800 11px/1 'BC','Barlow Condensed',sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:3px 6px;background:#000;color:var(--text);white-space:nowrap}
 .hych.g{color:var(--good)}.hych.w{color:#f0b54a}.hych.b{color:var(--bad)}
-html.lk-hy .slot.done>div>b .dn{font-weight:800}
 html.lk-hy .hyb{height:8px;border-radius:0;background:#2a2b31;-webkit-mask:repeating-linear-gradient(90deg,#000 0 calc(20% - 3px),transparent calc(20% - 3px) 20%);mask:repeating-linear-gradient(90deg,#000 0 calc(20% - 3px),transparent calc(20% - 3px) 20%);transform:skewX(-18deg)}
 html.lk-hy .hyb i{background:var(--gold2);box-shadow:0 0 6px rgba(246,221,142,.35)}
 html.lk-hy .hyps{box-shadow:inset 3px 0 0 var(--gold),inset 0 1px 0 rgba(255,255,255,.05)}
-/* v214: Book slots — number block + panel */
-html.lk-hy .slot{display:grid;grid-template-columns:34px minmax(0,1fr);gap:8px;align-items:stretch;padding:0;border:0!important;background:none!important;box-shadow:none!important;clip-path:none;overflow:visible}
-html.lk-hy .slot .num{position:static;width:auto;display:flex;align-items:center;justify-content:center;font:900 italic 32px/1 'BC',sans-serif;background:#111216;color:#4a4b52;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)}
-html.lk-hy .slot.done .num{background:#111216;color:var(--gold2)}
-html.lk-hy .slot.me .num,html.lk-hy .slot.me:not(.done) .num{background:linear-gradient(180deg,#ff6a55,var(--red) 60%,#8f0f0b);color:#fff}
-html.lk-hy .slot .sbody{position:relative;min-width:0;display:flex;flex-direction:column;gap:6px;padding:10px 30px 11px 14px;border:1px solid var(--line);clip-path:var(--cut);background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 60%),linear-gradient(180deg,#18191e,#101115);box-shadow:inset 3px 0 0 #5f5c55}
-html.lk-hy .slot.done .sbody{box-shadow:inset 3px 0 0 var(--gold)}
-html.lk-hy .slot.me .sbody{box-shadow:inset 3px 0 0 var(--red);border-color:rgba(226,51,43,.55)}
-html.lk-hy .slot.opt .sbody{border-style:dashed}
-html.lk-hy .slot .grip{z-index:2}
-html.lk-hy .shd{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:18px}
-html.lk-hy .slot .lbl{font:700 11px/1.2 'BC',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);min-width:0}
-html.lk-hy .slot.me .lbl{color:var(--red)}
-html.lk-hy .hybz{display:inline-flex;gap:3px;flex:none}
-html.lk-hy .hybz i{width:13px;height:6px;background:#3a3b42;transform:skewX(-18deg)}
-html.lk-hy .hybz i.on{background:var(--gold2);box-shadow:0 0 6px rgba(246,221,142,.35)}
-html.lk-hy .hybz.hot i.on{background:var(--red);box-shadow:0 0 6px rgba(226,51,43,.5)}
-html.lk-hy .hyem{font:700 11px 'BC',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);flex:none}
-html.lk-hy .slot .add{margin:2px 0 0;padding:9px 12px;text-align:center;font:900 italic 16px/1 'BC',sans-serif;text-transform:uppercase;letter-spacing:.04em;color:var(--text);background:#1d1e24;box-shadow:inset 0 0 0 1px #3a3c44;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)}
-html.lk-hy .slot .hyps2{margin:0}
-/* Go live: the gold broadcast button, no pulse */
-html.lk-hy .lvdock .btn.live,html.lk-hy .btn.live{color:#1a1203;background:linear-gradient(180deg,#fff0bb,var(--gold) 55%,var(--gold3));text-shadow:none;animation:none;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);font-size:22px;letter-spacing:.04em}
-html.lk-hy .lvdock .btn.live:disabled{filter:saturate(.3) brightness(.55)}
 /* production: a plain line above Go live, like the mockup */
 html.lk-hy .prodf{background:none;border:0;box-shadow:none;clip-path:none;padding:6px 2px}
 html.lk-hy .prodf[open]{background:linear-gradient(180deg,#18191e,#101115);border:1px solid var(--line);clip-path:var(--cut);padding:12px 14px}
@@ -1184,6 +1149,37 @@ html.lk-hy .wc.t1:before,html.lk-hy .wc.t2:before,html.lk-hy .wc.t3:before{box-s
 html.lk-hy .wc.t1:after{display:none}
 html.lk-hy .wc.t1 .o{color:var(--gold2)}html.lk-hy .wc.t2 .o{color:#d3dae3}html.lk-hy .wc.t3 .o{color:#d29a66}
 html.lk-hy .wc.champ:before{box-shadow:inset 0 0 0 2px #f1d27a,inset 0 0 18px rgba(246,221,142,.3)}
+/* v215: Book slots — the classic frame (gold number bar, gold label) with face-off plates and team cards */
+html.lk-hy .shd{display:flex;justify-content:space-between;align-items:center;gap:8px}
+html.lk-hy .shd .lbl{min-width:0}
+html.lk-hy .hybz{display:inline-flex;gap:3px;flex:none}
+html.lk-hy .hybz i{width:13px;height:6px;background:#3a3b42;transform:skewX(-18deg)}
+html.lk-hy .hybz i.on{background:var(--gold2);box-shadow:0 0 6px rgba(246,221,142,.35)}
+html.lk-hy .hybz.hot i.on{background:var(--red);box-shadow:0 0 6px rgba(226,51,43,.5)}
+html.lk-hy .hyface{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:5px;align-items:stretch;margin:7px 0 2px}
+html.lk-hy .hyface.one{grid-template-columns:minmax(0,1fr)}
+html.lk-hy .hyface.multi{grid-template-columns:repeat(2,minmax(0,1fr))}
+html.lk-hy .hyface>.vs{align-self:center;font:900 italic 11px/1 'BC',sans-serif;color:#c9a55a;text-transform:uppercase}
+html.lk-hy .fo{position:relative;display:flex;flex-direction:column;gap:3px;min-width:0;padding:6px 7px 7px 10px;background:linear-gradient(180deg,#22232a,#16171b);clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);box-shadow:inset 0 0 0 1px #3a3221;cursor:grab}
+html.lk-hy .fo:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--heel)}
+html.lk-hy .fo.fc:before{background:var(--face)}
+html.lk-hy .fo.w{box-shadow:inset 0 0 0 1px #f1d27a,inset 0 0 14px rgba(246,221,142,.22)}
+html.lk-hy .fot{display:flex;justify-content:space-between;align-items:center;gap:4px;min-height:19px}
+html.lk-hy .fot .o{font:900 italic 15px/1 'BC',sans-serif;color:var(--gold2);background:#000;padding:2px 4px 1px 3px;min-width:26px;text-align:center}
+html.lk-hy .fot .for{display:flex;gap:3px;align-items:center}
+html.lk-hy .fo .wn{font:900 italic 10px/1 'BC',sans-serif;color:#111;background:var(--gold2);padding:2px 5px}
+html.lk-hy .fo .hych{font-size:10px;padding:2px 5px}
+html.lk-hy .fon{font:800 italic 15px/1.05 'BC',sans-serif;text-transform:uppercase;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+html.lk-hy .fo .twbelt{align-self:flex-start;max-width:100%}
+html.lk-hy .mcs{display:flex;flex-wrap:wrap;gap:3px;margin-top:1px}
+html.lk-hy .mc{display:inline-flex;align-items:center;gap:4px;font:700 11px/1 'BC',sans-serif;letter-spacing:.04em;text-transform:uppercase;padding:3px 5px 3px 3px;background:#0d0d10;box-shadow:inset 2px 0 0 var(--heel);color:var(--text);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.lk-hy .mc.fc{box-shadow:inset 2px 0 0 var(--face)}
+html.lk-hy .mc i{font:900 italic 11px/1 'BC',sans-serif;color:var(--gold2);background:#000;padding:1px 3px}
+html.lk-hy .mc.t{color:#f0b54a}
+html.lk-hy .hyline{display:flex;flex-wrap:wrap;gap:5px 8px;align-items:center;margin-top:6px}
+html.lk-hy .hyline .tg{margin:0}
+html.lk-hy .hyline .tell{margin:0}
+html.lk-hy .hysub{font-size:12.5px;color:var(--mut)}
 </style>
 </head>
 <body>
@@ -1207,7 +1203,7 @@ html.lk-hy .wc.champ:before{box-shadow:inset 0 0 0 2px #f1d27a,inset 0 0 18px rg
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v214';
+const APP_VERSION='v215';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -3935,9 +3931,9 @@ function bookView(){const sh=curShow();const c=S.card.p;const ready=c.every(sl=>
    if(ocPending(sl.d)){const I=ocIssuer(sl.d);const h=sl.d.open&&sl.d.open.hope&&S.w[sl.d.open.hope];return `<button class="slot done${me}" ${dgA(i)} onclick="openMatch(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">${lbl} · 🎤 Open challenge</div><div><b>${vsLineD(sl.d,i)}</b></div><div class="muted">${sl.d.title&&S.titles[sl.d.title]?esc(S.titles[sl.d.title].n)+' title on the line · ':''}${stipKey(Object.assign({},sl.d,{type:'singles'}))!=='std'?esc(STIPS[sl.d.stip].n)+' · ':''}Someone answers live${h?` · crowd wants ${esc(h.name)}`:''}</div><div class="stars">?</div></button>`}
    const r=rateMatch(sl.d,{ppv:sh.ppv,allin:sh.ppv&&SUPER(S.week),preview:true});
    const pr=promiseOf(sl.d);
-   return `<button class="slot done${me}" ${dgA(i)} onclick="openMatch(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">${lbl}${sl.d.tour&&TOURS[sl.d.tour.k]?` · ${TOURS[sl.d.tour.k].i} ${esc(TOURS[sl.d.tour.k].n)} ${esc(sl.d.tour.lab)}`:''}${pr?(pr.kind==='contract'?' · Contracted':pr.kind==='shot'?' · Earned title shot':' · Promised'):''}</div>${skinOn()&&!sl.d.tour&&!isSp(sl.d)?hyPlates(sl.d,i):`<div><b>${sl.d.tour?vsLine(sl.d):vsLineD(sl.d,i)}</b></div>`}${slotTags(sl.d,sh.ppv)}<div class="muted">${esc(matchSub(sl.d))} · Winner: ${esc(sideName(sl.d.sides[sl.d.winner]))}</div>${typeof slotPips==='function'?slotPips(sl.d,sh,i):''}<div class="tellrow">${tellHtml(r)}</div></button>`}
+   return `<button class="slot done${me}" ${dgA(i)} onclick="openMatch(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">${lbl}${sl.d.tour&&TOURS[sl.d.tour.k]?` · ${TOURS[sl.d.tour.k].i} ${esc(TOURS[sl.d.tour.k].n)} ${esc(sl.d.tour.lab)}`:''}${pr?(pr.kind==='contract'?' · Contracted':pr.kind==='shot'?' · Earned title shot':' · Promised'):''}</div>${skinOn()&&!isSp(sl.d)?hyFace(sl.d,i):`<div><b>${sl.d.tour?vsLine(sl.d):vsLineD(sl.d,i)}</b></div>`}${slotTags(sl.d,sh.ppv)}<div class="muted">${esc(matchSub(sl.d))} · Winner: ${esc(sideName(sl.d.sides[sl.d.winner]))}</div>${typeof slotPips==='function'?slotPips(sl.d,sh,i):''}<div class="tellrow">${tellHtml(r)}</div></button>`}
   if(sl.k==='promo'){if(!sl.d)return `<button class="slot ${sl.opt?'opt':''}" ${dgA(i)} onclick="openPromo(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">${sl.opt?'Bonus promo (optional)':'Promo segment'}</div><div class="add">+ Book a promo${sl.opt?' — or leave it empty':''}</div></button>`;
-   const p=sl.d;const pdb=debutTag([S.w[p.a],p.b&&S.w[p.b]].filter(Boolean),sh.ppv);return `<button class="slot done" ${dgA(i)} onclick="openPromo(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">Promo · ${PT[p.type].n}</div>${skinOn()?`<div class="hyps2">${hyPlate(S.w[p.a],`pw:${i}:a`)}${p.b&&S.w[p.b]?'<span class="twvs">&amp;</span>'+hyPlate(S.w[p.b],`pw:${i}:b`):''}</div>`:`<div><b>${dnm(S.w[p.a],`pw:${i}:a`)}${p.b&&S.w[p.b]?' <span class="muted">&amp;</span> '+dnm(S.w[p.b],`pw:${i}:b`):''}</b></div>`}${(p.b&&S.w[p.b]&&heatOf(p.a,p.b)>=1)||pdb?`<div class="tags">${pdb}${p.b&&S.w[p.b]&&heatOf(p.a,p.b)>=1?`<span class="fdt t${heatTier(heatOf(p.a,p.b))+1}">Heat ${Math.round(heatOf(p.a,p.b))}</span>`:''}</div>`:''}${typeof promoPips==='function'?promoPips(p,i):'<div class="muted">Plays out live when you go live</div>'}</button>`}
+   const p=sl.d;const pdb=debutTag([S.w[p.a],p.b&&S.w[p.b]].filter(Boolean),sh.ppv);return `<button class="slot done" ${dgA(i)} onclick="openPromo(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">Promo · ${PT[p.type].n}</div>${skinOn()?hyPromo(p,i):`<div><b>${dnm(S.w[p.a],`pw:${i}:a`)}${p.b&&S.w[p.b]?' <span class="muted">&amp;</span> '+dnm(S.w[p.b],`pw:${i}:b`):''}</b></div>`}${(p.b&&S.w[p.b]&&heatOf(p.a,p.b)>=1)||pdb?`<div class="tags">${pdb}${p.b&&S.w[p.b]&&heatOf(p.a,p.b)>=1?`<span class="fdt t${heatTier(heatOf(p.a,p.b))+1}">Heat ${Math.round(heatOf(p.a,p.b))}</span>`:''}</div>`:''}${typeof promoPips==='function'?promoPips(p,i):'<div class="muted">Plays out live when you go live</div>'}</button>`}
   if(sl.k==='xo'){const d=sl.d;return `<button class="slot ${d?'done':'opt'}" onclick="openXo(${i})"><span class="num">${i+1}</span><div class="lbl">⚔️ ${esc(PPVS[FD_WEEK])} dream match (optional)</div>${d&&S.w[d.a]&&S.w[d.b]?`<div><b>${alSpan(S.w[d.a])} <span class="muted">vs</span> ${alSpan(S.w[d.b])}</b></div><div class="muted">First time ever · ${esc(nameOf(S.w[d.b].own||'ai'))}'s star · the winner is decided in the ring</div>`:`<div class="add">+ Pick one of yours vs one of ${esc(S.rival)}'s</div>`}</button>`}
   return ''}).join('');
  const um=unmetPromises(c);return `${inaugCard()}${poster(sh,sh.ppv?`<div class="venue mt" style="color:#e9d9b0">Your full PPV card</div>`:'',{kick:`Now booking · Week ${S.week}`,compact:true})}${typeof attnPanel==='function'&&S.phase==='season'?attnPanel():`${um.length?`<div class="card warn">${um.map(pr=>`<div>⚠️ Fans were ${pr.kind==='contract'?'contracted':'promised'} <b>${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)}</b> this week. Skip it and you'll lose fans and morale.</div>`).join('')}</div>`:''}${rivalAdHtml('line')}${weekGoalsCard()}${mandCard()}${dealBookCard(c)}${typeof conBook==='function'?conBook():''}${typeof mitbBook==='function'?mitbBook():''}`}<div class="row" style="gap:8px">${c.some(sl=>!sl.d&&!sl.opt)||c.some(sl=>!sl.d&&sl.k==='promo')?`<button class="btn sec" style="margin:0" onclick="suggestFill()">✨ Suggest the rest</button>`:''}${c.some(sl=>sl.d&&!(sl.k==='match'&&(sl.d.tour||promiseOf(sl.d))))?`<button class="btn ghost" style="margin:0" onclick="clearCard()">Clear card</button>`:''}</div>${c.some(sl=>!sl.d&&!sl.opt)?'<div class="tiny muted" style="margin-top:4px">Suggest covers your must-dos with a safe card. Great shows come from you.</div>':''}<div class="row sb" style="margin-top:14px"><div class="h small" style="margin:0">The running order</div><button class="mini" onclick="pipTog()" aria-pressed="${BOOK_PIPS?'true':'false'}">${BOOK_PIPS?'Hide details':'Show details'}</button></div><p class="muted tiny center dghint">Drag segments to reorder, or drag wrestlers to swap. Tap one to edit it.</p><div class="rord ${BOOK_PIPS?'pips':''}">${slots}</div>${flowCard(sh)}${prodFold(sh)}${feudBoard()}${lockerRoom()}
@@ -5221,25 +5217,38 @@ if(typeof document!=='undefined'&&document.getElementById('app')){
 function hyChip(w){if(w.inj)return '<span class="hych b">Hurt</span>';const st=100-(w.fat||0),sw=staWord(st);
  if(sw!=='Fresh')return `<span class="hych ${sw==='Tired'?'w':'b'}">${sw}</span>`;
  if(w.own==='p'&&typeof moodWord==='function'&&w.mor<50)return `<span class="hych ${w.mor<35?'b':'w'}">${moodWord(w.mor)[1]}</span>`;return '<span class="hych g">Fresh</span>'}
-function hyPlate(w,pos,partners){if(!w)return '';const t=titlesOf(w.id)[0];
- const sub=(partners||'')+(t?`<i class="twbelt">${esc(t.n)}</i>`:'');
- return `<div class="twpl hypl ${w.al==='f'?'fc':'hl'}" data-dg="${pos}" data-dp="${pos}"><span class="o">${ovr(w)}</span><div class="twn"><b>${esc(w.name)}</b>${sub?`<span>${sub}</span>`:''}</div>${hyChip(w)}</div>`}
-function hyPlates(m,i){const sides=m.sides.map((sd,si)=>{const ids=sd.map((id,pi)=>({id,pi})).filter(x=>x.id&&S.w[x.id]);if(!ids.length)return '<div class="twpl hypl"><div class="twn"><b>TBD</b></div></div>';
-  const L=ids.slice().sort((a,b)=>S.w[b.id].pop-S.w[a.id].pop)[0];const rest=ids.filter(x=>x!==L);
-  const pt=rest.length?'&amp; '+rest.map(x=>dnm(S.w[x.id],`w:${i}:${si}:${x.pi}`)).join(', '):'';
-  return hyPlate(S.w[L.id],`w:${i}:${si}:${L.pi}`,pt)});
- return `<div class="hyps2">${sides.join('<span class="twvs">vs</span>')}</div>`}
-/* v214: the Book screen's running order in the reveal's layout — the slot number sits in its own slanted block beside
-   a panel; the panel's header carries the label and the crowd buzz as five pips (red for the main event). Everything
-   the slot showed before (plates, tags, winner, details, tells) stays inside the panel. Runs on the rendered DOM. */
+/* v215: Book plates, face-off style — the two sides sit side by side. A one-wrestler side is a plate (overall, WIN on the
+   booked winner, a status chip, name, title strip). A side of two or more is a team card: the team's name (or the members'
+   names joined, biggest first, when they aren't a set team), the average overall, WIN, a shared title, and every member as
+   a chip with their overall (amber when tired or hurt). Every name keeps its drag position, so drag-to-swap still works. */
+function hyTeamName(ids){const t=(S.teams||[]).find(t=>ids.every(id=>t.m.includes(id)));return t?t.n:null}
+function hyShort(ids,id){const ln=x=>S.w[x].name.split(' ').slice(-1)[0];return ids.filter(x=>ln(x)===ln(id)).length>1?S.w[id].name.split(' ')[0]:ln(id)}
+function hyJoin(ids){const o=ids.slice().sort((a,b)=>S.w[b].pop-S.w[a].pop).map(id=>hyShort(ids,id));return o.length<2?o.join(''):o.slice(0,-1).join(', ')+' & '+o[o.length-1]}
+function hyTired(w){return w.inj?'hurt':staWord(100-(w.fat||0))!=='Fresh'?'tired':''}
+function hyFo(w,pos,win){if(!w)return '<div class="fo"><b class="fon">TBD</b></div>';const t=titlesOf(w.id)[0];const ch=hyChip(w);
+ return `<div class="fo ${w.al==='f'?'fc':'hl'}${win?' w':''}" data-dg="${pos}" data-dp="${pos}"><div class="fot"><span class="o">${ovr(w)}</span><span class="for">${win?'<span class="wn">WIN</span>':''}${win&&/hych g/.test(ch)?'':ch}</span></div><b class="fon">${esc(w.name)}</b>${t?`<i class="twbelt">${esc(t.n)}</i>`:''}</div>`}
+function hyTc(ids,i,si,pis,win){const ws=ids.map(id=>S.w[id]);const avg=Math.round(ws.reduce((a,w)=>a+ovr(w),0)/ws.length);
+ const lead=ws.slice().sort((a,b)=>b.pop-a.pop)[0];const nm=hyTeamName(ids)||hyJoin(ids);
+ const bt=Object.values(S.titles).find(t=>t.holders.length>=2&&t.holders.every(id=>ids.includes(id)));
+ const mem=ids.map((id,k)=>{const w=S.w[id],td=hyTired(w);return `<span class="mc ${w.al==='f'?'fc':'hl'}${td?' t':''}" data-dg="w:${i}:${si}:${pis[k]}" data-dp="w:${i}:${si}:${pis[k]}"><i>${ovr(w)}</i>${esc(hyShort(ids,id))}${td?' · '+td:''}</span>`}).join('');
+ return `<div class="fo tm ${lead.al==='f'?'fc':'hl'}${win?' w':''}"><div class="fot"><span class="o">${avg}</span><span class="for">${win?'<span class="wn">WIN</span>':''}</span></div><b class="fon">${esc(nm)}</b>${bt?`<i class="twbelt">${esc(bt.n)}</i>`:''}<div class="mcs">${mem}</div></div>`}
+function hyFace(m,i){const n=m.sides.length;const wi=m.nc?-1:m.winner;
+ const sides=m.sides.map((sd,si)=>{const ps=sd.map((id,pi)=>({id,pi})).filter(x=>x.id&&S.w[x.id]);
+  if(!ps.length)return hyFo(null);if(ps.length===1)return hyFo(S.w[ps[0].id],`w:${i}:${si}:${ps[0].pi}`,si===wi);
+  return hyTc(ps.map(x=>x.id),i,si,ps.map(x=>x.pi),si===wi)});
+ return n===2?`<div class="hyface">${sides[0]}<span class="vs">vs</span>${sides[1]}</div>`:`<div class="hyface multi">${sides.join('')}</div>`}
+function hyPromo(p,i){const a=S.w[p.a],b=p.b&&S.w[p.b];return b?`<div class="hyface">${hyFo(a,`pw:${i}:a`)}<span class="vs">&amp;</span>${hyFo(b,`pw:${i}:b`)}</div>`:`<div class="hyface one">${hyFo(a,`pw:${i}:a`)}</div>`}
 const HY_BUZZ=TELLS.map(t=>t[2]);
-function hyBook(root){if(!root)return;root.querySelectorAll('.rord>.slot,.slot').forEach(sl=>{if(sl.querySelector(':scope>.sbody'))return;const num=sl.querySelector(':scope>.num');if(!num)return;
-  const body=document.createElement('div');body.className='sbody';[...sl.childNodes].filter(n=>n!==num&&!(n.classList&&n.classList.contains('grip'))).forEach(n=>body.appendChild(n));sl.appendChild(body);
-  const lb=body.querySelector(':scope>.lbl');if(!lb)return;const hd=document.createElement('div');hd.className='shd';lb.parentNode.insertBefore(hd,lb);hd.appendChild(lb);
-  const t=body.querySelector('.tellrow .tell:not(.wild)');let right='';
-  if(t){const k=HY_BUZZ.findIndex(x=>t.textContent.includes(x));const n=k<0?0:5-k;right=`<span class="hybz${sl.classList.contains('me')?' hot':''}" title="${esc(t.textContent.trim())}">${[0,1,2,3,4].map(j=>`<i class="${j<n?'on':''}"></i>`).join('')}</span>`}
-  else if(!sl.classList.contains('done'))right='<span class="hyem">Empty</span>';
-  if(right)hd.insertAdjacentHTML('beforeend',right)})}
+function hyBook(root){if(!root)return;root.querySelectorAll('.rord>.slot,.slot').forEach(sl=>{if(sl.dataset.hy)return;sl.dataset.hy='1';
+  const lb=sl.querySelector(':scope>.lbl');if(!lb)return;const hd=document.createElement('div');hd.className='shd';sl.insertBefore(hd,lb);hd.appendChild(lb);
+  const t=sl.querySelector('.tellrow .tell:not(.wild)');
+  if(t){const k=HY_BUZZ.findIndex(x=>t.textContent.includes(x));const n=k<0?0:5-k;hd.insertAdjacentHTML('beforeend',`<span class="hybz${sl.classList.contains('me')?' hot':''}" title="${esc(t.textContent.trim())}">${[0,1,2,3,4].map(j=>`<i class="${j<n?'on':''}"></i>`).join('')}</span>`)}
+  /* tags, match type and the buzz share one line under the plates (the winner is on the plates, so it leaves the text) */
+  const face=sl.querySelector(':scope>.hyface');if(!face)return;const line=document.createElement('div');line.className='hyline';
+  sl.querySelectorAll(':scope>.tags').forEach(x=>{[...x.children].forEach(c=>line.appendChild(c));x.remove()});
+  const sub=[...sl.children].find(c=>c.matches('div.muted'));if(sub){const tx=sub.textContent.replace(/\s*·\s*Winner:.*$/,'').trim();if(tx){const sp=document.createElement('span');sp.className='hysub';sp.textContent=tx;line.appendChild(sp)}sub.remove()}
+  const tr=sl.querySelector(':scope>.tellrow');if(tr){[...tr.children].forEach(c=>line.appendChild(c));tr.remove()}
+  if(line.children.length)face.after(line)})}
 /* v212: the Hybrid look (v214: the only look — html.lk-hy is always on).
    Section labels lose their emoji in it; the label already says what the section is. */
 function skinOn(){return document.documentElement.classList.contains('lk-hy')}
