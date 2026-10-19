@@ -1234,7 +1234,7 @@ html.cmp.lk-hy .dghint{display:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v218';
+const APP_VERSION='v219';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4387,9 +4387,17 @@ function srDone(it){if(!it||it.ok)return;it.ok=true;SRV.seen.push(it);const br=i
  const v=SRV.seen.filter(x=>x.b.brand===br).map(x=>x.s.stars);const st=box.querySelector('b');st.textContent=stars(avg(v));srKick(st,'punch')}
 function srMark(rd){if(!rd.p||!rd.ai)return;const d=rd.p.s.stars-rd.ai.s.stars;const P=document.getElementById('srh-p'),A=document.getElementById('srh-ai');if(!P||!A)return;
  if(Math.abs(d)<.01){P.classList.add('tie');A.classList.add('tie')}else{(d>0?P:A).classList.add('won');(d>0?A:P).classList.add('lost')}}
+/* v219: the rope sits where the scores are — the gap between the two "So far" averages during the rounds, then the real
+ final ratings (main event weight, show structure, production, ads) at the end, always on the side of whoever won */
+function srRope(gap,win,kick){if(!SRV)return;let pos=clamp(-gap*30,-42,42);
+ if(win==='p'&&pos>-7)pos=-7;else if(win==='ai'&&pos<7)pos=7;else if(win==='tie')pos=0;SRV.pos=pos;
+ const k=document.getElementById('tw-knot');if(k){k.style.left=(50+pos)+'%';if(kick){srKick(k.parentNode,'jolt');srKick(k,'ring')}}}
+/* how far the full show rating moved from its segments alone (show structure, production, ads) */
+function srAdj(o,br){const b=o.blocks.find(x=>x.brand===br);if(!b||!b.segs.length||!o.ratings||o.ratings[br]==null)return 0;
+ let s=0,ws=0;b.segs.forEach((x,i)=>{const w=i===b.segs.length-1?1.6:1;s+=x.stars*w;ws+=w});return o.ratings[br]-s/ws}
 /* the round's result: running scores, the rope, the winner's panel. Visible only for the round on screen. */
 function srLand(rd,vis){if(rd.landed)return;rd.landed=true;[rd.p,rd.ai,rd.x].forEach(srDone);
- if(rd.p&&rd.ai){const d=rd.p.s.stars-rd.ai.s.stars;SRV.pos=clamp(SRV.pos-d*(rd.main?26:18),-42,42);const k=document.getElementById('tw-knot');if(k){k.style.left=(50+SRV.pos)+'%';if(vis&&Math.abs(d)>.01){srKick(k.parentNode,'jolt');srKick(k,'ring')}}}
+ if(rd.p&&rd.ai){const d=rd.p.s.stars-rd.ai.s.stars;const sc=br=>avg(SRV.seen.filter(x=>x.b.brand===br).map(x=>x.s.stars));srRope(sc('p')-sc('ai'),null,vis&&Math.abs(d)>.01)}
  if(vis){document.querySelectorAll('#tw-pair .twh').forEach(h=>h.classList.add('nt'));srMark(rd);srKick(document.querySelector('#tw-pair .twh.won'),'slamw');if(!rd.main)srKick(document.getElementById('srv'),'nudge')}}
 function srStage(o){const all=srRounds(o);const rounds=all.filter(r=>!r.x&&!r.main).concat(all.filter(r=>r.x),all.filter(r=>r.main));
  const two=!!o.ratings&&o.blocks.some(b=>b.brand==='ai');const cnt=br=>{const b=o.blocks.find(x=>x.brand===br);return b?b.segs.length:0};
@@ -4426,10 +4434,15 @@ function srFinal(instant){const R=SRV,o=R.o;R.tok++;R.busy=false;R.done=true;con
  if(instant){const last=R.rounds[R.rounds.length-1];if(last){srShow(last,true)}}
  R.rounds.forEach(rd=>srLand(rd,rd===R.rounds[R.rounds.length-1]));
  const v=document.getElementById('srv');if(!v)return;v.classList.remove('dim');const lb=v.querySelector('.livebug b');if(lb)lb.textContent='Final';const ctl=document.getElementById('sr-ctl');if(ctl)ctl.hidden=true;
+ if(o.ratings&&R.two&&o.ratings.p!=null&&o.ratings.ai!=null)srRope(o.ratings.p-o.ratings.ai,nw,!instant);
  if(o.ratings)[['p','srs-p'],['ai','srs-ai']].forEach(([k,id])=>{const box=document.getElementById(id);if(!box)return;box.querySelector('b').textContent=stars(o.ratings[k]);box.querySelector('em').textContent='Final';if(nw===k)box.classList.add('win');if(!instant){box.classList.remove('punch');void box.offsetWidth;box.classList.add('punch')}});
  const bs=srBest(o),pb=o.blocks.find(b=>b.brand==='p'),fl=pb&&pb.flow&&pb.flow.mod;
  const foot=document.getElementById('tw-foot');if(foot)foot.innerHTML=`${nw==='p'||nw==='ai'?`<div class="winban twban ${nw==='p'?'w':'l'}">${nw==='p'?'You win the night!':esc(S.rival)+' takes the night'}</div>`:nw==='tie'?`<div class="winban twban t">Dead even</div>`:''}
   ${bs?`<div class="sr-motn"><span>Best of the night</span><b>${esc(bs.txt)}</b>${srStars(bs.stars)}</div>`:''}
+  ${(()=>{if(!o.ratings||!R.two||o.ratings.p==null||o.ratings.ai==null)return '';const g=o.ratings.p-o.ratings.ai,same=stars(o.ratings.p)===stars(o.ratings.ai);
+   const sg=v=>`${v>=0?'+':'−'}${Math.abs(v).toFixed(2)}★`;const ap=srAdj(o,'p'),aa=srAdj(o,'ai');
+   const why=Math.abs(ap)>=.01||Math.abs(aa)>=.01?`Pacing, production &amp; ads: ${esc(S.gm)} ${sg(ap)} · ${esc(S.rival)} ${sg(aa)}`:'';
+   return `<div class="muted tiny center">${same&&(nw==='p'||nw==='ai')?Math.abs(g)<.005?`Level at ${o.ratings.p.toFixed(2)}★ — ties go to ${nw==='p'?'you':esc(S.rival)}${why?'<br>':''}`:`Won by a hair — ${o.ratings[nw].toFixed(2)}★ to ${o.ratings[nw==='p'?'ai':'p'].toFixed(2)}★${why?'<br>':''}`:''}${why}</div>`})()}
   ${fl?`<div class="muted tiny center">Show structure ${fl>0?'+':'−'}${Math.abs(fl).toFixed(2)}★ · ${esc(flowWord(fl))}</div>`:''}
   <div class="sr-btns"><button class="btn" onclick="event.stopPropagation();showResults()">Full results ▸</button><button class="btn sec" onclick="event.stopPropagation();closeModal();go('home');if(S.crisis)setTimeout(openCrisis,250)">Continue</button></div>`;
  if(!instant&&foot){foot.classList.remove('flash');void foot.offsetWidth;foot.classList.add('flash');srQuake(1)}}
