@@ -860,7 +860,10 @@ span.smeter.smeter{position:relative;display:inline-block;line-height:1;letter-s
 .twn span{display:flex;gap:6px;align-items:center;font-size:11px;font-weight:600;line-height:1.3;color:#c9c4b8;white-space:nowrap;overflow:hidden}
 .twbelt{font:900 italic 10px/1.35 'BC',sans-serif;font-style:normal;text-transform:uppercase;letter-spacing:.04em;padding:0 5px;color:#1a1203;background:linear-gradient(90deg,#c99a33,#fbe7a1 50%,#c99a33);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .tww{position:absolute;right:6px;top:50%;margin-top:-9px;background:var(--gold2);color:#111;font:900 italic 12px/1 'BC',sans-serif;padding:3px 6px;transform:scale(0) rotate(-14deg);transition:transform .3s cubic-bezier(.2,1.8,.4,1)}
-.twh.dn .twpl.rw{box-shadow:inset 0 0 0 1px #f1d27a,inset 0 0 16px rgba(246,221,142,.3);transform:scale(1.025)}
+.twh.dn .twpl.rw{box-shadow:inset 0 0 0 1px #f1d27a,inset 0 0 16px rgba(246,221,142,.3);transform:scale(1.025);animation:twWin .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes twWin{0%{transform:scale(1.12);filter:brightness(1.8)}100%{transform:scale(1.025);filter:none}}
+.twh.dn .twpl.rw .tww{animation:twTag .4s cubic-bezier(.2,1.8,.4,1) .08s backwards}
+@keyframes twTag{from{transform:scale(3) rotate(-20deg);opacity:0}}
 .twh.dn .twpl.rw .tww{transform:none}
 .twh.dn .twpl.rw .twn{padding-right:36px}
 .twh.dn .twpl.rl{filter:grayscale(.85) brightness(.55);transform:scale(.975)}
@@ -868,10 +871,10 @@ span.smeter.smeter{position:relative;display:inline-block;line-height:1;letter-s
 .tws i{font-style:normal;display:inline-block}
 .tws i.pt{overflow:hidden;width:calc(1em * var(--f))}
 .tws.gh{color:#3a3b42;text-shadow:none}
-.tws.slam{animation:twSlam .42s cubic-bezier(.2,1.5,.4,1) both}
-@keyframes twSlam{0%{opacity:0;transform:scale(2.4)}100%{opacity:1;transform:none}}
+.tws.slam{animation:twSlam .5s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes twSlam{0%{opacity:0;transform:scale(3.2) rotate(-6deg);filter:brightness(2.5) blur(2px)}45%{opacity:1;transform:scale(.9);filter:brightness(1.4)}100%{opacity:1;transform:none;filter:none}}
 .tws.stamp i{animation:twStamp .4s cubic-bezier(.2,1.6,.4,1) both;animation-delay:calc(var(--i) * .22s)}
-@keyframes twStamp{0%{opacity:0;transform:scale(2.6) rotate(-12deg)}100%{opacity:1;transform:none}}
+@keyframes twStamp{0%{opacity:0;transform:scale(3.4) rotate(-16deg);filter:brightness(2.5)}50%{opacity:1;transform:scale(.85)}100%{opacity:1;transform:none;filter:none}}
 .twdrum{font:900 18px/1 'BC',sans-serif;color:var(--gold);letter-spacing:.2em}
 .twdrum i{font-style:normal;animation:twBlink .9s infinite}.twdrum i:nth-child(2){animation-delay:.15s}.twdrum i:nth-child(3){animation-delay:.3s}
 @keyframes twBlink{0%,100%{opacity:.2}50%{opacity:1}}
@@ -880,8 +883,24 @@ span.smeter.smeter{position:relative;display:inline-block;line-height:1;letter-s
 .twfoot{position:relative;min-height:48px;display:flex;flex-direction:column;justify-content:center;margin-top:10px}
 .twnext{text-align:center;font:800 italic 17px 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--gold2);animation:twNudge 1.1s ease-in-out infinite}
 @keyframes twNudge{0%,100%{opacity:.45;transform:translateX(0)}50%{opacity:1;transform:translateX(5px)}}
-.twban{margin:0 auto 8px;animation:twBan .35s cubic-bezier(.2,1.4,.4,1) both}
-@keyframes twBan{from{transform:scaleX(0)}}
+.twban{margin:0 auto 8px;animation:twBan .55s cubic-bezier(.2,1.5,.35,1) both}
+@keyframes twBan{0%{transform:scale(2.2) rotate(-4deg);opacity:0;filter:brightness(2.2)}55%{transform:scale(.94) rotate(0);opacity:1}100%{transform:none;filter:none}}
+.winban.t{background:linear-gradient(180deg,#e8e4da,#9b978e 60%,#5f5c55);color:#141210}
+/* v210: weight */
+.srv.quake{animation:twQuake .26s cubic-bezier(.3,.7,.4,1)}
+.srv.quake2{animation:twQuake2 .5s cubic-bezier(.3,.7,.4,1)}
+@keyframes twQuake{0%,100%{transform:none}30%{transform:translate(-2px,3px)}60%{transform:translate(2px,-1px)}}
+@keyframes twQuake2{0%,100%{transform:none}15%{transform:translate(-6px,5px) rotate(-.4deg)}35%{transform:translate(5px,-4px) rotate(.3deg)}55%{transform:translate(-3px,2px)}75%{transform:translate(2px,-1px)}}
+.twsc b.punch{animation:twPunch .5s cubic-bezier(.2,1.6,.4,1)}
+.twsc>div.punch b{animation:twPunch .6s cubic-bezier(.2,1.6,.4,1)}
+@keyframes twPunch{0%{transform:scale(1.55);filter:brightness(1.8)}100%{transform:none;filter:none}}
+.twrope.jolt{animation:twJolt .45s cubic-bezier(.3,.8,.4,1)}
+@keyframes twJolt{0%,100%{transform:none}20%{transform:scaleY(1.35)}45%{transform:scaleY(.85)}70%{transform:scaleY(1.08)}}
+.twrope i{transition:left .75s cubic-bezier(.25,1.9,.4,1)}
+.twrope i.ring::after{content:"";position:absolute;inset:-4px;border:2px solid var(--gold2);animation:twRing .7s ease-out forwards}
+@keyframes twRing{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(3)}}
+.twh.slamw{animation:twSlamW .45s cubic-bezier(.2,1.6,.4,1)}
+@keyframes twSlamW{0%{transform:scale(1.05);filter:brightness(1.5)}100%{transform:none;filter:none}}
 .sr-motn{display:flex;flex-direction:column;align-items:center;gap:2px;margin:2px 0 4px}.sr-motn span{font:700 10px 'BC',sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--red)}.sr-motn b{font-size:13px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sr-motn .tws{font-size:16px;color:var(--gold2);letter-spacing:0;font-family:inherit}
 .sr-btns{display:grid;grid-template-columns:1.4fr 1fr;gap:8px;margin-top:12px}
 .sr-btns .btn{margin:0;padding:12px 8px;font-size:16px}
@@ -1105,7 +1124,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v209';
+const APP_VERSION='v210';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4222,6 +4241,9 @@ function srPick(s){if(!s||!s.sd)return null;const sd=s.sd.map(x=>x.filter(id=>S.
 const SR_T={intro:900,settle:800,noWin:350,stars:700,after:600,mainHold:2000,mainSettle:900,mainAfter:1300};
 function srOn(){return !!(SRV&&document.getElementById('srv'))}
 function srClear(){if(SRV){SRV.tok++;SRV.busy=false}}
+/* v210: weight — a short jolt of the whole stage, a punch on whatever just landed */
+function srKick(el,c){if(!el)return;el.classList.remove(c);void el.offsetWidth;el.classList.add(c)}
+function srQuake(n){srKick(document.getElementById('srv'),n>1?'quake2':'quake')}
 function srStars(v,cls){v=clamp(+v||0,0,5);let h='';for(let i=0;i<5;i++){const x=clamp(v-i,0,1);if(x<=0)break;h+=x<1?`<i class="pt" style="--i:${i};--f:${x.toFixed(2)}">★</i>`:`<i style="--i:${i}">★</i>`}
  return `<span class="tws ${cls||''}" role="img" aria-label="${stars(v)}">${h}</span>`}
 const SR_GHOST='<span class="tws gh">★★★★★</span>',SR_DRUM='<span class="twdrum"><i>●</i><i>●</i><i>●</i></span>';
@@ -4247,13 +4269,13 @@ function srShow(rd,settled){const pr=document.getElementById('tw-pair'),lb=docum
  if(settled)srMark(rd)}
 /* a segment is "done" once its stars are in: its show's running score updates (safe to call twice) */
 function srDone(it){if(!it||it.ok)return;it.ok=true;SRV.seen.push(it);const br=it.b.brand;if(br!=='p'&&br!=='ai')return;const box=document.getElementById(br==='p'?'srs-p':'srs-ai');if(!box)return;
- const v=SRV.seen.filter(x=>x.b.brand===br).map(x=>x.s.stars);const st=box.querySelector('b');st.textContent=stars(avg(v));st.classList.remove('srfade');void st.offsetWidth;st.classList.add('srfade')}
+ const v=SRV.seen.filter(x=>x.b.brand===br).map(x=>x.s.stars);const st=box.querySelector('b');st.textContent=stars(avg(v));srKick(st,'punch')}
 function srMark(rd){if(!rd.p||!rd.ai)return;const d=rd.p.s.stars-rd.ai.s.stars;const P=document.getElementById('srh-p'),A=document.getElementById('srh-ai');if(!P||!A)return;
  if(Math.abs(d)<.01){P.classList.add('tie');A.classList.add('tie')}else{(d>0?P:A).classList.add('won');(d>0?A:P).classList.add('lost')}}
 /* the round's result: running scores, the rope, the winner's panel. Visible only for the round on screen. */
 function srLand(rd,vis){if(rd.landed)return;rd.landed=true;[rd.p,rd.ai,rd.x].forEach(srDone);
- if(rd.p&&rd.ai){const d=rd.p.s.stars-rd.ai.s.stars;SRV.pos=clamp(SRV.pos-d*(rd.main?26:18),-42,42);const k=document.getElementById('tw-knot');if(k)k.style.left=(50+SRV.pos)+'%'}
- if(vis){document.querySelectorAll('#tw-pair .twh').forEach(h=>h.classList.add('nt'));srMark(rd)}}
+ if(rd.p&&rd.ai){const d=rd.p.s.stars-rd.ai.s.stars;SRV.pos=clamp(SRV.pos-d*(rd.main?26:18),-42,42);const k=document.getElementById('tw-knot');if(k){k.style.left=(50+SRV.pos)+'%';if(vis&&Math.abs(d)>.01){srKick(k.parentNode,'jolt');srKick(k,'ring')}}}
+ if(vis){document.querySelectorAll('#tw-pair .twh').forEach(h=>h.classList.add('nt'));srMark(rd);srKick(document.querySelector('#tw-pair .twh.won'),'slamw')}}
 function srStage(o){const all=srRounds(o);const rounds=all.filter(r=>!r.x&&!r.main).concat(all.filter(r=>r.x),all.filter(r=>r.main));
  const two=!!o.ratings&&o.blocks.some(b=>b.brand==='ai');const cnt=br=>{const b=o.blocks.find(x=>x.brand===br);return b?b.segs.length:0};
  openModal(`<div id="srv" class="srv tw" onclick="srTap(event)">
@@ -4270,10 +4292,11 @@ async function srPlay(){const R=SRV,rd=R.rounds[R.i];if(!rd)return srFinal(false
  const its=[rd.p,rd.ai,rd.x].filter(Boolean),main=!!rd.main,anyWin=its.some(it=>{const c=srPick(it.s);return c&&c.some(x=>x.r==='w')});
  const v=document.getElementById('srv');srShow(rd,false);if(main&&v)v.classList.add('dim');
  await w(main?SR_T.mainHold:SR_T.intro);
- document.querySelectorAll('#tw-pair .twh').forEach(h=>h.classList.add('dn'));await w(anyWin?(main?SR_T.mainSettle:SR_T.settle):SR_T.noWin);
+ document.querySelectorAll('#tw-pair .twh').forEach(h=>h.classList.add('dn'));if(anyWin)srQuake(1);await w(anyWin?(main?SR_T.mainSettle:SR_T.settle):SR_T.noWin);
  its.forEach(it=>{const h=document.querySelector(`#tw-pair .twh[data-k="${it.bi}-${it.si}"] .twsv`);if(h)h.innerHTML=srStars(it.s.stars,main?'stamp sl':'slam')});
+ if(main){const n=Math.ceil(Math.max(...its.map(it=>it.s.stars))-.001);for(let j=0;j<n;j++)setTimeout(()=>{if(srOn()&&SRV.tok===tok)srQuake(1)},j*220+260)}else setTimeout(()=>{if(srOn()&&SRV.tok===tok)srQuake(1)},230);
  await w(main?Math.ceil(Math.max(...its.map(it=>it.s.stars)))*220+600:SR_T.stars);
- srLand(rd,true);if(main&&v){v.classList.remove('dim');const win=document.querySelector('#tw-pair .twh.won');if(win){win.classList.remove('flash');void win.offsetWidth;win.classList.add('flash')}}
+ srLand(rd,true);if(main&&v){v.classList.remove('dim');srQuake(2);const win=document.querySelector('#tw-pair .twh.won');if(win){win.classList.remove('flash');void win.offsetWidth;win.classList.add('flash')}}
  if(R.i>=R.rounds.length-1){await w(main?SR_T.mainAfter:SR_T.after);return srFinal(false)}
  await w(SR_T.after);R.busy=false;R.i++;srHint(srNextLabel())}
 /* tap: start the next round, or finish the one that's playing */
@@ -4283,17 +4306,19 @@ function srAdvance(){if(!srOn()||SRV.done)return;const R=SRV;
  srPlay().catch(()=>{})}
 function srTap(e){if(e&&e.target&&e.target.closest('button,a,summary,details'))return;srAdvance()}
 document.addEventListener('keydown',e=>{if(!srOn()||SRV.done||(e.target&&e.target.closest&&e.target.closest('button,input,textarea')))return;if(e.key===' '||e.key==='Enter'||e.key==='ArrowRight'){e.preventDefault();srAdvance()}});
-function srFinal(instant){const R=SRV,o=R.o;R.tok++;R.busy=false;R.done=true;
+/* who won the night: the TV ratings war on TV weeks, the show ratings themselves on PPVs (they have no hour to win) */
+function srNight(o){if(o.hourWin)return o.hourWin;const r=o.ratings;if(!r||r.p==null||r.ai==null)return null;return r.p>r.ai+1e-9?'p':r.ai>r.p+1e-9?'ai':'tie'}
+function srFinal(instant){const R=SRV,o=R.o;R.tok++;R.busy=false;R.done=true;const nw=srNight(o);
  if(instant){const last=R.rounds[R.rounds.length-1];if(last){srShow(last,true)}}
  R.rounds.forEach(rd=>srLand(rd,rd===R.rounds[R.rounds.length-1]));
  const v=document.getElementById('srv');if(!v)return;v.classList.remove('dim');const lb=v.querySelector('.livebug b');if(lb)lb.textContent='Final';const ctl=document.getElementById('sr-ctl');if(ctl)ctl.hidden=true;
- if(o.ratings)[['p','srs-p'],['ai','srs-ai']].forEach(([k,id])=>{const box=document.getElementById(id);if(!box)return;box.querySelector('b').textContent=stars(o.ratings[k]);box.querySelector('em').textContent='Final';if(o.hourWin===k)box.classList.add('win')});
+ if(o.ratings)[['p','srs-p'],['ai','srs-ai']].forEach(([k,id])=>{const box=document.getElementById(id);if(!box)return;box.querySelector('b').textContent=stars(o.ratings[k]);box.querySelector('em').textContent='Final';if(nw===k)box.classList.add('win');if(!instant){box.classList.remove('punch');void box.offsetWidth;box.classList.add('punch')}});
  const bs=srBest(o),pb=o.blocks.find(b=>b.brand==='p'),fl=pb&&pb.flow&&pb.flow.mod;
- const foot=document.getElementById('tw-foot');if(foot)foot.innerHTML=`${o.ratings&&o.hourWin?`<div class="winban twban ${o.hourWin==='p'?'w':'l'}">${o.hourWin==='p'?'You win the night!':esc(S.rival)+' takes the night'}</div>`:o.ratings?`<div class="winban twban l">Dead even</div>`:''}
+ const foot=document.getElementById('tw-foot');if(foot)foot.innerHTML=`${nw==='p'||nw==='ai'?`<div class="winban twban ${nw==='p'?'w':'l'}">${nw==='p'?'You win the night!':esc(S.rival)+' takes the night'}</div>`:nw==='tie'?`<div class="winban twban t">Dead even</div>`:''}
   ${bs?`<div class="sr-motn"><span>Best of the night</span><b>${esc(bs.txt)}</b>${srStars(bs.stars)}</div>`:''}
   ${fl?`<div class="muted tiny center">Show structure ${fl>0?'+':'−'}${Math.abs(fl).toFixed(2)}★ · ${esc(flowWord(fl))}</div>`:''}
   <div class="sr-btns"><button class="btn" onclick="event.stopPropagation();showResults()">Full results ▸</button><button class="btn sec" onclick="event.stopPropagation();closeModal();go('home');if(S.crisis)setTimeout(openCrisis,250)">Continue</button></div>`;
- if(!instant&&foot){foot.classList.remove('flash');void foot.offsetWidth;foot.classList.add('flash')}}
+ if(!instant&&foot){foot.classList.remove('flash');void foot.offsetWidth;foot.classList.add('flash');srQuake(2)}}
 function srSkip(){if(!srOn()||SRV.done)return;srFinal(true)}
 
 function gridInfo(w,k){if(['pop','ring','mic'].includes(k))return `<em class="chm cn">${{pop:'Popularity',ring:'In-ring',mic:'Mic'}[k]} ${Math.round(w[k])}</em>`;if(k==='sta')return `Stamina ${sta(w)} · ${staWord(sta(w))}`;if(k==='dur')return `Durability ${durOf(w)} · ${durWord(durOf(w))}`;const lab={pot:'Pot',mor:'Morale',fat:'Fatigue'}[k];return lab?`${lab} ${Math.round(w[k])} · ${STYLE_N[w.st]}`:`${STYLE_N[w.st]}${w.rookie?' · 🌱':''}`}
