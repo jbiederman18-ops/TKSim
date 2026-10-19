@@ -823,7 +823,7 @@ span.smeter.smeter{position:relative;display:inline-block;line-height:1;letter-s
 .srso{font:700 10px 'BC',sans-serif;font-style:normal;letter-spacing:.14em;color:var(--mut);vertical-align:middle;text-shadow:none}
 .sr-spot{display:flex;height:286px;margin-bottom:12px}
 .sr-card{flex:1;min-width:0;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:6px;transition:opacity .22s ease,transform .22s ease}
-.sr-card.out{opacity:0;transform:translateX(-24px);transition-duration:.15s}
+.sr-card.out{opacity:0;transform:translateX(-32px);transition-duration:.13s}
 .sr-card.pre{opacity:0;transform:translateX(24px);transition:none}
 .sr-intro,.sr-fin,.sr-half{border:1px solid var(--line);clip-path:var(--cut);background:var(--grunge),linear-gradient(180deg,var(--st1),var(--st2))}
 .sr-intro,.sr-fin{flex:1;display:flex;flex-direction:column;justify-content:center;padding:14px 16px}
@@ -909,7 +909,7 @@ span.smeter.smeter{position:relative;display:inline-block;line-height:1;letter-s
 /* v205: stars stamp in one by one */
 .sst .sst-f{position:absolute;left:0;top:0;display:inline;white-space:nowrap;font:inherit;color:inherit;letter-spacing:0;text-transform:none;overflow:visible;text-overflow:clip;margin:0;padding:0}
 .sst .sst-f .sst-s{display:inline-block;font:inherit;color:inherit;letter-spacing:0;text-transform:none;overflow:visible;text-overflow:clip;white-space:nowrap;margin:0;padding:0;opacity:0;clip-path:inset(-30% calc(100% - var(--f) * 100%) -30% 0)}
-.sst.go .sst-f .sst-s{animation:sstIn .42s cubic-bezier(.25,1.5,.45,1) calc(var(--i) * .2s) both}
+.sst.go .sst-f .sst-s{animation:sstIn .4s cubic-bezier(.25,1.5,.45,1) calc(var(--i) * .17s) both}
 .sst.now .sst-f .sst-s{animation:none;opacity:1}
 @keyframes sstIn{0%{opacity:0;transform:scale(2.2);text-shadow:0 0 18px #fff3c4}55%{opacity:1}100%{opacity:1;transform:none;text-shadow:0 0 0 transparent}}
 /* v205: the winner's spotlight is its own moment — the card pops, WIN slams on, a light sweeps the panel */
@@ -1135,7 +1135,7 @@ body.tv.fs:not(.tvmove){cursor:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v206';
+const APP_VERSION='v207';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4238,7 +4238,7 @@ function showResults(rv){const o=S.last;if(!o)return;if(o.pairs)return openModal
    star). Add .go (or sit inside a revealed TV segment) to start the sweep. Shared by the solo stage and the TV reveal. */
 function starMeter(v,cls){v=clamp(+v||0,0,5);return `<span class="smeter ${cls||''}" style="--v:${(v/5).toFixed(4)};--d:${(.55+v*.2).toFixed(2)}s" role="img" aria-label="${stars(v)}"><span class="sm-b">★★★★★</span><span class="sm-f">★★★★★</span></span>`}
 /* v205: solo reveal stars stamp in one at a time (a quarter star shows as part of the last one) instead of sweeping */
-function sstDur(v){const n=Math.max(1,Math.ceil(clamp(+v||0,0,5)-.001));return (n-1)*.2+.42}
+function sstDur(v){const n=Math.max(1,Math.ceil(clamp(+v||0,0,5)-.001));return (n-1)*.17+.4}
 function starStamp(v,cls){v=clamp(+v||0,0,5);let f='';for(let i=0;i<5;i++){const x=clamp(v-i,0,1);if(x>0)f+=`<span class="sst-s" style="--i:${i};--f:${x.toFixed(2)}">★</span>`}
  return `<span class="smeter sst ${cls||''}" style="--d:${sstDur(v).toFixed(2)}s" role="img" aria-label="${stars(v)}"><span class="sm-b">★★★★★</span><span class="sst-f">${f}</span></span>`}
 function srGo(el,instant,cb){if(!el)return;if(instant){el.classList.add('now','go');if(cb)cb();return}void el.offsetWidth;el.classList.add('go');
@@ -4312,7 +4312,7 @@ function srRound(rd){srDone(SRV.cur&&SRV.cur.p);srDone(SRV.cur&&SRV.cur.ai);srDo
   beats(c,[[rd.p,c.querySelector('#srh-p')],[rd.ai,c.querySelector('#srh-ai')]],cmp)});
  return total}
 /* reveal pacing (ms after the round has slid in): time to read the match, then the spotlight, then the stars */
-const SR_T={swap:180,read:1500,spot:1100,readNoWin:1200,notes:2700,noNotes:1300,intro:3000,introNoCast:2000};
+const SR_T={swap:150,read:1250,spot:950,readNoWin:1000,notes:1700,noNotes:850,intro:2600,introNoCast:1700};
 function srFinal(instant){const o=SRV.o;srClear();SRV.rounds.forEach(r=>[r.p,r.ai,r.x].forEach(srDone));SRV.cur=null;SRV.done=true;
  document.querySelectorAll('#srv .sr-row.cur').forEach(r=>r.classList.remove('cur'));if(SRV.best){const r=document.getElementById(SRV.best);if(r)r.classList.add('best')}
  const v=document.getElementById('srv');{const st=document.getElementById('sr-stage');if(st)st.classList.add('fin')}const lb=v&&v.querySelector('.livebug b');if(lb)lb.textContent='Final';const ctl=document.getElementById('sr-ctl');if(ctl)ctl.style.visibility='hidden';
