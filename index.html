@@ -1590,6 +1590,32 @@ html.lk-hy .hero{animation:ppvWipe .55s cubic-bezier(.25,.8,.25,1) both}
 html.lk-hy .hero-t{animation:ppvName .5s cubic-bezier(.2,1.2,.3,1) .18s both}
 html.lk-hy .sheet.in{animation:sheetin .32s cubic-bezier(.2,.8,.2,1)}
 
+/* v225: the live header — a compact red banner, then face-off plates (mockup L1) */
+html.lk-hy .lvhd{padding:12px 14px 26px;margin-bottom:6px}
+html.lk-hy .lvhd .lvt{margin:8px 0 0;font-size:34px;line-height:1}
+html.lk-hy .lvfo{display:grid;gap:6px;margin:0 0 12px;position:relative;z-index:1}
+html.lk-hy .lvfo.two{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);margin-top:-14px}
+html.lk-hy .lvfo.one{grid-template-columns:minmax(0,1fr);margin-top:-14px;max-width:62%}
+html.lk-hy .lvfo.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+html.lk-hy .lvfo.many{grid-template-columns:repeat(2,minmax(0,1fr))}
+html.lk-hy .lvfo .lvvs{align-self:center;font:900 italic 22px 'BC','Barlow Condensed',sans-serif;color:var(--red);text-transform:uppercase}
+html.lk-hy .lvp{min-width:0;display:flex;flex-direction:column;gap:5px;padding:8px 12px 12px;background:var(--s2);clip-path:var(--slant);box-shadow:inset 0 -4px 0 var(--heel)}
+html.lk-hy .lvp.fc{box-shadow:inset 0 -4px 0 var(--face)}
+html.lk-hy .lvph{display:grid;gap:3px}
+html.lk-hy .lvph.n1{grid-template-columns:minmax(0,1fr)}html.lk-hy .lvph.n2{grid-template-columns:repeat(2,minmax(0,1fr))}html.lk-hy .lvph.n3{grid-template-columns:repeat(3,minmax(0,1fr))}
+html.lk-hy .lvph .pic{display:block;height:84px;overflow:hidden;background:#0c0c0e url(card-bg.jpg) center/cover no-repeat;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)}
+html.lk-hy .lvfo.one .lvph .pic{height:96px}
+html.lk-hy .lvfo.three .lvph .pic,html.lk-hy .lvfo.many .lvph .pic{height:62px}
+html.lk-hy .lvph .pic>*{display:block;width:100%;height:100%;object-fit:cover;object-position:center 15%}
+html.lk-hy .lvpn{font:900 italic 17px/1.05 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;overflow-wrap:anywhere}
+html.lk-hy .lvfo.three .lvpn,html.lk-hy .lvfo.many .lvpn{font-size:15px}
+html.lk-hy .lvps{font:800 italic 11px/1.2 'BC','Barlow Condensed',sans-serif;letter-spacing:.07em;text-transform:uppercase;color:var(--gold2)}
+html.lk-hy .lvmore{grid-column:1/-1;font:800 italic 13px 'BC','Barlow Condensed',sans-serif;color:var(--mut);text-transform:uppercase}
+html.lk-hy main.enter .lvp,html.lk-hy .sheet.in .lvp,html.lk-hy .sheet.swap .lvp{animation:ppvIn .38s cubic-bezier(.2,.8,.2,1) both}
+html.lk-hy .lvfo .lvp:nth-of-type(2){animation-delay:.08s}
+html.lk-hy .tv-live-sheet .lvph .pic{height:clamp(84px,9vw,180px)}
+html.lk-hy .tv-live-sheet .lvpn{font-size:1.1em}
+html.lk-hy .tv-live-sheet .lvps{font-size:.6em}
 /* ---- big moments (fx.js): black screen, gold kicker tab, the name slammed onto a red plate ---- */
 html.lk-hy #fxo{background:rgba(9,9,10,.97)}
 html.lk-hy #fxo .fl{background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.35),transparent 55%)}
@@ -1628,7 +1654,7 @@ html.lk-hy .bzm i{background:var(--gold)}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v224';
+const APP_VERSION='v225';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4404,9 +4430,14 @@ function liveNext(){if(!LQ)return;PS=null;ME=null;OCL=null;LQ.k++;const it=LQ.it
 function finishLive(){if(!LIVE)return;LIVE=false;ME=null;PS=null;LQ=null;S.card.p.forEach(sl=>{if(sl.k==='promo'&&sl.d&&!sl.d.res)sl.d=null});if(partyOn())return partyLiveDone();if(ON())return mpLockCard();airShow();showResults(true);render()}
 /* Live show header: broadcast tag, segment label, gold title, the wrestlers involved */
 function liveHd(show,lab,title,sides,tag,vs){const ss=(sides||[]).map(sd=>sd.filter(Boolean)).filter(sd=>sd.length);
- const col=sd=>`<div class="lvs"><div class="lvf">${sd.map(w=>face(w)).join('')}</div><div class="lvn">${esc(sd.length>1?sideName(sd.map(w=>w.id)):sd[0].name)}</div></div>`;
- const row=ss.length?`<div class="lvsides ${ss.length>2?'many':''}">${ss.map(col).join(vs?'<span class="lvvs">vs</span>':'')}</div>`:'';
- return `<div class="lvhd"><div class="ptop"><span class="livebug"><b>${tag||'● Live'}</b>${show?`<span>${esc(show)}</span>`:''}</span><span class="lvl">${lab}</span></div><div class="lvt">${title}</div>${row}<div class="lfl"></div></div>`}
+ return `<div class="lvhd"><div class="ptop"><span class="livebug"><b>${tag||'● Live'}</b>${show?`<span>${esc(show)}</span>`:''}</span><span class="lvl">${lab}</span></div><div class="lvt">${title}</div></div>${lvPlates(ss,vs)}`}
+/* v225: face-off plates — each side once, under the banner: photos, name, one gold line (title, team or record), face/heel stripe */
+function lvSub(sd){const tl=sd.map(x=>titlesOf(x.id)[0]).find(Boolean);if(tl)return `${tl.n} Champion${sd.length>1?'s':''}`;
+ if(sd.length>1){const t=S.teams.find(t=>t.m.length===sd.length&&sd.every(x=>t.m.includes(x.id)));return t?sd.map(x=>x.name.split(' ').slice(-1)[0]).join(' & '):`${sd.length}-person team`}
+ const w=sd[0],c=w.cr||{};return c.m?`${c.w}–${c.l} · ${STYLE_N[w.st]}`:STYLE_N[w.st]}
+function lvPlates(ss,vs){if(!ss.length)return '';const n=ss.length,shown=ss.slice(0,8),more=n-shown.length;
+ const plate=sd=>{const ph=sd.slice(0,3);return `<div class="lvp ${sd[0].al==='f'?'fc':'hl'}${sd.some(x=>titlesOf(x.id).length)?' ch':''}"><div class="lvph n${ph.length}">${ph.map(w=>`<span class="pic">${portrait(w)}</span>`).join('')}</div><b class="lvpn">${esc(sd.length>1?sideName(sd.map(x=>x.id)):sd[0].name)}</b><span class="lvps">${esc(lvSub(sd))}</span></div>`};
+ const two=n===2;return `<div class="lvfo ${two?'two':n===1?'one':n===3?'three':'many'}">${two?plate(shown[0])+`<span class="lvvs">${vs?'VS':'&amp;'}</span>`+plate(shown[1]):shown.map(plate).join('')}${more>0?`<div class="lvmore">+${more} more</div>`:''}</div>`}
 function callBar(t,l){return `<div class="callq"><b>${t}</b><span>${l}</span></div>`}
 function renderME(){const it=ME.q[ME.k];const {m,g}=it;const r=g.r;
  if(!ME.out&&g.e.need==='X'&&r.X&&!g.gor)return openModal(liveHd(ME.show,`Match ${it.n}${it.main?' · Main event':''}`,esc(m.title&&S.titles[m.title]?S.titles[m.title].n+' title':MT[m.type].n),m.sides.map(sd=>sd.map(id=>S.w[id])),'🎧 Gorilla',true)+gorPitch(r.X,`during ${sideName(m.sides[m.winner])} vs ${m.sides.filter((x,i)=>i!==m.winner).map(sideName).join(' vs ')}`,'meGor'));
