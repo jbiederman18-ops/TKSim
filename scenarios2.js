@@ -50,7 +50,7 @@ const MEV2=[
  {t:"Drag {B} back to the middle of the ring",s:'ring',d:.1,st:.5,ok:"No escape. The tension in the arena is unbearable.",no:"{B} wriggles closer and grabs the bottom rope."},
  {t:"Let them reach — and wait for the next opening",always:1,st:.25,ok:"Rope break. {A} stays in control."},
  {t:"Switch holds before {B} reaches the ropes",s:'ring',d:.15,st:.5,ok:"A seamless transition. {B} is stuck again.",no:"The switch gives {B} enough space to escape."},
- {al:'f',t:"Get the crowd behind the escape attempt — for {B}",vs:'f',s:'pop',d:.05,st:.5,popB:1,ok:"The crowd roots for both. Everyone is invested.",no:"The crowd isn't sure who to cheer."},
+ {al:'f',t:"Let go with a nod — then lock it right back in",vs:'f',s:'pop',d:.05,st:.5,popB:1,ok:"Respect, then straight back to business. The purists love it.",no:"{B} uses the reset to roll {A} up for two."},
  {al:'h',t:"Pull {B}'s hair to keep them away from the ropes",s:'luck',d:.05,st:.25,heat:10,ok:"Illegal, effective and hated.",no:"The ref sees it and forces a break."}]},
 {id:'mistake',w:1.5,text:"{A} lands awkwardly after a big move and grimaces, shaking out an arm.",ch:[
  {t:"Wrestle one-armed to the finish",iAn:.12,s:'ring',d:.15,st:.5,popA:2,ok:"Pure grit. The crowd rallies behind the effort.",no:"{B} goes straight for the hurt arm."},
@@ -83,11 +83,11 @@ const MEV2=[
  {t:"Make {B} look like a million bucks before winning",always:1,st:.5,popB:2,ok:"A generous performance. {B} leaves looking like a future star."},
  {t:"Let {B} hit their best stuff, then shake their head",s:'pop',d:.1,st:.5,popA:1,ok:"{B} threw everything. {A} is still standing. The crowd is in awe.",no:"{B}'s best stuff turns out to be very good."},
  {al:'h',t:"Use every veteran trick in the book",s:'luck',d:.05,st:.25,heat:10,ok:"Thumb to the eye, feet on the ropes, win. Masterclass in villainy.",no:"{B} has seen those tricks before."}]},
-{id:'manager',w:2,al:'h',text:"{A}'s manager hops on the apron and starts screaming at the referee.",ch:[
+{id:'manager',w:2,al:'h',text:"{A}'s cornerman hops on the apron and starts screaming at the referee.",ch:[
  {t:"Use the distraction for a low blow",s:'luck',d:.05,st:.25,heat:12,ok:"The ref never saw it. Every fan did.",no:"The ref turns around just in time."},
- {t:"The manager slips {A} a foreign object",loseNo:'dq',s:'luck',d:.1,st:.5,heat:14,ok:"One shot and it's over. The crowd is irate.",no:"The ref finds it and tosses it to the floor."},
- {t:"{B} knocks the manager off the apron",always:1,st:.25,heat:8,ok:"The crowd loves it — but {A} catches {B} from behind."},
- {vs:'f',t:"The ref ejects the manager from ringside",always:1,st:.25,heat:6,ok:"The manager is escorted out, kicking and screaming. The crowd waves goodbye."}]},
+ {t:"The cornerman slips {A} a foreign object",loseNo:'dq',s:'luck',d:.1,st:.5,heat:14,ok:"One shot and it's over. The crowd is irate.",no:"The ref finds it and tosses it to the floor."},
+ {t:"{B} knocks the cornerman off the apron",always:1,st:.25,heat:8,ok:"The crowd loves it — but {A} catches {B} from behind."},
+ {vs:'f',t:"The ref ejects the cornerman from ringside",always:1,st:.25,heat:6,ok:"The cornerman is escorted out, kicking and screaming. The crowd waves goodbye."}]},
 /* ---------- tags, trios and multi-person ---------- */
 {id:'blindtag',w:2.5,mt:'tag|trios|eight',need:'A2',text:"{A} is in trouble in the corner — and {A2} sneaks a blind tag.",ch:[
  {t:"{A2} surprises {B} from behind",s:'luck',d:.05,st:.5,chemT:1,ok:"{B} has no idea who's legal. {A2} takes over.",no:"The ref didn't see the tag and sends {A2} back."},
@@ -106,7 +106,7 @@ const MEV2=[
 {id:'breakpin',w:2,mt:'triple|four',text:"{B} has the pin — one, two — and {A} dives in to break it up!",ch:[
  {t:"Throw {B} out and cover the other wrestler",s:'ring',d:.1,st:.5,ok:"Swift, ruthless and smart.",no:"Everyone is too tired to pin anyone."},
  {t:"Break it up with a huge splash off the top",nsty:'pw',s:'ring',d:.15,st:.75,fat:6,ok:"A flying save. The crowd explodes.",no:"{A} lands on the wrong person."},
- {t:"Pull the referee out of the ring",dq:1,always:1,st:0,heat:10,ok:"Chaos. The ref resets and the match continues."},
+ {al:'h',t:"Pull the referee out of the ring",dq:1,always:1,st:0,heat:10,ok:"Chaos. The ref resets and the match continues."},
  {t:"Stack everyone up in the corner for a big splash",s:'ring',d:.15,st:.75,fat:6,ok:"Three bodies in one corner. {A} wipes them all out.",no:"Everyone moves at once."},
  {t:"Catch your breath and let the others fight",always:1,st:.25,ok:"Smart energy management. {A} is fresh for the finish."}]},
 /* ---------- stipulations ---------- */
@@ -171,7 +171,7 @@ const MEV2=[
  {t:"Double-team finisher",s:'ring',d:.15,st:.75,chemT:1,ok:"Perfectly timed. The crowd goes wild.",no:"{B}'s partner breaks it up."},
  {t:"Split up and fight everywhere at once",always:1,st:.25,ok:"Chaos in every corner. {A} and {A2} come out on top."},
  {t:"{A2} holds off the other partner while {A} goes for the pin",s:'luck',d:.05,st:.5,chemT:1,ok:"Teamwork wins it.",no:"{A2} gets taken out first."}]},
-{id:'lms2',w:2,stip:'lms|texas|iquit',text:"{B} is down. The ref is counting — four, five, six...",ch:[
+{id:'lms2',w:2,stip:'lms|texas',text:"{B} is down. The ref is counting — four, five, six...",ch:[
  {t:"Hit one more big move to make sure",s:'ring',d:.1,st:.75,fat:5,ok:"Ten. {B} doesn't move.",no:"{B} stirs at nine anyway."},
  {t:"Wait and see if {B} beats the count",s:'luck',d:.1,st:.5,ok:"Ten! {A} wins.",no:"{B} pulls themselves up on the ropes at nine."},
  {t:"Wedge {B} under a ladder so they can't get up",s:'ring',d:.1,st:.75,heat:10,ok:"Pinned under the steel. {B} can't rise.",no:"{B} kicks the ladder off."}]},
@@ -186,7 +186,7 @@ const MEV2=[
  {t:"Target {B}'s legs to slow them down",always:1,st:.25,ok:"Smart. {B} is limping by the finish."}]}];
 
 const TW2=[
-{hk:'live',when:'solo',text:"The crowd starts a chant for {A}'s old tag team partner.",ch:[{t:"Acknowledge them with a smile",s:'pop',d:.05,p:3,ok:"A nice moment of nostalgia."},{t:"Tell the crowd that chapter is closed",s:'mic',d:.1,p:2},{al:'h',t:"Tell the crowd their old partner held them back",s:'mic',d:.1,p:3,ok:"Cold. The boos rain down."}]},
+{hk:'live',when:'solo',text:"A section of the crowd starts chanting the name of {A}'s hometown.",ch:[{t:"Point to the section and soak it in",s:'pop',d:.05,p:3,ok:"A proud, warm moment."},{t:"Promise to bring a title home",s:'mic',d:.1,p:2},{al:'h',t:"Tell them {A} left that town for a reason",s:'mic',d:.1,p:3,ok:"Cold. The boos rain down."}]},
 {hk:'live',when:'solo',text:"The ring announcer's mic is the only one working — and {A} has to share it.",ch:[{t:"Make the announcer do the talking",s:'mic',d:.1,p:3,ok:"A hilarious double act. The crowd is in stitches."},{t:"Wait for the tech crew",s:'luck',d:0,p:1},{al:'h',t:"Snatch it and shove the announcer out",s:'mic',d:.05,p:2,ok:"Rude, abrupt and very heel."}]},
 {hk:'live',when:'solo',text:"Someone in the upper deck holds up a sign: '{A} CAN'T WIN THE BIG ONE.'",ch:[{t:"Read the sign out loud and promise to prove it wrong",s:'mic',d:.1,p:3,ok:"A fire is lit under {A}."},{t:"Laugh it off",s:'pop',d:.05,p:2},{al:'h',t:"Demand security remove the fan",s:'mic',d:.05,p:2,ok:"Petty, insecure and hilarious."}]},
 {hk:'live',when:'solo',cd:1,w:1,text:"The countdown clock on the big screen glitches and starts counting toward... something.",ch:[{t:"Stare at the screen until it stops",s:'pop',d:.05,p:2,cdh:1,ok:"Creepy. Fans start theorising immediately.",no:"The clock blinks out before anyone notices."},{t:"Ignore it and keep talking",s:'mic',d:.1,p:2,ok:"Business as usual — but the clock keeps ticking in the corner of the screen.",no:"Nobody's listening. Everyone is watching the clock."},{t:"Tell everyone it's counting down to something big",s:'mic',d:.15,p:4,cdh:2,ok:"Speculation runs wild online.",no:"It sounds like {A} has no idea either."},{al:'h',t:"Demand to know who's behind it",s:'mic',d:.1,p:3,cdh:1,ok:"{A} looks rattled for the first time in months.",no:"The clock just keeps counting. {A} storms off."}]},
@@ -194,7 +194,7 @@ const TW2=[
 {hk:'live',when:'solo',und:1,text:"A small but loud group of fans has made custom shirts for {A}.",ch:[{t:"Point them out and thank them",s:'pop',d:.05,p:4,ok:"The section goes wild. More fans want those shirts."},{t:"Promise to make them proud",s:'mic',d:.1,p:3},{al:'h',t:"Tell them to buy official merch instead",s:'mic',d:.05,p:2,ok:"Hilariously petty."}]},
 {nhk:'attack',hk:'live',when:'duo',text:"{B} snatches the mic out of {A}'s hand mid-sentence.",ch:[{t:"Snatch it right back",s:'mic',d:.1,h:10,p:2,ok:"A tug-of-war over a microphone. The tension is real."},{t:"Grab a second mic from the timekeeper",s:'mic',d:.05,h:6,p:3},{t:"Shove {B} into the ropes",nff:1,s:'ring',d:.05,h:14,p:1}]},
 {nhk:'attack|tape',when:'duo',text:"{B} walks out holding a stack of old photos of {A}.",ch:[{t:"Laugh along — they were a great look",s:'pop',d:.05,h:6,p:3,ok:"The crowd loves {A}'s sense of humor."},{t:"Grab the photos and rip them up",s:'luck',d:.05,h:12,p:2},{t:"Pull out embarrassing photos of {B}",s:'mic',d:.15,h:12,p:3,ok:"Turnabout is fair play. The crowd howls."}]},
-{nhk:'absent',when:'duo',nff:1,text:"{B} spits at {A}'s feet.",ch:[{t:"Go after {B} right now",s:'ring',d:.1,h:16,p:2},{t:"Stay cool and promise payback",s:'mic',d:.1,h:10,p:3,ok:"Composure. The crowd knows what's coming."},{t:"Wipe it up with {B}'s jacket",s:'luck',d:.05,h:12,p:3}]},
+{nhk:'absent',when:'duo',nff:1,vs:'h',text:"{B} spits at {A}'s feet.",ch:[{t:"Go after {B} right now",s:'ring',d:.1,h:16,p:2},{t:"Stay cool and promise payback",s:'mic',d:.1,h:10,p:3,ok:"Composure. The crowd knows what's coming."},{t:"Wipe it up with {B}'s jacket",s:'luck',d:.05,h:12,p:3}]},
 {hk:'live',when:'duo',al:'f',vs:'f',text:"The crowd starts chanting 'WE WANT BOTH!' — they want a match between {A} and {B}.",ch:[{t:"Give the crowd what they want — make it official",s:'mic',d:.1,h:8,p:3,ok:"Everyone wants to see this one."},{t:"Shake hands and save it for later",s:'pop',d:.05,h:4,p:3,c:1},{t:"Tease a tag team instead",s:'mic',d:.1,p:2,c:2,ok:"Wait — the crowd likes that too."}]},
 {nhk:'attack|absent',when:'duo',al:'h',vs:'h',text:"{A} and {B} realize they're wearing the same jacket.",ch:[{t:"Demand {B} take theirs off",s:'mic',d:.1,h:10,p:3,ok:"Ridiculous and perfect."},{t:"Suggest they're clearly meant to be a team",s:'mic',d:.1,c:2,p:2},{t:"Walk off in disgust",s:'luck',d:0,h:6,p:1}]},
 {nhk:'absent',when:'duo',text:"The lights go out. When they come back on, {B} is standing right behind {A}.",ch:[{t:"Turn slowly and stare them down",s:'pop',d:.05,h:10,p:3,ok:"Nobody blinks. The crowd is holding its breath."},{t:"Spin around swinging",nff:1,s:'ring',d:.1,h:14,p:2},{t:"Act like nothing happened",s:'mic',d:.1,h:8,p:2}]},
@@ -275,7 +275,7 @@ interview:{solo:{texts:[
  {al:'h',t:"Flip the table and walk out",nff:1,s:'ring',d:.05,h:14,p:2,ok:"The interviewer dives for cover. Great TV.",no:"The table is bolted down."}]}},
 contract:{duo:{texts:[
  {kk:'checked',t:"The contract signing is in the middle of the ring — and the table has already been checked for weapons."},
- {kk:'pen',al:'h',t:"{A} shows up with a pen that's clearly been sharpened."},
+ {kk:'chair',al:'h',t:"{A} walks out dragging a steel chair and parks it right next to the table."},
  {al:'f',vs:'f',t:"{A} and {B} both arrive early. They sit in silence."}],ch:[
  {t:"Read the contract out loud, slowly",s:'mic',d:.1,h:10,p:3,ok:"Every clause lands. The stakes feel enormous.",no:"The legal language bores the crowd."},
  {t:"Sign — then demand a bigger stage for the match",stp:1,s:'mic',d:.15,h:12,p:3,ok:"Done. The match just got upgraded.",no:"The demand falls flat."},
@@ -290,7 +290,7 @@ rally:{solo:{texts:[
  {t:"Have each member say one word",s:'pop',d:.1,p:2,ok:"A perfect, chilling moment.",no:"Someone forgets their word."},
  {t:"Debut new matching entrance music",s:'pop',d:.05,p:3,ok:"The crowd sings along immediately.",no:"The music is a little too long."},
  {al:'f',t:"Invite the crowd to join the group's chant",s:'pop',d:.05,p:4,ok:"Thousands chanting together.",no:"The chant is too complicated."},
- {al:'h',t:"Make a rival group's tag champions bow",s:'ring',d:.1,x:1,hx:12,p:3,ok:"{X} is furious at the disrespect.",no:"Nobody bows."},
+ {al:'h',t:"Single out {X} and demand they bow to the group",s:'ring',d:.1,x:1,hx:12,p:3,ok:"{X} is furious at the disrespect.",no:"Nobody bows."},
  {hk:'throne',al:'h',t:"Hold court from the throne — make each member kneel in turn",s:'mic',d:.1,p:3,ok:"A coronation. The crowd boos every bow.",no:"The throne wobbles. Not very regal."}]},
  duo:{texts:[
  {kk:'jackets',t:"{A} and {B} come out in matching jackets."},
@@ -316,7 +316,6 @@ champ:{solo:{texts:[
  {t:"{A} and {B} meet face to face, the {T} title between them."},
  {al:'f',vs:'f',t:"{A} invites {B} into the ring to talk about the {T} title."}],ch:[
  {t:"Set the date for the title match",ch:1,s:'mic',d:.05,h:10,p:3,ok:"It's official. The crowd can't wait.",no:"The details are muddled."},
- {t:"Hand {B} the title to hold — just for a second",s:'pop',d:.1,h:10,p:2,ok:"{B} looks at it a little too long.",no:"{B} won't hand it back."},
  {nff:1,t:"Drop {B} with the title belt",s:'ring',d:.15,h:16,p:2,ok:"The champion makes a statement.",no:"{B} ducks and grabs the title."},
  {al:'f',vs:'f',t:"Promise the best match of the year",s:'mic',d:.1,h:6,p:3,c:1,ok:"The crowd believes it.",no:"A big promise. Can they deliver?"},
  {al:'h',vs:'f',t:"Tell {B} they'll never be good enough",s:'mic',d:.1,h:14,p:2,ok:"Harsh and cruel. The crowd boos.",no:"{B} has a great comeback."}]}},
@@ -326,7 +325,7 @@ turn:{solo:{texts:[
  {al:'h',t:"{A} walks out without their usual entourage."},
  {al:'h',t:"{A} kneels in the middle of the ring."}],ch:[
  {al:'f',t:"Tell the fans they've been taking {A} for granted",s:'mic',d:.1,p:3,ok:"Bitter and believable.",no:"The crowd isn't sure what's happening."},
- {al:'f',t:"Attack the ring announcer",s:'ring',d:.05,p:2,ok:"Shocking and cruel. A new heel is born.",no:"The interviewer runs away."},
+ {al:'f',t:"Attack the ring announcer",s:'ring',d:.05,p:2,ok:"Shocking and cruel. A new heel is born.",no:"The ring announcer bails out of the ring just in time."},
  {al:'h',t:"Tell the crowd they changed {A}'s mind",s:'mic',d:.1,p:4,ok:"A redemption story. The crowd embraces it.",no:"Feels a little sudden."},
  {al:'h',t:"Apologize to the people they've hurt by name",s:'mic',d:.15,p:4,ok:"Powerful and sincere. The fans believe.",no:"The list is so long it gets awkward."}]},
  duo:{texts:[

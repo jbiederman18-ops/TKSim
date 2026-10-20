@@ -89,7 +89,8 @@ const MEV_MORE=[
  {al:'h',t:"Slam the cage door into {B}'s head",s:'luck',d:0,st:.5,heat:12,ok:"The clang echoes around the building.",no:"{B} ducks and {A} catches their own hand in the door."}]},
 {id:'tables',w:3,stip:'tables',text:"{A} slides a table into the ring and sets it up in the corner.",ch:[
  {t:"Powerbomb {B} through the table",sty:'pw|br',s:'ring',d:.1,st:.75,ok:"The table explodes. So does the crowd.",no:"{B} back-drops {A} over the top instead."},
- {t:"Leg drop {B} through the table from the top rope",sty:'fl|sh|te',s:'ring',d:.2,st:.75,fat:6,failInj:'A',ok:"From the top rope, through the table. Carnage.",no:"{B} rolls away and {A} goes through it alone."},
+ {t:"Splash {B} through the table from the top rope",sty:'fl|sh',s:'ring',d:.2,st:.75,fat:6,failInj:'A',ok:"From the top rope, through the table. Carnage.",no:"{B} rolls away and {A} goes through it alone."},
+ {t:"German suplex {B} through the table",sty:'te',s:'ring',d:.15,st:.75,fat:5,ok:"Bridged, released, splintered. The purists and the hardcore fans both cheer.",no:"{B} lands on their feet and {A} has to scramble."},
  {t:"Set up a second table for a bigger spot",s:'luck',d:.1,st:.5,ok:"Two tables, one spot, huge reaction.",no:"The tables collapse before anyone goes through them."},
  {al:'h',t:"Spray lighter fluid on the table",fine:1,susp:1,s:'luck',d:.1,st:.75,heat:16,ok:"The crowd gasps. Even commentary is horrified.",no:"Officials put it out before {A} can use it."}]},
 {id:'weapons',w:3,stip:'hard',text:"{A} reaches under the ring and pulls out a bag full of weapons.",ch:[
@@ -101,7 +102,7 @@ const MEV_MORE=[
 {id:'iquit',w:3,stip:'iquit',text:"{A} has {B} trapped in a submission and shoves the microphone in their face.",ch:[
  {t:"Crank it harder until {B} says it",s:'ring',d:.15,st:.75,heat:12,ok:"{B} screams, but refuses. Incredible drama.",no:"{B} powers out and grabs the mic."},
  {t:"Let {B} speak — and they spit defiance",always:1,st:.5,heat:10,ok:"'NEVER!' The crowd rallies behind {B}."},
- {al:'h',t:"Threaten {B}'s friend at ringside",morB:-6,popB:-1,s:'mic',d:.1,st:.75,heat:18,ok:"{B} says the words to protect their friend. The crowd is disgusted.",no:"The friend fights back and {B} escapes."},
+ {al:'h',t:"Grab a chair and promise to keep swinging until {B} says it",morB:-6,popB:-1,s:'mic',d:.1,st:.75,heat:18,ok:"{B} says the words rather than take another shot. The crowd is disgusted.",no:"{B} spits in {A}'s face instead, and the fight goes on."},
  {al:'f',t:"Demand {B} admit what they did",morB:-6,popB:-2,vs:'h',s:'mic',d:.1,st:.75,popA:2,heat:10,ok:"{B} is broken. The crowd has waited months for this.",no:"{B} laughs even in agony."}]},
 {id:'count10',w:3,stip:'lms|texas',text:"{B} is down. The referee is counting… six… seven… eight…",ch:[
  {t:"{B} uses the ropes to stagger up at nine",always:1,st:.5,popB:2,ok:"Up at nine! The crowd is on its feet."},
@@ -178,12 +179,12 @@ const MEV_MORE=[
 
 const TWISTS_MORE=[
 {hk:'live',when:'any',sty:'fl',text:"The crowd starts chanting 'This is awesome!' for a dive {A} hasn't even done yet.",ch:[{t:"Do a quick flip off the turnbuckle for them",s:'ring',d:.1,p:3,ok:"Gravity-defying. The crowd is thrilled."},{t:"Promise them something bigger on Sunday",s:'mic',d:.1,p:2},{al:'h',t:"Tell them they'll have to pay-per-view to see it",s:'mic',d:.05,p:2,ok:"Boos — and more buys."}]},
-{hk:'live',when:'any',sty:'pw',text:"A ring crew member dares {A} to lift the steel ring steps.",ch:[{t:"Lift them over their head",s:'ring',d:.1,p:3,ok:"The steps go up. So does the crowd."},{t:"Toss them into the aisle",s:'ring',d:.05,p:2},{al:'h',t:"Throw the steps at the ring crew member",s:'luck',d:.05,p:2,ok:"Pure menace. The crowd boos."}]},
-{hk:'live',when:'any',sty:'te',text:"A heckler yells that {A} is boring.",ch:[{t:"Explain wrestling fundamentals, slowly",s:'mic',d:.15,p:3,ok:"Weirdly captivating."},{t:"Demonstrate a hold on the ring announcer",s:'ring',d:.05,p:2},{al:'h',t:"Put the heckler in an arm bar over the barricade",s:'luck',d:.1,p:2,ok:"Security drags {A} off. The crowd is furious."}]},
-{hk:'live',when:'any',sty:'br',text:"Someone throws a drink at {A} from the crowd.",ch:[{t:"Climb the barricade after them",s:'ring',d:.1,p:2},{t:"Laugh, wipe it off and keep talking",s:'mic',d:.05,p:3,ok:"Unbothered. That's a tough customer."},{al:'f',t:"Hand the fan a new drink",s:'pop',d:.05,p:3,ok:"A class move. The crowd cheers."}]},
+{hk:'live',when:'any',sty:'pw',text:"The crowd spots the steel ring steps and starts chanting for {A} to lift them.",ch:[{t:"Lift them over their head",s:'ring',d:.1,p:3,ok:"The steps go up. So does the crowd."},{t:"Toss them into the aisle",s:'ring',d:.05,p:2},{al:'h',t:"Lift them — then slam them down and walk away",s:'luck',d:.05,p:2,ok:"They asked for it. The crowd boos the tease."}]},
+{hk:'live',when:'any',sty:'te',text:"A heckler yells that {A} is boring.",ch:[{t:"Explain wrestling fundamentals, slowly",s:'mic',d:.15,p:3,ok:"Weirdly captivating."},{al:'h',t:"Demonstrate a hold on the ring announcer",s:'ring',d:.05,p:2},{al:'f',t:"Invite the heckler to name anyone who does it better",s:'mic',d:.1,p:3,ok:"The heckler can't. The crowd laughs with {A}."},{al:'h',t:"Put the heckler in an arm bar over the barricade",s:'luck',d:.1,p:2,ok:"Security drags {A} off. The crowd is furious."}]},
+{hk:'live',when:'any',sty:'br',text:"Someone throws a drink at {A} from the crowd.",ch:[{t:"Climb the barricade after them",s:'ring',d:.1,p:2},{t:"Laugh, wipe it off and keep talking",s:'mic',d:.05,p:3,ok:"Unbothered. That's a tough customer."},{al:'f',t:"Grab a drink from the front row and toast the crowd",s:'pop',d:.05,p:3,ok:"The whole section raises a cup back. Party time."}]},
 {hk:'live',when:'any',sty:'sh',text:"The big screen glitches and starts playing {A}'s entrance video.",ch:[{t:"Dance along to their own music",s:'pop',d:.05,p:3},{t:"Play it off like it was planned",s:'mic',d:.1,p:2},{al:'h',t:"Demand the tech crew play it again, louder",s:'mic',d:.05,p:2}]},
 {hk:'live',when:'any',held:1,text:"Someone in the front row is waving a fake {T} title belt.",ch:[{t:"Hold the real one up next to it",s:'pop',d:.05,p:3},{al:'f',t:"Invite the fan into the ring for a photo",s:'pop',d:.1,p:4,ok:"A moment that fan will never forget."},{al:'h',t:"Snatch the fake and snap it over their knee",s:'ring',d:.05,p:2,ok:"The fan is crushed. The boos are huge."}]},
-{hk:'live',when:'any',held:1,x:1,text:"{X} appears on the stage holding up a contract with the {T} title written on it.",ch:[{t:"Tell {X} to get in line",s:'mic',d:.1,hx:10,p:2},{t:"Sprint up the ramp to confront {X}",s:'ring',d:.1,hx:14,p:2},{t:"Hold the belt higher and ignore {X}",s:'pop',d:.05,hx:6,p:2}]},
+{hk:'live',when:'any',held:1,x:1,text:"{X} walks out onto the stage and points straight at the {T} title.",ch:[{t:"Tell {X} to get in line",s:'mic',d:.1,hx:10,p:2},{t:"Sprint up the ramp to confront {X}",s:'ring',d:.1,hx:14,p:2},{t:"Hold the belt higher and ignore {X}",s:'pop',d:.05,hx:6,p:2}]},
 {hk:'live',when:'any',fac:1,text:"{F} marches down the ramp uninvited to back {A} up.",ch:[{t:"Welcome them into the ring",s:'pop',d:.05,p:3,c:2},{t:"Tell them to wait in the back",s:'mic',d:.1,p:2},{al:'h',t:"Make them kneel before {A}",s:'mic',d:.1,p:2,ok:"A power move. The crowd boos."}]},
 {hk:'live',when:'any',x:1,text:"{X} appears on the big screen with a pre-recorded message for {A}.",ch:[{t:"Stare at the screen until it ends",s:'pop',d:.05,hx:8,p:2},{t:"Interrupt the message with a comeback",s:'mic',d:.1,hx:12,p:3},{t:"Throw the mic at the screen",s:'luck',d:0,hx:10,p:1}]},
 {hk:'live',when:'any',al:'f',star:1,text:"The crowd starts chanting 'You deserve it!'",ch:[{t:"Take it all in",s:'pop',d:.05,p:3},{t:"Get emotional and thank them",s:'mic',d:.1,p:4},{t:"Promise them one more big moment",s:'mic',d:.1,p:3}]},
@@ -193,7 +194,7 @@ const TWISTS_MORE=[
 {hk:'live',when:'duo',nff:1,text:"{B} throws their jacket into {A}'s face.",ch:[{t:"Toss the jacket into the crowd",s:'pop',d:.05,h:8,p:2},{t:"Brawl through the ropes",s:'ring',d:.1,h:14,p:1},{t:"Put it on and mock {B}",s:'mic',d:.1,h:10,p:3}]},
 {nhk:'attack|absent',when:'duo',al:'f',vs:'f',text:"{B} offers {A} a fist bump mid-promo.",ch:[{t:"Bump it — respect",s:'pop',d:0,h:4,p:3},{t:"Leave them hanging — this is competition",s:'mic',d:.1,h:9,p:2},{t:"Bump it, then say 'see you in the ring'",s:'mic',d:.05,h:6,p:3}]},
 {hk:'live',when:'duo',al:'h',vs:'f',text:"{B}'s music plays again — the crowd wants {A} gone.",ch:[{t:"Run off and taunt from the ramp",s:'mic',d:.05,h:8,p:2},{t:"Hold your ground and demand the music stops",s:'mic',d:.1,h:10,p:2},{t:"Attack {B} during their entrance",s:'ring',d:.1,h:16,p:1}]},
-{hk:'live',when:'duo',al:'f',vs:'h',text:"{B}'s associates appear on the ramp.",ch:[{t:"Stand your ground — let them come",s:'ring',d:.15,h:14,p:3,ok:"{A} fights them all off. Hero."},{t:"Back off and live to fight another day",s:'luck',d:0,h:4,p:1},{t:"Challenge them all to a match",s:'mic',d:.1,h:10,p:2}]},
+{hk:'live',when:'duo',al:'f',vs:'h',text:"Hired muscle in matching shirts walks down the ramp — they're with {B}.",ch:[{t:"Stand your ground — let them come",s:'ring',d:.15,h:14,p:3,ok:"{A} fights them all off. Hero."},{t:"Back off and live to fight another day",s:'luck',d:0,h:4,p:1},{t:"Challenge them all to a match",s:'mic',d:.1,h:10,p:2}]},
 {nhk:'attack|absent',when:'duo',al:'h',vs:'h',text:"{A} and {B} both try to take credit for the last big moment on the show.",ch:[{t:"Claim it loudly",s:'mic',d:.1,h:10,p:2},{t:"Suggest an uneasy alliance",s:'mic',d:.1,h:4,c:2,p:2},{t:"Shove {B} out of the way",s:'ring',d:.05,h:12,p:1}]},
 {hk:'live',when:'solo',text:"Someone in the back starts pounding on the curtain — the locker room is listening.",ch:[{t:"Address the locker room directly",s:'mic',d:.1,p:3},{t:"Let the moment breathe",s:'luck',d:0,p:1},{al:'h',t:"Tell them nobody is safe",s:'mic',d:.1,p:3}]},
 {hk:'live',when:'any',text:"The camera catches a famous musician in the front row.",ch:[{t:"Shout them out",s:'pop',d:.05,p:3},{t:"Invite them into the ring",s:'mic',d:.15,p:4,ok:"A viral moment."},{al:'h',t:"Insult their music",s:'mic',d:.05,p:2,ok:"Heat from their fans too."}]},
@@ -236,6 +237,7 @@ callout:{solo:{texts:[
 attack:{duo:{texts:[
  {kk:'lot car',al:'h',t:"{B} is saying goodbye to their family in the parking lot when {A} pulls up."},
  {kk:'ring gloat',al:'f',vs:'h',t:"{B} is gloating in the ring about their last win when {A}'s music hits."},
+ {kk:'ring bully',al:'f',vs:'h',t:"{B} is still beating down a young wrestler after the bell when {A}'s music hits."},
  {kk:'ring',al:'f',vs:'f',t:"{B} is shaking hands with fans at ringside when {A} comes running down the ramp to make a point."}],ch:[
  {al:'f',vs:'f',t:"Jump {B} to prove a point — then offer a hand up",s:'mic',d:.1,h:12,p:2,ok:"Respect, with an edge. Game on.",no:"{B} slaps the hand away."},
  {al:'f',vs:'f',t:"Hit {B} with their own finisher to send a message",s:'ring',d:.15,h:14,p:3,ok:"The crowd is shocked, but loves it.",no:"{B} counters into their own finisher."},
@@ -246,7 +248,7 @@ attack:{duo:{texts:[
  {hk:'ring|ramp',sty:'fl',nff:1,t:"Dive off the stage onto {B}",s:'ring',d:.2,h:18,p:2,ok:"A jaw-dropping leap. {B} doesn't see it coming.",no:"{B} steps aside at the last second."},
  {sty:'te',nff:1,t:"Lock in a submission until the refs pull them off",s:'ring',d:.1,h:16,p:1,ok:"Calculated violence. {B} has to be helped out.",no:"{B} fights free."},
  {al:'h',t:"Attack {B}, then pose with {B}'s gear",s:'luck',d:.05,h:14,p:2,ok:"Humiliating.",no:"{A} drops the gear and has to run."},
- {al:'f',vs:'h',t:"Save a young wrestler {B} was bullying",s:'pop',d:.05,h:10,p:4,ok:"A hero moment. The crowd erupts.",no:"{B} escapes before {A} can land a shot."}]}},
+ {hk:'bully',al:'f',vs:'h',t:"Save the young wrestler {B} is beating down",s:'pop',d:.05,h:10,p:4,ok:"A hero moment. The crowd erupts.",no:"{B} escapes before {A} can land a shot."}]}},
 interview:{solo:{texts:[
  {star:1,t:"The lights dim and {A} sits in a leather chair for a career-spanning interview."},
  {und:1,t:"{A} sits down nervously — it's their first big interview."},
@@ -272,7 +274,7 @@ contract:{duo:{texts:[
  {al:'f',vs:'f',t:"Sign it and shake hands — may the best one win",s:'pop',d:.05,h:6,p:3,ok:"A classy moment. Everyone wants to see the match.",no:"{B} leaves them hanging."},
  {hk:'lawyer',al:'h',t:"Have the lawyer add fine print",s:'mic',d:.15,h:14,p:2,ok:"{B} signs without reading. Uh oh.",no:"{B} catches the fine print."},
  {hk:'checked',t:"Point out that the only weapon in the ring is {A}",s:'mic',d:.1,h:12,p:3,ok:"Cold and confident. The crowd oohs.",no:"{B} laughs it off."},
- {hk:'pen',al:'h',t:"Sign with the sharpened pen — then jab it at {B}",s:'ring',d:.1,h:16,p:2,ok:"{B} reels back clutching their arm. Chilling.",no:"{B} catches {A}'s wrist and snaps the pen."},
+ {hk:'chair',al:'h',t:"Sign — then fold the steel chair over {B}'s back",s:'ring',d:.1,h:16,p:2,ok:"The chair is bent, {B} is down, and the boos shake the building.",no:"{B} sees it coming and rips the chair away."},
  {hk:'security',al:'h',t:"Have security hold {B} back while {A} signs",s:'luck',d:.05,h:14,p:2,ok:"{B} strains against the guards as {A} signs with a flourish.",no:"{B} shoves through the guards. So much for protection."},
  {al:'f',vs:'h',t:"Refuse to sign until {B} apologizes to the fans",s:'mic',d:.1,h:12,p:3,ok:"{B} squirms. The crowd chants 'SAY IT!'",no:"{B} refuses and walks off."},
  {sty:'pw',nff:1,t:"Press {B} over their head and drop them on the table",s:'ring',d:.15,h:20,p:2,ok:"The table buckles under {B}. Violence signed and sealed.",no:"{B} slips free."}]}},
@@ -312,7 +314,7 @@ vignette:{solo:{texts:[
  {sty:'te',t:"Explain a new submission in chilling detail",s:'mic',d:.1,p:2,ok:"Creepy and effective.",no:"Too technical."},
  {sty:'pw',t:"Lift something impossibly heavy",s:'ring',d:.1,p:3,ok:"Unreal strength.",no:"The camera angle ruins it."},
  {sty:'sh',t:"Tease a big announcement",s:'mic',d:.1,p:3,ok:"The fans are dying to know.",no:"It sounds overhyped."},
- {al:'h',t:"Buy out a restaurant so nobody else can eat there",s:'mic',d:.05,p:2,ok:"Petty and hated.",no:"It comes off as boring."}]},
+ {hk:'dayoff',al:'h',t:"Buy out a restaurant so nobody else can eat there",s:'mic',d:.05,p:2,ok:"Petty and hated.",no:"It comes off as boring."}]},
  duo:{texts:[{kk:'tape train',al:'f',vs:'f',t:"A vignette shows {A} and {B} training together, with a hint of rivalry."},{kk:'tape absent',nff:1,t:"A vignette shows {A} watching tape of {B} in a dark room."}],ch:[
  {nff:1,t:"Circle {B}'s mistakes on a whiteboard",s:'mic',d:.1,h:9,p:2,ok:"Obsessive and scary.",no:"It's hard to read."},
  {hk:'train',nhk:'absent',al:'f',vs:'f',t:"Spar hard — a little too hard",s:'ring',d:.1,h:10,p:2,ok:"Friendly competition just turned serious.",no:"It looks like practice."},

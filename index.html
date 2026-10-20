@@ -1654,7 +1654,7 @@ html.lk-hy .bzm i{background:var(--gold)}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v225';
+const APP_VERSION='v226';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -2161,11 +2161,11 @@ duo:{texts:['{A} marches out and demands that {B} come face them right now.',
 {al:'f',vs:'h',t:'Promise the fans {B} will finally get what\'s coming',s:'pop',d:.05,h:10,p:3,ok:'The crowd roars. They\'ve waited a long time for someone to say it.',no:'{B} laughs from the stage and the moment fizzles.'},
 {al:'f',vs:'h',t:'Call {B} a coward who hides behind cheap tricks',s:'mic',d:.1,h:12,p:2,ok:'"Coward!" chants ring out and {B} has nowhere to hide.',no:'{B} flips it around: "Smart, not cowardly." The crowd laughs.'},
 {nhk:'screen',al:'f',vs:'f',t:'Offer {B} a handshake — may the best competitor win',s:'pop',d:.05,h:7,p:3,ok:'Respect on both sides, and suddenly everyone needs to see this match.',no:'{B} leaves them hanging. Awkward.'},
-{al:'f',t:'Tell {B} this one is for everyone they\'ve ever hurt',s:'mic',d:.15,h:13,p:3,ok:'Goosebumps. The crowd rises with {A}.',no:'It comes off melodramatic and the crowd giggles.'},
+{al:'f',vs:'h',t:'Tell {B} this one is for everyone they\'ve ever hurt',s:'mic',d:.15,h:13,p:3,ok:'Goosebumps. The crowd rises with {A}.',no:'It comes off melodramatic and the crowd giggles.'},
 {al:'h',t:'Mock {B}\'s catchphrase in a ridiculous voice',s:'mic',d:.1,h:13,p:2,ok:'The fans are outraged — and {B} looks ready to explode.',no:'The impression is so bad the crowd sides with {B} even harder.'},
 {al:'h',t:'Play {B}\'s most embarrassing loss on the big screen',s:'mic',d:.15,h:16,p:2,ok:'{B} has to watch it in front of everyone. Brutal.',no:'The video won\'t load. {A} stands there waiting. And waiting.'},
 {al:'h',vs:'f',t:'Blame {B}\'s fans for every loss {B} has ever had',s:'mic',d:.1,h:12,p:2,ok:'The whole building turns on {A}. Mission accomplished.',no:'The logic is so twisted nobody follows it.'},
-{al:'h',t:'Pay a fan in the front row to boo {B}',s:'luck',d:0,h:9,p:1,ok:'The fan boos with gusto. The rest of the crowd boos {A}. Perfect.',no:'The fan takes the money and cheers for {B} anyway.'},
+{al:'h',vs:'f',t:'Pay a fan in the front row to boo {B}',s:'luck',d:0,h:9,p:1,ok:'The fan boos with gusto. The rest of the crowd boos {A}. Perfect.',no:'The fan takes the money and cheers for {B} anyway.'},
 {al:'h',vs:'h',t:'Offer {B} an alliance… then laugh in their face',s:'mic',d:.2,h:15,p:2,ok:'{B} actually considered it. Now they look like a fool.',no:'{B} sees it coming a mile away and walks off laughing.'}]}},
 attack:{
 duo:{texts:[{kk:'back interview',nff:1,t:'{B} is mid-interview backstage when {A} creeps up from behind.'},
@@ -2179,7 +2179,7 @@ duo:{texts:[{kk:'back interview',nff:1,t:'{B} is mid-interview backstage when {A
 {al:'f',vs:'h',t:'Give {B} a taste of their own medicine',s:'ring',d:.1,h:16,p:3,ok:'Payback! The crowd has waited weeks for this.',no:'{B} rolls out of the ring and escapes up the ramp.'},
 {nhk:'lot',al:'f',vs:'h',t:'Chase {B} out of the building',s:'pop',d:.05,h:12,p:2,ok:'{B} flees into the parking lot with {A} right behind. The fans go wild.',no:'{B} ducks into a car and speeds off.'},
 {al:'f',t:'Stop short and let the refs pull them apart',s:'mic',d:.1,h:8,p:3,ok:'{A} keeps the moral high ground — and a promise that next time won\'t end so gently.',no:'It looks like {A} lost their nerve.'},
-{al:'h',t:'Go straight for {B}\'s injured knee',s:'ring',d:.1,h:20,p:1,ok:'Vicious and calculated. {B} is helped to the back.',no:'{B} kicks {A} away and limps to safety.'},
+{al:'h',t:'Stomp away at {B}\'s knee until they can\'t stand',s:'ring',d:.1,h:20,p:1,ok:'Vicious and calculated. {B} is helped to the back.',no:'{B} kicks {A} away and limps to safety.'},
 {al:'h',t:'Spray-paint their name on {B}\'s back',s:'luck',d:.05,h:14,p:2,ok:'A humiliating image for every highlight reel.',no:'The can is empty. {A} shakes it furiously.'},
 {hk:'ring|ramp',al:'h',t:'Drag {B} up the stage and hit the finisher off it',s:'ring',d:.2,h:22,p:2,ok:'An iconic, sickening visual. The crowd is stunned into silence.',no:'Security swarms the stage before {A} can finish the job.'},
 {al:'h',t:'Bring a masked accomplice for a two-on-one',s:'luck',d:.1,h:17,p:1,ok:'Who was that? Nobody knows — but {B} is down and out.',no:'The accomplice gets unmasked in the chaos. Oops.'}]}},
@@ -2205,7 +2205,7 @@ duo:{texts:['{A} and {B} sit across from each other for a tense interview.',
  {al:'h',vs:'h',t:'Two villains, one table, zero manners. {A} and {B} sit down.'},
  {al:'f',vs:'f',t:'{A} and {B} sit down with nothing but respect — for now.'}],ch:[
 {t:'Calmly dissect {B}\'s weaknesses',s:'mic',d:.15,h:10,p:3,ok:'Surgical. {B} is visibly rattled.',no:'{B} laughs it off and wins the exchange.'},
-{t:'Flip the table',s:'ring',d:.05,h:16,p:1,ok:'Chaos! The segment ends in a pull-apart brawl.',no:'The table barely moves. Unintentionally funny.'},
+{nff:1,t:'Flip the table',s:'ring',d:.05,h:16,p:1,ok:'Chaos! The segment ends in a pull-apart brawl.',no:'The table barely moves. Unintentionally funny.'},
 {al:'h',t:'Offer a handshake… then pull it away',s:'mic',d:.1,h:13,p:2,ok:'Pure mind games. The crowd loves to hate it.',no:'{B} slaps the hand away and gets the last word.'},
 {t:'Walk out and leave {B} talking to an empty chair',s:'luck',d:.05,h:9,p:2,ok:'{B} is left fuming at nobody. The fans howl.',no:'{B} just keeps talking and wins the segment.'},
 {al:'f',t:'Stay calm while {B} rants, then deliver one perfect line',s:'mic',d:.15,h:12,p:3,ok:'Mic drop. The crowd explodes.',no:'The line gets lost in {B}\'s yelling.'},
@@ -2217,15 +2217,15 @@ contract:{
 duo:{texts:['A table, two chairs and a contract for {A} vs {B}. Both sit down.',
  {kk:'lawyer security',al:'h',t:'{A} arrives at the contract signing with a lawyer and two security guards.'},
  {al:'f',vs:'h',t:'{A} sits across from {B}, ready for anything — they know {B} won\'t play fair.'}],ch:[
-{t:'Sign it — then put {B} through the table',s:'ring',d:.2,h:22,p:2,ok:'The table explodes. That\'s the image for the PPV poster.',no:'{B} reverses it and {A} goes through the table instead.'},
+{nff:1,t:'Sign it — then put {B} through the table',s:'ring',d:.2,h:22,p:2,ok:'The table explodes. That\'s the image for the PPV poster.',no:'{B} reverses it and {A} goes through the table instead.'},
 {key:1,t:'Add a stipulation before signing',stp:1,s:'mic',d:.15,h:15,p:3,ok:'The stakes just went way up. The crowd roars.',no:'The stipulation falls flat and {B} mocks it.'},
 {t:'Sign it respectfully and walk away',s:'luck',d:0,h:8,p:2,ok:'A classy moment that makes the match feel big.',no:'Anticlimactic. The crowd wanted a fight.'},
 {t:'Both sign — then a pull-apart brawl breaks out',s:'luck',d:.05,h:14,p:2,ok:'The whole locker room empties to separate them.',no:'The brawl is over before it starts.'},
 {al:'f',t:'Sign, then offer a handshake {B} won\'t take',s:'pop',d:.05,h:10,p:3,ok:'{A} looks like the bigger person, and {B} looks petty.',no:'{B} takes it — and squeezes way too hard.'},
 {al:'f',vs:'h',t:'Flip the table on {B} before they can try anything',s:'ring',d:.1,h:16,p:3,ok:'{A} beat {B} to the punch. The fans love it.',no:'{B} was waiting for exactly that.'},
 {al:'h',t:'Refuse to sign until {B} begs',s:'mic',d:.15,h:15,p:2,ok:'{B} has to swallow their pride on live TV.',no:'{B} just leaves. Now {A} has to chase the match.'},
-{al:'h',t:'Sign, then smash a chair across {B}\'s back',s:'ring',d:.15,h:20,p:1,ok:'Cowardly, vicious and very effective.',no:'{B} ducks and the chair hits the table instead.'},
-{al:'h',t:'Slip a nasty clause into the fine print',s:'mic',d:.2,h:14,p:3,ok:'{B} signs before reading it. Uh oh.',no:'{B} reads every word and crosses it out.'}]}},
+{al:'h',nhk:'chair',t:'Sign, then smash a chair across {B}\'s back',s:'ring',d:.15,h:20,p:1,ok:'Cowardly, vicious and very effective.',no:'{B} ducks and the chair hits the table instead.'},
+{al:'h',nhk:'lawyer',t:'Slip a nasty clause into the fine print',s:'mic',d:.2,h:14,p:3,ok:'{B} signs before reading it. Uh oh.',no:'{B} reads every word and crosses it out.'}]}},
 rally:{
 solo:{texts:['{A} gathers {F} in the ring for a show of force.',
  {al:'f',t:'{A} and {F} come out to a sea of their merch in the crowd.'},
@@ -2244,7 +2244,7 @@ duo:{texts:['{A} and {B} stand side by side in the ring.',
 {t:'"We are the future of this company."',s:'mic',d:.1,p:3,c:2,ok:'They look like a unit fans will follow.',no:'They talk over each other. Awkward.'},
 {t:'Pose together to a huge reaction',s:'pop',d:.05,p:2,c:1,ok:'The chemistry is obvious.',no:'Mild reaction at best.'},
 {t:'Name their next target',s:'mic',d:.15,p:3,c:1,ok:'Somebody in the back just got nervous.',no:'The threat sounds hollow.'},
-{t:'Debut a new double-team finisher on a crash-test dummy',s:'ring',d:.1,p:3,c:1,ok:'The dummy did not survive. The crowd is impressed.',no:'They miscommunicate and the dummy wins.'},
+{t:'Debut a new double-team finisher on a local wrestler',s:'ring',d:.1,p:3,c:1,ok:'The local wrestler does not get up. The crowd is impressed.',no:'They miscommunicate and the local wrestler nearly steals a pin.'},
 {al:'f',t:'Celebrate with the fans at ringside',s:'pop',d:.05,p:3,c:1,ok:'Hugs, high fives and selfies. Pure joy.',no:'They get swarmed and it gets chaotic.'},
 {al:'f',t:'Promise to always have each other\'s back',s:'mic',d:.1,p:2,c:2,ok:'The fans believe them. Now {F} feels like family.',no:'Something about it feels like foreshadowing.'},
 {al:'h',t:'Declare the rest of the division beneath them',s:'mic',d:.1,p:2,c:1,ok:'Arrogant and united. Everyone wants to see them humbled.',no:'They argue about who said it first.'},
@@ -2292,13 +2292,13 @@ duo:{texts:[{al:'f',t:'{A} comes out to stand beside {B}. The crowd cheers the p
 {al:'h',t:'Shake {B}\'s hand in front of everyone',s:'pop',d:.05,h:2,p:3,c:3,ok:'Respect earned. The fans are all in.',no:'{B} leaves {A} hanging — for now.'}]}},
 vignette:{
 solo:{texts:[{t:'The cameras catch {A} backstage.',kk:'tape back'},
- {kk:'tape dayoff',al:'f',t:'The cameras follow {A} through a day off.'},
+ {kk:'tape dayoff',t:'The cameras follow {A} through a day off.'},
  {kk:'tape trespass',al:'h',t:'A shaky camera finds {A} somewhere they definitely shouldn\'t be.'}],ch:[
 {t:'A gritty training montage',s:'ring',d:0,p:2,ok:'They look ready for war.',no:'It\'s fine. Just fine.'},
 {t:'A comedic bit with the production crew',s:'mic',d:.2,p:4,ok:'The internet is going to love this one.',no:'The joke dies. Crickets.'},
 {t:'A dark, cryptic message',s:'mic',d:.15,p:3,ok:'Everyone is talking about what it means.',no:'Confusing rather than intriguing.'},
 {nhk:'roof|car|school|gym|arena|truck|stage|study',t:'A slow-motion walk through the parking garage',s:'pop',d:.05,p:2,ok:'Cinematic and cool. Pure star power.',no:'It looks like a car commercial.'},
-{nhk:'trespass|school|arena|gym|roof|truck|stage|study',al:'f',t:'Visit a children\'s hospital',s:'pop',d:.05,p:4,ok:'Heartwarming. {A} is a hero in and out of the ring.',no:'A lovely moment, but it airs during a commercial break.'},
+{nhk:'back|car|trespass|school|arena|gym|roof|truck|stage|study',al:'f',t:'Visit a children\'s hospital',s:'pop',d:.05,p:4,ok:'Heartwarming. {A} is a hero in and out of the ring.',no:'A lovely moment, but it airs during a commercial break.'},
 {hk:'back|arena',al:'f',t:'Help the ring crew set up after hours',s:'pop',d:0,p:2,ok:'A humble, hardworking star. The crew adores {A}.',no:'{A} drops a turnbuckle on their foot.'},
 {hk:'back',al:'h',t:'Trash the catering table',s:'luck',d:0,p:2,ok:'Petty destruction at its finest.',no:'The caterer chases {A} off with a ladle.'},
 {al:'h',t:'Stare into the camera until it cuts away',s:'mic',d:.1,p:3,ok:'Unsettling. Nobody at home can look away.',no:'It goes on so long it becomes a meme — the wrong kind.'},
@@ -2307,13 +2307,13 @@ duo:{texts:[{t:'The cameras catch {A} bumping into {B} backstage.',kk:'tape back
  {kk:'tape back door',al:'h',vs:'f',t:'{A} is waiting outside {B}\'s locker room door.'},
  {kk:'tape back catering',al:'f',vs:'f',t:'{A} and {B} run into each other at catering.'}],ch:[
 {nhk:'absent',t:'A heated shoving match',s:'ring',d:.05,h:12,p:1,ok:'Officials have to pull them apart.',no:'Security breaks it up before it gets going.'},
-{t:'Cryptic mind games',s:'mic',d:.15,h:10,p:2,ok:'{B} walks off shaken.',no:'{B} doesn\'t take the bait.'},
+{nhk:'absent',t:'Cryptic mind games',s:'mic',d:.15,h:10,p:2,ok:'{B} walks off shaken.',no:'{B} doesn\'t take the bait.'},
 {nhk:'absent',t:'A surprising show of respect',s:'mic',d:.1,p:3,c:2,ok:'Could this be an alliance in the making?',no:'It reads as fake.'},
 {hk:'back',t:'A long, tense elevator ride together',s:'mic',d:.1,h:9,p:2,ok:'Nobody says a word. Nobody needs to.',no:'The elevator music undercuts the tension.'},
 {hk:'catering|train',nhk:'absent',al:'f',vs:'f',t:'Friendly trash talk over a game of cards',s:'mic',d:.1,h:6,p:3,c:1,ok:'Fun, loose and a little competitive. The fans love these two.',no:'The joke lands badly and things get chilly.'},
 {hk:'catering',al:'f',vs:'h',t:'Catch {B} cheating at cards in catering',s:'luck',d:.05,h:10,p:2,ok:'"Some things never change." {B} storms off.',no:'{B} pockets the evidence before anyone sees.'},
 {hk:'door|back',nhk:'absent',al:'h',vs:'f',t:'Lock {B} in the locker room before their match',s:'luck',d:.05,h:13,p:1,ok:'{B} is banging on the door as the show goes on. Dastardly.',no:'{B} climbs out a window.'},
-{al:'h',t:'Steal {B}\'s entrance jacket',s:'luck',d:0,h:10,p:2,ok:'{A} wears it to the ring later. Petty and perfect.',no:'It doesn\'t fit.'}]}}};
+{al:'h',nhk:'absent',t:'Steal {B}\'s entrance jacket',s:'luck',d:0,h:10,p:2,ok:'{A} wears it to the ring later. Petty and perfect.',no:'It doesn\'t fit.'}]}}};
 const TWISTS=[
 {hk:'live',when:'any',text:'The crowd erupts into a chant for {A}.',ch:[{t:'Feed off the crowd',s:'pop',d:.05,p:3},{t:'Tell them to shut up',s:'mic',d:.15,p:2,h:3},{t:'Stay focused',s:'luck',d:0,p:1}]},
 {hk:'live',when:'any',x:1,text:'Music hits — {X} is heading to the ring!',ch:[{t:'Get in {X}\'s face',s:'mic',d:.1,hx:12,p:2},{t:'Brawl with {X}',s:'ring',d:.1,hx:16,p:1},{t:'Leave them to it',s:'luck',d:0,hx:4,p:0},{al:'f',t:'Stare {X} down and tell them to wait their turn',s:'pop',d:.05,hx:8,p:3},{al:'h',t:'Use {X} as a human shield',s:'luck',d:.1,hx:14,p:1,ok:'{X} takes the hit meant for {A}. Now {X} is angry too.'}]},
@@ -2425,7 +2425,7 @@ const MEV=[
 {id:'stall',w:1.5,vs:'h',text:'{B} keeps arguing with the referee to buy time.',ch:[
  {t:'{A} waits patiently, then strikes',s:'ring',d:.05,st:.25,ok:'The patience pays off.',no:'{B} buys enough time to recover.'},
  {t:'{A} rolls {B} up while they\'re distracted',s:'luck',d:.05,st:.25,popA:2,heat:8,ok:'Caught napping! 1… 2… 3.',no:'{B} kicks out in shock.'},
- {al:'h',t:'{A} joins in yelling at the ref',s:'mic',d:.1,st:.25,heat:6,ok:'Two heels berating a ref. The crowd is fuming.',no:'The ref ejects {A}\'s manager instead.'},
+ {al:'h',t:'{A} joins in yelling at the ref',s:'mic',d:.1,st:.25,heat:6,ok:'Two heels berating a ref. The crowd is fuming.',no:'The ref threatens {A} with a DQ and they back right off.'},
  {al:'f',t:'{A} gets the crowd to count {B} down',s:'pop',d:.05,st:.5,popA:1,ok:'"FIVE! FOUR! THREE!" {B} scrambles back.',no:'The count fizzles.'}]},
 {id:'respect',w:1.5,al:'f',vs:'f',text:'Two fan favorites, battered and exhausted. The crowd is on its feet applauding.',ch:[
  {t:'Trade strikes from their knees',s:'ring',d:.1,st:.5,fat:5,ok:'A slugfest that ends with both on their feet.',no:'They\'re too tired to sell it.'},
@@ -4195,7 +4195,7 @@ function tonightCard(sh){const c=S.card&&S.card.p;if(!c||!c.length)return '';let
   vn++;/* v122: number what's shown — a hidden empty bonus promo doesn't take a number */
   return `<div class="tcr ${me?'me':''}"><span class="n">${vn}</span><span class="l">${who||lab}${who?`<small>${lab}</small>`:''}</span>${who?'':'<span class="t">TBA</span>'}</div>`}).join('');
  return `<div class="card tcard" onclick="go('book')"><div class="row sb"><div class="h small" style="margin:0">${sh.ppv?'The PPV card':"Tonight's card"}</div><span class="muted tiny">${done} of ${req.length} booked</span></div><div class="tc">${rows}</div></div>`}
-function homeView(){const sh=curShow();const np=nextPPV();const gp=fanGain('p'),ga=fanGain('ai');const pp=clamp(50+(gp-ga)/(Math.abs(gp)+Math.abs(ga)+20000)*50,3,97);const mine=ownList('p');const al=[];
+function homeView(){const sh=curShow();const np=nextPPV();const gp=fanGain('p'),ga=fanGain('ai');/* v226: the knot is pulled toward whoever is ahead — left for you, right for the rival (same as the star reveal) */const pp=clamp(50-(gp-ga)/(Math.abs(gp)+Math.abs(ga)+20000)*50,3,97);const mine=ownList('p');const al=[];
  {const v=inaugList();if(v.length)al.push(`👑 ${v.length} title${v.length>1?'s are':' is'} still vacant — book title matches to crown your inaugural champions. <a href="#" onclick="go('book');return false" style="color:var(--gold2)">Book now</a>`)}
  if(S.money.p<0)al.push(`💸 You're in the red (${money(S.money.p)}) — wrestlers' morale is slipping. See the Office.`);
  if(S.pitch&&S.w[S.pitch.a]&&S.w[S.pitch.a].own==='p'&&typeof PITCHES!=='undefined'&&PITCHES[S.pitch.k])al.push(`📨 ${esc(S.w[S.pitch.a].name)} has a pitch for you — <a href="#" onclick="openPitch();return false" style="color:var(--gold2)">hear them out</a>`);
