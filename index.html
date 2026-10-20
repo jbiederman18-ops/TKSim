@@ -1628,7 +1628,7 @@ html.lk-hy .bzm i{background:var(--gold)}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v223';
+const APP_VERSION='v224';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4007,7 +4007,11 @@ window.addEventListener('resize',()=>{const sh=document.querySelector('#modal .s
 function sheetScrollFix(sh){if(!sh)return;let last=-1,raf=0;
  const kick=()=>{raf=0;if(!sh.isConnected)return;const h=sh.scrollHeight;if(h===last)return;last=h;const t=sh.scrollTop;sh.style.overflowY='hidden';void sh.offsetHeight;sh.style.overflowY='';sh.scrollTop=t};
  const soon=()=>{if(!raf)raf=requestAnimationFrame(kick)};
- sh.addEventListener('animationend',()=>{last=-1;soon()},{once:true});sh.addEventListener('toggle',soon,true);sh.addEventListener('load',soon,true);
+ /* v224: only the sheet's own open animation counts (a child's animation ending first used to spend this early), plus a late kick as a backstop */
+ const ae=e=>{if(e.target!==sh)return;sh.removeEventListener('animationend',ae);last=-1;soon()};sh.addEventListener('animationend',ae);setTimeout(()=>{last=-1;soon()},450);
+ /* v224: iOS hands a swipe to the locked page behind (so nothing moves) when the sheet sits exactly at its top or bottom edge;
+    keeping it a pixel inside the range makes the sheet always take the swipe. Also re-check the scroll area on every touch. */
+ sh.addEventListener('touchstart',()=>{const max=sh.scrollHeight-sh.clientHeight;if(max>2){if(sh.scrollTop<=0)sh.scrollTop=1;else if(sh.scrollTop>=max)sh.scrollTop=max-1}soon()},{passive:true});sh.addEventListener('toggle',soon,true);sh.addEventListener('load',soon,true);
  if(window.ResizeObserver&&sh.firstElementChild){const ro=new ResizeObserver(()=>{if(!sh.isConnected){ro.disconnect();return}soon()});ro.observe(sh.firstElementChild)}}
 function closeModal(){const m=$('#modal');m.classList.add('hidden');m.innerHTML='';document.body.classList.remove('lock');pageUnlock();
  /* editors are finished once their sheet closes; leaving these set blocked live league updates and cloud loads */
