@@ -1211,6 +1211,400 @@ html.cmp.lk-hy .hyline .tg{font-size:10.5px;padding:2px 6px}
 html.cmp.lk-hy .hyline .tell{font-size:11.5px;padding:2px 6px}
 html.cmp.lk-hy .hyline .tell.big{font-size:11.5px}
 html.cmp.lk-hy .dghint{display:none}
+/* ===== v222: Pay-per-view look (mockup D). One shape (a single slant, never a chamfer, rounded pill or dashed box), flat fills
+   (no glows or gradients), heavy italic type, gold for what you act on, red for live and the main event, and full-bleed
+   banners with a slanted bottom edge for the show and every screen's header. Scoped to html.lk-hy so it outranks the older layers. ===== */
+html.lk-hy{--bg:#09090a;--st1:#151518;--st2:#151518;--s2:#1e1e22;--s3:#2a2a30;--line:#24242a;--gold:#f2c14e;--gold2:#f5cf68;--gold3:#a8842e;--red:#c8302a;--red2:#8f1d18;--ember:#e8662a;--ink:#09090a;--text:#f4f1ea;--mut:#a3a09a;--good:#5fcf8c;--bad:#ef6f66;--face:#5aa8ec;--heel:#ef5b52;
+ --grain:none;--grunge:none;
+ --cut:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);
+ --slant:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);
+ --sl:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%);
+ --band:polygon(0 0,100% 0,100% calc(100% - 18px),0 100%);
+ /* a 2px outline that follows the 10px slant (evenodd: outer edge, then the inner edge) */
+ --frame:polygon(evenodd,10px 0,100% 0,calc(100% - 10px) 100%,0 100%,10px 0,12px 2px,2px calc(100% - 2px),calc(100% - 12px) calc(100% - 2px),calc(100% - 2px) 2px,12px 2px);
+ --frame8:polygon(evenodd,8px 0,100% 0,calc(100% - 8px) 100%,0 100%,8px 0,10px 2px,2px calc(100% - 2px),calc(100% - 10px) calc(100% - 2px),calc(100% - 2px) 2px,10px 2px);
+ --frame3:polygon(evenodd,10px 0,100% 0,calc(100% - 10px) 100%,0 100%,10px 0,13px 3px,3px calc(100% - 3px),calc(100% - 13px) calc(100% - 3px),calc(100% - 3px) 3px,13px 3px)}
+html.lk-hy,html.lk-hy body{background:var(--bg)}
+html.lk-hy body{background:var(--bg)}
+
+/* ---- header ---- */
+html.lk-hy header.top,html.lk-hy header.top:before{background:var(--bg)}
+html.lk-hy header.top{border-bottom:1px solid #1c1c20;box-shadow:none}
+html.lk-hy header.top:after{display:none}
+html.lk-hy .logo{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:#fff;-webkit-text-fill-color:#fff;filter:none;font-weight:900;font-style:italic}
+html.lk-hy .logo2{background:var(--red);color:#fff;clip-path:var(--sl)}
+html.lk-hy .hudc{background:var(--s2);border:0;color:var(--text);font-weight:800;font-style:italic;clip-path:var(--slant)}
+html.lk-hy .hudc b{color:var(--text)}
+html.lk-hy header.top .hud .hudc:last-of-type{background:var(--gold);color:var(--ink)}
+html.lk-hy header.top .hud .hudc:last-of-type b{color:var(--ink)}
+html.lk-hy .gsw{background:var(--s2);box-shadow:none;color:var(--text)}
+html.lk-hy .gsw.on{background:var(--gold);color:var(--ink)}
+html.lk-hy .ver{color:#5d5a55}
+
+/* ---- tab bar: a gold slanted pill under the tab you're on (fx.js glides it between tabs) ---- */
+html.lk-hy nav.tabs{background:#111113;box-shadow:none}
+html.lk-hy nav.tabs:before{display:none}
+html.lk-hy nav.tabs:after{background:#111113}
+html.lk-hy nav.tabs button{z-index:1;color:#8e8b85;font-style:italic;font-weight:800;letter-spacing:.06em;transition:color .2s}
+html.lk-hy nav.tabs button.on{color:var(--ink);text-shadow:none}
+html.lk-hy nav.tabs button.on svg{filter:none}
+html.lk-hy nav.tabs button.on:before{z-index:-1;top:0;bottom:0;left:10%;right:10%;height:auto;background:var(--gold);box-shadow:none;clip-path:var(--slant)}
+html.lk-hy nav.tabs.fxn button.on:before{opacity:0}
+html.lk-hy nav.tabs .nvi{z-index:0;background:var(--gold);box-shadow:none;clip-path:var(--slant);transition:left .34s cubic-bezier(.3,1.25,.4,1),width .34s,top .2s,height .2s}
+
+/* ---- panels: flat, slanted; a colored top edge says what it is (gold = yours/ready, red = needs you) ---- */
+html.lk-hy .card{background:var(--st1);border:0;box-shadow:none;clip-path:var(--cut)}
+html.lk-hy .card.tcard,html.lk-hy .card.mine,html.lk-hy .card.seascal,html.lk-hy .card.belt.mine,html.lk-hy .hyps{box-shadow:inset 0 3px 0 var(--gold)}
+html.lk-hy .card.theirs,html.lk-hy .card.belt.theirs{box-shadow:inset 0 3px 0 #55555d}
+html.lk-hy .card.warn,html.lk-hy .card.attn,html.lk-hy .card.conbar{background:#1a1314;border:0;box-shadow:inset 0 3px 0 var(--red)}
+html.lk-hy .brief.urgent{box-shadow:inset 0 3px 0 var(--red)}
+html.lk-hy .card.belt,html.lk-hy .card.belt.top{background:var(--st1);border:0}
+html.lk-hy .card.belt.top .h{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--gold);-webkit-text-fill-color:var(--gold)}
+html.lk-hy .small,html.lk-hy .h.small{font:800 15px/1.2 'BC','Barlow Condensed',sans-serif!important;font-style:italic!important;letter-spacing:.04em;text-transform:uppercase;color:var(--text)}
+html.lk-hy .small:before{display:none}
+html.lk-hy .side,html.lk-hy .rib,html.lk-hy .capbox,html.lk-hy .proj,html.lk-hy .mu,html.lk-hy .scout,html.lk-hy .flow{background:#0f0f12;border:0;border-radius:0;clip-path:var(--cut)}
+html.lk-hy .card.prodf:not([open]){background:none;clip-path:none;box-shadow:none}
+html.lk-hy .card.prodf[open]{background:var(--st1);clip-path:var(--cut);padding:12px 14px 12px 18px}
+html.lk-hy .bkacts .btn{flex:1.5;white-space:nowrap;font-size:17px;padding-left:10px;padding-right:10px}html.lk-hy .bkacts .btn.ghost{flex:1;background:var(--s2);color:var(--text)}
+html.lk-hy .seg.best{margin:4px -15px;padding:10px 25px;background:#211d12;box-shadow:none;clip-path:var(--cut)}
+html.lk-hy .motn{color:var(--gold)}
+
+/* ---- the show banner: full width, solid brand color, slanted bottom edge ---- */
+html.lk-hy .card.showcard{background:var(--red);border:0;box-shadow:none;clip-path:var(--band);padding-bottom:30px}
+html.lk-hy main>.card.showcard,html.lk-hy main>.card.phead{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}
+html.lk-hy main>.card.showcard:first-child,html.lk-hy main>.card.phead:first-child{margin-top:-16px;padding-top:20px}
+html.lk-hy .card.showcard.col{background:#2c4f93}
+html.lk-hy .card.showcard.ppv{background:var(--gold)}
+html.lk-hy .showcard .spark,html.lk-hy .showcard .wm,html.lk-hy .phead .spark,html.lk-hy .res-hd .spark,html.lk-hy .hero .spark,html.lk-hy .lvhd .spark,html.lk-hy .wdt .spark{display:none}
+html.lk-hy .card.showcard .showname.showname,html.lk-hy .res-hd .showname.showname,html.lk-hy .hero-t,html.lk-hy .lvt,html.lk-hy .wdt .wd-n,html.lk-hy .dround,html.lk-hy .mhd,html.lk-hy .rv-win,html.lk-hy .lbbrand{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:#fff;-webkit-text-fill-color:currentColor;filter:none;text-shadow:none}
+html.lk-hy .rv-top .showname.showname,html.lk-hy .tv-poster .showname.showname{background:none;-webkit-background-clip:border-box;background-clip:border-box;-webkit-text-fill-color:currentColor;filter:none;color:var(--gold)}
+html.lk-hy .tv-poster .showname.showname{color:#fff}
+html.lk-hy .card.showcard .showname.showname{font-weight:900;font-style:italic;letter-spacing:-.01em}
+html.lk-hy .card.showcard.ppv .showname.showname,html.lk-hy .card.showcard.ppv .kicker,html.lk-hy .card.showcard.ppv .lfc,html.lk-hy .card.showcard.ppv .lfs,html.lk-hy .card.showcard.ppv .lft,html.lk-hy .card.showcard.ppv .venue,html.lk-hy .card.showcard.ppv .venue b{color:var(--ink)}
+html.lk-hy .showcard .kicker,html.lk-hy .hero .kicker{color:#fff;font-style:italic;font-weight:800}
+html.lk-hy .showcard .kicker i,html.lk-hy .hero .kicker i{background:#fff;box-shadow:none}
+html.lk-hy .showcard .livebug b,html.lk-hy .res-hd .livebug b,html.lk-hy .lvhd .livebug b{background:#fff;color:var(--red);font-style:italic;clip-path:var(--sl);padding:4px 10px}
+html.lk-hy .showcard .livebug span,html.lk-hy .lvhd .livebug span{background:rgba(0,0,0,.28);color:#fff;font-style:italic;clip-path:var(--sl);padding:4px 10px;margin-left:-2px}
+html.lk-hy .showcard.col .livebug b{color:#2c4f93}
+html.lk-hy .showcard.ppv .livebug b{background:var(--ink);color:var(--gold)}
+html.lk-hy .showcard.ppv .livebug span{background:rgba(0,0,0,.14);color:var(--ink)}
+html.lk-hy .showcard .lft,html.lk-hy .res-hd .lft,html.lk-hy .lvhd .lft{color:rgba(255,255,255,.82)}
+html.lk-hy .showcard .lfc{color:#fff}
+html.lk-hy .showcard .lfs,html.lk-hy .showcard .venue,html.lk-hy .showcard .venue b,html.lk-hy .res-hd .lfs{color:rgba(255,255,255,.9)}
+html.lk-hy .showcard .lfl,html.lk-hy .res-hd .lfl,html.lk-hy .lvhd .lfl{height:5px;width:150px;margin-left:0;background:#fff;clip-path:var(--sl)}
+html.lk-hy .showcard.ppv .lfl{background:var(--ink)}
+html.lk-hy .showcard .btn{background:#fff;color:var(--red)}
+html.lk-hy .showcard.col .btn{color:#2c4f93}
+html.lk-hy .showcard.ppv .btn{background:var(--ink);color:var(--gold)}
+html.lk-hy .showcard.ppv .muted,html.lk-hy .showcard.ppv .tiny{color:rgba(9,9,10,.75)}
+html.lk-hy .showcard .muted{color:rgba(255,255,255,.82)}
+
+/* ---- every screen's header: the same full-width banner, in charcoal, with a gold slash ---- */
+html.lk-hy .card.phead{background:#1a1a1e;border:0;box-shadow:none;clip-path:var(--band);padding-bottom:28px}
+html.lk-hy .phead .dk{color:var(--gold);font-style:italic;font-weight:800}
+html.lk-hy .phead .dround{color:#fff;font-weight:900}
+html.lk-hy .phead .dround .neg{color:var(--bad);-webkit-text-fill-color:var(--bad)}
+html.lk-hy .phr b{color:var(--gold)}
+html.lk-hy .phead .lfl{height:5px;width:150px;background:var(--gold);clip-path:var(--sl)}
+html.lk-hy .phead .lfs{color:#d6d2c8}
+html.lk-hy .roh-x .phead{background:#3a0f12!important;border:0!important}
+html.lk-hy .roh-x .phead .dround{color:#fff!important;text-shadow:none!important}
+html.lk-hy .roh-x .phead .lfl{background:#ff4b4b}
+html.lk-hy .roh-x .card{border-left:0;box-shadow:inset 0 3px 0 #b3161d}
+html.lk-hy .roh-x .chip.on{background:#b3161d!important}
+
+/* the draft's "on the clock" card, results, the live header: the show's red */
+html.lk-hy .card.ttape,html.lk-hy .res-hd,html.lk-hy .lvhd{background:var(--red);border:0;box-shadow:none;clip-path:var(--band);padding-bottom:26px}
+html.lk-hy .card.ttape .tt-bg,html.lk-hy .wdt .tt-bg{color:rgba(255,255,255,.08)}
+html.lk-hy .ttape .tt-k,html.lk-hy .lvl{color:#fff;font-style:italic;font-weight:800}
+html.lk-hy .ttape .dround{color:#fff}
+html.lk-hy .tt-g div{background:rgba(0,0,0,.32)}
+html.lk-hy .tt-g small{color:rgba(255,255,255,.75)}
+html.lk-hy .ttape .tt-s{color:rgba(255,255,255,.9)}
+html.lk-hy .ttape .btn.sec,html.lk-hy .lvhd .btn.sec{background:rgba(0,0,0,.3)}
+html.lk-hy .lvhd .lvn,html.lk-hy .lvhd .muted{color:#fff}
+html.lk-hy .lvvs{color:#fff}
+html.lk-hy .wd-top.wdt{background:#1a1a1e;clip-path:var(--band);padding-bottom:24px}
+html.lk-hy .wdt .tt-k{color:var(--gold)}
+html.lk-hy .rticks{gap:3px}
+html.lk-hy .rticks i{height:8px;background:var(--s3);clip-path:polygon(3px 0,100% 0,calc(100% - 3px) 100%,0 100%)}
+html.lk-hy .rticks i.done{background:var(--gold3)}
+html.lk-hy .rticks i.now{background:var(--gold);box-shadow:none}
+
+/* ---- title screen: the red banner ---- */
+html.lk-hy .hero{background:var(--red);clip-path:var(--band);padding-bottom:40px;margin-bottom:14px}
+html.lk-hy .hero p{color:rgba(255,255,255,.9)}
+html.lk-hy .hero-l{height:5px;width:150px;background:#fff;clip-path:var(--sl)}
+html.lk-hy .hero-t{color:#fff;font-weight:900}
+
+/* ---- buttons, chips, tags: one slant, flat fills ---- */
+html.lk-hy .btn{background:var(--gold);color:var(--ink);box-shadow:none;font-weight:900;font-style:italic;clip-path:var(--slant);animation:none}
+html.lk-hy .btn:after{display:none}
+html.lk-hy .btn:active{filter:brightness(1.08);transform:translateX(2px) scale(.98)}
+html.lk-hy .btn.sec{background:var(--s2);color:var(--text);box-shadow:none}
+html.lk-hy .btn.ghost{background:none;color:var(--mut)}
+html.lk-hy .btn.danger{color:var(--bad)}
+html.lk-hy .btn.live{background:var(--red);color:#fff;text-shadow:none;animation:none}
+html.lk-hy .lvdock .btn.live:disabled{background:var(--s2);color:#77747c;filter:none;opacity:1}
+html.lk-hy .mini{background:var(--s2);box-shadow:none;color:var(--gold2);clip-path:var(--sl)}
+html.lk-hy .mini.on{background:var(--gold);color:var(--ink)}
+html.lk-hy .chip,html.lk-hy .crown{background:var(--s2);box-shadow:none;color:#a7a39b;clip-path:var(--slant)}
+html.lk-hy .chip.on,html.lk-hy .crown.on{background:var(--gold);color:var(--ink)}
+html.lk-hy .badge.you{background:var(--gold);color:var(--ink)}
+html.lk-hy .badge.riv{background:#3a3a42}
+html.lk-hy .tg,html.lk-hy .tell,html.lk-hy .fdt,html.lk-hy .why,html.lk-hy .stc,html.lk-hy .rdp,html.lk-hy .rdn,html.lk-hy .gchip,html.lk-hy .lbtag,html.lk-hy .scm .sct,html.lk-hy .hych,html.lk-hy .trp i,html.lk-hy .edi .ask,html.lk-hy .chm,html.lk-hy .wc .nm span.inf em.chm,html.lk-hy .wc .ic,html.lk-hy .fxd{border-radius:0;clip-path:var(--sl);padding-left:8px;padding-right:8px}
+html.lk-hy .rdc,html.lk-hy .rdcal>span,html.lk-hy .conchip{border:0;border-radius:0;background:var(--s2);clip-path:var(--slant);padding-left:13px;padding-right:13px}
+html.lk-hy .rdc.on{background:#2a2414}
+html.lk-hy .conchip.warnt{background:rgba(230,182,64,.16)}
+html.lk-hy .conchip.bad{background:rgba(239,111,102,.18)}
+html.lk-hy .tg.gold{background:var(--gold);color:var(--ink)}
+html.lk-hy .fdt.t3{background:var(--ember)}
+html.lk-hy .alchip.f{background:var(--face)}html.lk-hy .alchip.h{background:var(--heel)}html.lk-hy .alchip.x{background:#7a4aa8}
+html.lk-hy .live-tag{background:var(--red);clip-path:var(--sl)}
+html.lk-hy .winban{clip-path:var(--slant)}
+html.lk-hy .winban.w{background:var(--gold);color:var(--ink)}
+html.lk-hy .winban.l{background:var(--red);color:#fff}
+html.lk-hy .winban.t{background:#9b978e;color:var(--ink)}
+html.lk-hy .qm{border-color:var(--s3)}
+
+/* ---- inputs ---- */
+html.lk-hy select,html.lk-hy input:not([type=range]):not([type=checkbox]):not([type=radio]),html.lk-hy .dd{background-color:var(--s2);border:0;clip-path:var(--sl);padding-left:14px}
+html.lk-hy select:focus,html.lk-hy input:focus,html.lk-hy .dd.open{box-shadow:inset 0 -3px 0 var(--gold);background-color:#25252a}
+html.lk-hy .dd.open{clip-path:var(--sl)}
+html.lk-hy .ddl{border:0;background:#121215;box-shadow:inset 0 3px 0 var(--gold)}
+html.lk-hy .ddo.on{background:rgba(242,193,78,.14)}
+html.lk-hy .ddo.spec{background:rgba(242,193,78,.07)}
+html.lk-hy .ddo.spec.on{background:rgba(242,193,78,.18)}
+
+/* ---- bars, meters, pips ---- */
+html.lk-hy .bar>i{background:var(--gold);box-shadow:none}
+html.lk-hy .bar.bad>i{background:var(--bad)}
+html.lk-hy .bar.heat>i{background:var(--ember)}
+html.lk-hy .trb,html.lk-hy .hfb,html.lk-hy .hyb,html.lk-hy .lr u,html.lk-hy .wc .sta u{border-radius:0}
+html.lk-hy .trb i{background:var(--gold)}
+html.lk-hy .hfb i{background:var(--ember)}
+html.lk-hy .pipm i.on{background:var(--gold)}
+html.lk-hy .fcurve i{border-radius:0;background:#6d4a28;clip-path:var(--sl)}
+html.lk-hy .fcurve i.hot{background:var(--ember)}
+html.lk-hy .flowbar i{border-radius:0;clip-path:var(--sl)}
+html.lk-hy .flowbar i:not(.promo){background:var(--gold)}
+html.lk-hy .flowbar i.promo{background:#6f9cf0}
+html.lk-hy .calstrip .cw{border-radius:0;clip-path:polygon(3px 0,100% 0,calc(100% - 3px) 100%,0 100%)}
+html.lk-hy .calrow{border-radius:0}
+html.lk-hy details.calpast{border:0;border-radius:0;background:#0f0f12;clip-path:var(--cut)}
+/* the rope (brand war, star reveal): flat track, a slanted gold knot */
+html.lk-hy .war,html.lk-hy .twrope{background:var(--s2);border:0}
+html.lk-hy .war>i:after,html.lk-hy .twrope i{background:var(--gold);box-shadow:none;transform:skewX(-14deg);width:14px;margin-left:-7px}
+html.lk-hy .war>i:after{right:-7px;margin-left:0;height:20px;margin-top:-10px}
+html.lk-hy .twrope i{height:22px;margin-top:-11px}
+html.lk-hy .twrope i.ring::after{border-color:var(--gold)}
+
+/* ---- booking slots: a gold number tab, then the plate (mockup D) ---- */
+html.lk-hy .slot{background:var(--st1);border:0;clip-path:var(--cut);padding:10px 26px 11px 54px;min-height:60px;margin-bottom:7px}
+html.lk-hy .slot.done{background:var(--st1);border:0}
+html.lk-hy .slot.me.done{background:#191314}
+html.lk-hy .slot .num,html.lk-hy .slot:not(.done) .num{width:44px;background:var(--gold);color:var(--ink);font-size:24px;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%)}
+html.lk-hy .slot.me .num,html.lk-hy .slot.me:not(.done) .num{background:var(--red);color:#fff}
+html.lk-hy .slot.opt{border:0;opacity:.62}
+html.lk-hy .slot .lbl{font:800 13px/1.15 'BC','Barlow Condensed',sans-serif;font-style:italic;letter-spacing:.05em;color:var(--gold2)}
+html.lk-hy .slot.me .lbl{color:#ff8a80}
+html.lk-hy .slot .add{font:800 17px/1.2 'BC','Barlow Condensed',sans-serif;font-style:italic;text-transform:uppercase;letter-spacing:.02em;color:var(--text)}
+html.lk-hy .slot .add:first-letter{color:var(--gold)}
+html.cmp.lk-hy .slot{padding:6px 10px 7px 46px;min-height:0;margin-bottom:6px}
+html.cmp.lk-hy .slot .num{width:36px;font-size:19px}
+html.cmp.lk-hy .slot .lbl{font-size:11px}
+html.cmp.lk-hy .slot .add{font-size:15px}
+/* face-off plates: flat, slanted, the face/heel color runs down the slanted left edge */
+html.lk-hy .fo,html.cmp.lk-hy .cpp,html.lk-hy .twpl{background:var(--s2);box-shadow:none;clip-path:var(--slant)}
+html.lk-hy .fo{padding-left:14px}
+html.cmp.lk-hy .cpp{padding-left:12px}
+html.lk-hy .twpl{padding-left:14px}
+html.lk-hy .fo:before,html.cmp.lk-hy .cpp:before,html.lk-hy .twpl::before{width:13px;clip-path:polygon(8px 0,13px 0,5px 100%,0 100%)}
+html.lk-hy .fo.w,html.cmp.lk-hy .cpp.w{box-shadow:none;background:#2a2412}
+html.lk-hy .fo.w:after,html.cmp.lk-hy .cpp.w:after{content:"";position:absolute;inset:0;background:var(--gold);clip-path:var(--frame8);pointer-events:none}
+html.lk-hy .fo .wn{clip-path:var(--sl);padding:2px 7px}
+html.lk-hy .twbelt,html.lk-hy .wc .nm .inf.btlb{background:var(--gold);color:var(--ink)}
+html.lk-hy .hyface>.vs{color:var(--red)}
+html.lk-hy .vs{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--red);-webkit-text-fill-color:var(--red);filter:none}
+
+/* Home: tonight's card + tiles */
+html.lk-hy .tcr{border-left:0;background:var(--s2);clip-path:var(--sl);padding-left:14px}
+html.lk-hy .tcr.me{background:#3a1715}
+html.lk-hy .tcr.me .n{color:#ff8a80}
+html.lk-hy .tile{background:var(--st1);border:0;clip-path:var(--cut)}
+html.lk-hy .tile:after{left:12px;width:56px;height:4px;background:var(--gold);clip-path:var(--sl)}
+html.lk-hy .tile svg{filter:none}
+html.lk-hy .card.dial{background:var(--st1)}
+html.lk-hy .dial .dk{background:#0f0f12}
+
+/* ---- photo cards: the same slant; champions' gold frame (and the feud ember) follow the edge ---- */
+html.lk-hy .wc,html.lk-hy .wd-pic,html.lk-hy .tt-pic{clip-path:var(--cut)}
+html.lk-hy .wc:before,html.lk-hy .wc.t1:before,html.lk-hy .wc.t2:before,html.lk-hy .wc.t3:before{box-shadow:none;background:none}
+html.lk-hy .wc.champ:before{background:var(--gold);clip-path:var(--frame);box-shadow:none}
+html.lk-hy .wc.fd:before{background:var(--ember);clip-path:var(--frame);box-shadow:none}
+html.lk-hy .wc.sel{outline:0}
+html.lk-hy .wc.sel:before{background:#fff;clip-path:var(--frame3);box-shadow:none}
+html.lk-hy .wc .al{width:15px;box-shadow:none;clip-path:polygon(10px 0,15px 0,5px 100%,0 100%)}
+html.lk-hy .wc.af:after,html.lk-hy .wc.ah:after{background:none}
+html.lk-hy .wc.af .nm,html.lk-hy .wc.ah .nm{background:linear-gradient(180deg,transparent,rgba(0,0,0,.86) 42%,#000)}
+html.lk-hy .wc .nm{padding-left:13px}
+html.lk-hy .wc .o{clip-path:var(--sl);padding-left:7px}
+html.lk-hy .wc .fdb{background:#8a3a1a}html.lk-hy .wc .fdb.t2{background:#c2451f}html.lk-hy .wc .fdb.t3{background:var(--ember);box-shadow:none}
+html.lk-hy .wc .fdr{background:#000}html.lk-hy .wc .fdr.t1{background:#8a3a1a}html.lk-hy .wc .fdr.t2{background:#c2451f}html.lk-hy .wc .fdr.t3{background:var(--ember);box-shadow:none}
+html.lk-hy .wc.empty{background:var(--st1);color:var(--gold)}
+html.lk-hy .wc.empty:before{background:#3a3a42;clip-path:var(--frame);box-shadow:none}
+html.lk-hy .wd-pic{box-shadow:none}
+html.lk-hy .wd-pic:after{content:"";position:absolute;inset:0;background:var(--gold);clip-path:var(--frame);pointer-events:none}
+html.lk-hy .wc .askb,html.lk-hy .wc .bkb{border:0}
+/* avatars: slanted, not round; the face/heel color sits underneath */
+html.lk-hy .fav,html.lk-hy .scav,html.lk-hy .lr .fav,html.lk-hy .duo .fav,html.lk-hy .tmrow .tmf .fav{border-radius:0;box-shadow:none;clip-path:var(--sl);border:0}
+html.lk-hy .fav.af,html.lk-hy .duo .fav.af{border-bottom:3px solid var(--face)}
+html.lk-hy .fav.ah,html.lk-hy .duo .fav.ah{border-bottom:3px solid var(--heel)}
+html.lk-hy .duo .fav{border-bottom:3px solid var(--gold)}
+html.lk-hy .fav>*,html.lk-hy .scav>*{border-radius:0}
+html.lk-hy .scav{background:var(--s2)}
+
+/* ---- rows & tiles inside panels ---- */
+html.lk-hy .bbr,html.lk-hy .dtr{position:relative;border-left:0;background:var(--st1);clip-path:var(--sl);padding-left:16px}
+html.lk-hy .bbr:before,html.lk-hy .dtr:before{content:"";position:absolute;left:0;top:0;bottom:0;width:10px;background:var(--face);clip-path:polygon(5px 0,10px 0,5px 100%,0 100%)}
+html.lk-hy .bbr.hl:before,html.lk-hy .dtr.hl:before{background:var(--heel)}
+html.lk-hy .dtr.new{box-shadow:none;background:#2a2412}
+html.lk-hy .lr,html.lk-hy .tp,html.lk-hy .prod,html.lk-hy .sell,html.lk-hy .tmrow,html.lk-hy .lbtile,html.lk-hy .gmain,html.lk-hy .gorp,html.lk-hy .lbrow,html.lk-hy .scene,html.lk-hy .edi,html.lk-hy .rundown .rdk>div,html.lk-hy .pkbk>summary,html.lk-hy .choice,html.lk-hy .tv-pl,html.lk-hy .tv-gm,html.lk-hy .tv-col,html.lk-hy .rv-seg,html.lk-hy .rv-score,html.lk-hy .twh,html.lk-hy .mpbar,html.lk-hy .lbhero{border:0;border-radius:0;box-shadow:none}
+html.lk-hy .lr,html.lk-hy .tp,html.lk-hy .prod,html.lk-hy .sell,html.lk-hy .tmrow,html.lk-hy .gmain,html.lk-hy .pkbk>summary{background:var(--s2);clip-path:var(--sl)}
+html.lk-hy .lr{padding-left:10px}
+html.lk-hy .tp.on,html.lk-hy .prod.on,html.lk-hy .sell.on,html.lk-hy .tmrow.on,html.lk-hy .grow.on .gmain{background:#2e2812;box-shadow:inset 0 -3px 0 var(--gold)}
+html.lk-hy .tmrow.on .tmck{background:var(--gold)}
+html.lk-hy .tmrow .tmck{box-shadow:none;background:var(--s3);clip-path:var(--sl)}
+html.lk-hy .scene{background:#18181c;clip-path:var(--cut);padding-left:16px;padding-right:16px}
+html.lk-hy .scene.hot{background:#211617}
+html.lk-hy .gorp{background:#18181c;clip-path:var(--cut);padding-left:14px}
+html.lk-hy .edi{background:#0f0f12}
+html.lk-hy .eslot>.edi{border-top:3px solid var(--line)}html.lk-hy .eslot>.edi.af{border-top-color:var(--face)}html.lk-hy .eslot>.edi.ah{border-top-color:var(--heel)}
+html.lk-hy .rundown .rdk>div{background:var(--s2);clip-path:var(--slant);padding-left:12px}
+html.lk-hy .rundown .rdk .m{background:#3a1715}
+html.lk-hy .rundown .rdk .c{background:#2e2812}
+html.lk-hy .rdsec{font:800 15px 'BC','Barlow Condensed',sans-serif;font-style:italic;letter-spacing:.04em;color:var(--text)}
+html.lk-hy .rdsec.gold{color:var(--gold)}html.lk-hy .rdsec.bad{color:#ff8a80}
+html.lk-hy .rdsec i{height:3px;background:var(--s2);clip-path:var(--sl)}
+html.lk-hy .bstrip.hot{background:#211617}
+html.lk-hy .mpbar{background:var(--st1);clip-path:var(--cut)}
+html.lk-hy .mpbar.on{box-shadow:inset 0 3px 0 var(--gold)}
+html.lk-hy .tpr.tpbad{border-left:0;box-shadow:inset 0 3px 0 var(--red);padding-top:6px}
+
+/* ---- pop-up sheets ---- */
+html.lk-hy #modal{background:rgba(0,0,0,.82)}
+html.lk-hy .sheet{background:#121215;border-top:4px solid var(--gold);box-shadow:none}
+html.lk-hy .sheet:before{background:#33333a;border-radius:0;clip-path:var(--sl)}
+html.lk-hy .mhd{color:var(--gold)}
+html.lk-hy #modal.lobbyM{background:var(--bg)}
+html.lk-hy #modal.lobbyM .sheet{background:var(--bg)}
+html.lk-hy .lbbrand{color:#fff}
+html.lk-hy .lbbrand span{background:var(--red);transform:none;clip-path:var(--sl)}
+html.lk-hy .lbhero{background:#1a1a1e;clip-path:var(--cut)}
+html.lk-hy .lbhero:after{left:10px;right:0;top:0;bottom:auto;width:auto;height:3px;background:var(--gold)}
+html.lk-hy .lbhero.turn{box-shadow:none;background:#2a2412}
+html.lk-hy .lbrow{background:var(--st1);clip-path:var(--cut);padding-left:6px}
+html.lk-hy .lbrow.turn{background:#2a2412}
+html.lk-hy .lbrow.on{box-shadow:inset 0 3px 0 var(--gold)}
+html.lk-hy .lbmore{border-left:0}
+html.lk-hy .lbmore.big{border:0;background:var(--s2);clip-path:var(--sl)}
+html.lk-hy .lbtile{background:var(--st1);clip-path:var(--cut);padding-left:16px}
+html.lk-hy .lbx{border:0;border-radius:0;background:var(--s2);clip-path:var(--sl)}
+html.lk-hy .lbsec:after{height:3px;background:var(--s2);clip-path:var(--sl)}
+html.lk-hy .lbst.turn{border-radius:0;clip-path:var(--sl);background:var(--gold)}
+/* live calls: choices are slanted plates with a gold letter tab */
+html.lk-hy .choice{background:#1a1a1e;clip-path:var(--cut);padding-left:16px;grid-template-columns:40px 1fr}
+html.lk-hy .choice:active{background:#232328}
+html.lk-hy .choice .key{transform:none;width:36px;height:32px;background:var(--gold);color:var(--ink);clip-path:var(--slant)}
+html.lk-hy .choice .key span{transform:none}
+html.lk-hy .sbody .choice.picked,html.lk-hy .tv-live-sheet .choice.picked{background:#2e2812;box-shadow:none;border:0}
+html.lk-hy .sbody .choice.picked::after,html.lk-hy .tv-live-sheet .choice.picked::after{background:var(--gold);clip-path:var(--sl)}
+html.lk-hy .ppick,html.lk-hy .tv-picked{border:0;background:#2a2412;clip-path:var(--cut);padding-left:16px}
+html.lk-hy .ppick .tvp-k,html.lk-hy .tvp-k{clip-path:var(--slant)}
+html.lk-hy .outcome{clip-path:var(--cut);padding-left:16px}
+html.lk-hy .outcome.ok{background:rgba(95,207,140,.16);box-shadow:none}
+html.lk-hy .outcome.no{background:rgba(239,111,102,.16);box-shadow:none}
+html.lk-hy .score>div{background:var(--s2);border:0;clip-path:var(--cut)}
+html.lk-hy .score>div.me{background:#2a2412}
+html.lk-hy .score>div.win{box-shadow:inset 0 3px 0 var(--gold)}
+html.lk-hy .score i{color:var(--red)}
+html.lk-hy .callbar,html.lk-hy .pickin{clip-path:var(--cut)}
+html.lk-hy .callbar .pt,html.lk-hy .pickin .pt{background:var(--red);color:#fff;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);padding-left:16px}
+html.lk-hy .callq{border-left:0;padding-left:0}
+html.lk-hy .callq b{color:var(--gold);font-style:italic;font-weight:800}
+html.lk-hy .pr-react b{color:var(--gold)}
+html.lk-hy #toast,html.lk-hy #upd{background:var(--s2);box-shadow:inset 0 -3px 0 var(--gold)}
+html.lk-hy #tut .tut-card{background:#1a1a1e;box-shadow:inset 0 3px 0 var(--gold),0 18px 50px rgba(0,0,0,.7)}
+html.lk-hy #tut .tut-hole{border-radius:0}
+html.lk-hy .stygrid td.hi{outline-color:var(--gold)}
+
+/* ---- the solo star reveal ---- */
+html.lk-hy .twh{background:var(--st1);clip-path:var(--cut);padding-left:16px}
+html.lk-hy .twh.p{box-shadow:inset 0 3px 0 var(--gold)}html.lk-hy .twh.x{box-shadow:inset 0 3px 0 var(--red)}
+html.lk-hy .twpair.main .twh{box-shadow:inset 0 3px 0 var(--red)}
+html.lk-hy .twh.won{background:#2a2412}
+html.lk-hy .twh.dn .twpl.rw{box-shadow:none;background:#3a3014}
+html.lk-hy .twh.dn .twpl.rw .twn b{color:var(--gold2)}
+html.lk-hy .tww{clip-path:var(--sl);padding:3px 8px;background:var(--gold)}
+html.lk-hy .twsc .me b,html.lk-hy .twsc .win b{text-shadow:none}
+html.lk-hy .tws{text-shadow:none}
+html.lk-hy .twh.flash::after,html.lk-hy .twfoot.flash::after{background:rgba(242,193,78,.25)}
+html.lk-hy .sr-motn span{color:#ff8a80}
+
+/* ---- party night: the TV ---- */
+html.lk-hy body.tv{background:var(--bg)}
+html.lk-hy .tv-pl{background:#0f0f12;clip-path:var(--cut);opacity:.6;padding-left:22px}
+html.lk-hy .tv-pl.on{background:var(--st1);opacity:1}
+html.lk-hy .tv-pl.ok{box-shadow:inset 0 5px 0 var(--gold)}
+html.lk-hy .tv-dot{border-radius:0;clip-path:var(--sl);width:16px}
+html.lk-hy .tv-gm,html.lk-hy .tv-col,html.lk-hy .rv-seg,html.lk-hy .rv-score{background:var(--st1);clip-path:var(--cut);padding-left:clamp(18px,1.6vw,30px)}
+html.lk-hy .tv-gm.lk,html.lk-hy .tv-col.oc{box-shadow:inset 0 5px 0 var(--gold)}
+html.lk-hy .tv-code{color:var(--gold);text-shadow:none}
+html.lk-hy .tv-qr svg{border-radius:0}
+html.lk-hy .tv-live-sheet{border:0;background:#121215;clip-path:var(--cut);box-shadow:inset 0 5px 0 var(--red);padding-left:clamp(22px,2vw,40px)}
+html.lk-hy .tv-steps b{color:var(--gold)}
+html.lk-hy .rv-hd{border-bottom:0;padding-bottom:14px;position:relative}
+html.lk-hy .rv-hd:after{content:"";position:absolute;left:0;bottom:0;width:min(220px,60%);height:5px;background:var(--gold);clip-path:var(--sl)}
+html.lk-hy .rv-show{color:#fff}
+html.lk-hy .rv-seg.on{border:0;box-shadow:inset 0 4px 0 #55555d}
+html.lk-hy .rv-seg.rvw{background:#2a2412;box-shadow:inset 0 4px 0 var(--gold)}
+html.lk-hy .rv-score.win{background:#2a2412;box-shadow:inset 0 5px 0 var(--gold)}
+html.lk-hy .rv-win{color:var(--gold)}
+html.lk-hy body.tv main.tv-main>.card.showcard{margin-left:0;margin-right:0}
+html.lk-hy .tv-poster{clip-path:var(--band)}
+
+/* ---- motion: everything moves along the slant ---- */
+@keyframes ppvIn{from{opacity:0;transform:translateX(-22px) skewX(-6deg)}to{opacity:1;transform:none}}
+@keyframes ppvR{from{opacity:0;transform:translateX(30px) skewX(-6deg)}to{opacity:1;transform:none}}
+@keyframes ppvL{from{opacity:0;transform:translateX(-30px) skewX(-6deg)}to{opacity:1;transform:none}}
+@keyframes ppvWipe{from{clip-path:polygon(0 0,0 0,0 calc(100% - 18px),0 100%)}to{clip-path:polygon(0 0,100% 0,100% calc(100% - 18px),0 100%)}}
+@keyframes ppvName{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:none}}
+html.lk-hy main.enter>*{animation-name:ppvIn}
+html.lk-hy main.fxr>*{animation-name:ppvR!important}
+html.lk-hy main.fxl>*{animation-name:ppvL!important}
+html.lk-hy main.enter>.card.showcard,html.lk-hy main.enter>.card.phead,html.lk-hy main.fxr>.card.showcard,html.lk-hy main.fxr>.card.phead,html.lk-hy main.fxl>.card.showcard,html.lk-hy main.fxl>.card.phead{animation:ppvWipe .5s cubic-bezier(.25,.8,.25,1) both!important}
+html.lk-hy main.enter>.card.showcard .showname,html.lk-hy main.enter>.card.phead .dround,html.lk-hy main.fxr>.card.showcard .showname,html.lk-hy main.fxr>.card.phead .dround,html.lk-hy main.fxl>.card.showcard .showname,html.lk-hy main.fxl>.card.phead .dround{animation:ppvName .45s cubic-bezier(.2,1.2,.3,1) .16s both}
+html.lk-hy main.enter .rord>.slot,html.lk-hy main.fxr .rord>.slot,html.lk-hy main.fxl .rord>.slot{animation:ppvIn .38s cubic-bezier(.2,.8,.2,1) both}
+html.lk-hy .rord>.slot:nth-child(2){animation-delay:.04s}html.lk-hy .rord>.slot:nth-child(3){animation-delay:.08s}html.lk-hy .rord>.slot:nth-child(4){animation-delay:.12s}html.lk-hy .rord>.slot:nth-child(5){animation-delay:.16s}html.lk-hy .rord>.slot:nth-child(6){animation-delay:.2s}html.lk-hy .rord>.slot:nth-child(n+7){animation-delay:.24s}
+html.lk-hy .hero{animation:ppvWipe .55s cubic-bezier(.25,.8,.25,1) both}
+html.lk-hy .hero-t{animation:ppvName .5s cubic-bezier(.2,1.2,.3,1) .18s both}
+html.lk-hy .sheet.in{animation:sheetin .32s cubic-bezier(.2,.8,.2,1)}
+
+/* ---- big moments (fx.js): black screen, gold kicker tab, the name slammed onto a red plate ---- */
+html.lk-hy #fxo{background:rgba(9,9,10,.97)}
+html.lk-hy #fxo .fl{background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.35),transparent 55%)}
+html.lk-hy #fxo .kk{background:var(--gold);color:var(--ink);text-shadow:none;padding:.3em .9em .25em 1.1em;letter-spacing:.2em;clip-path:var(--slant)}
+html.lk-hy #fxo .nmx{background:var(--red);color:#fff;text-shadow:none;padding:.12em .55em .08em;clip-path:polygon(.4em 0,100% 0,calc(100% - .4em) 100%,0 100%)}
+html.lk-hy #fxo .sub{color:#f4f1ea}
+html.lk-hy .fxplate{border:0;background:var(--gold);color:var(--ink);clip-path:var(--slant);padding:10px 30px}
+html.lk-hy #fxo .bm{background:linear-gradient(0deg,rgba(242,193,78,0),rgba(242,193,78,.14) 60%,transparent)}
+html.lk-hy .fxl3 .b{background:var(--st1);border-left:0;padding-left:16px;clip-path:var(--cut)}
+html.lk-hy .fxl3 .b:before{content:"";position:absolute;left:0;top:0;bottom:0;width:12px;background:var(--gold);clip-path:polygon(10px 0,12px 0,2px 100%,0 100%)}
+html.lk-hy .fxd.up{background:var(--good)}html.lk-hy .fxd.dn{background:var(--red)}
+html.lk-hy .wc .fxb{border-radius:0;clip-path:var(--sl);padding-left:7px;padding-right:7px}
+html.lk-hy .bzm{border-radius:0;transform:skewX(-14deg)}
+html.lk-hy .bzm i{background:var(--gold)}
+@media (prefers-reduced-motion:reduce){html.lk-hy main>*,html.lk-hy main .slot,html.lk-hy .hero,html.lk-hy .hero-t,html.lk-hy main .showname,html.lk-hy main .dround{animation:none!important}}
 </style>
 </head>
 <body>
@@ -1234,7 +1628,7 @@ html.cmp.lk-hy .dghint{display:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v221';
+const APP_VERSION='v222';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -3968,7 +4362,7 @@ function bookView(){const sh=curShow();const c=S.card.p;const ready=c.every(sl=>
    const p=sl.d;const pdb=debutTag([S.w[p.a],p.b&&S.w[p.b]].filter(Boolean),sh.ppv);return `<button class="slot done" ${dgA(i)} onclick="openPromo(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">Promo · ${PT[p.type].n}</div>${skinOn()?(BOOK_CMP?hyCpPromo(p,i):hyPromo(p,i)):`<div><b>${dnm(S.w[p.a],`pw:${i}:a`)}${p.b&&S.w[p.b]?' <span class="muted">&amp;</span> '+dnm(S.w[p.b],`pw:${i}:b`):''}</b></div>`}${(p.b&&S.w[p.b]&&heatOf(p.a,p.b)>=1)||pdb?`<div class="tags">${pdb}${p.b&&S.w[p.b]&&heatOf(p.a,p.b)>=1?`<span class="fdt t${heatTier(heatOf(p.a,p.b))+1}">Heat ${Math.round(heatOf(p.a,p.b))}</span>`:''}</div>`:''}${typeof promoPips==='function'?promoPips(p,i):'<div class="muted">Plays out live when you go live</div>'}</button>`}
   if(sl.k==='xo'){const d=sl.d;return `<button class="slot ${d?'done':'opt'}" onclick="openXo(${i})"><span class="num">${i+1}</span><div class="lbl">⚔️ ${esc(PPVS[FD_WEEK])} dream match (optional)</div>${d&&S.w[d.a]&&S.w[d.b]?`<div><b>${alSpan(S.w[d.a])} <span class="muted">vs</span> ${alSpan(S.w[d.b])}</b></div><div class="muted">First time ever · ${esc(nameOf(S.w[d.b].own||'ai'))}'s star · the winner is decided in the ring</div>`:`<div class="add">+ Pick one of yours vs one of ${esc(S.rival)}'s</div>`}</button>`}
   return ''}).join('');
- const um=unmetPromises(c);return `${inaugCard()}${poster(sh,sh.ppv?`<div class="venue mt" style="color:#e9d9b0">Your full PPV card</div>`:'',{kick:`Now booking · Week ${S.week}`,compact:true})}${typeof attnPanel==='function'&&S.phase==='season'?attnPanel():`${um.length?`<div class="card warn">${um.map(pr=>`<div>⚠️ Fans were ${pr.kind==='contract'?'contracted':'promised'} <b>${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)}</b> this week. Skip it and you'll lose fans and morale.</div>`).join('')}</div>`:''}${rivalAdHtml('line')}${weekGoalsCard()}${mandCard()}${dealBookCard(c)}${typeof conBook==='function'?conBook():''}${typeof mitbBook==='function'?mitbBook():''}`}<div class="row" style="gap:8px">${c.some(sl=>!sl.d&&!sl.opt)||c.some(sl=>!sl.d&&sl.k==='promo')?`<button class="btn sec" style="margin:0" onclick="suggestFill()">✨ Suggest the rest</button>`:''}${c.some(sl=>sl.d&&!(sl.k==='match'&&(sl.d.tour||promiseOf(sl.d))))?`<button class="btn ghost" style="margin:0" onclick="clearCard()">Clear card</button>`:''}</div>${c.some(sl=>!sl.d&&!sl.opt)?'<div class="tiny muted" style="margin-top:4px">Suggest covers your must-dos with a safe card. Great shows come from you.</div>':''}<div class="row sb" style="margin-top:14px"><div class="h small" style="margin:0">The running order</div><span class="row" style="gap:6px"><button class="mini ${BOOK_CMP?'on':''}" onclick="cmpTog()" aria-pressed="${BOOK_CMP?'true':'false'}">Compact</button><button class="mini" onclick="pipTog()" aria-pressed="${BOOK_PIPS?'true':'false'}">${BOOK_PIPS?'Hide details':'Show details'}</button></span></div><p class="muted tiny center dghint">Drag segments to reorder, or drag wrestlers to swap. Tap one to edit it.</p><div class="rord ${BOOK_PIPS?'pips':''}">${slots}</div>${flowCard(sh)}${prodFold(sh)}${feudBoard()}${lockerRoom()}
+ const um=unmetPromises(c);return `${inaugCard()}${poster(sh,sh.ppv?`<div class="venue mt" style="color:#e9d9b0">Your full PPV card</div>`:'',{kick:`Now booking · Week ${S.week}`,compact:true})}${typeof attnPanel==='function'&&S.phase==='season'?attnPanel():`${um.length?`<div class="card warn">${um.map(pr=>`<div>⚠️ Fans were ${pr.kind==='contract'?'contracted':'promised'} <b>${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)}</b> this week. Skip it and you'll lose fans and morale.</div>`).join('')}</div>`:''}${rivalAdHtml('line')}${weekGoalsCard()}${mandCard()}${dealBookCard(c)}${typeof conBook==='function'?conBook():''}${typeof mitbBook==='function'?mitbBook():''}`}<div class="row sb" style="margin-top:14px"><div class="h small" style="margin:0">The running order</div><span class="row" style="gap:6px"><button class="mini ${BOOK_CMP?'on':''}" onclick="cmpTog()" aria-pressed="${BOOK_CMP?'true':'false'}">Compact</button><button class="mini" onclick="pipTog()" aria-pressed="${BOOK_PIPS?'true':'false'}">${BOOK_PIPS?'Hide details':'Show details'}</button></span></div><p class="muted tiny center dghint">Drag segments to reorder, or drag wrestlers to swap. Tap one to edit it.</p><div class="rord ${BOOK_PIPS?'pips':''}">${slots}</div><div class="row bkacts" style="gap:8px;margin-top:4px">${c.some(sl=>!sl.d&&!sl.opt)||c.some(sl=>!sl.d&&sl.k==='promo')?`<button class="btn" style="margin:0" onclick="suggestFill()">✨ Suggest the rest</button>`:''}${c.some(sl=>sl.d&&!(sl.k==='match'&&(sl.d.tour||promiseOf(sl.d))))?`<button class="btn ghost" style="margin:0" onclick="clearCard()">Clear card</button>`:''}</div>${c.some(sl=>!sl.d&&!sl.opt)?'<div class="tiny muted" style="margin-top:4px">Suggest covers your must-dos with a safe card. Great shows come from you.</div>':''}${flowCard(sh)}${prodFold(sh)}${feudBoard()}${lockerRoom()}
  ${partyOn()?partyBookBtn(ready):ON()&&S.online.booked.p?`<div class="card"><b>Card locked in ✓</b><div class="muted">It airs when ${esc(S.rival)} books ${sh.ppv?'theirs':esc(sh.theirs)}.</div></div>`:`<div class="lvdock"><div class="lvst">${ready?'<b class="good">Card full</b>':`<b>${c.filter(sl=>!sl.d&&!sl.opt&&sl.k!=='chal').length} to book</b>`}<span>${(()=>{let n=0;try{n=attnItems().filter(x=>x.g==='must'&&x.s[0]==='b').length}catch(e){}return n?`${n} to fix`:'Ready'})()}</span></div><button class="btn live" ${ready&&myTurn()?'':'disabled'} onclick="goLive()">${ON()&&!S.online.booked.ai?'Go live & lock in ▸':'Go live ▸'}</button></div>`}<p class="muted center">${ready?'':'Fill every slot to go live. '}${esc(S.rival)} books their own ${sh.ppv?'card':'show, '+esc(sh.theirs)}. The best overall show wins the week.${ON()&&!S.online.booked.p&&!S.online.booked.ai?' Your segments play out now; the ratings come in once they book too.':''}</p>`}
 /* v201: production and selling out live behind one line on the Book screen */
 let BOOK_PIPS=false;try{BOOK_PIPS=localStorage.getItem('tksim_pips')==='1'}catch(e){}

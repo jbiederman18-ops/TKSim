@@ -162,7 +162,7 @@ if(typeof liveHd==='function'){const l0=liveHd;liveHd=function(show,lab,title,si
 const ORDER=['home','book','roster','titles','office','menu'];let DIR=null,NAVL=null;
 if(typeof go==='function'){const g0=go;go=function(t){const a=ORDER.indexOf(tab),b=ORDER.indexOf(t);DIR=a>=0&&b>=0&&a!==b?(b>a?'fxr':'fxl'):null;return g0.apply(this,arguments)}}
 function navFx(){const n=document.querySelector('nav.tabs');if(!n)return;const on=n.querySelector('button.on');if(!on){NAVL=null;return}n.classList.add('fxn');let i=n.querySelector('.nvi');if(!i){i=document.createElement('i');i.className='nvi';n.appendChild(i)}
- const L=on.offsetLeft+on.offsetWidth*.22,W=on.offsetWidth*.56;if(NAVL&&!RM()){i.style.transition='none';i.style.left=NAVL.l+'px';i.style.width=NAVL.w+'px';void i.offsetWidth;i.style.transition=''}i.style.left=L+'px';i.style.width=W+'px';NAVL={l:L,w:W}}
+ const L=on.offsetLeft+on.offsetWidth*.1,W=on.offsetWidth*.8;i.style.top=on.offsetTop+'px';i.style.height=on.offsetHeight+'px';if(NAVL&&!RM()){i.style.transition='none';i.style.left=NAVL.l+'px';i.style.width=NAVL.w+'px';void i.offsetWidth;i.style.transition=''}i.style.left=L+'px';i.style.width=W+'px';NAVL={l:L,w:W}}
 if(typeof render==='function'){const r0=render;render=function(){const d=DIR;DIR=null;const out=r0.apply(this,arguments);try{const m=document.querySelector('main');if(m&&d&&!RM()){m.classList.remove('enter');m.classList.add(d)}navFx();numbers()}catch(e){}return out}}
 
 /* ---------------- 8. ROH identity ---------------- */
