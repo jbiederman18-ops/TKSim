@@ -1152,10 +1152,10 @@ html.lk-hy .wc.champ:before{box-shadow:inset 0 0 0 2px #f1d27a,inset 0 0 18px rg
 /* v215: Book slots — the classic frame (gold number bar, gold label) with face-off plates and team cards */
 html.lk-hy .shd{display:flex;justify-content:space-between;align-items:center;gap:8px}
 html.lk-hy .shd .lbl{min-width:0}
-html.lk-hy .hybz{display:inline-flex;gap:3px;flex:none}
-html.lk-hy .hybz i{width:13px;height:6px;background:#3a3b42;transform:skewX(-18deg)}
-html.lk-hy .hybz i.on{background:var(--gold2);box-shadow:0 0 6px rgba(246,221,142,.35)}
-html.lk-hy .hybz.hot i.on{background:var(--red);box-shadow:0 0 6px rgba(226,51,43,.5)}
+html.lk-hy .shd .tell.hdt{margin:0;flex:none;white-space:nowrap;font-size:12px;padding:3px 8px}
+
+
+
 html.lk-hy .hyface{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:5px;align-items:stretch;margin:8px 0 2px}
 html.lk-hy .hyface.one{grid-template-columns:minmax(0,1fr)}
 html.lk-hy .hyface.multi{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -1193,7 +1193,7 @@ html.cmp.lk-hy .slot .num{width:26px;font-size:18px}
 html.cmp.lk-hy .slot .lbl{font-size:10px;letter-spacing:.13em}
 html.cmp.lk-hy .slot .add{margin-top:1px;font-size:14px}
 html.cmp.lk-hy .slot .grip{display:none}
-html.cmp.lk-hy .hybz i{width:9px;height:5px}
+html.cmp.lk-hy .shd .tell.hdt{font-size:11px;padding:2px 6px}
 html.cmp.lk-hy .hyface.cmpf{gap:4px;margin:4px 0 0}
 html.cmp.lk-hy .cpp{position:relative;display:flex;align-items:center;gap:5px;min-width:0;padding:4px 6px 4px 8px;background:linear-gradient(180deg,#25262d,#16171b);box-shadow:inset 0 0 0 1px #3a3221;cursor:grab}
 html.cmp.lk-hy .cpp:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--heel)}
@@ -1234,7 +1234,7 @@ html.cmp.lk-hy .dghint{display:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v219';
+const APP_VERSION='v220';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -5303,7 +5303,8 @@ const HY_BUZZ=TELLS.map(t=>t[2]);
 function hyBook(root){if(!root)return;root.querySelectorAll('.rord>.slot,.slot').forEach(sl=>{if(sl.dataset.hy)return;sl.dataset.hy='1';
   const lb=sl.querySelector(':scope>.lbl');if(!lb)return;const hd=document.createElement('div');hd.className='shd';sl.insertBefore(hd,lb);hd.appendChild(lb);
   const t=sl.querySelector('.tellrow .tell:not(.wild)');
-  if(t){let k=HY_BUZZ.findIndex(x=>t.textContent.includes(x));if(k<0)k=PROMO_TELLS.findIndex(x=>t.textContent.includes(x[2]));const n=k<0?0:5-k;hd.insertAdjacentHTML('beforeend',`<span class="hybz${sl.classList.contains('me')?' hot':''}" title="${esc(t.textContent.trim())}">${[0,1,2,3,4].map(j=>`<i class="${j<n?'on':''}"></i>`).join('')}</span>`)}
+  /* v220: the crowd buzz reads as words in the slot's top corner (it was a five-segment bar duplicating the tell below) */
+  if(t){t.classList.add('hdt');hd.appendChild(t)}
   /* tags, match type and the buzz share one line under the plates (the winner is on the plates, so it leaves the text) */
   const face=sl.querySelector(':scope>.hyface');if(!face)return;const line=document.createElement('div');line.className='hyline';
   sl.querySelectorAll(':scope>.tags').forEach(x=>{[...x.children].forEach(c=>line.appendChild(c));x.remove()});
