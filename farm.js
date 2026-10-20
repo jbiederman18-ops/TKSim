@@ -86,10 +86,19 @@ Bárbaro Cavernario|M|br|h|80|52|40|86|intl|mx|CMLL|290
 Lady Flammer|F|fl|h|76|52|30|86|intl|mx|CMLL|
 Zeuxis|F|br|h|74|56|30|80|intl|mx|CMLL|
 Dalys|F|pw|h|72|52|30|80|intl|mx|CMLL|`;
+/* v221: prospect pricing. Known names cost about what a free agent at their level would (fee + 4 weeks' pay = 6 weeks'
+   pay) plus a small premium for upside; generic rookies pay their tier's development fee (ROH tryouts a little less,
+   overseas talent a little more). Boards rolled under the old, much higher prices are repriced once. */
+const TIER_PREM={prospect:5,bluechip:15,gen:30},ROH_X=.8,INTL_X=1.1;
+function realFee(w){return mkt(w)*2+(TIER_PREM[w.tier]||5)}
+function baseFee(w){const T=(TIERS[w.tier]||TIERS.prospect).cost;return w.real?realFee(w):w.reg==='roh'?Math.round(T*ROH_X):w.reg==='intl'?Math.round(T*INTL_X):T}
+function reprice(){if(!S||S.px221)return;S.px221=1;const s=S.scout||{};
+ [].concat(s.l||[],s.roh||[],s.intl||[],(S.tapes||[]).map(t=>t.w)).forEach(w=>{if(w&&w.fee)w.fee=baseFee(w)});
+ (S.follow||[]).forEach(f=>{const w=f.w;if(w&&w.fee)w.fee=Math.round(baseFee(w)*Math.pow(1.08,f.up||0))})}
 function knownList(){return KNOWN_RAW.trim().split('\n').map(l=>{const f=l.split('|');const w=mkW(f.slice(0,8).join('|'));w.reg=f[8];if(f[9])w.from=f[9];w.org=f[10];if(f[11])w.pwi=+f[11];return w})}
 function onBoards(){const s=S.scout||{};return new Set([].concat(s.l||[],s.roh||[],s.intl||[]).map(w=>w.id))}
 function known(reg,n,ex){const used=onBoards();(ex||[]).forEach(id=>used.add(id));const l=shuffle(knownList().filter(w=>w.reg===reg&&!taken(w.id)&&!used.has(w.id))).slice(0,n);
- l.forEach(w=>{w.real=1;w.tier=w.pot>=90?'gen':w.pot>=84?'bluechip':'prospect';w.fee=Math.round(60+Math.max(0,w.ring-72)*8+w.pop*1.5);w.con=0;w.mor=80;w.tr=autoTraits(w)});return l}
+ l.forEach(w=>{w.real=1;w.tier=w.pot>=90?'gen':w.pot>=84?'bluechip':'prospect';w.fee=realFee(w);w.con=0;w.mor=80;w.tr=autoTraits(w)});return l}
 window.KNOWN_RAW=KNOWN_RAW;window.knownList=knownList;
 /* fictional international names */
 const INTL={
@@ -116,13 +125,13 @@ function toFarm(w,b){w.own=null;delete w.sal;w.fsal=fsal(w);w.mor=Math.max(w.mor
 /* ---------------- scouting boards ---------------- */
 function polish(w,ring,mic){w.ring=Math.min(w.pot-2,w.ring+ring);w.mic=Math.min(w.potM||w.pot,w.mic+mic);return w}
 function rohReal(ex){const used=new Set(ex);const l=(ROH_REAL.trim()+(typeof ROH_RAW==='string'?'\n'+ROH_RAW.trim():'')).split('\n').map(x=>mkW(x.trim())).filter(w=>!taken(w.id)&&!used.has(w.id));
- const w=l.length?pick(l):null;if(!w)return null;w.reg='roh';w.real=1;w.tier=w.pot>=78?'bluechip':'prospect';w.fee=w.pop>=55?120:60;w.con=0;w.mor=80;w.tr=autoTraits(w);return w}
+ const w=l.length?pick(l):null;if(!w)return null;w.reg='roh';w.real=1;w.tier=w.pot>=78?'bluechip':'prospect';w.fee=realFee(w);w.con=0;w.mor=80;w.tr=autoTraits(w);return w}
 function rohGen(){const g=Math.random()<.5?'M':'F';const tier=Math.random()<.3?'bluechip':'prospect';const nm=()=>pick(g==='M'?FIRST_M:FIRST_F)+' '+pick(LAST);let n=nm();for(let i=0;i<8&&Object.values(S.w).some(w=>w.name===n);i++)n=nm();
- const w=polish(makeRookie(n,g,pick(['te','te','br','fl','pw']),pick(['f','h']),tier),RI(14,22),RI(8,16));w.tier=tier;w.reg='roh';w.fee=Math.round(TIERS[tier].cost*.8);w.pop=RI(14,24);w.pop0=w.pop;w.tr=autoTraits(w);return w}
+ const w=polish(makeRookie(n,g,pick(['te','te','br','fl','pw']),pick(['f','h']),tier),RI(14,22),RI(8,16));w.tier=tier;w.reg='roh';w.fee=Math.round(TIERS[tier].cost*ROH_X);w.pop=RI(14,24);w.pop0=w.pop;w.tr=autoTraits(w);return w}
 function intlGen(){const k=pick(['jp','mx','uk']),R=INTL[k];const g=Math.random()<.6?'M':'F';const r=Math.random();const tier=r<.15?'gen':r<.6?'bluechip':'prospect';
  const ex=new Set(Object.values(S.w).map(w=>w.name).concat(...Object.values(S.farm||{}).map(f=>Object.values(f.r||{}).map(w=>w.name))));const opts=R[g].filter(n=>!ex.has(n));if(!opts.length)return null;
- const w=polish(makeRookie(pick(opts),g,pick(R.st),pick(['f','h']),tier),RI(16,26),-RI(4,10));w.mic=Math.max(18,w.mic);w.tier=tier;w.reg='intl';w.from=k;w.fee=Math.round(TIERS[tier].cost*1.3);w.tr=autoTraits(w);return w}
-function boards(){const s=S.scout;if(!s)return;
+ const w=polish(makeRookie(pick(opts),g,pick(R.st),pick(['f','h']),tier),RI(16,26),-RI(4,10));w.mic=Math.max(18,w.mic);w.tier=tier;w.reg='intl';w.from=k;w.fee=Math.round(TIERS[tier].cost*INTL_X);w.tr=autoTraits(w);return w}
+function boards(){reprice();const s=S.scout;if(!s)return;
  if(!s.roh){const l=[];for(let i=0;i<3;i++){const w=rohReal(l.map(x=>x.id));if(w)l.push(w)}while(l.length<5)l.push(rohGen());s.roh=shuffle(l)}
  if(!s.intl){const l=known('intl',2);for(let i=0;i<8&&l.length<4;i++){const w=intlGen();if(w&&!l.some(x=>x.name===w.name))l.push(w)}s.intl=shuffle(l)}
  /* v154: one or two known indie names on every Indies board, in place of generic prospects first */
@@ -215,6 +224,6 @@ function farmView(){const l=farmL('p').sort((a,b)=>b.ring-a.ring);const pay=l.re
  ${l.length?l.map(farmCard).join(''):'<p class="muted center">Nobody on ROH yet. Sign prospects to ROH from Scouting, or send a rookie down.</p>'}
  ${cand.length?`<div class="card"><div class="h small">Send down</div><div class="muted" style="margin-bottom:8px">Rookies and anyone at 45 popularity or lower can go to ROH to develop. Champions can't.</div>${cand.slice(0,12).map(w=>`<div class="prow">${face(w)}<div class="wl"><div class="wn">${esc(w.name)}</div><div class="muted tiny">Popularity ${Math.round(w.pop)} · Ring ${Math.round(w.ring)}${w.rookie?' · ROOKIE':''}</div></div><button class="mini" onclick="sendDown('${w.id}')">🏟️ Send down</button></div>`).join('')}</div>`:''}`}
 window.farmView=farmView;window.farmCard=farmCard;
-window.FARM={F,farmL,fsal,toFarm,taken,rohGen,intlGen,known,signCostF,INTL,FARM_MAX,ROH_POP_CAP};
+window.FARM={reprice,F,farmL,fsal,toFarm,taken,rohGen,intlGen,known,signCostF,INTL,FARM_MAX,ROH_POP_CAP};
 if(typeof rosterView==='function'){const r0=rosterView;rosterView=function(){if(rf==='roh')return window.farmView();return r0.apply(this,arguments)}}
 })();

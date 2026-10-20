@@ -1234,7 +1234,7 @@ html.cmp.lk-hy .dghint{display:none}
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v220';
+const APP_VERSION='v221';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -1291,7 +1291,8 @@ const STIP_COST=Object.fromEntries(Object.entries(STIPS).map(([k,v])=>[k,v.c||0]
 const PPV_BILL=100,ALLIN_BILL=175;
 /* the PPV venue: a bigger company books bigger buildings (about $100K / $175K for All In at the start) */
 function ppvBill(b,allin){return Math.max(allin?ALLIN_BILL:PPV_BILL,Math.round(econCap()*(allin?.4:.23)*fanF(S.fans[b]||0)))}
-const TIERS={prospect:{n:'Prospect',cost:80,pot:[72,79]},bluechip:{n:'Blue-Chip',cost:180,pot:[82,88]},gen:{n:'Generational',cost:350,pot:[90,96]}};
+/* v221: development fees cut (were 80/180/350) — a raw rookie cost more than a ready-made star (~$120–150K bonus) */
+const TIERS={prospect:{n:'Prospect',cost:25,pot:[72,79]},bluechip:{n:'Blue-Chip',cost:55,pot:[82,88]},gen:{n:'Generational',cost:90,pot:[90,96]}};
 const TRAITS={
  monster:{n:'Monster',i:'👹',d:'Dominant force. Electric chemistry against Underdogs (+4); two Monsters just bump into each other (−3).'},
  under:{n:'Underdog',i:'🐶',d:'Fans rally behind them. +4 chemistry against Monsters, +2 against anyone far more popular.'},
