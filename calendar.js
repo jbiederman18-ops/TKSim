@@ -20,6 +20,7 @@ function calWeekNotes(w){const n=[];
   if(D.semi===w)n.push(`${D.i} ${D.n} semi-finals`);
   if(D.final===w)n.push(`${D.i} ${D.n} final`)}
  if(!PPVS[w]&&w<FD_WEEK){let fd=true;for(let k=w;k<FD_WEEK;k++)if(PPVS[k]){fd=false;break}if(fd)n.push('⚔️ Crossover season — rival stars can invade')}
+ if(typeof BNG_WEEK!=='undefined'&&w===BNG_WEEK)n.push('🩸 Blood & Guts — two rings, one double cage, once a year (trios or 8-man, one per card)');
  (S.promises||[]).filter(pr=>pr.week===w&&S.w[pr.a]&&S.w[pr.b]).forEach(pr=>n.push(`${pr.kind==='contract'?'📜':pr.kind==='shot'?'🎟️':'🎯'} ${S.w[pr.a].name} vs ${S.w[pr.b].name}`));
  return n}
 /* your wrestlers whose last week under contract falls in week w (this season) */

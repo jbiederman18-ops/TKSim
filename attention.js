@@ -170,6 +170,12 @@ function attnItems(){if(!S||S.phase!=='season')return [];
    s:[lvK(l),l&&l.t||''],a:null,gate:due,where:'📺 The network',say:[['Network executive',fill(pickS(SAY.net_mand,'mand'),{n:MANDS[md.k].n.toLowerCase(),B:md.ppv||'the deadline'})]]})}
 
  /* ---------- chances tonight ---------- */
+ /* v232: Blood & Guts is once a year — heads-up three weeks out, and a nudge on the night */
+ if(typeof BNG_WEEK!=='undefined'&&S.week<=BNG_WEEK&&BNG_WEEK-S.week<=3){const away=BNG_WEEK-S.week;
+  const on=(S.card.p||[]).some(sl=>sl&&sl.k==='match'&&sl.d&&sl.d.stip==='bng');
+  add({id:'bng',g:away?A_MIND:A_CH,i:'🩸',h:away?`Blood & Guts is ${away===1?'next week':'in '+away+' weeks'}`:'Tonight is Blood & Guts',
+   d:away?`Week ${BNG_WEEK}: two rings, one double cage, and it only happens once a year. Book a trios or 8-man war between two factions with real heat — start building it now.`:`The only Blood & Guts of the year. Book one trios or 8-man match with the Blood & Guts stipulation (${money(STIPS.bng.c)}) — the hotter the war, the bigger the payoff.`,
+   s:away?['n','Week '+BNG_WEEK]:on?['ok','Booked']:['w','Not on the card'],a:null,where:'📺 The network'})}
  const g=S.goal&&S.goal.p;
  if(g&&g.w===AW()&&!g.done&&typeof GOALS!=='undefined'&&GOALS[g.k]){const l=goalLive(g.k);
   add({id:'goal',g:A_CH,i:GOALS[g.k].i,h:`This week's goal: ${GOALS[g.k].n}`,d:`+${money(goalCash(g))} and +${fmtFans(g.fans)} fans`,s:[lvK(l),l&&l.t||''],a:null,where:'📺 The network',
