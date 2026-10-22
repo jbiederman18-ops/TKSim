@@ -22,7 +22,13 @@
 const RT_W=.25;         /* the response beat's weight on heat and popularity against a normal call */
 const RT_SC=1.6;        /* its swing on the promo score: +RT_SC×(1−odds) if it lands, −RT_SC×odds if it doesn't */
 const RT_TYPES=['callout','champ','contract','interview'];
-const MD_SCORE=.3;      /* what a mic drop locks in (a landed call is worth ~1.4, a missed one −1 — so about a typical call's average) */
+const MD_SCORE=.3;
+/* v233: once a promo has a back-and-forth, the old random twist is an occasional extra instead of a third beat every time.
+   When it's skipped, the response is the closing call and counts as a full call (so ratings and heat hold). Twists that
+   carry a storyline of their own — a crowd hijack, the mystery figure, the countdown clock — still come at their usual rate. */
+const TW_RT_P=.25;
+/* the closing response is weighted to match what the twist it replaces used to add on average (score, heat, popularity) */
+const RT_LAST={score:.9,heat:.66,pop:1.4};      /* what a mic drop locks in (a landed call is worth ~1.4, a missed one −1 — so about a typical call's average) */
 
 /* ---------- reading the call {A} just made ---------- */
 function rtIntent(c){const t=(c.t||'').toLowerCase();
@@ -494,12 +500,14 @@ function rtScene(p,ctx,st,ai){if(!rtOn(p,ctx)||!st||!st.lastC)return null;
  const e=wpick(el,o=>rtSpec(o)*(x.tier==='hi'&&o.mic==='hi'?2.5:1)*(seenP(o.t)?.12:1));
  const own=(e.ch||[]).map(o=>Object.assign({key:1},o));const pool=own.concat(FU[e.m]||[]).filter(o=>rtExtra(o,ctx,x));
  let ch=dealChoices(pool,ctx,3);if(ch.length<2)return null;ch=ch.map(o=>Object.assign({},o,{rt:1,key:0}));
- if(!ai)noteP([e.t,...ch.map(o=>o.t)]);st.rtDone=1;return {text:e.t,ch,rt:1,m:e.m}}
+ if(!ai)noteP([e.t,...ch.map(o=>o.t)]);st.rtDone=1;
+ const tw=pickTwist(p,ctx,ai);const keep=!!(tw&&(tw.hj||tw.myst||tw.cd))||Math.random()<(window.TW_P!=null?window.TW_P:TW_RT_P);
+ st.tw=keep?tw:null;if(!keep){ctx.MYST=null;ctx.CD=null}st.rtFull=!keep;return {text:e.t,ch,rt:1,m:e.m,last:!keep}}
 
 /* ---------- the mic drop ---------- */
 function mdOk(p,ctx,st,sc){if(!p||!ctx||!ctx.A||!st||!sc||!sc.ch)return false;if(['turn','vignette'].includes(p.type))return false;
  if(sc.x||sc.myst||sc.cd||sc.hj||/\{X\}/.test(sc.text||'')||sc.ch.some(c=>c.drop))return false;
- const oks=st.oks||[];const need=st.rtDone?2:1;if(oks.length<need||!oks.every(Boolean))return false;
+ const oks=st.oks||[];const need=sc.rt?1:st.rtDone?2:1;if(oks.length<need||!oks.every(Boolean))return false;
  if(!st.rtDone&&ctx.A.mic+(hasT(ctx.A,'mouth')?10:0)<68)return false;
  return Math.random()<(st.rtDone?.6:.45)}
 function mdChoice(ctx){const K=ctx.K||new Set();const hi=typeof voiceTier==='function'&&voiceTier(ctx.A)==='hi';
@@ -518,7 +526,9 @@ roll=function(c,ctx,st){st.lastC=c;
  if(c.drop){st.drop=true;st.score+=MD_SCORE;st.heat+=2;st.pop+=1;const text=fill(c.ok,ctx);st.log.push(fill(c.t.replace(/^🎤\s*/,''),ctx)+' — '+text);(st.oks=st.oks||[]).push(true);return {success:true,text}}
  /* the response beat is centred: a landed answer is worth more the riskier it was, a miss costs more the safer it was,
     and on average it adds nothing — so the extra beat changes how a promo goes, not how high promos rate */
- if(c.rt){const f=['heat','hx','pop','chem'],s0={};f.forEach(k=>s0[k]=st[k]||0);const sc0=st.score,p=chance(c,ctx);const out=_roll(c,ctx,st);
+ if(c.rt&&st.rtFull){const s0=st.score,h0=st.heat,p0=st.pop;const out=_roll(c,ctx,st);
+  st.score=s0+(st.score-s0)*RT_LAST.score;st.heat=h0+(st.heat-h0)*RT_LAST.heat;st.pop=p0+(st.pop-p0)*RT_LAST.pop;return out}
+ if(c.rt&&!st.rtFull){const f=['heat','hx','pop','chem'],s0={};f.forEach(k=>s0[k]=st[k]||0);const sc0=st.score,p=chance(c,ctx);const out=_roll(c,ctx,st);
   st.score=sc0+RT_SC*(out.success?(1-p):-p);f.forEach(k=>{st[k]=s0[k]+((st[k]||0)-s0[k])*RT_W});return out}
  return _roll(c,ctx,st)};
 const _pc=promoCtx;
