@@ -24,13 +24,14 @@ const RC_TELL={
  faceB:[`The crowd is begging for a {FAV} comeback.`,`The fans are stomping and clapping, willing {FAV} back into this.`,`They won't let {FAV} stay down — the whole building wants a comeback.`,`"Let's go, {FAVL}!" is shaking the arena. They want {FAV} to fight back.`],
  upset:[`They smell an upset. Every near-fall for {FAV} gets louder.`,`Nobody gave {FAV} a chance — now the crowd thinks they can pull it off.`,`The underdog chants are deafening. They want {FAV} to steal it.`],
  epic:[`This crowd wants it to go the distance.`,`They're on their feet chanting "This is awesome!" — nobody wants this to end yet.`,`They paid to see a war, and they want one.`,`Both sets of fans are dueling chants. They want an epic.`]};
-function rcTag1(c,lk,favIsA){const t=(c.t||'').toLowerCase();
+/* v231: c.rc pins a call's reading when its wording was rewritten (c cheat, e epic, b {B}'s moment, x cuts {B} off, m {A}'s moment; '-' none) */
+function rcTag1(c,lk,favIsA){const t=(c.t||'').toLowerCase();const P=c.rc!=null?c.rc:null;const has=(k,re)=>P!=null?P.includes(k):re.test(t);
  const bWin=!!(c.flip||c.loseOk);
- const cheat=!!(c.heelA||/cheap shot|feet on the ropes|leverage|stall|regroup|roll out|human shield|shush|rake|low blow|debris|sit on the lead|let \{b\} go|by count-out/.test(t));
- const epic=/one more|false finish|trade|go for broke|everything left|until one stays down|near-fall|dig deep|fight back|flurry/.test(t)||((c.st||0)>=.75&&c.s==='ring');
- const bMoment=bWin||/\{b\}[^.]*(comeback|stagger|steals|completes|survive)/.test(t)||/let \{b\} make/.test(t)||/small package|out of nowhere/.test(t);
- const aCut=/cut[^.]*(comeback|off)|make sure|finish it|unload|ignore the plea|finisher clean/.test(t);
- const aMoment=(!bWin&&!cheat&&(c.s==='ring'||c.s==='pop')&&(c.st||0)>=.5)||/fires up|comeback flurry|rises to their own feet|stares [^.]* down|finish it|finisher clean/.test(t);
+ const cheat=!!(c.heelA||has('c',/cheap shot|feet on the ropes|leverage|stall|regroup|roll out|human shield|shush|rake|low blow|debris|sit on the lead|let \{b\} go|by count-out/));
+ const epic=has('e',/one more|false finish|trade|go for broke|everything left|until one stays down|near-fall|dig deep|fight back|flurry/)||((c.st||0)>=.75&&c.s==='ring');
+ const bMoment=bWin||has('b',/\{b\}[^.]*(comeback|stagger|steals|completes|survive)|let \{b\} make|small package|out of nowhere/);
+ const aCut=has('x',/cut[^.]*(comeback|off)|make sure|finish it|unload|ignore the plea|finisher clean/);
+ const aMoment=(!bWin&&!cheat&&(c.s==='ring'||c.s==='pop')&&(c.st||0)>=.5)||has('m',/fires up|comeback flurry|rises to their own feet|stares [^.]* down|finish it|finisher clean/);
  if(lk==='face'){if(favIsA){if(bWin||cheat)return 'a';if(aMoment||c.al==='f')return 'w';return ''}if(bMoment)return 'w';if(cheat||aCut)return 'a';return ''}
  if(lk==='upset'){if(bMoment)return 'w';if(aCut||cheat||(aMoment&&!epic))return 'a';return ''}
  if(epic&&!bWin&&!cheat)return 'w';if(cheat||(c.always&&(c.st||0)<=.25&&!bWin))return 'a';return ''}
