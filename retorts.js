@@ -20,7 +20,8 @@
 'use strict';
 (function(){
 const RT_W=.25;         /* the response beat's weight on heat and popularity against a normal call */
-const RT_SC=1.6;        /* its swing on the promo score: +RT_SC×(1−odds) if it lands, −RT_SC×odds if it doesn't */
+const RT_SC=1.6;
+const RT_RS=.6;          /* v236: the response beat swings like any call (riskier = bigger either way), at 60% of a full call */        /* its swing on the promo score: +RT_SC×(1−odds) if it lands, −RT_SC×odds if it doesn't */
 const RT_TYPES=['callout','champ','contract','interview'];
 const MD_SCORE=.3;
 /* v233: once a promo has a back-and-forth, the old random twist is an occasional extra instead of a third beat every time.
@@ -529,7 +530,7 @@ roll=function(c,ctx,st){st.lastC=c;
  if(c.rt&&st.rtFull){const s0=st.score,h0=st.heat,p0=st.pop;const out=_roll(c,ctx,st);
   st.score=s0+(st.score-s0)*RT_LAST.score;st.heat=h0+(st.heat-h0)*RT_LAST.heat;st.pop=p0+(st.pop-p0)*RT_LAST.pop;return out}
  if(c.rt&&!st.rtFull){const f=['heat','hx','pop','chem'],s0={};f.forEach(k=>s0[k]=st[k]||0);const sc0=st.score,p=chance(c,ctx);const out=_roll(c,ctx,st);
-  st.score=sc0+RT_SC*(out.success?(1-p):-p);f.forEach(k=>{st[k]=s0[k]+((st[k]||0)-s0[k])*RT_W});return out}
+  {const sw=swingOf(p);st.score=sc0+RT_RS*(out.success?sw.w:-sw.l)/.35}f.forEach(k=>{st[k]=s0[k]+((st[k]||0)-s0[k])*RT_W});return out}
  return _roll(c,ctx,st)};
 const _pc=promoCtx;
 promoCtx=function(p,brand){const c=_pc(p,brand);c.brand=brand;if(c.B){const bt=titlesOf(c.B.id)[0];c.BT=bt?bt.n:''}
