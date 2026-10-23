@@ -53,8 +53,8 @@ const KIND={tamp:['🕵️','A word about another offer'],med:['🚑','The train
 function whoOf(x){if(x.k==='crisis')return S.crisis&&S.crisis.a;if(x.k==='pitch')return S.pitch&&S.pitch.a;if(x.k==='tape')return '📼';if(x.k==='trade')return '📞';const v=voiceFor(x.k,x.row);return v?v[0]:'?'}
 /* ---- what's waiting ---- */
 function inboxList(){if(!allowed())return [];const out=[];
- if(S.crisis&&S.w[S.crisis.a]&&S.w[S.crisis.a].own==='p'&&typeof CRISES!=='undefined'&&CRISES[S.crisis.k])out.push({k:'crisis',open:()=>openCrisis()});
- if(S.pitch&&typeof PITCHES!=='undefined'&&PITCHES[S.pitch.k]&&S.w[S.pitch.a]&&S.w[S.pitch.a].own==='p')out.push({k:'pitch',open:()=>openPitch()});
+ if(S.crisis&&S.w[S.crisis.a]&&S.w[S.crisis.a].own==='p'&&typeof CRISES!=='undefined'&&CRISES[S.crisis.k])out.push({k:'crisis',open:()=>_oc()});
+ if(S.pitch&&typeof PITCHES!=='undefined'&&PITCHES[S.pitch.k]&&S.w[S.pitch.a]&&S.w[S.pitch.a].own==='p')out.push({k:'pitch',open:()=>_op()});
  let secs=[];try{secs=B0?B0():[]}catch(e){console.warn('inbox',e)}
  const order=['tamp','med','trade','cd','oc','tape','team'];
  secs.map(s=>({s,k:deskKind(s)})).filter(x=>x.k).sort((a,b)=>order.indexOf(a.k)-order.indexOf(b.k)).forEach(({s,k})=>(s.rows||[]).forEach(row=>{if(isAsk(row))out.push({k,row,s})}));
@@ -73,15 +73,28 @@ function stamp(pos,left){const m=document.querySelector('#modal .sbody');if(!m)r
  /* a pitch can't be put off from the inbox, and the count sits on top of every decision screen */
  m.querySelectorAll('button.btn.ghost').forEach(b=>{if(/Decide later/.test(b.textContent))b.remove()});
  if(!m.querySelector('.ibx-k'))m.insertAdjacentHTML('afterbegin',head(pos,left))}
-function openInbox(){const l=inboxList();if(!l.length){ON_=false;N0=0;return false}
+function openInbox(){const l=inboxList();if(!l.length){ON_=false;N0=0;try{render()}catch(e){}return false}
  if(!ON_){ON_=true;N0=l.length}const pos=Math.max(1,N0-l.length+1);const x=l[0];
  try{if(x.open){x.open();stamp(pos,l.length)}else openModal(deskPage(x,pos,l.length))}catch(e){console.warn('inbox',e);ON_=false;return false}
  return true}
 window.openInbox=openInbox;
 /* once the last one is answered, the briefing */
-function finish(){ON_=false;N0=0;if(typeof _ob==='function')_ob()}
+/* v237: Home re-draws as the line clears, so its strip never shows people who've already been answered */
+function finish(){ON_=false;N0=0;try{render()}catch(e){}if(typeof _ob==='function')_ob()}
 /* ---- hooks ---- */
 const _ob=window.openBrief;
+/* v237: the results screen used to open a situation straight away, so the line never formed. Anything that opens a
+   pitch or a situation on its own now starts the line instead (the line opens them through the originals). */
+const _oc=window.openCrisis,_op=window.openPitch;
+if(typeof _oc==='function')window.openCrisis=openCrisis=function(){if(!ON_&&allowed()&&inboxList().length){openInbox();return}return _oc.apply(this,arguments)};
+if(typeof _op==='function')window.openPitch=openPitch=function(){if(!ON_&&allowed()&&inboxList().length){openInbox();return}return _op.apply(this,arguments)};
+/* and the line forms by itself whenever Home or Book is on screen with nothing else open — not only the first time
+   the briefing would have popped up (the tour and its offers go first) */
+let AUTO_T=0;
+function autoLine(){if(ON_||AUTO_T||!allowed())return;if(typeof tab==='undefined'||(tab!=='home'&&tab!=='book'))return;
+ if(typeof TUT!=='undefined'&&TUT||typeof TUT_OFFER!=='undefined'&&TUT_OFFER)return;if(typeof ME!=='undefined'&&ME||typeof PS!=='undefined'&&PS||typeof LQ!=='undefined'&&LQ)return;
+ AUTO_T=setTimeout(()=>{AUTO_T=0;const m=document.getElementById('modal');if(ON_||!m||!m.classList.contains('hidden')||!allowed())return;if(typeof TUT!=='undefined'&&TUT||typeof TUT_OFFER!=='undefined'&&TUT_OFFER)return;if(inboxList().length)openInbox()},450)}
+if(typeof render==='function'){const r0=render;render=window.render=function(){const out=r0.apply(this,arguments);try{autoLine()}catch(e){}return out}}
 if(typeof _ob==='function')window.openBrief=openBrief=function(){if(allowed()&&inboxList().length){openInbox();return}if(ON_){ON_=false;N0=0}return _ob.apply(this,arguments)};
 const _cm=window.closeModal;
 window.closeModal=closeModal=function(){const r=_cm.apply(this,arguments);
