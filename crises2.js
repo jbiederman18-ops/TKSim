@@ -91,7 +91,7 @@ finisher:{t:'Stolen finisher',i:'🌀',need:2,who:r=>pair(r,(a,b)=>a.g===b.g),
  {t:'Let both of them use it',d:'{A} won\'t take this well.',fx:c=>{mor(c.A,-12);addBeef(c.A.id,c.B.id,20);return `${c.A.name} is furious and hasn't spoken to ${c.B.name} since.`}}]},
 
 prank:{t:'Prank gone wrong',i:'🧴',need:2,who:r=>pair(r),
- text:'{A} filled {B}\'s boots with shaving cream an hour before their match. {B} had to wrestle in sneakers and is not laughing.',ch:[
+ text:'{A} filled {B}\'s boots with shaving cream an hour before {B}\'s match. {B} had to wrestle in sneakers and is not laughing.',ch:[
  {t:'Turn it into a TV rivalry',d:'Feud heat. Could get personal.',fx:c=>{const n=[];bumpHeat(c.A.id,c.B.id,16,n,'a backstage prank');if(Math.random()<.3)addBeef(c.A.id,c.B.id,20);return `${c.B.name} gets revenge on camera with a bucket of ice water. ${n.join(' ')}`}},
  {t:'Make {A} buy {B} new boots',d:'Fair. Both stay reasonably happy.',fx:c=>{mor(c.B,6);mor(c.A,-2);chemx(c.A,c.B,1);return `New boots and a handshake. They're laughing about it by the weekend.`}},
  {t:'Laugh it off — locker rooms need fun',d:'Everyone else loves it. {B} doesn\'t.',fx:c=>{ownList('p').forEach(w=>{if(w!==c.B)mor(w,2)});mor(c.B,-10);addBeef(c.A.id,c.B.id,12);return `The locker room is cracking up. ${c.B.name} is quietly plotting revenge.`}}]},

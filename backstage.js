@@ -87,7 +87,7 @@ const WS=[
 function wsFits(sp,W,m,opp){const sk=stipKey(m),sg=(STIPS[sk]||STIPS.std).g;
  if(sp.sty&&!sp.sty.split(' ').includes(W.st))return false;if(sp.stip&&!sp.stip.split(' ').includes(sk))return false;if(sp.grp&&sg!==sp.grp)return false;
  if(sp.mt&&!sp.mt.split(' ').includes(m.type))return false;if(sp.al&&sp.al!==W.al)return false;if(sp.title&&!m.title)return false;
- if(sp.star&&W.pop<70)return false;if(sp.under&&!(opp&&W.pop<55&&opp.pop>=W.pop+15))return false;return true}
+ if(typeof finFits==='function'&&!finFits(sp,m))return false;if(sp.star&&W.pop<70)return false;if(sp.under&&!(opp&&W.pop<55&&opp.pop>=W.pop+15))return false;return true}
 function wsOpp(m,W){const si=m.sides.findIndex(s=>s.includes(W.id));const o=m.sides.filter((s,i)=>i!==si).flat().map(id=>S.w[id]).filter(Boolean);return o.sort((a,b)=>b.pop-a.pop)[0]||null}
 function wsMatchOk(m){return m&&m.sides&&m.type!=='squash'&&!(typeof isSp==='function'&&isSp(m))&&validMatch(m)&&!(typeof ocPending==='function'&&ocPending(m))}
 function wsCur(){const x=S&&S.wsr;return x&&x.w===AW()?x:null}
