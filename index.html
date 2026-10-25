@@ -596,6 +596,38 @@ body.tv .card .h.small{font-size:clamp(17px,1.4vw,26px)}
 .rv-many .rv-vs{font-size:clamp(22px,2vw,40px);margin-top:60px}.rv-many .rv-txt{font-size:clamp(15px,1.15vw,24px)}.rv-many .rv-stars{font-size:clamp(20px,1.8vw,36px)}.rv-many .rv-show{font-size:clamp(16px,1.4vw,28px)}
 .rv-pl{display:block;font:800 italic clamp(14px,1.1vw,22px) 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}.rv-score.win .rv-pl{color:var(--gold)}
 .tv-all .tv-gm b{font-size:clamp(20px,1.8vw,36px)}
+.ry section{display:none}.ry[data-stage="under"] [data-sec="under"],.ry[data-stage="elim"] [data-sec="elim"],.ry[data-stage="final"] [data-sec="final"],.ry[data-stage="out"] [data-sec="out"],.ry[data-stage="podium"] [data-sec="podium"]{display:block;animation:rise .45s both}
+.ry .ry-col .rv-hd{box-shadow:inset 0 -5px 0 var(--c)}
+.ry-elim{display:none;position:relative;min-height:clamp(420px,46vw,820px)}.ry-elim.cur{display:block}
+.ry-ban{width:max-content;max-width:100%;margin:0 auto clamp(14px,1.6vw,30px);background:var(--red);color:#fff;font:900 italic clamp(48px,5.6vw,112px)/1 'BC',Impact,sans-serif;text-transform:uppercase;padding:.12em .6em .08em;clip-path:polygon(.35em 0,100% 0,calc(100% - .35em) 100%,0 100%);opacity:0;transform:scale(.9);transition:opacity .4s,transform .4s}
+.ry-elim.gone .ry-ban{opacity:1;transform:none}.ry-elim.now .ry-ban{transition:none}
+.ry-in{display:flex;justify-content:space-between;gap:clamp(12px,2vw,40px)}
+.ry-plate,.ry-fall,.ry-end,.ry-step .ry-pi{position:relative;background:var(--st1);clip-path:var(--cut);box-shadow:inset 0 5px 0 var(--c)}
+.ry-plate{flex:0 1 26%;padding:clamp(10px,1vw,18px) clamp(14px,1.3vw,26px)}
+.ry-pk{font:800 italic clamp(12px,.85vw,16px)/1.1 'BC',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.ry-pn{display:block;font:900 italic clamp(30px,3vw,60px)/1 'BC',sans-serif;text-transform:uppercase;margin-top:4px}
+.ry-tag{font:900 italic clamp(12px,.85vw,16px)/1 'BC',sans-serif;letter-spacing:.16em;text-transform:uppercase}
+.ry-ropes{margin:clamp(16px,2vw,36px) 0 0;display:grid;gap:clamp(14px,1.4vw,28px)}.ry-ropes i{display:block;height:6px;background:#3a3a42}.ry-ropes i:nth-child(2){background:#303037}.ry-ropes i:nth-child(3){background:#2a2a30}
+.ry-fall{width:min(100%,clamp(420px,36vw,720px));margin:calc(-1 * clamp(60px,6vw,110px)) auto 0;padding:clamp(14px,1.4vw,28px) clamp(18px,1.6vw,32px);transition:transform 1.3s cubic-bezier(.5,-.3,.7,1),opacity 1.3s}
+.ry-elim.gone .ry-fall{transform:translateY(clamp(120px,12vw,230px)) rotate(-7deg);opacity:.5}.ry-elim.now .ry-fall{transition:none}
+.ry-fh{display:flex;justify-content:space-between;gap:10px;font:800 italic clamp(12px,.9vw,17px)/1 'BC',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.ry-fall .rv-seg{margin:clamp(10px,1vw,18px) 0 0;opacity:1;filter:none;background:#0f0f12}.ry-fall .rv-seg:not(.on) .rv-stars{opacity:.35}
+.ry-fr{display:flex;justify-content:space-between;margin-top:clamp(10px,1vw,16px);font-size:clamp(15px,1.15vw,22px)}
+.ry-sub{text-align:center;font:800 italic clamp(14px,1.1vw,20px)/1 'BC',sans-serif;letter-spacing:.22em;text-transform:uppercase;color:var(--mut);margin-bottom:clamp(12px,1.4vw,24px)}
+.ry-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(20px,4vw,80px)}
+.ry-end{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:clamp(12px,1.2vw,24px) clamp(16px,1.6vw,30px)}.ry-end.r{flex-direction:row-reverse}.ry-end .ry-pn{margin:0;font-size:clamp(40px,4.4vw,88px)}.ry-so{font-size:clamp(20px,1.8vw,36px)}
+.ry-rope{position:relative;height:14px;background:var(--gold3);margin:clamp(36px,3.6vw,70px) clamp(20px,2vw,40px) 0}
+.ry-mid{position:absolute;left:50%;top:-26px;width:16px;height:66px;margin-left:-8px;background:#3a3a42}
+.ry-knot{position:absolute;left:50%;top:50%;width:clamp(44px,3.8vw,72px);height:clamp(44px,3.8vw,72px);transform:translate(-50%,-50%);background:var(--gold);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);transition:left 1.4s cubic-bezier(.3,1.4,.5,1)}
+.ry-rl{display:flex;justify-content:space-between;margin:clamp(20px,2vw,36px) clamp(20px,2vw,40px) clamp(20px,2.4vw,44px);font:800 italic clamp(14px,1.1vw,20px)/1 'BC',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.ry-mes .rv-seg{margin:0}.ry-mes .rv-txt{font-size:clamp(20px,1.8vw,36px)}.ry-mes .rv-stars{font-size:clamp(34px,3.2vw,64px)}
+.ry-win{text-align:center;margin:0 0 clamp(14px,2vw,36px)}
+.ry-pod{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,1.8vw,34px);align-items:end;max-width:1300px;margin:0 auto}
+.ry-step{display:flex;flex-direction:column;gap:12px;text-align:center}.ry-step .ry-pi{padding:clamp(12px,1.2vw,22px)}.ry-step .stars{font-size:clamp(22px,2vw,40px)}.ry-step b.good,.ry-step b.bad{display:block;font-size:clamp(17px,1.4vw,28px);margin-top:4px}
+.ry-blk{display:flex;align-items:center;justify-content:center;background:var(--s2);clip-path:var(--cut);box-shadow:inset 0 6px 0 var(--c);font:900 italic clamp(50px,5vw,110px)/1 'BC',sans-serif;color:var(--mut)}
+.ry-step.p1 .ry-blk{height:clamp(170px,15vw,300px);background:#2a2412;color:var(--gold)}.ry-step.p2 .ry-blk{height:clamp(120px,11vw,220px)}.ry-step.p3 .ry-blk{height:clamp(80px,7.5vw,150px)}.ry-step.p1 .ry-pn{font-size:clamp(40px,3.8vw,74px)}
+.ry-4th,.ry-mew{width:max-content;max-width:100%;margin:clamp(14px,1.6vw,28px) auto 0;background:var(--st1);padding:12px 26px;clip-path:var(--cut);font-size:clamp(16px,1.2vw,22px);color:var(--mut)}.ry-mew{color:var(--text)}
+@media(max-width:900px){.ry-two,.ry-pod{grid-template-columns:1fr}.ry-in{flex-wrap:wrap}}
 .rv-ctl{position:fixed;right:clamp(12px,2vw,36px);bottom:clamp(12px,2vw,36px);z-index:7}
 @media(max-width:900px){.tv-lobby,.tv-grid{grid-template-columns:1fr}.rv-cols{grid-template-columns:1fr}.rv-vs{display:none}}
 .mpbar{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;margin-bottom:12px;border:1px solid var(--line);background:linear-gradient(180deg,var(--st1),var(--st2));font-size:14px;line-height:1.35}.mpbar.on{border-color:var(--gold3);box-shadow:0 0 18px rgba(216,180,73,.22)}.mpbar b{color:var(--gold2)}.hdr-r{display:flex;align-items:center;gap:6px;min-width:0}
@@ -1680,7 +1712,7 @@ html.lk-hy .showcard.compact.bngp,.showcard.compact.bngp{background:linear-gradi
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v240';
+const APP_VERSION='v241';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */

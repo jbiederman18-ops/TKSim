@@ -354,6 +354,7 @@ function tvOver(){const l=localSeats().slice().sort((a,b)=>S.fans[b]-S.fans[a]);
 /* ---------- the reveal: each show's segments, side by side, one at a time ---------- */
 function tvRevealPairs(){const L=S.last;return (L.pairs||[{blocks:L.blocks,ratings:L.ratings,fans:L.fans,hourWin:L.hourWin}])}
 function tvRevealHtml(){const L=S.last,R=TV.reveal,pairs=tvRevealPairs(),pr=pairs[R.pi];R.built=R.key+':'+R.pi;
+ if(Object.keys(pr.ratings||{}).length>2)return ryHtml(L,R,pr);
  const cols=pr.blocks.filter(b=>b.brand!=='x'),x=pr.blocks.find(b=>b.brand==='x');
  const col=(b,ci)=>`<div class="rv-col"><div class="rv-hd"><div class="rv-show">${esc(b.label)}</div><div class="rv-run" id="rvr${ci}">—</div></div>${b.segs.map((s,si)=>`<div class="rv-seg" id="rv-${ci}-${si}" data-st="${s.stars}"><div class="muted tiny">${si===b.segs.length-1?'<b class="gold">MAIN EVENT</b> · ':''}${esc(s.sub)}</div><div class="rv-txt">${esc(s.txt)}</div><div class="rv-stars">${starMeter(s.stars)}</div>${s.notes.slice(0,3).map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`).join('')||'<div class="muted">Nothing aired.</div>'}</div>`;
  const ks=Object.keys(pr.ratings);const best=ks.slice().sort((a,b)=>pr.ratings[b]-pr.ratings[a])[0];const many=ks.length>2,ORD=['1st','2nd','3rd','4th'];
@@ -363,7 +364,7 @@ function tvRevealHtml(){const L=S.last,R=TV.reveal,pairs=tvRevealPairs(),pr=pair
  <div class="rv-final" id="rv-final"><div class="rv-scores">${(many?ks.slice().sort((a,b)=>pr.ratings[b]-pr.ratings[a]):ks).map(k=>`<div class="rv-score ${k===best&&ks.length>1?'win':''}">${many&&pr.places&&pr.places[k]?`<small class="rv-pl">${ORD[pr.places[k]-1]}</small>`:''}<span>${esc(nameOf(k))}</span><div class="rv-fs">${starMeter(pr.ratings[k])}</div><b class="${pr.fans[k]>=0?'good':'bad'}">${pr.fans[k]>=0?'+':''}${fmtFans(Math.abs(pr.fans[k])).replace(/^/,pr.fans[k]<0?'−':'')} fans</b></div>`).join('')}</div>
  <div class="rv-win">${ks.length>1?(pr.hourWin?`🏆 ${esc(nameOf(pr.hourWin))} wins the night!`:`🏆 ${esc(nameOf(best))} steals the show!`):'Bye-week show in the books.'}</div></div>
  <div class="rv-ctl"><button class="mini" onclick="tvRevealSkip()">Skip ▸▸</button></div></div>`}
-function tvRevealRun(){const R=TV.reveal,pr=tvRevealPairs()[R.pi];const cols=pr.blocks.filter(b=>b.brand!=='x'),x=pr.blocks.find(b=>b.brand==='x');
+function tvRevealRun(){const R=TV.reveal,pr=tvRevealPairs()[R.pi];if(Object.keys(pr.ratings||{}).length>2)return ryRun(R,pr);const cols=pr.blocks.filter(b=>b.brand!=='x'),x=pr.blocks.find(b=>b.brand==='x');
  const steps=[];const max=Math.max(0,...cols.map(b=>b.segs.length));
  if(R.pi===0&&S.last.deals)S.last.deals.forEach((d,i)=>steps.push({id:'rv-d-'+i,n:d.bids.length+1}));
  for(let i=0;i<max;i++)cols.forEach((b,ci)=>{if(b.segs[i])steps.push({id:`rv-${ci}-${i}`,ci,n:b.segs[i].notes.length})});
@@ -380,11 +381,75 @@ function tvRevealShow(st,instant){const el=document.getElementById(st.id);if(!el
  if(!instant)try{el.scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}}
 function tvRevealNext(){const R=TV&&TV.reveal;if(!R||!R.steps||!document.getElementById('rv'))return;clearTimeout(R.t);
  if(R.si>=R.steps.length){R.t=setTimeout(tvRevealAdvance,9000);return}
- const st=R.steps[R.si++];tvRevealShow(st,false);
+ const st=R.steps[R.si++];if(st.fn)st.fn(false);else tvRevealShow(st,false);if(st.ms!=null){R.t=setTimeout(tvRevealNext,st.ms);return}
  /* v239: three or four shows means more segments to get through, so each one moves a little quicker */
  const sp=document.querySelector('#rv .rv-many')?.7:1;R.t=setTimeout(tvRevealNext,st.final?0:Math.round(Math.min(7600,3600+st.n*1100)*sp))}
 function tvRevealAdvance(){const R=TV&&TV.reveal;if(!R)return;clearTimeout(R.t);const n=tvRevealPairs().length;
  if(R.pi<n-1){R.pi++;R.si=0;R.built=null;render();return}
  TV.reveal=null;window.scrollTo(0,0);render()}
 function tvRevealSkip(){const R=TV&&TV.reveal;if(!R)return;clearTimeout(R.t);if(!R.steps)return render();
- if(R.si<R.steps.length){while(R.si<R.steps.length)tvRevealShow(R.steps[R.si++],true);const f=document.getElementById('rv-final');if(f)try{f.scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}R.t=setTimeout(tvRevealAdvance,9000)}else tvRevealAdvance()}
+ if(R.si<R.steps.length){while(R.si<R.steps.length){const st=R.steps[R.si++];if(st.fn)st.fn(true);else tvRevealShow(st,true)}const f=document.getElementById('rv-final');if(f)try{f.scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}R.t=setTimeout(tvRevealAdvance,9000)}else tvRevealAdvance()}
+
+/* ===================== v241: the Battle Royale reveal (3–4 shows) =====================
+   The undercard plays side by side, one segment per show per round (main events held back). Then, from last place up, each
+   show plays its main event on its own and goes over the top rope, until two are left. Their main events settle it as a tug of
+   war; the runner-up goes over the top rope too, and the winner stands alone on the podium. Places are the real final ones. */
+const RY_ORD=['1st','2nd','3rd','4th'];
+function ryPlan(pr){const cols=pr.blocks.filter(b=>b.brand!=='x');const ks=cols.map(b=>b.brand);
+ const pl=pr.places&&Object.keys(pr.places).length?pr.places:(()=>{const o={};ks.slice().sort((a,b)=>pr.ratings[b]-pr.ratings[a]).forEach((k,i)=>o[k]=i+1);return o})();
+ const byPlace=ks.slice().sort((a,b)=>(pl[a]-pl[b])||(pr.ratings[b]-pr.ratings[a]));
+ return {cols,ks,pl,byPlace,top2:byPlace.slice(0,2),out:byPlace.slice(2).reverse()}}
+const ryMain=b=>b&&b.segs.length?b.segs[b.segs.length-1]:null;
+const ryUnder=b=>b&&b.segs.length?b.segs.slice(0,-1):[];
+function ryFans(v){return `<b class="${v>=0?'good':'bad'}">${v>=0?'+':'−'}${fmtFans(Math.abs(v||0))} fans</b>`}
+function rySeg(s,id,cls){return `<div class="rv-seg ${cls||''}" id="${id}" data-st="${s.stars}"><div class="muted tiny">${esc(s.sub)}</div><div class="rv-txt">${esc(s.txt)}</div><div class="rv-stars">${starMeter(s.stars)}</div>${s.notes.slice(0,3).map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`}
+function ryPlate(k,b,cls,extra){return `<div class="ry-plate ${cls||''}" style="--c:${ryColor(k)}"><div class="ry-pk">${esc(showNames()[k]||b&&b.label||'')}</div><b class="ry-pn">${esc(nameOf(k))}</b>${extra||''}</div>`}
+function ryColor(k){return ['#c8302a','#5aa8ec','#e8662a','#5fcf8c'][(+String(canonKey(k)).slice(1)||0)%4]}
+function ryHtml(L,R,pr){const P=ryPlan(pr),x=pr.blocks.find(b=>b.brand==='x');const bk=k=>P.cols.find(b=>b.brand===k);
+ const colH=P.cols.map((b,ci)=>`<div class="rv-col ry-col" data-k="${b.brand}" style="--c:${ryColor(b.brand)}"><div class="rv-hd"><div class="rv-show">${esc(b.label)}</div><div class="rv-run" id="rvr${ci}">—</div></div>${ryUnder(b).map((s,si)=>rySeg(s,`rv-${ci}-${si}`)).join('')||'<div class="muted">Nothing on the undercard.</div>'}</div>`);
+ const elim=(k,i,lbl)=>{const b=bk(k),m=ryMain(b);return `<div class="ry-elim" id="ry-e-${i}"><div class="ry-ban">Over the top rope!</div>
+  <div class="ry-in">${(l=>l.map(o=>ryPlate(o,bk(o),'ry-still',`<span class="ry-tag good">${l.length===1?'Last one standing':'Still in'}</span>`)).join(''))(P.byPlace.filter(o=>P.pl[o]<P.pl[k]))}</div>
+  <div class="ry-ropes"><i></i><i></i><i></i></div>
+  <div class="ry-fall" style="--c:${ryColor(k)}"><div class="ry-fh"><span>${esc(showNames()[k]||'')}</span><span class="bad">${lbl} · ${RY_ORD[P.pl[k]-1]}</span></div><b class="ry-pn">${esc(nameOf(k))}</b>
+   ${m?rySeg(m,`ry-em-${i}`,'ry-me'):''}<div class="ry-fr"><span class="muted">Final rating</span><span><span class="stars">${stars(pr.ratings[k])}</span> · ${ryFans(pr.fans[k])}</span></div></div></div>`};
+ const [A,B]=P.top2,mA=ryMain(bk(A)),mB=ryMain(bk(B));
+ const pod=P.byPlace;const podOrder=[pod[1],pod[0],pod[2]].filter(Boolean);
+ const mew=(L.notes||[]).find(n=>/Main event war/.test(n));
+ return `<div id="rv" class="rv ry" data-stage="under"><div class="rv-top"><div class="kicker"><i></i>Week ${L.week} · Battle Royale · <span id="ry-lbl">The undercard</span></div><div class="showname">${esc(L.ppv?L.title:'League night')}</div></div>
+ <section data-sec="under">${R.pi===0&&L.deals&&L.deals.length?dealRevealHtml(L.deals):''}<div class="rv-cols rv-many" style="grid-template-columns:repeat(${P.cols.length-1},minmax(0,1fr) auto) minmax(0,1fr)">${colH.map((h,ci)=>(ci?'<div class="vs rv-vs">VS</div>':'')+h).join('')}</div>
+  ${x?`<div class="card rv-x"><div class="h small">${esc(x.label)}</div>${x.segs.map((s,si)=>rySeg(s,'rv-x-'+si)).join('')}</div>`:''}</section>
+ <section data-sec="elim">${P.out.map((k,i)=>elim(k,i,'Eliminated')).join('')}</section>
+ <section data-sec="final"><div class="ry-sub">Final two — the main events settle it</div>
+  <div class="ry-two">${[A,B].map((k,j)=>`<div class="ry-end ${j?'r':''}" style="--c:${ryColor(k)}"><b class="ry-pn">${esc(nameOf(k))}</b><span class="ry-so" id="ry-so-${j}"></span></div>`).join('')}</div>
+  <div class="ry-rope"><i class="ry-mid"></i><i class="ry-knot" id="ry-knot"></i></div><div class="ry-rl"><span>◂ ${esc(nameOf(A))}</span><span id="ry-lead" class="gold"></span><span>${esc(nameOf(B))} ▸</span></div>
+  <div class="ry-two ry-mes">${mA?rySeg(mA,'ry-f-0','ry-me'):'<div class="muted">No main event.</div>'}${mB?rySeg(mB,'ry-f-1','ry-me'):'<div class="muted">No main event.</div>'}</div></section>
+ <section data-sec="out">${elim(B,'x','Over the top rope')}</section>
+ <section data-sec="podium"><div class="rv-win ry-win">🏆 ${esc(nameOf(A))} wins the night!</div>
+  <div class="ry-pod">${podOrder.map(k=>`<div class="ry-step p${P.pl[k]}" style="--c:${ryColor(k)}"><div class="ry-pi"><div class="ry-pk">${esc(showNames()[k]||'')}</div><b class="ry-pn">${esc(nameOf(k))}</b><div class="stars">${stars(pr.ratings[k])}</div>${ryFans(pr.fans[k])}</div><div class="ry-blk">${RY_ORD[P.pl[k]-1]}</div></div>`).join('')}</div>
+  ${pod[3]?`<div class="ry-4th">${RY_ORD[P.pl[pod[3]]-1]} · <b>${esc(nameOf(pod[3]))}</b> · <span class="stars">${stars(pr.ratings[pod[3]])}</span> · ${ryFans(pr.fans[pod[3]])}</div>`:''}
+  ${mew?`<div class="ry-mew">${esc(mew)}</div>`:''}</section>
+ <div class="rv-ctl"><button class="mini" onclick="tvRevealSkip()">Skip ▸▸</button></div></div>`}
+function ryStage(st,lbl){const rv=document.getElementById('rv');if(!rv)return;rv.dataset.stage=st;const l=document.getElementById('ry-lbl');if(l)l.textContent=lbl;try{window.scrollTo({top:0,behavior:'smooth'})}catch(e){window.scrollTo(0,0)}}
+function ryKnot(d){const k=document.getElementById('ry-knot');if(k)k.style.left=`${50-clamp(d*45,-40,40)}%`;const l=document.getElementById('ry-lead');if(l)l.textContent=Math.abs(d)<.03?'Dead level':d>0?'◂ Pulling ahead':'Pulling ahead ▸'}
+function ryAvg(b,withMain){const segs=withMain?b.segs:ryUnder(b);if(!segs.length)return 0;let s=0,w=0;segs.forEach((x,i)=>{const ww=withMain&&i===segs.length-1?1.6:1;s+=x.stars*ww;w+=ww});return s/w}
+function ryRun(R,pr){const P=ryPlan(pr),x=pr.blocks.find(b=>b.brand==='x');const steps=[];const sp=.7;
+ if(R.pi===0&&S.last.deals)S.last.deals.forEach((d,i)=>steps.push({id:'rv-d-'+i,n:d.bids.length+1}));
+ const max=Math.max(0,...P.cols.map(b=>ryUnder(b).length));
+ for(let i=0;i<max;i++)P.cols.forEach((b,ci)=>{if(ryUnder(b)[i])steps.push({id:`rv-${ci}-${i}`,ci,n:ryUnder(b)[i].notes.length})});
+ if(x)x.segs.forEach((s,i)=>steps.push({id:'rv-x-'+i,n:s.notes.length}));
+ P.out.forEach((k,i)=>{steps.push({ms:2200,fn:()=>{ryStage('elim',`${RY_ORD[P.pl[k]-1]} place`);document.querySelectorAll('#rv .ry-elim').forEach(e=>e.classList.toggle('cur',e.id==='ry-e-'+i))}});
+  if(document.getElementById('ry-em-'+i))steps.push({id:'ry-em-'+i,n:3,ms:4200});
+  steps.push({ms:3000,fn:inst=>{const e=document.getElementById('ry-e-'+i);if(e)e.classList.add('gone',...(inst?['now']:[]))}})});
+ const [A,B]=P.top2,bA=P.cols.find(b=>b.brand===A),bB=P.cols.find(b=>b.brand===B);
+ const so=(j,v)=>{const e=document.getElementById('ry-so-'+j);if(e)e.innerHTML=`<span class="muted tiny">SO FAR</span> <span class="stars">${stars(v)}</span>`};
+ steps.push({ms:3200,fn:()=>{ryStage('final','Final two');const a=ryAvg(bA,false),b=ryAvg(bB,false);so(0,a);so(1,b);ryKnot(a-b)}});
+ steps.push({id:'ry-f-0',n:3,ms:5200,after:()=>{const a=ryAvg(bA,true),b=ryAvg(bB,false);so(0,a);ryKnot(a-b)}});
+ steps.push({id:'ry-f-1',n:3,ms:5600,after:()=>{const d=pr.ratings[A]-pr.ratings[B];so(0,pr.ratings[A]);so(1,pr.ratings[B]);ryKnot(Math.max(d,.15));
+  const w=document.getElementById(d>=0?'ry-f-0':'ry-f-1');if(w)setTimeout(()=>{if(w.isConnected)w.classList.add('rvw')},1800)}});
+ steps.push({ms:5200,fn:()=>{ryStage('out','2nd place');const m=document.getElementById('ry-em-x');if(m)m.classList.add('on','now');const e=document.getElementById('ry-e-x');if(e){e.classList.add('cur');setTimeout(()=>{if(e.isConnected)e.classList.add('gone')},1600)}}});
+ steps.push({id:'rv-final',final:true,fn:()=>ryStage('podium','Final')});
+ /* stars reveal through tvRevealShow (so title celebrations and big-star bursts still fire); a step's after() runs once its stars are up */
+ steps.forEach(st=>{if(st.id&&!st.fn){const id=st.id,aft=st.after;st.fn=inst=>{tvRevealShow({id,ci:st.ci},inst);if(aft)aft()}}});
+ steps.forEach(st=>{if(st.ms==null&&!st.final)st.ms=Math.round(Math.min(7600,3600+(st.n||0)*1100)*sp)});
+ steps[steps.length-1].ms=0;
+ R.steps=steps;R.si=R.si||0;for(let i=0;i<R.si&&i<steps.length;i++)steps[i].fn(true);tvRevealNext()}
