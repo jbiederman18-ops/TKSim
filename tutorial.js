@@ -173,7 +173,9 @@ function tutDecline(){const o=TUT_OFFER;tutOfferClose();if(!o)return;const p={};
  if(!o.ids)toast('No problem — the tour lives in ⚙️ → Rookie orientation.');if(typeof briefAuto==='function')briefAuto()}
 
 /* who sees what, after every render */
-function tutAuto(){if(!S||TUT||TUT_OFFER||(typeof TV!=='undefined'&&TV))return;
+function tutAuto(){/* v238: a draft-tour offer left unanswered (say, on auto-draft) must not linger into the season or over a live show */
+ if(TUT_OFFER&&S&&((TUT_OFFER.track==='draft'&&S.phase!=='draft')||(typeof LIVE!=='undefined'&&LIVE)||(typeof partyLiveTurn==='function'&&partyLiveTurn())))tutOfferClose();
+ if(!S||TUT||TUT_OFFER||(typeof TV!=='undefined'&&TV))return;
  if(typeof LIVE!=='undefined'&&LIVE)return;const m=document.getElementById('modal');if(m&&!m.classList.contains('hidden'))return;
  const st=tutStore();
  if(S.phase==='draft'&&st.draft===undefined&&!(S.draft&&S.draft.log&&S.draft.log.length>4))return tutOffer('draft');

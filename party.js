@@ -166,13 +166,16 @@ function partyAdopt(str,rev,d,quiet){
 /* on party night, a phone that just got a new week's results asks whether to watch the TV or open its own */
 function partyAfterLoad(){if(!S.online.party){if(simOn()&&mpUnseen()){mpMarkSeen();showResults();return true}return false}if(partyLivePrompt())return true;if(S.phase==='draft'||!mpUnseen())return false;mpMarkSeen();partyResultsPrompt();return true}
 /* a newer league arrived while we were busy: apply it now if nothing is in the way */
-function partyCatchUp(){if(!MP_HELD||MPX||busy())return;const d=MP_HELD;MP_HELD=null;if(typeof mpIncoming==='function')mpIncoming(d)}
+/* v238: a plain party-night notice (Locked in, the week is on) is not "busy": a league update behind it must still land,
+   or the first GM to go live sits on "Got it" while the TV waits for them */
+function partyBusy(){if(!busy())return false;if(PS||ME||LQ||ED||PE||CE||PK||CF||QP)return true;const m=$('#modal');return !(m&&m.querySelector('.mp-ok'))}
+function partyCatchUp(){if(!MP_HELD||MPX||partyBusy())return;const d=MP_HELD;MP_HELD=null;if(typeof mpIncoming==='function')mpIncoming(d)}
 /* mpIncoming asks this first: should this new copy of the league wait? */
 function mpHoldIncoming(d){
  if(MPX||mpT){if(!MP_HELD||(d.rev||0)>=(MP_HELD.rev||0))MP_HELD=d;if(mpT&&!MPX)mpPush();return true}
- if(busy()&&partyOn()){if(!MP_HELD||(d.rev||0)>=(MP_HELD.rev||0))MP_HELD=d;return true}
+ if(partyOn()&&partyBusy()){if(!MP_HELD||(d.rev||0)>=(MP_HELD.rev||0))MP_HELD=d;return true}
  return false}
-function partyResultsPrompt(){if(!S||!S.last)return;openModal(`<div class="h mhd">📺 Week ${S.last.week} is on!</div><p>Everyone's locked in. Watch the results play out on the TV, or open your own.</p><button class="btn" onclick="showResults()">See my results</button><button class="btn ghost" onclick="closeModal()">I'm watching the TV</button>`)}
+function partyResultsPrompt(){if(!S||!S.last)return;openModal(`<i class="mp-ok" hidden></i><div class="h mhd">📺 Week ${S.last.week} is on!</div><p>Everyone's locked in. Watch the results play out on the TV, or open your own.</p><button class="btn" onclick="showResults()">See my results</button><button class="btn ghost" onclick="closeModal()">I'm watching the TV</button>`)}
 
 /* ===================== party night on a phone ===================== */
 function partyMyTurn(){const o=S.online||{};if(S.phase==='rookies')return !(o.rk&&o.rk.p);if(S.phase==='draft')return onClock()==='p';if(S.phase==='season')return o.live?partyLiveNow()==='p':!(o.booked&&o.booked.p);return true}
@@ -196,6 +199,9 @@ let FEED_T=null,FEED_LAST='';
 const PICK_HOLD=1900;let FEED_HOLD=0,FEED_PICK=null;
 function partyFeed(html,now){if(!ON()||!LMP||!window.TKO||!TKO.ready)return;clearTimeout(FEED_T);
  html=String(html||'').replace(/<img\b[^>]*src="data:[^"]*"[^>]*>/gi,'').slice(0,90000);
+ /* v238: the "picked" tag belongs on how that call played out — if the next screen is already a fresh decision (say, a gorilla pitch
+    that went straight back to the show), drop it instead of labelling the new choices with the old pick */
+ if(html&&!now&&FEED_PICK&&/class="[^"]*\bchoice\b/.test(html)&&!/class="[^"]*\bchoice\b[^"]*"[^>]*\bdisabled\b/.test(html)&&!/class="ppick"/.test(html))FEED_PICK=null;
  if(html&&!now&&FEED_PICK){html=`<div class="tv-picked"><span class="tvp-k">${esc(FEED_PICK.k)}</span><span><small>${esc(nameOf('p'))} picked</small>${esc(FEED_PICK.t)}</span></div>`+html;FEED_PICK=null}
  const send=()=>{if(html===FEED_LAST)return;FEED_LAST=html;TKO.push(LMP.code,{live:{seat:LMP.me,week:S.week,season:S.season,html,at:Date.now()}}).catch(()=>{})};
  if(!html||now)return send();FEED_T=setTimeout(send,Math.max(150,FEED_HOLD-Date.now()))}
@@ -211,7 +217,7 @@ function partyLocked(){if(partyMyTurn())return false;
  toast(S.phase==='draft'?`${nameOf(onClock())} is on the clock.`:S.phase==='rookies'?"You're ready — waiting on the others.":'Your card is locked in — eyes on the TV! (Unlock it from the banner to make changes.)');return true}
 function partyLockCard(){const o=S.online;o.booked=o.booked||{};o.booked.p=true;const sh=curShow();const left=partyWaiting();
  save();render();
- openModal(`<div class="h mhd">Locked in ✓</div><p>Your ${esc(sh.ppv?sh.name:sh.mine)} card is in.${left.length?` Waiting on <b>${left.map(esc).join(', ')}</b>.`:' You were the last one — time to go live!'}</p><p class="muted">When everyone's locked in, each GM goes live on the TV one at a time — the room watches your promos and match calls while you make them here. Then the week airs.</p><button class="btn" onclick="closeModal()">Got it</button>`)}
+ openModal(`<i class="mp-ok" hidden></i><div class="h mhd">Locked in ✓</div><p>Your ${esc(sh.ppv?sh.name:sh.mine)} card is in.${left.length?` Waiting on <b>${left.map(esc).join(', ')}</b>.`:' You were the last one — time to go live!'}</p><p class="muted">When everyone's locked in, each GM goes live on the TV one at a time — the room watches your promos and match calls while you make them here. Then the week airs.</p><button class="btn" onclick="closeModal()">Got it</button>`)}
 function partyUnlock(){if(!S||S.phase!=='season'||!partyOn()||S.online.live)return;S.online.booked.p=false;save();render();toast('Unlocked — make your changes, then go live again.')}
 function partyBanner(){const o=S.online;let t;
  if(S.phase==='rookies')t=o.rk&&o.rk.p?`✅ You're ready — waiting on ${esc(partyWaiting().join(', '))}`:'🟡 Create wrestlers, then continue to the draft';
@@ -337,7 +343,7 @@ function tvSafe(html){const t=document.createElement('template');t.innerHTML=Str
  return t.innerHTML}
 function tvLive(){const o=S.online,now=partyLiveNow(),lv=o.lv||{},f=TV.feed;const sh=curShow();
  const mine=f&&f.html&&f.seat===canonKey(now)&&f.week===S.week&&f.season===S.season;
- return `<div class="tv-grid"><div><div class="tv-title"><div class="kicker"><i></i><span class="live-tag">LIVE</span> Week ${S.week} · ${esc(sh.ppv?sh.name:showNames()[now]||'')}</div><div class="hero-t tv-hero tv-clock" style="font-size:clamp(40px,4.6vw,96px)!important">${esc(nameOf(now))}</div></div>
+ return `<div class="tv-grid"><div><div class="tv-title"><div class="kicker"><span class="live-tag">LIVE</span> Week ${S.week} · ${esc(sh.ppv?sh.name:showNames()[now]||'')}</div><div class="hero-t tv-hero tv-clock" style="font-size:clamp(40px,4.6vw,96px)!important">${esc(nameOf(now))}</div></div>
  ${mine?`<div class="tv-live-sheet">${tvSafe(f.html)}</div>`:`<div class="card center"><div class="big">📱 Waiting for ${esc(nameOf(now))} to start their show…</div><p class="muted">Their promos and match calls show up here as they make them.</p></div>`}</div>
  <div><div class="card"><div class="h small">Going live tonight</div>${(o.live.order||[]).map(k=>`<div class="tv-row"><b class="${k===now?'gold':''}">${esc(nameOf(k))}</b><span class="muted">${lv[k]?'✅ Done':k===now?'🔴 Live now':'Up next'}</span></div>`).join('')}</div>${tvStandings()}</div></div>`}
 function tvOver(){const l=localSeats().slice().sort((a,b)=>S.fans[b]-S.fans[a]);

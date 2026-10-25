@@ -258,7 +258,7 @@ const GRP=[[A_MUST,'Before you go live'],[A_CH,'Chances tonight'],[A_MIND,'Keep 
 let OPEN=null;
 function stHtml(s){if(!s||!s[1])return '';const k=s[0];return ` · <span class="${k==='ok'?'good':k==='b'?'bad':k==='w'?'warnt':'muted'}">${k==='ok'?'✓ ':k==='b'?'✗ ':''}${esc(s[1])}</span>`}
 function rowHtml(x){return `<div class="atr ${x.s&&x.s[0]==='b'?'bad':''}"><div class="atb"><b>${x.i} ${esc(x.h)}</b><div class="tiny muted">${esc(x.d)}${stHtml(x.s)}</div></div>${x.a?`<button class="mini ${x.a[2]?'on':''}" onclick="${x.a[1]}">${esc(x.a[0])}</button>`:''}</div>`}
-function attnPanel(){if(!S||S.phase!=='season'||mpLocked&&mpLocked())return '';let l;try{l=attnItems()}catch(e){console.warn(e);return ''}
+function attnPanel(){if(!S||S.phase!=='season'||typeof mpLockedQuiet==='function'&&mpLockedQuiet())return '';let l;try{l=attnItems()}catch(e){console.warn(e);return ''}
  if(!OPEN)OPEN={more:false,[A_MUST]:true,[A_CH]:true,[A_MIND]:true,[A_OFF]:true};
  /* on top: only what still blocks a clean go-live. Everything else waits behind one dropdown. */
  const top=l.filter(x=>x.g===A_MUST&&x.s[0]==='b');const rest=l.filter(x=>!top.includes(x));

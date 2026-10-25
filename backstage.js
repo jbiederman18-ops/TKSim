@@ -92,7 +92,7 @@ function wsOpp(m,W){const si=m.sides.findIndex(s=>s.includes(W.id));const o=m.si
 function wsMatchOk(m){return m&&m.sides&&m.type!=='squash'&&!(typeof isSp==='function'&&isSp(m))&&validMatch(m)&&!(typeof ocPending==='function'&&ocPending(m))}
 function wsCur(){const x=S&&S.wsr;return x&&x.w===AW()?x:null}
 function wsMatch(){const x=wsCur();if(!x||!x.ws)return null;const sl=(S.card.p||[]).find(sl=>sl.k==='match'&&sl.d&&wsMatchOk(sl.d)&&sl.d.sides.flat().includes(x.ws.id));if(!sl)return null;const W=S.w[x.ws.id],sp=WS.find(s=>s.k===x.ws.k);if(!W||!sp||W.inj||!wsFits(sp,W,sl.d,wsOpp(sl.d,W)))return null;return {m:sl.d,W,sp,ws:x.ws}}
-function wsRoll(m){if(!S||S.phase!=='season'||!m||!wsMatchOk(m)||(typeof mpLocked==='function'&&mpLocked()))return;
+function wsRoll(m){if(!S||S.phase!=='season'||!m||!wsMatchOk(m)||(typeof mpLockedQuiet==='function'&&mpLockedQuiet()))return;
  if(!(S.card.p||[]).some(sl=>sl.d===m))return;
  if(!S.wsr||S.wsr.w!==AW())S.wsr={w:AW(),seen:[]};const x=S.wsr;if(x.ws)return;
  const sig=m.sides.flat().slice().sort().join(',');if(x.seen.includes(sig))return;x.seen.push(sig);if(x.seen.length>12)x.seen=x.seen.slice(-12);

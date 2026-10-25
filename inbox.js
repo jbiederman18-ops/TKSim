@@ -26,7 +26,7 @@ const deskKind=s=>{const d=DESK.find(d=>d.test(s));return d?d.k:null};
 const isAsk=row=>/<button/.test(row);
 let B0=null;            /* the briefing's sections before the inbox takes its rows out */
 function allowed(){if(!S||S.phase!=='season')return false;if(typeof TV!=='undefined'&&TV)return false;if(typeof LIVE!=='undefined'&&LIVE)return false;
- if(ON()&&typeof myTurn==='function'&&!myTurn())return false;if(typeof mpLocked==='function'&&mpLocked())return false;return true}
+ if(ON()&&typeof myTurn==='function'&&!myTurn())return false;if(typeof mpLockedQuiet==='function'&&mpLockedQuiet())return false;return true}
 const idIn=(row,fn)=>{const m=row.match(new RegExp(fn+"\\('([^']+)'"));return m?m[1]:null};
 const firstName=w=>w.name.split(' ')[0];
 function pickL(arr,seed){let h=0;const s=String(seed)+'|'+AW();for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return arr[Math.abs(h)%arr.length]}

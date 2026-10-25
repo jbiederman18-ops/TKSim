@@ -1613,7 +1613,7 @@ html.lk-hy .lvps{font:800 italic 11px/1.2 'BC','Barlow Condensed',sans-serif;let
 html.lk-hy .lvmore{grid-column:1/-1;font:800 italic 13px 'BC','Barlow Condensed',sans-serif;color:var(--mut);text-transform:uppercase}
 html.lk-hy main.enter .lvp,html.lk-hy .sheet.in .lvp,html.lk-hy .sheet.swap .lvp{animation:ppvIn .38s cubic-bezier(.2,.8,.2,1) both}
 html.lk-hy .lvfo .lvp:nth-of-type(2){animation-delay:.08s}
-html.lk-hy .tv-live-sheet .lvph .pic{height:clamp(84px,9vw,180px)}
+html.lk-hy .tv-live-sheet .lvph .pic,html.lk-hy .tv-live-sheet .lvfo.one .lvph .pic{height:clamp(84px,9vw,180px)}html.lk-hy .tv-live-sheet .lvfo.three .lvph .pic,html.lk-hy .tv-live-sheet .lvfo.many .lvph .pic{height:clamp(62px,6.5vw,130px)}
 html.lk-hy .tv-live-sheet .lvpn{font-size:1.1em}
 html.lk-hy .tv-live-sheet .lvps{font-size:.6em}
 /* ---- big moments (fx.js): black screen, gold kicker tab, the name slammed onto a red plate ---- */
@@ -1676,7 +1676,7 @@ html.lk-hy .showcard.compact.bngp,.showcard.compact.bngp{background:linear-gradi
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v237';
+const APP_VERSION='v238';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -2734,6 +2734,8 @@ function brands(){return ON()?localSeats():['p','ai']}
 function simOn(st){st=st||S;const o=st&&st.online;return !!(o&&!o.party&&o.sim!==false&&(st.phase==='season'||st.phase==='over'))}
 function simWaiting(){const o=S.online||{};return localSeats().filter(k=>!(o.booked||{})[k])}
 function myTurn(){if(partyOn())return partyMyTurn();if(ON()&&S.phase==='rookies')return !(S.online.rk&&S.online.rk.p);if(ON()&&simOn())return S.phase==='over'||!(S.online.booked&&S.online.booked.p);return !ON()||S.online.turn==='p'}
+/* v238: the same check without the toast, for code that runs while a screen draws (it used to toast on every render once a party-night card was locked) */
+function mpLockedQuiet(){const t=toast;toast=()=>{};try{return mpLocked()}finally{toast=t}}
 function mpLocked(){if(partyOn())return partyLocked();if(ON()&&S.phase==='rookies'){if(myTurn())return false;const w=localSeats().filter(k=>!(S.online.rk||{})[k]);toast(`You're ready for the draft — waiting on ${w.map(nameOf).join(', ')}.`);return true}if(ON()&&simOn()){if(myTurn())return false;const w=simWaiting();toast(`Your card is locked in — waiting on ${w.length?w.map(nameOf).join(', '):'the week to air'}.`);return true}if(!ON()||S.online.turn==='p')return false;const who=nameOf(S.online.turn);toast(S.online.booked&&S.online.booked.p?`Your card is locked in — waiting on ${who}.`:`It's ${who}'s turn. You can look around; changes wait for your turn.`);return true}
 function freshCards(){popSnap();S.prod={};S.sell={};setTimeout(()=>{try{prodPinApply();render()}catch(e){}},0);if(!ON()){S.card={p:newCard().p,ai:null};/* the rival books early and advertises its main event (Forbidden Door waits for your dream matches) */if(S.phase==='season'&&S.week!==FD_WEEK)try{S.card.ai=autoBook('ai',curShow(),null)}catch(e){S.card.ai=null}return}S.card={};allSeats(()=>{S.card.p=newCard().p})}
 function bookingOrder(){const l=localSeats();const i=l.indexOf('p');return l.slice(i).concat(l.slice(0,i))}
@@ -4869,15 +4871,21 @@ function lockPromo(){S.card.p[PS.i].d=PS.p;PS=null;save();closeModal();render()}
  Skip jumps to the end. Opened later from Last Show it goes straight to the full results, with a Replay button. */
 let SRV=null;
 function srBest(o){let m=null;o.blocks.forEach(b=>{if(b.brand==='p')b.segs.forEach(x=>{if(!m||x.stars>m.stars)m=x})});return m}
-function showResults(rv){const o=S.last;if(!o)return;if(o.pairs)return openModal(mpResults(o));
+function showResults(rv){let o=S.last;if(!o)return;let rest=[];
+ /* v238: league weeks (party night included) get the same results layout as solo: your matchup up top, the others folded */
+ if(o.pairs){const mine=o.pairs.find(p=>p.blocks.some(b=>b.brand==='p'))||o.pairs[0];rest=o.pairs.filter(p=>p!==mine);
+  const ks=Object.keys(mine.ratings||{});
+  o={week:o.week,season:o.season,ppv:o.ppv,notes:o.notes||[],blocks:mine.blocks,ratings:mine.ratings,fans:mine.fans,hourWin:mine.hourWin,cash:mine.cash,
+   title:o.ppv?o.title:ks.map(k=>showNames()[k]||nameOf(k)).join(' vs ')+(ks.length===1?' · Bye week':''),league:true}}
  if(SRV)srClear();SRV=null;
- const segs=o.blocks.reduce((n,b)=>n+b.segs.length,0);if(rv===true&&segs)return srStage(o);
+ const segs=o.blocks.reduce((n,b)=>n+b.segs.length,0);if(rv===true&&segs&&!o.league)return srStage(o);
+ const ok=o.ratings?Object.keys(o.ratings).find(k=>k!=='p')||null:null,rvN=ok?nameOf(ok):S.rival;
  const best=srBest(o);
- openModal(`<div class="res-hd"><div class="ptop" style="justify-content:center"><span class="livebug"><b>Final</b><span>Week ${o.week}</span></span></div><div class="showname" style="--n:${lw(esc(o.title))}">${esc(o.title)}</div><div class="lfl"></div></div>${o.ratings?`<div class="score"><div class="me ${o.hourWin==='p'?'win':''}"><span>${esc(S.gm)}</span><div class="stars">${stars(o.ratings.p)}</div></div><i>VS</i><div class="${o.hourWin&&o.hourWin!=='p'?'win':''}"><span>${esc(S.rival)}</span><div class="stars">${stars(o.ratings.ai)}</div></div></div>${o.hourWin?`<div class="winban ${o.hourWin==='p'?'w':'l'}">${o.hourWin==='p'?'You win the night!':esc(S.rival)+' takes the night'}</div>`:''}`:''}
- ${segs?'<div class="center"><button class="mini sr-rep" onclick="showResults(true)">▶ Replay the reveal</button></div>':''}
+ openModal(`<div class="res-hd"><div class="ptop" style="justify-content:center"><span class="livebug"><b>Final</b><span>Week ${o.week}</span></span></div><div class="showname" style="--n:${lw(esc(o.title))}">${esc(o.title)}</div><div class="lfl"></div></div>${o.ratings&&o.ratings.p!=null?`<div class="score"><div class="me ${o.hourWin==='p'?'win':''}"><span>${esc(S.gm)}</span><div class="stars">${stars(o.ratings.p)}</div></div>${ok?`<i>VS</i><div class="${o.hourWin&&o.hourWin!=='p'?'win':''}"><span>${esc(rvN)}</span><div class="stars">${stars(o.ratings[ok])}</div></div>`:''}</div>${o.hourWin?`<div class="winban ${o.hourWin==='p'?'w':'l'}">${o.hourWin==='p'?'You win the night!':esc(nameOf(o.hourWin))+' takes the night'}</div>`:''}`:''}
+ ${segs&&!o.league?'<div class="center"><button class="mini sr-rep" onclick="showResults(true)">▶ Replay the reveal</button></div>':''}
  ${(()=>{/* v201: the night at a glance under the score; each segment leads with its headline note, the rest fold away */
   const fan=(v)=>`<b class="${v>=0?'good':'bad'}">${v>=0?'+':'−'}${fmtFans(Math.abs(v))}</b>`;const c=o.cash&&o.cash.p;
-  return `<div class="rsum">${o.fans?`<span>Fans ${fan(o.fans.p)} <i>vs ${esc(S.rival)} ${o.fans.ai>=0?'+':'−'}${fmtFans(Math.abs(o.fans.ai))}</i></span>`:''}${c?`<span>Show net <b class="${c.net>=0?'good':'bad'}">${c.net>=0?'+':'−'}${money(Math.abs(c.net))}</b></span>`:''}</div>`})()}
+  return `<div class="rsum">${o.fans&&o.fans.p!=null?`<span>Fans ${fan(o.fans.p)}${ok&&o.fans[ok]!=null?` <i>vs ${esc(rvN)} ${o.fans[ok]>=0?'+':'−'}${fmtFans(Math.abs(o.fans[ok]))}</i>`:''}</span>`:''}${c?`<span>Show net <b class="${c.net>=0?'good':'bad'}">${c.net>=0?'+':'−'}${money(Math.abs(c.net))}</b></span>`:''}</div>`})()}
  ${(()=>{const shown=new Set();const segRow=(b,s)=>{const ns=s.notes||[];ns.forEach(n=>shown.add(n));const lead=ns[0],rest=ns.slice(1);
    return `<div class="seg rseg ${s===best?'best':''}">${s===best?'<span class="motn">Best of the night</span>':''}<div class="rst"><div class="rsw"><div class="muted tiny">${esc(s.sub)}</div><div class="rsn">${esc(s.txt)}</div></div><div class="stars">${stars(s.stars)}</div></div>${lead?`<div class="note">${esc(lead)}</div>`:''}${rest.length?`<details class="rsx"><summary>+${rest.length} more</summary>${rest.map(n=>`<div class="note">${esc(n)}</div>`).join('')}</details>`:''}${b.brand==='p'?bdHtml(s.bd):''}</div>`};
   const block=b=>{const inner=`${flowHtml(b.flow)}${b.segs.length?b.segs.map(s=>segRow(b,s)).join(''):'<div class="muted">Nothing aired.</div>'}`;
@@ -4888,6 +4896,7 @@ function showResults(rv){const o=S.last;if(!o)return;if(o.pairs)return openModal
   return out+(extra.length?`<div class="card"><div class="h small">Also this week</div>${extra.map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`:'')})()}
  ${(()=>{const c=o.cash&&o.cash.p;if(!c)return '';const inner=cashCard(c).replace(/^<div class="card"><div class="h small">Box office<\/div>/,'').replace(/<\/div>$/,'');
   return `<details class="card rfold"><summary><span class="row sb" style="flex:1"><span class="h small" style="margin:0">Box office</span><span class="muted tiny">Tickets ${money(c.tix||0)} · Merch ${money(c.merch||0)}${c.ad?` · Ads ${money(c.ad)}`:''}${c.gate?` · PPV ${money(c.gate)}`:''}</span></span></summary>${inner}</details>`})()}
+ ${rest.map(p=>{const ks=Object.keys(p.ratings||{});return `<details class="card rfold"><summary><span class="row sb" style="flex:1"><span class="h small" style="margin:0">Elsewhere: ${ks.map(k=>esc(showNames()[k]||nameOf(k))).join(' vs ')}</span><span class="muted tiny">${ks.map(k=>`${esc(nameOf(k))} ${stars(p.ratings[k])}`).join(' · ')}</span></span></summary>${p.hourWin?`<div class="muted tiny" style="margin:4px 0 6px">🏆 ${esc(nameOf(p.hourWin))} won the ratings</div>`:''}${p.blocks.map(b=>`<div class="seg"><div class="row sb"><b>${esc(b.label)}</b>${b.rating!=null?`<span class="stars">${stars(b.rating)}</span>`:''}</div>${b.segs.map(x=>`<div class="rst" style="display:flex;gap:10px;margin-top:6px"><div style="flex:1;min-width:0"><div class="muted tiny">${esc(x.sub)}</div><div>${esc(x.txt)}</div></div><div class="stars" style="flex:none">${stars(x.stars)}</div></div>`).join('')||'<div class="muted">Nothing aired.</div>'}</div>`).join('')}</details>`}).join('')}
  <button class="btn" onclick="closeModal();go('home');if(S.crisis)setTimeout(openCrisis,250)">Continue</button>`)}
 /* v145: a star meter — five dim stars with a gold layer that sweeps across to the exact rating (¼ steps show as part of a
    star). Add .go (or sit inside a revealed TV segment) to start the sweep. Shared by the solo stage and the TV reveal. */
@@ -5226,7 +5235,7 @@ function mpIncoming(d){if(!d||!LMP||!S||!ON()||TV)return;if(d.state&&(d.rev||0)>
 }
  else{const before=JSON.stringify([S.names,S.online.show]);mpApplyNames(d.names,d.shows);if(JSON.stringify([S.names,S.online.show])!==before)changed=true}
  if(!changed)return;saveLocal();mpRemember();
- if(busy()){if(!MP_DEFER)MP_DEFER={wasMine};return} /* don't yank a screen out from under someone mid-edit — catch up when it closes */
+ if(partyOn()&&typeof partyBusy==='function'?partyBusy():busy()){if(!MP_DEFER)MP_DEFER={wasMine};return} /* don't yank a screen out from under someone mid-edit — catch up when it closes */
  render();
  if(partyOn()||simOn()){if(!partyAfterLoad()&&!wasMine&&myTurn()&&S.phase==='season')toast(`🔔 Week ${S.week} is open — book your show, ${S.gm}!`);return}
  if(!wasMine&&myTurn()){toast(`🔔 Your turn, ${S.gm}!`);if(S.phase!=='draft'&&mpUnseen()){mpMarkSeen();showResults()}}}
@@ -5354,14 +5363,6 @@ function mpOfficeCard(){if(!ON())return mpSetupCard()+partySetupCard();const ale
 /* results for a week with several head-to-head matchups (and maybe a bye) */
 function cashCard(c){if(!c)return '';const row=(l,v,good)=>v?`<div class="row sb"><span>${l}</span><b class="${good?'good':'bad'}">${good?'+':'−'}${money(v)}</b></div>`:'';
  return `<div class="card"><div class="h small">Box office</div><div class="bill" style="border:0;padding:0">${row('Tickets',c.tix,1)}${row('Merch',c.merch,1)}${row('Ad revenue',c.ad,1)}${row('PPV buys',c.gate,1)}${row('🌟 Instant-classic bonus',c.ovfCash||0,1)}${row('Sell-outs',c.spons,1)}${row('Venue bill',c.bill)}${row(`Production · ${esc(PROD[c.pk||'std'].n)}`,c.prod)}${row('Stipulations',c.stip)}${c.ceil?row('Over a sold-out house (half of it is lost)',c.ceil):''}<div class="row sb" style="border-top:1px solid var(--line);padding-top:6px;margin-top:6px"><span>Show net</span><b class="${c.net>=0?'good':'bad'}">${c.net>=0?'+':'−'}${money(Math.abs(c.net))}</b></div><div class="muted tiny" style="margin-top:4px">The TV deal and payroll settle at the end of the week — see the Office.</div></div></div>`}
-function mpResults(o){const mine=o.pairs.find(p=>p.blocks.some(b=>b.brand==='p'))||o.pairs[0];const rest=o.pairs.filter(p=>p!==mine);
- const pairHd=p=>{const ks=Object.keys(p.ratings);return `<div class="score">${ks.map((k,i)=>`${i?'<i>VS</i>':''}<div class="${k==='p'?'me':''}"><span>${esc(nameOf(k))}</span><div class="stars">${stars(p.ratings[k])}</div></div>`).join('')}</div>`};
- const fansHd=p=>`<div class="card"><div class="h small">Fan impact${p.hourWin?` · ${esc(nameOf(p.hourWin))} won the ratings`:Object.keys(p.ratings).length===1&&!o.ppv?' · bye week':''}</div>${Object.keys(p.fans).map(k=>`<div class="row sb"><span>${esc(nameOf(k))}</span><b class="${p.fans[k]>=0?'good':'bad'}">${p.fans[k]>=0?'+':''}${p.fans[k].toLocaleString()}</b></div>`).join('')}</div>`;
- const blocks=p=>p.blocks.map(b=>`<div class="card ${b.brand==='p'?'mine':'theirs'}"><div class="row sb"><div class="h small" style="margin:0">${esc(b.label)}</div>${b.rating!=null?`<div class="stars">${stars(b.rating)}</div>`:''}</div>${flowHtml(b.flow)}${b.segs.length?b.segs.map(s=>`<div class="seg"><div class="muted tiny">${esc(s.sub)}</div><div>${esc(s.txt)}</div><div class="stars">${stars(s.stars)}</div>${b.brand==='p'?bdHtml(s.bd):''}${s.notes.map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`).join(''):'<div class="muted">Nothing aired.</div>'}</div>`).join('');
- return `<div class="res-hd"><div class="kicker"><i></i>Week ${o.week} · Final results</div><div class="showname" style="--n:${lw(esc(o.title))}">${esc(o.title)}</div></div>${pairHd(mine)}${blocks(mine)}${fansHd(mine)}${cashCard(mine.cash&&mine.cash.p)}
- ${rest.map(p=>`<details class="card"><summary class="h small" style="margin:0">Elsewhere: ${Object.keys(p.ratings).map(k=>`${esc(nameOf(k))} ${stars(p.ratings[k])}`).join(' vs ')}</summary>${blocks(p)}${fansHd(p)}</details>`).join('')}
- ${o.notes.length?`<div class="card"><div class="h small">Storylines &amp; news</div>${o.notes.map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`:''}
- <button class="btn" onclick="closeModal();go('home');if(S.crisis)setTimeout(openCrisis,250)">Continue</button>`}
 /* air every matchup this week, then advance the week once */
 function mpAirWeek(){const wk=S.week,show=curShow();const L={week:wk,season:S.season,ppv:show.ppv,title:show.ppv?show.name:`Week ${wk} · ${nSeats()>2?'League night':showNames().p+' vs '+showNames().ai}`,pairs:[],notes:[]};
  pairings(wk,nSeats()).forEach(([x,y])=>asPair(x,y,()=>{const out=airPair();const f=k=>k==='p'?x:k==='ai'?(y||k):k;
