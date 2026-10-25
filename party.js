@@ -333,8 +333,8 @@ function tvWeek(){const sh=curShow(),o=S.online;const v=venueOf();const party=o.
  const pairs=pairings(S.week,nSeats());
  const gm=s=>{const k=localKey(s),lk=(o.booked||{})[k],up=!party&&o.turn===k;return `<div class="tv-gm ${lk?'lk':''}"><div class="tv-show">${esc(sh.ppv?sh.name:showNames()[k]||'')}</div><b>${esc(nameOf(k))}</b><div class="tv-lock">${lk?'✅ Locked in':up?'🟡 Booking now':party?'✏️ Booking…':'⏳ Waiting for their turn'}</div></div>`};
  return `<div class="tv-grid"><div><div class="card showcard ${sh.ppv?'ppv':''} tv-poster"><div class="wm">${esc(sh.ppv?sh.name:v[1].split(',')[0])}</div><div class="kicker"><i></i>Week ${S.week} of ${SEASON}${sh.ppv?' · Pay-per-view':' · Ratings war'} · ${tvPartyTag()}</div><div class="showname">${esc(sh.ppv?sh.name:'Week '+S.week)}</div><div class="venue">${sh.ppv?'<b>Live on pay-per-view</b>':`<b>${esc(v[0])}</b> · ${esc(v[1])}`}</div></div>
- <div class="tv-match">${pairs.map(([a,b])=>b?`<div class="tv-pair">${gm(a)}<div class="vs">VS</div>${gm(b)}</div>`:`<div class="tv-pair bye">${gm(a)}<div class="tv-byetag">Bye week — airs solo</div></div>`).join('')}</div>
- <p class="muted center">${party?"Book your show on your phone and go live. When everyone's locked in, the results play here.":'The league is taking turns. Start party night from any GM\'s Office to book together.'}</p></div>
+ <div class="tv-match">${allIn()?`<div class="tv-pair tv-all" style="grid-template-columns:repeat(${nSeats()-1},minmax(0,1fr) auto) minmax(0,1fr)">${seatIds().map((k,i)=>(i?'<div class="vs">VS</div>':'')+gm(k)).join('')}</div>`:pairs.map(([a,b])=>b?`<div class="tv-pair">${gm(a)}<div class="vs">VS</div>${gm(b)}</div>`:`<div class="tv-pair bye">${gm(a)}<div class="tv-byetag">Bye week — airs solo</div></div>`).join('')}</div>
+ <p class="muted center">${allIn()?'Every show competes every week — 1st gets the biggest fan bump, last loses some. ':''}${party?"Book your show on your phone and go live. When everyone's locked in, the results play here.":'The league is taking turns. Start party night from any GM\'s Office to book together.'}</p></div>
  <div>${tvStandings()}<div class="card"><div class="h small">The Wire</div>${S.news.slice(-6).reverse().map(n=>`<div class="news"><span class="muted">W${n.w}</span> ${esc(n.t)}</div>`).join('')}</div></div></div>`}
 /* a GM is live: show exactly what's on their phone — the scene, the choices, then how the call played out */
 function tvSafe(html){const t=document.createElement('template');t.innerHTML=String(html||'');
@@ -356,11 +356,11 @@ function tvRevealPairs(){const L=S.last;return (L.pairs||[{blocks:L.blocks,ratin
 function tvRevealHtml(){const L=S.last,R=TV.reveal,pairs=tvRevealPairs(),pr=pairs[R.pi];R.built=R.key+':'+R.pi;
  const cols=pr.blocks.filter(b=>b.brand!=='x'),x=pr.blocks.find(b=>b.brand==='x');
  const col=(b,ci)=>`<div class="rv-col"><div class="rv-hd"><div class="rv-show">${esc(b.label)}</div><div class="rv-run" id="rvr${ci}">—</div></div>${b.segs.map((s,si)=>`<div class="rv-seg" id="rv-${ci}-${si}" data-st="${s.stars}"><div class="muted tiny">${si===b.segs.length-1?'<b class="gold">MAIN EVENT</b> · ':''}${esc(s.sub)}</div><div class="rv-txt">${esc(s.txt)}</div><div class="rv-stars">${starMeter(s.stars)}</div>${s.notes.slice(0,3).map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`).join('')||'<div class="muted">Nothing aired.</div>'}</div>`;
- const ks=Object.keys(pr.ratings);const best=ks.slice().sort((a,b)=>pr.ratings[b]-pr.ratings[a])[0];
- return `<div id="rv" class="rv"><div class="rv-top"><div class="kicker"><i></i>Week ${L.week} · ${pairs.length>1?`Matchup ${R.pi+1} of ${pairs.length}`:'Results'}</div><div class="showname">${esc(L.ppv?L.title:ks.map(k=>showNames()[k]||nameOf(k)).join(' vs '))}</div></div>
- ${R.pi===0&&L.deals&&L.deals.length?dealRevealHtml(L.deals):''}<div class="rv-cols">${cols.map((b,ci)=>(ci?'<div class="vs rv-vs">VS</div>':'')+col(b,ci)).join('')}</div>
+ const ks=Object.keys(pr.ratings);const best=ks.slice().sort((a,b)=>pr.ratings[b]-pr.ratings[a])[0];const many=ks.length>2,ORD=['1st','2nd','3rd','4th'];
+ return `<div id="rv" class="rv"><div class="rv-top"><div class="kicker"><i></i>Week ${L.week} · ${pairs.length>1?`Matchup ${R.pi+1} of ${pairs.length}`:'Results'}</div><div class="showname">${esc(L.ppv?L.title:many?'League night':ks.map(k=>showNames()[k]||nameOf(k)).join(' vs '))}</div></div>
+ ${R.pi===0&&L.deals&&L.deals.length?dealRevealHtml(L.deals):''}<div class="rv-cols${many?' rv-many':''}"${cols.length>2?` style="grid-template-columns:repeat(${cols.length-1},minmax(0,1fr) auto) minmax(0,1fr)"`:''}>${cols.map((b,ci)=>(ci?'<div class="vs rv-vs">VS</div>':'')+col(b,ci)).join('')}</div>
  ${x?`<div class="card rv-x"><div class="h small">${esc(x.label)}</div>${x.segs.map((s,si)=>`<div class="rv-seg" id="rv-x-${si}"><div class="rv-txt">${esc(s.txt)}</div><div class="muted tiny">${esc(s.sub)}</div><div class="rv-stars">${starMeter(s.stars)}</div>${s.notes.slice(0,2).map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`).join('')}</div>`:''}
- <div class="rv-final" id="rv-final"><div class="rv-scores">${ks.map(k=>`<div class="rv-score ${k===best&&ks.length>1?'win':''}"><span>${esc(nameOf(k))}</span><div class="rv-fs">${starMeter(pr.ratings[k])}</div><b class="${pr.fans[k]>=0?'good':'bad'}">${pr.fans[k]>=0?'+':''}${fmtFans(Math.abs(pr.fans[k])).replace(/^/,pr.fans[k]<0?'−':'')} fans</b></div>`).join('')}</div>
+ <div class="rv-final" id="rv-final"><div class="rv-scores">${(many?ks.slice().sort((a,b)=>pr.ratings[b]-pr.ratings[a]):ks).map(k=>`<div class="rv-score ${k===best&&ks.length>1?'win':''}">${many&&pr.places&&pr.places[k]?`<small class="rv-pl">${ORD[pr.places[k]-1]}</small>`:''}<span>${esc(nameOf(k))}</span><div class="rv-fs">${starMeter(pr.ratings[k])}</div><b class="${pr.fans[k]>=0?'good':'bad'}">${pr.fans[k]>=0?'+':''}${fmtFans(Math.abs(pr.fans[k])).replace(/^/,pr.fans[k]<0?'−':'')} fans</b></div>`).join('')}</div>
  <div class="rv-win">${ks.length>1?(pr.hourWin?`🏆 ${esc(nameOf(pr.hourWin))} wins the night!`:`🏆 ${esc(nameOf(best))} steals the show!`):'Bye-week show in the books.'}</div></div>
  <div class="rv-ctl"><button class="mini" onclick="tvRevealSkip()">Skip ▸▸</button></div></div>`}
 function tvRevealRun(){const R=TV.reveal,pr=tvRevealPairs()[R.pi];const cols=pr.blocks.filter(b=>b.brand!=='x'),x=pr.blocks.find(b=>b.brand==='x');
@@ -381,7 +381,8 @@ function tvRevealShow(st,instant){const el=document.getElementById(st.id);if(!el
 function tvRevealNext(){const R=TV&&TV.reveal;if(!R||!R.steps||!document.getElementById('rv'))return;clearTimeout(R.t);
  if(R.si>=R.steps.length){R.t=setTimeout(tvRevealAdvance,9000);return}
  const st=R.steps[R.si++];tvRevealShow(st,false);
- R.t=setTimeout(tvRevealNext,st.final?0:Math.min(7600,3600+st.n*1100))}
+ /* v239: three or four shows means more segments to get through, so each one moves a little quicker */
+ const sp=document.querySelector('#rv .rv-many')?.7:1;R.t=setTimeout(tvRevealNext,st.final?0:Math.round(Math.min(7600,3600+st.n*1100)*sp))}
 function tvRevealAdvance(){const R=TV&&TV.reveal;if(!R)return;clearTimeout(R.t);const n=tvRevealPairs().length;
  if(R.pi<n-1){R.pi++;R.si=0;R.built=null;render();return}
  TV.reveal=null;window.scrollTo(0,0);render()}

@@ -92,10 +92,12 @@ function gauntletPrize(b,m,notes){if(m.nc)return;const W=S.w[m.sides[m.winner][0
 
 /* ===================== FORBIDDEN DOOR: crossover dream matches ===================== */
 const otherBrand=b=>b==='p'?'ai':'p';
+/* v239: in an all-compete league each brand's dream matches are against its nominal rival (the next seat round) */
+const xoOther=b=>typeof allIn==='function'&&allIn()?localKey(oppOf(canonKey(b),S.week,nSeats())):otherBrand(b);
 /* v124: grudges from invasions this Forbidden Door season (both wrestlers still healthy and on opposite brands) */
 function xoSeeds(brand,used){const out=[];(S.xoSeed||[]).filter(x=>AW()-x.w<=4).slice().reverse().forEach(x=>{const A=S.w[x.a],B=S.w[x.b];
  if(out.length>=2||!A||!B||A.own!==brand||!B.own||B.own===brand||A.inj||B.inj||used.has(A.id)||out.some(o=>o.a===x.a||o.b===x.b))return;out.push({a:x.a,b:x.b});used.add(x.a)});return out}
-function xoAuto(brand,used,n){const seeded=xoSeeds(brand,used);if(seeded.length>=n)return seeded.slice(0,n);const other=otherBrand(brand);const theirs=new Set();((S.card&&S.card[other])||[]).forEach(sl=>{if(!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(id=>theirs.add(id));if(sl.k==='chal'&&sl.d.c)theirs.add(sl.d.c);if(sl.k==='xo'){theirs.add(sl.d.a);theirs.add(sl.d.b)}});
+function xoAuto(brand,used,n){const seeded=xoSeeds(brand,used);if(seeded.length>=n)return seeded.slice(0,n);const other=xoOther(brand);const theirs=new Set();((S.card&&S.card[other])||[]).forEach(sl=>{if(!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(id=>theirs.add(id));if(sl.k==='chal'&&sl.d.c)theirs.add(sl.d.c);if(sl.k==='xo'){theirs.add(sl.d.a);theirs.add(sl.d.b)}});
  const mineL=ownList(brand).filter(w=>!w.inj&&!used.has(w.id)).sort((a,b)=>b.pop-a.pop);const opp=ownList(other).filter(w=>!w.inj&&!theirs.has(w.id));const out=[];
  out.push(...seeded);mineL.splice(0,mineL.length,...mineL.filter(w=>!seeded.some(x=>x.a===w.id)));
  for(const A of mineL){if(out.length>=n)break;const c=opp.filter(o=>o.g===A.g&&!out.some(x=>x.b===o.id)).sort((x,y)=>(chemOpp(A,y)*2+y.pop)-(chemOpp(A,x)*2+x.pop))[0];if(c){out.push({a:A.id,b:c.id});used.add(A.id)}}
@@ -107,7 +109,7 @@ function openXo(i){if(mpLocked())return;const sl=S.card.p[i];const used=usedIn('
     onPick:b=>{if(!b)return openXo(i);S.card.p[i].d={a,b};save();closeModal();render();toast(`⚔️ Dream match signed: ${A.name} vs ${S.w[b].name}.`)}})}})}
 /* air the dream matches: neither GM controls both sides, so the winner is decided in the ring */
 function airXo(order,ctx,vals,extra,out){const segs=[];
- order.forEach(b=>{const other=otherBrand(b);(S.card[b]||[]).forEach(sl=>{if(sl.k!=='xo'||!sl.d)return;const A=S.w[sl.d.a];let B=S.w[sl.d.b];if(!A||A.own!==b||A.inj)return;
+ order.forEach(b=>{const other=xoOther(b);(S.card[b]||[]).forEach(sl=>{if(sl.k!=='xo'||!sl.d)return;const A=S.w[sl.d.a];let B=S.w[sl.d.b];if(!A||A.own!==b||A.inj)return;
   const busy=new Set();((S.card[other])||[]).forEach(x=>{if(x.d&&x.k==='match')x.d.sides.flat().forEach(id=>busy.add(id));if(x.d&&x.k==='chal'&&x.d.c)busy.add(x.d.c)});segs.forEach(s=>s.ids&&s.ids.forEach(id=>busy.add(id)));
   const notes=[];if(!B||B.own!==other||B.inj||busy.has(B.id)){const was=B;B=ownList(other).filter(w=>!w.inj&&!busy.has(w.id)&&w.g===A.g).sort((x,y)=>y.pop-x.pop)[0];if(!B)return;if(was)notes.push(`🔁 ${was.name} couldn't make it — ${B.name} steps up for ${nameOf(other)} instead.`)}
   const m={type:'singles',stip:'std',sides:[[A.id],[B.id]],winner:0,title:'',xo:1};const sc=w=>w.ring*.4+w.pop*.4+(w.mom||0)*2+R(0,25);m.winner=sc(B)>sc(A)?1:0;
@@ -126,7 +128,7 @@ const MANDS={
  tagdef:{n:'Successfully defend a tag or trios title',i:'🤝',ok:b=>Object.values(S.titles).some(t=>t.kind!=='singles'&&t.holders.length&&S.w[t.holders[0]]&&S.w[t.holders[0]].own===b)},
  rookie:{n:'Give a developing prospect a 3★ match',i:'🌱',ok:b=>ownList(b).some(w=>w.rookie&&!w.inj)},
  nosell:{n:"No Sell Out options (sponsors, price hikes, merch blitzes) until the PPV",i:'🙅',ok:()=>true,end:1},
- win2:{n:'Win the ratings war two weeks in a row',i:'📈',ok:()=>!ON()||nSeats()===2}};
+ win2:{n:'Win the ratings war two weeks in a row',i:'📈',ok:()=>!ON()||nSeats()===2||(typeof allIn==='function'&&allIn())}};
 const mandReward=()=>({cash:Math.round(econCap()*.3),fans:10000});
 function mandNew(b,notes){const np=nextPPVAfter(S.week-1);if(!np)return;S.mand=S.mand||{};const last=S.mand[b]&&S.mand[b].k;
  const l=Object.keys(MANDS).filter(k=>k!==last&&MANDS[k].ok(b));if(!l.length)return;const k=pick(l);const rw=mandReward();
