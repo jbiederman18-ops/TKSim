@@ -305,11 +305,16 @@ function tvQR(){try{const q=qrcode(0,'M');q.addData(tvJoinUrl());q.make();return
 function tvScale(){const z=TV?Math.max(1,Math.min(innerWidth/1920,innerHeight/1080)):1;const v=z>1.02?String(Math.round(z*100)/100):'';
  if(document.body.style.zoom!==v){document.body.style.zoom=v;document.body.style.setProperty('--tvz',v||'1')}}
 addEventListener('resize',()=>{try{tvScale()}catch(e){}});
+/* v242: shrink an element (CSS zoom) step by step until the TV picture needs no scrolling */
+/* how far the element's bottom runs past the bottom of the TV picture (CSS px in the page's zoomed space; the 24px keeps clear of Skip) */
+function tvPast(el){const bz=+(document.body.style.zoom||1),r=el.getBoundingClientRect();return r.height&&r.bottom>innerHeight-24*bz}
+function tvFit(el,max,min,prop){if(!el)return;max=max||1;min=min||.7;const set=z=>prop?el.style.setProperty(prop,z.toFixed(2)):(el.style.zoom=z===1?'':z.toFixed(2));let z=max;set(z);while(tvPast(el)&&z>min+.001){z=Math.max(min,z-.04);set(z)}}
 function tvRender(){document.body.classList.add('tv');tvScale();const app=$('#app');
  if(TV.reveal&&S&&S.last){if(document.getElementById('rv')&&TV.reveal.built===TV.reveal.key+':'+TV.reveal.pi)return;app.innerHTML=tvHeader()+`<main class="tv-main">${tvRevealHtml()}</main>`;tvRevealRun();return}
  let body;
  if(!S)body=tvWaiting();else if(Object.values(S.names||{}).filter(Boolean).length<nSeats())body=tvLobby();else if(S.phase==='rookies')body=tvRookies();else if(S.phase==='draft')body=tvDraft();else if(S.phase==='over')body=tvOver();else if(S.online&&S.online.live&&partyLiveNow())body=tvLive();else body=tvWeek();
- app.innerHTML=tvHeader()+`<main class="tv-main">${body}</main>`}
+ app.innerHTML=tvHeader()+`<main class="tv-main">${body}</main>`;
+ const ls=document.querySelector('.tv-live-sheet');if(ls){tvFit(ls,1.5,1,'--lz');setTimeout(()=>{if(ls.isConnected&&tvPast(ls))tvFit(ls,+(ls.style.getPropertyValue('--lz')||1.5),1,'--lz')},600)}}
 function tvWaiting(){return `<div class="tv-title center"><div class="kicker"><i></i>League ${esc(TV.code)}</div><div class="hero-t tv-hero">${TV.status==='missing'?'No league<br>found':'Tuning in…'}</div><p class="muted">${TV.status==='missing'?'Double-check the code (Office on any GM\'s phone shows it).':(window.TKO&&TKO.ready?'Connecting to the league.':'Waiting for online play to load. This screen needs an internet connection.')}</p>${TV.status==='missing'?'<button class="btn tv-go" onclick="tvStop();tvForm()">Try another code</button>':''}</div>`}
 function tvPartyTag(){return S.online&&S.online.party?'📺 Party night':'Taking turns'}
 function tvLobby(){const n=nSeats(),names=localSeats();
@@ -371,12 +376,14 @@ function tvRevealRun(){const R=TV.reveal,pr=tvRevealPairs()[R.pi];if(Object.keys
  if(x)x.segs.forEach((s,i)=>steps.push({id:'rv-x-'+i,n:s.notes.length}));
  steps.push({id:'rv-final',n:0,final:true});R.steps=steps;R.si=R.si||0;
  for(let i=0;i<R.si&&i<steps.length;i++)tvRevealShow(steps[i],true);
- tvRevealNext()}
+ tvFit(document.querySelector('#rv .rv-cols'),1,.72);tvRevealNext()}
 /* v145: once both shows' segments in the same slot are up, the better one wins the round */
 function tvRoundWin(i,instant){const els=[...document.querySelectorAll('#rv .rv-col')].map((c,ci)=>document.getElementById(`rv-${ci}-${i}`));
  if(els.length<2||els.some(e=>!e||!e.classList.contains('on')))return;const v=els.map(e=>+e.dataset.st),m=Math.max(...v);if(v.filter(x=>Math.abs(x-m)<.01).length>1)return;
  const w=els[v.indexOf(m)];setTimeout(()=>{if(w.isConnected)w.classList.add('rvw')},instant?0:2300)}
-function tvRevealShow(st,instant){const el=document.getElementById(st.id);if(!el)return;el.classList.add('on');if(instant)el.classList.add('now');if(st.ci!=null){const i=+st.id.split('-').pop();tvRoundWin(i,instant)}
+function tvRevealShow(st,instant){const el=document.getElementById(st.id);if(!el)return;el.classList.add('on');
+ if(st.ci!=null&&el.closest('.rv-col')){el.closest('.rv-col').querySelectorAll('.rv-seg.cur').forEach(x=>x.classList.remove('cur'));el.classList.add('cur');requestAnimationFrame(()=>tvFit(document.querySelector('#rv .rv-cols'),1,.72))}
+ if(st.final&&!document.querySelector('#rv.ry')){const rv=document.getElementById('rv');if(rv)rv.classList.add('fin');try{window.scrollTo(0,0)}catch(e){}}if(instant)el.classList.add('now');if(st.ci!=null){const i=+st.id.split('-').pop();tvRoundWin(i,instant)}
  if(st.ci!=null){const segs=[...document.querySelectorAll(`[id^="rv-${st.ci}-"].on`)].map(e=>+e.dataset.st);const r=document.getElementById('rvr'+st.ci);if(r&&segs.length)r.innerHTML=`<span class="muted tiny">SO FAR</span> <span class="stars">${stars(avg(segs))}</span>`}
  if(!instant)try{el.scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}}
 function tvRevealNext(){const R=TV&&TV.reveal;if(!R||!R.steps||!document.getElementById('rv'))return;clearTimeout(R.t);
@@ -429,7 +436,12 @@ function ryHtml(L,R,pr){const P=ryPlan(pr),x=pr.blocks.find(b=>b.brand==='x');co
   ${pod[3]?`<div class="ry-4th">${RY_ORD[P.pl[pod[3]]-1]} · <b>${esc(nameOf(pod[3]))}</b> · <span class="stars">${stars(pr.ratings[pod[3]])}</span> · ${ryFans(pr.fans[pod[3]])}</div>`:''}
   ${mew?`<div class="ry-mew">${esc(mew)}</div>`:''}</section>
  <div class="rv-ctl"><button class="mini" onclick="tvRevealSkip()">Skip ▸▸</button></div></div>`}
-function ryStage(st,lbl){const rv=document.getElementById('rv');if(!rv)return;rv.dataset.stage=st;const l=document.getElementById('ry-lbl');if(l)l.textContent=lbl;try{window.scrollTo({top:0,behavior:'smooth'})}catch(e){window.scrollTo(0,0)}}
+function ryStage(st,lbl){const rv=document.getElementById('rv');if(!rv)return;rv.dataset.stage=st;const l=document.getElementById('ry-lbl');if(l)l.textContent=lbl;try{window.scrollTo(0,0)}catch(e){}
+ const sec=rv.querySelector(`[data-sec="${st}"]`);rv.querySelectorAll('section').forEach(x=>{if(x!==sec)x.style.zoom=''});requestAnimationFrame(()=>tvFit(sec,1,.7));
+ /* the falling show and the banner land a moment later: fit again once they have */
+ setTimeout(()=>{if(sec.isConnected&&rv.dataset.stage===st&&tvPast(sec))tvFit(sec,+(sec.style.zoom||1),.7)},2000)}
+/* refit the stage on screen once a falling show has landed */
+function ryRefit(){setTimeout(()=>{const rv=document.getElementById('rv');const sec=rv&&rv.querySelector(`[data-sec="${rv.dataset.stage}"]`);if(sec&&tvPast(sec))tvFit(sec,+(sec.style.zoom||1),.7)},1400)}
 function ryKnot(d){const k=document.getElementById('ry-knot');if(k)k.style.left=`${50-clamp(d*45,-40,40)}%`;const l=document.getElementById('ry-lead');if(l)l.textContent=Math.abs(d)<.03?'Dead level':d>0?'◂ Pulling ahead':'Pulling ahead ▸'}
 function ryAvg(b,withMain){const segs=withMain?b.segs:ryUnder(b);if(!segs.length)return 0;let s=0,w=0;segs.forEach((x,i)=>{const ww=withMain&&i===segs.length-1?1.6:1;s+=x.stars*ww;w+=ww});return s/w}
 function ryRun(R,pr){const P=ryPlan(pr),x=pr.blocks.find(b=>b.brand==='x');const steps=[];const sp=.7;
@@ -439,17 +451,17 @@ function ryRun(R,pr){const P=ryPlan(pr),x=pr.blocks.find(b=>b.brand==='x');const
  if(x)x.segs.forEach((s,i)=>steps.push({id:'rv-x-'+i,n:s.notes.length}));
  P.out.forEach((k,i)=>{steps.push({ms:2200,fn:()=>{ryStage('elim',`${RY_ORD[P.pl[k]-1]} place`);document.querySelectorAll('#rv .ry-elim').forEach(e=>e.classList.toggle('cur',e.id==='ry-e-'+i))}});
   if(document.getElementById('ry-em-'+i))steps.push({id:'ry-em-'+i,n:3,ms:4200});
-  steps.push({ms:3000,fn:inst=>{const e=document.getElementById('ry-e-'+i);if(e)e.classList.add('gone',...(inst?['now']:[]))}})});
+  steps.push({ms:3000,fn:inst=>{const e=document.getElementById('ry-e-'+i);if(e){e.classList.add('gone',...(inst?['now']:[]));ryRefit()}}})});
  const [A,B]=P.top2,bA=P.cols.find(b=>b.brand===A),bB=P.cols.find(b=>b.brand===B);
  const so=(j,v)=>{const e=document.getElementById('ry-so-'+j);if(e)e.innerHTML=`<span class="muted tiny">SO FAR</span> <span class="stars">${stars(v)}</span>`};
  steps.push({ms:3200,fn:()=>{ryStage('final','Final two');const a=ryAvg(bA,false),b=ryAvg(bB,false);so(0,a);so(1,b);ryKnot(a-b)}});
  steps.push({id:'ry-f-0',n:3,ms:5200,after:()=>{const a=ryAvg(bA,true),b=ryAvg(bB,false);so(0,a);ryKnot(a-b)}});
  steps.push({id:'ry-f-1',n:3,ms:5600,after:()=>{const d=pr.ratings[A]-pr.ratings[B];so(0,pr.ratings[A]);so(1,pr.ratings[B]);ryKnot(Math.max(d,.15));
   const w=document.getElementById(d>=0?'ry-f-0':'ry-f-1');if(w)setTimeout(()=>{if(w.isConnected)w.classList.add('rvw')},1800)}});
- steps.push({ms:5200,fn:()=>{ryStage('out','2nd place');const m=document.getElementById('ry-em-x');if(m)m.classList.add('on','now');const e=document.getElementById('ry-e-x');if(e){e.classList.add('cur');setTimeout(()=>{if(e.isConnected)e.classList.add('gone')},1600)}}});
+ steps.push({ms:5200,fn:()=>{ryStage('out','2nd place');const m=document.getElementById('ry-em-x');if(m)m.classList.add('on','now');const e=document.getElementById('ry-e-x');if(e){e.classList.add('cur');setTimeout(()=>{if(e.isConnected){e.classList.add('gone');ryRefit()}},1600)}}});
  steps.push({id:'rv-final',final:true,fn:()=>ryStage('podium','Final')});
  /* stars reveal through tvRevealShow (so title celebrations and big-star bursts still fire); a step's after() runs once its stars are up */
  steps.forEach(st=>{if(st.id&&!st.fn){const id=st.id,aft=st.after;st.fn=inst=>{tvRevealShow({id,ci:st.ci},inst);if(aft)aft()}}});
  steps.forEach(st=>{if(st.ms==null&&!st.final)st.ms=Math.round(Math.min(7600,3600+(st.n||0)*1100)*sp)});
  steps[steps.length-1].ms=0;
- R.steps=steps;R.si=R.si||0;for(let i=0;i<R.si&&i<steps.length;i++)steps[i].fn(true);tvRevealNext()}
+ R.steps=steps;R.si=R.si||0;for(let i=0;i<R.si&&i<steps.length;i++)steps[i].fn(true);tvFit(document.querySelector('#rv [data-sec="under"]'),1,.72);tvRevealNext()}

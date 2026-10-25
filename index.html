@@ -557,7 +557,7 @@ body.tv main.tv-main{max-width:1600px;padding:clamp(16px,2.2vw,44px) clamp(16px,
 @keyframes tvpick{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1.03)}}
 .tv-picked{display:flex;align-items:center;gap:14px;margin:0 0 16px;padding:10px 16px;border:1px solid var(--gold3);border-left:5px solid var(--gold);background:rgba(255,200,80,.08)}
 .tv-picked small{display:block;color:var(--gold);font:800 .62em/1.3 'BC',sans-serif;letter-spacing:.14em;text-transform:uppercase}
-.tvp-k{flex:none;width:1.8em;height:1.8em;display:flex;align-items:center;justify-content:center;background:var(--gold);color:#16120a;font:900 italic 1em 'BC',sans-serif;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}.tv-live-sheet .choice{margin:10px 0}.tv-live-sheet .scene{font-size:1.1em}.tv-live-sheet .face,.tv-live-sheet .duo img{max-height:120px}
+.tvp-k{flex:none;width:1.8em;height:1.8em;display:flex;align-items:center;justify-content:center;background:var(--gold);color:#16120a;font:900 italic 1em 'BC',sans-serif;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}.tv-live-sheet .choice{margin:10px 0}.tv-live-sheet .face,.tv-live-sheet .duo img{max-height:120px}
 .tv-row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:clamp(16px,1.3vw,24px)}
 body.tv .card .h.small{font-size:clamp(17px,1.4vw,26px)}
 /* the reveal */
@@ -596,6 +596,28 @@ body.tv .card .h.small{font-size:clamp(17px,1.4vw,26px)}
 .rv-many .rv-vs{font-size:clamp(22px,2vw,40px);margin-top:60px}.rv-many .rv-txt{font-size:clamp(15px,1.15vw,24px)}.rv-many .rv-stars{font-size:clamp(20px,1.8vw,36px)}.rv-many .rv-show{font-size:clamp(16px,1.4vw,28px)}
 .rv-pl{display:block;font:800 italic clamp(14px,1.1vw,22px) 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}.rv-score.win .rv-pl{color:var(--gold)}
 .tv-all .tv-gm b{font-size:clamp(20px,1.8vw,36px)}
+/* v242: TV legibility. The live sheet is the phone's own markup (fixed px sizes), so it's scaled as a whole (zoom, fitted to the
+   screen by tvFit); small labels get a TV floor; the reveal only shows notes for each show's latest segment and fits the screen */
+body.tv .tv-live-sheet>*:not(.tv-picked){zoom:var(--lz,1.5)}body.tv .tv-live-sheet .choice .muted.tiny,body.tv .tv-live-sheet .choice .tiny{font-size:14px}body.tv .tv-live-sheet .callq,body.tv .tv-live-sheet .lvps{font-size:14px}
+body.tv .kicker{font-size:clamp(15px,1vw,22px)}
+body.tv .tiny:not(.tv-live-sheet .tiny),body.tv .muted.tiny:not(.tv-live-sheet .tiny){font-size:clamp(15px,.9vw,20px)}
+body.tv .news{font-size:clamp(16px,1.05vw,22px)}
+body.tv .tv-row .muted,body.tv .tv-row .muted.tiny,body.tv .card.center>.muted,body.tv .ry-fr,body.tv .tv-poster .venue,body.tv .news .muted{font-size:clamp(16px,1.1vw,22px)}body.tv .live-tag{font-size:clamp(14px,1vw,22px)}body.tv .ry-fr .muted{font-size:inherit}body.tv .rv:not(.fin):not(.ry) .rv-final{display:none}
+body.tv .tv-last .muted,body.tv .tv-qr .muted,body.tv .tv-title p.muted,body.tv main.tv-main>p.muted,body.tv .tv-grid p.muted{font-size:clamp(16px,1.1vw,24px)}
+body.tv .tv-dtop .tv-last .wc{width:clamp(100px,6.4vw,140px);zoom:1.5}
+body.tv .rv-top .showname{font-size:clamp(40px,3.8vw,76px)}
+body.tv .rv-col .rv-seg .note{display:none}body.tv .rv-col .rv-seg.cur .note{display:block}
+body.tv .rv-col .rv-seg{margin-bottom:8px;padding-top:clamp(8px,.8vw,14px);padding-bottom:clamp(8px,.8vw,14px);display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"sub stars" "txt stars" "note note";column-gap:clamp(10px,1vw,20px);align-items:end}
+body.tv .rv-col .rv-seg>.muted.tiny{grid-area:sub;padding-right:9em}body.tv .rv-col .rv-seg>.rv-txt{grid-area:txt}body.tv .rv-col .rv-seg>.rv-stars{grid-area:stars;margin:0;align-self:end;font-size:clamp(22px,1.9vw,38px)}body.tv .rv-col .rv-seg>.note{grid-column:1/-1}
+/* past and upcoming segments sit as one compact line (name + stars); only the segment being revealed opens up */
+body.tv .rv-col .rv-seg:not(.cur){grid-template-areas:"txt stars";padding-top:clamp(6px,.5vw,10px);padding-bottom:clamp(6px,.5vw,10px);align-items:center}
+body.tv .rv-col .rv-seg:not(.cur)>.muted.tiny{display:none}body.tv .rv-col .rv-seg:not(.cur)>.rv-txt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:clamp(15px,1.05vw,22px)}body.tv .rv-col .rv-seg:not(.cur)>.rv-stars{font-size:clamp(18px,1.4vw,28px)}
+body.tv .rv-col .rv-seg:not(.cur)::after{display:none}
+body.tv .rv-many .rv-col .rv-seg>.muted.tiny{padding-right:0}body.tv .rv-many .rv-col .rv-seg.cur{grid-template-columns:minmax(0,1fr);grid-template-areas:"sub" "txt" "stars" "note"}body.tv .rv-many .rv-col .rv-seg>.rv-stars{align-self:start}body.tv .rv-many .rv-seg::after{content:'▲'}
+body.tv .rv.fin .rv-cols,body.tv .rv.fin .rv-x,body.tv .rv.fin .rv-deal{display:none}body.tv .rv.fin .rv-final{margin-top:clamp(20px,4vw,80px)}body.tv .rv.fin .rv-score{min-width:min(100%,420px)}
+body.tv .ry-ban{font-size:clamp(44px,4.6vw,92px)}body.tv .ry-elim{min-height:0}body.tv .ry-ropes{margin-top:clamp(10px,1.2vw,22px);gap:clamp(10px,1vw,18px)}body.tv .ry-fall{margin-top:calc(-1 * clamp(40px,4vw,70px))}
+body.tv .ry-pk,body.tv .ry-tag,body.tv .ry-fh{font-size:clamp(14px,1vw,20px)}
+body.tv main.tv-main{padding-bottom:16px}body.tv .ry-elim.gone .ry-fall{transform:translateY(clamp(24px,2.4vw,48px)) rotate(-5deg);opacity:.55}
 .ry section{display:none}.ry[data-stage="under"] [data-sec="under"],.ry[data-stage="elim"] [data-sec="elim"],.ry[data-stage="final"] [data-sec="final"],.ry[data-stage="out"] [data-sec="out"],.ry[data-stage="podium"] [data-sec="podium"]{display:block;animation:rise .45s both}
 .ry .ry-col .rv-hd{box-shadow:inset 0 -5px 0 var(--c)}
 .ry-elim{display:none;position:relative;min-height:clamp(420px,46vw,820px)}.ry-elim.cur{display:block}
@@ -1649,9 +1671,7 @@ html.lk-hy .lvps{font:800 italic 11px/1.2 'BC','Barlow Condensed',sans-serif;let
 html.lk-hy .lvmore{grid-column:1/-1;font:800 italic 13px 'BC','Barlow Condensed',sans-serif;color:var(--mut);text-transform:uppercase}
 html.lk-hy main.enter .lvp,html.lk-hy .sheet.in .lvp,html.lk-hy .sheet.swap .lvp{animation:ppvIn .38s cubic-bezier(.2,.8,.2,1) both}
 html.lk-hy .lvfo .lvp:nth-of-type(2){animation-delay:.08s}
-html.lk-hy .tv-live-sheet .lvph .pic,html.lk-hy .tv-live-sheet .lvfo.one .lvph .pic{height:clamp(84px,9vw,180px)}html.lk-hy .tv-live-sheet .lvfo.three .lvph .pic,html.lk-hy .tv-live-sheet .lvfo.many .lvph .pic{height:clamp(62px,6.5vw,130px)}
-html.lk-hy .tv-live-sheet .lvpn{font-size:1.1em}
-html.lk-hy .tv-live-sheet .lvps{font-size:.6em}
+
 /* ---- big moments (fx.js): black screen, gold kicker tab, the name slammed onto a red plate ---- */
 html.lk-hy #fxo{background:rgba(9,9,10,.97)}
 html.lk-hy #fxo .fl{background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.35),transparent 55%)}
@@ -1712,7 +1732,7 @@ html.lk-hy .showcard.compact.bngp,.showcard.compact.bngp{background:linear-gradi
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v241';
+const APP_VERSION='v242';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
