@@ -23,7 +23,7 @@ const reEsc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 function bubbleParse(text,owner,names,cam){
  const sides=Object.keys(names).filter(k=>names[k]).sort((x,y)=>names[y].length-names[x].length);
  const who=t=>{for(const s of sides){if(new RegExp('^'+reEsc(names[s])+"(?:'s)?\\b").test(t))return s}return null};
- const strip=(t,s)=>new RegExp('^'+reEsc(names[s])+"'s\\b").test(t)?t:t.replace(new RegExp('^'+reEsc(names[s])+'\\s+'),'');
+ const strip=(t,s)=>t===names[s]?'':new RegExp('^'+reEsc(names[s])+"'s\\b").test(t)?t:t.replace(new RegExp('^'+reEsc(names[s])+'[\\s,]+'),'');
  const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
  const parts=[];const re=/"([^"]+)"/g;let last=0,m;
  while((m=re.exec(text))){const q=m[1].trim();if(/^[a-z]/.test(q))continue;
@@ -37,7 +37,7 @@ function bubbleParse(text,owner,names,cam){
   if(p.q){beats.push({side:speaker,q:p.q});return}
   if(i>lastQ&&/^[a-z]/.test(p.n)){const sn=p.n.split(/(?<=[.!?…])\s+/);beats.push({side:speaker,act:sn[0].replace(/[.]$/,'')});if(sn[1])react=sn[1];return}
   if(i>lastQ){react=p.n.split(/(?<=[.!?…])\s+/)[0];return}
-  let g=null;const push=()=>{if(!g)return;const t=g.t.join(' ').replace(/[.:]$/,'');beats.push(g.side?{side:g.side,act:t}:{cam:t});if(g.side)speaker=g.side};
+  let g=null;const push=()=>{if(!g)return;const t=g.t.join(' ').replace(/[.:]$/,'').trim();if(g.side){if(t)beats.push({side:g.side,act:t});speaker=g.side}else if(t)beats.push({cam:t})};
   p.n.split(/(?<=[.!?…])\s+/).forEach(s=>{const w=who(s);
    if(w&&(!g||g.side!==w)){push();g={side:w,t:[strip(s,w)]}}
    else if(w)g.t.push(cap(strip(s,w)));
