@@ -113,6 +113,29 @@ function sdTap(){if(!PS||!PS.q)return;if(TYPE){TYPE.fin();return}
 document.addEventListener('keydown',e=>{if(!PS||!PS.q||(e.key!==' '&&e.key!=='Enter'))return;if(e.target&&e.target.closest&&e.target.closest('button,input,select,textarea'))return;if(!document.getElementById('sdbox'))return;e.preventDefault();sdTap()});
 function queue(pages,after){if(!pages.length){if(after)after();return}PS.q=pages;PS.qi=0;PS.after=after||null;showPage()}
 
+/* ---------- what your wrestler actually says ----------
+   v248: the menu shows tactics ("Go personal"), so the words behind a call are only in how it went. When that
+   doesn't show your wrestler at all — most misses ("Frazer laughs. "Name one."") — the reaction would answer
+   something nobody heard. So your wrestler first delivers the call: the line written for it (from its landed
+   version), else a line in the call's own label, else the attempt itself ("goes to jump them from behind"). */
+const lead=(t,A)=>{t=t.replace(/^\p{Extended_Pictographic}\S*\s*/u,'').split(/:\s/)[0].trim().replace(/[.!]$/,'');return A&&t.startsWith(A.name)?t:t.charAt(0).toLowerCase()+t.slice(1)};
+function attempt(c,ok,ctx,shown){if(c.wait||c.drop||c.close)return [];
+ const N=namesOf(ctx),A=ctx.A;const parse=t=>bubbleParse(t,'a',N).beats;
+ if(parse(shown).some(b=>b.side==='a'))return [];
+ /* the call as written, from its landed version: the lines up to their first spoken line */
+ for(const t of [c.ok,c.g].filter(Boolean).map(t=>fill(t,ctx)).filter(t=>t!==shown)){const bs=parse(t);const qi=bs.findIndex(b=>b.side==='a'&&b.q!=null);if(qi<0)continue;
+  const sl=bs.slice(0,qi+1).filter(b=>b.side==='a'&&(b.q!=null||b.act!=null));
+  /* on a miss, a long lead-in ("swings the belt flush…") already describes it working — use the call itself instead */
+  if(!ok&&sl.some(b=>b.act!=null&&b.act.split(/\s+/).length>4))break;
+  return sl}
+ if(ok)return [];
+ const lab=fill(c.lt||c.t||'',ctx);const m=lab.match(/"([^"]+)"/);
+ if(m&&!/^[a-z]/.test(m[1]))return [{side:'a',q:m[1].trim()}];
+ const l=lead(lab,A);if(!l||/^(both|they|the|a|an|nobody|everyone|g[a-z]\d)\b/i.test(l)||l.startsWith(A.name))return [];
+ return [{side:'a',act:'goes to '+l}]}
+const beatPages=bs=>bs.flatMap(b=>b.q!=null?chunks(b.q).map(t=>({side:'a',q:t})):[{side:'a',act:b.act}]);
+const beatText=(bs,A)=>bs.map(b=>b.q!=null?`"${b.q}"`:`${A.name} ${b.act}.`).join(' ');
+
 /* ---------- the call menu ---------- */
 function menuHtml(){const {scene,ctx}=PS;
  const bar=scene.ex&&typeof exCall==='function'?callBar(...exCall(scene,ctx)):callBar(scene.rt?'Fire back':scene.hj?'👥 The crowd has a mind of its own':'🎧 Your call',scene.rt?`What does ${esc(ctx.A.name)} say back?`:`What does ${esc(ctx.A.name)} do?`);
@@ -140,7 +163,9 @@ psChoose=function(ci){if(!PS||PS.done||PS.q)return;const c=PS.scene.ch[ci];if(!c
   if(tac&&PS.scene.ex){tac.textContent='🎧 '+fill(c.t,ctx).replace(/^\p{Extended_Pictographic}\S*\s/u,'');tac.classList.add('on')}
   await panTo('a');
   if(c.drop)await shout('Mic drop!','gold');else if(c.cut)await shout('Hold it!');else if(out.success&&swingOf(pr).w>=.55)await shout('Take that!');
-  queue(pagesOf(out.text,'a',ctx,false,{ok:out.success}),()=>{PS.out=out;_next()})})};
+  const pre=c.drop?[]:attempt(c,out.success,ctx,out.text);
+  if(pre.length){const L=PS.st.log;if(L&&L.length)L[L.length-1]=fill(c.t,ctx)+' — '+beatText(pre,ctx.A)+' '+out.text}
+  queue(beatPages(pre).concat(pagesOf(out.text,'a',ctx,false,{ok:out.success})),()=>{PS.out=out;_next()})})};
 
 (function(){const c=document.createElement('style');c.textContent=`
 .sdw .lvhd{margin-bottom:0}
@@ -201,5 +226,5 @@ psChoose=function(ci){if(!PS||PS.done||PS.q)return;const c=PS.scene.ch[ci];if(!c
 body.tv .sdhint{display:none}
 `;document.head.appendChild(c)})();
 
-Object.assign(window,{bubbleParse,sdTap,promoPages:pagesOf});
+Object.assign(window,{bubbleParse,sdTap,promoPages:pagesOf,promoAttempt:attempt});
 })();
