@@ -5,14 +5,15 @@
    and the wrestler says it in their own voice — the line is written for what the other wrestler just said, and how
    it comes out depends on mic skill and alignment. The other wrestler answers that, and so on.
 
-   • Length varies: 2 tactic calls by default, 3 for a hot feud (or a feud with a PPV coming), 4 when both are great
-     talkers too; a weak talker opposite shortens it. From the second call you can go straight to the closer.
+   • Length (v244): three decisions — the opening, one exchange call and the closer. A hot feud between two great
+     talkers gets a second exchange call (and the option to skip it and go straight to the closer).
    • A tug-of-war bar tracks who's winning the exchange. Your calls pull it by their swing (a landed long shot pulls
      hard, a missed one gives ground) and the other wrestler's answers pull it back by what they said and how good
      they are on the mic. Where it sits decides the closer: way ahead and the mic drop is there for the taking; even and
      it boils over, ends on a stare or gets made official; behind and they get the last word, and you choose how to
      answer it.
-   • Now and then a good talker winds up a big line: cut them off (your mic, risky) or let them finish (it's on them).
+   • Now and then a good talker winds up a big line instead of answering: cut them off (your mic, risky) or let them
+     finish (it's on them). It takes the place of an exchange call, so it never makes a promo longer.
    • Balance: the mid-exchange calls are centred on zero for the promo score like the old response beat, the closer
      counts as a full call, and where the bar ends nudges the score a little. More calls change how a promo goes, not
      how high promos rate. The old random twist still replaces the closer about a quarter of the time (storyline twists
@@ -22,7 +23,7 @@
 const EX_RS=window.RT_RS||.6;   /* a mid-exchange call's swing on the promo score, against a full call */
 const EX_HW=.2;                 /* the mid-exchange calls' total weight on heat and popularity (split across them) */
 const EX_MB=.03;                /* the bar's nudge on the promo score at the closer, per point (±3 at most) */
-const EX_TP=.3;                 /* chance of one "big line" timing call in an exchange */
+const EX_TP=.25;                /* chance of one "big line" timing call in an exchange */
 const RT=window.RT_LIB,FU=window.RT_FU;
 
 /* ---------- the tactics ---------- */
@@ -122,7 +123,8 @@ const ZONE_TIP={up:`You're winning the exchange`,even:'Dead even',down:`{B} is w
 const zoneOf=M=>M>=1.5?'up':M<=-1.5?'down':'even';
 
 /* ---------- building the beats ---------- */
-function exLen(p,ctx){const h=heatOf(p.a,p.b);let n=2;if(h>=40||ctx.PPV&&h>=20)n++;if(mm(ctx.A)>=75&&mm(ctx.B)>=75)n++;if(mm(ctx.B)<60)n--;return clamp(n,1,4)}
+/* v244: three decisions a promo (opening, one exchange call, closer); a hot feud between two great talkers gets a fourth */
+function exLen(p,ctx){return heatOf(p.a,p.b)>=40&&mm(ctx.A)>=75&&mm(ctx.B)>=75?2:1}
 const swPull=(ok,p)=>{const sw=swingOf(p);return ok?.75+sw.w:-(.5+sw.l*1.2)};
 function xOf(p,ctx,st,o){const x=st.ex;return Object.assign({i:intentOf(x.lastC),ok:x.lastOk?1:0,tier:rtTier(ctx.B),heat:heatOf(p.a,p.b)},o||{})}
 function bLine(ctx,st,xi,moves){const x=st.ex;const ok=o=>!x.used.has(o.t)&&(!moves||moves.includes(o.m));
@@ -160,11 +162,12 @@ function exStart(p,ctx,st,ai){if(!rtOn(p,ctx)||!st||!st.lastC)return null;
  st.rtDone=1;
  const tw=pickTwist(p,ctx,ai);const keep=!!(tw&&(tw.hj||tw.myst||tw.cd))||Math.random()<(window.TW_P!=null?window.TW_P:(window.TW_RT_P||.25));
  st.tw=keep?tw:null;if(!keep){ctx.MYST=null;ctx.CD=null}
+ if(rtTier(ctx.B)!=='lo'&&Math.random()<EX_TP){st.ex.tUsed=1;return timeScene(ctx,st)}
  return tacScene(p,ctx,st,e,ai)}
 function rtOn(p,ctx){return !!(p&&p.b&&ctx&&ctx.A&&ctx.B&&['callout','champ','contract','interview'].includes(p.type)&&!inTeam(p.a,p.b))}
 /* what comes after a call: another answer, a big line, the closer, or the twist in its place. {b:'r'|1, sc} or null when it's over */
 function exNext(p,ctx,st,ai){const x=st.ex;if(!x||x.closed||st.drop)return null;
- if(x.T>=x.Tmax||x.toClose){x.closed=1;if(st.tw){const tw=st.tw;st.tw=null;return {b:1,sc:tw}}return {b:'r',sc:closeScene(p,ctx,st,ai)}}
+ if(x.T>=x.Tmax||x.toClose){x.closed=1;x.timing=null;if(st.tw){const tw=st.tw;st.tw=null;return {b:1,sc:tw}}return {b:'r',sc:closeScene(p,ctx,st,ai)}}
  if(x.timing){const t=x.timing;x.timing=null;
   const e=t==='ok'?bLine(ctx,st,xOf(p,ctx,st,{ok:1}),['rattled','stumble']):bLine(ctx,st,xOf(p,ctx,st,{ok:t==='cut'?0:1}),['personal','mock','flip']);
   if(e)return {b:'r',sc:tacScene(p,ctx,st,e,ai,false)}}
@@ -190,7 +193,7 @@ roll=function(c,ctx,st){const x=st&&st.ex;
      response beat's average, so a longer exchange swings more without rating higher */
   const sw=swingOf(p),ev=p*sw.w-(1-p)*sw.l;st.score=sc0+EX_RS*((out.success?sw.w:-sw.l)-ev)/.35;f.forEach(k=>{st[k]=s0[k]+((st[k]||0)-s0[k])*x.hw});
   const d=c.cut?(out.success?2:-2):c.wait?(out.success?1:-1.5):swPull(out.success,p);x.M0=x.M;x.M=clamp(x.M+d,-4,4);
-  if(c.ex==='mid'){x.T++;x.lastC=c;x.lastOk=out.success}else x.timing=out.success?'ok':c.cut?'cut':'wait';
+  x.T++;if(c.ex==='mid'){x.lastC=c;x.lastOk=out.success}else x.timing=out.success?'ok':c.cut?'cut':'wait';
   return out}
  if(x&&(c.ex==='close'||c.drop)){const s0=st.score,h0=st.heat,p0=st.pop;const out=_roll(c,ctx,st);
   if(!c.drop){const L=window.RT_LAST||{score:1,heat:1,pop:1};st.score=s0+(st.score-s0)*L.score;st.heat=h0+(st.heat-h0)*L.heat;st.pop=p0+(st.pop-p0)*L.pop}
