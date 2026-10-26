@@ -7,7 +7,7 @@
 
    • Length (v244): three decisions — the opening, one exchange call and the closer. A hot feud between two great
      talkers gets a second exchange call (and the option to skip it and go straight to the closer).
-   • A tug-of-war bar tracks who's winning the exchange. Your calls pull it by their swing (a landed long shot pulls
+   • (v247: no longer shown.) Momentum tracks who's winning the exchange. Your calls pull it by their swing (a landed long shot pulls
      hard, a missed one gives ground) and the other wrestler's answers pull it back by what they said and how good
      they are on the mic. Where it sits decides the closer: way ahead and the mic drop is there for the taking; even and
      it boils over, ends on a stare or gets made official; behind and they get the last word, and you choose how to
@@ -22,7 +22,7 @@
 (function(){
 const EX_RS=window.RT_RS||.6;   /* a mid-exchange call's swing on the promo score, against a full call */
 const EX_HW=.2;                 /* the mid-exchange calls' total weight on heat and popularity (split across them) */
-const EX_MB=.03;                /* the bar's nudge on the promo score at the closer, per point (±3 at most) */
+const EX_MB=0;                  /* v247: the meter is gone — how the exchange went still picks the closer, but adds nothing to the score */
 const EX_TP=.25;                /* chance of one "big line" timing call in an exchange */
 const RT=window.RT_LIB,FU=window.RT_FU;
 
@@ -144,7 +144,7 @@ function tacScene(p,ctx,st,e,ai,pull){const x=st.ex;x.lastM=e.m;x.used.add(e.t);
  let ks=shuffle(Object.keys(lines).filter(k=>lines[k].own)).concat(shuffle(Object.keys(lines).filter(k=>!lines[k].own))).slice(0,4);
  ks=TACS.filter(k=>ks.includes(k));
  const ch=ks.map(tc=>{const l=lines[tc].l;return Object.assign({},l,{t:tacName(tc,ctx.A),tip:tacTip(tc,ctx.A),lt:l.t,tc,ex:'mid',key:0,rt:0})});
- if(x.T>=1&&x.T<x.Tmax)ch.push({t:'🎬 Go to the closer',tip:`End it here · ${ZONE_TIP[zoneOf(x.M)]}`,close:1,always:1,s:'luck'});
+ if(x.T>=1&&x.T<x.Tmax)ch.push({t:'🎬 Go to the closer',tip:'End it here',close:1,always:1,s:'luck'});
  if(!ai)noteP([e.t,...ch.filter(c=>c.lt).map(c=>c.lt)]);
  return {text:e.t,ch,rt:1,ex:'tac',m:e.m}}
 function timeScene(ctx,st){st.ex.M0=st.ex.M;const tx=TIME_TX.filter(o=>okFor(o,ctx));return {text:pick(tx).t,ch:TIME_CH.map(c=>Object.assign({},c)),rt:1,ex:'time'}}

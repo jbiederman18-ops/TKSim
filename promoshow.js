@@ -67,7 +67,7 @@ function corner(w,k){if(!w)return '';const sub=typeof lvSub==='function'?lvSub([
  return `<div class="sdc c${k}"><div class="sdph">${portrait(w)}</div><div class="sdpl ${w.al==='f'?'fc':'hl'}"><b>${esc(w.name)}</b>${sub?`<span>${esc(sub)}</span>`:''}</div></div>`}
 function stageHtml(){const {ctx}=PS;const cam=PS.cam||'a';const two=!!ctx.B;
  return `<div class="sd${two?'':' solo'}" id="sd" onclick="sdTap()"><div class="sdpan${cam==='b'&&two?' at-b':''}" id="sdpan">${corner(ctx.A,'a')}${two?corner(ctx.B,'b'):''}</div>
- <div class="sdspeed" id="sdspeed"></div><div class="sdflash" id="sdflash"></div><div class="sdhud" id="sdhud">${PS.st.ex&&typeof exBar==='function'?exBar(PS.st,ctx):''}</div>
+ <div class="sdspeed" id="sdspeed"></div><div class="sdflash" id="sdflash"></div>
  <div class="sdcut" id="sdcut"></div><div class="sdtac" id="sdtac"></div><div class="sdfx" id="sdfx"></div></div>`}
 function header(){const {scene,ctx}=PS;const lab=scene&&scene.ex&&typeof exLabel==='function'?exLabel(scene):PS.beat==='r'?'The response':PS.beat?'The twist':'On air';
  return liveHd(PS.live&&typeof LQ!=='undefined'&&LQ?LQ.show:'',`Promo · ${lab}`,esc(PT[PS.p.type].n),[],PS.live?'● Live':'Preview')}
