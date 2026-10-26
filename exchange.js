@@ -86,7 +86,7 @@ chal:[
 resp:[
  {t:'gr1',lb:`Tell {B} they're as good as they say`,al:'f',s:'pop',d:.05,h:6,p:3,ok:`"You're as good as you say you are, {B}. That's why beating you will mean something."`,g:`"I'm not going to stand here and pretend you're not great, {B}. You are. That's exactly why I want you." The fans applaud both of them.`,no:`{A} nods. "You're as good as you say you are." It comes across as soft.`,b:`"You're good, {B}. Really good. Probably better than — anyway." It comes across as soft.`},
  {t:'gr2',lb:`Pay {B} a backhanded compliment`,al:'h',s:'mic',d:.1,h:9,p:2,ok:`"Credit where it's due, {B}. You're the second-best person standing here." Backhanded and smug.`,g:`"I'll give you this, {B}." {A} smiles. "You're very good at being almost as good as me." Backhanded and smug, and {B} hates it.`,no:`{A} shrugs. "Credit where it's due. You're good." {B} takes it. "Thanks." It just sounds like a compliment.`,b:`"You're… pretty good. For you." It just sounds like a compliment. {B} takes it.`},
- {t:'gr3',lb:`Offer {B} a handshake`,al:'f',vs:'f',ri:'shake',s:'pop',d:.05,h:5,p:3,ok:`{A} offers a hand. "Best one wins." {B} shakes it, and the crowd stands for both of them.`,g:`{A} holds out a hand and doesn't say anything. {B} looks at it for a long moment, then shakes. "Best one wins." The crowd stands for both of them.`,no:`{A} offers a hand. "Best one wins." {B} leaves the hand hanging. Not yet.`,b:`{A} offers a hand. "Best one w—" {B} is still mid-sentence. {B} leaves it hanging.`}]};
+ {t:'gr3',nxi:'shake+ok',lb:`Offer {B} a handshake`,al:'f',vs:'f',ri:'shake',s:'pop',d:.05,h:5,p:3,ok:`{A} offers a hand. "Best one wins." {B} shakes it, and the crowd stands for both of them.`,g:`{A} holds out a hand and doesn't say anything. {B} looks at it for a long moment, then shakes. "Best one wins." The crowd stands for both of them.`,no:`{A} offers a hand. "Best one wins." {B} leaves the hand hanging. Not yet.`,b:`{A} offers a hand. "Best one w—" {B} is still mid-sentence. {B} leaves it hanging.`}]};
 
 /* ---------- the big line: a timing call ---------- */
 const TIME_TX=[
@@ -96,7 +96,7 @@ const TIME_TX=[
  {nhk:'live',t:`{B} leans toward the camera. "Let me tell you something about {A} nobody knows —"`}];
 const TIME_CH=[
  {t:'✋ Cut them off',tip:'Steal the moment before it lands',s:'mic',d:.12,h:9,p:2,ex:'time',cut:1,always:0,ok:`{A} cuts in before {B} gets there: "Nobody wants to hear it." {B} is left holding a dead line.`,g:`"No." {A} says it right over {B}. "You don't get to finish. Not tonight." {B} is left standing there with the best line they had and nobody to hear it.`,no:`{A} cuts in. "Nobody wants to—" {B} talks right over {A}: "—and THAT'S why you'll never beat me." It lands twice as hard.`,b:`{A} tries to cut in. "Nobody wants to hear—" The mic isn't on. {B} finishes: "—and THAT'S why you'll never beat me." It lands twice as hard.`},
- {t:'🤫 Let them finish',tip:"It's on {B} now",s:'luck',d:0,h:6,p:1,ex:'time',wait:1,ok:`{B} reaches the big line. "You're nothing but a — a —" It comes out half-baked. {A} just raises an eyebrow. "Mm." {A} didn't have to say a word.`,no:`{B} nails it. "Every night they cheer you, they're cheering for who you used to be." A chorus of "ooooh." Now {A} has to answer that.`}];
+ {t:'🤫 Let them finish',tip:"It's on {B} now",s:'luck',d:0,h:6,p:1,ex:'time',wait:1,ok:`{B} reaches the big line. "You're nothing but a — a —" It comes out half-baked. {A} just raises an eyebrow. "Mm." That's all {A} needed.`,no:`{B} nails it. "Every night they cheer you, they're cheering for who you used to be." A chorus of "ooooh." Now {A} has to answer that.`}];
 const mm=w=>w.mic+(hasT(w,'mouth')?10:0);
 const waitP=ctx=>clamp(1.05-(.2+mm(ctx.B)/100*.75),.2,.85);
 
@@ -117,7 +117,7 @@ const CLOSE={
   {t:'🎯 Make it official',s:'mic',d:.05,h:10,p:2,ch:1,ok:`"Then let's settle it. {PPV}." {B} nods. It's on.`,g:`"Fine. No more talking." {A} holds the mic out to {B}. "Say yes." {B} takes it. "Yes." It's on.`,no:`{A} points. "{PPV}. You and me." {B} walks off without answering.`,b:`"So — the match. Is it? Are we?" {B} walks off without answering.`}],
  down:[
   {t:'👊 Make them pay for it',s:'ring',d:.1,h:11,p:1,ok:`{A} doesn't answer with words — just one: "Okay." Then {B} gets dropped, and suddenly nobody remembers the last word.`,g:`{A} lets {B} enjoy it for exactly one second. "That's your last word?" Then {B} is on the floor with {A} standing over them, and nobody remembers what {B} said.`,no:`{A} swings. "Say it again!" {B} sees it coming and slides away, smiling.`,b:`{A} swings. "Take th—" {A} misses. {B} is already backing away, smiling.`},
-  {t:'🎤 Grab the mic back',s:'mic',d:.22,h:12,p:2,ok:`{A} takes the mic back. "Nice line. Shame you won't be able to say it at {PPV}." The last word isn't {B}'s after all.`,g:`{A} grabs the mic back. "Funny. You've been saying that for years. How's it working out?" Huge reaction. The last word isn't {B}'s after all.`,no:`{A} grabs the mic back. "Yeah, well — we'll see." Nothing lands. {B} wins this one.`,b:`{A} grabs the mic and says "Well —" and nothing else. {B} wins this one.`},
+  {t:'🎤 Grab the mic back',s:'mic',d:.22,h:12,p:2,ok:`{A} takes the mic back. "Nice line. Shame you won't be able to say it at {PPV}." The last word isn't {B}'s after all.`,g:`{A} grabs the mic back. "Funny. You've been saying that for years. How's it working out?" Huge reaction. The last word isn't {B}'s after all.`,no:`{A} grabs the mic back. "Yeah, well — we'll see." Nothing lands. {B} wins this one.`,b:`{A} grabs the mic. "Well —" Nothing else comes. {B} wins this one.`},
   {t:'🚶 Let them have it',s:'luck',d:-.15,h:7,p:0,ok:`{A} shrugs. "Enjoy it." And walks off. It'll keep.`,g:`{A} nods, almost impressed. "Good one. Save it." And walks off. Whatever happens next, it's not happening here. It'll keep.`,no:`{A} shrugs. "Whatever." And walks off. It looks like {A} lost, because {A} did.`,b:`{A} walks off. "I'm — I'll get you next time." It looks like {A} lost.`}]};
 const ZONE_TIP={up:`You're winning the exchange`,even:'Dead even',down:`{B} is winning the exchange`};
 const zoneOf=M=>M>=1.5?'up':M<=-1.5?'down':'even';
@@ -127,19 +127,25 @@ const zoneOf=M=>M>=1.5?'up':M<=-1.5?'down':'even';
 function exLen(p,ctx){return heatOf(p.a,p.b)>=40&&mm(ctx.A)>=75&&mm(ctx.B)>=75?2:1}
 const swPull=(ok,p)=>{const sw=swingOf(p);return ok?.75+sw.w:-(.5+sw.l*1.2)};
 function xOf(p,ctx,st,o){const x=st.ex;return Object.assign({i:intentOf(x.lastC),ok:x.lastOk?1:0,tier:rtTier(ctx.B),heat:heatOf(p.a,p.b)},o||{})}
-function bLine(ctx,st,xi,moves){const x=st.ex;const ok=o=>!x.used.has(o.t)&&(!moves||moves.includes(o.m));
+/* v250: an answer never repeats a line the call's outcome just used ("Make me." twice in a row) */
+const quotes=t=>(String(t).match(/"([^"]{4,})"/g)||[]).map(q=>q.slice(1,-1).toLowerCase());
+const echoes=(o,st)=>{const L=String(st.lastTx||'').toLowerCase();return !!L&&quotes(o.t).some(q=>L.includes(q))};
+function bLine(ctx,st,xi,moves){const x=st.ex;const ok=o=>!x.used.has(o.t)&&(!moves||moves.includes(o.m))&&!echoes(o,st);
  let el=RT.filter(o=>ok(o)&&rtFit(o,ctx,xi));
  if(!el.length)el=RT.filter(o=>ok(o)&&rtFit(o,ctx,Object.assign({},xi,{anyI:1})));
  if(!el.length)return null;
  return wpick(el,o=>rtSpec(o)*(xi.tier==='hi'&&o.mic==='hi'?2.5:1)*(seenP(o.t)?.12:1)*(o.m===x.lastM?.25:1))}
-function genLine(tc,ctx,xi){const l=(GEN[tc]||[]).filter(o=>okFor(o,ctx)&&rtExtra(o,ctx,xi));return l.length?wpick(l,o=>(seenP(o.ok)?.15:1)*(o.al||o.vs||o.hk||o.bt||o.hot?2:1)):null}
-function tacScene(p,ctx,st,e,ai,pull){const x=st.ex;x.lastM=e.m;x.used.add(e.t);x.M0=x.M;
+/* v250: xi / nxi limit an answer to (or keep it away from) what {B} was answering — "kneel", or "shake+ok" for a handshake that happened */
+function gate(o,xi){const k=[xi.i,xi.i+(xi.ok?'+ok':'+no')];return (!o.xi||o.xi.split(' ').some(t=>k.includes(t)))&&(!o.nxi||!o.nxi.split(' ').some(t=>k.includes(t)))}
+function genLine(tc,ctx,xi){const l=(GEN[tc]||[]).filter(o=>okFor(o,ctx)&&rtExtra(o,ctx,xi)&&gate(o,xi));return l.length?wpick(l,o=>(seenP(o.ok)?.15:1)*(o.al||o.vs||o.hk||o.bt||o.hot?2:1)):null}
+function tacScene(p,ctx,st,e,ai,pull){const x=st.ex;x.lastM=e.m;x.used.add(e.t);x.M0=x.M;x.bGone=!!e.gone;
  if(pull!==false){let v=MV[e.m]||0;const tier=rtTier(ctx.B);if(v<0)v*=tier==='hi'?1.3:tier==='lo'?.6:1;x.M=clamp(x.M+v,-4,4)}
  const xi=xOf(p,ctx,st);const live=tagHit('live',ctx.K||SC_DEF);
- const pool=(e.ch||[]).concat(FU[e.m]||[]).filter(o=>okFor(o,ctx)&&rtExtra(o,ctx,xi));
+ const pool=(e.ch||[]).concat(FU[e.m]||[]).filter(o=>okFor(o,ctx)&&rtExtra(o,ctx,xi)&&gate(o,xi));
  const by={};pool.forEach(o=>{const t=o.tc||cls(o);(by[t]=by[t]||[]).push(o)});
  const lines={};TACS.forEach(tc=>{if(tc==='crowd'&&!live)return;if(tc==='resp'&&ctx.A.al!=='f'&&!by.resp&&!['respect','accept'].includes(e.m))return;
-  const l=by[tc]?wpick(by[tc],o=>seenP(o.t)?.2:1):genLine(tc,ctx,xi);if(l)lines[tc]={l,own:!!by[tc]}});
+  /* after a beatdown, a counter or a retreat only the answers written for it make sense — no generic talk lines */
+  const l=by[tc]?wpick(by[tc],o=>seenP(o.t)?.2:1):['laidout','fightback','retreat'].includes(e.m)?null:genLine(tc,ctx,xi);if(l)lines[tc]={l,own:!!by[tc]}});
  /* four calls: the ones written for this exact moment first, then the rest; shown in the same order every time */
  let ks=shuffle(Object.keys(lines).filter(k=>lines[k].own)).concat(shuffle(Object.keys(lines).filter(k=>!lines[k].own))).slice(0,4);
  ks=TACS.filter(k=>ks.includes(k));
@@ -148,15 +154,26 @@ function tacScene(p,ctx,st,e,ai,pull){const x=st.ex;x.lastM=e.m;x.used.add(e.t);
  if(!ai)noteP([e.t,...ch.filter(c=>c.lt).map(c=>c.lt)]);
  return {text:e.t,ch,rt:1,ex:'tac',m:e.m}}
 function timeScene(ctx,st){st.ex.M0=st.ex.M;const tx=TIME_TX.filter(o=>okFor(o,ctx));return {text:pick(tx).t,ch:TIME_CH.map(c=>Object.assign({},c)),rt:1,ex:'time'}}
-function closeScene(p,ctx,st,ai){const x=st.ex;x.M0=x.M;x.zone=zoneOf(x.M);const z=x.zone;
- const tx=CLOSE_TX[z].filter(o=>okFor(o,ctx));const text=(wpick(tx,o=>(seenP(o.t)?.2:1)*(o.vs?2:1))||CLOSE_TX[z][0]).t;
+/* v250: right after {B} lands their big line, the set-up for the closer doesn't hand them a second last word */
+const CLOSE_AFTER={up:`{B} got that one in, but {A} still has the room.`,even:`That one landed. Now it's dead even, and it has to go somewhere.`,down:`{B} lets the line hang. Every eye in the building is on {A}.`};
+function closeScene(p,ctx,st,ai,bLanded){const x=st.ex;x.M0=x.M;x.zone=zoneOf(x.M);const z=x.zone;
+ const tx=CLOSE_TX[z].filter(o=>okFor(o,ctx));const text=bLanded?CLOSE_AFTER[z]:(wpick(tx,o=>(seenP(o.t)?.2:1)*(o.vs?2:1))||CLOSE_TX[z][0]).t;
  let ch=dealChoices(CLOSE[z],ctx,z==='up'?2:3).map(c=>Object.assign({},c,{ex:'close'}));
  if(z==='up')ch=[mdChoice(ctx)].concat(ch);
  if(!ai)noteP([text]);return {text,ch,rt:1,ex:'close',zone:z,last:true,_md:1}}
 
+/* v250: when a call ends with someone leaving ("{B} walks off", "{A} walks out"), the exchange is over — nobody answers
+   a wrestler who isn't there. gone / back name the versions it applies to ('ok g no b', or 1 for all of them):
+   gone — after this call, someone has left; back — after the other wrestler walked off, this call brings them back */
+const verOf=(c,ok,w)=>{const t=voiceTier(w);return ok?(t==='hi'&&c.g?'g':'ok'):(t==='lo'&&c.b?'b':'no')};
+const hasV=(f,c,ok,w)=>!!f&&(f===1||String(f).split(' ').includes(verOf(c,ok,w)));
+const goneAfter=(c,ok,ctx)=>!!c&&hasV(c.gone,c,ok,ctx.A);
+/* the same check for any promo: end — the segment is over (both are gone); gone — the other wrestler has left */
+const exGone=(c,ok,ctx,f)=>!!c&&hasV(c[f||'gone'],c,ok,ctx.A);
 /* the first beat — replaces the single response beat (rtScene) */
 function exStart(p,ctx,st,ai){if(!rtOn(p,ctx)||!st||!st.lastC)return null;
  const c0=st.lastC,ok0=!!(st.oks||[]).slice(-1)[0];
+ if(goneAfter(c0,ok0,ctx)){st.gone=1;return null}
  st.ex={T:0,Tmax:exLen(p,ctx),M:clamp(swPull(ok0,chance(c0,ctx))*.6,-4,4),M0:0,used:new Set(),lastC:c0,lastOk:ok0,hw:EX_HW/Math.max(1,exLen(p,ctx))};
  const e=bLine(ctx,st,xOf(p,ctx,st));if(!e){st.ex=null;return null}
  st.rtDone=1;
@@ -167,7 +184,9 @@ function exStart(p,ctx,st,ai){if(!rtOn(p,ctx)||!st||!st.lastC)return null;
 function rtOn(p,ctx){return !!(p&&p.b&&ctx&&ctx.A&&ctx.B&&['callout','champ','contract','interview'].includes(p.type)&&!inTeam(p.a,p.b))}
 /* what comes after a call: another answer, a big line, the closer, or the twist in its place. {b:'r'|1, sc} or null when it's over */
 function exNext(p,ctx,st,ai){const x=st.ex;if(!x||x.closed||st.drop)return null;
- if(x.T>=x.Tmax||x.toClose){x.closed=1;x.timing=null;if(st.tw){const tw=st.tw;st.tw=null;return {b:1,sc:tw}}return {b:'r',sc:closeScene(p,ctx,st,ai)}}
+ if(x.lastC&&x.lastC.ex==='mid'&&!x.timing){const c=x.lastC,ok=x.lastOk;
+  if(goneAfter(c,ok,ctx)||x.bGone&&!hasV(c.back,c,ok,ctx.A)){x.closed=1;st.tw=null;st.gone=1;return null}x.bGone=0}
+ if(x.T>=x.Tmax||x.toClose){const tm=x.timing;x.closed=1;x.timing=null;if(st.tw){const tw=st.tw;st.tw=null;return {b:1,sc:tw}}return {b:'r',sc:closeScene(p,ctx,st,ai,tm==='wait'||tm==='cut')}}
  if(x.timing){const t=x.timing;x.timing=null;
   const e=t==='ok'?bLine(ctx,st,xOf(p,ctx,st,{ok:1}),['rattled','stumble']):bLine(ctx,st,xOf(p,ctx,st,{ok:t==='cut'?0:1}),['personal','mock','flip']);
   if(e)return {b:'r',sc:tacScene(p,ctx,st,e,ai,false)}}
@@ -185,7 +204,8 @@ function exAuto(p,ctx,st,sc){let g=0;while(sc&&g++<14){const ch=sc.ch.filter(c=>
 const _chance=chance;
 chance=function(c,ctx){return c&&c.wait&&ctx&&ctx.B?waitP(ctx):_chance(c,ctx)};
 const _roll=roll;
-roll=function(c,ctx,st){const x=st&&st.ex;
+roll=function(c,ctx,st){const out=roll0(c,ctx,st);if(st)st.lastTx=out&&out.text;return out};
+function roll0(c,ctx,st){const x=st&&st.ex;
  if(x&&(c.ex==='mid'||c.ex==='time')){const f=['heat','hx','pop','chem'],s0={};f.forEach(k=>s0[k]=st[k]||0);const sc0=st.score,p=chance(c,ctx);let out;
   if(c.wait){const ok=Math.random()<p;if(ok){st.heat+=c.h||0;st.pop+=c.p||0}const text=fill(ok?c.ok:c.no,ctx);st.log.push(fill(c.t,ctx)+' — '+text);(st.oks=st.oks||[]).push(ok);st.lastC=c;out={success:ok,text}}
   else out=_roll(c,ctx,st);
@@ -198,7 +218,7 @@ roll=function(c,ctx,st){const x=st&&st.ex;
  if(x&&(c.ex==='close'||c.drop)){const s0=st.score,h0=st.heat,p0=st.pop;const out=_roll(c,ctx,st);
   if(!c.drop){const L=window.RT_LAST||{score:1,heat:1,pop:1};st.score=s0+(st.score-s0)*L.score;st.heat=h0+(st.heat-h0)*L.heat;st.pop=p0+(st.pop-p0)*L.pop}
   st.score+=clamp(x.M,-3,3)*EX_MB;x.M0=x.M;x.M=clamp(x.M+(out.success?1:-1),-4,4);x.closed=1;return out}
- return _roll(c,ctx,st)};
+ return _roll(c,ctx,st)}
 
 /* ---------- the tug-of-war bar ---------- */
 const short=w=>{const n=String(w.name||'');return n.length>14?n.split(' ').slice(-1)[0]:n};
@@ -223,5 +243,5 @@ function exCall(sc,ctx){return sc.ex==='close'?['🎬 Take it home',`How does ${
 `;document.head.appendChild(c)})();
 
 window.rtScene=exStart;
-Object.assign(window,{exStart,exNext,exGo,exClose,exAuto,exBar,exLabel,exCall,EX_GEN:GEN,EX_CLOSE:CLOSE,EX_CLOSE_TX:CLOSE_TX,EX_TIME_TX:TIME_TX,EX_TIME_CH:TIME_CH,EX_TAC:TAC});
+Object.assign(window,{exGone,exStart,exNext,exGo,exClose,exAuto,exBar,exLabel,exCall,EX_GEN:GEN,EX_CLOSE:CLOSE,EX_CLOSE_TX:CLOSE_TX,EX_TIME_TX:TIME_TX,EX_TIME_CH:TIME_CH,EX_TAC:TAC});
 })();

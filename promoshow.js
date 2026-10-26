@@ -17,31 +17,39 @@
 'use strict';
 (function(){
 /* ---------- splitting a line into what's said and what's done ---------- */
-const SIDELESS=/^(The|Half|Nobody|Everyone|Everybody|Somebody|Someone|Twenty|Ten|Fans|Security|Officials|Referees|It|That|This|A chant|A chorus)\b/;
+const SIDELESS=/^(The|Half|Nobody|Everyone|Everybody|Somebody|Someone|Twenty|Ten|Fans|Security|Officials|Referees|It|That|This|A chant|A chorus|A beat|A pause|A long pause|Silence|Nothing|Boos|Crickets|Ding|Click)\b/;
 const SAYS=/,?\s*(?:(?:and|then)\s+)?(?:says|say|said|yells|yelling|screams|whispers|asks|goes)[,:]?$/;
 const reEsc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 function bubbleParse(text,owner,names,cam){
  const sides=Object.keys(names).filter(k=>names[k]).sort((x,y)=>names[y].length-names[x].length);
- const who=t=>{for(const s of sides){if(new RegExp('^'+reEsc(names[s])+"(?:'s)?\\b").test(t))return s}return null};
- const strip=(t,s)=>t===names[s]?'':new RegExp('^'+reEsc(names[s])+"'s\\b").test(t)?t:t.replace(new RegExp('^'+reEsc(names[s])+'[\\s,]+'),'');
+ const NB="(?![\\w\\u00C0-\\u024F])";
+ /* "A and B stand face to face" is about both of them: a camera note, not one wrestler's action */
+ /* "{A}'s music hits" is about the room, not something {A} does — a camera note */
+ const who=t=>{for(const s of sides){if(new RegExp('^'+reEsc(names[s])+NB).test(t)){const r=t.slice(names[s].length);if(/^'s\b/.test(r)||/^\s+(?:and|&)\s+/.test(r))return null;return s}}return null};
+ const both=t=>sides.some(s=>new RegExp('^'+reEsc(names[s])+'\\s+(?:and|&)\\s+').test(t));
+ const strip=(t,s)=>t===names[s]||t===names[s]+':'?'':new RegExp('^'+reEsc(names[s])+"'s"+NB).test(t)?t:t.replace(new RegExp('^'+reEsc(names[s])+'[\\s,:]+'),'');
  const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
  const parts=[];const re=/"([^"]+)"/g;let last=0,m;
  while((m=re.exec(text))){const q=m[1].trim();if(/^[a-z]/.test(q))continue;
   const pre=text.slice(last,m.index).trim();const before=text.slice(0,m.index).trim();let pre2=pre;
   if(before&&/[A-Za-z,]$/.test(before)){const sent=before.split(/(?<=[.!?…])\s+/).pop();if(!(who(sent)&&SAYS.test(sent)))continue;pre2=pre.replace(SAYS,'').trim()}
-  if(pre2)parts.push({n:pre2});parts.push({q});last=re.lastIndex}
- const tail=text.slice(last).trim();if(tail)parts.push({n:tail});
+  /* "The announcer booms: ..." — someone who isn't one of the wrestlers is talking; it stays in the narration */
+  else if(before&&/:$/.test(before)){const sent=before.split(/(?<=[.!?…])\s+/).pop();if(SIDELESS.test(sent)&&!sides.some(k=>sent.includes(names[k])))continue}
+  /* "points at it — "Today." — and jogs out": the dashes around a line are punctuation, not part of the action */
+  const dash=t=>t.replace(/^[—–]\s*/,'').replace(/\s*[—–]$/,'').trim();
+  if(dash(pre2))parts.push({n:dash(pre2)});parts.push({q});last=re.lastIndex}
+ const tail=text.slice(last).trim().replace(/^[—–]\s*/,'');if(tail)parts.push({n:tail});
  if(!parts.some(p=>p.q)){const s=cam?null:who(text);return {beats:s?[{side:s,only:text}]:[{cam:text}],react:''}}
  const lastQ=parts.map(p=>!!p.q).lastIndexOf(true);let speaker=owner;const beats=[];let react='';
  parts.forEach((p,i)=>{
   if(p.q){beats.push({side:speaker,q:p.q});return}
-  if(i>lastQ&&/^[a-z]/.test(p.n)){const sn=p.n.split(/(?<=[.!?…])\s+/);beats.push({side:speaker,act:sn[0].replace(/[.]$/,'')});if(sn[1])react=sn[1];return}
-  if(i>lastQ){react=p.n.split(/(?<=[.!?…])\s+/)[0];return}
-  let g=null;const push=()=>{if(!g)return;const t=g.t.join(' ').replace(/[.:]$/,'').trim();if(g.side){if(t)beats.push({side:g.side,act:t});speaker=g.side}else if(t)beats.push({cam:t})};
+  if(i>lastQ&&/^[a-z]/.test(p.n)){const sn=p.n.split(/(?<=[.!?…])\s+/);beats.push({side:speaker,act:sn[0].replace(/[.]$/,'').replace(/^(?:and|then)\s+/,'')});if(sn[1])react=sn.slice(1).join(' ');return}
+  if(i>lastQ){react=p.n;return}
+  let g=null;const push=()=>{if(!g)return;let t=g.t.join(' ').replace(/[.:]$/,'').trim();if(g.side)t=t.replace(/^(?:and|then)\s+/,'');if(g.side){if(t&&!/^(then|finally|again|and|later|still|so|now)$/i.test(t))beats.push({side:g.side,act:t});speaker=g.side}else if(t)beats.push({cam:t})};
   p.n.split(/(?<=[.!?…])\s+/).forEach(s=>{const w=who(s);
    if(w&&(!g||g.side!==w)){push();g={side:w,t:[strip(s,w)]}}
    else if(w)g.t.push(cap(strip(s,w)));
-   else if(!g)g={side:SIDELESS.test(s)||!parts.slice(0,i).some(x=>x.q)?null:speaker,t:[s]};
+   else if(!g)g={side:SIDELESS.test(s)||both(s)||!parts.slice(0,i).some(x=>x.q)?null:speaker,t:[s]};
    else g.t.push(s)});
   push()});
  return {beats,react}}
@@ -57,8 +65,10 @@ function pagesOf(text,owner,ctx,cam,res){const {beats,react}=bubbleParse(fill(te
   else if(b.only)chunks(b.only).forEach(t=>out.push({side:b.side,cam:t}));
   else if(b.act!=null)out.push({side:b.side,act:b.act});
   else chunks(b.q).forEach(t=>out.push({side:b.side,q:t}))});
- if(res)out.push({res:react||(res.ok?'The crowd is with it.':'It falls flat.'),ok:res.ok,stamp:1});
- else if(react)out.push({cam:react});
+ /* the reaction plays out in full; its last page carries the It lands / It misses stamp */
+ const rc=react?chunks(react):[];
+ if(res){rc.slice(0,-1).forEach(t=>out.push({cam:t}));out.push({res:rc.length?rc[rc.length-1]:(res.ok?'The crowd is with it.':'It falls flat.'),ok:res.ok,stamp:1})}
+ else rc.forEach(t=>out.push({cam:t}));
  return out}
 
 /* ---------- the stage ---------- */
