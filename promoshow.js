@@ -260,6 +260,8 @@ body.tv .tv-live-sheet .sdbox:has(.sdtab) .sdsay{margin-top:14px}
 body.tv .tv-live-sheet .sdmenu .callq{font-size:20px}body.tv .tv-live-sheet .sdmenu .choice{font-size:22px;padding-top:14px;padding-bottom:14px}body.tv .tv-live-sheet .sdmenu .choice .muted.tiny{font-size:16px}
 body.tv .tv-live-sheet .sdmenu{margin-top:0}
 body.tv .tv-live-sheet:has(.sdw)>.tv-picked{zoom:.75}
+/* the ✓ PICKED badge sits on the right of the chosen call — keep the call's words clear of it */
+body.tv .tv-live-sheet .choice.picked{padding-right:8.5em}
 body.tv .tv-live-sheet #sdlow>.sdbox:has(.sdsay:empty){visibility:hidden}
 body.tv .tv-live-sheet .sdfx .sdshout span{font-size:72px}
 body.tv .tv-live-sheet .sdph:empty::after,.sdph:empty::after{content:attr(data-i);position:absolute;inset:0;display:grid;place-items:center;font:900 italic 64px 'BC','Barlow Condensed',sans-serif;color:rgba(216,180,73,.55)}
