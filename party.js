@@ -314,7 +314,11 @@ function tvRender(){document.body.classList.add('tv');tvScale();const app=$('#ap
  let body;
  if(!S)body=tvWaiting();else if(Object.values(S.names||{}).filter(Boolean).length<nSeats())body=tvLobby();else if(S.phase==='rookies')body=tvRookies();else if(S.phase==='draft')body=tvDraft();else if(S.phase==='over')body=tvOver();else if(S.online&&S.online.live&&partyLiveNow())body=tvLive();else body=tvWeek();
  app.innerHTML=tvHeader()+`<main class="tv-main">${body}</main>`;
- const ls=document.querySelector('.tv-live-sheet');if(ls){tvFit(ls,1.5,1,'--lz');setTimeout(()=>{if(ls.isConnected&&tvPast(ls))tvFit(ls,+(ls.style.getPropertyValue('--lz')||1.5),1,'--lz')},600)}}
+ const ls=document.querySelector('.tv-live-sheet');if(ls){
+  /* v251: a promo showdown may shrink further on a small TV, and keeps one size for the whole promo instead of
+     growing and shrinking page by page (it only ever steps down) */
+  const sd=!!ls.querySelector('.sdw'),mn=sd?.7:1,keep=()=>{if(!sd){TV.sdz=0;return}const z=+(ls.style.getPropertyValue('--lz')||1.5);if(TV.sdz&&TV.sdz<z)ls.style.setProperty('--lz',TV.sdz.toFixed(2));else TV.sdz=z};
+  tvFit(ls,1.5,mn,'--lz');keep();setTimeout(()=>{if(ls.isConnected&&tvPast(ls)){tvFit(ls,+(ls.style.getPropertyValue('--lz')||1.5),mn,'--lz');keep()}},600)}}
 function tvWaiting(){return `<div class="tv-title center"><div class="kicker"><i></i>League ${esc(TV.code)}</div><div class="hero-t tv-hero">${TV.status==='missing'?'No league<br>found':'Tuning in…'}</div><p class="muted">${TV.status==='missing'?'Double-check the code (Office on any GM\'s phone shows it).':(window.TKO&&TKO.ready?'Connecting to the league.':'Waiting for online play to load. This screen needs an internet connection.')}</p>${TV.status==='missing'?'<button class="btn tv-go" onclick="tvStop();tvForm()">Try another code</button>':''}</div>`}
 function tvPartyTag(){return S.online&&S.online.party?'📺 Party night':'Taking turns'}
 function tvLobby(){const n=nSeats(),names=localSeats();

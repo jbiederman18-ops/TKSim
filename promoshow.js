@@ -73,8 +73,10 @@ function pagesOf(text,owner,ctx,cam,res){const {beats,react}=bubbleParse(fill(te
 
 /* ---------- the stage ---------- */
 const short=w=>{const n=String(w.name||'');return n.length>16?n.split(' ').slice(-1)[0]:n};
+/* initials stand in on the party TV when a wrestler's photo is a private upload (the feed leaves those out) */
+const inits=w=>String(w.name||'').split(/\s+/).filter(Boolean).map(x=>x[0]).join('').slice(0,3).toUpperCase();
 function corner(w,k){if(!w)return '';const sub=typeof lvSub==='function'?lvSub([w]):'';
- return `<div class="sdc c${k}"><div class="sdph">${portrait(w)}</div><div class="sdpl ${w.al==='f'?'fc':'hl'}"><b>${esc(w.name)}</b>${sub?`<span>${esc(sub)}</span>`:''}</div></div>`}
+ return `<div class="sdc c${k}"><div class="sdph" data-i="${esc(inits(w))}">${portrait(w)}</div><div class="sdpl ${w.al==='f'?'fc':'hl'}"><b>${esc(w.name)}</b>${sub?`<span>${esc(sub)}</span>`:''}</div></div>`}
 function stageHtml(){const {ctx}=PS;const cam=PS.cam||'a';const two=!!ctx.B;
  return `<div class="sd${two?'':' solo'}" id="sd" onclick="sdTap()"><div class="sdpan${cam==='b'&&two?' at-b':''}" id="sdpan">${corner(ctx.A,'a')}${two?corner(ctx.B,'b'):''}</div>
  <div class="sdspeed" id="sdspeed"></div><div class="sdflash" id="sdflash"></div>
@@ -90,7 +92,7 @@ async function panTo(k){if(!PS)return;const ctx=PS.ctx;if(k!=='a'&&k!=='b')retur
  const p=document.getElementById('sdpan'),sp=document.getElementById('sdspeed');if(!p)return;
  if(sp)sp.classList.add('on');p.classList.toggle('at-b',k==='b');await sleep(320);if(sp)sp.classList.remove('on')}
 function cutIn(k){const el=document.getElementById('sdcut');if(!el)return;const w=people(PS.ctx)[k];
- el.innerHTML=(k==='x'||k==='h')&&w?`<div class="sdci"><div class="sdph">${portrait(w)}</div><b>${esc(short(w))}</b></div>`:''}
+ el.innerHTML=(k==='x'||k==='h')&&w?`<div class="sdci"><div class="sdph" data-i="${esc(inits(w))}">${portrait(w)}</div><b>${esc(short(w))}</b></div>`:''}
 async function shout(t,kind){const fx=document.getElementById('sdfx'),sd=document.getElementById('sd'),fl=document.getElementById('sdflash');if(!fx)return;
  fx.innerHTML=`<div class="sdshout ${kind||''}"><span>${esc(t)}</span></div>`;feed();
  if(fl){fl.classList.remove('on');void fl.offsetWidth;fl.classList.add('on')}
@@ -234,6 +236,33 @@ psChoose=function(ci){if(!PS||PS.done||PS.q)return;const c=PS.scene.ch[ci];if(!c
 .sdmenu{margin-top:14px}
 @media (prefers-reduced-motion:reduce){.sdpan{transition:none}.sd *,.sd{animation:none!important}}
 body.tv .sdhint{display:none}
+/* v251: the showdown on the party TV — the live sheet takes the whole width, the stage sits on the left with both
+   wrestlers in frame (whoever isn't talking dims) and the words get the right-hand side in big type, so the whole
+   thing fits a 1080p picture without scrolling */
+body.tv .tv-grid:has(.tv-live-sheet .sdw){grid-template-columns:minmax(0,1fr)}
+body.tv .tv-grid:has(.tv-live-sheet .sdw)>div+div{display:none}
+body.tv .tv-live-sheet .sdw{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);grid-template-areas:"hd hd" "st lo";column-gap:28px;align-items:start}
+body.tv .tv-live-sheet .sdw>.lvhd{grid-area:hd;margin-bottom:12px}
+body.tv .tv-live-sheet .sd{grid-area:st;margin:0;aspect-ratio:16/10}
+body.tv .tv-live-sheet #sdlow{grid-area:lo;min-width:0}
+body.tv .tv-live-sheet .sdpan{width:100%;transform:none!important}
+body.tv .tv-live-sheet .sd:not(.solo) .sdc{flex:1 1 50%}
+body.tv .tv-live-sheet .sd:not(.solo) .sdph{height:86%;max-width:94%}
+body.tv .tv-live-sheet .sdpan .sdc{transition:filter .3s}
+body.tv .tv-live-sheet .sdpan.at-b .ca,body.tv .tv-live-sheet .sdpan:not(.at-b) .cb{filter:brightness(.38) saturate(.4)}
+body.tv .tv-live-sheet .sd:not(.solo) .sdpl b{font-size:16px}
+body.tv .tv-live-sheet .sdspeed{display:none}
+body.tv .tv-live-sheet .sdbox{margin-top:0;min-height:0;padding:30px 22px 26px}
+body.tv .tv-live-sheet .sdsay{font-size:34px;line-height:1.35;min-height:0}
+body.tv .tv-live-sheet .sdbox.k-act .sdsay,body.tv .tv-live-sheet .sdbox.k-cam .sdsay,body.tv .tv-live-sheet .sdbox.k-res .sdsay{font-size:28px}
+body.tv .tv-live-sheet .sdtab{font-size:24px}
+body.tv .tv-live-sheet .sdbox:has(.sdtab) .sdsay{margin-top:14px}
+body.tv .tv-live-sheet .sdmenu .callq{font-size:20px}body.tv .tv-live-sheet .sdmenu .choice{font-size:22px;padding-top:14px;padding-bottom:14px}body.tv .tv-live-sheet .sdmenu .choice .muted.tiny{font-size:16px}
+body.tv .tv-live-sheet .sdmenu{margin-top:0}
+body.tv .tv-live-sheet:has(.sdw)>.tv-picked{zoom:.75}
+body.tv .tv-live-sheet #sdlow>.sdbox:has(.sdsay:empty){visibility:hidden}
+body.tv .tv-live-sheet .sdfx .sdshout span{font-size:72px}
+body.tv .tv-live-sheet .sdph:empty::after,.sdph:empty::after{content:attr(data-i);position:absolute;inset:0;display:grid;place-items:center;font:900 italic 64px 'BC','Barlow Condensed',sans-serif;color:rgba(216,180,73,.55)}
 `;document.head.appendChild(c)})();
 
 Object.assign(window,{bubbleParse,sdTap,promoPages:pagesOf,promoAttempt:attempt});
