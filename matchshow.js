@@ -1,4 +1,4 @@
-/* Tony Khan Simulator — the match showdown (v254).
+/* Tony Khan Simulator — the match showdown (v254; v255: main event only, moments placed by whether they end the match).
    One match a show — the main event — plays out like the promo showdown: the camera whips between the two sides,
    the commentary booth calls it, and you make the calls through the match in three acts:
 
@@ -62,7 +62,7 @@ const MS_HEAT=[
   hit:[[['A','({A} goes to work on {B}\'s knee — a dragon screw, then a figure-four around the ring post.)'],['c','Every move has a purpose. That knee is going to matter later.'],['x','{B} screams and the crowd winces with them.']]],
   miss:[[['A','({A} goes for the leg and {B} kicks them off into the turnbuckle.)'],['p','{B} wants no part of that.']]]},
  {id:'hope',al:'f',t:'Let {A} fight from underneath',sub:'A beating, then the comeback',s:'pop',d:.05,st:.6,
-  hit:[[['B','({B} has {A} down and is stomping away, playing to the boos.)'],['A','({A} blocks a punch, fires back with three of their own and the crowd explodes.)',['Here we go!','gold']],['p','Here comes the comeback!']]],
+  hit:[[['B','({B} has {A} down and won\'t let up, stomping away in the corner.)'],['A','({A} blocks a punch, fires back with three of their own and the crowd explodes.)',['Here we go!','gold']],['p','Here comes the comeback!']]],
   miss:[[['B','({B} keeps {A} grounded for what feels like forever.)'],['x','The crowd starts to drift. A few people check their phones.']]]},
  {id:'cheat',al:'h',t:'Cheat behind the ref\'s back',sub:'Eye rake, hair pull, choke on the ropes',s:'luck',d:0,st:.5,heat:6,
   hit:[[['A','({A} rakes {B}\'s eyes while the ref is checking the ropes, then feigns innocence.)'],['c','Can somebody buy that referee a pair of glasses?'],['x','The boos are deafening.']]],
@@ -239,22 +239,47 @@ function msPostDeal(r,m){if(m.nc||!r.B)return [];return msDeal(MS_POST,r,3)}
 function msOn(m){return !!(m&&m.sides&&m.type!=='squash'&&!(typeof isSq==='function'&&isSq(m))&&validMatch(m))}
 /* the moment for the heat act: forced situations first, then a random moment (always one in the main event) */
 function msMoment(m,brand,big){try{return matchEvent(m,brand,big,1)}catch(e){console.warn(e);return null}}
-const msFinKind=g=>g&&!g.sit&&callKind(g)==='finish';
-const msStop=(m,g)=>m.nc||(g&&g.sit&&['hurt','sabotage','business'].includes(g.sit));
+/* v255: which calls end the match. Every outcome line was read in the v255 sweep; these phrases are how they end it
+   (a count of three, a tap, a bell, a ten count, a win, a DQ, a prize pulled down…). A moment plays in the heat only
+   with the calls that keep the match going; one that can't offer two of those is saved for the finish. */
+const MS_END=[/\b(?:for|counts?|gets the|steals? the)\s+(?:a\s+)?three\b(?![- ]?(?:times|way|punches|count))/i,/\bslaps the mat three times\b/i,/\bthree count\b/i,/\bcheap three\b/i,/,\s*three\./i,
+ /(?:one|1)\W{1,3}(?:two|2)\W{1,3}(?:three|3)\b/i,/(?:^|[.!?]\s+)three[.!]/i,/\b1-2-3\b/,/\b(?:wins?|won)\b(?!'t| (?:the (?:exchange|race|crowd|room|tug|test)|a title))/i,
+ /\bdisqualif/i,/\bcount-?out\b/i,/\bno contest\b/i,/\bdouble (?:dq|knockout)\b/i,/\bstoppage\b/i,
+ /\b(?:calls? for|rings?) the bell\b|\bthe bell rings\b|\bfinal bell\b|\btime expires\b|clock (?:hits zero|runs out)|time runs out|time-limit draw|\bat the time limit\b/i,
+ /\btaps\b(?! (?:it|their|the mic))|\btaps out\b|\btapped\b/i,/\bI quit\b/i,/\b(?:waves? it off|throws? it out|stops (?:it|the match)|ref stops it|calls it)\b/i,
+ /\bthe finish\b|\bfinish(?:es|ed)? (?:it|strong|one-armed)\b|\bfinishes\b/i,/\bit's over\b/i,/(?:^|[.!?]\s+)Ten[.!]/,/\bcounts? ten\b/i,/\bdeciding fall\b|\bfinal fall\b/i,
+ /\bsteals? (?:it|the win)\b/i,/\bafter the bell\b/i,/\bcan't continue\b/i,/\bthe pin\b(?! (?:attempt|is broken|at))|(?:^|[.!?]\s+)Pin in\b|\bpins \S+ in the middle\b/i,
+ /\bdrapes an arm over for the cover\b|\bcovers (?:and|as)\b/i,/\b(?:grabs|pulls|unhooks) the prize\b|\bprize down\b/i,/\bit counts\b/i,/\bFeet touch the floor\b/i,/\bbeats \S+ (?:clean|with)\b/i,/\b(?:be|get|gets|got) pinned\b/i,/\bleaves looking like\b/i,/\bruns? out the clock\b/i];
+const msEnds=t=>{t=String(t||'');return MS_END.some(r=>r.test(t))};
+const msChEnds=c=>!!(c.flip||c.nc||c.loseOk||c.loseNo||c.rematch||[c.ok,c.g,c.no,c.b].some(msEnds));
+/* where the big moment plays: 'heat' (dealt only calls that keep the match going) or 'fin' (it decides the finish) */
+function msPlan(g,m){if(!g||!g.e)return null;if(g.sit)return 'heat';const base=MEV.find(x=>x.id===g.e.id)||g.e;
+ /* a general finish (a ref stoppage, a slow count) only ends pinfall and submission matches; ladder, tables, "I Quit",
+    Last Man Standing, coffin, Blood & Guts and Rumble finishes come from their own moments or the finish call */
+ const fin=()=>['pin','sub','none'].includes(msFam(m))||base.stip?'fin':null;
+ if(callKind(g)==='finish')return fin();
+ const mids=evChoices(base,m,g.r).filter(c=>!msChEnds(c));if(mids.length<2)return fin();
+ g.e=Object.assign({},base,{ch:mids.length>3?mids.slice().sort(()=>Math.random()-.5).slice(0,3):mids});
+ /* the crowd read was worked out on the old calls — re-tag it, and drop it if the new calls don't give the crowd a real choice */
+ const C=g.r.CROWD;if(C){try{const A=g.r.A,B=g.r.B;const fav=C.lk==='upset'?B:C.lk==='face'?(A.al!==B.al?(A.al==='f'?A:B):(A.pop>=B.pop?A:B)):null;
+  const tags={};g.e.ch.forEach(c=>{tags[c.t]=rcTag1(c,C.lk,fav===A)});const v=Object.values(tags);C.tags=tags;if(!v.includes('w')||!v.some(x=>x!=='w'))delete g.r.CROWD}catch(e){delete g.r.CROWD}}
+ return 'heat'}
+/* the match is over when the call says so — a no contest, a new winner, or words that end it */
+const msOver=(m,out,w0)=>!!(m.nc||(out&&(out.nc||out.flip))||m.winner!==w0||(out&&msEnds(out.text)));
 
 /* ---------- the rival (and the balance bot) run the same calls by the rival's rules ---------- */
 function msAIPick(list,r){let best=list[0],bv=-1e9;list.forEach(c=>{const p=msChance(c,r);const sw=swingOf(p,c.st);const v=p*sw.w-(1-p)*sw.l+(c.heat||0)/40+Math.random()*.25;if(v>bv){bv=v;best=c}});return best}
 function msAuto(m,brand,big){if(!msOn(m))return;const st={};const r=msRoles(m,brand);if(!r.A||!r.B)return;
- const fam=msFam(m);const g=msMoment(m,brand,big);const fk=msFinKind(g);
+ const fam=msFam(m);const g=msMoment(m,brand,big);const plan=msPlan(g,m);const w0=m.winner;
  msRoll(msAIPick(msDeal(MS_OPEN,r,3),r),r,m,st,'Opening');
- if(g&&!fk){runEvAI(g,m)}else msRoll(msAIPick(msDeal(MS_HEAT,r,3),r),r,m,st,'Heat');
- const w0=m.winner;if(msStop(m,g)||m.winner!==w0)return;
+ if(plan==='heat'){const out=runEvAI(g,m);if(msOver(m,out,w0))return msAutoPost(m,brand)}else msRoll(msAIPick(msDeal(MS_HEAT,r,3),r),r,m,st,'Heat');
  const r2=msRoles(m,brand);if(!r2.A||!r2.B)return;
  if(fam!=='none'){const F=MS_FALL[fam==='pin'&&m.sides.length>2&&r2.C?'multi':fam];
   const p=clamp(.25+((r2.B.ring+r2.A.ring)/2)/100*.6,.3,.85);const kick=p>=.6&&Math.random()<.7;
-  if(kick){msKick(m,r2,st,F,'Near fall');if(fk)runEvAI(g,m);else msRoll(msAIPick(msDeal(FIN[fam==='rumble'?'rumble':fam]||FIN_PIN,r2,3),r2),r2,m,st,'Finish')}}
- else if(fk)runEvAI(g,m);
- const pl=msPostDeal(msRoles(m,brand),m);if(pl.length)msPost(pick(pl),msRoles(m,brand),m)}
+  if(kick){msKick(m,r2,st,F,'Near fall');if(plan==='fin')runEvAI(g,m);else msRoll(msAIPick(msDeal(FIN[fam]||FIN_PIN,r2,3),r2),r2,m,st,'Finish')}}
+ else if(plan==='fin')runEvAI(g,m);
+ msAutoPost(m,brand)}
+function msAutoPost(m,brand){const r=msRoles(m,brand);if(!r.A||!r.B)return;const pl=msPostDeal(r,m);if(pl.length)msPost(pick(pl),r,m)}
 
 /* ---------- the live showdown ---------- */
 const msReduce=()=>window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -282,10 +307,14 @@ async function msStamp(t,cls,ms){const fx=document.getElementById('sdfx');if(!fx
 function msPage(l){const [k,t,sh]=l;const r=MS.r;const text=msFill(t,r);
  const side=k==='A'||k==='qa'?'a':k==='B'||k==='qb'?'b':null;const kind=k==='qa'||k==='qb'?'q':k==='A'||k==='B'?'act':k==='p'||k==='c'?'booth':'cam';
  return {side,kind,t:text,who:k==='p'?'Play-by-play':k==='c'?'Colour':'',sh}}
-/* moment texts are narration: split them the way the promo showdown does */
-function msNarr(text,rr){const g=MS.g&&MS.g.r||{};rr=rr||g;const ctx={A:rr.A||MS.r.A,B:rr.B||MS.r.B,X:g.X,T:'',F:''};
- try{if(typeof promoPages==='function')return promoPages(text,'a',ctx,true,null).map(pg=>pg.q!=null?{side:pg.side,kind:'q',t:pg.q}:pg.act!=null?{side:pg.side,kind:'act',t:`${(people0(ctx)[pg.side]||{}).name||''} ${pg.act}`.trim()}:{side:pg.side,kind:'cam',t:pg.cam||pg.res||''}).filter(pg=>pg.t)}catch(e){console.warn(e)}
- return [{kind:'cam',t:text}]}
+/* moment texts are narration: sentences grouped into pages the box can hold; a page that starts with a wrestler's
+   name turns the camera to them, the rest are camera notes */
+function msNarr(text,rr){const g=MS.g&&MS.g.r||{};rr=rr||g;const A=rr.A||MS.r.A,B=rr.B||MS.r.B;
+ const sent=String(text).match(/[^.!?…]+(?:[.!?…]+["”']?|$)\s*/g)||[String(text)];const out=[];let cur='';
+ sent.forEach(x=>{x=x.trim();if(!x)return;if(cur&&(cur+' '+x).length>140){out.push(cur);cur=x}else cur=cur?cur+' '+x:x});if(cur)out.push(cur);
+ const sideOf=t=>{const inA=(MS.m.sides[MS.m.winner]||[]).map(id=>S.w[id]&&S.w[id].name).filter(Boolean);const bs=(MS.m.sides.find(sd=>sd.includes(MS.r.B.id))||[]).map(id=>S.w[id]&&S.w[id].name).filter(Boolean);
+  if([A&&A.name,...inA].some(n=>n&&t.startsWith(n)))return 'a';if([B&&B.name,...bs].some(n=>n&&t.startsWith(n)))return 'b';return null};
+ return out.map(t=>{const sd=sideOf(t);return {side:sd,kind:sd?'act':'cam',t}})}
 const people0=ctx=>({a:ctx.A,b:ctx.B,x:ctx.X});
 function msBox(pg){const r=MS.r;const w=pg.side==='a'?r.A:pg.side==='b'?r.B:null;
  const tab=pg.kind==='booth'?`<div class="sdtab other">${esc(pg.who)}</div>`:w&&(pg.kind==='q')?`<div class="sdtab ${pg.side==='a'?'mine':'them'}${pg.side==='b'?' r':''}">${esc(w.name)}</div>`:'';
@@ -314,35 +343,47 @@ const msItems=(list,r)=>list.map(c=>({c,label:msFill(c.t,r),info:msInfo(c,r)}));
 async function msCall(list,lab,q,sub){const r=MS.r;const it=await msMenu(q,sub,msItems(list,r));const o=msRoll(it.c,r,MS.m,MS.st,lab);
  MS.log.push({lab,t:it.label,ok:o.ok});msFrame('');await msPan('a');await msStamp(o.ok?'It lands':'It misses',o.ok?'ok':'no');await msPlay(msLines(o.lines))}
 /* the big moment: the same calls, odds and results as any other match moment */
-async function msMomentAct(){const g=MS.g,m=MS.m,r=g.r;
+async function msMomentAct(slot){const g=MS.g,m=MS.m,r=g.r;
  if(g.e.need==='X'&&r.X&&!g.gor){const X=r.X;const it=await msMenu('🎧 Your call in gorilla',`${esc(X.name)} wants to go out there and start something`,[{label:'Send them out there',info:`They crash the main event and could start a new rivalry · morale +${GOR_MOR}`,yes:1},{label:'Not tonight',info:`The match goes on as booked · morale −${GOR_MOR}`}]);
-  gorMor(X,!!it.yes,true);if(!it.yes){const ng=genEvent(m,'p',true,true);if(ng&&ng.e.need!=='X'&&!msFinKind(ng)){MS.g=ng;ng.gor=1;return msMomentAct()}return null}g.gor=1}
+  gorMor(X,!!it.yes,true);if(!it.yes){const ng=genEvent(m,'p',true,true);if(ng&&ng.e.need!=='X'&&(msPlan(ng,m)==='heat')===(slot==='heat')){MS.g=ng;ng.gor=1;return msMomentAct(slot)}return null}g.gor=1}
  msFrame('');await msPlay(msNarr(evFill(g.e.text,r)));
  const ch=evChoices(g.e,m,r);const ck=CALLS[callKind(g)];
  const items=ch.map(c=>({c,label:evFill(c.t,r),info:`${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:c.heelA&&r.A.al==='f'?'<span class="heel">😈 Dirty — fans won\'t like it from a face</span> · ':''}${c.always?'✅ Guaranteed':STAT_ICON[c.s]+' · '+oddsWord(evChance(c,r))}${c.flip?' · changes the winner':''}${c.nc?' · no winner':''} · ${callStakes(c,g,c.always?null:evChance(c,r))}${g.sit&&c.tip?` · ${esc(sitTip(c,r))}`:''}${typeof rcTag==='function'?rcTag(c,g):''}`}));
- const note=(g.sit?g.info:'')+(typeof rcNote==='function'&&g.r&&g.r.CROWD?' 👥 '+esc(g.r.CROWD.text):'');
- const it=await msMenu(`${ck.i} ${ck.n}`,note||ck.l,items);
- const out=g.sit?sitRoll(it.c,r,m):evRoll(it.c,r,m);MS.log.push({lab:MS.act===2?'Finish':'Heat',t:it.label,ok:out.success});
+ const note=(g.sit?g.info:'')+(g.r&&g.r.CROWD?(g.sit?' · ':'')+'👥 '+esc(g.r.CROWD.text):'');
+ const it=await msMenu(`${ck.i} ${ck.n}`,note||ck.l,items);const w0=m.winner;
+ const out=g.sit?sitRoll(it.c,r,m):evRoll(it.c,r,m);MS.log.push({lab:slot==='heat'?'Heat':'Finish',t:it.label,ok:out.success});
  msFrame('');await msStamp(out.success?'It lands':'It misses',out.success?'ok':'no');
  const pages=msNarr(out.text);pages.push({kind:'booth',who:'Play-by-play',t:pick(out.success?MS_BOOTH_OK:MS_BOOTH_NO)});
  (out.extra||[]).forEach(x=>pages.push({kind:'cam',t:x}));if(out.flip)pages.push({kind:'cam',t:`👑 New winner: ${sideName(m.sides[m.winner])}`});if(out.nc)pages.push({kind:'cam',t:'🚫 The match ends without a winner.'});
+ out.over=msOver(m,out,w0)||(slot==='fin'&&msEnds(evFill(g.e.text,r)));
+ /* at the finish, a call that keeps the match going still has to end it: the winner puts it away */
+ if(slot==='fin'&&!out.over){const fam=msFam(m);const F=MS_FALL[fam==='pin'&&m.sides.length>2&&MS.r.C?'multi':fam];
+  if(F){pages.push({kind:'cam',t:msFill(pick(['A minute later, {A} puts it away.','{A} regroups, and this time it\'s over.','It takes one more big move from {A}.']),MS.r)});pages.push(...msLines(F.end))}else pages.push({kind:'cam',t:msFill('A minute later, {A} puts it away and gets the win.',MS.r)});out.over=true}
  await msPlay(pages);return out}
-async function msRun(){const m=MS.m;const fam=msFam(m);const g=MS.g;const fk=msFinKind(g);
- MS.act=0;msFrame('');
- await msPlay([{kind:'cam',t:pick(['The main event. The bell rings.','Main event time, and the crowd is on its feet for the opening bell.','Here we go. The main event is underway.'])},{kind:'booth',who:'Play-by-play',t:msFill(pick(['{A} and {B}, and this one has been building for a while.','This is the one they paid to see. {A} against {B}.','Main event: {A} versus {B}. Buckle up.']),MS.r)}]);
+function msIntro(m,hot){const ns=m.sides.map(sd=>sideName(sd));
+ if(m.type==='rumble')return pick(['It\'s the Royal Rumble, and the clock is ticking down to the first entrant.','Royal Rumble time. Every number is a new chance.']);
+ if(m.type==='gauntlet')return pick(['The Casino Gauntlet. Only one of them leaves a loser tonight.','Casino Gauntlet time. Nobody wants to be the one who gets pinned.']);
+ if(m.type==='mitb')return 'Money in the Bank. The briefcase is hanging high above the ring.';
+ const vs=ns.length===2?`${ns[0]} against ${ns[1]}`:`${ns.slice(0,-1).join(', ')} and ${ns[ns.length-1]}`;
+ return pick(hot?[`${vs}, and this one has been building for weeks.`,`There is real bad blood here. ${vs}.`]:[`Main event time: ${vs}.`,`Main event: ${vs}. Buckle up.`,`${vs} closes the show tonight.`])}
+async function msRun(){const m=MS.m;const fam=msFam(m);const plan=msPlan(MS.g,m);
+ MS.act=0;msFrame('');const r0=MS.r;const hot=heatOf(r0.A.id,r0.B.id)>=30;
+ await msPlay([{kind:'cam',t:pick(['The main event. The bell rings.','Main event time, and the crowd is on its feet for the opening bell.','Here we go. The main event is underway.'])},{kind:'booth',who:'Play-by-play',t:msIntro(m,hot)}]);
  await msCall(msDeal(MS_OPEN,MS.r,3),'Opening','🎬 The opening bell',`How does ${esc(MS.r.A.name)} start?`);
  MS.act=1;msFrame('');
- const w0=m.winner;
- if(!(g&&!fk&&await msMomentAct()))await msCall(msDeal(MS_HEAT,MS.r,3),'Heat','🎬 The heat','How does the middle of the match go?');
- if(!msStop(m,MS.g)&&m.winner===w0){MS.act=2;MS.r=msRoles(m,'p');const r=MS.r;msFrame('');
+ let over=false;
+ if(plan==='heat'){const out=await msMomentAct('heat');if(out)over=out.over;else await msCall(msDeal(MS_HEAT,MS.r,3),'Heat','🎬 The heat','How does the middle of the match go?')}
+ else await msCall(msDeal(MS_HEAT,MS.r,3),'Heat','🎬 The heat','How does the middle of the match go?');
+ if(!over){MS.act=2;MS.r=msRoles(m,'p');const r=MS.r;msFrame('');
   if(fam!=='none'){const F=MS_FALL[fam==='pin'&&m.sides.length>2&&r.C?'multi':fam];
    await msPlay(msLines(pick(F.set)));if(F.count)for(const n of F.count)await msStamp(n,'count',560);
-   const it=await msMenu('🏁 '+msFill(F.q,r),'You\'re calling the finish',[{label:msFill(F.kick,r),info:`💪 In-ring · ${oddsWord(clamp(.25+((r.B.ring+r.A.ring)/2)/100*.6,.3,.85))} · ${esc(msFill(F.ksub,r))}`,kick:1},{label:msFill(F.stay,r),info:`✅ Guaranteed · 🛡️ Small swing · ${esc(msFill(F.ssub,r))}`}]);
+   const it=await msMenu('🏁 '+msFill(F.q,r),'You\'re calling the finish',[{label:msFill(F.kick,r),info:(pk=>`💪 In-ring · ${oddsWord(pk)} · ${swingWord(swingOf(pk,.6).w)} · ${esc(msFill(F.ksub,r))}`)(clamp(.25+((r.B.ring+r.A.ring)/2)/100*.6,.3,.85)),kick:1},{label:msFill(F.stay,r),info:`✅ Guaranteed · 🛡️ Small swing · ${esc(msFill(F.ssub,r))}`}]);
    if(it.kick){const o=msKick(m,r,MS.st,F,'Near fall');MS.log.push({lab:'Near fall',t:it.label,ok:o.ok});msFrame('');await msStamp(o.ok?'It lands':'It misses',o.ok?'ok':'no');await msPlay(msLines(o.lines));
-    if(fk&&MS.g)await msMomentAct();
-    else{const fl=msDeal(FIN[fam]||FIN_PIN,r,3);await msCall(fl,'Finish','🏁 Call the finish',`${esc(r.A.name)} is booked to win. How does it end?`)}}
+    if(plan==='fin'&&MS.g)await msMomentAct('fin');
+    else await msCall(msDeal(FIN[fam]||FIN_PIN,r,3),'Finish','🏁 Call the finish',`${esc(r.A.name)} is booked to win. How does it end?`)}
    else{MS.log.push({lab:'Near fall',t:it.label,ok:true});evNew(m).notes.push(`🎬 Near fall: ${it.label}`);msFrame('');await msPlay(msLines(F.end))}}
-  else if(fk&&MS.g)await msMomentAct()}
+  else if(plan==='fin'&&MS.g)await msMomentAct('fin');
+  else{msFrame('');await msPlay([{kind:'cam',t:msFill('{A} gets the win.',r)}])}}
  const r=msRoles(m,'p');MS.r=r;const pl=msPostDeal(r,m);
  if(pl.length){MS.act=3;msFrame('');const it=await msMenu('🎤 After the bell','What\'s the closing shot?',pl.map(c=>({c,label:msFill(c.t,r),info:`📖 Story only, no stars · ${esc(msFill(c.sub,r))}`})));
   msPost(it.c,r,m);MS.log.push({lab:'After',t:it.label,story:1,note:msFill(it.c.note||'',r)});msFrame('');await msStamp('Closing shot','gd',700);await msPlay(msLines(pick(it.c.hit)))}
