@@ -34,7 +34,7 @@ const MS_OPEN=[
  {id:'brawl',fit:'br',t:'Start a fight, not a match',sub:'Fists flying from the opening bell',s:'ring',d:.05,st:.5,
   hit:[[['A','({A} charges across the ring before the bell finishes ringing. Fists everywhere.)',['Fight!','']],['p','No feeling out process at all! They are throwing bombs!'],['x','The front row is up on the barricade.']],
        [['A','({A} drags {B} out by the hair and runs them spine-first into the ring steps.)',['Steel steps!','gold']],['qb','My back! Ref!'],['p','The referee has already lost control of this one!']]],
-  miss:[[['A','({A} goes to whip {B} into the steps. {B} reverses and {A} hits the steel instead.)'],['c','Picked a fight with the wrong person.'],['x','Boos as {B} poses on the steps.']],
+  miss:[[['A','({A} goes to whip {B} into the steps. {B} reverses and {A} hits the steel instead.)'],['c','Picked a fight with the wrong person.'],['x','{B} stands on the steps and soaks it in.']],
        [['A','({A} swings wild and {B} ducks every punch, then drops {A} with one clean shot.)'],['c','All that anger, nothing to show for it.']]]},
  {id:'power',fit:'pw',t:'Throw {B} around early',sub:'Suplexes and slams to set the tone',s:'ring',d:.02,st:.5,
   hit:[[['A','({A} catches {B} mid-leap and launches them across the ring with a belly-to-belly.)',['Suplex city!','gold']],['p','{B} just got thrown like a sack of laundry!'],['x','A big "Ooooh!" rolls around the arena.']],
@@ -203,7 +203,12 @@ const MS_POST=[
 
 /* the booth's reaction to the big moment */
 const MS_BOOTH_OK=['What a moment! This place is unglued!','You will not see that anywhere else this week.','That is why this match is the main event!'],
- MS_BOOTH_NO=['Not how anyone drew that one up.','That one got away from them.','The crowd isn\'t sure what they just saw.'];
+ MS_BOOTH_NO=['Not how anyone drew that one up.','That one got away from them.','The crowd isn\'t sure what they just saw.'],
+ /* v256: when the moment is somebody hurt, a stoppage or no winner, the booth doesn't cheer it */
+ MS_BOOTH_GRAVE=['Everybody hold your breath.','That\'s the side of this business nobody wants to see.','Let\'s hope everyone is all right.'],
+ MS_BOOTH_SOFT=['That one will stay with that kid forever.','Sometimes the best moment isn\'t a move at all.'];
+const msGrave=(out)=>!!(out&&(out.nc||/\b(?:doctor|medics?|trainers?|stretcher|neck|concussion|not moving|isn't moving|falls silent|goes silent|under their own power)\b/i.test(out.text||'')));
+const msSoft=(out)=>!!(out&&/\b(?:kid|child|tears|bursts into tears|hugs?)\b/i.test(out.text||''));
 
 /* ---------- engine ---------- */
 let MS=null;
@@ -238,7 +243,7 @@ function msPostDeal(r,m){if(m.nc||!r.B)return [];return msDeal(MS_POST,r,3)}
 /* is this match getting the showdown? the main event of a live show, not a squash */
 function msOn(m){return !!(m&&m.sides&&m.type!=='squash'&&!(typeof isSq==='function'&&isSq(m))&&validMatch(m))}
 /* the moment for the heat act: forced situations first, then a random moment (always one in the main event) */
-function msMoment(m,brand,big){try{return matchEvent(m,brand,big,1)}catch(e){console.warn(e);return null}}
+function msMoment(m,brand,big){try{const r=msRoles(m,brand);m._msr=r.A&&r.B?{a:r.A.id,b:r.B.id}:null;return matchEvent(m,brand,big,1)}catch(e){console.warn(e);return null}finally{delete m._msr}}
 /* v255: which calls end the match. Every outcome line was read in the v255 sweep; these phrases are how they end it
    (a count of three, a tap, a bell, a ten count, a win, a DQ, a prize pulled down…). A moment plays in the heat only
    with the calls that keep the match going; one that can't offer two of those is saved for the finish. */
@@ -321,14 +326,16 @@ function msBox(pg){const r=MS.r;const w=pg.side==='a'?r.A:pg.side==='b'?r.B:null
  const text=pg.kind==='q'?`“${pg.t}”`:pg.t;
  return `<div class="sdbox k-${pg.kind==='booth'?'q':pg.kind}${pg.kind==='booth'?' k-booth':''}" id="sdbox" onclick="msTap()">${tab}<div class="sdsay" id="sdsay" data-t="${esc(text)}">${esc(text)}</div><span class="sdnx" id="sdnx">▼</span></div><div class="sdhint">Tap to continue</div>`}
 let MS_TYPE=null;
+let MS_PAN=false;
 async function msShow(){const pg=MS.q[MS.qi];if(!pg)return;const low=document.getElementById('sdlow');if(!low){msFrame('');return msShow()}
- if(pg.side)await msPan(pg.side);const bb=document.getElementById('msbooth');if(bb)bb.classList.toggle('on',pg.kind==='booth');
+ /* v256: a tap during the camera whip waits instead of skipping the line that's about to appear */
+ if(pg.side){MS_PAN=true;try{await msPan(pg.side)}finally{MS_PAN=false}}const bb=document.getElementById('msbooth');if(bb)bb.classList.toggle('on',pg.kind==='booth');
  if(pg.sh)msShout(pg.sh);low.innerHTML=msBox(pg);msFeed();
  const spr=pg.side&&document.querySelector(`#sd .c${pg.side} .sdph`);if(spr){spr.classList.remove('talk','hit');void spr.offsetWidth;spr.classList.add(pg.sh?'hit':'talk')}
  const el=document.getElementById('sdsay');const done=()=>{const nx=document.getElementById('sdnx');if(nx)nx.classList.add('on')};if(!el||msReduce())return done();
  const t=el.dataset.t;let i=0;el.textContent='';const iv=setInterval(()=>{i+=2;el.textContent=t.slice(0,i);if(i>=t.length)fin()},20);
  const fin=()=>{clearInterval(iv);el.textContent=t;MS_TYPE=null;done()};MS_TYPE={fin}}
-function msTap(){if(!MS||!MS.q)return;if(MS_TYPE){MS_TYPE.fin();return}MS.qi++;if(MS.qi<MS.q.length)return msShow();const a=MS.after;MS.q=null;MS.after=null;if(a)a()}
+function msTap(){if(!MS||!MS.q||MS_PAN)return;if(MS_TYPE){MS_TYPE.fin();return}MS.qi++;if(MS.qi<MS.q.length)return msShow();const a=MS.after;MS.q=null;MS.after=null;if(a)a()}
 document.addEventListener('keydown',e=>{if(!MS||!MS.q||(e.key!==' '&&e.key!=='Enter'))return;if(e.target&&e.target.closest&&e.target.closest('button,input,select,textarea'))return;if(!document.getElementById('sdbox'))return;e.preventDefault();msTap()});
 function msPlay(pages){return new Promise(res=>{pages=pages.filter(Boolean);if(!pages.length)return res();MS.q=pages;MS.qi=0;MS.after=res;msShow()})}
 const msLines=ls=>ls.map(msPage);
@@ -345,7 +352,7 @@ async function msCall(list,lab,q,sub){const r=MS.r;const it=await msMenu(q,sub,m
 /* the big moment: the same calls, odds and results as any other match moment */
 async function msMomentAct(slot){const g=MS.g,m=MS.m,r=g.r;
  if(g.e.need==='X'&&r.X&&!g.gor){const X=r.X;const it=await msMenu('🎧 Your call in gorilla',`${esc(X.name)} wants to go out there and start something`,[{label:'Send them out there',info:`They crash the main event and could start a new rivalry · morale +${GOR_MOR}`,yes:1},{label:'Not tonight',info:`The match goes on as booked · morale −${GOR_MOR}`}]);
-  gorMor(X,!!it.yes,true);if(!it.yes){const ng=genEvent(m,'p',true,true);if(ng&&ng.e.need!=='X'&&(msPlan(ng,m)==='heat')===(slot==='heat')){MS.g=ng;ng.gor=1;return msMomentAct(slot)}return null}g.gor=1}
+  gorMor(X,!!it.yes,true);if(!it.yes){const r0=msRoles(m,'p');m._msr={a:r0.A.id,b:r0.B.id};let ng=null;try{ng=genEvent(m,'p',true,true)}finally{delete m._msr}if(ng&&ng.e.need!=='X'&&(msPlan(ng,m)==='heat')===(slot==='heat')){MS.g=ng;ng.gor=1;return msMomentAct(slot)}return null}g.gor=1}
  msFrame('');await msPlay(msNarr(evFill(g.e.text,r)));
  const ch=evChoices(g.e,m,r);const ck=CALLS[callKind(g)];
  const items=ch.map(c=>({c,label:evFill(c.t,r),info:`${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:c.heelA&&r.A.al==='f'?'<span class="heel">😈 Dirty — fans won\'t like it from a face</span> · ':''}${c.always?'✅ Guaranteed':STAT_ICON[c.s]+' · '+oddsWord(evChance(c,r))}${c.flip?' · changes the winner':''}${c.nc?' · no winner':''} · ${callStakes(c,g,c.always?null:evChance(c,r))}${g.sit&&c.tip?` · ${esc(sitTip(c,r))}`:''}${typeof rcTag==='function'?rcTag(c,g):''}`}));
@@ -353,7 +360,7 @@ async function msMomentAct(slot){const g=MS.g,m=MS.m,r=g.r;
  const it=await msMenu(`${ck.i} ${ck.n}`,note||ck.l,items);const w0=m.winner;
  const out=g.sit?sitRoll(it.c,r,m):evRoll(it.c,r,m);MS.log.push({lab:slot==='heat'?'Heat':'Finish',t:it.label,ok:out.success});
  msFrame('');await msStamp(out.success?'It lands':'It misses',out.success?'ok':'no');
- const pages=msNarr(out.text);pages.push({kind:'booth',who:'Play-by-play',t:pick(out.success?MS_BOOTH_OK:MS_BOOTH_NO)});
+ const pages=msNarr(out.text);pages.push({kind:'booth',who:'Play-by-play',t:pick(msGrave(out)?MS_BOOTH_GRAVE:out.success&&msSoft(out)?MS_BOOTH_SOFT:out.success?MS_BOOTH_OK:MS_BOOTH_NO)});
  (out.extra||[]).forEach(x=>pages.push({kind:'cam',t:x}));if(out.flip)pages.push({kind:'cam',t:`👑 New winner: ${sideName(m.sides[m.winner])}`});if(out.nc)pages.push({kind:'cam',t:'🚫 The match ends without a winner.'});
  out.over=msOver(m,out,w0)||(slot==='fin'&&msEnds(evFill(g.e.text,r)));
  /* at the finish, a call that keeps the match going still has to end it: the winner puts it away */

@@ -108,18 +108,19 @@ const CLOSE_TX={
  down:[{hk:'live',t:`{B} gets the last word: "Enjoy the noise tonight. It's the last time you'll hear it."`},{nhk:'live',t:`{B} gets the last word: "Take a good look at this face. You'll be seeing it a lot more than you'd like."`},{vs:'h',t:`{B} leans in for the last word: "You're not the main character here. You never were."`},{vs:'f',t:`{B} gets the last word, and it's a good one: "You've had your say. I'll have mine at {PPV}."`},{vs:'h',t:`{B} gets the last word: "Go ahead. Stand there. That's all you were ever good at."`}]};
 const CLOSE={
  up:[
-  {t:'🗡️ Twist the knife',s:'mic',d:.2,h:11,p:2,ok:`{A} stops on the way out. "And {B}? Nobody will remember you after this." The cruelest line of the night. {B} has nothing.`,g:`"And {B}?" {A} stops on the way out. "When it's over, I'll be the only reason anyone remembers your name." {B} has nothing left.`,no:`{A} turns back. "And another thing—" One line too many. {B} gets a breath back.`,b:`{A} turns back. "And — you're — bad!" It's the weakest line of the night. {B} gets a breath back.`},
+  {t:'🗡️ Twist the knife',rage:1,s:'mic',d:.2,h:11,p:2,ok:`{A} stops on the way out. "And {B}? Nobody will remember you after this." The cruelest line of the night. {B} has nothing.`,g:`"And {B}?" {A} stops on the way out. "When it's over, I'll be the only reason anyone remembers your name." {B} has nothing left.`,no:`{A} turns back. "And another thing—" One line too many. {B} gets a breath back.`,b:`{A} turns back. "And — you're — bad!" It's the weakest line of the night. {B} gets a breath back.`},
   {t:'🏆 Hold the moment',hk:'live',s:'pop',d:.05,h:8,p:3,ok:`{A} lowers the mic. "Listen to that." Then just stands there and soaks it in. The moment is theirs.`,g:`{A} raises a fist and holds it there, eyes on {B}. One word, off-mic: "Listen." The noise builds and builds. The moment is theirs.`,no:`{A} raises a fist. "This is—" The music hits early and steps on it.`,b:`{A} poses. "Yeah!" Poses again. "Yeah!" A third time. The moment drags.`},
   {t:'🏆 Hold the moment',hk:'back|lot',s:'pop',d:.05,h:8,p:3,ok:`{A} leans against the wall. "Take your time." Then says nothing else. {B} has to fill the silence and can't. The moment is theirs.`,g:`{A} straightens {B}'s collar, slowly. "There." And just waits. {B} has nothing to fill the silence with. The moment is theirs.`,no:`{A} leans back against the wall. "I'll wait." A crew member walks right between them and the moment's gone.`,b:`{A} leans back against the wall. "Take your — whoa!" It's a door. It opens. The moment's gone.`},
   {t:'🏆 Hold the moment',hk:'studio',s:'pop',d:.05,h:8,p:3,ok:`{A} leans back. "Your turn." Then lets the silence win. The moment is theirs.`,g:`{A} leans back and crosses one leg over the other. "Take your time." Then nothing. {B} has to fill the silence and can't. The moment is theirs.`,no:`{A} leans back. "I'll wait." The interviewer jumps in too early and the moment's gone.`,b:`{A} leans back. "Take your — whoa!" The chair tips. The moment's gone.`}],
  even:[
-  {t:'💥 Let it boil over',hk:'live',s:'ring',d:.1,h:12,p:1,ok:`{A} steps in. "Come on, then!" They go at it. It takes half the locker room to pull them apart.`,g:`{A} drops the mic. "Enough talking." Nobody knows who threw first. Then it's everyone: referees, security, half the roster, and {A} and {B} still reaching for each other over the pile.`,no:`{A} lunges. "Let's go!" Security gets there before a punch lands. It fizzles.`,b:`{A} lunges. "Let me at — let me AT —" {A} gets tangled in security before reaching {B}. It fizzles.`},
-  {t:'💥 Let it boil over',hk:'back|lot',s:'ring',d:.1,h:12,p:1,ok:`{A} drops the mic. "Come here." They crash into the equipment cases and it takes half the crew to pull them apart.`,g:`{A} shoves {B} into the wall. "Now." They go through a rack of road cases, crew everywhere, and the camera loses them in the pile.`,no:`{A} lunges. "Let's go!" Crew members get between them before it starts.`,b:`{A} lunges. "Let me at —" A road case rolls into {A}'s shins. Crew members get between them.`},
-  {t:'💥 Let it boil over',hk:'studio',s:'ring',d:.1,h:12,p:1,ok:`{A} stands. "We're done talking." The table goes over, the chairs go flying and the feed cuts to black.`,g:`{A} shoves the table out of the way. "Come here!" They're on each other before it lands. Crew everywhere. The feed cuts to black mid-scuffle.`,no:`{A} stands. "Let's go." Crew members get between them before it starts.`,b:`{A} grabs the table. "Let's — it won't —" It's bolted down. Crew members get between them.`},
+  {t:'💥 Let it boil over',rage:1,hk:'live',s:'ring',d:.1,h:12,p:1,ok:`{A} steps in. "Come on, then!" They go at it. It takes half the locker room to pull them apart.`,g:`{A} drops the mic. "Enough talking." Nobody knows who threw first. Then it's everyone: referees, security, half the roster, and {A} and {B} still reaching for each other over the pile.`,no:`{A} lunges. "Let's go!" Security gets there before a punch lands. It fizzles.`,b:`{A} lunges. "Let me at — let me AT —" {A} gets tangled in security before reaching {B}. It fizzles.`},
+  {t:'💥 Let it boil over',rage:1,hk:'back|lot',s:'ring',d:.1,h:12,p:1,ok:`{A} drops the mic. "Come here." They crash into the equipment cases and it takes half the crew to pull them apart.`,g:`{A} shoves {B} into the wall. "Now." They go through a rack of road cases, crew everywhere, and the camera loses them in the pile.`,no:`{A} lunges. "Let's go!" Crew members get between them before it starts.`,b:`{A} lunges. "Let me at —" A road case rolls into {A}'s shins. Crew members get between them.`},
+  {t:'💥 Let it boil over',rage:1,hk:'studio',s:'ring',d:.1,h:12,p:1,ok:`{A} stands. "We're done talking." The table goes over, the chairs go flying and the feed cuts to black.`,g:`{A} shoves the table out of the way. "Come here!" They're on each other before it lands. Crew everywhere. The feed cuts to black mid-scuffle.`,no:`{A} stands. "Let's go." Crew members get between them before it starts.`,b:`{A} grabs the table. "Let's — it won't —" It's bolted down. Crew members get between them.`},
   {t:'👀 Stare them down',s:'luck',d:0,h:9,p:1,ok:`{A} steps in. "Go on. Blink." Nose to nose. Nobody blinks. The segment ends on the stare.`,g:`{A} steps in and says it off-mic, barely a whisper: "{PPV}." They stand there, nose to nose, as the noise builds around them. The show goes to break on the stare.`,no:`{A} steps in. "Look at me." {B} turns away first, but on their own terms.`,b:`{A} steps in. "Don't blink. Don't — oh." {A} blinks first. Then again. {B} smiles.`},
+  {t:'🤝 Shake on it',calm:1,s:'pop',d:.05,h:6,p:3,ok:`{A} holds out a hand. "Best one wins." {B} takes it. They hold the grip for the cameras, and the crowd stands for both of them.`,g:`{A} holds out a hand and doesn't say a word. {B} looks at it, then at {A}, and shakes. Neither lets go first. The crowd stands for both of them.`,no:`{A} offers a hand. "Best one wins." {B} looks at it a beat too long before taking it. The moment is a little stiff.`,b:`{A} offers the wrong hand, the one holding the mic. "Best one — sorry." They sort it out. The moment is a little stiff.`},
   {t:'🎯 Make it official',s:'mic',d:.05,h:10,p:2,ch:1,ok:`"Then let's settle it. {PPV}." {B} nods. It's on.`,g:`"Fine. No more talking." {A} holds the mic out to {B}. "Say yes." {B} takes it. "Yes." It's on.`,no:`{A} points. "{PPV}. You and me." {B} walks off without answering.`,b:`"So — the match. Is it? Are we?" {B} walks off without answering.`}],
  down:[
-  {t:'👊 Make them pay for it',s:'ring',d:.1,h:11,p:1,ok:`{A} doesn't answer with words — just one: "Okay." Then {B} gets dropped, and suddenly nobody remembers the last word.`,g:`{A} lets {B} enjoy it for exactly one second. "That's your last word?" Then {B} is on the floor with {A} standing over them, and nobody remembers what {B} said.`,no:`{A} swings. "Say it again!" {B} sees it coming and slides away, smiling.`,b:`{A} swings. "Take th—" {A} misses. {B} is already backing away, smiling.`},
+  {t:'👊 Make them pay for it',rage:1,s:'ring',d:.1,h:11,p:1,ok:`{A} doesn't answer with words — just one: "Okay." Then {B} gets dropped, and suddenly nobody remembers the last word.`,g:`{A} lets {B} enjoy it for exactly one second. "That's your last word?" Then {B} is on the floor with {A} standing over them, and nobody remembers what {B} said.`,no:`{A} swings. "Say it again!" {B} sees it coming and slides away, smiling.`,b:`{A} swings. "Take th—" {A} misses. {B} is already backing away, smiling.`},
   {t:'🎤 Grab the mic back',s:'mic',d:.22,h:12,p:2,ok:`{A} takes the mic back. "Nice line. Shame you won't be able to say it at {PPV}." The last word isn't {B}'s after all.`,g:`{A} grabs the mic back. "Funny. You've been saying that for years. How's it working out?" Huge reaction. The last word isn't {B}'s after all.`,no:`{A} grabs the mic back. "Yeah, well — we'll see." Nothing lands. {B} wins this one.`,b:`{A} grabs the mic. "Well —" Nothing else comes. {B} wins this one.`},
   {t:'🚶 Let them have it',s:'luck',d:-.15,h:7,p:0,ok:`{A} shrugs. "Enjoy it." And walks off. It'll keep.`,g:`{A} nods, almost impressed. "Good one. Save it." And walks off. Whatever happens next, it's not happening here. It'll keep.`,no:`{A} shrugs. "Whatever." And walks off. It looks like {A} lost, because {A} did.`,b:`{A} walks off. "I'm — I'll get you next time." It looks like {A} lost.`}]};
 const ZONE_TIP={up:`You're winning the exchange`,even:'Dead even',down:`{B} is winning the exchange`};
@@ -143,15 +144,17 @@ function bLine(ctx,st,xi,moves){const x=st.ex;const ok=o=>!x.used.has(o.t)&&(!mo
 function gate(o,xi){const k=[xi.i,xi.i+(xi.ok?'+ok':'+no')];return (!o.xi||o.xi.split(' ').some(t=>k.includes(t)))&&(!o.nxi||!o.nxi.split(' ').some(t=>k.includes(t)))}
 /* v253: bm / nbm keep an answer to (or away from) the kind of line {B} just said; bw needs {B} to be walking away */
 const fitsB=(o,e)=>(!o.bw||!!(e.w||e.gone))&&(!o.bm||o.bm.split(' ').includes(e.m))&&(!o.nbm||!o.nbm.split(' ').includes(e.m));
-function genLine(tc,ctx,xi,e){const l=(GEN[tc]||[]).filter(o=>okFor(o,ctx)&&rtExtra(o,ctx,xi)&&gate(o,xi)&&(!e||fitsB(o,e)));return l.length?wpick(l,o=>(seenP(o.ok)?.15:1)*(o.al||o.vs||o.hk||o.bt||o.hot?2:1)):null}
+/* v256: once the match is made — a contract on the table, or a challenge already accepted tonight — nobody asks for a yes again */
+const made=(p,st)=>!!(p&&p.type==='contract'||st&&st.chal);
+function genLine(tc,ctx,xi,e,mk){const l=(GEN[tc]||[]).filter(o=>okFor(o,ctx)&&rtExtra(o,ctx,xi)&&gate(o,xi)&&(!e||fitsB(o,e))&&!(mk&&o.ch));return l.length?wpick(l,o=>(seenP(o.ok)?.15:1)*(o.al||o.vs||o.hk||o.bt||o.hot?2:1)):null}
 function tacScene(p,ctx,st,e,ai,pull){const x=st.ex;x.lastM=e.m;x.used.add(e.t);x.M0=x.M;x.bGone=!!e.gone;
  if(pull!==false){let v=MV[e.m]||0;const tier=rtTier(ctx.B);if(v<0)v*=tier==='hi'?1.3:tier==='lo'?.6:1;x.M=clamp(x.M+v,-4,4)}
  const xi=xOf(p,ctx,st);const live=tagHit('live',ctx.K||SC_DEF);
- const pool=(e.ch||[]).concat(FU[e.m]||[]).filter(o=>okFor(o,ctx)&&rtExtra(o,ctx,xi)&&gate(o,xi)&&fitsB(o,e));
+ const mk=made(p,st);const pool=(e.ch||[]).concat(FU[e.m]||[]).filter(o=>okFor(o,ctx)&&rtExtra(o,ctx,xi)&&gate(o,xi)&&fitsB(o,e)&&!(mk&&o.ch));
  const by={};pool.forEach(o=>{const t=o.tc||cls(o);(by[t]=by[t]||[]).push(o)});
  const lines={};TACS.forEach(tc=>{if(tc==='crowd'&&!live)return;if(tc==='resp'&&ctx.A.al!=='f'&&!by.resp&&!['respect','accept'].includes(e.m))return;
   /* after a beatdown, a counter or a retreat only the answers written for it make sense — no generic talk lines */
-  const l=by[tc]?wpick(by[tc],o=>seenP(o.t)?.2:1):['laidout','fightback','retreat'].includes(e.m)||e.gone?null:genLine(tc,ctx,xi,e);if(l)lines[tc]={l,own:!!by[tc]}});
+  const l=by[tc]?wpick(by[tc],o=>seenP(o.t)?.2:1):['laidout','fightback','retreat'].includes(e.m)||e.gone?null:genLine(tc,ctx,xi,e,mk);if(l)lines[tc]={l,own:!!by[tc]}});
  /* four calls: the ones written for this exact moment first, then the rest; shown in the same order every time */
  let ks=shuffle(Object.keys(lines).filter(k=>lines[k].own)).concat(shuffle(Object.keys(lines).filter(k=>!lines[k].own))).slice(0,4);
  ks=TACS.filter(k=>ks.includes(k));
@@ -161,10 +164,14 @@ function tacScene(p,ctx,st,e,ai,pull){const x=st.ex;x.lastM=e.m;x.used.add(e.t);
  return {text:e.t,ch,rt:1,ex:'tac',m:e.m}}
 function timeScene(ctx,st){st.ex.M0=st.ex.M;const tx=TIME_TX.filter(o=>okFor(o,ctx));return {text:pick(tx).t,ch:TIME_CH.map(c=>Object.assign({},c)),rt:1,ex:'time'}}
 /* v250: right after {B} lands their big line, the set-up for the closer doesn't hand them a second last word */
+/* v256: after a respectful call lands (a handshake, an honest compliment) the closer doesn't pretend it's a war:
+   calmer set-up lines, and no brawl, cheap shot or knife-twist on the menu */
+const CLOSE_CALM={up:`{B} nods. There's nothing left to argue about, and {A} has the room.`,even:`They've both said what they came to say. All that's left is how it ends.`,down:`{B} gets the last word, and it's a gracious one: "Good. Then let's give them a night to remember at {PPV}."`};
 const CLOSE_AFTER={up:`{B} got that one in, but {A} still has the room.`,even:`That one landed. Now it's dead even, and it has to go somewhere.`,down:`{B} lets the line hang. Every eye in the building is on {A}.`};
 function closeScene(p,ctx,st,ai,bLanded){const x=st.ex;x.M0=x.M;x.zone=zoneOf(x.M);const z=x.zone;
- const tx=CLOSE_TX[z].filter(o=>okFor(o,ctx));const text=bLanded?CLOSE_AFTER[z]:(wpick(tx,o=>(seenP(o.t)?.2:1)*(o.vs?2:1))||CLOSE_TX[z][0]).t;
- let ch=dealChoices(CLOSE[z],ctx,z==='up'?2:3).map(c=>Object.assign({},c,{ex:'close'}));
+ const lc=x.lastC,calm=!bLanded&&!!x.lastOk&&!!lc&&lc.ex==='mid'&&lc.tc==='resp',mk=made(p,st);
+ const tx=CLOSE_TX[z].filter(o=>okFor(o,ctx));const text=bLanded?CLOSE_AFTER[z]:calm?CLOSE_CALM[z]:(wpick(tx,o=>(seenP(o.t)?.2:1)*(o.vs?2:1))||CLOSE_TX[z][0]).t;
+ let ch=dealChoices(CLOSE[z].filter(c=>(calm?!c.rage:!c.calm)&&!(mk&&c.ch)),ctx,z==='up'?2:3).map(c=>Object.assign({},c,{ex:'close'}));
  if(z==='up')ch=[mdChoice(ctx)].concat(ch);
  if(!ai)noteP([text]);return {text,ch,rt:1,ex:'close',zone:z,last:true,_md:1}}
 
@@ -179,11 +186,14 @@ const exGone=(c,ok,ctx,f)=>!!c&&hasV(c[f||'gone'],c,ok,ctx.A);
 /* the first beat — replaces the single response beat (rtScene) */
 function exStart(p,ctx,st,ai){if(!rtOn(p,ctx)||!st||!st.lastC)return null;
  const c0=st.lastC,ok0=!!(st.oks||[]).slice(-1)[0];
- if(goneAfter(c0,ok0,ctx)){st.gone=1;return null}
+ /* v256: an opening that ends the segment (a pull-apart brawl, a walk-out) ends it — nobody answers a brawl that already cleared the ring */
+ if(goneAfter(c0,ok0,ctx)||exGone(c0,ok0,ctx,'end')){st.gone=1;return null}
  st.ex={T:0,Tmax:exLen(p,ctx),M:clamp(swPull(ok0,chance(c0,ctx))*.6,-4,4),M0:0,used:new Set(),lastC:c0,lastOk:ok0,hw:EX_HW/Math.max(1,exLen(p,ctx))};
  const e=bLine(ctx,st,xOf(p,ctx,st));if(!e){st.ex=null;return null}
  st.rtDone=1;
- const tw=pickTwist(p,ctx,ai);const keep=!!(tw&&(tw.hj||tw.myst||tw.cd))||Math.random()<(window.TW_P!=null?window.TW_P:(window.TW_RT_P||.25));
+ /* v256: a twist that takes the closer's place comes after a face-to-face back-and-forth, so only twists written to land
+    in the middle of a confrontation (fx) qualify — no crowd sing-alongs or "You deserve it!" while {B} is standing right there */
+ ctx.EXTW=1;const tw=pickTwist(p,ctx,ai);ctx.EXTW=0;const keep=!!(tw&&(tw.hj||tw.myst||tw.cd))||Math.random()<(window.TW_P!=null?window.TW_P:(window.TW_RT_P||.25));
  st.tw=keep?tw:null;if(!keep){ctx.MYST=null;ctx.CD=null}
  if(rtTier(ctx.B)!=='lo'&&Math.random()<EX_TP){st.ex.tUsed=1;return timeScene(ctx,st)}
  return tacScene(p,ctx,st,e,ai)}
@@ -191,7 +201,7 @@ function rtOn(p,ctx){return !!(p&&p.b&&ctx&&ctx.A&&ctx.B&&['callout','champ','co
 /* what comes after a call: another answer, a big line, the closer, or the twist in its place. {b:'r'|1, sc} or null when it's over */
 function exNext(p,ctx,st,ai){const x=st.ex;if(!x||x.closed||st.drop)return null;
  if(x.lastC&&x.lastC.ex==='mid'&&!x.timing){const c=x.lastC,ok=x.lastOk;
-  if(goneAfter(c,ok,ctx)||x.bGone&&!hasV(c.back,c,ok,ctx.A)){x.closed=1;st.tw=null;st.gone=1;return null}x.bGone=0}
+  if(goneAfter(c,ok,ctx)||exGone(c,ok,ctx,'end')||x.bGone&&!hasV(c.back,c,ok,ctx.A)){x.closed=1;st.tw=null;st.gone=1;return null}x.bGone=0}
  if(x.T>=x.Tmax||x.toClose){const tm=x.timing;x.closed=1;x.timing=null;if(st.tw){const tw=st.tw;st.tw=null;return {b:1,sc:tw}}return {b:'r',sc:closeScene(p,ctx,st,ai,tm==='wait'||tm==='cut')}}
  if(x.timing){const t=x.timing;x.timing=null;
   const e=t==='ok'?bLine(ctx,st,xOf(p,ctx,st,{ok:1}),['rattled','stumble']):bLine(ctx,st,xOf(p,ctx,st,{ok:t==='cut'?0:1}),['personal','mock','flip']);

@@ -106,9 +106,11 @@ function boxHtml(pg){const ctx=PS.ctx;const w=pg.side?people(ctx)[pg.side]:null;
  const text=pg.q!=null?pg.q:pg.act!=null?`(${pg.act})`:pg.cam||pg.res||'';
  const tab=w&&(kind==='q'||kind==='act')?`<div class="sdtab ${pg.side==='a'?'mine':pg.side==='b'?'them':'other'}${pg.side==='b'?' r':''}">${esc(w.name)}</div>`:'';
  return `<div class="sdbox k-${kind}" id="sdbox" onclick="sdTap()">${tab}<div class="sdsay" id="sdsay" data-t="${esc(text)}">${esc(text)}</div><span class="sdnx" id="sdnx">▼</span></div><div class="sdhint">Tap to continue</div>`}
+/* v256: while the camera is still whipping to the next speaker, a tap waits — it used to skip that line unseen */
+let PANNING=false;
 async function showPage(){const pg=PS.q[PS.qi];if(!pg)return;
  const low=document.getElementById('sdlow');if(!low){frame('');return showPage()}
- if(pg.side==='a'||pg.side==='b')await panTo(pg.side);cutIn(pg.side);
+ if(pg.side==='a'||pg.side==='b'){PANNING=true;try{await panTo(pg.side)}finally{PANNING=false}}cutIn(pg.side);
  const fx=document.getElementById('sdfx');
  if(pg.stamp&&fx)fx.innerHTML=`<div class="sdstamp ${pg.ok?'ok':'no'}">${pg.ok?'It lands':'It misses'}</div>`;
  low.innerHTML=boxHtml(pg);feed();
@@ -118,7 +120,7 @@ async function showPage(){const pg=PS.q[PS.qi];if(!pg)return;
  const iv=setInterval(()=>{i+=2;el.textContent=t.slice(0,i);if(i>=t.length)fin()},20);
  const fin=()=>{clearInterval(iv);el.textContent=t;TYPE=null;done()};TYPE={fin};
  function done(){const nx=document.getElementById('sdnx');if(nx)nx.classList.add('on')}}
-function sdTap(){if(!PS||!PS.q)return;if(TYPE){TYPE.fin();return}
+function sdTap(){if(!PS||!PS.q||PANNING)return;if(TYPE){TYPE.fin();return}
  const fx=document.getElementById('sdfx');if(fx&&PS.q[PS.qi]&&PS.q[PS.qi].stamp)fx.innerHTML='';
  PS.qi++;if(PS.qi<PS.q.length)return showPage();
  const after=PS.after;PS.q=null;PS.after=null;if(after)after();else renderPS()}
