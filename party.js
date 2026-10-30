@@ -135,7 +135,7 @@ function mpPushBlind(){const o=S.online,seq=mpUnsentSeq(LMP.code);o.rev=(o.rev||
    kept and put back on top of the fresh league (minus anything that no longer belongs to them), then sent again. */
 let MP_KEEP=null;
 function partyMine(str,me){try{const c=JSON.parse(str),o=c.online||{},g=(x,k)=>x&&x[k]!==undefined?JSON.parse(PJ(x[k])):undefined;
- return {code:LMP&&LMP.code,me,season:c.season,week:c.week,phase:c.phase,live:!!o.live,card:g(c.card,me),prod:g(c.prod,me),sell:g(c.sell,me),priv:g(c.priv,me),booked:g(o.booked,me),rk:g(o.rk,me),auto:g(o.auto,me),
+ return {code:LMP&&LMP.code,me,season:c.season,week:c.week,phase:c.phase,live:!!o.live,lv:g(o.lv,me),card:g(c.card,me),prod:g(c.prod,me),sell:g(c.sell,me),priv:g(c.priv,me),booked:g(o.booked,me),rk:g(o.rk,me),auto:g(o.auto,me),
   offers:Object.fromEntries(Object.entries(c.offers||{}).filter(([,x])=>x&&x.by&&x.by[me]).map(([id,x])=>[id,{due:x.due,bid:JSON.parse(PJ(x.by[me]))}]))}}catch(e){return null}}
 function partyReapply(){const k=MP_KEEP;MP_KEEP=null;
  if(!k||!LMP||!S||!ON()||k.code!==LMP.code||k.me!==LMP.me||k.season!==S.season||k.week!==S.week||k.phase!==S.phase)return false;
@@ -156,6 +156,9 @@ function partyReapply(){const k=MP_KEEP;MP_KEEP=null;
    else if(sl.k==='chal')ok=mine(d.c);
    if(!ok){sl.d=null;dropped=true}});
   S.card.p=k.card;if(k.booked!==undefined)o.booked.p=!!k.booked&&!dropped}
+ /* v257: a GM who just finished going live keeps their show (the calls they made are on their card) and stays done —
+    a refresh at that moment used to put them back on the TV to play their whole show again */
+ else if(k.live&&k.lv&&o.live&&Array.isArray(k.card)&&S.phase==='season'){o.lv=o.lv||{};o.lv.p=true;S.card.p=k.card}
  save();
  if(dropped)setTimeout(()=>toast('Someone else signed a wrestler you had booked — that spot on your card is open again.'),1200);
  return true}

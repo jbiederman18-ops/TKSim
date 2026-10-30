@@ -9,6 +9,10 @@
 (function(){
 const TS_N=3; /* the third match together brings up a suggestion */
 const TS=()=>{S.tsug=S.tsug||{c:{},l:[],no:[]};S.tsug.c=S.tsug.c||{};S.tsug.l=S.tsug.l||[];S.tsug.no=S.tsug.no||[];return S.tsug};
+/* v257: in a league each GM keeps their own suggestions (private, like their Performance Center). The phone that airs the week
+   counts every brand's pairings, each into that GM's own list; it used to count only its own, and every GM shared one list */
+const TSb=b=>{if(b==='p'||typeof ON!=='function'||!ON()||!S.priv)return TS();const P=S.priv[b]=S.priv[b]||{};const t=P.tsug=P.tsug||{};t.c=t.c||{};t.l=t.l||[];t.no=t.no||[];return t};
+const ownerOf=sd=>{const o=S.w[sd[0]]&&S.w[sd[0]].own;return o&&sd.every(id=>S.w[id]&&S.w[id].own===o)?o:null};
 const kOf=ids=>ids.slice().sort().join('|');
 const mine=id=>S.w[id]&&S.w[id].own==='p';
 const LN=w=>w.name.split(' ').slice(-1)[0];
@@ -33,7 +37,7 @@ function nameIdeas(ids){const ws=ids.map(id=>S.w[id]).filter(Boolean);const r=se
 function live(){if(!S||!S.tsug)return [];const T=TS();
  T.l=T.l.filter(s=>s.ids.every(mine)&&!named(s.ids));return T.l}
 window.tsList=live;
-function suggest(ids,why,notes,t){const T=TS();const k=kOf(ids);
+function suggest(ids,why,notes,t,b){const T=TSb(b||'p');const k=kOf(ids);
  if(named(ids))return;const ex=T.l.find(s=>s.k===k);
  if(ex){if(why==='gold'&&ex.why!=='gold'){ex.why='gold';ex.t=t;ex.at=AW();notes.push(`🤝 ${names(ids)} won the ${t} titles without a team name. Their suggested team is waiting in the Front office.`)}return}
  if(why!=='gold'&&T.no.includes(k))return;
@@ -44,11 +48,11 @@ function suggest(ids,why,notes,t){const T=TS();const k=kOf(ids);
 /* ---------- counting pairings after each match ---------- */
 const _apply=window.applyMatch;
 window.applyMatch=function(m,res,ctx,notes){const out=_apply.apply(this,arguments);
- try{const per=MT[m.type]&&MT[m.type].per;if(m.nc!==true&&(per===2||per===3)&&!m.tour){const T=TS();
-  m.sides.forEach((sd,si)=>{if(sd.length<2||!sd.every(mine)||named(sd))return;const k=kOf(sd);T.c[k]=(T.c[k]||0)+1;
+ try{const per=MT[m.type]&&MT[m.type].per;if(m.nc!==true&&(per===2||per===3)&&!m.tour){
+  m.sides.forEach((sd,si)=>{const b=sd.length>1&&ownerOf(sd);if(!b||(b!=='p'&&!(typeof ON==='function'&&ON()))||named(sd))return;const T=TSb(b);const k=kOf(sd);T.c[k]=(T.c[k]||0)+1;
    const t=m.title&&S.titles[m.title];
-   if(t&&si===m.winner&&t.won===AW()&&t.holders.length===sd.length&&sd.every(id=>t.holders.includes(id)))suggest(sd,'gold',notes,t.n);
-   else if(T.c[k]>=TS_N)suggest(sd,'pair',notes)})}}catch(e){console.warn(e)}
+   if(t&&si===m.winner&&t.won===AW()&&t.holders.length===sd.length&&sd.every(id=>t.holders.includes(id)))suggest(sd,'gold',notes,t.n,b);
+   else if(T.c[k]>=TS_N)suggest(sd,'pair',notes,null,b)})}}catch(e){console.warn(e)}
  return out};
 
 /* ---------- making it official ---------- */

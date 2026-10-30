@@ -1732,7 +1732,7 @@ html.lk-hy .showcard.compact.bngp,.showcard.compact.bngp{background:linear-gradi
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v256';
+const APP_VERSION='v257';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -2774,9 +2774,11 @@ function remapKeys(st,f){const rv=v=>typeof v==='string'&&BK.test(v)?f(v):v;
  const o=st.online;if(o){if(o.turn)o.turn=rv(o.turn);['booked','auto','rk','show','lv','dq'].forEach(k=>{if(o[k])o[k]=mapObj(o[k],f)});if(o.order)o.order=o.order.map(rv);if(o.live&&o.live.order)o.live.order=o.live.order.map(rv)}
  return st}
 /* each GM's Performance Center, promises and front-office situations are private to them */
-const PRIV=['training','promises','crisis','scout','pitch','trials','pitchNews','pitchBy','pitchLast','pitchK','ocOffer','cdown','tapes','follow','tamp','injq'];
+/* v257: the locker-room whisper roll (wsr), the briefing's "what's new" markers (brSig, brBase) and suggested tag teams (tsug) are each GM's own too — kept
+   in the shared save, two GMs booking at the same time changed the same field and one of them was refreshed mid-week */
+const PRIV=['training','promises','crisis','scout','pitch','trials','pitchNews','pitchBy','pitchLast','pitchK','ocOffer','cdown','tapes','follow','tamp','injq','wsr','brSig','brBase','tsug'];
 function stashPriv(st){st.priv=st.priv||{};const x={};PRIV.forEach(k=>{x[k]=st[k];delete st[k]});st.priv.p=x}
-function liftPriv(st){st.priv=st.priv||{};const x=st.priv.p||{};delete st.priv.p;st.training=Array.isArray(x.training)?x.training:[];st.promises=Array.isArray(x.promises)?x.promises:[];st.crisis=x.crisis||null;st.scout=x.scout||null;st.pitch=x.pitch||null;st.trials=Array.isArray(x.trials)?x.trials:[];st.pitchNews=Array.isArray(x.pitchNews)?x.pitchNews:[];st.pitchBy=x.pitchBy||{};st.pitchLast=x.pitchLast||0;st.pitchK=Array.isArray(x.pitchK)?x.pitchK:[];st.ocOffer=x.ocOffer||null;st.cdown=x.cdown||null;st.tapes=Array.isArray(x.tapes)?x.tapes:[];st.follow=Array.isArray(x.follow)?x.follow:[];st.tamp=x.tamp||{};st.injq=Array.isArray(x.injq)?x.injq:[]}
+function liftPriv(st){st.priv=st.priv||{};const x=st.priv.p||{};delete st.priv.p;st.training=Array.isArray(x.training)?x.training:[];st.promises=Array.isArray(x.promises)?x.promises:[];st.crisis=x.crisis||null;st.scout=x.scout||null;st.pitch=x.pitch||null;st.trials=Array.isArray(x.trials)?x.trials:[];st.pitchNews=Array.isArray(x.pitchNews)?x.pitchNews:[];st.pitchBy=x.pitchBy||{};st.pitchLast=x.pitchLast||0;st.pitchK=Array.isArray(x.pitchK)?x.pitchK:[];st.ocOffer=x.ocOffer||null;st.cdown=x.cdown||null;st.tapes=Array.isArray(x.tapes)?x.tapes:[];st.follow=Array.isArray(x.follow)?x.follow:[];st.tamp=x.tamp||{};st.injq=Array.isArray(x.injq)?x.injq:[];['wsr','brSig','brBase','tsug'].forEach(k=>{if(k in x){if(x[k]==null)delete st[k];else st[k]=x[k]}})}
 function toCanon(st){const v=st._view;if(!v)return st;stashPriv(st);remapKeys(st,k=>k==='p'?v.me:k==='ai'?(v.opp||k):k);delete st._view;delete st.gm;delete st.rival;return st}
 function toView(st,me,opp){remapKeys(st,k=>k===me?'p':k===opp?'ai':k);liftPriv(st);st._view={me,opp};const nm=st.names||{};st.gm=nm.p||'You';st.rival=opp?(nm.ai||'Waiting for a GM'):'Bye week';return st}
 function viewFor(st,me){return toView(st,me,oppOf(me,st.week,nSeats(st),st))}

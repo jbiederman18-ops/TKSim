@@ -320,6 +320,10 @@ function suggestCard(){const sh=curShow();const c=JSON.parse(JSON.stringify(S.ca
   order.forEach((i,j)=>{const x=ord[j];if(!x)return;const m=x.d;m.stip='std';delete m.fin;delete m.ri;c[i].d=m;m.sides.flat().forEach(id=>used.add(id))})}
  /* a match still empty (a thin roster): any two healthy wrestlers who can go */
  empty().forEach(i=>{const l=ownList('p').filter(w=>ok(w.id)).sort((a,b)=>b.pop-a.pop);const a=l[0];const o=a&&(oppFor(a.id)||l.find(w=>w.id!==a.id));if(a&&o)put(i,'singles',[[a.id],[o.id]])});
+ /* v257: still empty (a big night like the Rumble can take most of a 3–4 GM league's roster): work a second match, the
+    freshest two who can go — a required slot left empty meant the card could never go live */
+ empty().forEach(i=>{const rest=new Set((S.trials||[]).filter(t=>t.goal==='rest').map(t=>t.a));
+  const l=ownList('p').filter(w=>!w.inj&&!rest.has(w.id)).sort((a,b)=>sta(b)-sta(a));const a=l[0];const o=a&&(l.find(w=>w.id!==a.id&&w.g===a.g)||l.find(w=>w.id!==a.id));if(a&&o)put(i,'singles',[[a.id],[o.id]])});
 
  /* 7 · promos: the crowd's chant gets a spot if nobody gave them one, then the usual picks — but no contract signings
     (announcing PPV matches is the GM's call) */
