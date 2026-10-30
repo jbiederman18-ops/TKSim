@@ -298,7 +298,7 @@ function tvBoot(){const q=new URLSearchParams(location.search).get('join');
 
 function tvRefresh(){if(!TV)return;const R=TV.reveal;if(R&&document.getElementById('rv')&&R.built===R.key+':'+R.pi)return;render()}
 function tvHeader(){const st=TV.status==='on'?'':TV.status==='missing'?'<span class="tv-warn">No league with that code</span>':'<span class="tv-warn">📡 Connecting…</span>';
- return `<header class="top tv-top">${brandHtml()}<div class="hud">${st}<span class="hudc">LEAGUE <b>${esc(TV.code)}</b></span>${S&&S.last?'<button class="mini" onclick="tvReplay()">Replay last week</button>':''}${fsCan()?`<button class="mini" id="fsBtn" onclick="tvFull()">${fsEl()?'Exit full screen':'⛶ Full screen'}</button>`:''}<button class="mini" onclick="tvEnd()">Exit TV</button></div></header>`}
+ return `<header class="top tv-top">${brandHtml()}<div class="hud">${st}<span class="hudc">LEAGUE <b>${esc(TV.code)}</b></span>${S&&S.last?'<button class="mini" onclick="tvReplay()">Replay last week</button>':''}${window.SFX?`<button class="mini" onclick="SFX.tvToggle()">${SFX.tvMuted()?'🔇 Sound off':SFX.ready()?'🔊 Sound on':'🔊 Tap for sound'}</button>`:''}${fsCan()?`<button class="mini" id="fsBtn" onclick="tvFull()">${fsEl()?'Exit full screen':'⛶ Full screen'}</button>`:''}<button class="mini" onclick="tvEnd()">Exit TV</button></div></header>`}
 function tvJoinUrl(){return location.href.split(/[?#]/)[0]+'?join='+TV.code}
 function tvShortUrl(){return location.href.split(/[?#]/)[0].replace(/^https?:\/\//,'').replace(/index\.html$/,'').replace(/\/$/,'')}
 function tvQR(){try{const q=qrcode(0,'M');q.addData(tvJoinUrl());q.make();return q.createSvgTag({cellSize:6,margin:2,scalable:true})}catch(e){return ''}}
@@ -343,10 +343,10 @@ function tvStandings(){const l=localSeats().slice().sort((a,b)=>S.fans[b]-S.fans
  return `<div class="card"><div class="h small">Standings</div>${l.map((k,i)=>`<div class="tv-row"><span>${['🥇','🥈','🥉','4.'][i]} <b>${esc(nameOf(k))}</b> <span class="muted tiny">${esc(showNames()[k]||'')}</span></span><span><b class="gold">${fmtFans(S.fans[k])}</b> <span class="muted">fans · ${S.hourWins[k]||0} W</span></span></div>`).join('')}</div>`}
 function tvWeek(){const sh=curShow(),o=S.online;const v=venueOf();const party=o.party;
  const pairs=pairings(S.week,nSeats());
- const gm=s=>{const k=localKey(s),lk=(o.booked||{})[k],up=!party&&o.turn===k;return `<div class="tv-gm ${lk?'lk':''}"><div class="tv-show">${esc(sh.ppv?sh.name:showNames()[k]||'')}</div><b>${esc(nameOf(k))}</b><div class="tv-lock">${lk?'✅ Locked in':up?'🟡 Booking now':party?'✏️ Booking…':'⏳ Waiting for their turn'}</div></div>`};
+ const gm=s=>{const k=localKey(s),lk=(o.booked||{})[k],up=!party&&o.turn===k;return `<div class="tv-gm ${lk?'lk':''}${typeof lrfSeat==='function'&&lrfSeat()===s?' office':''}" data-seat="${s}"><div class="tv-show">${esc(sh.ppv?sh.name:showNames()[k]||'')}</div><b>${esc(nameOf(k))}</b><div class="tv-lock">${lk?'✅ Locked in':up?'🟡 Booking now':party?'✏️ Booking…':'⏳ Waiting for their turn'}</div></div>`};
  return `<div class="tv-grid"><div><div class="card showcard ${sh.ppv?'ppv':''} tv-poster"><div class="wm">${esc(sh.ppv?sh.name:v[1].split(',')[0])}</div><div class="kicker"><i></i>Week ${S.week} of ${SEASON}${sh.ppv?' · Pay-per-view':' · Ratings war'} · ${tvPartyTag()}</div><div class="showname">${esc(sh.ppv?sh.name:'Week '+S.week)}</div><div class="venue">${sh.ppv?'<b>Live on pay-per-view</b>':`<b>${esc(v[0])}</b> · ${esc(v[1])}`}</div></div>
  <div class="tv-match">${allIn()?`<div class="tv-pair tv-all" style="grid-template-columns:repeat(${nSeats()-1},minmax(0,1fr) auto) minmax(0,1fr)">${seatIds().map((k,i)=>(i?'<div class="vs">VS</div>':'')+gm(k)).join('')}</div>`:pairs.map(([a,b])=>b?`<div class="tv-pair">${gm(a)}<div class="vs">VS</div>${gm(b)}</div>`:`<div class="tv-pair bye">${gm(a)}<div class="tv-byetag">Bye week — airs solo</div></div>`).join('')}</div>
- <p class="muted center">${allIn()?'Every show competes every week — 1st gets the biggest fan bump, last gets none. ':''}${party?"Book your show on your phone and go live. When everyone's locked in, the results play here.":'The league is taking turns. Start party night from any GM\'s Office to book together.'}</p></div>
+ <p class="muted center">${allIn()?'Every show competes every week — 1st gets the biggest fan bump, last gets none. ':''}${party?"Book your show on your phone and go live. When everyone's locked in, the results play here.":'The league is taking turns. Start party night from any GM\'s Office to book together.'}</p>${typeof lrfHtml==='function'?lrfHtml():''}</div>
  <div>${tvStandings()}<div class="card"><div class="h small">The Wire</div>${S.news.slice(-6).reverse().map(n=>`<div class="news"><span class="muted">W${n.w}</span> ${esc(n.t)}</div>`).join('')}</div></div></div>`}
 /* a GM is live: show exactly what's on their phone — the scene, the choices, then how the call played out */
 function tvSafe(html){const t=document.createElement('template');t.innerHTML=String(html||'');
@@ -387,7 +387,7 @@ function tvRevealRun(){const R=TV.reveal,pr=tvRevealPairs()[R.pi];if(Object.keys
 /* v145: once both shows' segments in the same slot are up, the better one wins the round */
 function tvRoundWin(i,instant){const els=[...document.querySelectorAll('#rv .rv-col')].map((c,ci)=>document.getElementById(`rv-${ci}-${i}`));
  if(els.length<2||els.some(e=>!e||!e.classList.contains('on')))return;const v=els.map(e=>+e.dataset.st),m=Math.max(...v);if(v.filter(x=>Math.abs(x-m)<.01).length>1)return;
- const w=els[v.indexOf(m)];setTimeout(()=>{if(w.isConnected)w.classList.add('rvw')},instant?0:2300)}
+ const w=els[v.indexOf(m)];setTimeout(()=>{if(w.isConnected){w.classList.add('rvw');if(!instant&&window.SFX)SFX.play('roundwin')}},instant?0:2300)}
 function tvRevealShow(st,instant){const el=document.getElementById(st.id);if(!el)return;el.classList.add('on');
  if(st.ci!=null&&el.closest('.rv-col')){el.closest('.rv-col').querySelectorAll('.rv-seg.cur').forEach(x=>x.classList.remove('cur'));el.classList.add('cur');requestAnimationFrame(()=>tvFit(document.querySelector('#rv .rv-cols'),1,.72))}
  if(st.final&&!document.querySelector('#rv.ry')){const rv=document.getElementById('rv');if(rv)rv.classList.add('fin');try{window.scrollTo(0,0)}catch(e){}}if(instant)el.classList.add('now');if(st.ci!=null){const i=+st.id.split('-').pop();tvRoundWin(i,instant)}
@@ -458,14 +458,14 @@ function ryRun(R,pr){const P=ryPlan(pr),x=pr.blocks.find(b=>b.brand==='x');const
  if(x)x.segs.forEach((s,i)=>steps.push({id:'rv-x-'+i,n:s.notes.length}));
  P.out.forEach((k,i)=>{steps.push({ms:2200,fn:()=>{ryStage('elim',`${RY_ORD[P.pl[k]-1]} place`);document.querySelectorAll('#rv .ry-elim').forEach(e=>e.classList.toggle('cur',e.id==='ry-e-'+i))}});
   if(document.getElementById('ry-em-'+i))steps.push({id:'ry-em-'+i,n:3,ms:4200});
-  steps.push({ms:3000,fn:inst=>{const e=document.getElementById('ry-e-'+i);if(e){e.classList.add('gone',...(inst?['now']:[]));ryRefit()}}})});
+  steps.push({ms:3000,fn:inst=>{const e=document.getElementById('ry-e-'+i);if(e){e.classList.add('gone',...(inst?['now']:[]));ryRefit();if(!inst&&window.SFX)SFX.play('overtop')}}})});
  const [A,B]=P.top2,bA=P.cols.find(b=>b.brand===A),bB=P.cols.find(b=>b.brand===B);
  const so=(j,v)=>{const e=document.getElementById('ry-so-'+j);if(e)e.innerHTML=`<span class="muted tiny">SO FAR</span> <span class="stars">${stars(v)}</span>`};
  steps.push({ms:3200,fn:()=>{ryStage('final','Final two');const a=ryAvg(bA,false),b=ryAvg(bB,false);so(0,a);so(1,b);ryKnot(a-b)}});
  steps.push({id:'ry-f-0',n:3,ms:5200,after:()=>{const a=ryAvg(bA,true),b=ryAvg(bB,false);so(0,a);ryKnot(a-b)}});
  steps.push({id:'ry-f-1',n:3,ms:5600,after:()=>{const d=pr.ratings[A]-pr.ratings[B];so(0,pr.ratings[A]);so(1,pr.ratings[B]);ryKnot(Math.max(d,.15));
-  const w=document.getElementById(d>=0?'ry-f-0':'ry-f-1');if(w)setTimeout(()=>{if(w.isConnected)w.classList.add('rvw')},1800)}});
- steps.push({ms:5200,fn:()=>{ryStage('out','2nd place');const m=document.getElementById('ry-em-x');if(m)m.classList.add('on','now');const e=document.getElementById('ry-e-x');if(e){e.classList.add('cur');setTimeout(()=>{if(e.isConnected){e.classList.add('gone');ryRefit()}},1600)}}});
+  const w=document.getElementById(d>=0?'ry-f-0':'ry-f-1');if(w)setTimeout(()=>{if(w.isConnected){w.classList.add('rvw');if(window.SFX)SFX.play('roundwin')}},1800)}});
+ steps.push({ms:5200,fn:()=>{ryStage('out','2nd place');const m=document.getElementById('ry-em-x');if(m)m.classList.add('on','now');const e=document.getElementById('ry-e-x');if(e){e.classList.add('cur');setTimeout(()=>{if(e.isConnected){e.classList.add('gone');ryRefit();if(window.SFX)SFX.play('overtop')}},1600)}}});
  steps.push({id:'rv-final',final:true,fn:()=>ryStage('podium','Final')});
  /* stars reveal through tvRevealShow (so title celebrations and big-star bursts still fire); a step's after() runs once its stars are up */
  steps.forEach(st=>{if(st.id&&!st.fn){const id=st.id,aft=st.after;st.fn=inst=>{tvRevealShow({id,ci:st.ci},inst);if(aft)aft()}}});

@@ -112,12 +112,12 @@ async function showPage(){const pg=PS.q[PS.qi];if(!pg)return;
  const low=document.getElementById('sdlow');if(!low){frame('');return showPage()}
  if(pg.side==='a'||pg.side==='b'){PANNING=true;try{await panTo(pg.side)}finally{PANNING=false}}cutIn(pg.side);
  const fx=document.getElementById('sdfx');
- if(pg.stamp&&fx)fx.innerHTML=`<div class="sdstamp ${pg.ok?'ok':'no'}">${pg.ok?'It lands':'It misses'}</div>`;
+ if(pg.stamp&&fx){fx.innerHTML=`<div class="sdstamp ${pg.ok?'ok':'no'}">${pg.ok?'It lands':'It misses'}</div>`;if(window.SFX)SFX.stamp('',pg.ok?'ok':'no','promo')}
  low.innerHTML=boxHtml(pg);feed();
  const spr=pg.side&&document.querySelector(`#sd .c${pg.side} .sdph`);if(spr){spr.classList.remove('talk','hit');void spr.offsetWidth;spr.classList.add(pg.q!=null?'talk':'hit')}
  const el=document.getElementById('sdsay');if(!el||reduce())return done();
  const t=el.dataset.t;let i=0;el.textContent='';
- const iv=setInterval(()=>{i+=2;el.textContent=t.slice(0,i);if(i>=t.length)fin()},20);
+ const talk=pg.q!=null;const iv=setInterval(()=>{i+=2;el.textContent=t.slice(0,i);if(talk&&window.SFX)SFX.blip();if(i>=t.length)fin()},20);
  const fin=()=>{clearInterval(iv);el.textContent=t;TYPE=null;done()};TYPE={fin};
  function done(){const nx=document.getElementById('sdnx');if(nx)nx.classList.add('on')}}
 function sdTap(){if(!PS||!PS.q||PANNING)return;if(TYPE){TYPE.fin();return}

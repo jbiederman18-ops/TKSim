@@ -73,14 +73,32 @@ function stamp(pos,left){const m=document.querySelector('#modal .sbody');if(!m)r
  /* a pitch can't be put off from the inbox, and the count sits on top of every decision screen */
  m.querySelectorAll('button.btn.ghost').forEach(b=>{if(/Decide later/.test(b.textContent))b.remove()});
  if(!m.querySelector('.ibx-k'))m.insertAdjacentHTML('afterbegin',head(pos,left))}
-function openInbox(){const l=inboxList();if(!l.length){ON_=false;N0=0;try{render()}catch(e){}return false}
+function openInbox(){const l=inboxList();if(!l.length){ON_=false;N0=0;CUR=null;try{render()}catch(e){}return false}
  if(!ON_){ON_=true;N0=l.length}const pos=Math.max(1,N0-l.length+1);const x=l[0];
+ try{CUR=describe(x)}catch(e){CUR=null}
  try{if(x.open){x.open();stamp(pos,l.length)}else openModal(deskPage(x,pos,l.length))}catch(e){console.warn('inbox',e);ON_=false;return false}
+ try{if(CUR&&!CUR.q){const sc=document.querySelector('#modal .scene q, #modal .scene');if(sc)CUR.q=sc.textContent.trim().slice(0,240)}}catch(e){}
  return true}
+/* v258: what's on screen right now, for the party-night TV's locker-room feed (feed.js) — who's in the office, what kind of
+   visit it is, a headline and their line. Tampering, the trainer, trade offers and tapes are strategy: the TV only
+   teases those (the room never sees who called, the money, the weeks out or the trade). */
+let CUR=null;
+const TEASE={tamp:1,med:1,trade:1,tape:1};
+function describe(x){const nm=id=>S.w[id]?S.w[id].name:'';
+ if(x.k==='pitch'){const p=S.pitch,P=PITCHES[p.k],c=pCtx(p);return {k:'pitch',kick:P.cat,head:P.head(c),w:p.a,w2:p.b||null}}
+ if(x.k==='crisis'){const c=S.crisis,C=CRISES[c.k];return {k:'crisis',kick:`${C.i} ${C.good?'Opportunity':'Front office'}`,head:C.t,w:c.a,narr:1}}
+ const [ic,kn]=KIND[x.k]||[x.s.i,x.s.t];const v=voiceFor(x.k,x.row);const who=v&&S.w[v[0]]?v[0]:null;
+ const ids=[...new Set((x.row.match(/'[^'\s<>]{1,80}'/g)||[]).flatMap(t=>t.slice(1,-1).split(/[|,]/)).filter(id=>S.w[id]))];
+ if(TEASE[x.k]){const id=who||ids[0]||null;const n=id?nm(id):'';
+  const head=x.k==='tamp'?`${n||'Someone'} got a phone call`:x.k==='med'?`The trainer has news on ${n||'someone'}`:x.k==='trade'?'A trade offer just landed':'A tape landed on the desk';
+  return {k:x.k,kick:`${ic} ${kn}`,head,w:x.k==='trade'||x.k==='tape'?null:id,tease:1}}
+ if(x.k==='team'){const t=ids.slice(0,3);return {k:'team',kick:`${ic} ${kn}`,head:`${t.map(nm).join(' & ')} want to make it official`,w:t[0]||null,w2:t[1]||null,q:v?v[1]:''}}
+ const id=who||ids[0]||null;return {k:x.k,kick:`${ic} ${kn}`,head:x.k==='cd'?`${nm(id)} is at the door`:x.k==='oc'?`${nm(id)} wants a contract`:kn,w:id,q:v?v[1]:''}}
+window.inboxCur=()=>ON_?CUR:null;
 window.openInbox=openInbox;
 /* once the last one is answered, the briefing */
 /* v237: Home re-draws as the line clears, so its strip never shows people who've already been answered */
-function finish(){ON_=false;N0=0;try{render()}catch(e){}if(typeof _ob==='function')_ob()}
+function finish(){ON_=false;N0=0;CUR=null;try{render()}catch(e){}if(typeof _ob==='function')_ob()}
 /* ---- hooks ---- */
 const _ob=window.openBrief;
 /* v237: the results screen used to open a situation straight away, so the line never formed. Anything that opens a
