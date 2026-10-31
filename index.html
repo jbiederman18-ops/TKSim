@@ -120,6 +120,7 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),l
 .chips{display:flex;gap:4px;overflow-x:auto;padding:0 16px 2px;margin:0 -16px;scroll-padding:0 16px;scrollbar-width:none;overscroll-behavior-x:contain;touch-action:pan-x pan-y}
 .chips:after{content:"";flex:0 0 12px}.chip{flex:none}
 .ror{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}.ror .num{width:22px;color:var(--gold2);font-weight:800}.rol{flex:1;min-width:0;display:flex;flex-direction:column}.rol small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ror .mini{min-width:40px;font-size:16px}
+.ror .mini:disabled{opacity:.25;cursor:default;pointer-events:none}.ror{transition:background .5s}.ror.moved{background:rgba(242,193,78,.16)}
 .wdb{display:block;margin:4px auto 0}
 .flbar{margin-top:10px}.flbar input{width:100%}.flsep{flex:none;width:1px;background:var(--line);margin:4px 4px}
 .card .chips{padding-left:15px;padding-right:15px;margin:0 -15px;scroll-padding:0 15px}.chips::-webkit-scrollbar{display:none}
@@ -1743,7 +1744,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v265';
+const APP_VERSION='v266';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4513,7 +4514,7 @@ function dgOk(s,d){const A=dgP(s),B=dgP(d);if(s===d)return false;const tourAt=x=
 function mainMi(c){const ms=c.map((x,j)=>x&&x.k==='match'?j:-1).filter(j=>j>=0);return ms.length?ms[ms.length-1]:-1}
 function mainGap(c,i,j){const mi=mainMi(c);if(i!==mi&&j!==mi)return false;const o=i===mi?c[j]:c[i];if(!o)return true;return o.k!=='match'||(!o.d&&!!c[mi].d)}
 function slotSwap(i,j){const card=S.card.p;if(i===j||!card[i]||!card[j]||fixedK(card[i])||fixedK(card[j]))return false;if(mainGap(card,i,j)){toast('The main event closes the show — move another match onto it to change what headlines.');return false}
- if(card[i].k==='match'&&card[j].k==='match'){const x=card[i].d;card[i].d=card[j].d;card[j].d=x}else{const x=card[i];card[i]=card[j];card[j]=x;optNorm(card)}save();return true}
+ if(card[i].k==='match'&&card[j].k==='match'&&!card[i].opt&&!card[j].opt){const x=card[i].d;card[i].d=card[j].d;card[j].d=x}else{const x=card[i];card[i]=card[j];card[j]=x;optNorm(card)}save();return true}
 /* v259: a plain running-order list with up/down arrows — for when drag and drop is fiddly (on a phone, or a long card) */
 function reorderOpen(){if(mpLocked())return;const c=S.card.p;
  const row=(sl,i)=>{const lab=sl.k==='match'?mLab(c,i).lab:sl.k==='promo'?(sl.opt?'Bonus promo':'Promo'):sl.k==='xo'?'Dream match':'Challenge';
@@ -4521,7 +4522,10 @@ function reorderOpen(){if(mpLocked())return;const c=S.card.p;
   const can=d=>{const j=i+d;return j>=0&&j<c.length&&!fixedK(sl)&&!fixedK(c[j])&&!mainGap(c,i,j)};
   return `<div class="ror"><span class="num">${i+1}</span><span class="rol"><b>${esc(lab)}</b><small class="muted">${esc(who)}</small></span><button class="mini" ${can(-1)?'':'disabled'} onclick="reorderMove(${i},-1)" aria-label="Move up">▲</button><button class="mini" ${can(1)?'':'disabled'} onclick="reorderMove(${i},1)" aria-label="Move down">▼</button></div>`};
  openModal(`<div class="h mhd">Running order</div>${c.map(row).join('')}<button class="btn mt" onclick="closeModal();render()">Done</button>`)}
-function reorderMove(i,d){if(slotSwap(i,i+d))reorderOpen()}
+/* v266: keep the list where it was after each move, and briefly light up the row that moved */
+function reorderMove(i,d){const m=document.querySelector('#modal .mbody')||document.querySelector('#modal');const y=m?m.scrollTop:0;
+ if(!slotSwap(i,i+d))return;reorderOpen();const m2=document.querySelector('#modal .mbody')||document.querySelector('#modal');if(m2)m2.scrollTop=y;
+ const r=document.querySelectorAll('#modal .ror')[i+d];if(r){r.classList.add('moved');setTimeout(()=>r.classList.remove('moved'),700)}}
 /* where a wrestler sits on a card: {i, si, pi} in a match or {i, r} in a promo */
 function cpGet(c,p){const d=c[p.i].d;return p.r?d[p.r]:d.sides[p.si][p.pi]}
 function cpSet(c,p,id){const d=c[p.i].d;if(p.r)d[p.r]=id;else d.sides[p.si][p.pi]=id}
