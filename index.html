@@ -1743,7 +1743,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v262';
+const APP_VERSION='v263';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -5023,6 +5023,7 @@ function lockPromo(){S.card.p[PS.i].d=PS.p;PS=null;save();closeModal();render()}
  playing. The main event dims the room, holds on a drumroll, stamps its stars slowly and runs straight into the result.
  Skip jumps to the end. Opened later from Last Show it goes straight to the full results, with a Replay button. */
 let SRV=null;
+function srBestAll(o){let m=null;o.blocks.forEach(b=>{if(b.brand!=='x')b.segs.forEach(x=>{if(!m||x.stars>m.stars)m=x})});return m}
 function srBest(o){let m=null;o.blocks.forEach(b=>{if(b.brand==='p')b.segs.forEach(x=>{if(!m||x.stars>m.stars)m=x})});return m}
 function showResults(rv){let o=S.last;if(!o)return;let rest=[];
  /* v238: league weeks (party night included) get the same results layout as solo: your matchup up top, the others folded */
@@ -5084,7 +5085,9 @@ const SR_GHOST='<span class="tws gh">★★★★★</span>',SR_DRUM='<span clas
 function srPlate(c){const w=S.w[c.id];if(!w)return '';const t=titlesOf(c.id)[0];
  const sub=(c.info?esc(c.info):'')+(t?`<i class="twbelt">${esc(t.n)}</i>`:'');
  return `<div class="twpl ${w.al==='f'?'fc':'hl'}${c.r?' r'+c.r:''}"><span class="o">${ovr(w)}</span><div class="twn"><b>${esc(w.name)}</b>${sub?`<span>${sub}</span>`:''}</div><span class="tww">WIN</span></div>`}
-function srHalf(it,br,st){const who=br==='p'?S.gm:br==='ai'?S.rival:'';
+/* v263: the TV plays any two shows' tug of war, so names come from the stage (SRV.nm) when it has them */
+function srNm(br){return SRV&&SRV.nm?(SRV.nm[br]||''):br==='p'?S.gm:br==='ai'?S.rival:''}
+function srHalf(it,br,st){const who=srNm(br);
  if(!it)return `<div class="twh ${br} empty" id="srh-${br}"><div class="twhd"><span class="twl">${esc(who)}</span></div><div class="muted tiny">Nothing in this slot.</div></div>`;
  const s=it.s,b=it.b,cs=srPick(s);const sub=String(s.sub||b.label);
  const tag=b.brand==='x'?esc(sub.split(' · ').pop()):`${esc(who)} · ${esc(sub.split(' · ').pop())}`;
@@ -5117,17 +5120,19 @@ function srAdj(o,br){const b=o.blocks.find(x=>x.brand===br);if(!b||!b.segs.lengt
 function srLand(rd,vis){if(rd.landed)return;rd.landed=true;[rd.p,rd.ai,rd.x].forEach(srDone);
  if(rd.p&&rd.ai){const d=rd.p.s.stars-rd.ai.s.stars;const sc=br=>avg(SRV.seen.filter(x=>x.b.brand===br).map(x=>x.s.stars));srRope(sc('p')-sc('ai'),null,vis&&Math.abs(d)>.01)}
  if(vis){document.querySelectorAll('#tw-pair .twh').forEach(h=>h.classList.add('nt'));srMark(rd);srKick(document.querySelector('#tw-pair .twh.won'),'slamw');if(!rd.main)srKick(document.getElementById('srv'),'nudge')}}
-function srStage(o){const all=srRounds(o);const rounds=all.filter(r=>!r.x&&!r.main).concat(all.filter(r=>r.x),all.filter(r=>r.main));
+/* v263: the stage's markup on its own, so the party-night TV can play it too (nm = the two shows' GM names, tv = no tapping) */
+function srStageHtml(o,nm,tv){const G=nm?nm.p:S.gm,Rv=nm?nm.ai:S.rival;const all=srRounds(o);const rounds=all.filter(r=>!r.x&&!r.main).concat(all.filter(r=>r.x),all.filter(r=>r.main));
  const two=!!o.ratings&&o.blocks.some(b=>b.brand==='ai');const cnt=br=>{const b=o.blocks.find(x=>x.brand===br);return b?b.segs.length:0};
- openModal(`<div id="srv" class="srv tw" onclick="srTap(event)">
+ const html=(`<div id="srv" class="srv tw${tv?' srtv':''}" ${tv?'':'onclick="srTap(event)"'}>
  <div class="sr-top"><span class="livebug"><b>On air</b><span>Week ${o.week}</span></span><div class="sr-title">${esc(o.title)}</div></div>
- ${two?`<div class="twsc"><div class="me" id="srs-p"><span>${esc(S.gm)}</span><b>–</b><em>So far</em></div><div id="srs-ai"><span>${esc(S.rival)}</span><b>–</b><em>So far</em></div></div>
- <div class="twrope"><i id="tw-knot"></i></div><div class="twrl"><span>${esc(S.gm)}</span><span>${esc(S.rival)}</span></div>`:''}
+ ${two?`<div class="twsc"><div class="me" id="srs-p"><span>${esc(G)}</span><b>–</b><em>So far</em></div><div id="srs-ai"><span>${esc(Rv)}</span><b>–</b><em>So far</em></div></div>
+ <div class="twrope"><i id="tw-knot"></i></div><div class="twrl"><span>${esc(G)}</span><span>${esc(Rv)}</span></div>`:''}
  <div class="twrd" id="tw-rd"></div>
- <div class="twpair" id="tw-pair"><div class="twh p"><div class="twt">${esc(S.gm)} · ${cnt('p')} segment${cnt('p')===1?'':'s'}</div></div>${two?`<div class="twh ai"><div class="twt">${esc(S.rival)} · ${cnt('ai')} segment${cnt('ai')===1?'':'s'}</div></div>`:''}</div>
- <div class="twfoot" id="tw-foot"><div class="twnext" id="tw-next" aria-live="polite">Tap to start ▸</div></div>
- <div class="sr-ctl" id="sr-ctl"><span class="muted tiny">Tap anywhere to advance</span><button class="mini" onclick="event.stopPropagation();srSkip()">Skip ▸▸</button></div></div>`);
- SRV={o,rounds,i:0,tok:0,busy:false,done:false,seen:[],pos:0,two}}
+ <div class="twpair" id="tw-pair"><div class="twh p"><div class="twt">${esc(G)} · ${cnt('p')} segment${cnt('p')===1?'':'s'}</div></div>${two?`<div class="twh ai"><div class="twt">${esc(Rv)} · ${cnt('ai')} segment${cnt('ai')===1?'':'s'}</div></div>`:''}</div>
+ <div class="twfoot" id="tw-foot"><div class="twnext" id="tw-next" aria-live="polite"${tv?' hidden':''}>Tap to start ▸</div></div>
+ <div class="sr-ctl" id="sr-ctl">${tv?'':'<span class="muted tiny">Tap anywhere to advance</span>'}<button class="mini" onclick="event.stopPropagation();srSkip()">Skip ▸▸</button></div></div>`);
+ SRV={o,rounds,i:0,tok:0,busy:false,done:false,seen:[],pos:0,two,nm:nm||null,tv:!!tv};return html}
+function srStage(o){const html=srStageHtml(o);openModal(html)}
 function srWait(ms,tok){return new Promise((res,rej)=>setTimeout(()=>srOn()&&SRV.tok===tok?res():rej(0),ms))}
 async function srPlay(){const R=SRV,rd=R.rounds[R.i];if(!rd)return srFinal(false);const tok=++R.tok,w=ms=>srWait(ms,tok);R.busy=true;srHint('');
  const its=[rd.p,rd.ai,rd.x].filter(Boolean),main=!!rd.main,anyWin=its.some(it=>{const c=srPick(it.s);return c&&c.some(x=>x.r==='w')});
@@ -5154,15 +5159,15 @@ function srFinal(instant){const R=SRV,o=R.o;R.tok++;R.busy=false;R.done=true;con
  const v=document.getElementById('srv');if(!v)return;v.classList.remove('dim');const lb=v.querySelector('.livebug b');if(lb)lb.textContent='Final';const ctl=document.getElementById('sr-ctl');if(ctl)ctl.hidden=true;
  if(o.ratings&&R.two&&o.ratings.p!=null&&o.ratings.ai!=null)srRope(o.ratings.p-o.ratings.ai,nw,!instant);
  if(o.ratings)[['p','srs-p'],['ai','srs-ai']].forEach(([k,id])=>{const box=document.getElementById(id);if(!box)return;box.querySelector('b').textContent=stars(o.ratings[k]);box.querySelector('em').textContent='Final';if(nw===k)box.classList.add('win');if(!instant){box.classList.remove('punch');void box.offsetWidth;box.classList.add('punch')}});
- const bs=srBest(o),pb=o.blocks.find(b=>b.brand==='p'),fl=pb&&pb.flow&&pb.flow.mod;
- const foot=document.getElementById('tw-foot');if(foot)foot.innerHTML=`${nw==='p'||nw==='ai'?`<div class="winban twban ${nw==='p'?'w':'l'}">${nw==='p'?'You win the night!':esc(S.rival)+' takes the night'}</div>`:nw==='tie'?`<div class="winban twban t">Dead even</div>`:''}
+ const bs=R.tv?srBestAll(o):srBest(o),pb=o.blocks.find(b=>b.brand==='p'),fl=pb&&pb.flow&&pb.flow.mod;
+ const foot=document.getElementById('tw-foot');if(foot)foot.innerHTML=`${nw==='p'||nw==='ai'?`<div class="winban twban ${nw==='p'?'w':'l'}">${R.tv?esc(srNm(nw))+' wins the night!':nw==='p'?'You win the night!':esc(S.rival)+' takes the night'}</div>`:nw==='tie'?`<div class="winban twban t">Dead even</div>`:''}
   ${bs?`<div class="sr-motn"><span>Best of the night</span><b>${esc(bs.txt)}</b>${srStars(bs.stars)}</div>`:''}
   ${(()=>{if(!o.ratings||!R.two||o.ratings.p==null||o.ratings.ai==null)return '';const g=o.ratings.p-o.ratings.ai,same=stars(o.ratings.p)===stars(o.ratings.ai);
    const sg=v=>`${v>=0?'+':'−'}${Math.abs(v).toFixed(2)}★`;const ap=srAdj(o,'p'),aa=srAdj(o,'ai');
-   const why=Math.abs(ap)>=.01||Math.abs(aa)>=.01?`Pacing, production &amp; ads: ${esc(S.gm)} ${sg(ap)} · ${esc(S.rival)} ${sg(aa)}`:'';
-   return `<div class="muted tiny center">${same&&(nw==='p'||nw==='ai')?Math.abs(g)<.005?`Level at ${o.ratings.p.toFixed(2)}★ — ties go to ${nw==='p'?'you':esc(S.rival)}${why?'<br>':''}`:`Won by a hair — ${o.ratings[nw].toFixed(2)}★ to ${o.ratings[nw==='p'?'ai':'p'].toFixed(2)}★${why?'<br>':''}`:''}${why}</div>`})()}
-  ${fl?`<div class="muted tiny center">Show structure ${fl>0?'+':'−'}${Math.abs(fl).toFixed(2)}★ · ${esc(flowWord(fl))}</div>`:''}
-  <div class="sr-btns"><button class="btn" onclick="event.stopPropagation();showResults()">Full results ▸</button><button class="btn sec" onclick="event.stopPropagation();closeModal();go('home');if(S.crisis)setTimeout(openCrisis,250)">Continue</button></div>`;
+   const why=Math.abs(ap)>=.01||Math.abs(aa)>=.01?`Pacing, production &amp; ads: ${esc(srNm('p'))} ${sg(ap)} · ${esc(srNm('ai'))} ${sg(aa)}`:'';
+   return `<div class="muted tiny center">${same&&(nw==='p'||nw==='ai')?Math.abs(g)<.005?`Level at ${o.ratings.p.toFixed(2)}★ — ties go to ${R.tv?esc(srNm(nw)):nw==='p'?'you':esc(S.rival)}${why?'<br>':''}`:`Won by a hair — ${o.ratings[nw].toFixed(2)}★ to ${o.ratings[nw==='p'?'ai':'p'].toFixed(2)}★${why?'<br>':''}`:''}${why}</div>`})()}
+  ${fl&&!R.tv?`<div class="muted tiny center">Show structure ${fl>0?'+':'−'}${Math.abs(fl).toFixed(2)}★ · ${esc(flowWord(fl))}</div>`:''}
+  ${R.tv?'':`<div class="sr-btns"><button class="btn" onclick="event.stopPropagation();showResults()">Full results ▸</button><button class="btn sec" onclick="event.stopPropagation();closeModal();go('home');if(S.crisis)setTimeout(openCrisis,250)">Continue</button></div>`}`;
  if(!instant&&foot){foot.classList.remove('flash');void foot.offsetWidth;foot.classList.add('flash');srQuake(1)}}
 function srSkip(){if(!srOn()||SRV.done)return;srFinal(true)}
 
@@ -5967,6 +5972,8 @@ if(typeof document!=='undefined'&&document.getElementById('app')){
   if(!ON()||!LMP||!(partyOn()||simOn())||MPX)return;const code=LMP.code;
   TKO.fetch(code).then(d=>{if(!d||!LMP||LMP.code!==code||!S||!ON())return;if(d.state&&(d.rev||0)>(S.online.rev||0)){console.warn('league update was missed — catching up',d.rev,S.online.rev);mpIncoming(d)}else partyCatchUp()}).catch(()=>{})}
  setInterval(syncCheck,15000);
+ /* v263: a TV is left open for hours — look for a new version every 10 minutes so it doesn't run old code next to updated phones */
+ setInterval(()=>{if(TV&&'serviceWorker' in navigator&&navigator.onLine)navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{})},600000);
  /* slow or patchy connections often never fire 'online': keep nudging anything still waiting to sync while the app is open */
  setInterval(()=>{if(!navigator.onLine||document.visibilityState!=='visible'||!window.TKO||!TKO.ready)return;if(cloudCfg()&&cloudPendingAny()&&!CL_BUSY)cloudPush();if(ON()&&MP_PENDING&&!MPX&&!mpT)mpPush(S.online&&S.online.msg)},60000);
  window.addEventListener('online',()=>{if(cloudCfg()&&cloudPendingAny())cloudPush();if(ON()&&(MP_PENDING||mpHasUnsent()))mpPush(S.online&&S.online.msg)});
@@ -5974,7 +5981,9 @@ if(typeof document!=='undefined'&&document.getElementById('app')){
  const flush=()=>{if(mpT&&ON())mpPush();if(CL_T)cloudPush()};window.addEventListener('pagehide',flush);
  /* a new version finished installing in the background: offer a one-tap reload instead of making people close the app */
  if('serviceWorker' in navigator&&navigator.serviceWorker.controller){let shown=false;window.updNow=()=>{flush();setTimeout(()=>location.reload(),400)};
-  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(shown)return;shown=true;const d=document.createElement('div');d.id='upd';d.innerHTML='New version ready <button class="mini" onclick="updNow()">Update</button>';document.body.appendChild(d)})}
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(shown)return;shown=true;
+   /* v263: nobody taps "Update" on a TV — it reloads itself into the new version between segments (it reopens the league on its own) */
+   if(TV){const go=()=>{if(TV&&(TV.reveal||(S&&S.online&&S.online.live&&partyLiveNow())))return setTimeout(go,15000);updNow()};return go()}const d=document.createElement('div');d.id='upd';d.innerHTML='New version ready <button class="mini" onclick="updNow()">Update</button>';document.body.appendChild(d)})}
  if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{const c=e.data&&e.data.tksim==='open'&&e.data.code;if(c&&(!LMP||LMP.code!==c))mpOpen(c)});
  $('#modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!PS&&!ME)closeModal()});
  /* a fast double tap shouldn't also hit whatever button appears under the finger on the next screen */

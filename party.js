@@ -288,7 +288,9 @@ function tvStart(code){if(S&&!ON())saveLocal();if(typeof leaveLeagueView==='func
 function tvConnect(){if(!TV)return;if(TV.unsub){TV.unsub();TV.unsub=null}if(TV.sideUnsub){TV.sideUnsub();TV.sideUnsub=null}
  if(!window.TKO||!TKO.ready)return;
  TV.unsub=TKO.listen(TV.code,tvIncoming,()=>{if(!TV)return;TV.status='missing';render()});
- if(TKO.listenSide)TV.sideUnsub=TKO.listenSide(TV.code,tvSide);partyWake()}
+ if(TKO.listenSide)TV.sideUnsub=TKO.listenSide(TV.code,tvSide);partyWake();
+ /* v263: pick up a new version as soon as a league goes on the TV */
+ try{if('serviceWorker' in navigator)navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{})}catch(e){}}
 /* v262: the TV feed now has its own little document (see online.js pushSide); the league document still carries it for
    phones on older versions or before the rules are published, so the TV uses whichever is newer */
 function tvPickFeed(){const a=TV.mainFeed,b=TV.side&&TV.side.live;TV.feed=!a?(b||null):!b?a:((b.at||0)>=(a.at||0)?b:a)}
@@ -391,6 +393,7 @@ function tvOver(){const l=localSeats().slice().sort((a,b)=>S.fans[b]-S.fans[a]);
 function tvRevealPairs(){const L=S.last;return (L.pairs||[{blocks:L.blocks,ratings:L.ratings,fans:L.fans,hourWin:L.hourWin}])}
 function tvRevealHtml(){const L=S.last,R=TV.reveal,pairs=tvRevealPairs(),pr=pairs[R.pi];R.built=R.key+':'+R.pi;
  if(Object.keys(pr.ratings||{}).length>2)return ryHtml(L,R,pr);
+ if(tvTwOk(pr))return tvTwHtml(L,R,pr,pairs);
  const cols=pr.blocks.filter(b=>b.brand!=='x'),x=pr.blocks.find(b=>b.brand==='x');
  const col=(b,ci)=>`<div class="rv-col"><div class="rv-hd"><div class="rv-show">${esc(b.label)}</div><div class="rv-run" id="rvr${ci}">—</div></div>${b.segs.map((s,si)=>`<div class="rv-seg" id="rv-${ci}-${si}" data-st="${s.stars}"><div class="muted tiny">${si===b.segs.length-1?'<b class="gold">MAIN EVENT</b> · ':''}${esc(s.sub)}</div><div class="rv-txt">${esc(s.txt)}</div><div class="rv-stars">${starMeter(s.stars)}</div>${s.notes.slice(0,3).map(n=>`<div class="note">${esc(n)}</div>`).join('')}</div>`).join('')||'<div class="muted">Nothing aired.</div>'}</div>`;
  const ks=Object.keys(pr.ratings);const best=ks.slice().sort((a,b)=>pr.ratings[b]-pr.ratings[a])[0];const many=ks.length>2,ORD=['1st','2nd','3rd','4th'];
@@ -400,7 +403,7 @@ function tvRevealHtml(){const L=S.last,R=TV.reveal,pairs=tvRevealPairs(),pr=pair
  <div class="rv-final" id="rv-final"><div class="rv-scores">${(many?ks.slice().sort((a,b)=>pr.ratings[b]-pr.ratings[a]):ks).map(k=>`<div class="rv-score ${k===best&&ks.length>1?'win':''}">${many&&pr.places&&pr.places[k]?`<small class="rv-pl">${ORD[pr.places[k]-1]}</small>`:''}<span>${esc(nameOf(k))}</span><div class="rv-fs">${starMeter(pr.ratings[k])}</div><b class="${pr.fans[k]>=0?'good':'bad'}">${pr.fans[k]>=0?'+':''}${fmtFans(Math.abs(pr.fans[k])).replace(/^/,pr.fans[k]<0?'−':'')} fans</b></div>`).join('')}</div>
  <div class="rv-win">${ks.length>1?(pr.hourWin?`🏆 ${esc(nameOf(pr.hourWin))} wins the night!`:`🏆 ${esc(nameOf(best))} steals the show!`):'Bye-week show in the books.'}</div></div>
  <div class="rv-ctl"><button class="mini" onclick="tvRevealSkip()">Skip ▸▸</button></div></div>`}
-function tvRevealRun(){const R=TV.reveal,pr=tvRevealPairs()[R.pi];if(Object.keys(pr.ratings||{}).length>2)return ryRun(R,pr);const cols=pr.blocks.filter(b=>b.brand!=='x'),x=pr.blocks.find(b=>b.brand==='x');
+function tvRevealRun(){const R=TV.reveal,pr=tvRevealPairs()[R.pi];if(Object.keys(pr.ratings||{}).length>2)return ryRun(R,pr);if(R.tw)return tvTwRun(R,pr);const cols=pr.blocks.filter(b=>b.brand!=='x'),x=pr.blocks.find(b=>b.brand==='x');
  const steps=[];const max=Math.max(0,...cols.map(b=>b.segs.length));
  if(R.pi===0&&S.last.deals)S.last.deals.forEach((d,i)=>steps.push({id:'rv-d-'+i,n:d.bids.length+1}));
  for(let i=0;i<max;i++)cols.forEach((b,ci)=>{if(b.segs[i])steps.push({id:`rv-${ci}-${i}`,ci,n:b.segs[i].notes.length})});
@@ -421,11 +424,11 @@ function tvRevealNext(){const R=TV&&TV.reveal;if(!R||!R.steps||!document.getElem
  if(R.si>=R.steps.length){R.t=setTimeout(tvRevealAdvance,9000);return}
  const st=R.steps[R.si++];if(st.fn)st.fn(false);else tvRevealShow(st,false);if(st.ms!=null){R.t=setTimeout(tvRevealNext,st.ms);return}
  /* v239: three or four shows means more segments to get through, so each one moves a little quicker */
- const sp=document.querySelector('#rv .rv-many')?.7:1;R.t=setTimeout(tvRevealNext,st.final?0:Math.round(Math.min(7600,3600+st.n*1100)*sp))}
+ const sp=document.querySelector('#rv .rv-many')?.7:1;R.t=setTimeout(tvRevealNext,st.final?0:Math.round(Math.min(4400,2000+st.n*700)*sp))}
 function tvRevealAdvance(){const R=TV&&TV.reveal;if(!R)return;clearTimeout(R.t);const n=tvRevealPairs().length;
  if(R.pi<n-1){R.pi++;R.si=0;R.built=null;render();return}
  TV.reveal=null;window.scrollTo(0,0);render()}
-function tvRevealSkip(){const R=TV&&TV.reveal;if(!R)return;clearTimeout(R.t);if(!R.steps)return render();
+function tvRevealSkip(){const R=TV&&TV.reveal;if(!R)return;clearTimeout(R.t);if(R.tw){{const st=document.getElementById('tvtw-stage'),dl=document.getElementById('tvtw-deals');if(st)st.hidden=false;if(dl)dl.hidden=true}if(typeof srOn==='function'&&srOn()&&!SRV.done){R.twTok=(R.twTok||0)+1;srSkip();R.t=setTimeout(tvRevealAdvance,9000)}else tvRevealAdvance();return}if(!R.steps)return render();
  if(R.si<R.steps.length){while(R.si<R.steps.length){const st=R.steps[R.si++];if(st.fn)st.fn(true);else tvRevealShow(st,true)}const f=document.getElementById('rv-final');if(f)try{f.scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}R.t=setTimeout(tvRevealAdvance,9000)}else tvRevealAdvance()}
 
 /* ===================== v241: the Battle Royale reveal (3–4 shows) =====================
@@ -496,3 +499,39 @@ function ryRun(R,pr){const P=ryPlan(pr),x=pr.blocks.find(b=>b.brand==='x');const
  steps.forEach(st=>{if(st.ms==null&&!st.final)st.ms=Math.round(Math.min(7600,3600+(st.n||0)*1100)*sp)});
  steps[steps.length-1].ms=0;
  R.steps=steps;R.si=R.si||0;for(let i=0;i<R.si&&i<steps.length;i++)steps[i].fn(true);tvFit(document.querySelector('#rv [data-sec="under"]'),1,.72);tvRevealNext()}
+
+/* ===================== v263: the tug of war on the TV (two shows head to head) =====================
+   The same tug of war as the solo reveal (index.html srStage), played for the room: it runs itself round by round — no
+   tapping — with a short beat between rounds and a longer hold before the main event. A signing war (sealed offers) plays
+   first when there is one. Three or four shows still get the Battle Royale. */
+function tvTwOk(pr){const cols=(pr.blocks||[]).filter(b=>b.brand!=='x');return typeof srStageHtml==='function'&&cols.length===2&&Object.keys(pr.ratings||{}).length===2}
+/* the matchup as the solo stage expects it: the first show is 'p', the second 'ai' */
+function tvTwPair(L,pr){const cols=pr.blocks.filter(b=>b.brand!=='x'),a=cols[0].brand,b=cols[1].brand,f=k=>k===a?'p':k===b?'ai':k;
+ const o={week:L.week,season:L.season,ppv:L.ppv,title:L.ppv?L.title:`${showNames()[a]||nameOf(a)} vs ${showNames()[b]||nameOf(b)}`,notes:L.notes||[],
+  blocks:pr.blocks.map(x=>Object.assign({},x,{brand:f(x.brand)})),ratings:{p:pr.ratings[a],ai:pr.ratings[b]},fans:{p:(pr.fans||{})[a],ai:(pr.fans||{})[b]},hourWin:pr.hourWin?f(pr.hourWin):null};
+ return {o,nm:{p:nameOf(a),ai:nameOf(b)}}}
+function tvTwHtml(L,R,pr,pairs){const {o,nm}=tvTwPair(L,pr);R.tw=true;
+ const deals=R.pi===0&&L.deals&&L.deals.length&&typeof dealRevealHtml==='function';
+ return `<div id="rv" class="rv tvtw">${pairs.length>1?`<div class="rv-top"><div class="kicker"><i></i>Matchup ${R.pi+1} of ${pairs.length}</div></div>`:''}
+ ${deals?`<div class="tvtw-deals" id="tvtw-deals">${dealRevealHtml(L.deals)}</div>`:''}<div class="tvtw-stage" id="tvtw-stage"${deals?' hidden':''}>${srStageHtml(o,nm,true)}</div>
+ <div class="rv-ctl"><button class="mini" onclick="tvRevealSkip()">Skip ▸▸</button></div></div>`}
+async function tvTwRun(R,pr){const tok=R.twTok=(R.twTok||0)+1,live=()=>TV&&TV.reveal===R&&R.twTok===tok&&document.getElementById('srv');
+ const wait=ms=>new Promise(r=>setTimeout(r,ms));const fit=()=>{const st=document.getElementById('tvtw-stage');if(st)tvFit(st,1.9,1.1,'--twz')};
+ const L=S.last,dl=document.getElementById('tvtw-deals');
+ if(dl){const n=L.deals.length;for(let i=0;i<n;i++){if(!live())return;const el=document.getElementById('rv-d-'+i);if(el)el.classList.add('on','now');if(window.SFX)SFX.play('confirm');await wait(2600)}
+  await wait(1200);if(!live())return;dl.hidden=true;document.getElementById('tvtw-stage').hidden=false}
+ fit();await wait(1600);
+ while(live()&&!SRV.done){const rd=SRV.rounds[SRV.i];if(rd&&rd.main)await wait(900);if(!live())return;
+  try{await srPlay()}catch(e){}
+  if(!live()||SRV.done)break;await wait(SRV.rounds[SRV.i]&&SRV.rounds[SRV.i].main?1600:1100)}
+ if(!live())return;fit();clearTimeout(R.t);R.t=setTimeout(tvRevealAdvance,10000)}
+(function(){const c=document.createElement('style');c.textContent=`
+body.tv .tvtw .rv-top{margin-bottom:6px}
+body.tv .tvtw-stage{max-width:1000px;margin:0 auto;zoom:var(--twz,1.6)}
+body.tv .tvtw .srv{cursor:default}
+body.tv .tvtw .twpair{flex-direction:row;align-items:stretch;min-height:200px}
+body.tv .tvtw .twpair.one{justify-content:center}
+body.tv .tvtw .twpair>.twh{flex:1 1 0;min-width:0}
+body.tv .tvtw .twnote{white-space:normal}
+body.tv .tvtw .sr-ctl{display:none}
+body.tv .tvtw-deals{max-width:1100px;margin:0 auto;zoom:1.4}`;document.head.appendChild(c)})();
