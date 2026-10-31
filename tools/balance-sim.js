@@ -56,8 +56,10 @@ window.SIM = async function (opt) {
       c.forEach(sl => {
         if (!sl.d) return;
         if (sl.k === 'promo') { const p = sl.d; delete p.res; p.played = false; if (S.w[p.a] && !S.w[p.a].inj && (!p.b || S.w[p.b] && !S.w[p.b].inj)) runAutoPromo(p, 'p'); else sl.d = null }
-        else if (sl.k === 'match') { const m = sl.d; delete m.ev; j++; const main = j === nM; if (!validMatch(m)) return; if (main && typeof msOn === 'function' && msOn(m)) { msAuto(m, 'p', true); return } const ev = matchEvent(m, 'p', sh.ppv || main, main ? .65 : 0); if (ev) runEvAI(ev, m) }
+        else if (sl.k === 'match') { const m = sl.d; delete m.ev; j++; const main = j === nM; if (!validMatch(m)) return; if (typeof hrAuto === 'function') return; if (main && typeof msOn === 'function' && msOn(m)) { msAuto(m, 'p', true); return } const ev = matchEvent(m, 'p', sh.ppv || main, main ? .65 : 0); if (ev) runEvAI(ev, m) }
       });
+      // v260: highlight reels decide which matches get calls (same rules as the live show)
+      if (typeof hrAuto === 'function') hrAuto(c, 'p', sh);
       const before = Object.fromEntries(Object.values(S.titles).map(t => [t.id, t.holders.join('|')]));
       const out = airShow();
       const o = S.last || out;

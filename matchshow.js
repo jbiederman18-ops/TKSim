@@ -202,7 +202,7 @@ const MS_POST=[
   hit:[[['A','({A} and {B} stand nose to nose as the show goes off the air.)'],['p','This isn\'t done, folks.']]],note:'Heat up a little'}];
 
 /* the booth's reaction to the big moment */
-const MS_BOOTH_OK=['What a moment! This place is unglued!','You will not see that anywhere else this week.','That is why this match is the main event!'],
+const MS_BOOTH_OK=['What a moment! This place is unglued!','You will not see that anywhere else this week.','That is why you tune in every week!'],
  MS_BOOTH_NO=['Not how anyone drew that one up.','That one got away from them.','The crowd isn\'t sure what they just saw.'],
  /* v256: when the moment is somebody hurt, a stoppage or no winner, the booth doesn't cheer it */
  MS_BOOTH_GRAVE=['Everybody hold your breath.','That\'s the side of this business nobody wants to see.','Let\'s hope everyone is all right.'],
@@ -221,7 +221,9 @@ function msRoles(m,brand){const win=m.sides[m.winner]||[];const A=S.w[win[0]];co
  return {A,B,A2,C:Cid?S.w[Cid]:null,brand}}
 function msFill(t,r){return String(t).replace(/\{(A2|A|B|C)\}/g,(_,k)=>r[k]?r[k].name:'')}
 function msOk(c,r){return (!c.al||r.A.al===c.al)&&(!c.vs||r.B.al===c.vs)&&(!c.need||r[c.need])}
-function msChance(c,r){const A=r.A;const fit=c.fit?(A.st===c.fit?-.1:.04):0;return clamp(chance(Object.assign({},c,{d:(c.d||0)+fit}),{A}),.12,.95)}
+function msChance(c,r){const A=r.A;const fit=c.fit?(A.st===c.fit?-.1:.04):0;let p=chance(Object.assign({},c,{d:(c.d||0)+fit}),{A});
+ /* v260: a tired wrestler misses more, and it takes two — a weak opponent drags every spot down with them */
+ p-=Math.max(0,(A.fat||0)-40)/220;if(r.B)p+=(Math.min(A.ring,r.B.ring)-75)/500;return clamp(p,.12,.95)}
 /* deal three calls: the one that fits the wrestler's style first, then the alignment move, then the rest at random */
 function msDeal(list,r,n){const ok=list.filter(c=>msOk(c,r));const fit=ok.filter(c=>c.fit&&c.fit===r.A.st),al=ok.filter(c=>c.al&&!fit.includes(c)),rest=ok.filter(c=>!fit.includes(c)&&!al.includes(c));
  const out=[];[fit,al].forEach(g=>{if(g.length&&out.length<n)out.push(pick(g))});
@@ -229,11 +231,15 @@ function msDeal(list,r,n){const ok=list.filter(c=>msOk(c,r));const fit=ok.filter
 function msAdd(m,d,st){const ev=evNew(m);st.sum=st.sum||0;const nd=clamp(st.sum+d,-MS_CAP,MS_CAP)-st.sum;st.sum+=nd;ev.stars+=nd;return nd}
 /* roll one of the new calls; returns {ok,d,lines} */
 function msRoll(c,r,m,st,lab){const p=msChance(c,r);const ok=Math.random()<p;const sw=swingOf(p,c.st);
- const d=msAdd(m,ok?sw.w*MS_K:-sw.l*MS_K,st);const ev=evNew(m);
+ /* v260: risky calls (under ~60%) swing further in a hot crowd, less in a cold one (reel.js) */
+ const cm=p<.6&&typeof hrCm==='function'?hrCm():1;
+ const d=msAdd(m,ok?sw.w*MS_K*cm:-sw.l*MS_K*cm,st);const ev=evNew(m);const extra=[];
+ if(p<.6&&typeof injSev==='function'){const A=r.A;const ip=((p<.4?.05:.02)*cm*(ok?.6:1.5)+Math.max(0,(A.fat||0)-50)/1000)*(STIPS[stipKey(m)]||STIPS.std).inj;
+  if(Math.random()<ip&&!A.inj&&!ev.inj.some(x=>x[0]===A.id)){const wk=injSev(A);ev.inj.push([A.id,wk,1]);extra.push({kind:'cam',t:wk?`🚑 ${A.name} is hurt. The trainer is out — they finish the match, but they'll miss time.`:`😮‍💨 ${A.name} is slow to get up. A scare, but they're OK.`})}}
  if(c.heat&&ok&&r.B)ev.heat.push([r.A.id,r.B.id,c.heat]);if(c.fat)m.sides.flat().forEach(id=>ev.fat.push([id,c.fat]));
  if(c.al==='h'&&ok&&r.A.al==='f')ev.pop.push([r.A.id,-1]);
  ev.notes.push(`🎬 ${lab}: ${msFill(c.t,r)} — ${ok?'it lands':'it falls short'}${d?` (${qStar(d)})`:''}`);
- return {ok,d,lines:pick(ok?c.hit:c.miss)}}
+ return {ok,d,lines:pick(ok?c.hit:c.miss),extra}}
 function msKick(m,r,st,F,lab){const B=r.B;const p=clamp(.25+((B.ring+r.A.ring)/2)/100*.6,.3,.85);const ok=Math.random()<p;const sw=swingOf(p,.6);
  const d=msAdd(m,ok?sw.w*MS_K:-sw.l*MS_K,st);const ev=evNew(m);m.sides.flat().forEach(id=>ev.fat.push([id,3]));
  ev.notes.push(`🎬 ${lab}: ${msFill(F.kick,r)} — ${ok?'the crowd buys every second':'the timing was off'}${d?` (${qStar(d)})`:''}`);return {ok,d,p,lines:pick(ok?F.hit:F.miss)}}
@@ -297,7 +303,7 @@ function msActs(){const a=MS.act||0;return `<div class="msacts">${['Opening','He
 function msStage(){const m=MS.m,r=MS.r;const win=(m.sides[m.winner]||[]).map(id=>S.w[id]).filter(Boolean);const bs=(m.sides.find(s=>s.includes(r.B.id))||[r.B.id]).map(id=>S.w[id]).filter(Boolean);
  return `<div class="sd" id="sd" onclick="msTap()"><div class="sdpan${MS.cam==='b'?' at-b':''}" id="sdpan">${msCorner(win,'a')}${msCorner(bs,'b')}</div>
  <div class="sdspeed" id="sdspeed"></div><div class="sdflash" id="sdflash"></div><div class="msbooth" id="msbooth">Commentary</div><div class="sdfx" id="sdfx"></div></div>`}
-function msHead(){return liveHd(MS.show,`Match ${MS.n} · Main event`,esc(msTitle(MS.m)),[],'● Live')+msActs()}
+function msHead(){return liveHd(MS.show,`${MS.it&&MS.it.main?`Match ${MS.n} · Main event`:`Match ${MS.n} · 🎬 Highlight reel`}`,esc(msTitle(MS.m)),[],'● Live')+msActs()}
 const MS_HOLD='<div class="sdbox k-cam"><div class="sdsay"></div></div><div class="sdhint">&nbsp;</div>';
 function msFrame(low){openModal(`<div class="sdw msw">${msHead()}${msStage()}<div id="sdlow">${low||MS_HOLD}</div></div>`,true)}
 function msFeed(){try{if(typeof partyFeed==='function'&&partyOn()){const b=document.querySelector('#modal .sbody');if(b)partyFeed(b.innerHTML)}}catch(e){}}
@@ -348,7 +354,7 @@ function msPick(i){if(!MS||!MS.menu)return;const M=MS.menu;pickFlash(()=>{if(!MS
 function msInfo(c,r){const p=msChance(c,r);return `${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:''}${STAT_ICON[c.s]} · ${oddsWord(p)} · ${swingWord(swingOf(p,c.st).w)}${c.sub?' · '+esc(msFill(c.sub,r)):''}`}
 const msItems=(list,r)=>list.map(c=>({c,label:msFill(c.t,r),info:msInfo(c,r)}));
 async function msCall(list,lab,q,sub){const r=MS.r;const it=await msMenu(q,sub,msItems(list,r));const o=msRoll(it.c,r,MS.m,MS.st,lab);
- MS.log.push({lab,t:it.label,ok:o.ok});msFrame('');await msPan('a');await msStamp(o.ok?'It lands':'Not quite',o.ok?'ok':'no');await msPlay(msLines(o.lines))}
+ MS.log.push({lab,t:it.label,ok:o.ok});msFrame('');await msPan('a');await msStamp(o.ok?'It lands':'Not quite',o.ok?'ok':'no');await msPlay(msLines(o.lines).concat(o.extra||[]))}
 /* the big moment: the same calls, odds and results as any other match moment */
 async function msMomentAct(slot){const g=MS.g,m=MS.m,r=g.r;
  if(g.e.need==='X'&&r.X&&!g.gor){const X=r.X;const it=await msMenu('🎧 Your call in gorilla',`${esc(X.name)} wants to go out there and start something`,[{label:'Send them out there',info:`They crash the main event and could start a new rivalry · morale +${GOR_MOR}`,yes:1},{label:'Not tonight',info:`The match goes on as booked · morale −${GOR_MOR}`}]);
@@ -372,10 +378,10 @@ function msIntro(m,hot){const ns=m.sides.map(sd=>sideName(sd));
  if(m.type==='gauntlet')return pick(['The Casino Gauntlet. Only one of them leaves a loser tonight.','Casino Gauntlet time. Nobody wants to be the one who gets pinned.']);
  if(m.type==='mitb')return 'Money in the Bank. The briefcase is hanging high above the ring.';
  const vs=ns.length===2?`${ns[0]} against ${ns[1]}`:`${ns.slice(0,-1).join(', ')} and ${ns[ns.length-1]}`;
- return pick(hot?[`${vs}, and this one has been building for weeks.`,`There is real bad blood here. ${vs}.`]:[`Main event time: ${vs}.`,`Main event: ${vs}. Buckle up.`,`${vs} closes the show tonight.`])}
+ return pick(hot?[`${vs}, and this one has been building for weeks.`,`There is real bad blood here. ${vs}.`]:MS&&MS.it&&!MS.it.main?[`${vs}, and the crowd can feel something coming.`,`${vs}. This one has people leaning forward.`]:[`Main event time: ${vs}.`,`Main event: ${vs}. Buckle up.`,`${vs} closes the show tonight.`])}
 async function msRun(){const m=MS.m;const fam=msFam(m);const plan=msPlan(MS.g,m);
  MS.act=0;msFrame('');if(window.SFX)SFX.play('swell');const r0=MS.r;const hot=heatOf(r0.A.id,r0.B.id)>=30;
- await msPlay([{kind:'cam',t:pick(['The main event. The bell rings.','Main event time, and the crowd is on its feet for the opening bell.','Here we go. The main event is underway.'])},{kind:'booth',who:'Play-by-play',t:msIntro(m,hot)}]);
+ await msPlay([{kind:'cam',t:pick(MS.it&&!MS.it.main?['The bell rings, and the crowd is already buzzing.','Here we go. The crowd senses something special.','The bell rings. Eyes up, everyone.']:['The main event. The bell rings.','Main event time, and the crowd is on its feet for the opening bell.','Here we go. The main event is underway.'])},{kind:'booth',who:'Play-by-play',t:msIntro(m,hot)}]);
  await msCall(msDeal(MS_OPEN,MS.r,3),'Opening','🎬 The opening bell',`How does ${esc(MS.r.A.name)} start?`);
  MS.act=1;msFrame('');
  let over=false;
