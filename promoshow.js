@@ -76,9 +76,9 @@ const short=w=>{const n=String(w.name||'');return n.length>16?n.split(' ').slice
 /* initials stand in on the party TV when a wrestler's photo is a private upload (the feed leaves those out) */
 const inits=w=>String(w.name||'').split(/\s+/).filter(Boolean).map(x=>x[0]).join('').slice(0,3).toUpperCase();
 function corner(w,k){if(!w)return '';const sub=typeof lvSub==='function'?lvSub([w]):'';
- return `<div class="sdc c${k}"><div class="sdph" data-i="${esc(inits(w))}">${portrait(w)}</div><div class="sdpl ${w.al==='f'?'fc':'hl'}"><b>${esc(w.name)}</b>${sub?`<span>${esc(sub)}</span>`:''}</div></div>`}
+ return `<div class="sdc c${k}">${typeof foTag==='string'?foTag:''}<div class="sdph" data-i="${esc(inits(w))}">${portrait(w)}</div><div class="sdpl ${w.al==='f'?'fc':'hl'}"><b>${esc(w.name)}</b>${sub?`<span>${esc(sub)}</span>`:''}</div></div>`}
 function stageHtml(){const {ctx}=PS;const cam=PS.cam||'a';const two=!!ctx.B;
- return `<div class="sd${two?'':' solo'}" id="sd" onclick="sdTap()"><div class="sdpan${cam==='b'&&two?' at-b':''}" id="sdpan">${corner(ctx.A,'a')}${two?corner(ctx.B,'b'):''}</div>
+ return `<div class="sd${two?(typeof foPose==='function'?' duo':''):' solo'}" id="sd" onclick="sdTap()"><div class="sdpan${cam==='b'&&two?' at-b':''}" id="sdpan">${corner(ctx.A,'a')}${two?corner(ctx.B,'b'):''}</div>
  <div class="sdspeed" id="sdspeed"></div><div class="sdflash" id="sdflash"></div>
  <div class="sdcut" id="sdcut"></div><div class="sdtac" id="sdtac"></div><div class="sdfx" id="sdfx"></div></div>`}
 function header(){const {scene,ctx}=PS;const lab=scene&&scene.ex&&typeof exLabel==='function'?exLabel(scene):PS.beat==='r'?'The response':PS.beat?'The twist':'On air';
@@ -89,7 +89,7 @@ function frame(low){openModal(`<div class="sdw">${header()}${stageHtml()}<div id
 function feed(){try{if(PS&&PS.live&&typeof partyFeed==='function'){const b=document.querySelector('#modal .sbody');if(b)partyFeed(b.innerHTML)}}catch(e){}}
 const sleep=ms=>new Promise(r=>setTimeout(r,reduce()?Math.min(ms,60):ms));
 async function panTo(k){if(!PS)return;const ctx=PS.ctx;if(k!=='a'&&k!=='b')return;if(k==='b'&&!ctx.B)return;if(PS.cam===k)return;PS.cam=k;
- const p=document.getElementById('sdpan'),sp=document.getElementById('sdspeed');if(!p)return;
+ const p=document.getElementById('sdpan'),sp=document.getElementById('sdspeed');if(!p)return;if(document.querySelector('#sd.duo')){p.classList.toggle('at-b',k==='b');return}
  if(sp)sp.classList.add('on');p.classList.toggle('at-b',k==='b');await sleep(320);if(sp)sp.classList.remove('on')}
 function cutIn(k){const el=document.getElementById('sdcut');if(!el)return;const w=people(PS.ctx)[k];
  el.innerHTML=(k==='x'||k==='h')&&w?`<div class="sdci"><div class="sdph" data-i="${esc(inits(w))}">${portrait(w)}</div><b>${esc(short(w))}</b></div>`:''}
@@ -113,7 +113,7 @@ async function showPage(){const pg=PS.q[PS.qi];if(!pg)return;
  if(pg.side==='a'||pg.side==='b'){PANNING=true;try{await panTo(pg.side)}finally{PANNING=false}}cutIn(pg.side);
  const fx=document.getElementById('sdfx');
  if(pg.stamp&&fx){fx.innerHTML=`<div class="sdstamp ${pg.ok?'ok':'no'}">${pg.ok?'It lands':'Not quite'}</div>`;if(window.SFX)SFX.stamp('',pg.ok?'ok':'no','promo')}
- low.innerHTML=boxHtml(pg);feed();
+ if(typeof foPose==='function'){if(pg.q!=null&&(pg.side==='a'||pg.side==='b'))foPose(pg.side,'talk');else if(pg.act!=null&&(pg.side==='a'||pg.side==='b'))foPose(pg.side,'act');else foPose(null)}low.innerHTML=boxHtml(pg);feed();
  const spr=pg.side&&document.querySelector(`#sd .c${pg.side} .sdph`);if(spr){spr.classList.remove('talk','hit');void spr.offsetWidth;spr.classList.add(pg.q!=null?'talk':'hit')}
  const el=document.getElementById('sdsay');if(!el||reduce())return done();
  const t=el.dataset.t;let i=0;el.textContent='';
