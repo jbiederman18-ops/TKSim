@@ -51,7 +51,7 @@ function mergeById(base,host,mine,path,conf){const id=x=>x&&x.id;base=Array.isAr
 function noMsg(st){if(st&&st.online)delete st.online.msg;return st}
 
 /* the league version this device's game is built on (kept in memory; set whenever we load or save the league) */
-let MP_BASE=null,MPX=null,MP_HELD=null,MP_TX=false,MP_OFFLINE_TOLD=0,MP_RETRY=0;
+let MP_BASE=null,MPX=null,MP_HELD=null,MP_TX=false,MP_OFFLINE_TOLD=0,MP_RETRY=0,MP_LAST_TRY=0;
 function mpSetBase(rev,str){MP_BASE=LMP?{code:LMP.code,rev,str}:null}
 function mpBase(){if(MP_BASE&&LMP&&MP_BASE.code===LMP.code)return MP_BASE;
  /* after a restart: the version an unsent change was based on was kept on the device */
@@ -91,7 +91,11 @@ function mpMergeTx(d,sent,base,me,msg){
  return {fields:{state:str,rev:curRev+1,turn:out.online.turn,msg:out.online.msg,week:out.week,season:out.season,phase:out.phase},str,rev:curRev+1,d}}
 
 /* send this device's game to the league. Called by mpPush. */
-async function leaguePush(retried){
+/* v262: every way out of a save — success, a lost race, no connection — now catches up on a league update that arrived
+   while the save was in flight. Only the success path used to, so after a failed or raced save the phone could sit on an
+   old copy (not showing that it was someone else's turn, or that the TV was waiting on them) until it was refreshed. */
+async function leaguePush(retried){MP_LAST_TRY=Date.now();try{return await leaguePush0(retried)}finally{setTimeout(()=>{try{partyCatchUp()}catch(e){console.warn(e)}},0)}}
+async function leaguePush0(retried){
  if(!ON()||!LMP||TV)return;
  if(MPX){MPX.again=true;return}
  const L=LMP,code=L.code,me=L.me,base=mpBase(),msg=S.online.msg||'';
@@ -176,6 +180,10 @@ function partyCatchUp(){if(!MP_HELD||MPX||partyBusy())return;const d=MP_HELD;MP_
 /* mpIncoming asks this first: should this new copy of the league wait? */
 function mpHoldIncoming(d){
  if(MPX||mpT){if(!MP_HELD||(d.rev||0)>=(MP_HELD.rev||0))MP_HELD=d;if(mpT&&!MPX)mpPush();return true}
+ /* v262: a save that didn't go through yet (busy moment, patchy wifi) must not be wiped by the next league update —
+    that dropped a GM's lock-in or card and left the room waiting on them. Hold the update and send now: the save
+    merges our changes into the newer league, and the result comes back to this phone. */
+ if(MP_PENDING&&(partyOn()||simOn())){if(!MP_HELD||(d.rev||0)>=(MP_HELD.rev||0))MP_HELD=d;if(Date.now()-MP_LAST_TRY>3000)mpPush(S.online.msg);return true}
  if(partyOn()&&partyBusy()){if(!MP_HELD||(d.rev||0)>=(MP_HELD.rev||0))MP_HELD=d;return true}
  return false}
 function partyResultsPrompt(){if(!S||!S.last)return;openModal(`<i class="mp-ok" hidden></i><div class="h mhd">📺 Week ${S.last.week} is on!</div><p>Everyone's locked in. Watch the results play out on the TV, or open your own.</p><button class="btn" onclick="showResults()">See my results</button><button class="btn ghost" onclick="closeModal()">I'm watching the TV</button>`)}
@@ -200,7 +208,10 @@ let FEED_T=null,FEED_LAST='';
 /* v129: when the live GM taps a choice, the TV holds that screen for a moment with the pick lit up, then shows how it played out
    (with a "Picked" tag on top, for anyone who looked away) */
 const PICK_HOLD=1900;let FEED_HOLD=0,FEED_PICK=null;
-function partyFeed(html,now){if(!ON()||!LMP||!window.TKO||!TKO.ready)return;clearTimeout(FEED_T);
+/* v262: where TV feed goes — the party league, or a solo game that's on a TV (solotv.js) */
+function tvTarget(){if(typeof S==='undefined'||!S||TV)return null;if(partyOn()&&LMP)return {code:LMP.code,seat:LMP.me};if(typeof stvOn==='function'&&stvOn())return {code:STV.code,seat:'s0'};return null}
+function tvFeedTurn(){return partyLiveTurn()||(typeof stvOn==='function'&&stvOn())}
+function partyFeed(html,now){const tg=tvTarget();if(!tg||!window.TKO||!TKO.ready)return;clearTimeout(FEED_T);
  /* v259: photos are stored on each device, too big to send — keep a placeholder with the wrestler's id and let the TV
     fill it in from its own photos (or the repo's), so party night isn't photo-less */
  html=String(html||'').replace(/<img\b[^>]*src="data:[^"]*"[^>]*>/gi,m=>{const id=(m.match(/data-ph="([^"]+)"/)||[])[1];return id?`<img data-ph="${id}" alt="">`:''}).slice(0,90000);
@@ -208,10 +219,10 @@ function partyFeed(html,now){if(!ON()||!LMP||!window.TKO||!TKO.ready)return;clea
     that went straight back to the show), drop it instead of labelling the new choices with the old pick */
  if(html&&!now&&FEED_PICK&&/class="[^"]*\bchoice\b/.test(html)&&!/class="[^"]*\bchoice\b[^"]*"[^>]*\bdisabled\b/.test(html)&&!/class="ppick"/.test(html))FEED_PICK=null;
  if(html&&!now&&FEED_PICK){html=`<div class="tv-picked"><span class="tvp-k">${esc(FEED_PICK.k)}</span><span><small>${esc(nameOf('p'))} picked</small>${esc(FEED_PICK.t)}</span></div>`+html;FEED_PICK=null}
- const send=()=>{if(html===FEED_LAST)return;FEED_LAST=html;TKO.push(LMP.code,{live:{seat:LMP.me,week:S.week,season:S.season,html,at:Date.now()}}).catch(()=>{})};
+ const send=()=>{if(html===FEED_LAST)return;FEED_LAST=html;if(typeof stvBeforeFeed==='function')stvBeforeFeed();const v={seat:tg.seat,week:S.week,season:S.season,html,at:Date.now()};(TKO.pushSide?TKO.pushSide(tg.code,'live',v):TKO.push(tg.code,{live:v})).catch(()=>{})};
  if(!html||now)return send();FEED_T=setTimeout(send,Math.max(150,FEED_HOLD-Date.now()))}
 document.addEventListener('click',e=>{const b=e.target&&e.target.closest&&e.target.closest('#modal .choice');if(!b||b.disabled)return;
- try{if(typeof LIVE==='undefined'||!LIVE||!partyLiveTurn())return;const body=b.closest('.sbody');if(!body)return;
+ try{if(typeof LIVE==='undefined'||!LIVE||!tvFeedTurn())return;const body=b.closest('.sbody');if(!body)return;
   const all=[...body.querySelectorAll('.choice')],i=all.indexOf(b);if(i<0)return;const c=body.cloneNode(true);
   c.querySelectorAll('.choice').forEach((x,j)=>x.classList.add(j===i?'picked':'unpicked'));
   const key=(b.querySelector('.key')||{}).textContent||'';const txt=((b.querySelector('.key+div')||b).textContent||'').trim();
@@ -274,22 +285,28 @@ document.addEventListener('fullscreenchange',fsSync);document.addEventListener('
 document.addEventListener('keydown',e=>{if(!TV||e.ctrlKey||e.metaKey||e.altKey||/input|textarea|select/i.test((e.target&&e.target.tagName)||''))return;if(e.key==='f'||e.key==='F'){e.preventDefault();tvFull()}})
 function tvStart(code){if(S&&!ON())saveLocal();if(typeof leaveLeagueView==='function')leaveLeagueView();
  TV={code,unsub:null,rev:0,seen:null,reveal:null,status:'connecting'};S=null;LS.set(TV_KEY,code);tab='home';render();tvConnect()}
-function tvConnect(){if(!TV)return;if(TV.unsub){TV.unsub();TV.unsub=null}
+function tvConnect(){if(!TV)return;if(TV.unsub){TV.unsub();TV.unsub=null}if(TV.sideUnsub){TV.sideUnsub();TV.sideUnsub=null}
  if(!window.TKO||!TKO.ready)return;
- TV.unsub=TKO.listen(TV.code,tvIncoming,()=>{if(!TV)return;TV.status='missing';render()});partyWake()}
+ TV.unsub=TKO.listen(TV.code,tvIncoming,()=>{if(!TV)return;TV.status='missing';render()});
+ if(TKO.listenSide)TV.sideUnsub=TKO.listenSide(TV.code,tvSide);partyWake()}
+/* v262: the TV feed now has its own little document (see online.js pushSide); the league document still carries it for
+   phones on older versions or before the rules are published, so the TV uses whichever is newer */
+function tvPickFeed(){const a=TV.mainFeed,b=TV.side&&TV.side.live;TV.feed=!a?(b||null):!b?a:((b.at||0)>=(a.at||0)?b:a)}
+function tvFeedBeatsReveal(){if(TV.reveal&&TV.feed&&TV.feed.html&&S&&TV.feed.week===S.week&&S.online&&S.online.live){if(TV.reveal.t)clearTimeout(TV.reveal.t);TV.reveal=null}}
+function tvSide(sd){if(!TV)return;TV.side=sd||null;if(!S)return;tvPickFeed();tvFeedBeatsReveal();try{if(sd&&window.lrfTake)lrfTake(sd)}catch(e){console.warn(e)}tvRefresh()}
 function tvIncoming(d){if(!TV||!d||!d.state)return;if((d.rev||0)<TV.rev&&S)return;
  let st;try{st=JSON.parse(d.state)}catch(e){return}delete st._view;viewFor(st,'s0');dataUpdate(st);ensureTraits(st);
- S=st;TV.rev=d.rev||0;TV.status='on';TV.n=d.n||nSeats();TV.feed=d.live||null;
+ S=st;TV.rev=d.rev||0;TV.status='on';TV.n=d.n||nSeats();TV.mainFeed=d.live||null;tvPickFeed();
  const nm=d.names||{},sh=d.shows||{};S.names=S.names||{};for(const k in nm)if(nm[k])S.names[localKey(k)]=nm[k];S.gm=S.names.p||S.gm;
  if(S.online){S.online.show=S.online.show||{};for(const k in sh)if(sh[k])S.online.show[localKey(k)]=cleanShow(sh[k])}
  const k=S.last?(S.last.season||S.season)*100+S.last.week:0;
  if(TV.seen===null)TV.seen=k;
  else if(k>TV.seen){TV.seen=k;if(TV.reveal&&TV.reveal.t)clearTimeout(TV.reveal.t);TV.reveal={key:S.last.season+'-'+S.last.week,pi:0}}
  /* a GM started their live segment: that beats replaying last week */
- if(TV.reveal&&TV.feed&&TV.feed.html&&TV.feed.week===S.week&&S.online&&S.online.live){if(TV.reveal.t)clearTimeout(TV.reveal.t);TV.reveal=null}
+ tvFeedBeatsReveal();
  tvRefresh()}
 function tvEnd(){if(!confirm('Take the league off this screen?'))return;tvStop()}
-function tvStop(){tvFull(false);document.body.style.zoom='';document.body.style.removeProperty('--tvz');if(TV){if(TV.unsub)TV.unsub();if(TV.reveal&&TV.reveal.t)clearTimeout(TV.reveal.t)}TV=null;LS.del(TV_KEY);document.body.classList.remove('tv');
+function tvStop(){tvFull(false);document.body.style.zoom='';document.body.style.removeProperty('--tvz');if(TV){if(TV.unsub)TV.unsub();if(TV.sideUnsub)TV.sideUnsub();if(TV.reveal&&TV.reveal.t)clearTimeout(TV.reveal.t)}TV=null;LS.del(TV_KEY);document.body.classList.remove('tv');
  S=null;try{const a=JSON.parse(LS.get('tksim_active')||'null');const g=a&&LS.get('tksim_game_'+a.code);if(g){LMP={code:a.code,me:a.me,key:a.key};S=JSON.parse(g)}}catch(e){LMP=null}
  if(!S)S=load();if(S){dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);if(!ON())showMigrate()}closeModal();tab='home';ANIM=true;render();if(ON())mpConnect()}
 function tvReplay(){if(!TV||!S||!S.last)return;TV.reveal={key:S.last.season+'-'+S.last.week,pi:0};render()}

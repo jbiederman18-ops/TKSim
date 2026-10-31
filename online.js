@@ -203,8 +203,74 @@ if (!cfg.apiKey || !cfg.projectId) {
       return out;
     },
 
+    // v262: a listener that hits an error is dead for good in Firestore — it used to just log it, and the phone (or TV)
+    // sat on an old copy of the league until someone refreshed. Now it re-subscribes on its own, backing off a little each time.
     listen(code, cb, missing) {
-      return onSnapshot(game(code), s => { if (s.exists()) cb(s.data()); else if (missing && !s.metadata.fromCache) missing(); }, e => console.warn('listen failed', e));
+      let unsub = null, stop = false, tries = 0, t = null;
+      const sub = () => {
+        if (stop) return;
+        unsub = onSnapshot(game(code), s => {
+          tries = 0;
+          if (s.exists()) cb(s.data()); else if (missing && !s.metadata.fromCache) missing();
+        }, e => {
+          console.warn('listen failed — reconnecting', e);
+          unsub = null; if (stop) return;
+          const ms = Math.min(30000, 1500 * 2 ** Math.min(tries++, 5));
+          t = setTimeout(sub, ms);
+        });
+      };
+      sub();
+      return () => { stop = true; clearTimeout(t); if (unsub) unsub(); unsub = null; };
+    },
+    // v262: the league straight from the server (not the device's copy) — the safety net for a live update that never arrived.
+    fetch(code) { return timed(getDocFromServer(game(code)).then(s => (s.exists() ? s.data() : null)), 12000); },
+
+    // v262: the TV feed (the live GM's screen and the locker-room office answers) lives in its own small document,
+    // games/{code}/live/now. It changes every few seconds during a live segment; on the main league document every one of
+    // those changes made every phone download the whole save again (a few hundred KB each time) and knocked other GMs'
+    // saves off their transaction mid-way. If the database rules haven't been updated for it yet, it falls back to the old
+    // place on the league document, so nothing breaks before the rules are published.
+    sideOK: null,
+    pushSide(code, key, value) {
+      const main = () => updateDoc(game(code), { [key]: value, updated: serverTimestamp() });
+      if (this.sideOK === false) return main();
+      const parts = key.split('.'), obj = {};
+      let cur = obj; parts.forEach((p, i) => { if (i === parts.length - 1) cur[p] = value; else cur = cur[p] = {}; });
+      obj.at = Date.now();
+      return setDoc(doc(db, 'games', code, 'live', 'now'), obj, { merge: true })
+        .then(() => { this.sideOK = true; })
+        .catch(e => {
+          if (String(e && (e.code || e.message)).includes('permission')) { this.sideOK = false; console.warn('TV feed: database rules not updated yet — using the league document'); return main(); }
+          throw e;
+        });
+    },
+    listenSide(code, cb) {
+      let unsub = null, stop = false, tries = 0, t = null;
+      const sub = () => {
+        if (stop) return;
+        unsub = onSnapshot(doc(db, 'games', code, 'live', 'now'), s => { tries = 0; cb(s.exists() ? s.data() : null); }, e => {
+          unsub = null; if (stop) return;
+          if (String(e && (e.code || e.message)).includes('permission')) return; // rules not published: the main doc carries the feed
+          t = setTimeout(sub, Math.min(30000, 1500 * 2 ** Math.min(tries++, 5)));
+        });
+      };
+      sub();
+      return () => { stop = true; clearTimeout(t); if (unsub) unsub(); unsub = null; };
+    },
+
+    // v262: a solo game shown on a TV. It uses an ordinary two-seat league document (both seats are this device), so the
+    // TV's "Show a league on this screen" works on it unchanged and the existing database rules allow it.
+    soloTv(code, data) { return timed(this._soloTv(...arguments)); },
+    async _soloTv(code, data) {
+      const uid = await uidReady;
+      const snap = await getDocFromServer(game(code));
+      if (snap.exists()) {
+        const d = snap.data();
+        if (!(d.solo && d.uids && d.uids.s0 === uid)) throw new Error('taken');
+        await updateDoc(game(code), { ...data, updated: serverTimestamp() });
+        return;
+      }
+      await setDoc(game(code), { ...data, n: 2, solo: true, uids: { s0: uid, s1: uid }, created: serverTimestamp(), updated: serverTimestamp() });
     },
 
     canAlert() { return 'Notification' in window && 'serviceWorker' in navigator && !!cfg.vapidKey; },

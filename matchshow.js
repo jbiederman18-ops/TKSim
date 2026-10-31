@@ -306,7 +306,7 @@ function msStage(){const m=MS.m,r=MS.r;const win=(m.sides[m.winner]||[]).map(id=
 function msHead(){return liveHd(MS.show,`${MS.it&&MS.it.main?`Match ${MS.n} · Main event`:`Match ${MS.n} · 🎬 Highlight reel`}`,esc(msTitle(MS.m)),[],'● Live')+msActs()}
 const MS_HOLD='<div class="sdbox k-cam"><div class="sdsay"></div></div><div class="sdhint">&nbsp;</div>';
 function msFrame(low){openModal(`<div class="sdw msw">${msHead()}${msStage()}<div id="sdlow">${low||MS_HOLD}</div></div>`,true)}
-function msFeed(){try{if(typeof partyFeed==='function'&&partyOn()){const b=document.querySelector('#modal .sbody');if(b)partyFeed(b.innerHTML)}}catch(e){}}
+function msFeed(){try{if(typeof partyFeed==='function'&&typeof tvTarget==='function'&&tvTarget()){const b=document.querySelector('#modal .sbody');if(b)partyFeed(b.innerHTML)}}catch(e){}}
 async function msPan(k){if(!MS||(k!=='a'&&k!=='b')||MS.cam===k)return;MS.cam=k;const p=document.getElementById('sdpan'),sp=document.getElementById('sdspeed');if(!p)return;if(document.querySelector('#sd.duo')){p.classList.toggle('at-b',k==='b');return}
  if(sp)sp.classList.add('on');p.classList.toggle('at-b',k==='b');await msSleep(320);if(sp)sp.classList.remove('on')}
 function msShout(s){const fx=document.getElementById('sdfx'),sd=document.getElementById('sd'),fl=document.getElementById('sdflash');if(!fx)return;if(window.SFX)SFX.play('pop');

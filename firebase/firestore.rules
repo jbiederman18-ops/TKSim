@@ -56,6 +56,14 @@ service cloud.firestore {
           && get(/databases/$(database)/documents/games/$(code)).data.uids[seat] == request.auth.uid;
       }
 
+      // v262: the TV feed — the live GM's screen and the locker-room office answers. Kept apart from the league so it
+      // can change every few seconds without every phone downloading the whole save again. Any GM in the league can write it.
+      match /live/{doc} {
+        allow read: if signedIn();
+        allow write: if signedIn() && doc == 'now'
+          && request.auth.uid in get(/databases/$(database)/documents/games/$(code)).data.uids.values();
+      }
+
       // Each device's push token; only the Cloud Function reads these.
       match /tokens/{uid} {
         allow read, write: if signedIn() && request.auth.uid == uid;

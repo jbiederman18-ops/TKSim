@@ -1743,7 +1743,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v261';
+const APP_VERSION='v262';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4151,7 +4151,7 @@ function saveLocal(){if(TV||MP_TX||RESTORING)return true;const k=saveKey(),v=JSO
   /* storage full: make room by dropping the oldest backup, then try again */
   const l=localBackups();if(!l.length)break;l.pop();try{if(l.length)localStorage.setItem('tksim_bk',JSON.stringify(l));else localStorage.removeItem('tksim_bk')}catch(e2){}}}
  if(Date.now()-SAVE_WARNED>60000){SAVE_WARNED=Date.now();toast('⚠️ Device storage is full — progress isn\'t saving. Export your save from the ⚙️ menu.')}return false}
-function save(){if(TV||MP_TX)return;saveLocal();if(!ON()){touchSolo();cloudSoon()}else if(S.online.turn==='p'||partyOn()||simOn())mpSoon()}
+function save(){if(TV||MP_TX)return;saveLocal();if(!ON()){touchSolo();cloudSoon();if(typeof stvSoon==='function')stvSoon()}else if(S.online.turn==='p'||partyOn()||simOn())mpSoon()}
 function load(){try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){return null}}
 function exportSave(){const blob=new Blob([JSON.stringify(Object.assign({},S,{__img:IMG}))],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`tony-khan-sim-s${S.season}-w${S.week}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);toast('Save file exported.')}
 function importSave(){const i=fileInput();i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.w||!d.titles||!d.phase)throw 0;localBackup('Before importing a file');if(d.__img){for(const id in d.__img)if(typeof d.__img[id]==='string'&&d.__img[id].startsWith('data:image/'))IMG[id]=d.__img[id];delete d.__img;saveImg()}S=d;dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);calMigrate(S);showMigrate();save();loadRepoPhotos();closeModal();tab='home';render();toast('Save loaded.')}catch(e){toast('That file is not a valid save.')}};r.readAsText(f)};i.click()}
@@ -4204,7 +4204,7 @@ function pkPick(id){const p=PK;PK=null;p.onPick(id)}
 function pkBack(){const p=PK;PK=null;p.back()}
 function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),2200)}
 let MODAL_AT=0;
-function openModal(html,keep){keep=keep||DDKEEP;MODAL_AT=Date.now();const m=$('#modal');const was=m.classList.contains('hidden');const sh=m.querySelector('.sheet');const st=keep&&sh?sh.scrollTop:0;m.classList.toggle('lobbyM',html.startsWith('<div id="games"'));m.innerHTML=`<div class="sheet ${was?'in':keep?'':'swap'}"><div class="sbody">${html}</div></div>`;m.classList.remove('hidden');document.body.classList.add('lock');pageLock();const ns=m.querySelector('.sheet');if(keep)ns.scrollTop=st;sheetScrollFix(ns);pinDocks(ns);if(LIVE&&partyLiveTurn())partyFeed(html)}
+function openModal(html,keep){keep=keep||DDKEEP;MODAL_AT=Date.now();const m=$('#modal');const was=m.classList.contains('hidden');const sh=m.querySelector('.sheet');const st=keep&&sh?sh.scrollTop:0;m.classList.toggle('lobbyM',html.startsWith('<div id="games"'));m.innerHTML=`<div class="sheet ${was?'in':keep?'':'swap'}"><div class="sbody">${html}</div></div>`;m.classList.remove('hidden');document.body.classList.add('lock');pageLock();const ns=m.querySelector('.sheet');if(keep)ns.scrollTop=st;sheetScrollFix(ns);pinDocks(ns);if(LIVE&&tvFeedTurn())partyFeed(html)}
 /* v203: buttons pinned to the bottom of a pop-up sit on the screen's real bottom edge. The sheet runs past the
    bottom of the screen (for iOS) and pads itself, and how far differs by phone, so measure where a pinned dock
    actually lands and correct its offset once — sticky offsets move it one-for-one. */
@@ -4687,7 +4687,7 @@ function liveSeg(it){const last=LQ.k===LQ.items.length-1&&!LQ.quiet.length;
  if(it.kind==='ms'&&typeof msStart==='function'){if(!msStart(it,LQ.show,last))liveNext();return}
  if(it.kind==='ev'){ME={q:[it],k:0,out:null,show:LQ.show,last};renderME()}
  else{const p=S.card.p[it.i].d;const ctx=promoCtx(p,'p');PS={i:it.i,p,ctx,st:newSt(),beat:0,scene:openScene(p,ctx),out:null,done:false,live:true,last};renderPS()}}
-function finishLive(){if(!LIVE)return;LIVE=false;ME=null;PS=null;LQ=null;S.card.p.forEach(sl=>{if(sl.k==='promo'&&sl.d&&!sl.d.res)sl.d=null});if(partyOn())return partyLiveDone();if(ON())return mpLockCard();airShow();showResults(true);render()}
+function finishLive(){if(!LIVE)return;LIVE=false;ME=null;PS=null;LQ=null;S.card.p.forEach(sl=>{if(sl.k==='promo'&&sl.d&&!sl.d.res)sl.d=null});if(partyOn())return partyLiveDone();if(ON())return mpLockCard();if(typeof stvOn==='function'&&stvOn())partyFeed('');airShow();showResults(true);render()}
 /* Live show header: broadcast tag, segment label, gold title, the wrestlers involved */
 function liveHd(show,lab,title,sides,tag,vs){const ss=(sides||[]).map(sd=>sd.filter(Boolean)).filter(sd=>sd.length);
  return `<div class="lvhd"><div class="ptop"><span class="livebug"><b>${tag||'● Live'}</b>${show?`<span>${esc(show)}</span>`:''}</span><span class="lvl">${lab}</span></div><div class="lvt">${title}</div></div>${typeof hrBug==='function'?hrBug():''}${lvPlates(ss,vs)}`}
@@ -5516,7 +5516,7 @@ function mpStandings(){if(!ON()||nSeats()<3)return '';const l=localSeats().slice
 function mpSetupCard(){const g=mpGames();return `<div class="card"><div class="h small">Online league</div><div class="muted tiny" style="margin:2px 0 8px">Play 1–3 friends, each running a brand. <details class="ohow" style="display:inline"><summary>How it works</summary><span class="muted tiny">You face a different GM each week. Everyone creates wrestlers and books at the same time, on their own phone — even offline — and it syncs when you're back online. The draft goes in order, and you can queue your next picks.</span></details></div>
  ${g.map(x=>`<button class="btn sec" onclick="mpOpen('${x.code}')">▶ ${esc(x.label||x.code)} <span class="muted tiny">${x.code}</span></button>`).join('')}
  <div class="row"><button class="btn sec" onclick="mpHostForm()">Host a league</button><button class="btn sec" onclick="mpJoinForm()">Join a league</button></div></div>`}
-function mpOfficeCard(){if(!ON())return mpSetupCard()+partySetupCard();const alerts=mpAvail()&&TKO.alertsOn(LMP.code);const others=mpGames().filter(g=>g.code!==LMP.code);
+function mpOfficeCard(){if(!ON())return mpSetupCard()+partySetupCard()+(typeof stvOfficeCard==='function'?stvOfficeCard():'');const alerts=mpAvail()&&TKO.alertsOn(LMP.code);const others=mpGames().filter(g=>g.code!==LMP.code);
  return `<div class="card"><div class="h small">Online league · ${LMP.code}</div>${localSeats().map(k=>`<div class="row sb" style="margin:4px 0"><span><b class="${k==='p'?'gold':''}">${esc(S.names&&S.names[k]?nameOf(k):'Open seat')}</b></span><span class="muted tiny">${esc(showNames()[k]||'')}${k==='p'?` · you <button class="mini" onclick="mpShowForm()">Rename</button>`:''}</span></div>`).join('')}
  <button class="btn ${alerts?'sec':''}" onclick="mpAlerts()">${alerts?'🔔 Turn alerts on — refresh':'🔔 Turn on turn alerts'}</button>
  <div class="row"><button class="btn sec" onclick="mpInvite()">Invite code</button><button class="btn sec" onclick="moveGame('league','${LMP.code}',0)">${inApp()?'Other device':'📲 Move to my app'}</button></div>
@@ -5955,7 +5955,18 @@ if(typeof document!=='undefined'&&document.getElementById('app')){
  if(!LMP)S=load();if(S&&(!S.w||!S.phase))S=null;dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);seasonMigrate(S);starMigrate(S);calMigrate(S);titleMigrate(S);if(!ON())showMigrate();else cardMigrate();if(S)saveLocal();
  tvBoot();loadImg();
  window.addEventListener('tko-ready',()=>{mpConnect();tvConnect();cloudCheck();render()});if(window.TKO)setTimeout(()=>{mpConnect();tvConnect();cloudCheck()},0);
- let lastCk=Date.now();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&TV)partyWake();if(document.visibilityState==='visible'&&Date.now()-lastCk>20000){lastCk=Date.now();cloudCheck();if(ON())mpConnect()}else if(document.visibilityState==='hidden')flush()});
+ let lastCk=Date.now(),hidAt=0;document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&TV)partyWake();
+  /* v262: a phone that was locked or switched away (even briefly) often comes back with a stalled live connection — reconnect and check the league right away */
+  if(document.visibilityState==='visible'&&hidAt&&Date.now()-hidAt>4000){if(ON())mpConnect();if(TV)tvConnect();setTimeout(syncCheck,800)}
+  if(document.visibilityState==='visible'&&Date.now()-lastCk>20000){lastCk=Date.now();cloudCheck()}else if(document.visibilityState==='hidden'){hidAt=Date.now();flush()}});
+ /* v262: safety net for live updates that never arrive (a stalled connection on a phone or the TV doesn't always report an error).
+    On party night and booking-at-the-same-time weeks, every 15 seconds ask the server for the league; if it's moved on and
+    nothing here is in the middle of saving, catch up — instead of everyone refreshing to see whose turn it is. */
+ function syncCheck(){if(!navigator.onLine||document.visibilityState!=='visible'||!window.TKO||!TKO.ready||!TKO.fetch)return;
+  if(TV){const code=TV.code;TKO.fetch(code).then(d=>{if(TV&&TV.code===code&&d&&d.state&&(d.rev||0)>TV.rev)tvIncoming(d)}).catch(()=>{});return}
+  if(!ON()||!LMP||!(partyOn()||simOn())||MPX)return;const code=LMP.code;
+  TKO.fetch(code).then(d=>{if(!d||!LMP||LMP.code!==code||!S||!ON())return;if(d.state&&(d.rev||0)>(S.online.rev||0)){console.warn('league update was missed — catching up',d.rev,S.online.rev);mpIncoming(d)}else partyCatchUp()}).catch(()=>{})}
+ setInterval(syncCheck,15000);
  /* slow or patchy connections often never fire 'online': keep nudging anything still waiting to sync while the app is open */
  setInterval(()=>{if(!navigator.onLine||document.visibilityState!=='visible'||!window.TKO||!TKO.ready)return;if(cloudCfg()&&cloudPendingAny()&&!CL_BUSY)cloudPush();if(ON()&&MP_PENDING&&!MPX&&!mpT)mpPush(S.online&&S.online.msg)},60000);
  window.addEventListener('online',()=>{if(cloudCfg()&&cloudPendingAny())cloudPush();if(ON()&&(MP_PENDING||mpHasUnsent()))mpPush(S.online&&S.online.msg)});
@@ -6064,6 +6075,7 @@ function hyTidy(root){if(!skinOn()||!root)return;root.querySelectorAll('.small,.
 <script src="inbox.js"></script>
 <script src="sfx.js"></script>
 <script src="feed.js"></script>
+<script src="solotv.js"></script>
 <script type="module" src="online.js"></script>
 </body>
 </html>

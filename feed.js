@@ -21,14 +21,14 @@ function answerOf(b,cur){const lab=((b.querySelector('.key+div')||b).textContent
  const oc=b.getAttribute('onclick')||'';
  if(/pitchChoose\('no'\)/.test(oc))return {ans:'no',a:lab};if(/pitchChoose\('(go|try)'\)/.test(oc))return {ans:'yes',a:lab};
  const t=lab.replace(/^[^\w"“]+/,'');return {ans:NO.test(t)?'no':YES.test(t)?'yes':'call',a:lab}}
-function send(ev){if(typeof LMP==='undefined'||!LMP||!window.TKO||!TKO.ready)return;if(SENT_CODE!==LMP.code){SENT=[];SENT_CODE=LMP.code}
- SENT=SENT.concat([ev]).slice(-5);TKO.push(LMP.code,{['office.'+LMP.me]:SENT}).catch(()=>{})}
+function send(ev){const tg=typeof tvTarget==='function'?tvTarget():null;if(!tg||!window.TKO||!TKO.ready)return;if(SENT_CODE!==tg.code){SENT=[];SENT_CODE=tg.code}
+ SENT=SENT.concat([ev]).slice(-5);const k='office.'+tg.seat;(TKO.pushSide?TKO.pushSide(tg.code,k,SENT):TKO.push(tg.code,{[k]:SENT})).catch(()=>{})}
 document.addEventListener('click',e=>{try{
- if(typeof partyOn!=='function'||!partyOn()||typeof window.inboxCur!=='function')return;const cur=window.inboxCur();if(!cur||cur.sent)return;
+ if(typeof tvTarget!=='function'||!tvTarget()||typeof window.inboxCur!=='function')return;const cur=window.inboxCur();if(!cur||cur.sent)return;
  const b=e.target&&e.target.closest&&e.target.closest('#modal .sbody button');if(!b||b.disabled||b.classList.contains('ghost'))return;
  const lab=(b.textContent||'').trim();if(SKIP.test(lab))return;
  cur.sent=1;const r=answerOf(b,cur);
- send({id:LMP.me+'-'+Date.now(),seat:LMP.me,wk:S.week,ss:S.season,kick:cur.kick||'',head:cur.head||'',q:cur.tease?'':(cur.q||''),narr:cur.narr?1:0,w:cur.w||null,w2:cur.w2||null,tease:cur.tease?1:0,ans:r.ans,a:r.a,at:Date.now()})
+ const tg=tvTarget();send({id:tg.seat+'-'+Date.now(),seat:tg.seat,wk:S.week,ss:S.season,kick:cur.kick||'',head:cur.head||'',q:cur.tease?'':(cur.q||''),narr:cur.narr?1:0,w:cur.w||null,w2:cur.w2||null,tease:cur.tease?1:0,ans:r.ans,a:r.a,at:Date.now()})
 }catch(err){console.warn('feed',err)}},true);
 
 /* ===================== TV: play them for the room ===================== */
@@ -60,6 +60,7 @@ function draw(anim){const el=document.getElementById('lrf');if(el)el.innerHTML=i
 /* the booking screen asks for this (party.js tvWeek) */
 window.lrfHtml=function(){if(!S||!S.online||!S.online.party)return '';return `<div id="lrf" class="lrf">${inner(false)}</div>`};
 window.lrfSeat=()=>F.cur?F.cur.seat:null;
+window.lrfTake=d=>take(d); /* v262: the TV feed's own document (party.js tvSide) */
 if(typeof tvIncoming==='function'){const t0=tvIncoming;window.tvIncoming=tvIncoming=function(d){const out=t0.apply(this,arguments);try{if(typeof TV!=='undefined'&&TV)take(d)}catch(e){console.warn('feed',e)}return out}}
 /* leaving the TV starts fresh next time */
 if(typeof tvStop==='function'){const s0=tvStop;window.tvStop=tvStop=function(){F.seen.clear();F.init=false;F.q=[];F.cur=null;F.past=[];clearTimeout(F.t);return s0.apply(this,arguments)}}

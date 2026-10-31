@@ -129,7 +129,7 @@ function setPrefs(p){try{localStorage.setItem(KEY,JSON.stringify(p))}catch(e){}V
 VOL=prefs().vol;
 const isTV=()=>typeof TV!=='undefined'&&!!TV;
 function tvMuted(){try{return localStorage.getItem(TVKEY)==='1'}catch(e){return false}}
-function muted(){const p=prefs();if(!p.on)return true;if(isTV())return tvMuted();try{if(typeof partyOn==='function'&&partyOn())return true}catch(e){}return false}
+function muted(){const p=prefs();if(!p.on)return true;if(isTV())return tvMuted();try{if(typeof partyOn==='function'&&partyOn())return true;if(typeof stvOn==='function'&&stvOn())return true}catch(e){}return false}
 let UNLOCKED=false;
 function unlock(){if(!ac())return;UNLOCKED=true;loadClips()}
 ['pointerdown','keydown','touchend'].forEach(ev=>document.addEventListener(ev,()=>{try{if(!muted()||isTV())unlock()}catch(e){}},{capture:true,passive:true}));
