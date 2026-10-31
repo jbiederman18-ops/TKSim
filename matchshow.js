@@ -232,7 +232,7 @@ function msRoll(c,r,m,st,lab){const p=msChance(c,r);const ok=Math.random()<p;con
  const d=msAdd(m,ok?sw.w*MS_K:-sw.l*MS_K,st);const ev=evNew(m);
  if(c.heat&&ok&&r.B)ev.heat.push([r.A.id,r.B.id,c.heat]);if(c.fat)m.sides.flat().forEach(id=>ev.fat.push([id,c.fat]));
  if(c.al==='h'&&ok&&r.A.al==='f')ev.pop.push([r.A.id,-1]);
- ev.notes.push(`🎬 ${lab}: ${msFill(c.t,r)} — ${ok?'it lands':'it misses'}${d?` (${qStar(d)})`:''}`);
+ ev.notes.push(`🎬 ${lab}: ${msFill(c.t,r)} — ${ok?'it lands':'it falls short'}${d?` (${qStar(d)})`:''}`);
  return {ok,d,lines:pick(ok?c.hit:c.miss)}}
 function msKick(m,r,st,F,lab){const B=r.B;const p=clamp(.25+((B.ring+r.A.ring)/2)/100*.6,.3,.85);const ok=Math.random()<p;const sw=swingOf(p,.6);
  const d=msAdd(m,ok?sw.w*MS_K:-sw.l*MS_K,st);const ev=evNew(m);m.sides.flat().forEach(id=>ev.fat.push([id,3]));
@@ -348,7 +348,7 @@ function msPick(i){if(!MS||!MS.menu)return;const M=MS.menu;pickFlash(()=>{if(!MS
 function msInfo(c,r){const p=msChance(c,r);return `${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:''}${STAT_ICON[c.s]} · ${oddsWord(p)} · ${swingWord(swingOf(p,c.st).w)}${c.sub?' · '+esc(msFill(c.sub,r)):''}`}
 const msItems=(list,r)=>list.map(c=>({c,label:msFill(c.t,r),info:msInfo(c,r)}));
 async function msCall(list,lab,q,sub){const r=MS.r;const it=await msMenu(q,sub,msItems(list,r));const o=msRoll(it.c,r,MS.m,MS.st,lab);
- MS.log.push({lab,t:it.label,ok:o.ok});msFrame('');await msPan('a');await msStamp(o.ok?'It lands':'It misses',o.ok?'ok':'no');await msPlay(msLines(o.lines))}
+ MS.log.push({lab,t:it.label,ok:o.ok});msFrame('');await msPan('a');await msStamp(o.ok?'It lands':'Not quite',o.ok?'ok':'no');await msPlay(msLines(o.lines))}
 /* the big moment: the same calls, odds and results as any other match moment */
 async function msMomentAct(slot){const g=MS.g,m=MS.m,r=g.r;
  if(g.e.need==='X'&&r.X&&!g.gor){const X=r.X;const it=await msMenu('🎧 Your call in gorilla',`${esc(X.name)} wants to go out there and start something`,[{label:'Send them out there',info:`They crash the main event and could start a new rivalry · morale +${GOR_MOR}`,yes:1},{label:'Not tonight',info:`The match goes on as booked · morale −${GOR_MOR}`}]);
@@ -359,7 +359,7 @@ async function msMomentAct(slot){const g=MS.g,m=MS.m,r=g.r;
  const note=(g.sit?g.info:'')+(g.r&&g.r.CROWD?(g.sit?' · ':'')+'👥 '+esc(g.r.CROWD.text):'');
  const it=await msMenu(`${ck.i} ${ck.n}`,note||ck.l,items);const w0=m.winner;
  const out=g.sit?sitRoll(it.c,r,m):evRoll(it.c,r,m);MS.log.push({lab:slot==='heat'?'Heat':'Finish',t:it.label,ok:out.success});
- msFrame('');await msStamp(out.success?'It lands':'It misses',out.success?'ok':'no');
+ msFrame('');await msStamp(out.success?'It lands':'Not quite',out.success?'ok':'no');
  const pages=msNarr(out.text);pages.push({kind:'booth',who:'Play-by-play',t:pick(msGrave(out)?MS_BOOTH_GRAVE:out.success&&msSoft(out)?MS_BOOTH_SOFT:out.success?MS_BOOTH_OK:MS_BOOTH_NO)});
  (out.extra||[]).forEach(x=>pages.push({kind:'cam',t:x}));if(out.flip)pages.push({kind:'cam',t:`👑 New winner: ${sideName(m.sides[m.winner])}`});if(out.nc)pages.push({kind:'cam',t:'🚫 The match ends without a winner.'});
  out.over=msOver(m,out,w0)||(slot==='fin'&&msEnds(evFill(g.e.text,r)));
@@ -385,7 +385,7 @@ async function msRun(){const m=MS.m;const fam=msFam(m);const plan=msPlan(MS.g,m)
   if(fam!=='none'){const F=MS_FALL[fam==='pin'&&m.sides.length>2&&r.C?'multi':fam];
    await msPlay(msLines(pick(F.set)));if(F.count)for(const n of F.count)await msStamp(n,'count',560);
    const it=await msMenu('🏁 '+msFill(F.q,r),'You\'re calling the finish',[{label:msFill(F.kick,r),info:(pk=>`💪 In-ring · ${oddsWord(pk)} · ${swingWord(swingOf(pk,.6).w)} · ${esc(msFill(F.ksub,r))}`)(clamp(.25+((r.B.ring+r.A.ring)/2)/100*.6,.3,.85)),kick:1},{label:msFill(F.stay,r),info:`✅ Guaranteed · 🛡️ Small swing · ${esc(msFill(F.ssub,r))}`}]);
-   if(it.kick){const o=msKick(m,r,MS.st,F,'Near fall');MS.log.push({lab:'Near fall',t:it.label,ok:o.ok});msFrame('');await msStamp(o.ok?'It lands':'It misses',o.ok?'ok':'no');await msPlay(msLines(o.lines));
+   if(it.kick){const o=msKick(m,r,MS.st,F,'Near fall');MS.log.push({lab:'Near fall',t:it.label,ok:o.ok});msFrame('');await msStamp(o.ok?'It lands':'Not quite',o.ok?'ok':'no');await msPlay(msLines(o.lines));
     if(plan==='fin'&&MS.g)await msMomentAct('fin');
     else await msCall(msDeal(FIN[fam]||FIN_PIN,r,3),'Finish','🏁 Call the finish',`${esc(r.A.name)} is booked to win. How does it end?`)}
    else{MS.log.push({lab:'Near fall',t:it.label,ok:true});if(window.SFX)SFX.three();evNew(m).notes.push(`🎬 Near fall: ${it.label}`);msFrame('');await msPlay(msLines(F.end))}}
@@ -395,7 +395,7 @@ async function msRun(){const m=MS.m;const fam=msFam(m);const plan=msPlan(MS.g,m)
  if(pl.length){MS.act=3;msFrame('');const it=await msMenu('🎤 After the bell','What\'s the closing shot?',pl.map(c=>({c,label:msFill(c.t,r),info:`📖 Story only, no stars · ${esc(msFill(c.sub,r))}`})));
   msPost(it.c,r,m);MS.log.push({lab:'After',t:it.label,story:1,note:msFill(it.c.note||'',r)});msFrame('');await msStamp('Closing shot','gd',700);await msPlay(msLines(pick(it.c.hit)))}
  msDone()}
-function msDone(){if(!MS)return;MS.fin=1;if(window.SFX)SFX.matchEnd();const m=MS.m;const rows=MS.log.map(e=>`<li><span class="mslab">${esc(e.lab)}</span><span>${esc(e.t)}</span><b class="${e.story?'msst':e.ok?'good':'bad'}">${e.story?'Story':e.ok?'Landed':'Missed'}</b></li>`).join('');
+function msDone(){if(!MS)return;MS.fin=1;if(window.SFX)SFX.matchEnd();const m=MS.m;const rows=MS.log.map(e=>`<li><span class="mslab">${esc(e.lab)}</span><span>${esc(e.t)}</span><b class="${e.story?'msst':e.ok?'good':'bad'}">${e.story?'Story':e.ok?'Landed':'Fell short'}</b></li>`).join('');
  const post=MS.log.find(e=>e.story);const res=m.nc?'No contest':`${sideName(m.sides[m.winner])} def. ${m.sides.filter((s,i)=>i!==m.winner).map(sideName).join(', ')}`;
  openModal(`<div class="sdw msw">${msHead()}<div class="msres"><h3>${esc(res)}</h3><ul class="mscalls">${rows}</ul>${post&&post.note?`<div class="muted tiny">${esc(post.note)}</div>`:''}<div class="muted tiny">The stars come in with the results.</div></div><button class="btn" onclick="msNext()">${MS.last?'Finish the show':'Continue the show ▸'}</button></div>`,true);msFeed()}
 function msNext(){if(!MS||!MS.fin)return;MS=null;if(LQ)return liveNext();finishLive()}

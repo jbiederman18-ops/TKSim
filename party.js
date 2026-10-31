@@ -201,7 +201,9 @@ let FEED_T=null,FEED_LAST='';
    (with a "Picked" tag on top, for anyone who looked away) */
 const PICK_HOLD=1900;let FEED_HOLD=0,FEED_PICK=null;
 function partyFeed(html,now){if(!ON()||!LMP||!window.TKO||!TKO.ready)return;clearTimeout(FEED_T);
- html=String(html||'').replace(/<img\b[^>]*src="data:[^"]*"[^>]*>/gi,'').slice(0,90000);
+ /* v259: photos are stored on each device, too big to send — keep a placeholder with the wrestler's id and let the TV
+    fill it in from its own photos (or the repo's), so party night isn't photo-less */
+ html=String(html||'').replace(/<img\b[^>]*src="data:[^"]*"[^>]*>/gi,m=>{const id=(m.match(/data-ph="([^"]+)"/)||[])[1];return id?`<img data-ph="${id}" alt="">`:''}).slice(0,90000);
  /* v238: the "picked" tag belongs on how that call played out — if the next screen is already a fresh decision (say, a gorilla pitch
     that went straight back to the show), drop it instead of labelling the new choices with the old pick */
  if(html&&!now&&FEED_PICK&&/class="[^"]*\bchoice\b/.test(html)&&!/class="[^"]*\bchoice\b[^"]*"[^>]*\bdisabled\b/.test(html)&&!/class="ppick"/.test(html))FEED_PICK=null;
@@ -233,6 +235,9 @@ function partyOfficeCard(){if(!ON()||!LMP)return '';const on=partyOn();
  return `<div class="card"><div class="h small">📺 Party night</div>${on?`<p class="muted" style="margin-top:0">Party night is <b class="gold">on</b>. Everyone books at the same time and the week airs when the last GM locks in.</p>`:`<p class="muted" style="margin-top:0">Everyone in the same room? Turn on party night and the whole league books at the same time instead of taking turns. Same league, same save — turn it off and you're back to taking turns right where you left off.</p>`}
  <p class="muted tiny">On the TV: open the game, tap <b>Show a league on this screen</b> and enter <b class="gold">${esc(LMP.code)}</b>.</p>
  <button class="btn ${on?'sec':''}" onclick="partyToggleForm()">${on?'End party night':'📺 Start party night'}</button></div>`}
+/* v259: one tap from the home screen into party night — no trip to the Office, no confirm screen. The code for the TV is right on the button. */
+function partyQuick(){if(!ON()||!LMP||partyOn()||!S||S.phase==='over')return '';
+ return `<button class="card otool pqk" onclick="partySet(true);toast('Party night is on — open the game on the TV and enter ${esc(LMP.code)}.')"><span class="oti">📺</span><span class="ott"><b>Start party night</b><span>Everyone books at once · TV code <b class="gold">${esc(LMP.code)}</b></span></span><span class="otc">›</span></button>`}
 function partyToggleForm(){if(!ON()||!LMP)return;const on=partyOn();
  openModal(on?`<div class="h mhd">End party night?</div><p>The league goes back to taking turns from right here. Anyone who hasn't ${S.phase==='rookies'?'finished creating wrestlers':'locked in'} yet takes their turn whenever they like, with turn alerts as usual.</p><button class="btn" onclick="partySet(false)">End party night</button><button class="btn ghost" onclick="closeModal()">Keep partying</button>`
   :`<div class="h mhd">📺 Start party night?</div><p>Everyone in the league books at the same time instead of taking turns, and the week airs as soon as the last GM locks in. It's the same league and save — end party night whenever you like and you're back to taking turns.</p><p class="muted">Put the league on a TV: open the game there, tap <b>Show a league on this screen</b> and enter <b class="gold">${esc(LMP.code)}</b>.</p><button class="btn" onclick="partySet(true)">Start party night</button><button class="btn ghost" onclick="closeModal()">Cancel</button>`)}
@@ -352,6 +357,8 @@ function tvWeek(){const sh=curShow(),o=S.online;const v=venueOf();const party=o.
 function tvSafe(html){const t=document.createElement('template');t.innerHTML=String(html||'');
  t.content.querySelectorAll('script,iframe,object,embed,link,meta,style,form,input,textarea,select').forEach(e=>e.remove());
  t.content.querySelectorAll('*').forEach(e=>{[...e.attributes].forEach(a=>{const n=a.name.toLowerCase(),v=String(a.value).trim().toLowerCase();if(n.startsWith('on')||((n==='href'||n==='src'||n==='xlink:href')&&(v.startsWith('javascript:')||v.startsWith('data:text'))))e.removeAttribute(a.name)})});
+ t.content.querySelectorAll('img[data-ph]:not([src])').forEach(e=>{const w=S&&S.w&&S.w[e.dataset.ph];if(!w){e.remove();return}
+  const x=document.createElement('template');x.innerHTML=typeof portrait==='function'?portrait(w):'';e.replaceWith(x.content)});
  return t.innerHTML}
 function tvLive(){const o=S.online,now=partyLiveNow(),lv=o.lv||{},f=TV.feed;const sh=curShow();
  const mine=f&&f.html&&f.seat===canonKey(now)&&f.week===S.week&&f.season===S.season;

@@ -4,7 +4,7 @@
    and you tap to advance. Actions show in parentheses, the room and the crowd as gold camera notes. When it's your
    turn the call menu takes over the box. Big moments get a shout across the stage — TAKE THAT! when a big-swing call
    lands, HOLD IT! when you cut someone off, LISTEN UP! when they wind up a big line, MIC DROP! — and every call is
-   stamped It lands / It misses with the crowd's reaction.
+   stamped It lands / Not quite with the crowd's reaction.
 
    How a line is split (bubbleParse): quoted words are a line for whoever is speaking; narration before or between
    quotes is stage direction for whoever its first sentence names (the name is dropped — the tab shows who it is);
@@ -65,7 +65,7 @@ function pagesOf(text,owner,ctx,cam,res){const {beats,react}=bubbleParse(fill(te
   else if(b.only)chunks(b.only).forEach(t=>out.push({side:b.side,cam:t}));
   else if(b.act!=null)out.push({side:b.side,act:b.act});
   else chunks(b.q).forEach(t=>out.push({side:b.side,q:t}))});
- /* the reaction plays out in full; its last page carries the It lands / It misses stamp */
+ /* the reaction plays out in full; its last page carries the It lands / Not quite stamp */
  const rc=react?chunks(react):[];
  if(res){rc.slice(0,-1).forEach(t=>out.push({cam:t}));out.push({res:rc.length?rc[rc.length-1]:(res.ok?'The crowd is with it.':'It falls flat.'),ok:res.ok,stamp:1})}
  else rc.forEach(t=>out.push({cam:t}));
@@ -112,7 +112,7 @@ async function showPage(){const pg=PS.q[PS.qi];if(!pg)return;
  const low=document.getElementById('sdlow');if(!low){frame('');return showPage()}
  if(pg.side==='a'||pg.side==='b'){PANNING=true;try{await panTo(pg.side)}finally{PANNING=false}}cutIn(pg.side);
  const fx=document.getElementById('sdfx');
- if(pg.stamp&&fx){fx.innerHTML=`<div class="sdstamp ${pg.ok?'ok':'no'}">${pg.ok?'It lands':'It misses'}</div>`;if(window.SFX)SFX.stamp('',pg.ok?'ok':'no','promo')}
+ if(pg.stamp&&fx){fx.innerHTML=`<div class="sdstamp ${pg.ok?'ok':'no'}">${pg.ok?'It lands':'Not quite'}</div>`;if(window.SFX)SFX.stamp('',pg.ok?'ok':'no','promo')}
  low.innerHTML=boxHtml(pg);feed();
  const spr=pg.side&&document.querySelector(`#sd .c${pg.side} .sdph`);if(spr){spr.classList.remove('talk','hit');void spr.offsetWidth;spr.classList.add(pg.q!=null?'talk':'hit')}
  const el=document.getElementById('sdsay');if(!el||reduce())return done();

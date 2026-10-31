@@ -230,6 +230,8 @@ function spw(b){S.spw=S.spw||{};let x=S.spw[b];if(!x||x.s!==S.season)x=S.spw[b]=
 function worldFor(g,b,other,not){return WORLD_T[g].map(id=>S.titles[id]).filter(t=>t&&t.holders.length===1&&S.w[t.holders[0]]&&t.holders[0]!==not&&(other?S.w[t.holders[0]].own&&S.w[t.holders[0]].own!==b:S.w[t.holders[0]].own===b)).sort((x,y)=>y.prestige-x.prestige)[0]||null}
 function rumblePrize(b,m,notes){if(m.nc)return;const W=S.w[(m.sides[m.winner]||[])[0]];if(!W)return;const mine=b==='p'||ON();const D=SPK[m.sp]||SPK.rr;const wm=PPVS[WM_WEEK]||'WrestleMania';
  W.pop=clamp(W.pop+3,1,100);W.mor=clamp(W.mor+10,0,100);
+ /* v259: the last one eliminated looks like a star too — the runner-up gets a smaller bump instead of nothing */
+ {const ru=typeof pinOf==='function'?S.w[pinOf(m)]:null;if(ru&&ru.id!==W.id){ru.pop=clamp(ru.pop+1.5,1,100);ru.mor=clamp(ru.mor+5,0,100);if(b==='p'||ON())notes.push(`🥈 ${ru.name} was the last one eliminated — a strong showing (+1.5 popularity).`)}}
  if(WORLD_T[W.g].some(id=>S.titles[id]&&S.titles[id].holders.includes(W.id))){const n=`${D.i} ${W.name} wins the ${D.n} — as a world champion, they head to ${wm} with all the momentum in the world.`;notes.push(n);news(n);return}
  const own=worldFor(W.g,b,false,W.id);
  if(own){const h=S.w[own.holders[0]];if(b==='p')addPromise({kind:'shot',a:W.id,b:h.id,week:WM_WEEK,ppv:wm,title:own.id,why:'Royal Rumble winner'});else spw(b).shot.push({a:W.id,title:own.id});
