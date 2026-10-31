@@ -1743,7 +1743,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v263';
+const APP_VERSION='v264';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -5096,7 +5096,7 @@ function srHalf(it,br,st){const who=srNm(br);
  return `<div class="twh ${b.brand}${st?' dn nt':''}" id="srh-${b.brand==='x'?'x':br}" data-k="${it.bi}-${it.si}"><div class="twhd"><span class="twl">${tag}</span><span class="twsv">${st||SR_GHOST}</span></div>${plates}${txt}${s.notes&&s.notes.length?`<div class="twnote">${esc(s.notes[0])}</div>`:''}</div>`}
 function srLabel(rd){if(rd.x)return esc(rd.x.b.label);const n=SRV.rounds.filter(r=>!r.x).length,k=SRV.rounds.filter(r=>!r.x).indexOf(rd)+1;return rd.main?'<b>Main event</b>':`Round ${k} of ${n}`}
 function srNextLabel(){const rd=SRV.rounds[SRV.i];return !rd?'':rd.main?'Tap for the main event ▸':rd.x?`Tap for ${rd.x.b.label} ▸`:`Tap for round ${SRV.rounds.filter(r=>!r.x).indexOf(rd)+1} ▸`}
-function srHint(t){const h=document.getElementById('tw-next');if(h){h.textContent=t||'';h.hidden=!t}}
+function srHint(t){const h=document.getElementById('tw-next');if(SRV&&SRV.tv)t='';/* v264: the TV plays itself — no "Tap for…" */if(h){h.textContent=t||'';h.hidden=!t}}
 /* draw a round in the pair area; settled shows its stars, winners and notes right away */
 function srShow(rd,settled){const pr=document.getElementById('tw-pair'),lb=document.getElementById('tw-rd');if(!pr)return;if(lb)lb.innerHTML=srLabel(rd);
  const st=it=>settled&&it?srStars(it.s.stars):(rd.main&&!settled&&it?SR_DRUM:null);

@@ -336,7 +336,24 @@ addEventListener('resize',()=>{try{tvScale()}catch(e){}});
 /* how far the element's bottom runs past the bottom of the TV picture (CSS px in the page's zoomed space; the 24px keeps clear of Skip) */
 function tvPast(el){const bz=+(document.body.style.zoom||1),r=el.getBoundingClientRect();return r.height&&r.bottom>innerHeight-24*bz}
 function tvFit(el,max,min,prop){if(!el)return;max=max||1;min=min||.7;const set=z=>prop?el.style.setProperty(prop,z.toFixed(2)):(el.style.zoom=z===1?'':z.toFixed(2));let z=max;set(z);while(tvPast(el)&&z>min+.001){z=Math.max(min,z-.04);set(z)}}
+/* v264: while a GM is live, each new screen from their phone used to rebuild the whole TV page — every photo reloaded and
+   the sheet jumped back to full size before shrinking to fit, so it flashed between every choice. Now only what changed on
+   the sheet is swapped (tvMorph), the photos and everything else stay put, and the size only steps down when it must. */
+function tvMorph(el,html){const t=document.createElement('template');t.innerHTML=html;tvMorphKids(el,t.content)}
+function tvMorphKids(a,b){const A=[...a.childNodes],B=[...b.childNodes];
+ B.forEach((n,i)=>{const o=A[i];if(!o){a.appendChild(n);return}
+  if(o.nodeType!==n.nodeType||o.nodeName!==n.nodeName||(n.nodeType===1&&n.nodeName==='IMG'&&o.getAttribute('src')!==n.getAttribute('src'))){a.replaceChild(n,o);return}
+  if(n.nodeType===3||n.nodeType===8){if(o.nodeValue!==n.nodeValue)o.nodeValue=n.nodeValue;return}
+  if(o.isEqualNode(n))return;
+  [...o.attributes].forEach(x=>{if(!n.hasAttribute(x.name))o.removeAttribute(x.name)});[...n.attributes].forEach(x=>{if(o.getAttribute(x.name)!==x.value)o.setAttribute(x.name,x.value)});
+  tvMorphKids(o,n)});
+ for(let i=A.length-1;i>=B.length;i--)A[i].remove()}
+function tvLiveUpdate(){const ls=document.querySelector('.tv-live-sheet'),f=TV.feed,now=partyLiveNow();if(!ls||!f||!f.html||!now||f.seat!==canonKey(now)||f.week!==S.week||ls.dataset.seat!==f.seat)return false;
+ tvMorph(ls,tvSafe(f.html));
+ /* keep the size steady: shrink only if it no longer fits */
+ const sd=!!ls.querySelector('.sdw'),z=+(ls.style.getPropertyValue('--lz')||1.5);if(tvPast(ls))tvFit(ls,z,sd?.7:1,'--lz');if(sd)TV.sdz=+(ls.style.getPropertyValue('--lz')||z);return true}
 function tvRender(){document.body.classList.add('tv');tvScale();const app=$('#app');
+ if(!TV.reveal&&S&&S.online&&S.online.live&&partyLiveNow()&&document.querySelector('.tv-live-sheet')&&tvLiveUpdate())return;
  if(TV.reveal&&S&&S.last){if(document.getElementById('rv')&&TV.reveal.built===TV.reveal.key+':'+TV.reveal.pi)return;app.innerHTML=tvHeader()+`<main class="tv-main">${tvRevealHtml()}</main>`;tvRevealRun();return}
  let body;
  if(!S)body=tvWaiting();else if(Object.values(S.names||{}).filter(Boolean).length<nSeats())body=tvLobby();else if(S.phase==='rookies')body=tvRookies();else if(S.phase==='draft')body=tvDraft();else if(S.phase==='over')body=tvOver();else if(S.online&&S.online.live&&partyLiveNow())body=tvLive();else body=tvWeek();
@@ -382,7 +399,7 @@ function tvSafe(html){const t=document.createElement('template');t.innerHTML=Str
 function tvLive(){const o=S.online,now=partyLiveNow(),lv=o.lv||{},f=TV.feed;const sh=curShow();
  const mine=f&&f.html&&f.seat===canonKey(now)&&f.week===S.week&&f.season===S.season;
  return `<div class="tv-grid"><div><div class="tv-title"><div class="kicker"><span class="live-tag">LIVE</span> Week ${S.week} · ${esc(sh.ppv?sh.name:showNames()[now]||'')}</div><div class="hero-t tv-hero tv-clock" style="font-size:clamp(40px,4.6vw,96px)!important">${esc(nameOf(now))}</div></div>
- ${mine?`<div class="tv-live-sheet">${tvSafe(f.html)}</div>`:`<div class="card center"><div class="big">📱 Waiting for ${esc(nameOf(now))} to start their show…</div><p class="muted">Their promos and match calls show up here as they make them.</p></div>`}</div>
+ ${mine?`<div class="tv-live-sheet" data-seat="${esc(f.seat)}">${tvSafe(f.html)}</div>`:`<div class="card center"><div class="big">📱 Waiting for ${esc(nameOf(now))} to start their show…</div><p class="muted">Their promos and match calls show up here as they make them.</p></div>`}</div>
  <div><div class="card"><div class="h small">Going live tonight</div>${(o.live.order||[]).map(k=>`<div class="tv-row"><b class="${k===now?'gold':''}">${esc(nameOf(k))}</b><span class="muted">${lv[k]?'✅ Done':k===now?'🔴 Live now':'Up next'}</span></div>`).join('')}</div>${tvStandings()}</div></div>`}
 function tvOver(){const l=localSeats().slice().sort((a,b)=>S.fans[b]-S.fans[a]);
  return `<div class="tv-title center"><div class="kicker"><i></i>Season ${S.season} complete</div><div class="hero-t tv-hero">${esc(nameOf(l[0]))}<br>wins!</div></div>${tvStandings()}
@@ -523,7 +540,7 @@ async function tvTwRun(R,pr){const tok=R.twTok=(R.twTok||0)+1,live=()=>TV&&TV.re
  fit();await wait(1600);
  while(live()&&!SRV.done){const rd=SRV.rounds[SRV.i];if(rd&&rd.main)await wait(900);if(!live())return;
   try{await srPlay()}catch(e){}
-  if(!live()||SRV.done)break;await wait(SRV.rounds[SRV.i]&&SRV.rounds[SRV.i].main?1600:1100)}
+  if(!live()||SRV.done)break;await wait(SRV.rounds[SRV.i]&&SRV.rounds[SRV.i].main?2800:2100)}
  if(!live())return;fit();clearTimeout(R.t);R.t=setTimeout(tvRevealAdvance,10000)}
 (function(){const c=document.createElement('style');c.textContent=`
 body.tv .tvtw .rv-top{margin-bottom:6px}
