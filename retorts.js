@@ -528,7 +528,7 @@ function rtScene(p,ctx,st,ai){if(!rtOn(p,ctx)||!st||!st.lastC)return null;
  const x={i:rtIntent(st.lastC),ok:(st.oks||[]).slice(-1)[0]?1:0,tier:rtTier(ctx.B),heat:heatOf(p.a,p.b)};
  const el=RT.filter(o=>rtFit(o,ctx,x));if(!el.length)return null;
  /* v229: a great talker mostly gets the great lines written for them */
- const e=wpick(el,o=>rtSpec(o)*(x.tier==='hi'&&o.mic==='hi'?2.5:1)*(seenP(o.t)?.12:1));
+ const e=wpick(el,o=>rtSpec(o)*(x.tier==='hi'&&o.mic==='hi'?2.5:1)*(seenP(o.t)?.03:1));
  const own=(e.ch||[]).map(o=>Object.assign({key:1},o));const pool=own.concat(FU[e.m]||[]).filter(o=>rtExtra(o,ctx,x));
  let ch=dealChoices(pool,ctx,3);if(ch.length<2)return null;ch=ch.map(o=>Object.assign({},o,{rt:1,key:0}));
  if(!ai)noteP([e.t,...ch.map(o=>o.t)]);st.rtDone=1;

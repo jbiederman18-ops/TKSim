@@ -2,12 +2,12 @@
    A live show no longer stops for every promo and the main event. Each segment rolls for a highlight reel as it comes up:
    the odds rise with feud heat, a title on the line, a wild stipulation, daring wrestlers (flyers, showmen, brawlers),
    a hot crowd and big shows — plus luck. A highlight reel plays out as the full showdown (the match or promo showdown);
-   everything else resolves quietly and shows up in a short rundown. At most HR_CAP highlight reels a show.
+   everything else resolves quietly and shows up in a short rundown. At most HR_CAP (2) highlight reels a show. v265: lines and moments avoid what you've seen lately (fpick).
    The crowd builds (or dies) across the night. A hot crowd pushes wrestlers to reach for more: risky calls in a match
    highlight swing further both ways and carry real injury risk. Tired wrestlers miss more.
    Loaded after the main script; everything here is only called once the game is running. */
 'use strict';
-const HR_CAP=3;
+const HR_CAP=2;
 const HR_DARE={fl:.95,sh:.8,br:.8,te:.55,pw:.5};
 /* ---- the crowd: 0–100, starts from the show's buzz and the size of the night ---- */
 let HRC=50;/* the crowd for whoever is airing right now (live show, the rival, the sim) */
@@ -43,9 +43,13 @@ function hrAfter(it){if(!LQ||!it)return;HRC=LQ.crowd;let s=3,txt='';
 function hrBug(){if(!LIVE||!LQ||LQ.crowd==null)return '';const c=LQ.crowd;
  return `<div class="hrbug"><span class="hrk">The crowd</span><span class="hrbar"><i style="width:${c}%"></i></span><b class="hrw">${hrWord(c)}</b><span class="hrn">🎬 ${LQ.hr}/${HR_CAP}</span></div>`}
 /* the quiet segments since the last highlight reel, in one short screen */
-const HR_Q={match:{hi:['A strong match. The crowd is with them.','Good stuff, and the fans let them know it.','They worked hard and it showed.'],mid:['A solid match. Nothing more, nothing less.','It did its job.','Steady work. Polite applause.'],lo:['That one never got going.','The crowd sat on their hands.','A flat match. A few people checked their phones.']},
- promo:{hi:['The mic work landed. The crowd ate it up.','A strong promo. People were hanging on every word.'],mid:['A fine promo that set things up.','It got the point across.'],lo:['The promo fell flat.','The crowd wasn\'t buying it.']}};
-function hrLine(it){const k=it.kind==='promo'?'promo':'match';const d=it.dc||0;return pick(HR_Q[k][d>=4?'hi':d<=-3?'lo':'mid'])}
+const HR_Q={match:{hi:['A strong match. The crowd is with them.','Good stuff, and the fans let them know it.','They worked hard and it showed.','The fans were up for the finish.','A real crowd-pleaser.','They had the place buzzing by the end.','Better than anyone expected.','That got a standing ovation.','Fans will be talking about that one.'],
+ mid:['A solid match. Nothing more, nothing less.','It did its job.','Steady work. Polite applause.','Fine. The crowd stayed with it.','Decent, if a little by the numbers.','Good enough. On to the next one.','A few nice spots, a clean finish.','Workmanlike. Nobody complained.','It moved the story along.'],
+ lo:['That one never got going.','The crowd sat on their hands.','A flat match. A few people checked their phones.','A popcorn break for a lot of people.','It never clicked.','Sloppy in spots. The crowd noticed.','The finish came and nobody much cared.','They lost the room halfway through.']},
+ promo:{hi:['The mic work landed. The crowd ate it up.','A strong promo. People were hanging on every word.','Every line got a reaction.','They had the crowd chanting along.','That\'s a promo people will quote.','The fans were loud from start to finish.'],
+ mid:['A fine promo that set things up.','It got the point across.','Said what needed saying.','A couple of good lines in there.','It did the job and got out.','The crowd listened. Mostly.'],
+ lo:['The promo fell flat.','The crowd wasn\'t buying it.','It went on too long.','A few lines got lost in the noise.','Crickets in the cheap seats.','The crowd talked over most of it.']}};
+function hrLine(it){const k=it.kind==='promo'?'promo':'match';const d=it.dc||0;return fpick(HR_Q[k][d>=4?'hi':d<=-3?'lo':'mid'])}
 function hrWho(it){if(it.kind==='promo'){const p=S.card.p[it.i]&&S.card.p[it.i].d;return p?[p.a,p.b].filter(Boolean).map(id=>S.w[id]&&S.w[id].name).join(' & '):''}return it.m.sides.map(sd=>sideName(sd)).join(' vs ')}
 function hrRundown(then,end){const l=LQ.quiet;LQ.quiet=[];
  const rows=l.map(it=>`<div class="hrrow"><span class="hrl">${esc(it.kind==='promo'?'Promo':it.main?'Main event':'Match '+it.n)}</span><span class="hrt"><b>${esc(hrWho(it))}</b><small>${esc(hrLine(it))}</small></span><span class="hrd ${it.dc>0?'up':it.dc<0?'dn':''}">${it.dc>0?'▲':it.dc<0?'▼':'–'}</span></div>`).join('');

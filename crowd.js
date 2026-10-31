@@ -50,7 +50,7 @@ function rcTry(g,m,brand,big){if(!crowdFree(brand)||!m||!m.sides||m.sides.length
  (g.e.ch||[]).forEach(c=>{const tg=rcTag1(c,lk,favIsA);tags[c.t]=tg;if(tg==='w')w++;else o++});
  if(!w||!o)return;
  const oth=fav?(fav===A?B:A):null;const key=lk==='face'?(favIsA?'faceA':'faceB'):lk;
- const text=pick(RC_TELL[key]).replace(/\{FAVL\}/g,fav?last(fav.name):'').replace(/\{FAV\}/g,fav?fav.name:'').replace(/\{OTH\}/g,oth?oth.name:'');
+ const text=fpick(RC_TELL[key]).replace(/\{FAVL\}/g,fav?last(fav.name):'').replace(/\{FAV\}/g,fav?fav.name:'').replace(/\{OTH\}/g,oth?oth.name:'');
  r.CROWD={lk,tags,text};crowdUse(brand)}
 function rcNote(g){const C=g&&g.r&&g.r.CROWD;return C?`<div class="note crowdn">👥 <b>Read the crowd:</b> ${esc(C.text)}</div>`:''}
 function rcTag(c,g){const C=g&&g.r&&g.r.CROWD;if(!C)return '';const t=C.tags[c.t];return t==='w'?' · <span class="good">👥 Gives them what they want</span>':t==='a'?' · <span class="bad">👥 Goes against them</span>':''}
@@ -77,7 +77,7 @@ function hjTry(p,ctx,ai){if(!p||!ctx||!ctx.A||!S)return null;const brand=ctx.bra
  const cands=Object.values(S.w).filter(w=>w.own===brand&&!w.inj&&w.id!==A.id&&(!B||w.id!==B.id)&&w.pop>=Math.max(65,top+10)&&(w.al==='f'||w.pop>=82)&&!inTeam(w.id,A.id));
  if(!cands.length||Math.random()>=HJ_P)return null;
  const H=wpick(cands,w=>Math.max(1,w.pop-60));ctx.H=H;ctx.X=H;ctx.MYST=null;ctx.CD=null;crowdUse(brand);
- const ch=hjChoices(A,H);const text=pick(B?HJ_TXT.duo:HJ_TXT.solo);if(!ai)noteP([text]);
+ const ch=hjChoices(A,H);const text=fpick(B?HJ_TXT.duo:HJ_TXT.solo);if(!ai)noteP([text]);
  return {text,ch,hj:1}}
 
 /* ---------- hooks ---------- */

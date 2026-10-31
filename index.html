@@ -1743,7 +1743,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v264';
+const APP_VERSION='v265';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -2592,7 +2592,7 @@ function evFill(t,r){return t.replace(/\{(A2|A|B|X|Y|T|RIVAL|V|O|P)\}/g,(_,k)=>k
 function fdSeason(){if(!S||S.week>=FD_WEEK)return false;for(let k=S.week;k<FD_WEEK;k++)if(PPVS[k])return false;return true}
 function genEvent(m,brand,big,noX){if(m&&m.type==='squash')return null;const r=evRoles(m,brand);if(noX)r.X=null;const bigM=big||!!m.title||heatOf(r.A.id,r.B.id)>=30;
  const opts=MEV.filter(e=>(!e.fd||fdSeason())&&(!e.need||r[e.need])&&(!e.title||m.title)&&(!e.big||bigM)&&okFor(e,r)&&finFits({fin:e.fin,text:e.text},m)&&evChoices(e,m,r).length>=2);if(!opts.length)return null;
- const e=wpick(opts,x=>x.w*(seenP('ev:'+x.id)?.4:1)*(x.al||x.vs?1.3:1));const ch=dealEv(e,m,r);if(brand==='p')noteP(['ev:'+e.id,...ch.map(c=>c.t)]);return {e:Object.assign({},e,{ch}),r}}
+ const e=wpick(opts,x=>x.w*(seenP('ev:'+x.id)?.12:1)*(x.al||x.vs?1.3:1));const ch=dealEv(e,m,r);if(brand==='p')noteP(['ev:'+e.id,...ch.map(c=>c.t)]);return {e:Object.assign({},e,{ch}),r}}
 /* faces only go after heels; heels go after anyone. xh/yh: who X/Y hits, xa: X is helping A, xal: X must be that alignment */
 const canHit=(x,t)=>!!(x&&t&&(x.al==='h'||t.al==='h'));
 function evChoices(e,m,r){const std=!!(STIPS[stipKey(m)]||STIPS.std).dq;const who=k=>k==='B'?r.B:r.A;
@@ -3653,13 +3653,18 @@ function okFor(o,ctx){const A=ctx.A,B=ctx.B;const K=ctx.K||SC_DEF;return (!o.hk|
  options (it used to forget after about a show and a half) without growing the save */
 function pKey(t){let h=5381;for(let i=0;i<t.length;i++)h=(h*33^t.charCodeAt(i))>>>0;return h.toString(36)}
 function seenP(t){return !!(S&&S.pseen&&S.pseen.includes(pKey(t)))}
-function noteP(ts){if(S)S.pseen=(S.pseen||[]).filter(x=>x.length<=7).concat(ts.map(pKey)).slice(-220)}
+function noteP(ts){if(S)S.pseen=(S.pseen||[]).filter(x=>x.length<=7).concat(ts.map(pKey)).slice(-600)}
+/* v265: pick from a pool, favouring what you haven't seen lately; when everything's been seen, take the oldest. Remembers what it chose. */
+function fpick(a,kf){if(!a||!a.length)return undefined;const K=kf||(x=>typeof x==='string'?x:JSON.stringify(x));const ps=(S&&S.pseen)||[];
+ const ks=a.map(x=>pKey(K(x)));const fresh=a.filter((x,i)=>!ps.includes(ks[i]));let c;
+ if(fresh.length)c=fresh[Math.floor(Math.random()*fresh.length)];else{let bi=0,bv=1e9;ks.forEach((k,i)=>{const v=ps.lastIndexOf(k)+Math.random()*3;if(v<bv){bv=v;bi=i}});c=a[bi]}
+ noteP([K(c)]);return c}
 function wpick(l,wf){const tot=l.reduce((a,x)=>a+wf(x),0);let r=Math.random()*tot;for(const x of l){r-=wf(x);if(r<=0)return x}return l[l.length-1]}
 /* two choices are too alike to deal together if they do the same special thing (add a stipulation) or share most of their words */
 const CH_STOP=new Set('a an the to and of it them their they on in with for at be is are into then up out back over off from as that this every before after'.split(' '));
 function chWords(t){return new Set((t.toLowerCase().replace(/\{[a-z]\}/gi,' ').match(/[a-z']+/g)||[]).filter(x=>!CH_STOP.has(x)))}
 function chNear(a,b){if(a.stp&&b.stp)return true;const x=chWords(a.t),y=chWords(b.t);if(!x.size||!y.size)return false;let i=0;x.forEach(v=>{if(y.has(v))i++});return i/(x.size+y.size-i)>=.5}
-function dealChoices(pool,ctx,n){const el=pool.filter(c=>okFor(c,ctx));const out=el.filter(c=>c.key);const w=c=>seenP(c.t)?.2:1;const rest=()=>el.filter(c=>!out.includes(c)&&!out.some(o=>chNear(o,c)));
+function dealChoices(pool,ctx,n){const el=pool.filter(c=>okFor(c,ctx));const out=el.filter(c=>c.key);const w=c=>seenP(c.t)?.03:1;const rest=()=>el.filter(c=>!out.includes(c)&&!out.some(o=>chNear(o,c)));
  /* v179: when the opening set something up (a poster, a folder, a parking lot), one option always plays off it */
  {const K=ctx.K||SC_DEF;const hk=el.filter(c=>!out.includes(c)&&hookOn(c,K));if(hk.length&&out.length<n)out.push(wpick(hk,w))}
  const al=rest().filter(c=>c.al||c.vs);if(out.length<n&&al.length)out.push(wpick(al,w));
@@ -3682,7 +3687,7 @@ duo:{texts:[{al:'f',t:'{B} is left alone in the ring as {A} heads up the ramp. S
 {al:'h',t:'Tell the crowd why {A} changed',s:'mic',d:.1,p:4,ok:`"I changed because I was tired of being the bad guy. I want to be somebody you can cheer for." The turn is complete.`,g:`"I hurt people because it was easier than letting them hurt me." {A} looks at the floor, then up. "I'm tired. That's it. That's the whole reason." Heartfelt and honest. The turn is complete.`,no:`{A} wipes their eyes. "When I was seven, my grandfather told me... and then in high school... and then last month..." Three stories and a tear, but it lands with most of them.`,b:`"I changed because... people change. And I'm a person. So." It lands with most of them, somehow.`}]}};
 function openScene(p,ctx,ai){const sc=SCENES[p.type];const base=p.b?sc.duo:(sc.solo||sc.duo);ctx=ctx||promoCtx(p,'p');
  const texts=(base.texts||[base.text]).map(t=>typeof t==='string'?{t}:t).filter(o=>okFor(o,ctx));
- const to=wpick(texts,o=>(seenP(o.t)?.2:1)*(o.al||o.vs?2.5:1)*(o.gim?12:1));const tx=to.t;ctx.K=sceneTags(p,to);const ch=dealChoices(base.ch,ctx,3);if(!ai)noteP([tx,...ch.map(c=>c.t)]);return {text:tx,ch}}
+ const to=wpick(texts,o=>(seenP(o.t)?.03:1)*(o.al||o.vs?2.5:1)*(o.gim?12:1));const tx=to.t;ctx.K=sceneTags(p,to);const ch=dealChoices(base.ch,ctx,3);if(!ai)noteP([tx,...ch.map(c=>c.t)]);return {text:tx,ch}}
 function pickTwist(p,ctx,ai){if(p.type==='turn'){const base=p.b?TURN_TWIST.duo:TURN_TWIST.solo;const tx=base.texts.filter(o=>okFor(o,ctx));const ch=dealChoices(base.ch,ctx,3);if(!ai)noteP(ch.map(c=>c.t));return {text:(tx[0]||base.texts[0]).t,ch}}
  const mx=mystCand(ctx.A);const cx=!ai&&typeof cdCand==='function'?cdCand(ctx.A):null;const needB=t=>/\{B\}/.test(t.text+' '+t.ch.map(c=>c.t+' '+(c.ok||'')).join(' '));
  /* v256: where the twist lands decides which twists can. After a face-to-face exchange (ctx.EXTW) only ones written for the
@@ -3695,7 +3700,7 @@ function pickTwist(p,ctx,ai){if(p.type==='turn'){const base=p.b?TURN_TWIST.duo:T
  /* (never come up empty: fall back to twists that work anywhere) */
  if(!el.length)el=TWISTS.filter(t=>!t.hk&&!t.myst&&!t.cd&&(t.when!=='duo'||ctx.B)&&(t.when!=='solo'||!ctx.B)&&fit(t)&&!(ctx.BGONE&&needB(t)));
  if(!el.length)el=TWISTS.filter(t=>!t.hk&&!t.myst&&!t.cd&&(t.when!=='duo'||ctx.B)&&(t.when!=='solo'||!ctx.B));
- const t=wpick(el,x=>(x.w||1)*(seenP(x.text)?.15:1)*(x.al||x.vs?1.5:1));const ch=dealChoices(t.ch.map(c=>c.al||!t.al||c.turn||c.t.startsWith('Nobody')||c.t.startsWith('Shake it')?c:Object.assign({},c,{al:t.al})),ctx,3);if(!ai)noteP([t.text,...ch.map(c=>c.t)]);ctx.MYST=t.myst?mx.id:null;ctx.CD=t.cd?cx.id:null;return Object.assign({},t,{ch})}
+ const t=wpick(el,x=>(x.w||1)*(seenP(x.text)?.03:1)*(x.al||x.vs?1.5:1));const ch=dealChoices(t.ch.map(c=>c.al||!t.al||c.turn||c.t.startsWith('Nobody')||c.t.startsWith('Shake it')?c:Object.assign({},c,{al:t.al})),ctx,3);if(!ai)noteP([t.text,...ch.map(c=>c.t)]);ctx.MYST=t.myst?mx.id:null;ctx.CD=t.cd?cx.id:null;return Object.assign({},t,{ch})}
 /* the mysterious figure is a real free agent from the other side of the face/heel line, revealed a week later.
  One mystery at a time, and not again for 10 weeks after a reveal, so it stays rare. */
 function mystCand(A){if(!A||!S||(S.myst&&S.myst.x)||(S.mystLast&&AW()-S.mystLast<10))return null;
@@ -5085,7 +5090,7 @@ const SR_GHOST='<span class="tws gh">★★★★★</span>',SR_DRUM='<span clas
 function srPlate(c){const w=S.w[c.id];if(!w)return '';const t=titlesOf(c.id)[0];
  const sub=(c.info?esc(c.info):'')+(t?`<i class="twbelt">${esc(t.n)}</i>`:'');
  return `<div class="twpl ${w.al==='f'?'fc':'hl'}${c.r?' r'+c.r:''}"><span class="o">${ovr(w)}</span><div class="twn"><b>${esc(w.name)}</b>${sub?`<span>${sub}</span>`:''}</div><span class="tww">WIN</span></div>`}
-/* v263: the TV plays any two shows' tug of war, so names come from the stage (SRV.nm) when it has them */
+/* v265: the TV plays any two shows' tug of war, so names come from the stage (SRV.nm) when it has them */
 function srNm(br){return SRV&&SRV.nm?(SRV.nm[br]||''):br==='p'?S.gm:br==='ai'?S.rival:''}
 function srHalf(it,br,st){const who=srNm(br);
  if(!it)return `<div class="twh ${br} empty" id="srh-${br}"><div class="twhd"><span class="twl">${esc(who)}</span></div><div class="muted tiny">Nothing in this slot.</div></div>`;
@@ -5120,7 +5125,7 @@ function srAdj(o,br){const b=o.blocks.find(x=>x.brand===br);if(!b||!b.segs.lengt
 function srLand(rd,vis){if(rd.landed)return;rd.landed=true;[rd.p,rd.ai,rd.x].forEach(srDone);
  if(rd.p&&rd.ai){const d=rd.p.s.stars-rd.ai.s.stars;const sc=br=>avg(SRV.seen.filter(x=>x.b.brand===br).map(x=>x.s.stars));srRope(sc('p')-sc('ai'),null,vis&&Math.abs(d)>.01)}
  if(vis){document.querySelectorAll('#tw-pair .twh').forEach(h=>h.classList.add('nt'));srMark(rd);srKick(document.querySelector('#tw-pair .twh.won'),'slamw');if(!rd.main)srKick(document.getElementById('srv'),'nudge')}}
-/* v263: the stage's markup on its own, so the party-night TV can play it too (nm = the two shows' GM names, tv = no tapping) */
+/* v265: the stage's markup on its own, so the party-night TV can play it too (nm = the two shows' GM names, tv = no tapping) */
 function srStageHtml(o,nm,tv){const G=nm?nm.p:S.gm,Rv=nm?nm.ai:S.rival;const all=srRounds(o);const rounds=all.filter(r=>!r.x&&!r.main).concat(all.filter(r=>r.x),all.filter(r=>r.main));
  const two=!!o.ratings&&o.blocks.some(b=>b.brand==='ai');const cnt=br=>{const b=o.blocks.find(x=>x.brand===br);return b?b.segs.length:0};
  const html=(`<div id="srv" class="srv tw${tv?' srtv':''}" ${tv?'':'onclick="srTap(event)"'}>
@@ -5286,7 +5291,7 @@ const HOWTO=`<p><b>📅 The calendar:</b> the strip on the Home screen (or <b>WK
 <p><b>Network mandates:</b> after each PPV the TV network asks for something specific by the next one — a 4★ main event, two women's matches on one show, a new champion, a debut and so on. Deliver for a cash and fan bonus; miss it and you lose 5K fans. Check the Home or Book screen for your current one.</p>
 <p><b>🎯 Weekly goals &amp; 📣 crowd chants:</b> each week the Book screen gives you one small goal (hit it for a little cash and 3K fans — no penalty for missing it; a live ✅/🤞/⏳ line tells you if the card you've booked is on track), and the crowd starts chanting for someone on your roster. Book them in a match or promo that week and their segment gets +¼★, they gain popularity and you get 2K fans.</p>
 <p><b>Head to head:</b> in solo play the rival's card stays a surprise until the show airs. On TV, whoever's main event rates higher wins the main event war (+3K fans). When you sign a big free agent (70+ popularity), the rival may start a <b>bidding war</b>: pay 35% more (and a 20% higher salary) or let them go.</p>
-<p><b>✨ Suggest the rest</b> on the Book screen fills any empty slots and keeps everything you've already booked, promised or entered in a tournament. It takes care of the must-dos — promised and contracted matches, contract clauses, promises to wrestlers, the most overdue title defense, the weekly goal and the crowd's chant — then books a plain, safe card: standard matches, clean finishes, no run-ins, no PPV announcements, and the bonus slots stay empty. The creative booking is yours. <b>Clear card</b> wipes everything else.</p>
+<p><b>✨ Suggest the rest</b> on the Book screen fills any empty slots and keeps everything you've already booked, promised or entered in a tournament. It books the best matches it can from the wrestlers' own traits — popularity, in-ring skill, style chemistry, face vs heel, no recent rematches — as plain singles matches with clean finishes, plus your best talkers for any open promo. It ignores the briefing entirely: promises, contract clauses, title defenses, the weekly goal, the crowd's chant and feuds are all yours to handle, and the bonus slots stay empty. <b>Clear card</b> wipes everything else.</p>
 <p><b>Difficulty:</b> no rival gets free stars any more. Hard rivals book like pros — they rest stars before PPVs, order their card for the ratings, protect new champions and pay off feuds cleanly. Easy rivals book sloppily.</p>
 <p><b>The offseason:</b> after ${PPVS[SEASON]}, the season ends with an awards show (Wrestler and Women's Wrestler of the Year, Breakout Star, Rookie, Tag Team, Feud, Match and Promo of the Year — winners start next season with a boost). Veterans feel Father Time: they lose a little in-ring each year and may retire. Prospects ready for the main roster (60+ in-ring) get called up with debut buzz. Re-sign anyone whose contract is running out before you start the new season.</p>`;
 /* the rival scouts too: harder rivals invest in better prospects more often */
@@ -5972,7 +5977,7 @@ if(typeof document!=='undefined'&&document.getElementById('app')){
   if(!ON()||!LMP||!(partyOn()||simOn())||MPX)return;const code=LMP.code;
   TKO.fetch(code).then(d=>{if(!d||!LMP||LMP.code!==code||!S||!ON())return;if(d.state&&(d.rev||0)>(S.online.rev||0)){console.warn('league update was missed — catching up',d.rev,S.online.rev);mpIncoming(d)}else partyCatchUp()}).catch(()=>{})}
  setInterval(syncCheck,15000);
- /* v263: a TV is left open for hours — look for a new version every 10 minutes so it doesn't run old code next to updated phones */
+ /* v265: a TV is left open for hours — look for a new version every 10 minutes so it doesn't run old code next to updated phones */
  setInterval(()=>{if(TV&&'serviceWorker' in navigator&&navigator.onLine)navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{})},600000);
  /* slow or patchy connections often never fire 'online': keep nudging anything still waiting to sync while the app is open */
  setInterval(()=>{if(!navigator.onLine||document.visibilityState!=='visible'||!window.TKO||!TKO.ready)return;if(cloudCfg()&&cloudPendingAny()&&!CL_BUSY)cloudPush();if(ON()&&MP_PENDING&&!MPX&&!mpT)mpPush(S.online&&S.online.msg)},60000);
@@ -5982,7 +5987,7 @@ if(typeof document!=='undefined'&&document.getElementById('app')){
  /* a new version finished installing in the background: offer a one-tap reload instead of making people close the app */
  if('serviceWorker' in navigator&&navigator.serviceWorker.controller){let shown=false;window.updNow=()=>{flush();setTimeout(()=>location.reload(),400)};
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(shown)return;shown=true;
-   /* v263: nobody taps "Update" on a TV — it reloads itself into the new version between segments (it reopens the league on its own) */
+   /* v265: nobody taps "Update" on a TV — it reloads itself into the new version between segments (it reopens the league on its own) */
    if(TV){const go=()=>{if(TV&&(TV.reveal||(S&&S.online&&S.online.live&&partyLiveNow())))return setTimeout(go,15000);updNow()};return go()}const d=document.createElement('div');d.id='upd';d.innerHTML='New version ready <button class="mini" onclick="updNow()">Update</button>';document.body.appendChild(d)})}
  if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{const c=e.data&&e.data.tksim==='open'&&e.data.code;if(c&&(!LMP||LMP.code!==c))mpOpen(c)});
  $('#modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!PS&&!ME)closeModal()});

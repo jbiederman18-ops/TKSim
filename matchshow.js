@@ -76,20 +76,20 @@ const MS_HEAT=[
 
 /* ---------- Act 3: the near fall, by kind of finish ---------- */
 const MS_FALL={
- pin:{set:[[['A','({A} hits their biggest move and hooks the leg.)'],['p','Cover! One! Two!']],[['A','({A} plants {B} with a finisher out of nowhere and dives on top.)'],['p','This could be it!']]],count:['1','2'],
+ pin:{set:[[['A','({A} catches {B} coming off the ropes with a cutter and rolls them up tight.)'],['p','Hook of the leg! One! Two!']],[['A','({A} counters a desperation move into their finisher and floats over into the cover.)'],['c','Out of nowhere!']],[['A','({A} hits the finisher, then hits it again for good measure, and drapes an arm over.)'],['p','Twice! Surely that\'s it!']],[['A','({A} hits their biggest move and hooks the leg.)'],['p','Cover! One! Two!']],[['A','({A} plants {B} with a finisher out of nowhere and dives on top.)'],['p','This could be it!']]],count:['1','2'],
   q:'{A} has the cover. Does {B} kick out?',kick:'{B} kicks out at 2.9',ksub:'More drama and a bigger finish. Costs stamina.',stay:'Stay down. That\'s three.',ssub:'{A} wins right here. Clean, no extra drama.',
-  hit:[[['B','({B}\'s shoulder flies up a hair before three.)',['Kicked out!','']],['c','I had it counted! I thought that was it!'],['x','"This is awesome!" Clap clap, clap-clap-clap.']],[['B','({B} gets a shoulder up at the last possible moment.)',['Two point nine!','']],['p','How is {B} still in this?'],['x','The arena gasps, then roars.']]],
-  miss:[[['B','({B}\'s shoulder comes up a beat late. The ref\'s hand was already on the way down.)'],['c','Was that three? I think that was three!'],['x','Confused murmurs around the building.']]],
+  hit:[[['B','({B} throws a leg on the rope with the ref\'s hand an inch from the mat.)',['On the ropes!','']],['p','Instinct! Pure instinct from {B}!'],['x','The fans spill forward over the barricade.']],[['B','({B} kicks out with such force that {A} goes flying off them.)',['Kicked out!','']],['c','Where did that come from?'],['x','A "Fight forever!" chant starts up.']],[['B','({B} somehow rolls a shoulder at two and a half.)',['No!','']],['qa','Stay DOWN!'],['x','Fans are holding their heads in their hands.']],[['B','({B}\'s shoulder flies up a hair before three.)',['Kicked out!','']],['c','I had it counted! I thought that was it!'],['x','"This is awesome!" Clap clap, clap-clap-clap.']],[['B','({B} gets a shoulder up at the last possible moment.)',['Two point nine!','']],['p','How is {B} still in this?'],['x','The arena gasps, then roars.']]],
+  miss:[[['B','({B} tries to kick out, but there\'s nothing left. The ref\'s hand hits three a hair early.)'],['p','Did {B} get a shoulder up there? Somebody check the replay.'],['x','A smattering of boos for the referee.']],[['B','({B} lifts a shoulder after the bell has already rung.)'],['c','Too late. That\'s a three if I\'ve ever seen one.'],['x','The crowd groans, then applauds both of them.']],[['B','({B}\'s shoulder comes up a beat late. The ref\'s hand was already on the way down.)'],['c','Was that three? I think that was three!'],['x','Confused murmurs around the building.']]],
   end:[['x','1… 2… 3!',['Three!','gold']],['p','{A} gets it done!']]},
  multi:{set:[[['A','({A} drills {B} with a finisher and covers in the middle of the ring.)'],['p','Cover! One! Two!']]],count:['1','2'],
   q:'{A} has {B} covered. Does someone break it up?',kick:'{C} dives in and breaks up the count',ksub:'More chaos and a bigger finish. Costs stamina.',stay:'Nobody gets there. That\'s three.',ssub:'{A} wins right here.',
-  hit:[[['x','{C} flies in from nowhere and breaks up the pin at two point nine!',['Saved!','']],['p','Pandemonium! Nobody wants to lose this one!']]],
-  miss:[[['x','{C} dives in a beat late and lands on the referee\'s back.'],['c','Was that three? Nobody seems sure.']]],
+  hit:[[['x','{C} yanks the referee out of the ring at two!',['Pulled out!','']],['c','{C} is not losing this match for anybody!']],[['x','{C} breaks it up with a stomp to the back of {A}\'s head.',['Broken up!','']],['p','Every time somebody gets close, someone else is there!']],[['x','{C} flies in from nowhere and breaks up the pin at two point nine!',['Saved!','']],['p','Pandemonium! Nobody wants to lose this one!']]],
+  miss:[[['x','{C} is crawling over but gets there a second after three.'],['p','So close for {C}, and so far.']],[['x','{C} is laid out on the floor and can\'t get back in.'],['c','That\'s the problem with these matches. You can\'t watch everybody.']],[['x','{C} dives in a beat late and lands on the referee\'s back.'],['c','Was that three? Nobody seems sure.']]],
   end:[['x','1… 2… 3!',['Three!','gold']],['p','{A} pins {B} and wins it!']]},
  sub:{set:[[['A','({A} locks the hold in, right in the middle of the ring. {B} is fading.)'],['p','{B} is in trouble here!']]],
   q:'{B} is fading in the hold. Does {B} reach the ropes?',kick:'{B} crawls to the ropes',ksub:'More drama and a bigger finish. Costs stamina.',stay:'{B} taps',ssub:'{A} wins right here.',
-  hit:[[['B','({B} crawls, inch by inch, and gets a fingertip on the bottom rope.)',['Rope break!','']],['x','The building erupts.'],['c','Pure guts from {B}!']]],
-  miss:[[['B','({B} stretches for the rope and it\'s nowhere near. The ref lets it go on far too long.)'],['c','That ought to have been over a minute ago.']]],
+  hit:[[['B','({B} rolls through and turns the hold into a pinning attempt. {A} has to let go.)',['Escaped!','']],['c','Smart wrestling under the worst pressure.'],['x','The crowd claps {B} back to their feet.']],[['B','({B} drags {A} with them to the ropes by sheer force of will.)',['Rope break!','']],['p','{B} refuses to quit!']],[['B','({B} crawls, inch by inch, and gets a fingertip on the bottom rope.)',['Rope break!','']],['x','The building erupts.'],['c','Pure guts from {B}!']]],
+  miss:[[['B','({B} reaches for the ropes with one arm, then sags and taps with the other.)'],['p','That\'s it. {B} had no choice.']],[['B','({B} goes limp in the hold. The ref lifts their arm and it drops.)'],['c','{B} would not tap. So they passed out.']],[['B','({B} stretches for the rope and it\'s nowhere near. The ref lets it go on far too long.)'],['c','That ought to have been over a minute ago.']]],
   end:[['B','({B} taps out.)',['Tap out!','gold']],['p','{A} makes {B} submit!']]},
  iquit:{set:[[['A','({A} shoves the mic in {B}\'s face with the hold cranked all the way.)'],['qa','Say it!']]],
   q:'Does {B} say "I quit"?',kick:'{B} refuses',ksub:'More drama and a bigger finish. Costs stamina.',stay:'{B} says the words',ssub:'{A} wins right here.',
@@ -202,11 +202,11 @@ const MS_POST=[
   hit:[[['A','({A} and {B} stand nose to nose as the show goes off the air.)'],['p','This isn\'t done, folks.']]],note:'Heat up a little'}];
 
 /* the booth's reaction to the big moment */
-const MS_BOOTH_OK=['What a moment! This place is unglued!','You will not see that anywhere else this week.','That is why you tune in every week!'],
- MS_BOOTH_NO=['Not how anyone drew that one up.','That one got away from them.','The crowd isn\'t sure what they just saw.'],
+const MS_BOOTH_OK=['What a moment! This place is unglued!','You will not see that anywhere else this week.','That is why you tune in every week!','Remember where you were for that one.','Put that on the poster!','I\'ve called a lot of matches. That\'s up there.','They\'ll be running that back all week.','Are you kidding me?!'],
+ MS_BOOTH_NO=['Not how anyone drew that one up.','That one got away from them.','The crowd isn\'t sure what they just saw.','That was not the plan.','You can feel the air go out of the building.','Well. They tried.','That\'ll be one they want back.'],
  /* v256: when the moment is somebody hurt, a stoppage or no winner, the booth doesn't cheer it */
- MS_BOOTH_GRAVE=['Everybody hold your breath.','That\'s the side of this business nobody wants to see.','Let\'s hope everyone is all right.'],
- MS_BOOTH_SOFT=['That one will stay with that kid forever.','Sometimes the best moment isn\'t a move at all.'];
+ MS_BOOTH_GRAVE=['Everybody hold your breath.','That\'s the side of this business nobody wants to see.','Let\'s hope everyone is all right.','The doctors are on their way down.','Nobody here wants to see that.','This one isn\'t about the result anymore.'],
+ MS_BOOTH_SOFT=['That one will stay with that kid forever.','Sometimes the best moment isn\'t a move at all.','That\'s what this business is all about.','You don\'t need a finisher to bring the house down.'];
 const msGrave=(out)=>!!(out&&(out.nc||/\b(?:doctor|medics?|trainers?|stretcher|neck|concussion|not moving|isn't moving|falls silent|goes silent|under their own power)\b/i.test(out.text||'')));
 const msSoft=(out)=>!!(out&&/\b(?:kid|child|tears|bursts into tears|hugs?)\b/i.test(out.text||''));
 
@@ -225,9 +225,11 @@ function msChance(c,r){const A=r.A;const fit=c.fit?(A.st===c.fit?-.1:.04):0;let 
  /* v260: a tired wrestler misses more, and it takes two — a weak opponent drags every spot down with them */
  p-=Math.max(0,(A.fat||0)-40)/220;if(r.B)p+=(Math.min(A.ring,r.B.ring)-75)/500;return clamp(p,.12,.95)}
 /* deal three calls: the one that fits the wrestler's style first, then the alignment move, then the rest at random */
-function msDeal(list,r,n){const ok=list.filter(c=>msOk(c,r));const fit=ok.filter(c=>c.fit&&c.fit===r.A.st),al=ok.filter(c=>c.al&&!fit.includes(c)),rest=ok.filter(c=>!fit.includes(c)&&!al.includes(c));
- const out=[];[fit,al].forEach(g=>{if(g.length&&out.length<n)out.push(pick(g))});
- rest.slice().sort(()=>Math.random()-.5).forEach(c=>{if(out.length<n)out.push(c)});return out}
+function msDeal(list,r,n){const ok=list.filter(c=>msOk(c,r));const fit=ok.filter(c=>c.fit&&c.fit===r.A.st),al=ok.filter(c=>c.al&&!fit.includes(c)),rest=null;
+ /* v265: calls you've seen lately sink to the back, and a style call you just saw doesn't jump the queue every time */
+ const sn=c=>typeof seenP==='function'&&seenP(c.t);const out=[];[fit,al].forEach(g=>{const f=g.filter(c=>!sn(c));const pool=f.length?f:Math.random()<.35?g:[];if(pool.length&&out.length<n)out.push(pick(pool))});
+ const sh=l=>l.slice().sort(()=>Math.random()-.5);const left=sh(ok.filter(c=>!out.includes(c)));[...left.filter(c=>!sn(c)),...left.filter(sn)].forEach(c=>{if(out.length<n)out.push(c)});
+ if(typeof noteP==='function')noteP(out.map(c=>c.t));return out}
 function msAdd(m,d,st){const ev=evNew(m);st.sum=st.sum||0;const nd=clamp(st.sum+d,-MS_CAP,MS_CAP)-st.sum;st.sum+=nd;ev.stars+=nd;return nd}
 /* roll one of the new calls; returns {ok,d,lines} */
 function msRoll(c,r,m,st,lab){const p=msChance(c,r);const ok=Math.random()<p;const sw=swingOf(p,c.st);
@@ -239,10 +241,10 @@ function msRoll(c,r,m,st,lab){const p=msChance(c,r);const ok=Math.random()<p;con
  if(c.heat&&ok&&r.B)ev.heat.push([r.A.id,r.B.id,c.heat]);if(c.fat)m.sides.flat().forEach(id=>ev.fat.push([id,c.fat]));
  if(c.al==='h'&&ok&&r.A.al==='f')ev.pop.push([r.A.id,-1]);
  ev.notes.push(`🎬 ${lab}: ${msFill(c.t,r)} — ${ok?'it lands':'it falls short'}${d?` (${qStar(d)})`:''}`);
- return {ok,d,lines:pick(ok?c.hit:c.miss),extra}}
+ return {ok,d,lines:fpick(ok?c.hit:c.miss),extra}}
 function msKick(m,r,st,F,lab){const B=r.B;const p=clamp(.25+((B.ring+r.A.ring)/2)/100*.6,.3,.85);const ok=Math.random()<p;const sw=swingOf(p,.6);
  const d=msAdd(m,ok?sw.w*MS_K:-sw.l*MS_K,st);const ev=evNew(m);m.sides.flat().forEach(id=>ev.fat.push([id,3]));
- ev.notes.push(`🎬 ${lab}: ${msFill(F.kick,r)} — ${ok?'the crowd buys every second':'the timing was off'}${d?` (${qStar(d)})`:''}`);return {ok,d,p,lines:pick(ok?F.hit:F.miss)}}
+ ev.notes.push(`🎬 ${lab}: ${msFill(F.kick,r)} — ${ok?'the crowd buys every second':'the timing was off'}${d?` (${qStar(d)})`:''}`);return {ok,d,p,lines:fpick(ok?F.hit:F.miss)}}
 function msPost(c,r,m){const ev=evNew(m);if(c.heat&&r.B)ev.heat.push([r.A.id,r.B.id,c.heat]);if(c.popA)ev.pop.push([r.A.id,c.popA]);if(c.popB&&r.B)ev.pop.push([r.B.id,c.popB]);if(c.morB&&r.B)ev.mor.push([r.B.id,c.morB]);
  ev.notes.push(`🎬 After the bell: ${msFill(c.t,r)}`)}
 function msPostDeal(r,m){if(m.nc||!r.B)return [];return msDeal(MS_POST,r,3)}
@@ -290,7 +292,7 @@ function msAuto(m,brand,big){if(!msOn(m))return;const st={};const r=msRoles(m,br
   if(kick){msKick(m,r2,st,F,'Near fall');if(plan==='fin')runEvAI(g,m);else msRoll(msAIPick(msDeal(FIN[fam]||FIN_PIN,r2,3),r2),r2,m,st,'Finish')}}
  else if(plan==='fin')runEvAI(g,m);
  msAutoPost(m,brand)}
-function msAutoPost(m,brand){const r=msRoles(m,brand);if(!r.A||!r.B)return;const pl=msPostDeal(r,m);if(pl.length)msPost(pick(pl),r,m)}
+function msAutoPost(m,brand){const r=msRoles(m,brand);if(!r.A||!r.B)return;const pl=msPostDeal(r,m);if(pl.length)msPost(fpick(pl),r,m)}
 
 /* ---------- the live showdown ---------- */
 const msReduce=()=>window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -366,22 +368,22 @@ async function msMomentAct(slot){const g=MS.g,m=MS.m,r=g.r;
  const it=await msMenu(`${ck.i} ${ck.n}`,note||ck.l,items);const w0=m.winner;
  const out=g.sit?sitRoll(it.c,r,m):evRoll(it.c,r,m);MS.res=out.success?'ok':'no';MS.log.push({lab:slot==='heat'?'Heat':'Finish',t:it.label,ok:out.success});
  msFrame('');await msStamp(out.success?'It lands':'Not quite',out.success?'ok':'no');
- const pages=msNarr(out.text);pages.push({kind:'booth',who:'Play-by-play',t:pick(msGrave(out)?MS_BOOTH_GRAVE:out.success&&msSoft(out)?MS_BOOTH_SOFT:out.success?MS_BOOTH_OK:MS_BOOTH_NO)});
+ const pages=msNarr(out.text);pages.push({kind:'booth',who:'Play-by-play',t:fpick(msGrave(out)?MS_BOOTH_GRAVE:out.success&&msSoft(out)?MS_BOOTH_SOFT:out.success?MS_BOOTH_OK:MS_BOOTH_NO)});
  (out.extra||[]).forEach(x=>pages.push({kind:'cam',t:x}));if(out.flip)pages.push({kind:'cam',t:`👑 New winner: ${sideName(m.sides[m.winner])}`});if(out.nc)pages.push({kind:'cam',t:'🚫 The match ends without a winner.'});
  out.over=msOver(m,out,w0)||(slot==='fin'&&msEnds(evFill(g.e.text,r)));
  /* at the finish, a call that keeps the match going still has to end it: the winner puts it away */
  if(slot==='fin'&&!out.over){const fam=msFam(m);const F=MS_FALL[fam==='pin'&&m.sides.length>2&&MS.r.C?'multi':fam];
-  if(F){pages.push({kind:'cam',t:msFill(pick(['A minute later, {A} puts it away.','{A} regroups, and this time it\'s over.','It takes one more big move from {A}.']),MS.r)});pages.push(...msLines(F.end))}else pages.push({kind:'cam',t:msFill('A minute later, {A} puts it away and gets the win.',MS.r)});out.over=true}
+  if(F){pages.push({kind:'cam',t:msFill(fpick(['A minute later, {A} puts it away.','{A} regroups, and this time it\'s over.','It takes one more big move from {A}.','{A} isn\'t giving them another chance.','{A} finds one last gear and finishes it.']),MS.r)});pages.push(...msLines(F.end))}else pages.push({kind:'cam',t:msFill('A minute later, {A} puts it away and gets the win.',MS.r)});out.over=true}
  await msPlay(pages);return out}
 function msIntro(m,hot){const ns=m.sides.map(sd=>sideName(sd));
- if(m.type==='rumble')return pick(['It\'s the Royal Rumble, and the clock is ticking down to the first entrant.','Royal Rumble time. Every number is a new chance.']);
- if(m.type==='gauntlet')return pick(['The Casino Gauntlet. Only one of them leaves a loser tonight.','Casino Gauntlet time. Nobody wants to be the one who gets pinned.']);
+ if(m.type==='rumble')return fpick(['It\'s the Royal Rumble, and the clock is ticking down to the first entrant.','Royal Rumble time. Every number is a new chance.']);
+ if(m.type==='gauntlet')return fpick(['The Casino Gauntlet. Only one of them leaves a loser tonight.','Casino Gauntlet time. Nobody wants to be the one who gets pinned.']);
  if(m.type==='mitb')return 'Money in the Bank. The briefcase is hanging high above the ring.';
  const vs=ns.length===2?`${ns[0]} against ${ns[1]}`:`${ns.slice(0,-1).join(', ')} and ${ns[ns.length-1]}`;
- return pick(hot?[`${vs}, and this one has been building for weeks.`,`There is real bad blood here. ${vs}.`]:MS&&MS.it&&!MS.it.main?[`${vs}, and the crowd can feel something coming.`,`${vs}. This one has people leaning forward.`]:[`Main event time: ${vs}.`,`Main event: ${vs}. Buckle up.`,`${vs} closes the show tonight.`])}
+ return fpick(hot?[`${vs}, and this one has been building for weeks.`,`There is real bad blood here. ${vs}.`,`${vs}. These two cannot stand each other.`,`${vs}. Weeks of words, and now it\'s fists.`]:MS&&MS.it&&!MS.it.main?[`${vs}, and the crowd can feel something coming.`,`${vs}. This one has people leaning forward.`,`${vs}. The fans are on their feet before the bell.`,`${vs}, and the building is humming.`]:[`Main event time: ${vs}.`,`Main event: ${vs}. Buckle up.`,`${vs} closes the show tonight.`,`Last match of the night: ${vs}.`,`It all comes down to this. ${vs}.`])}
 async function msRun(){const m=MS.m;const fam=msFam(m);const plan=msPlan(MS.g,m);
  MS.act=0;msFrame('');if(window.SFX)SFX.play('swell');const r0=MS.r;const hot=heatOf(r0.A.id,r0.B.id)>=30;
- await msPlay([{kind:'cam',t:pick(MS.it&&!MS.it.main?['The bell rings, and the crowd is already buzzing.','Here we go. The crowd senses something special.','The bell rings. Eyes up, everyone.']:['The main event. The bell rings.','Main event time, and the crowd is on its feet for the opening bell.','Here we go. The main event is underway.'])},{kind:'booth',who:'Play-by-play',t:msIntro(m,hot)}]);
+ await msPlay([{kind:'cam',t:fpick(MS.it&&!MS.it.main?['The bell rings, and the crowd is already buzzing.','Here we go. The crowd senses something special.','The bell rings. Eyes up, everyone.']:['The main event. The bell rings.','Main event time, and the crowd is on its feet for the opening bell.','Here we go. The main event is underway.'])},{kind:'booth',who:'Play-by-play',t:msIntro(m,hot)}]);
  await msCall(msDeal(MS_OPEN,MS.r,3),'Opening','🎬 The opening bell',`How does ${esc(MS.r.A.name)} start?`);
  MS.act=1;msFrame('');
  let over=false;
@@ -389,7 +391,7 @@ async function msRun(){const m=MS.m;const fam=msFam(m);const plan=msPlan(MS.g,m)
  else await msCall(msDeal(MS_HEAT,MS.r,3),'Heat','🎬 The heat','How does the middle of the match go?');
  if(!over){MS.act=2;MS.r=msRoles(m,'p');const r=MS.r;msFrame('');
   if(fam!=='none'){const F=MS_FALL[fam==='pin'&&m.sides.length>2&&r.C?'multi':fam];
-   await msPlay(msLines(pick(F.set)));if(F.count)for(const n of F.count)await msStamp(n,'count',560);
+   await msPlay(msLines(fpick(F.set)));if(F.count)for(const n of F.count)await msStamp(n,'count',560);
    const it=await msMenu('🏁 '+msFill(F.q,r),'You\'re calling the finish',[{label:msFill(F.kick,r),info:(pk=>`💪 In-ring · ${oddsWord(pk)} · ${swingWord(swingOf(pk,.6).w)} · ${esc(msFill(F.ksub,r))}`)(clamp(.25+((r.B.ring+r.A.ring)/2)/100*.6,.3,.85)),kick:1},{label:msFill(F.stay,r),info:`✅ Guaranteed · 🛡️ Small swing · ${esc(msFill(F.ssub,r))}`}]);
    if(it.kick){const o=msKick(m,r,MS.st,F,'Near fall');MS.res=o.ok?'ok':'no';MS.log.push({lab:'Near fall',t:it.label,ok:o.ok});msFrame('');await msStamp(o.ok?'It lands':'Not quite',o.ok?'ok':'no');await msPlay(msLines(o.lines));
     if(plan==='fin'&&MS.g)await msMomentAct('fin');
@@ -399,7 +401,7 @@ async function msRun(){const m=MS.m;const fam=msFam(m);const plan=msPlan(MS.g,m)
   else{msFrame('');await msPlay([{kind:'cam',t:msFill('{A} gets the win.',r)}])}}
  const r=msRoles(m,'p');MS.r=r;const pl=msPostDeal(r,m);
  if(pl.length){MS.act=3;msFrame('');const it=await msMenu('🎤 After the bell','What\'s the closing shot?',pl.map(c=>({c,label:msFill(c.t,r),info:`📖 Story only, no stars · ${esc(msFill(c.sub,r))}`})));
-  msPost(it.c,r,m);MS.log.push({lab:'After',t:it.label,story:1,note:msFill(it.c.note||'',r)});msFrame('');await msStamp('Closing shot','gd',700);await msPlay(msLines(pick(it.c.hit)))}
+  msPost(it.c,r,m);MS.log.push({lab:'After',t:it.label,story:1,note:msFill(it.c.note||'',r)});msFrame('');await msStamp('Closing shot','gd',700);await msPlay(msLines(fpick(it.c.hit)))}
  msDone()}
 function msDone(){if(!MS)return;MS.fin=1;if(window.SFX)SFX.matchEnd();const m=MS.m;const rows=MS.log.map(e=>`<li><span class="mslab">${esc(e.lab)}</span><span>${esc(e.t)}</span><b class="${e.story?'msst':e.ok?'good':'bad'}">${e.story?'Story':e.ok?'Landed':'Fell short'}</b></li>`).join('');
  const post=MS.log.find(e=>e.story);const res=m.nc?'No contest':`${sideName(m.sides[m.winner])} def. ${m.sides.filter((s,i)=>i!==m.winner).map(sideName).join(', ')}`;

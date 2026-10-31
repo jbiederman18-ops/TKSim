@@ -139,14 +139,14 @@ function bLine(ctx,st,xi,moves){const x=st.ex;const ok=o=>!x.used.has(o.t)&&(!mo
  /* nothing written for this exact call: fall back to the all-purpose answers (the ones written for any insult, brag, promise or mind game) before anything at all */
  if(!el.length){const any=RT.filter(o=>ok(o)&&rtFit(o,ctx,Object.assign({},xi,{anyI:1})));el=any.filter(o=>o.i==='*'||['insult','brag','promise','mind'].every(t=>o.i.split(' ').includes(t)));if(!el.length)el=any}
  if(!el.length)return null;
- return wpick(el,o=>rtSpec(o)*(xi.tier==='hi'&&o.mic==='hi'?2.5:1)*(seenP(o.t)?.12:1)*(o.m===x.lastM?.25:1))}
+ return wpick(el,o=>rtSpec(o)*(xi.tier==='hi'&&o.mic==='hi'?2.5:1)*(seenP(o.t)?.03:1)*(o.m===x.lastM?.25:1))}
 /* v250: xi / nxi limit an answer to (or keep it away from) what {B} was answering — "kneel", or "shake+ok" for a handshake that happened */
 function gate(o,xi){const k=[xi.i,xi.i+(xi.ok?'+ok':'+no')];return (!o.xi||o.xi.split(' ').some(t=>k.includes(t)))&&(!o.nxi||!o.nxi.split(' ').some(t=>k.includes(t)))}
 /* v253: bm / nbm keep an answer to (or away from) the kind of line {B} just said; bw needs {B} to be walking away */
 const fitsB=(o,e)=>(!o.bw||!!(e.w||e.gone))&&(!o.bm||o.bm.split(' ').includes(e.m))&&(!o.nbm||!o.nbm.split(' ').includes(e.m));
 /* v256: once the match is made — a contract on the table, or a challenge already accepted tonight — nobody asks for a yes again */
 const made=(p,st)=>!!(p&&p.type==='contract'||st&&st.chal);
-function genLine(tc,ctx,xi,e,mk){const l=(GEN[tc]||[]).filter(o=>okFor(o,ctx)&&rtExtra(o,ctx,xi)&&gate(o,xi)&&(!e||fitsB(o,e))&&!(mk&&o.ch));return l.length?wpick(l,o=>(seenP(o.ok)?.15:1)*(o.al||o.vs||o.hk||o.bt||o.hot?2:1)):null}
+function genLine(tc,ctx,xi,e,mk){const l=(GEN[tc]||[]).filter(o=>okFor(o,ctx)&&rtExtra(o,ctx,xi)&&gate(o,xi)&&(!e||fitsB(o,e))&&!(mk&&o.ch));return l.length?wpick(l,o=>(seenP(o.ok)?.03:1)*(o.al||o.vs||o.hk||o.bt||o.hot?2:1)):null}
 function tacScene(p,ctx,st,e,ai,pull){const x=st.ex;x.lastM=e.m;x.used.add(e.t);x.M0=x.M;x.bGone=!!e.gone;
  if(pull!==false){let v=MV[e.m]||0;const tier=rtTier(ctx.B);if(v<0)v*=tier==='hi'?1.3:tier==='lo'?.6:1;x.M=clamp(x.M+v,-4,4)}
  const xi=xOf(p,ctx,st);const live=tagHit('live',ctx.K||SC_DEF);
@@ -154,7 +154,7 @@ function tacScene(p,ctx,st,e,ai,pull){const x=st.ex;x.lastM=e.m;x.used.add(e.t);
  const by={};pool.forEach(o=>{const t=o.tc||cls(o);(by[t]=by[t]||[]).push(o)});
  const lines={};TACS.forEach(tc=>{if(tc==='crowd'&&!live)return;if(tc==='resp'&&ctx.A.al!=='f'&&!by.resp&&!['respect','accept'].includes(e.m))return;
   /* after a beatdown, a counter or a retreat only the answers written for it make sense — no generic talk lines */
-  const l=by[tc]?wpick(by[tc],o=>seenP(o.t)?.2:1):['laidout','fightback','retreat'].includes(e.m)||e.gone?null:genLine(tc,ctx,xi,e,mk);if(l)lines[tc]={l,own:!!by[tc]}});
+  const l=by[tc]?wpick(by[tc],o=>seenP(o.t)?.03:1):['laidout','fightback','retreat'].includes(e.m)||e.gone?null:genLine(tc,ctx,xi,e,mk);if(l)lines[tc]={l,own:!!by[tc]}});
  /* four calls: the ones written for this exact moment first, then the rest; shown in the same order every time */
  let ks=shuffle(Object.keys(lines).filter(k=>lines[k].own)).concat(shuffle(Object.keys(lines).filter(k=>!lines[k].own))).slice(0,4);
  ks=TACS.filter(k=>ks.includes(k));
@@ -162,7 +162,7 @@ function tacScene(p,ctx,st,e,ai,pull){const x=st.ex;x.lastM=e.m;x.used.add(e.t);
  if(x.T>=1&&x.T<x.Tmax)ch.push({t:'🎬 Go to the closer',tip:'End it here',close:1,always:1,s:'luck'});
  if(!ai)noteP([e.t,...ch.filter(c=>c.lt).map(c=>c.lt)]);
  return {text:e.t,ch,rt:1,ex:'tac',m:e.m}}
-function timeScene(ctx,st){st.ex.M0=st.ex.M;const tx=TIME_TX.filter(o=>okFor(o,ctx));return {text:pick(tx).t,ch:TIME_CH.map(c=>Object.assign({},c)),rt:1,ex:'time'}}
+function timeScene(ctx,st){st.ex.M0=st.ex.M;const tx=TIME_TX.filter(o=>okFor(o,ctx));return {text:fpick(tx).t,ch:TIME_CH.map(c=>Object.assign({},c)),rt:1,ex:'time'}}
 /* v250: right after {B} lands their big line, the set-up for the closer doesn't hand them a second last word */
 /* v256: after a respectful call lands (a handshake, an honest compliment) the closer doesn't pretend it's a war:
    calmer set-up lines, and no brawl, cheap shot or knife-twist on the menu */
@@ -170,7 +170,7 @@ const CLOSE_CALM={up:`{B} nods. There's nothing left to argue about, and {A} has
 const CLOSE_AFTER={up:`{B} got that one in, but {A} still has the room.`,even:`That one landed. Now it's dead even, and it has to go somewhere.`,down:`{B} lets the line hang. Every eye in the building is on {A}.`};
 function closeScene(p,ctx,st,ai,bLanded){const x=st.ex;x.M0=x.M;x.zone=zoneOf(x.M);const z=x.zone;
  const lc=x.lastC,calm=!bLanded&&!!x.lastOk&&!!lc&&lc.ex==='mid'&&lc.tc==='resp',mk=made(p,st);
- const tx=CLOSE_TX[z].filter(o=>okFor(o,ctx));const text=bLanded?CLOSE_AFTER[z]:calm?CLOSE_CALM[z]:(wpick(tx,o=>(seenP(o.t)?.2:1)*(o.vs?2:1))||CLOSE_TX[z][0]).t;
+ const tx=CLOSE_TX[z].filter(o=>okFor(o,ctx));const text=bLanded?CLOSE_AFTER[z]:calm?CLOSE_CALM[z]:(wpick(tx,o=>(seenP(o.t)?.03:1)*(o.vs?2:1))||CLOSE_TX[z][0]).t;
  let ch=dealChoices(CLOSE[z].filter(c=>(calm?!c.rage:!c.calm)&&!(mk&&c.ch)),ctx,z==='up'?2:3).map(c=>Object.assign({},c,{ex:'close'}));
  if(z==='up')ch=[mdChoice(ctx)].concat(ch);
  if(!ai)noteP([text]);return {text,ch,rt:1,ex:'close',zone:z,last:true,_md:1}}
@@ -206,7 +206,7 @@ function exNext(p,ctx,st,ai){const x=st.ex;if(!x||x.closed||st.drop)return null;
  if(x.timing){const t=x.timing;x.timing=null;
   const e=t==='ok'?bLine(ctx,st,xOf(p,ctx,st,{ok:1}),['rattled','stumble']):bLine(ctx,st,xOf(p,ctx,st,{ok:t==='cut'?0:1}),['personal','mock','flip']);
   /* v253: when {B}'s big line landed, {A} answers that line — {B} doesn't get a second one on top of it */
-  if(e){const big=t!=='ok';const sc=tacScene(p,ctx,st,big?Object.assign({},e,{ch:null}):e,ai,false);if(big)sc.text=pick(HOLD_TX).t;return {b:'r',sc}}}
+  if(e){const big=t!=='ok';const sc=tacScene(p,ctx,st,big?Object.assign({},e,{ch:null}):e,ai,false);if(big)sc.text=fpick(HOLD_TX).t;return {b:'r',sc}}}
  else if(!x.tUsed&&x.T>=1&&rtTier(ctx.B)!=='lo'&&Math.random()<EX_TP){x.tUsed=1;return {b:'r',sc:timeScene(ctx,st)}}
  const e=bLine(ctx,st,xOf(p,ctx,st));if(!e){x.toClose=1;return exNext(p,ctx,st,ai)}
  return {b:'r',sc:tacScene(p,ctx,st,e,ai)}}

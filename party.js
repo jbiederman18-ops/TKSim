@@ -289,7 +289,7 @@ function tvConnect(){if(!TV)return;if(TV.unsub){TV.unsub();TV.unsub=null}if(TV.s
  if(!window.TKO||!TKO.ready)return;
  TV.unsub=TKO.listen(TV.code,tvIncoming,()=>{if(!TV)return;TV.status='missing';render()});
  if(TKO.listenSide)TV.sideUnsub=TKO.listenSide(TV.code,tvSide);partyWake();
- /* v263: pick up a new version as soon as a league goes on the TV */
+ /* v265: pick up a new version as soon as a league goes on the TV */
  try{if('serviceWorker' in navigator)navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{})}catch(e){}}
 /* v262: the TV feed now has its own little document (see online.js pushSide); the league document still carries it for
    phones on older versions or before the rules are published, so the TV uses whichever is newer */
@@ -517,7 +517,7 @@ function ryRun(R,pr){const P=ryPlan(pr),x=pr.blocks.find(b=>b.brand==='x');const
  steps[steps.length-1].ms=0;
  R.steps=steps;R.si=R.si||0;for(let i=0;i<R.si&&i<steps.length;i++)steps[i].fn(true);tvFit(document.querySelector('#rv [data-sec="under"]'),1,.72);tvRevealNext()}
 
-/* ===================== v263: the tug of war on the TV (two shows head to head) =====================
+/* ===================== v265: the tug of war on the TV (two shows head to head) =====================
    The same tug of war as the solo reveal (index.html srStage), played for the room: it runs itself round by round — no
    tapping — with a short beat between rounds and a longer hold before the main event. A signing war (sealed offers) plays
    first when there is one. Three or four shows still get the Battle Royale. */
