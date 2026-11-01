@@ -5,7 +5,11 @@
    tug-of-war reveal and the brand war on Home all use it. Loaded last so it sits on top of the older layers.
    v270: every other screen too — the roster and free agents are split rows (tinted photo | details), titles are
    belt | champion, the office splits money in | out and each expiring contract | re-sign, the draft splits you | the
-   rival and the tale of the tape, offers split your bid | the sealed rival bid, and calendar PPVs split by brand. */
+   rival and the tale of the tape, offers split your bid | the sealed rival bid, and calendar PPVs split by brand.
+   v271: the full redesign. Every shape in the game now uses the seam: the old two-sided parallelogram (--cut, --slant,
+   --sl and their outline frames) becomes one straight edge and one diagonal cut, like half of a split panel; every
+   banner is two-tone across a diagonal (red | deep red for shows and the live header, dark | gold for page heads);
+   sheets open under a gold | red split rule; cards, chips, tabs and inputs are flat. */
 'use strict';
 /* a generic split pair: sides are {c:'f'|'h'|'p'|'x'|'g'|'b'|'n'|'v', h:html}; tints in the CSS below */
 function sfPair(l,r,o){o=o||{};return `<div class="sfp ${o.cls||''}"><div class="sfa ${l.c}${l.on?' on':''}">${l.h}</div>${o.vs===''?'':`<span class="sfvs">${o.vs||'VS'}</span>`}<div class="sfb ${r.c}${r.on?' on':''}">${r.h}</div></div>`}
@@ -229,6 +233,83 @@ html.lk-hy body .calrow.wwe .calwk{background:var(--sfX);color:#ff8a80}
 html.lk-hy body .calrow.ppv .calbody,html.lk-hy body .calrow.sup .calbody{background:#151518;padding:8px 10px 8px 20px;clip-path:polygon(12px 0,100% 0,100% 100%,0 100%);margin-left:-6px}
 html.lk-hy body .calrow.sup .calbody{box-shadow:inset 0 3px 0 var(--gold)}
 html.lk-hy body .calrow.now{outline:0;box-shadow:inset 0 0 0 2px var(--gold2)}
+
+/* ==== v271: the full split system ==== */
+html.lk-hy{
+ --cut:polygon(0 0,100% 0,calc(100% - 12px) 100%,0 100%);
+ --slant:polygon(0 0,100% 0,calc(100% - 9px) 100%,0 100%);
+ --sl:polygon(0 0,100% 0,calc(100% - 6px) 100%,0 100%);
+ --frame:polygon(evenodd,0 0,100% 0,calc(100% - 12px) 100%,0 100%,0 0,2px 2px,2px calc(100% - 2px),calc(100% - 13px) calc(100% - 2px),calc(100% - 2.7px) 2px,2px 2px);
+ --frame8:polygon(evenodd,0 0,100% 0,calc(100% - 9px) 100%,0 100%,0 0,2px 2px,2px calc(100% - 2px),calc(100% - 10px) calc(100% - 2px),calc(100% - 2.6px) 2px,2px 2px);
+ --frame3:polygon(evenodd,0 0,100% 0,calc(100% - 12px) 100%,0 100%,0 0,3px 3px,3px calc(100% - 3px),calc(100% - 13.5px) calc(100% - 3px),calc(100% - 4px) 3px,3px 3px);
+ --sfRed:linear-gradient(103deg,var(--red) 0 63%,#7c1913 63% 100%);
+ --sfRule:linear-gradient(103deg,var(--gold) 0 50%,var(--red) 50% 100%)}
+/* cards are flat slabs; the seam is for things that face off, act, or move you forward */
+html.lk-hy body .card:not(.showcard):not(.phead):not(.ttape){clip-path:none;background:#141417;border:0;box-shadow:none}
+html.lk-hy body .card.warn{background:#1f150f;box-shadow:inset 3px 0 0 var(--ember)}
+html.lk-hy body .card.mine{box-shadow:inset 3px 0 0 var(--gold)}
+html.lk-hy body .tile{clip-path:none;background:#141417}
+html.lk-hy body .tile:after{clip-path:none;width:100%;left:0;height:3px;background:var(--sfRule)}
+/* banners: two tones across a diagonal */
+html.lk-hy body .card.showcard,html.lk-hy body .res-hd,html.lk-hy body .lvhd,html.lk-hy body .hero{background:var(--sfRed)}
+html.lk-hy body .card.showcard.ppv{background:linear-gradient(103deg,#b8862a 0 63%,#7a5a17 63% 100%)}
+html.lk-hy body .card.showcard.ppv .showname,html.lk-hy body .card.showcard.ppv .kicker,html.lk-hy body .card.showcard.ppv .venue{color:#0d0b07;-webkit-text-fill-color:#0d0b07}
+html.lk-hy body .card.phead{background:linear-gradient(103deg,#1c1c20 0 62%,var(--sfP) 62% 100%)}
+html.lk-hy body .card.phead .phr b{color:var(--gold2)}
+html.lk-hy body .wd-top.wdt{background:linear-gradient(103deg,#1c1c20 0 62%,var(--sfP) 62% 100%)}
+html.lk-hy body .wd-top.wdt.af,html.lk-hy body .wdt:has(.alg.fc){background:linear-gradient(103deg,#1c1c20 0 62%,var(--sfF) 62% 100%)}
+/* sheets open under the split rule */
+html.lk-hy body .sheet{border-top:0;background:#111114}
+html.lk-hy body .sheet::after{content:'';position:absolute;left:0;right:0;top:0;height:5px;background:var(--sfRule);pointer-events:none;z-index:3}
+html.lk-hy body .sheet:before{clip-path:none}
+/* chips, tabs and toggles: flat blocks, gold when on */
+html.lk-hy body .chip{clip-path:none;border-radius:0;border:0;box-shadow:none;background:#1e1e22;color:var(--mut)}
+html.lk-hy body .chip.on{background:var(--gold);color:var(--ink)}
+html.lk-hy body .mini{clip-path:var(--sl)}
+html.lk-hy body select,html.lk-hy body input,html.lk-hy body textarea{clip-path:none;border-radius:0;background:#0d0d10;border:1px solid #2c2c33}
+/* the tab bar: flat, the open tab is a gold block cut on one side */
+html.lk-hy body nav.tabs{background:#0e0e11}
+html.lk-hy body nav.tabs:before{background:var(--sfRule);height:3px}
+html.lk-hy body nav.tabs button.on:before{left:6%;right:6%}
+/* header money/fans chips */
+html.lk-hy body .hudc{clip-path:var(--sl)}
+/* choice rows (promo calls, decisions, promises): a tinted key half, then the text half */
+html.lk-hy body .choice{clip-path:none;background:#151518;padding-left:0;grid-template-columns:52px 1fr;overflow:hidden}
+html.lk-hy body .choice .key{width:52px;height:auto;align-self:stretch;min-height:44px;background:var(--sfP);color:var(--gold2);clip-path:polygon(0 0,100% 0,calc(100% - 12px) 100%,0 100%);display:flex;align-items:center;justify-content:center;margin-right:4px}
+html.lk-hy body .choice.on .key,html.lk-hy body .choice.picked .key{background:var(--gold);color:var(--ink)}
+/* the briefing's section rules and rows */
+html.lk-hy body .rdsec i{background:var(--sfRule);height:2px}
+html.lk-hy body .rdr{border-radius:0}
+
+/* booking slots: the number tab is cut like a split half */
+html.lk-hy body .slot{clip-path:none;background:#141417}
+html.lk-hy body .slot .num,html.lk-hy body .slot:not(.done) .num{clip-path:polygon(0 0,100% 0,calc(100% - 12px) 100%,0 100%)}
+/* Home: the briefing strip is count | headline */
+html.lk-hy body .bstrip{padding:0;gap:0;overflow:hidden}
+html.lk-hy body .bstrip .bsn{align-self:stretch;display:flex;align-items:center;padding:10px 22px 10px 14px;background:var(--sfP);clip-path:polygon(0 0,100% 0,calc(100% - 14px) 100%,0 100%);margin-right:6px}
+html.lk-hy body .bstrip.hot .bsn{background:var(--sfX)}
+html.lk-hy body .bstrip>:not(.bsn){padding-top:10px;padding-bottom:10px}
+html.lk-hy body .bstrip .bsc{padding-right:14px}
+html.lk-hy body .tcr{background:#1a1a1e}
+/* the briefing's three counts are one split strip */
+html.lk-hy body .rundown .rdk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0}
+html.lk-hy body .rundown .rdk>div{clip-path:polygon(14px 0,100% 0,calc(100% - 14px) 100%,0 100%);margin:0 -7px;padding:10px 20px;background:#1e1e22;box-shadow:none;border:0}
+html.lk-hy body .rundown .rdk>div:first-child{clip-path:polygon(0 0,100% 0,calc(100% - 14px) 100%,0 100%);margin-left:0;padding-left:12px}
+html.lk-hy body .rundown .rdk>div:last-child{clip-path:polygon(14px 0,100% 0,100% 100%,0 100%);margin-right:0}
+html.lk-hy body .rundown .rdk>div.m{background:var(--sfX)}html.lk-hy body .rundown .rdk>div.c{background:var(--sfP)}
+/* wrestler details: the photo is a tinted half cut by the seam */
+html.lk-hy body .wd-top .wd-pic{clip-path:polygon(0 0,100% 0,calc(100% - 16px) 100%,0 100%);box-shadow:none;background-color:var(--sfP)}
+/* pickers (teams, factions and the like): photo | name rows */
+html.lk-hy body .tmrow{clip-path:none;background:#151518;padding:0;gap:0;flex-shrink:0;min-height:48px;align-items:stretch}
+html.lk-hy body .tmrow .tmf{width:auto;flex:none;align-self:stretch;display:flex;align-items:center;padding:4px 20px 4px 8px;background:var(--sfH);clip-path:polygon(0 0,100% 0,calc(100% - 12px) 100%,0 100%);margin-right:6px}
+html.lk-hy body .tmrow.af .tmf{background:var(--sfF)}
+html.lk-hy body .tmrow .tmn{padding:8px 0}html.lk-hy body .tmrow .tmck{padding-right:12px}
+html.lk-hy body .tmrow.on{box-shadow:inset 0 0 0 2px var(--gold)}
+/* the games lobby: the save you'll pick up is a split hero; every tile is cut like a split half */
+html.lk-hy body .lbhero{border:0;background:linear-gradient(103deg,#1c1c20 0 60%,var(--sfP) 60% 100%);clip-path:none}
+html.lk-hy body .lbtile{clip-path:var(--cut);background:#151518}
+/* the scouting board */
+html.lk-hy body .card.scout{box-shadow:inset 3px 0 0 var(--gold)}
 
 @media (prefers-reduced-motion:reduce){html.lk-hy body .sd.duo .sdc,html.lk-hy body .sd.duo::after{transition:none}}
 `;document.head.appendChild(c)})();

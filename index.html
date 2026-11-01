@@ -1744,7 +1744,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v270';
+const APP_VERSION='v271';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -5356,7 +5356,7 @@ function renderTeam(){const l=ownList('p').sort((a,b)=>a.name.localeCompare(b.na
  <label>Type</label><div class="chips">${[['team','Tag team (2–3)'],['faction','Faction (2–6)']].map(([v,nm])=>`<button type="button" class="chip ${TE.type===v?'on':''}" onclick="TE.type='${v}';renderTeam()">${nm}</button>`).join('')}</div>
  <div class="row sb tmhead"><label style="margin:0">Members</label><span class="tmcount ${ok?'good':n>max?'bad':'muted'}">${n} picked · ${TE.type==='team'?'2–3':'2–6'}</span></div>
  ${TE.keep.length?`<div class="muted tiny" style="margin-bottom:6px">Also in this ${TE.type==='team'?'team':'faction'} (on another roster): ${TE.keep.map(x=>S.w[x]?esc(S.w[x].name):'').filter(Boolean).join(', ')}</div>`:''}
- <div class="tmlist">${l.map(w=>{const on=TE.m.includes(w.id);const o=teamOthers(w.id);return `<button type="button" class="tmrow ${on?'on':''}" onclick="teamPick('${w.id}')"><span class="tmf">${face(w)}</span><span class="tmn"><b>${esc(w.name)}</b><span class="muted tiny">${w.al==='f'?'Face':'Heel'} · ${STYLE_N[w.st]}${o.length?' · in '+esc(o.join(', ')):''}</span></span><span class="tmck">${on?'✓':''}</span></button>`}).join('')}</div>
+ <div class="tmlist">${l.map(w=>{const on=TE.m.includes(w.id);const o=teamOthers(w.id);return `<button type="button" class="tmrow ${on?'on':''} ${w.al==='f'?'af':'ah'}" onclick="teamPick('${w.id}')"><span class="tmf">${face(w)}</span><span class="tmn"><b>${esc(w.name)}</b><span class="muted tiny">${w.al==='f'?'Face':'Heel'} · ${STYLE_N[w.st]}${o.length?' · in '+esc(o.join(', ')):''}</span></span><span class="tmck">${on?'✓':''}</span></button>`}).join('')}</div>
  <button class="btn mt" ${ok?'':'disabled'} onclick="saveTeam()">${TE.id?'Save changes':'Create'}</button>${TE.id?`<button class="btn ghost danger" onclick="closeModal();delTeam('${TE.id}')">Disband</button>`:''}<button class="btn ghost" onclick="closeModal()">Cancel</button>`,true)}
 function teamPick(id){const i=TE.m.indexOf(id);if(i>=0)TE.m.splice(i,1);else{if(TE.m.length>=TE_MAX[TE.type])return toast(`A ${TE.type==='team'?'tag team':'faction'} can have up to ${TE_MAX[TE.type]}.`);TE.m.push(id)}renderTeam()}
 function saveTeam(){if(mpLocked())return;const n=(TE.n||'').trim();const type=TE.type;const m=TE.m.slice();
