@@ -253,7 +253,7 @@ function center(i){requestAnimationFrame(()=>requestAnimationFrame(()=>{const el
 window.tcOpen=function(){if(TC.act==null)pickAct();if(TC.act==null)return;TC.open=true;TC.dealt=1;render();center(TC.act)};
 window.tcClose=function(){TC.open=false;TC.sel=null;TC.confirm=null;render()};
 window.tcMode=function(k){TC.mode=k;TC.sel=null;TC.dealt=1;render()};
-window.tcYes=function(){const c=TC.confirm;if(!c)return;TC.confirm=null;play(c.i,c.id,c.tg,true)};
+window.tcYes=function(){const c=TC.confirm;if(!c)return;TC.confirm=null;if(c.tg&&c.tg.t==='swap')return replaceWith(c.i,c.tg.old,c.id,true);play(c.i,c.id,c.tg,true)};
 window.tcNo=function(){TC.confirm=null;render()};
 window.tcDeck=function(){const i=TC.act;const sl=card()[i];if(!sl)return;const m=cur(i);const here=new Set(idsOf(i,m));const promo=sl.k==='promo';
  const anchor=[...here].pop();const opps=anchor?[W_(anchor)]:[];
@@ -267,53 +267,93 @@ window.tcDeck=function(){const i=TC.act;const sl=card()[i];if(!sl)return;const m
 /* ---------------- touch: drag, flick, tap, hold, swipe off ---------------- */
 let PD=null,DR=null,LP=null,SUP=0,MOM=0,AS=0;
 const inBook=()=>bookOn()&&!locked();
+/* hand cards: drag up to play, sideways to scroll, tap to play here, hold for details (opens when you let go).
+   table cards: tap = winner, flick sideways = back to your hand, hold to pick up (then drop on another slot to move it,
+   on another wrestler to trade places, or anywhere outside the card to send it back), hold and let go = details. */
+const HOLD=260;
 document.addEventListener('pointerdown',e=>{if(!inBook()||(e.pointerType==='mouse'&&e.button!==0))return;
  const hc=e.target.closest('#tchand [data-tcw],#tchand .tx');const tc=e.target.closest('.tcs [data-tcon]');if(!hc&&!tc)return;
  const el=hc||tc;const h=document.getElementById('tchand');cancelAnimationFrame(MOM);
  PD={el,id:el.dataset.tcw,x2:el.dataset.tcx,x:e.clientX,y:e.clientY,pid:e.pointerId,hand:!!hc,on:tc?+tc.dataset.tcon:null,sl:h?h.scrollLeft:0,lx:e.clientX,lt:Date.now(),v:0};
- clearTimeout(LP);if(PD.id)LP=setTimeout(()=>{if(!PD)return;const id=PD.id;PD=null;SUP=Date.now();buzz();showW(id)},480)},true);
+ clearTimeout(LP);
+ if(PD.id&&PD.hand)LP=setTimeout(()=>{if(PD){PD.long=true;buzz()}},480);
+ if(PD.id&&!PD.hand)LP=setTimeout(()=>{if(!PD)return;buzz();startDrag({clientX:PD.x,clientY:PD.y},true)},HOLD)},true);
 document.addEventListener('pointermove',e=>{
  if(DR){e.preventDefault();moveDrag(e.clientX,e.clientY);return}
- if(!PD||e.pointerId!==PD.pid)return;const dx=e.clientX-PD.x,dy=e.clientY-PD.y;if(Math.hypot(dx,dy)>8)clearTimeout(LP);
+ if(!PD||e.pointerId!==PD.pid)return;const dx=e.clientX-PD.x,dy=e.clientY-PD.y;if(Math.hypot(dx,dy)>8){clearTimeout(LP);PD.long=false}
  if(PD.hand){const h=document.getElementById('tchand');
   if(PD.scrub){e.preventDefault();if(h)h.scrollLeft=PD.sl-dx;const t=Date.now();PD.v=(e.clientX-PD.lx)/Math.max(1,t-PD.lt);PD.lx=e.clientX;PD.lt=t;return}
   if(dy<-8&&Math.abs(dy)>=Math.abs(dx)*.45){startDrag(e);return}
   if(Math.abs(dx)>8)PD.scrub=true}
- else{if(Math.abs(dx)>14&&Math.abs(dx)>Math.abs(dy))startDrag(e);else if(Math.abs(dy)>12){clearTimeout(LP);PD=null}}},{passive:false});
+ else{if(Math.abs(dx)>14&&Math.abs(dx)>Math.abs(dy)){PD.flick=true;startDrag(e)}else if(Math.abs(dy)>12){clearTimeout(LP);PD=null}}},{passive:false});
+/* once a card is picked up the page must not scroll under the finger (iOS needs this on touchmove) */
+document.addEventListener('touchmove',e=>{if(DR)e.preventDefault()},{passive:false});
 document.addEventListener('pointerup',e=>{clearTimeout(LP);if(DR){endDrag(e.clientX,e.clientY);return}if(!PD)return;const p=PD;PD=null;
  if(p.scrub){SUP=Date.now();let v=p.v*16;const h=document.getElementById('tchand');const step=()=>{if(Math.abs(v)<.4||!h)return;h.scrollLeft-=v;TC.sx=h.scrollLeft;v*=.93;MOM=requestAnimationFrame(step)};MOM=requestAnimationFrame(step);return}
  if(Date.now()-SUP<300)return;SUP=Date.now();
+ if(p.long&&p.id)return showW(p.id);
  if(p.hand)tapHand(p);else crown(p.on,p.id)});
-document.addEventListener('pointercancel',()=>{clearTimeout(LP);PD=null;if(DR){const d=DR;cleanup();if(d.on!=null&&Math.abs(d.lx-d.x)>12){SUP=Date.now();takeOff(d.on,d.id)}else render()}});
+document.addEventListener('pointercancel',()=>{clearTimeout(LP);PD=null;if(DR){const d=DR;cleanup();if(d.on!=null&&d.flick&&Math.abs(d.lx-d.x)>12){SUP=Date.now();takeOff(d.on,d.id)}else render()}});
 document.addEventListener('click',e=>{if(!on())return;if((Date.now()-SUP<350||(typeof DG_SUP!=='undefined'&&Date.now()<DG_SUP))&&e.target.closest&&e.target.closest('#tcdock,.tcs')&&(!e.target.closest('button')||e.target.closest('.tcpull'))){e.stopPropagation();e.preventDefault();return}
  if(!inBook())return;const d=e.target.closest&&e.target.closest('.tcdrop');if(d&&TC.sel){e.stopPropagation();const t=JSON.parse(d.dataset.tct);play(t.s,TC.sel,t);return}
  const s=e.target.closest&&e.target.closest('.tcs');if(s&&!e.target.closest('[data-tcon],button,.tcdrop')){tcAct(+s.dataset.tcs)}},true);
 document.addEventListener('keydown',e=>{if(!inBook()||(e.key!=='Enter'&&e.key!==' '))return;const c=e.target.closest&&e.target.closest('#tchand [data-tcw],#tchand .tx,.tcs [data-tcon]');if(!c)return;e.preventDefault();
  if(c.closest('#tchand'))tapHand({el:c,id:c.dataset.tcw,x2:c.dataset.tcx});else crown(+c.dataset.tcon,c.dataset.tcw)});
-document.addEventListener('contextmenu',e=>{if(on()&&e.target.closest&&e.target.closest('.tkc'))e.preventDefault()});
+document.addEventListener('contextmenu',e=>{if(on()&&e.target.closest&&e.target.closest('.tkc,.tx'))e.preventDefault()});
 function tapHand(p){const i=TC.act;if(p.x2)return applyX(i,p.x2);
  if(TC.sel===p.id){TC.sel=null;return render()}
- const m=cur(i);const t=targets(i,m);if(!t.length)return toast(`${slotLab(i)} is full. Pick another slot to deal for it.`);
+ const m=cur(i);const t=targets(i,m);if(!t.length)return toast(`${slotLab(i)} is full. Drop a card on someone to swap them, or pick another slot.`);
  const d=defTarget(i,m);if(d)return play(i,p.id,d);TC.sel=p.id;render();toast('Pick a space: a partner or a third.')}
-function startDrag(e){const p=PD;PD=null;clearTimeout(LP);const r=p.el.getBoundingClientRect();
- const g=p.el.cloneNode(true);g.classList.add('tcghost');g.classList.remove('sel','deal');g.style.width=r.width+'px';g.style.height=r.height+'px';g.style.left=r.left+'px';g.style.top=r.top+'px';document.body.appendChild(g);
- p.el.style.opacity='.25';if(p.hand&&!p.x2){TC.sel=p.id;document.querySelectorAll('.tcs').forEach(x=>x.classList.add('drag-ok'));document.querySelectorAll('.tcs.act .tcdrop').forEach(x=>x.classList.add('live'))}
- DR=Object.assign(p,{g,ox:p.x-r.left,oy:p.y-r.top,lx:e.clientX,ly:e.clientY,lt:Date.now(),vy:0,vx:0});document.body.classList.add('tcdragging');moveDrag(e.clientX,e.clientY);autoScroll()}
+function startDrag(e,held){const p=PD;PD=null;clearTimeout(LP);if(!p||!document.body.contains(p.el))return;const r=p.el.getBoundingClientRect();
+ const g=p.el.cloneNode(true);g.classList.add('tcghost');g.classList.remove('sel','deal');g.querySelectorAll('.tcw').forEach(x=>x.remove());g.style.width=r.width+'px';g.style.height=r.height+'px';g.style.left=r.left+'px';g.style.top=r.top+'px';document.body.appendChild(g);
+ p.el.style.opacity='.25';if(!p.x2){if(p.hand)TC.sel=p.id;document.querySelectorAll('.tcs').forEach(x=>x.classList.add('drag-ok'));document.querySelectorAll('.tcs.act .tcdrop').forEach(x=>x.classList.add('live'))}
+ DR=Object.assign(p,{g,held:!!held,ox:p.x-r.left,oy:p.y-r.top,lx:e.clientX,ly:e.clientY,lt:Date.now(),vy:0,vx:0});document.body.classList.add('tcdragging');moveDrag(e.clientX,e.clientY);autoScroll()}
 function moveDrag(x,y){const t=Date.now(),dt=Math.max(1,t-DR.lt);DR.vy=(y-DR.ly)/dt;DR.vx=(x-DR.lx)/dt;DR.lx=x;DR.ly=y;DR.lt=t;
  DR.g.style.transform=`translate(${x-DR.ox-parseFloat(DR.g.style.left)}px,${y-DR.oy-parseFloat(DR.g.style.top)}px) rotate(-4deg) scale(1.06)`;clearOver();const h=hit(x,y);if(h)h.classList.add('over')}
-function hit(x,y){const el=document.elementFromPoint(x,y);if(!el)return null;if(DR.x2)return el.closest('.tcs.act');const d=el.closest('.tcdrop');if(d)return d;return el.closest('.tcs,[data-tcpk]')}
-function clearOver(){document.querySelectorAll('.tcs.over,.tcdrop.over,[data-tcpk].over').forEach(x=>x.classList.remove('over'))}
+/* what's under the finger: a card already on the table, an open space, a slot or a slot chip */
+function hit(x,y){const el=document.elementFromPoint(x,y);if(!el)return null;if(DR.x2)return el.closest('.tcs.act');
+ const c=el.closest('.tcs [data-tcon]');if(c&&c!==DR.el&&!(DR.on!=null&&+c.dataset.tcon===DR.on&&c.dataset.tcw===DR.id))return c;
+ const d=el.closest('.tcdrop');if(d)return d;return el.closest('.tcs,[data-tcpk]')}
+function clearOver(){document.querySelectorAll('.tcs.over,.tcdrop.over,[data-tcpk].over,.tcs [data-tcon].over').forEach(x=>x.classList.remove('over'))}
 function cleanup(){cancelAnimationFrame(AS);clearOver();if(DR){DR.g.remove();DR.el.style.opacity=''}DR=null;document.body.classList.remove('tcdragging');document.querySelectorAll('.drag-ok').forEach(x=>x.classList.remove('drag-ok'))}
-function autoScroll(){cancelAnimationFrame(AS);const step=()=>{if(!DR)return;const y=DR.ly;const dock=document.getElementById('tcdock');const top=dock?dock.getBoundingClientRect().top:innerHeight;
- let v=0;if(y<150)v=-Math.min(18,(150-y)/5);else if(DR.vy>.05&&y>top-70&&y<top)v=Math.min(14,(y-(top-70))/4);
+function autoScroll(){cancelAnimationFrame(AS);const step=()=>{if(!DR)return;const y=DR.ly;const dock=document.getElementById('tcdock');const top=dock?dock.getBoundingClientRect().top:innerHeight;const hd=document.querySelector('header.top');const ht=hd?hd.getBoundingClientRect().bottom:0;
+ let v=0;if(y<ht+80)v=-Math.min(18,(ht+80-y)/5);else if((DR.vy>.05||!DR.hand)&&y>top-70&&y<top+40)v=Math.min(14,(y-(top-70))/4);
  if(v){window.scrollBy(0,v);clearOver();const h=hit(DR.lx,DR.ly);if(h)h.classList.add('over')}AS=requestAnimationFrame(step)};AS=requestAnimationFrame(step)}
+/* put one wrestler where another stands (the other goes back to your hand, or trades places if they came from the table) */
+function swapM(i,oldId,newId){const sl=card()[i];const m=clone(cur(i));if(sl.k==='promo'){if(m.a===oldId)m.a=newId;else if(m.b===oldId)m.b=newId}else{m.sides=m.sides.map(s=>s.map(x=>x===oldId?newId:x));if(m.ri&&m.ri.t===oldId)delete m.ri}return m}
+function canJoin(j,id,ignore){const w=W_(id);const sl=card()[j];if(idsOf(j).filter(x=>x!==ignore).includes(id)){toast(`${w.name} is already in that ${sl.k==='promo'?'segment':'match'}.`);return false}
+ if(sl.k==='match'){if(fullIn('p',j).has(id)&&!idsOf(j).includes(id)){toast(`${w.name} can't take another match tonight — ${DD_MAX} is the limit.`);return false}if(card().some(o=>o.k==='xo'&&o.d&&o.d.a===id)){toast(`${w.name} is already in the dream match tonight.`);return false}}
+ else{const other=idsOf(j).find(x=>x!==ignore);if(other&&promoPairBooked(other,id,j)){toast(`${w.name} and ${W_(other).name} already share a promo tonight.`);return false}}
+ return true}
+function moveTable(i,id,j){/* a card leaves slot i for slot j's next open space */
+ const mj=cur(j);const tg=defTarget(j,mj);if(!tg){render();return toast(`${slotLab(j)} is full — drop on someone to swap them.`)}
+ if(!canJoin(j,id)){render();return}
+ const mi=clone(cur(i));const si=card()[i];if(si.k==='promo'){if(mi.a===id){mi.a=mi.b||'';mi.b=''}else if(mi.b===id)mi.b=''}else{mi.sides=mi.sides.map(s=>s.filter(x=>x!==id))}
+ commit(i,mi);TC.act=j;TC.open=true;play(j,id,tg,true);toast(`${W_(id).name} moves to ${slotLab(j)}.`)}
+function tradeTable(i,id,j,other){/* two cards on the table trade places */
+ if(i===j){const m=clone(cur(i));const sl=card()[i];if(sl.k==='promo'){const a=m.a;m.a=m.b;m.b=a}else m.sides=m.sides.map(s=>s.map(x=>x===id?other:x===other?id:x));commit(i,m);buzz();render();return toast(`${W_(id).name} and ${W_(other).name} switch places.`)}
+ if(!canJoin(j,id,other)||!canJoin(i,other,id)){render();return}
+ commit(i,swapM(i,id,other));commit(j,swapM(j,other,id));buzz();TC.dealt=1;render();toast(`${W_(id).name} and ${W_(other).name} trade places.`)}
+function replaceWith(j,other,id,force){/* a card from your hand takes someone's place; they go back to your hand */
+ if(!canJoin(j,id,other)){render();return}
+ if(!force&&card()[j].k==='match'&&usedIn('p',j).has(id)){TC.confirm={i:j,id,tg:{t:'swap',old:other}};TC.sel=null;render();return}
+ commit(j,swapM(j,other,id));TC.act=j;TC.open=true;TC.sel=null;TC.confirm=null;buzz();TC.dealt=1;render();land(j,id);toast(`${W_(id).name} in, ${W_(other).name} back to your hand.`)}
 function endDrag(x,y){const t=hit(x,y);const d=DR;cleanup();SUP=Date.now();
  if(d.x2){if(t||d.vy<-.5)applyX(TC.act,d.x2);else render();return}
- if(d.on!=null){const el=document.elementFromPoint(x,y);const stay=el&&el.closest(`.tcs[data-tcs="${d.on}"]`);if(!stay||Math.abs(d.vx)>.6)takeOff(d.on,d.id);else render();return}
+ const moved=Math.hypot(x-d.x,y-d.y);
+ if(d.on!=null){
+  if(d.held&&moved<12)return showW(d.id);
+  if(t&&t.dataset&&t.dataset.tcon!=null)return tradeTable(d.on,d.id,+t.dataset.tcon,t.dataset.tcw);
+  if(t&&t.classList.contains('tcdrop')){const tg=JSON.parse(t.dataset.tct);if(tg.s!==d.on)return moveTable(d.on,d.id,tg.s)}
+  const j=t?(t.dataset.tcpk!=null?+t.dataset.tcpk:t.dataset.tcs!=null?+t.dataset.tcs:null):null;
+  if(j!=null&&j!==d.on){const sl=card()[j];if(!tableOk(sl)){render();return toast(`${slotLab(j)} has its own editor — tap it to open.`)}return moveTable(d.on,d.id,j)}
+  if(j===d.on&&!(d.flick&&(Math.abs(d.vx)>.4||Math.abs(x-d.x)>90))){render();return}
+  return takeOff(d.on,d.id)}
+ if(t&&t.dataset&&t.dataset.tcon!=null)return replaceWith(+t.dataset.tcon,t.dataset.tcw,d.id);
  if(t&&t.classList.contains('tcdrop')){const tg=JSON.parse(t.dataset.tct);if(tg.s!==TC.act){TC.act=tg.s}play(tg.s,d.id,tg);return}
  const j=t?(t.dataset.tcpk!=null?+t.dataset.tcpk:t.dataset.tcs!=null?+t.dataset.tcs:null):null;
  if(j!=null){const sl=card()[j];if(!tableOk(sl)){TC.sel=null;render();return toast(`${slotLab(j)} has its own editor — tap it to open.`)}
-  if(j!==TC.act){TC.act=j;TC.mode='w';TC.open=true}const m=cur(j);const df=defTarget(j,m);if(df)return play(j,d.id,df);if(targets(j,m).length){TC.sel=d.id;render();return toast('Drop it on + to add a partner or a third.')}TC.sel=null;render();return toast(`${slotLab(j)} is full.`)}
+  if(j!==TC.act){TC.act=j;TC.mode='w';TC.open=true}const m=cur(j);const df=defTarget(j,m);if(df)return play(j,d.id,df);if(targets(j,m).length){TC.sel=d.id;render();return toast('Drop it on + to add a partner or a third.')}TC.sel=null;render();return toast(`${slotLab(j)} is full — drop it on someone to swap them.`)}
  if(d.vy<-.45||(d.y-y)>90){const m=cur(TC.act);const df=defTarget(TC.act,m);if(df)return play(TC.act,d.id,df)}
  TC.sel=null;render()}
 
@@ -416,7 +456,8 @@ html.tcards .tkc{--w:92px;position:relative;flex:none;width:var(--w);aspect-rati
 .tcs.act{box-shadow:inset 0 0 0 2px var(--gold)}.tcs.drag-ok{box-shadow:inset 0 0 0 1px rgba(242,193,78,.45)}.tcs.over{box-shadow:inset 0 0 0 3px var(--gold);background:#1d1a12}
 .tcs .tcnum{background:var(--gold);color:#111;font:900 italic 22px/1 'BC',sans-serif;display:flex;align-items:center;justify-content:center;touch-action:none}.tcs.opt .tcnum{background:var(--gold3)}.tcs.me .tcnum{background:var(--red);color:#fff}
 .tcs .tcin{padding:9px 12px 12px;min-width:0}
-.tcs .tchd{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap}.tcs .tctl{order:3;flex-basis:100%;display:flex;gap:6px;flex-wrap:wrap}.tcs .tcmat.many .tkc{--w:62px}.tcs .tcmat.many .tcdrop{width:62px}.tcs .tcmat.many .tcdrop.mini{width:30px}.tcs .tclb{flex:1;min-width:0;font:800 italic 14px/1.1 'BC',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+.tcs .tchd{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap}.tcs .tctl{order:3;flex-basis:100%;display:flex;gap:6px;flex-wrap:wrap}.tcs .tcmat.many .tkc{--w:62px}.tcs .tcmat.many .tcdrop{width:62px}.tcs .tcmat.many .tcs [data-tcon].over .tcf{box-shadow:inset 0 0 0 3px var(--gold),0 0 0 3px rgba(242,193,78,.35)}.tcs [data-tcon].over{transform:scale(1.05)}
+.tcdrop.mini{width:30px}.tcs .tclb{flex:1;min-width:0;font:800 italic 14px/1.1 'BC',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
 .tcs .tctl .tell{margin:0}.tcs .tcbk{font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px 3px;background:var(--gold);color:#111;clip-path:var(--slant)}.tcs.opt .tcbk{background:#1d1e23;color:var(--gold)}
 .tcs .tcdet{font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px 4px;background:#1d1e23;color:var(--mut);clip-path:var(--slant);border:0;cursor:pointer}
 .tcs .tcsum{font-size:13px;color:var(--mut);margin-top:3px}.tcs .tcsum b{color:var(--text);font-weight:600}
@@ -456,7 +497,7 @@ html.tcards .tkc{--w:92px;position:relative;flex:none;width:var(--w);aspect-rati
 .tccf{margin:0 16px 8px;background:#1d1e23;padding:10px 12px;display:flex;align-items:center;gap:8px;font-size:13px}.tccf span{flex:1}
 html.tcards .tkc.tcghost,.tx.tcghost{position:fixed!important;z-index:200;pointer-events:none;transition:none!important;animation:none!important;margin:0;opacity:.95}html.tcards .tkc.tcghost{--w:92px}.tx.tcghost{box-shadow:inset 0 0 0 2px var(--gold),0 14px 30px rgba(0,0,0,.6)}html.tcards .tkc.tcghost .tcf{box-shadow:inset 0 0 0 2px var(--gold),0 14px 30px rgba(0,0,0,.6)}
 body.tcbody .lvdock{margin-bottom:6px}body.tcbody #toast{bottom:auto;top:calc(76px + env(safe-area-inset-top,0px))}
-body.tcdragging{user-select:none;-webkit-user-select:none}
+body.tcdragging{user-select:none;-webkit-user-select:none}.tcs,.tcdock{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 /* the office line */
 #modal .tcline{position:relative;transition:transform .3s cubic-bezier(.2,.9,.3,1.1),opacity .25s;touch-action:pan-y}
 #modal .sheet.tcb1{box-shadow:0 -7px 0 -3px #23242a,0 -1px 0 0 var(--gold3)}#modal .sheet.tcb2{box-shadow:0 -7px 0 -3px #23242a,0 -13px 0 -6px #1a1b20,0 -1px 0 0 var(--gold3)}
