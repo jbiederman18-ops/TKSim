@@ -150,6 +150,9 @@ function takeOff(i,id){if(locked())return;const sl=card()[i];if(!sl||!tableOk(sl
  if(sl.k==='promo'){if(m.a===id){m.a=m.b||'';m.b=''}else if(m.b===id)m.b='';}
  else{if(sl.d&&typeof promiseOf==='function'&&promiseOf(sl.d))toast('That was a promised match — fans are still expecting it.');m.sides=m.sides.map(s=>s.filter(x=>x!==id));if(m.winner!=null&&!m.sides[m.winner])m.winner=0}
  commit(i,m);TC.mode='w';TC.dealt=1;render();0}
+function pinPick(i,id){if(locked())return;const d=card()[i]&&card()[i].d;if(!d||!pinCands(d).includes(id))return;
+ if(id!==pinOf(d)&&W_(id).own==='p'&&typeof ccOn==='function'&&ccOn(W_(id)))toast(`${W_(id).name} has creative control and won't agree to take the pin.`);
+ d.pin=id;delete d.ev;save();buzz();render()}
 function crownSide(i,si){if(locked()||typeof crownTap!=='function')return;const t0=toast;toast=window.toast=function(m){if(/won't|can't|costs/.test(m))return t0.apply(this,arguments)};try{crownTap(i,si)}finally{toast=window.toast=t0}buzz()}
 function crown(i,id){if(locked())return;const sl=card()[i];const m=sl&&sl.d;
  if(sl&&sl.k==='promo')return showW(id);
@@ -172,7 +175,7 @@ function extras(i){const sl=card()[i];const m=cur(i);const out=[];const ppv=ppvN
   const fitN=k!=='std'&&f.spec.length;return {x:`s:${k}`,k:pr?`Stipulation · ${money(pr)}`:'Stipulation',n:s.n,d:fitN?`Suits ${shortNames(f.spec).replace(/&amp;/g,'&')}.`:f.tough.length&&k!=='std'?`Tough for ${shortNames(f.tough).replace(/&amp;/g,'&')}.`:s.d.split('.')[0]+'.',fit:!!fitN,on:stipKey(d)===k,o:fitN?2:k==='std'?1:f.tough.length?-1:0}});
  stips.sort((a,b)=>(b.on-a.on)||(b.o-a.o));out.push(...stips);
  vac.forEach(T=>out.push({x:`t:${T.id}`,k:'Vacant title',n:`Crown the first ${T.n} champion`,d:d.title===T.id?'Tap to make it non-title.':'The winner takes the belt.',fit:false,on:d.title===T.id}));
- const pc=pinCands(d);if(pc.length>=2){const cp=pinOf(d);pc.slice().sort((a,b)=>S.w[a].pop-S.w[b].pop).forEach(id=>{const [c,t]=pinRub(d,id);out.push({x:`n:${id}`,k:d.type==='rumble'?'Eliminated last':'Takes the pin',n:S.w[id].name,d:t+'.',fit:c==='good',on:cp===id})})}
+
  out.push({x:'e',k:'Everything else',n:'Finish & run-ins',d:'Open the full match editor.',fit:false,on:false});
  return out}
 function applyX(i,x){if(locked())return;const sl=card()[i];const [k,v]=[x.slice(0,1),x.slice(2)];
@@ -194,17 +197,21 @@ function slotHtml(i){const c=card(),sl=c[i];let act=i===TC.act&&!locked();const 
  const tg=act&&TC.open&&TC.mode==='w'?targets(i,m):[];const live=act&&TC.sel&&TC.mode==='w';
  const drop=(t,label,cls)=>`<div class="tcdrop ${cls||''} ${live?'live':''}" data-tct='${JSON.stringify(Object.assign({s:i},t))}'>${label}</div>`;
  const pr=!promo&&sl.d&&typeof promiseOf==='function'?promiseOf(sl.d):null;
- const onC=(id)=>{if(!W_(id))return '';const d=sl.d;let mark='';if(d&&!promo&&!d.nc){const si=d.sides.findIndex(x=>x.includes(id));const lead=si>=0&&d.sides[si][0]===id;const ok=typeof cwOk==='function'&&cwOk(d)&&!locked();
-   if(si===d.winner)mark=lead?`<span class="tcw">👑 Wins</span>`:'';
-   else{const p=pinCands(d).length>=2?pinOf(d):null;mark=(p===id?'<span class="tcw pin">Takes the pin</span>':'')+(lead&&ok?`<button class="tccr" data-tccr="${i}:${si}" aria-label="Make ${esc(sideName(d.sides[si]))} the winner">👑</button>`:'')}}
-  return tcCard(W_(id),{attr:`data-tcon="${i}"`,mark})};
+ const fin=!promo&&sl.d&&!sl.d.nc&&typeof cwOk==='function'&&cwOk(sl.d);const pins=fin?pinCands(sl.d):[];const pinNow=pins.length>=2?pinOf(sl.d):null;const can=!locked();
+ const onC=(id)=>{if(!W_(id))return '';const d=sl.d;let cls='';if(fin){const si=d.sides.findIndex(x=>x.includes(id));if(si===d.winner)cls='win';else if(pinNow===id)cls='pinned'}
+  const c=tcCard(W_(id),{attr:`data-tcon="${i}"`,cls});
+  /* who takes the pin: a toggle under each card on the losing side(s), when there's more than one to choose from */
+  if(pinNow&&pins.includes(id))return `<div class="tccol">${c}<button class="tcpin ${pinNow===id?'on':''}" ${can?'':'disabled'} data-tcpin="${i}|${id}" aria-pressed="${pinNow===id}" aria-label="${esc(W_(id).name)} takes the pin">${pinNow===id?'Takes the pin':'Pin'}</button></div>`;
+  return c};
  let mat='',many=false;
  if(promo){mat=(m.a?`<div class="tcside">${onC(m.a)}</div>`:act?`<div class="tcside">${drop({t:'a'},'On the mic')}</div>`:'')
   +((m.b||(act&&m.a))?`<div class="tcvs">&amp;</div><div class="tcside">${m.b?onC(m.b):drop({t:'b'},PT[m.type]&&PT[m.type].b==='req'?'Opponent':'Second (optional)')}</div>`:'')}
  else if((act&&TC.open)||idsOf(i,m).length){
   if(idsOf(i,m).length>3)many=true;const act0=act;act=act&&TC.open;
   mat=m.sides.map((s,j)=>{const ps=s.map(onC).join('');const em=!s.length&&act?drop({t:'side',i:j},j===0?'Play a card':'Opponent'):'';
-   const pt=tg.find(t=>t.t==='partner'&&t.i===j)?drop({t:'partner',i:j},'+','mini'):'';return `<div class="tcside">${ps}${em}${pt}</div>`}).join('<div class="tcvs">vs</div>')
+   const pt=tg.find(t=>t.t==='partner'&&t.i===j)?drop({t:'partner',i:j},'+','mini'):'';
+   if(!fin||!s.length)return `<div class="tcside">${ps}${em}${pt}</div>`;const wn=sl.d.winner===j;
+   return `<div class="tcsg"><div class="tcside">${ps}${em}${pt}</div><button class="tcwin ${wn?'on':''}" ${can&&!wn?'':'disabled'} data-tccr="${i}:${j}" aria-pressed="${wn}" aria-label="${wn?esc(sideName(s))+' wins':'Make '+esc(sideName(s))+' the winner'}"><b>👑</b>${wn?'Wins':'Win'}</button></div>`}).join('<div class="tcvs">vs</div>')
    +(tg.find(t=>t.t==='third')?`<div class="tcvs">vs</div><div class="tcside">${drop({t:'third'},'+ Third')}</div>`:'');act=act0}
  const d=sl.d;let mods='';
  if(promo&&m.a&&PT[m.type])mods=`<span class="tcm g">${esc(PT[m.type].n)}</span>`;
@@ -275,7 +282,7 @@ const inBook=()=>bookOn()&&!locked();
    on another wrestler to trade places, or anywhere outside the card to send it back), hold and let go = details. */
 const HOLD=260;
 document.addEventListener('pointerdown',e=>{if(!inBook()||(e.pointerType==='mouse'&&e.button!==0))return;
- if(e.target.closest('.tccr'))return;const hc=e.target.closest('#tchand [data-tcw],#tchand .tx');const tc=e.target.closest('.tcs [data-tcon]');if(!hc&&!tc)return;
+ if(e.target.closest('.tccr,.tcwin,.tcpin'))return;const hc=e.target.closest('#tchand [data-tcw],#tchand .tx');const tc=e.target.closest('.tcs [data-tcon]');if(!hc&&!tc)return;
  const el=hc||tc;const h=document.getElementById('tchand');cancelAnimationFrame(MOM);
  PD={el,id:el.dataset.tcw,x2:el.dataset.tcx,x:e.clientX,y:e.clientY,pid:e.pointerId,hand:!!hc,on:tc?+tc.dataset.tcon:null,sl:h?h.scrollLeft:0,lx:e.clientX,lt:Date.now(),v:0};
  clearTimeout(LP);
@@ -298,7 +305,8 @@ document.addEventListener('pointerup',e=>{clearTimeout(LP);if(DR){endDrag(e.clie
  if(p.hand)tapHand(p);else showW(p.id)});
 document.addEventListener('pointercancel',()=>{clearTimeout(LP);PD=null;if(DR){const d=DR;cleanup();if(d.on!=null&&d.flick&&Math.abs(d.lx-d.x)>12){SUP=Date.now();takeOff(d.on,d.id)}else render()}});
 document.addEventListener('click',e=>{if(!on())return;if((Date.now()-SUP<350||(typeof DG_SUP!=='undefined'&&Date.now()<DG_SUP))&&e.target.closest&&e.target.closest('#tcdock,.tcs')&&(!e.target.closest('button')||e.target.closest('.tcpull'))){e.stopPropagation();e.preventDefault();return}
- if(!inBook())return;const cr=e.target.closest&&e.target.closest('[data-tccr]');if(cr){e.stopPropagation();e.preventDefault();const [ci,si]=cr.dataset.tccr.split(':').map(Number);crownSide(ci,si);return}
+ if(!inBook())return;const cr=e.target.closest&&e.target.closest('[data-tccr]');if(cr){e.stopPropagation();e.preventDefault();if(cr.disabled)return;const [ci,si]=cr.dataset.tccr.split(':').map(Number);crownSide(ci,si);return}
+ const pn=e.target.closest&&e.target.closest('[data-tcpin]');if(pn){e.stopPropagation();e.preventDefault();if(pn.disabled)return;const [ci,id]=pn.dataset.tcpin.split('|');pinPick(+ci,id);return}
  const d=e.target.closest&&e.target.closest('.tcdrop');if(d&&TC.sel){e.stopPropagation();const t=JSON.parse(d.dataset.tct);play(t.s,TC.sel,t);return}
  const s=e.target.closest&&e.target.closest('.tcs');if(s&&!e.target.closest('[data-tcon],button,.tcdrop')){tcAct(+s.dataset.tcs)}},true);
 document.addEventListener('keydown',e=>{if(!inBook()||(e.key!=='Enter'&&e.key!==' '))return;const c=e.target.closest&&e.target.closest('#tchand [data-tcw],#tchand .tx,.tcs [data-tcon]');if(!c)return;e.preventDefault();
@@ -456,6 +464,15 @@ html.tcards .tkc{--w:92px;position:relative;flex:none;width:var(--w);aspect-rati
 .tkc .tccr{position:absolute;left:50%;top:-16px;z-index:6;transform:translateX(-50%);width:38px;height:28px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;background:#141417;border:0;box-shadow:inset 0 0 0 1.5px var(--gold3);clip-path:var(--slant);cursor:pointer;filter:grayscale(.85) brightness(1.1);opacity:.9;touch-action:manipulation}
 .tkc .tccr:hover,.tkc .tccr:focus-visible{filter:none;opacity:1;box-shadow:inset 0 0 0 2px var(--gold)}.tkc .tccr:active{transform:translateX(-50%) scale(.92)}
 .tkc .tcw.pin+.tccr{top:12px}
+.tcs .tcsg{display:flex;flex-direction:column;gap:6px;align-items:stretch}.tcs .tcsg .tcside{justify-content:center}
+.tcs .tccol{display:flex;flex-direction:column;gap:5px}
+.tcwin{display:flex;align-items:center;justify-content:center;gap:6px;min-height:30px;padding:0 10px;font:900 italic 13px/1 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;background:#141417;color:var(--mut);border:0;box-shadow:inset 0 0 0 1.5px #3d3e46;clip-path:var(--slant);cursor:pointer;touch-action:manipulation}
+.tcwin b{font-size:15px;filter:grayscale(1) brightness(1.2);opacity:.75}.tcwin:not(.on):active{transform:scale(.96)}.tcwin:not(.on):hover,.tcwin:not(.on):focus-visible{color:var(--gold);box-shadow:inset 0 0 0 1.5px var(--gold)}
+.tcwin.on{background:var(--gold);color:#111;box-shadow:none;cursor:default}.tcwin.on b{filter:none;opacity:1}.tcwin:disabled:not(.on){opacity:.5;cursor:default}
+.tcpin{min-height:24px;padding:0 6px;font:800 italic 11px/1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;background:#141417;color:var(--mut);border:0;box-shadow:inset 0 0 0 1px #3d3e46;clip-path:var(--slant);cursor:pointer;white-space:nowrap;touch-action:manipulation}
+.tcpin.on{background:var(--red);color:#fff;box-shadow:none}.tcpin:not(.on):hover,.tcpin:not(.on):focus-visible{color:var(--text);box-shadow:inset 0 0 0 1px var(--bad)}
+.tkc.win .tcf{box-shadow:inset 0 0 0 2px var(--gold),0 0 0 2px rgba(242,193,78,.25),0 6px 14px rgba(0,0,0,.55)}
+.tkc.pinned .tcf{box-shadow:inset 0 0 0 2px var(--red),0 6px 14px rgba(0,0,0,.55)}.tkc.pinned .tcp,.tkc.pinned .tcg{filter:saturate(.5) brightness(.8)}
 .tkc:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
 /* the table */
 .tcrord{display:flex;flex-direction:column;gap:10px}
