@@ -70,11 +70,13 @@ window.tcCard=tcCard;
 /* ---------------- dealing a hand ---------------- */
 function defenseDue(id){return Object.values(S.titles||{}).some(t=>t.holders.includes(id)&&t.last!=null&&S.week-t.last>=4&&!card().some(sl=>sl&&sl.k==='match'&&sl.d&&sl.d.title===t.id))}
 function promisedWith(id){let l=[];try{l=unmetPromises(card())}catch(e){}return l.filter(pr=>pr.a===id||pr.b===id).map(pr=>pr.a===id?pr.b:pr.a)}
+function askTxt(am,id){const a=am.get(id);let t=String((a&&a.t)||'').replace(/^(Asking|Contract|Promised|Owed):\s*/,(m0,k)=>k==='Asking'?'':k+': ').replace(/\s+by week \d+/i,'').replace(/\s+within \d+ weeks?/i,'').trim();
+ if(!t)return 'Has a request';t=t.charAt(0).toUpperCase()+t.slice(1);return t.length>42?t.slice(0,40).replace(/\s+\S*$/,'')+'…':t}
 function askMap(){try{return typeof attnAskMap==='function'?attnAskMap():new Map()}catch(e){return new Map()}}
 function why(w,anchor,i,am,tg){const sl=card()[i],promo=sl.k==='promo';
  if(!anchor){
   if(!promo&&promisedWith(w.id).length)return ['Promised','must',90];
-  if(am.has(w.id))return ['Asked for this','must',80];
+  if(am.has(w.id))return [askTxt(am,w.id),'must',80];
   if(!promo&&defenseDue(w.id))return ['Defense due','must',75];
   const f=hotFeud(w);if(f&&f.h>=20&&f.o&&f.o.own==='p'&&!f.o.inj)return [`Feud · ${ln(f.o)}`,'feud',40+f.h/4];
   if(promo&&w.mic>=85)return ['Great talker','hot',30];
@@ -90,7 +92,7 @@ function why(w,anchor,i,am,tg){const sl=card()[i],promo=sl.k==='promo';
  if(!met&&c>=10)return ['Electric?','hot',20+c];
  if(promo&&w.mic>=85)return ['Great talker','hot',24];
  if(A.pop-w.pop>=15&&w.pop>=45&&tg!=='partner')return ['Rub','rub',14];
- if(am.has(w.id))return ['Asked for this','must',26];
+ if(am.has(w.id))return [askTxt(am,w.id),'must',26];
  if(A.al!==w.al&&tg!=='partner')return [met?'Face v heel':'Never met','',8];
  return [met?'':'Never met','',0]}
 function hand(i){const sl=card()[i];if(!sl)return [];const m=cur(i);const here=idsOf(i,m);const promo=sl.k==='promo';
@@ -377,7 +379,9 @@ function endDrag(x,y){const t=hit(x,y);const d=DR;cleanup();SUP=Date.now();
  document.addEventListener('pointercancel',()=>{y0=null},true)}
 /* ---------------- hooks ---------------- */
 if(typeof go==='function'){const g0=go;go=window.go=function(t){if(t==='book'&&tab!=='book'){TC.open=false;TC.sel=null}return g0.apply(this,arguments)}}
-const r0=render;render=window.render=function(){const o=r0.apply(this,arguments);try{decorate()}catch(e){console.error('cards',e)}return o};
+function attnDown(){if(!S||S.phase!=='season'||typeof tab==='undefined'||tab!=='book')return;const m=document.querySelector('#app main');if(!m)return;const a=m.querySelector('.card.attn');if(!a)return;
+ const anchor=m.querySelector('.prodstrip')||m.querySelector('.lvdock')||m.querySelector('.btn.live');if(anchor&&anchor.parentElement)anchor.parentElement.insertBefore(a,anchor)}
+const r0=render;render=window.render=function(){const o=r0.apply(this,arguments);try{attnDown()}catch(e){}try{decorate()}catch(e){console.error('cards',e)}return o};
 /* Settings: a card to switch the table off */
 if(typeof menuView==='function'){const mv=menuView;menuView=window.menuView=function(){const h=mv.apply(this,arguments);
  const cd=`<div class="card"><div class="row sb"><div class="h small" style="margin:0">🃏 Card table</div><div class="chips" style="margin:0"><button class="chip ${on()?'on':''}" onclick="cardsSet(true)">On</button><button class="chip ${on()?'':'on'}" onclick="cardsSet(false)">Off</button></div></div>
@@ -451,7 +455,7 @@ html.tcards .tkc{--w:92px;position:relative;flex:none;width:var(--w);aspect-rati
 .tkc .tcp{position:absolute;inset:0}.tkc .tcp img,.tkc .tcp svg{width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block}
 .tkc .tcf.ph::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.45),transparent 28%,transparent 48%,rgba(0,0,0,.92) 80%)}
 .tkc .tco{position:absolute;left:9px;top:6px;z-index:3;font:900 italic calc(var(--w)*.21)/1 'BC',Impact,sans-serif;color:#fff;text-shadow:0 1px 0 #000,0 0 8px rgba(0,0,0,.6)}
-.tkc .tct{position:absolute;left:5px;top:calc(var(--w)*.3);z-index:3;max-width:calc(100% - 5px);font:800 italic calc(var(--w)*.105)/1.2 'BC',sans-serif;letter-spacing:.05em;text-transform:uppercase;padding:2px 10px 2px 6px;background:#1e1e22;color:var(--text);clip-path:polygon(0 0,100% 0,calc(100% - 6px) 100%,0 100%);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tkc .tct{position:absolute;left:5px;top:calc(var(--w)*.3);z-index:3;max-width:calc(100% - 5px);font:800 italic calc(var(--w)*.105)/1.15 'BC',sans-serif;letter-spacing:.04em;text-transform:uppercase;padding:2px 10px 2px 6px;background:#1e1e22;color:var(--text);clip-path:polygon(0 0,100% 0,calc(100% - 6px) 100%,0 100%);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
 .tkc .tct.must{background:var(--gold);color:#111}.tkc .tct.feud{background:var(--red);color:#fff}.tkc .tct.hot{background:#22382a;color:var(--good)}.tkc .tct.rub{background:#2a2a40;color:#b9b6ff}.tkc .tct.gold{background:#2c2410;color:var(--gold2)}
 .tkc .tcb{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:0 5px 6px 9px}
 .tkc .tcn{display:block;font:900 italic calc(var(--w)*.15)/.92 'BC',sans-serif;text-transform:uppercase;letter-spacing:.005em;text-wrap:balance;overflow-wrap:anywhere;text-shadow:0 1px 0 #000}.tkc .tcn.ln{font-size:calc(var(--w)*.135)}
