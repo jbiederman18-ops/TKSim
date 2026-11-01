@@ -62,7 +62,7 @@ function promoOk(p){return !!(p.a&&PT[p.type]&&(PT[p.type].b!=='req'||p.b))}
 function condOf(w){if(w.inj)return ['Hurt','b'];const sw=staWord(sta(w));if(sw!=='Fresh')return [sw,sw==='Tired'?'t':'b'];
  if(w.own==='p'&&typeof moodWord==='function'&&w.mor<50)return [moodWord(w.mor)[1],w.mor<35?'b':'t'];return ['Fresh','']}
 function tcCard(w,o){o=o||{};const [cw,cc]=condOf(w);const t=titlesOf(w.id)[0];const worn=!o.noWear&&(sta(w)<100-FAT_OK||w.inj);
- const cls=['tc',w.al==='f'?'fc':'hl',t?'ch':'',worn?'worn':'',o.used?'used':'',o.cls||''].join(' ');
+ const cls=['tkc',w.al==='f'?'fc':'hl',t?'ch':'',worn?'worn':'',o.used?'used':'',o.cls||''].join(' ');
  return `<div class="${cls}" data-tcw="${w.id}" ${o.attr||''} tabindex="0" role="button" aria-label="${esc(w.name)}${t?', '+esc(t.n)+' champion':''}, ${cw}${o.tab?', '+esc(o.tab):''}">
  <div class="tcf"><div class="tcp">${portrait(w)}</div><span class="tco">${ovr(w)}</span>${o.tab?`<span class="tct ${o.tabc||''}">${esc(o.tab)}</span>`:''}<div class="tcb"><b class="tcn${w.name.length>13?' ln':''}">${esc(w.name)}</b><span class="tcc ${cc}">${esc(o.cond||cw)}</span>${t?`<i class="tcbelt">${esc(t.n)}</i>`:''}</div></div>${o.mark||''}</div>`}
 window.tcCard=tcCard;
@@ -235,6 +235,7 @@ function decorate(){if(!bookOn())return;sync();const app=document.getElementById
  rord.classList.add('tcrord');if(lk)rord.classList.add('tclock');
  const hd=rord.previousElementSibling;if(hd&&/running order/i.test(hd.textContent))hd.innerHTML=`<div class="h small" style="margin:0">Tonight's card</div><span class="row" style="gap:6px"><button class="mini" onclick="reorderOpen()">Running order</button></span>`;
  if(!lk&&TC.act!=null){const main=app.querySelector('main');const old=main.querySelector('#tcdock');if(old)old.remove();main.insertAdjacentHTML('beforeend',dockHtml());
+  const pk=document.querySelector('.tcpk.on');if(pk&&pk.scrollIntoView)try{pk.scrollIntoView({inline:'nearest',block:'nearest'})}catch(e){}
   const h=document.getElementById('tchand');if(h){h.scrollLeft=TC.dealt?0:TC.sx;h.addEventListener('scroll',()=>{TC.sx=h.scrollLeft},{passive:true})}TC.dealt=0;
   document.body.classList.add('tcbody')}
  else document.body.classList.remove('tcbody')}
@@ -282,7 +283,7 @@ document.addEventListener('click',e=>{if(!on())return;if((Date.now()-SUP<350||(t
  const s=e.target.closest&&e.target.closest('.tcs');if(s&&!e.target.closest('[data-tcon],button,.tcdrop')){tcAct(+s.dataset.tcs)}},true);
 document.addEventListener('keydown',e=>{if(!inBook()||(e.key!=='Enter'&&e.key!==' '))return;const c=e.target.closest&&e.target.closest('#tchand [data-tcw],#tchand .tx,.tcs [data-tcon]');if(!c)return;e.preventDefault();
  if(c.closest('#tchand'))tapHand({el:c,id:c.dataset.tcw,x2:c.dataset.tcx});else crown(+c.dataset.tcon,c.dataset.tcw)});
-document.addEventListener('contextmenu',e=>{if(on()&&e.target.closest&&e.target.closest('.tc'))e.preventDefault()});
+document.addEventListener('contextmenu',e=>{if(on()&&e.target.closest&&e.target.closest('.tkc'))e.preventDefault()});
 function tapHand(p){const i=TC.act;if(p.x2)return applyX(i,p.x2);
  if(TC.sel===p.id){TC.sel=null;return render()}
  const m=cur(i);const t=targets(i,m);if(!t.length)return toast(`${slotLab(i)} is full. Pick another slot to deal for it.`);
@@ -335,7 +336,7 @@ function lineDeck(){if(!on())return;const m=document.querySelector('#modal .sbod
   m.querySelectorAll(':scope>.h.mhd, :scope>.duo').forEach(x=>x.style.display='none')}
  else if(cu&&cu.k==='tape'){const nmEl=m.querySelector('.brow b, .scene b');const nm=nmEl?nmEl.textContent.replace(/^[^A-Za-z]+/,'').trim():'';
   const hd=document.createElement('div');hd.className='tclh';
-  hd.innerHTML=`<div class="tclc"><div class="tc fc tcdown" role="button" tabindex="0" aria-label="Watch the tape"><div class="tcf"><div class="tcp"><svg viewBox="0 0 120 160" preserveAspectRatio="xMidYMid slice"><text x="60" y="64" text-anchor="middle" font-family="Impact,Arial Black,sans-serif" font-size="60" fill="#f3d77a" fill-opacity=".2">${esc(nm.split(' ').map(x=>x[0]).join('').slice(0,2))}</text></svg></div><span class="tct must">Prospect</span><div class="tcb"><b class="tcn">${esc(nm)}</b><span class="tcc">On tape</span></div></div><div class="tcback">TK<small>Tap to watch</small></div></div></div><div class="tclt"><span class="tclk">A tape on your desk</span><b>${nm?'Someone sent a tape':'A tape landed'}</b></div>`;
+  hd.innerHTML=`<div class="tclc"><div class="tkc fc tcdown" role="button" tabindex="0" aria-label="Watch the tape"><div class="tcf"><div class="tcp"><svg viewBox="0 0 120 160" preserveAspectRatio="xMidYMid slice"><text x="60" y="64" text-anchor="middle" font-family="Impact,Arial Black,sans-serif" font-size="60" fill="#f3d77a" fill-opacity=".2">${esc(nm.split(' ').map(x=>x[0]).join('').slice(0,2))}</text></svg></div><span class="tct must">Prospect</span><div class="tcb"><b class="tcn">${esc(nm)}</b><span class="tcc">On tape</span></div></div><div class="tcback">TK<small>Tap to watch</small></div></div></div><div class="tclt"><span class="tclk">A tape on your desk</span><b>${nm?'Someone sent a tape':'A tape landed'}</b></div>`;
   const k=m.querySelector('.ibx-k');const q=m.querySelector('.ibx-q');(q||k).after(hd);m.querySelectorAll(':scope>.h.mhd').forEach(x=>x.style.display='none');
   const c=hd.querySelector('.tcdown');const flip=()=>{if(c.classList.contains('up'))return;c.classList.add('up');buzz();const b=hd.querySelector('.tclt b');if(b&&nm)b.textContent=nm};c.addEventListener('click',flip);c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}})}
  /* the rest of the line: face-down cards */
@@ -376,34 +377,34 @@ if(typeof tvWeek==='function'){const tw=tvWeek;tvWeek=window.tvWeek=function(){l
 
 /* ---------------- styles ---------------- */
 const css=document.createElement('style');css.textContent=`
-html.tcards .tc{--w:92px;position:relative;flex:none;width:var(--w);aspect-ratio:3/4;max-width:100%;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:transform .3s cubic-bezier(.2,.9,.3,1.2),opacity .2s;cursor:pointer}
-.tc .tcf{position:absolute;inset:0;overflow:hidden;background:#0c0c0e url(card-bg.jpg) center/cover;clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));box-shadow:inset 0 0 0 1px #3a3c44}
-.tc .tcf::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;z-index:3;background:var(--face)}.tc.hl .tcf::before{background:var(--heel)}
-.tc.ch .tcf{box-shadow:inset 0 0 0 2px #f1d27a,inset 0 0 18px rgba(246,221,142,.3)}
-.tc .tcp{position:absolute;inset:0}.tc .tcp img,.tc .tcp svg{width:100%;height:100%;object-fit:cover;display:block}
-.tc .tco{position:absolute;top:4px;left:7px;z-index:3;background:#000;color:var(--gold2);font:900 italic calc(var(--w)*.17)/1 'BC',Impact,sans-serif;padding:2px 6px 1px 4px;clip-path:var(--slant)}
-.tc .tct{position:absolute;left:4px;top:calc(var(--w)*.28);z-index:3;max-width:calc(100% - 4px);font:800 italic calc(var(--w)*.105)/1.15 'BC',sans-serif;letter-spacing:.05em;text-transform:uppercase;padding:2px 9px 1px 5px;background:#1d1e23;color:var(--text);clip-path:polygon(0 0,100% 0,calc(100% - 6px) 100%,0 100%);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tc .tct.must{background:var(--gold);color:#111}.tc .tct.feud{background:var(--red);color:#fff}.tc .tct.hot{background:#1d3324;color:var(--good)}.tc .tct.rub{background:#26264a;color:#c3c0ff}.tc .tct.gold{background:#2c2410;color:var(--gold2)}
-.tc .tcb{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:22px 5px 5px 8px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.86) 40%,#000)}
-.tc .tcn{display:block;font:800 italic calc(var(--w)*.15)/.95 'BC',sans-serif;text-transform:uppercase;letter-spacing:.01em;overflow-wrap:anywhere}.tc .tcn.ln{font-size:calc(var(--w)*.13)}
-.tc .tcc{display:block;margin-top:2px;font:700 calc(var(--w)*.1)/1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--good)}.tc .tcc.t{color:var(--gold)}.tc .tcc.b{color:var(--bad)}
-.tc .tcbelt{display:block;margin:3px -5px -5px -8px;padding:2px 6px;font:900 italic calc(var(--w)*.095)/1.1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#140f02;background:linear-gradient(90deg,var(--gold3),var(--gold),var(--gold3));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tc.worn .tcp{filter:saturate(.3) brightness(.7)}.tc.worn .tcf::after{content:"";position:absolute;inset:0;z-index:1;background:repeating-linear-gradient(115deg,transparent 0 9px,rgba(255,255,255,.04) 9px 10px)}
-.tc.used .tcf::after{content:"ON CARD";position:absolute;left:50%;top:46%;z-index:4;transform:translate(-50%,-50%) rotate(-14deg);font:900 italic calc(var(--w)*.15)/1 'BC',sans-serif;letter-spacing:.06em;color:var(--gold);border:2px solid var(--gold);padding:2px 6px;background:rgba(0,0,0,.65);white-space:nowrap}
-.tc .tcw{position:absolute;left:50%;top:-10px;z-index:5;transform:translateX(-50%);font:900 italic 11px/1 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;background:var(--gold);color:#111;padding:3px 9px 2px;clip-path:var(--slant);white-space:nowrap}.tc .tcw.pin{background:#1d1e23;color:var(--bad);box-shadow:inset 0 0 0 1px var(--bad)}
-.tc:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
+html.tcards .tkc{--w:92px;position:relative;flex:none;width:var(--w);aspect-ratio:3/4;max-width:100%;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:transform .3s cubic-bezier(.2,.9,.3,1.2),opacity .2s;cursor:pointer}
+.tkc .tcf{position:absolute;inset:0;overflow:hidden;background:#0c0c0e url(card-bg.jpg) center/cover;clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));box-shadow:inset 0 0 0 1px #3a3c44}
+.tkc .tcf::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;z-index:3;background:var(--face)}.tkc.hl .tcf::before{background:var(--heel)}
+.tkc.ch .tcf{box-shadow:inset 0 0 0 2px #f1d27a,inset 0 0 18px rgba(246,221,142,.3)}
+.tkc .tcp{position:absolute;inset:0}.tkc .tcp img,.tkc .tcp svg{width:100%;height:100%;object-fit:cover;display:block}
+.tkc .tco{position:absolute;top:4px;left:7px;z-index:3;background:#000;color:var(--gold2);font:900 italic calc(var(--w)*.17)/1 'BC',Impact,sans-serif;padding:2px 6px 1px 4px;clip-path:var(--slant)}
+.tkc .tct{position:absolute;left:4px;top:calc(var(--w)*.28);z-index:3;max-width:calc(100% - 4px);font:800 italic calc(var(--w)*.105)/1.15 'BC',sans-serif;letter-spacing:.05em;text-transform:uppercase;padding:2px 9px 1px 5px;background:#1d1e23;color:var(--text);clip-path:polygon(0 0,100% 0,calc(100% - 6px) 100%,0 100%);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tkc .tct.must{background:var(--gold);color:#111}.tkc .tct.feud{background:var(--red);color:#fff}.tkc .tct.hot{background:#1d3324;color:var(--good)}.tkc .tct.rub{background:#26264a;color:#c3c0ff}.tkc .tct.gold{background:#2c2410;color:var(--gold2)}
+.tkc .tcb{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:22px 5px 5px 8px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.86) 40%,#000)}
+.tkc .tcn{display:block;font:800 italic calc(var(--w)*.15)/.95 'BC',sans-serif;text-transform:uppercase;letter-spacing:.01em;overflow-wrap:anywhere}.tkc .tcn.ln{font-size:calc(var(--w)*.13)}
+.tkc .tcc{display:block;margin-top:2px;font:700 calc(var(--w)*.1)/1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--good)}.tkc .tcc.t{color:var(--gold)}.tkc .tcc.b{color:var(--bad)}
+.tkc .tcbelt{display:block;margin:3px -5px -5px -8px;padding:2px 6px;font:900 italic calc(var(--w)*.095)/1.1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#140f02;background:linear-gradient(90deg,var(--gold3),var(--gold),var(--gold3));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tkc.worn .tcp{filter:saturate(.3) brightness(.7)}.tkc.worn .tcf::after{content:"";position:absolute;inset:0;z-index:1;background:repeating-linear-gradient(115deg,transparent 0 9px,rgba(255,255,255,.04) 9px 10px)}
+.tkc.used .tcf::after{content:"ON CARD";position:absolute;left:50%;top:46%;z-index:4;transform:translate(-50%,-50%) rotate(-14deg);font:900 italic calc(var(--w)*.15)/1 'BC',sans-serif;letter-spacing:.06em;color:var(--gold);border:2px solid var(--gold);padding:2px 6px;background:rgba(0,0,0,.65);white-space:nowrap}
+.tkc .tcw{position:absolute;left:50%;top:-10px;z-index:5;transform:translateX(-50%);font:900 italic 11px/1 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;background:var(--gold);color:#111;padding:3px 9px 2px;clip-path:var(--slant);white-space:nowrap}.tkc .tcw.pin{background:#1d1e23;color:var(--bad);box-shadow:inset 0 0 0 1px var(--bad)}
+.tkc:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
 /* the table */
 .tcrord{display:flex;flex-direction:column;gap:10px}
 .tcs{position:relative;display:grid;grid-template-columns:30px 1fr;background:#141417;box-shadow:inset 0 0 0 1px var(--line);cursor:pointer;transition:box-shadow .2s,background .2s}
 .tcs.act{box-shadow:inset 0 0 0 2px var(--gold)}.tcs.drag-ok{box-shadow:inset 0 0 0 1px rgba(242,193,78,.45)}.tcs.over{box-shadow:inset 0 0 0 3px var(--gold);background:#1d1a12}
 .tcs .tcnum{background:var(--gold);color:#111;font:900 italic 22px/1 'BC',sans-serif;display:flex;align-items:center;justify-content:center;touch-action:none}.tcs.opt .tcnum{background:var(--gold3)}.tcs.me .tcnum{background:var(--red);color:#fff}
 .tcs .tcin{padding:9px 12px 12px;min-width:0}
-.tcs .tchd{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap}.tcs .tctl{order:3;flex-basis:100%;display:flex;gap:6px;flex-wrap:wrap}.tcs .tcmat.many .tc{--w:62px}.tcs .tcmat.many .tcdrop{width:62px}.tcs .tcmat.many .tcdrop.mini{width:30px}.tcs .tclb{flex:1;min-width:0;font:800 italic 14px/1.1 'BC',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+.tcs .tchd{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap}.tcs .tctl{order:3;flex-basis:100%;display:flex;gap:6px;flex-wrap:wrap}.tcs .tcmat.many .tkc{--w:62px}.tcs .tcmat.many .tcdrop{width:62px}.tcs .tcmat.many .tcdrop.mini{width:30px}.tcs .tclb{flex:1;min-width:0;font:800 italic 14px/1.1 'BC',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
 .tcs .tctl .tell{margin:0}.tcs .tcbk{font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px 3px;background:var(--gold);color:#111;clip-path:var(--slant)}.tcs.opt .tcbk{background:#1d1e23;color:var(--gold)}
 .tcs .tcdet{font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px 4px;background:#1d1e23;color:var(--mut);clip-path:var(--slant);border:0;cursor:pointer}
 .tcs .tcsum{font-size:13px;color:var(--mut);margin-top:3px}.tcs .tcsum b{color:var(--text);font-weight:600}
 .tcs .tcmat{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;row-gap:16px;margin-top:14px}
-.tcs .tcside{display:flex;gap:4px;align-items:stretch;position:relative}.tcs .tcside .tc{--w:76px}
+.tcs .tcside{display:flex;gap:4px;align-items:stretch;position:relative}.tcs .tcside .tkc{--w:76px}
 .tcs .tcvs{font:900 italic 18px/1 'BC',sans-serif;color:var(--red)}
 .tcdrop{flex:none;width:76px;aspect-ratio:3/4;border:2px dashed #3d3e46;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px;font:800 italic 12px/1.1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);transition:border-color .15s,background .15s,color .15s}
 .tcdrop.mini{width:36px;aspect-ratio:auto;font-size:18px}.tcdrop.live{border-color:var(--gold);color:var(--gold);background:rgba(242,193,78,.06);animation:tcpulse 1.1s ease-in-out infinite}.tcdrop.over{background:rgba(242,193,78,.22);border-style:solid}
@@ -412,16 +413,16 @@ html.tcards .tc{--w:92px;position:relative;flex:none;width:var(--w);aspect-ratio
 .tcrord.tclock .tcs{cursor:default}
 /* the hand */
 .tcdock{position:sticky;bottom:var(--navh,72px);z-index:5;margin:10px -16px 0;padding:14px 0 8px;background:linear-gradient(180deg,rgba(9,9,10,0),var(--bg,#09090a) 14px)}
-.tcdock .tcpks{display:flex;gap:5px;padding:0 16px 8px}
-.tcpk{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;gap:4px;font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.03em;text-transform:uppercase;padding:7px 2px 6px;background:#1d1e23;color:var(--mut);clip-path:var(--slant);border:0;white-space:nowrap;overflow:hidden;cursor:pointer}
+.tcdock .tcpks{display:flex;gap:5px;padding:0 16px 8px;overflow-x:auto;scrollbar-width:none}.tcdock .tcpks::-webkit-scrollbar{display:none}
+.tcpk{flex:1 0 auto;display:flex;align-items:center;justify-content:center;gap:4px;font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.03em;text-transform:uppercase;padding:7px 10px 6px 9px;background:#1d1e23;color:var(--mut);clip-path:var(--slant);border:0;white-space:nowrap;overflow:hidden;cursor:pointer}
 .tcpk i{font-style:italic;font-weight:900;color:var(--gold)}.tcpk.done{color:var(--text);box-shadow:inset 0 -2px 0 var(--good)}.tcpk.sp{opacity:.7}
 .tcpk.on{background:var(--gold);color:#111}.tcpk.on i{color:#111}.tcpk.over{background:var(--gold2);color:#111}
 .tcdock .tcbar{display:flex;align-items:center;gap:8px;padding:0 16px 4px}
 .tcdt{flex:1;min-width:0;font:800 italic 13px/1.2 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tcdt b{color:var(--gold)}
 .tcseg{display:flex}.tcseg button{font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:6px 11px 5px;background:#1d1e23;color:var(--mut);clip-path:var(--slant);border:0;cursor:pointer}.tcseg button.on{background:var(--gold);color:#111}
 .tchand{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:16px 16px 4px;min-height:140px;align-items:flex-start}.tchand::-webkit-scrollbar{display:none}
-.tchand .tc{touch-action:none;cursor:grab}.tchand .tc.sel{transform:translateY(-14px)}.tchand .tc.sel .tcf{box-shadow:inset 0 0 0 2px var(--gold)}
-.tchand .tc.deal,.tchand .tx.deal{animation:tcdeal .36s cubic-bezier(.2,.9,.3,1.15) both}@keyframes tcdeal{from{transform:translateY(60px) rotate(8deg);opacity:0}}
+.tchand .tkc{touch-action:none;cursor:grab}.tchand .tkc.sel{transform:translateY(-14px)}.tchand .tkc.sel .tcf{box-shadow:inset 0 0 0 2px var(--gold)}
+.tchand .tkc.deal,.tchand .tx.deal{animation:tcdeal .36s cubic-bezier(.2,.9,.3,1.15) both}@keyframes tcdeal{from{transform:translateY(60px) rotate(8deg);opacity:0}}
 .tx{flex:none;width:104px;min-height:122px;background:#141417;box-shadow:inset 0 0 0 1px var(--line);clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));padding:9px 8px;display:flex;flex-direction:column;gap:4px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;transition:transform .3s}
 .tx.fit{box-shadow:inset 0 0 0 2px var(--gold)}.tx.on{background:var(--gold);color:#111}
 .tx .txk{font:800 italic 10px/1.1 'BC',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}.tx.on .txk,.tx.on .txd{color:#3a2e0a}
@@ -430,13 +431,13 @@ html.tcards .tc{--w:92px;position:relative;flex:none;width:var(--w);aspect-ratio
 .tcempty{padding:30px 0;color:var(--mut);font-size:13px}
 .tchint{font-size:12px;color:var(--mut);padding:2px 16px 0}
 .tccf{margin:0 16px 8px;background:#1d1e23;padding:10px 12px;display:flex;align-items:center;gap:8px;font-size:13px}.tccf span{flex:1}
-.tcghost{position:fixed;z-index:200;pointer-events:none;transition:none!important;--w:92px}
+html.tcards .tkc.tcghost,.tx.tcghost{position:fixed!important;z-index:200;pointer-events:none;transition:none!important;animation:none!important;margin:0;opacity:.95}html.tcards .tkc.tcghost{--w:92px}.tx.tcghost{box-shadow:inset 0 0 0 2px var(--gold),0 14px 30px rgba(0,0,0,.6)}html.tcards .tkc.tcghost .tcf{box-shadow:inset 0 0 0 2px var(--gold),0 14px 30px rgba(0,0,0,.6)}
 body.tcbody .lvdock{margin-bottom:6px}body.tcbody #toast{bottom:auto;top:calc(76px + env(safe-area-inset-top,0px))}
 body.tcdragging{user-select:none;-webkit-user-select:none}
 /* the office line */
 #modal .tcline{position:relative;transition:transform .3s cubic-bezier(.2,.9,.3,1.1),opacity .25s;touch-action:pan-y}
 #modal .sheet.tcb1{box-shadow:0 -7px 0 -3px #23242a,0 -1px 0 0 var(--gold3)}#modal .sheet.tcb2{box-shadow:0 -7px 0 -3px #23242a,0 -13px 0 -6px #1a1b20,0 -1px 0 0 var(--gold3)}
-#modal .tclh{display:flex;gap:12px;align-items:flex-end;margin:6px 0 12px}#modal .tclc{display:flex;gap:6px;flex:none}#modal .tclc .tc{--w:92px;cursor:default}
+#modal .tclh{display:flex;gap:12px;align-items:flex-end;margin:6px 0 12px}#modal .tclc{display:flex;gap:6px;flex:none}#modal .tclc .tkc{--w:92px;cursor:default}
 #modal .tclt{min-width:0;display:flex;flex-direction:column;gap:4px;padding-bottom:4px}#modal .tclk{font:800 italic 12px/1.1 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}#modal .tclt b{font:900 italic 21px/1.02 'BC',sans-serif;text-transform:uppercase;text-wrap:balance}
 #modal .tcdown{cursor:pointer}#modal .tcdown .tcback{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:#0c0c0e url(card-bg.jpg) center/cover;box-shadow:inset 0 0 0 2px var(--gold3);clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));font:900 italic 30px/1 'BC',sans-serif;color:var(--gold);transition:transform .35s,opacity .35s}#modal .tcdown .tcback small{font:700 11px/1 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}#modal .tcdown.up .tcback{transform:perspective(500px) rotateY(90deg);opacity:0}
 #modal .tcq .tcqn{font-size:12px;color:var(--mut);margin-left:16px}
@@ -459,7 +460,7 @@ html.tcards .twpair .twh[data-k]+.twh[data-k]{animation-delay:.12s}
 .tvpile i{display:block;width:22px;height:30px;background:#0c0c0e url(card-bg.jpg) center/cover;box-shadow:inset 0 0 0 1px var(--gold3);animation:tvslam .35s cubic-bezier(.2,1.3,.4,1) both}
 .tvpile:not(.lk) i{animation:tvbob 1.4s ease-in-out infinite}
 @keyframes tvslam{from{opacity:0;transform:translateY(-40%) scale(1.5) rotate(-8deg)}}@keyframes tvbob{50%{transform:translateY(-4px) rotate(-3deg)}}
-@media (prefers-reduced-motion:reduce){.tc,.tx,.tchand .tc.deal,.tvpile i,html.tcards .twpair .twh[data-k]{animation:none!important;transition:none!important}}
+@media (prefers-reduced-motion:reduce){.tkc,.tx,.tchand .tkc.deal,.tvpile i,html.tcards .twpair .twh[data-k]{animation:none!important;transition:none!important}}
 `;document.head.appendChild(css);
 window.TCARD=TC;
 })();
