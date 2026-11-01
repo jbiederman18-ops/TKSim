@@ -29,7 +29,7 @@ window.cardsSet=setOn;
 document.documentElement.classList.toggle('tcards',ONF);
 
 /* ---------------- state ---------------- */
-const TC={act:null,mode:'w',sel:null,confirm:null,dr:{},wk:null,dealt:0,sx:0};
+const TC={act:null,mode:'w',sel:null,confirm:null,dr:{},wk:null,dealt:0,sx:0,open:false};
 function wkKey(){return S?[S.season||0,S.week,S.gm,S.phase].join('|'):''}
 function sync(){const k=wkKey();if(TC.wk!==k){TC.wk=k;TC.dr={};TC.act=null;TC.mode='w';TC.sel=null;TC.confirm=null}}
 const card=()=>(S&&S.card&&S.card.p)||[];
@@ -64,7 +64,7 @@ function condOf(w){if(w.inj)return ['Hurt','b'];const sw=staWord(sta(w));if(sw!=
 function tcCard(w,o){o=o||{};const [cw,cc]=condOf(w);const t=titlesOf(w.id)[0];const worn=!o.noWear&&(sta(w)<100-FAT_OK||w.inj);
  const cls=['tkc',w.al==='f'?'fc':'hl',t?'ch':'',worn?'worn':'',o.used?'used':'',o.cls||''].join(' ');
  return `<div class="${cls}" data-tcw="${w.id}" ${o.attr||''} tabindex="0" role="button" aria-label="${esc(w.name)}${t?', '+esc(t.n)+' champion':''}, ${cw}${o.tab?', '+esc(o.tab):''}">
- <div class="tcf"><div class="tcp">${portrait(w)}</div><span class="tco">${ovr(w)}</span>${o.tab?`<span class="tct ${o.tabc||''}">${esc(o.tab)}</span>`:''}<div class="tcb"><b class="tcn${w.name.length>13?' ln':''}">${esc(w.name)}</b><span class="tcc ${cc}">${esc(o.cond||cw)}</span>${t?`<i class="tcbelt">${esc(t.n)}</i>`:''}</div></div>${o.mark||''}</div>`}
+ <div class="tcf ${hasPhoto(w)?'ph':''}">${hasPhoto(w)?`<div class="tcp">${portrait(w)}</div>`:`<div class="tcg">${esc(initials(w.name))}</div>`}<span class="tco">${ovr(w)}</span>${o.tab?`<span class="tct ${o.tabc||''}">${esc(o.tab)}</span>`:''}<div class="tcb"><b class="tcn${w.name.length>13?' ln':''}">${esc(w.name)}</b><span class="tcc ${cc}">${esc(o.cond||cw)}</span>${t?`<i class="tcbelt">${esc(t.n)}</i>`:''}</div></div>${o.mark||''}</div>`}
 window.tcCard=tcCard;
 
 /* ---------------- dealing a hand ---------------- */
@@ -188,9 +188,9 @@ function tellFor(i){const sl=card()[i];const sh=curShow();
  if(sl.k==='promo'){const m=cur(i);if(!m.a)return '';if(!promoOk(m))return `<span class="tell muted">Needs a second wrestler</span>`;try{const t=tellOf(promoEst({type:m.type,a:m.a,b:m.b||null}),true);return `<span class="tell ${t[3]}">${t[1]} ${t[2]}</span>`}catch(e){return ''}}
  if(!sl.d){const m=cur(i);return idsOf(i,m).length?`<span class="tell muted">${needTxt(m)}</span>`:''}
  try{const r=rateMatch(sl.d,{ppv:sh.ppv,allin:sh.ppv&&SUPER(S.week),preview:true});return tellHtml(r)}catch(e){return ''}}
-function slotHtml(i){const c=card(),sl=c[i],act=i===TC.act&&!locked();const m=cur(i);const promo=sl.k==='promo';
+function slotHtml(i){const c=card(),sl=c[i];let act=i===TC.act&&!locked();const m=cur(i);const promo=sl.k==='promo';
  const ml=promo?null:(()=>{try{return mLab(c,i)}catch(e){return {}}})();const main=ml&&ml.main,opt=!!sl.opt;
- const tg=act&&TC.mode==='w'?targets(i,m):[];const live=act&&TC.sel&&TC.mode==='w';
+ const tg=act&&TC.open&&TC.mode==='w'?targets(i,m):[];const live=act&&TC.sel&&TC.mode==='w';
  const drop=(t,label,cls)=>`<div class="tcdrop ${cls||''} ${live?'live':''}" data-tct='${JSON.stringify(Object.assign({s:i},t))}'>${label}</div>`;
  const pr=!promo&&sl.d&&typeof promiseOf==='function'?promiseOf(sl.d):null;
  const onC=(id)=>{if(!W_(id))return '';const d=sl.d;let mark='';if(d&&!promo&&!d.nc){if(d.sides[d.winner]&&d.sides[d.winner].includes(id))mark='<span class="tcw">Wins</span>';else{const p=pinCands(d).length>=2?pinOf(d):null;if(p===id)mark='<span class="tcw pin">Takes the pin</span>'}}
@@ -198,24 +198,25 @@ function slotHtml(i){const c=card(),sl=c[i],act=i===TC.act&&!locked();const m=cu
  let mat='',many=false;
  if(promo){mat=(m.a?`<div class="tcside">${onC(m.a)}</div>`:act?`<div class="tcside">${drop({t:'a'},'On the mic')}</div>`:'')
   +((m.b||(act&&m.a))?`<div class="tcvs">&amp;</div><div class="tcside">${m.b?onC(m.b):drop({t:'b'},PT[m.type]&&PT[m.type].b==='req'?'Opponent':'Second (optional)')}</div>`:'')}
- else if(act||idsOf(i,m).length){
-  if(idsOf(i,m).length>3)many=true;
+ else if((act&&TC.open)||idsOf(i,m).length){
+  if(idsOf(i,m).length>3)many=true;const act0=act;act=act&&TC.open;
   mat=m.sides.map((s,j)=>{const ps=s.map(onC).join('');const em=!s.length&&act?drop({t:'side',i:j},j===0?'Play a card':'Opponent'):'';
    const pt=tg.find(t=>t.t==='partner'&&t.i===j)?drop({t:'partner',i:j},'+','mini'):'';return `<div class="tcside">${ps}${em}${pt}</div>`}).join('<div class="tcvs">vs</div>')
-   +(tg.find(t=>t.t==='third')?`<div class="tcvs">vs</div><div class="tcside">${drop({t:'third'},'+ Third')}</div>`:'')}
+   +(tg.find(t=>t.t==='third')?`<div class="tcvs">vs</div><div class="tcside">${drop({t:'third'},'+ Third')}</div>`:'');act=act0}
  const d=sl.d;let mods='';
  if(promo&&m.a&&PT[m.type])mods=`<span class="tcm g">${esc(PT[m.type].n)}</span>`;
  if(!promo&&d){const st=stipKey(d);const f=stipFits(STIPS[st],d);mods=`<span class="tcm ${st!=='std'&&f.spec.length?'g':st==='std'?'q':''}">${esc(STIPS[st].n)}</span>${d.title&&S.titles[d.title]?`<span class="tcm g">${esc(S.titles[d.title].n)} title</span>`:''}${d.ri&&d.ri.x&&W_(d.ri.x)?`<span class="tcm">Run-in · ${esc(ln(W_(d.ri.x)))}</span>`:''}${typeof finOf==='function'&&finOf(d)!=='clean'?'<span class="tcm">Screwy finish</span>':''}`}
  const empty=!idsOf(i,m).length;
  const sum=empty&&!act?`<div class="tcsum">${opt?'Optional. Tap here or drag a card in — or leave it empty.':'Tap here or drag a card onto it.'}</div>`
-  :empty&&act?`<div class="tcsum">${promo?'Your best talkers and anyone owed mic time lead your hand.':'Promises, requests and title defenses lead your hand.'}</div>`
+  :empty&&act&&TC.open?`<div class="tcsum">${promo?'Your best talkers and anyone owed mic time lead your hand.':'Promises, requests and title defenses lead your hand.'}</div>`
   :!promo&&d?`<div class="tcsum"><b>${esc(MT[d.type].n)}</b> · ${esc(sideName(d.sides[d.winner]))} wins${pr?` · <span class="gold">${pr.kind==='contract'?'Contracted':pr.kind==='shot'?'Earned title shot':'Promised'}</span>`:''}</div>`:'';
  const tl=tellFor(i);
  return `<div class="tcs ${act?'act':''} ${main?'me':''} ${opt?'opt':''}" data-tcs="${i}" data-dp="slot:${i}">
  <div class="tcnum" data-dg="slot:${i}" title="Hold and drag to move it">${i+1}</div>
  <div class="tcin"><div class="tchd"><span class="tclb">${esc(slotLab(i))}${d&&d.stip==='bng'?' · Blood &amp; Guts':''}</span>${tl?`<span class="tctl">${tl}</span>`:empty&&!act?`<span class="tcbk">${opt?'Add':'Book it'}</span>`:''}${!empty?`<button class="tcdet" onclick="event.stopPropagation();${promo?'openPromo':'openMatch'}(${i})">Details</button>`:''}</div>
  ${sum}${mat?`<div class="tcmat${many?' many':''}">${mat}</div>`:''}${mods?`<div class="tcmods">${mods}</div>`:''}</div></div>`}
-function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl)return '';const m=cur(i);const promo=sl.k==='promo';const ids=idsOf(i,m);
+function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl)return '';
+ if(!TC.open){const left=card().filter(x=>!x.opt&&!x.d).length;return `<div class="tcdock shut" id="tcdock"><button class="tcpull" onclick="tcOpen()" aria-label="Show your hand"><span class="tcgrip"></span><span class="tcpt"><b>Your hand</b>${left?`<span>${left} slot${left>1?'s':''} to book · tap one or swipe up</span>`:'<span>Card full · tap a slot to change it</span>'}</span><span class="tcpa">▲</span></button></div>`}const m=cur(i);const promo=sl.k==='promo';const ids=idsOf(i,m);
  const title=TC.mode==='x'?`Lay on <b>${esc(slotLab(i))}</b>`:!ids.length?`Dealing for <b>${esc(slotLab(i))}</b>`:defTarget(i,m)||promo?`Best with <b>${esc(W_(ids[ids.length-1]).name)}</b>`:`<b>${esc(slotLab(i))}</b> set · + partner or third`;
  let h='';
  if(TC.mode==='x'){const xs=extras(i);h=xs.length?xs.map(x=>`<div class="tx ${x.fit?'fit':''} ${x.on?'on':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span></div>`).join(''):`<div class="tcempty">${promo?'Play a card first.':'Fill both sides first.'}</div>`}
@@ -223,7 +224,7 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl)return '';const m=c
   +`<button class="tcdeck" onclick="tcDeck()"><b>${ownList('p').filter(w=>!w.inj).length}</b>Full deck</button>`}
  const chips=card().map((x,j)=>{const done=x.d&&(x.k!=='promo'||promoOk(x.d));return `<button class="tcpk ${j===i?'on':''} ${done?'done':''} ${tableOk(x)?'':'sp'}" data-tcpk="${j}" onclick="tcAct(${j})"><i>${j+1}</i>${esc(chipLab(j))}</button>`}).join('');
  const cf=TC.confirm&&W_(TC.confirm.id)?`<div class="tccf"><span>${esc(W_(TC.confirm.id).name)} is already on the card tonight. A second match costs ${DD_FAT}× the stamina.</span><button class="mini" onclick="tcNo()">No</button><button class="mini on" onclick="tcYes()">Book twice</button></div>`:'';
- return `<div class="tcdock" id="tcdock">${cf}<div class="tcpks">${chips}</div><div class="tcbar"><div class="tcdt">${title}</div><div class="tcseg"><button class="${TC.mode==='w'?'on':''}" onclick="tcMode('w')">Wrestlers</button><button class="${TC.mode==='x'?'on':''}" onclick="tcMode('x')">${promo?'Segment':'Stips &amp; more'}</button></div></div>
+ return `<div class="tcdock" id="tcdock"><button class="tcpull open" onclick="tcClose()" aria-label="Hide your hand"><span class="tcgrip"></span></button>${cf}<div class="tcpks">${chips}</div><div class="tcbar"><div class="tcdt">${title}</div><div class="tcseg"><button class="${TC.mode==='w'?'on':''}" onclick="tcMode('w')">Wrestlers</button><button class="${TC.mode==='x'?'on':''}" onclick="tcMode('x')">${promo?'Segment':'Stips &amp; more'}</button></div></div>
  <div class="tchand" id="tchand">${h}</div><div class="tchint" ${hintN()>=6?'hidden':''}>${TC.mode==='w'?'Drag a card onto any slot or number. Tap plays it here. Hold for details.':'Gold cards suit them. Tap one to lay it on the slot.'}</div></div>`}
 function pickAct(){const c=card();if(TC.act!=null&&c[TC.act]&&tableOk(c[TC.act]))return;
  const ok=c.map((sl,i)=>tableOk(sl)?i:-1).filter(i=>i>=0);if(!ok.length){TC.act=null;return}
@@ -241,10 +242,16 @@ function decorate(){if(!bookOn())return;sync();const app=document.getElementById
  else document.body.classList.remove('tcbody')}
 
 /* actions the markup calls */
-window.tcAct=function(i){const sl=card()[i];if(!sl)return;if(!tableOk(sl)){if(sl.k==='match')return openMatch(i);if(sl.k==='xo'&&typeof openXo==='function')return openXo(i);return}
- if(TC.act===i)return;TC.act=i;TC.sel=null;TC.confirm=null;TC.mode=(sl.k==='promo'?promoOk(cur(i))&&cur(i).b:!!sl.d)?'x':'w';TC.dealt=1;render();
- requestAnimationFrame(()=>{const el=document.querySelector(`.tcs[data-tcs="${i}"]`);if(el&&!noScroll)el.scrollIntoView({block:'center',behavior:'smooth'});noScroll=false})};
-let noScroll=false;
+window.tcAct=function(i,stay){const sl=card()[i];if(!sl)return;if(!tableOk(sl)){if(sl.k==='match')return openMatch(i);if(sl.k==='xo'&&typeof openXo==='function')return openXo(i);return}
+ if(TC.act===i&&TC.open){if(!stay)center(i);return}
+ if(TC.act!==i){TC.act=i;TC.sel=null;TC.confirm=null;TC.mode=(sl.k==='promo'?promoOk(cur(i))&&cur(i).b:!!sl.d)?'x':'w'}
+ TC.open=true;TC.dealt=1;render();if(!stay)center(i)};
+/* put the slot in the middle of the space between the header and the hand */
+function center(i){requestAnimationFrame(()=>requestAnimationFrame(()=>{const el=document.querySelector(`.tcs[data-tcs="${i}"]`);if(!el)return;
+ const hd=document.querySelector('header.top');const dk=document.getElementById('tcdock');const top=hd?hd.getBoundingClientRect().bottom:0;const bot=dk?dk.getBoundingClientRect().top:innerHeight;
+ const r=el.getBoundingClientRect();const room=bot-top;const d=r.height>room-16?r.top-(top+8):r.top+r.height/2-(top+room/2);if(Math.abs(d)>4)window.scrollBy({top:d,behavior:'smooth'})}))}
+window.tcOpen=function(){if(TC.act==null)pickAct();if(TC.act==null)return;TC.open=true;TC.dealt=1;render();center(TC.act)};
+window.tcClose=function(){TC.open=false;TC.sel=null;TC.confirm=null;render()};
 window.tcMode=function(k){TC.mode=k;TC.sel=null;TC.dealt=1;render()};
 window.tcYes=function(){const c=TC.confirm;if(!c)return;TC.confirm=null;play(c.i,c.id,c.tg,true)};
 window.tcNo=function(){TC.confirm=null;render()};
@@ -278,7 +285,7 @@ document.addEventListener('pointerup',e=>{clearTimeout(LP);if(DR){endDrag(e.clie
  if(Date.now()-SUP<300)return;SUP=Date.now();
  if(p.hand)tapHand(p);else crown(p.on,p.id)});
 document.addEventListener('pointercancel',()=>{clearTimeout(LP);PD=null;if(DR){const d=DR;cleanup();if(d.on!=null&&Math.abs(d.lx-d.x)>12){SUP=Date.now();takeOff(d.on,d.id)}else render()}});
-document.addEventListener('click',e=>{if(!on())return;if((Date.now()-SUP<350||(typeof DG_SUP!=='undefined'&&Date.now()<DG_SUP))&&e.target.closest&&e.target.closest('#tcdock,.tcs')&&!e.target.closest('button')){e.stopPropagation();e.preventDefault();return}
+document.addEventListener('click',e=>{if(!on())return;if((Date.now()-SUP<350||(typeof DG_SUP!=='undefined'&&Date.now()<DG_SUP))&&e.target.closest&&e.target.closest('#tcdock,.tcs')&&(!e.target.closest('button')||e.target.closest('.tcpull'))){e.stopPropagation();e.preventDefault();return}
  if(!inBook())return;const d=e.target.closest&&e.target.closest('.tcdrop');if(d&&TC.sel){e.stopPropagation();const t=JSON.parse(d.dataset.tct);play(t.s,TC.sel,t);return}
  const s=e.target.closest&&e.target.closest('.tcs');if(s&&!e.target.closest('[data-tcon],button,.tcdrop')){tcAct(+s.dataset.tcs)}},true);
 document.addEventListener('keydown',e=>{if(!inBook()||(e.key!=='Enter'&&e.key!==' '))return;const c=e.target.closest&&e.target.closest('#tchand [data-tcw],#tchand .tx,.tcs [data-tcon]');if(!c)return;e.preventDefault();
@@ -306,11 +313,18 @@ function endDrag(x,y){const t=hit(x,y);const d=DR;cleanup();SUP=Date.now();
  if(t&&t.classList.contains('tcdrop')){const tg=JSON.parse(t.dataset.tct);if(tg.s!==TC.act){TC.act=tg.s}play(tg.s,d.id,tg);return}
  const j=t?(t.dataset.tcpk!=null?+t.dataset.tcpk:t.dataset.tcs!=null?+t.dataset.tcs:null):null;
  if(j!=null){const sl=card()[j];if(!tableOk(sl)){TC.sel=null;render();return toast(`${slotLab(j)} has its own editor — tap it to open.`)}
-  if(j!==TC.act){TC.act=j;TC.mode='w'}const m=cur(j);const df=defTarget(j,m);if(df)return play(j,d.id,df);if(targets(j,m).length){TC.sel=d.id;render();return toast('Drop it on + to add a partner or a third.')}TC.sel=null;render();return toast(`${slotLab(j)} is full.`)}
+  if(j!==TC.act){TC.act=j;TC.mode='w';TC.open=true}const m=cur(j);const df=defTarget(j,m);if(df)return play(j,d.id,df);if(targets(j,m).length){TC.sel=d.id;render();return toast('Drop it on + to add a partner or a third.')}TC.sel=null;render();return toast(`${slotLab(j)} is full.`)}
  if(d.vy<-.45||(d.y-y)>90){const m=cur(TC.act);const df=defTarget(TC.act,m);if(df)return play(TC.act,d.id,df)}
  TC.sel=null;render()}
 
+/* swipe the hand up to open it, down to put it away */
+{let y0=null,x0=0,pid=null;
+ document.addEventListener('pointerdown',e=>{if(!inBook())return;const z=e.target.closest&&e.target.closest('#tcdock .tcpull,#tcdock .tcbar,#tcdock .tcpks');if(!z)return;y0=e.clientY;x0=e.clientX;pid=e.pointerId},true);
+ document.addEventListener('pointerup',e=>{if(y0===null||e.pointerId!==pid)return;const dy=e.clientY-y0,dx=e.clientX-x0;y0=null;if(Math.abs(dy)<36||Math.abs(dy)<Math.abs(dx))return;
+  SUP=Date.now();if(dy<0&&!TC.open)tcOpen();else if(dy>0&&TC.open)tcClose()},true);
+ document.addEventListener('pointercancel',()=>{y0=null},true)}
 /* ---------------- hooks ---------------- */
+if(typeof go==='function'){const g0=go;go=window.go=function(t){if(t==='book'&&tab!=='book'){TC.open=false;TC.sel=null}return g0.apply(this,arguments)}}
 const r0=render;render=window.render=function(){const o=r0.apply(this,arguments);try{decorate()}catch(e){console.error('cards',e)}return o};
 /* Settings: a card to switch the table off */
 if(typeof menuView==='function'){const mv=menuView;menuView=window.menuView=function(){const h=mv.apply(this,arguments);
@@ -336,7 +350,7 @@ function lineDeck(){if(!on())return;const m=document.querySelector('#modal .sbod
   m.querySelectorAll(':scope>.h.mhd, :scope>.duo').forEach(x=>x.style.display='none')}
  else if(cu&&cu.k==='tape'){const nmEl=m.querySelector('.brow b, .scene b');const nm=nmEl?nmEl.textContent.replace(/^[^A-Za-z]+/,'').trim():'';
   const hd=document.createElement('div');hd.className='tclh';
-  hd.innerHTML=`<div class="tclc"><div class="tkc fc tcdown" role="button" tabindex="0" aria-label="Watch the tape"><div class="tcf"><div class="tcp"><svg viewBox="0 0 120 160" preserveAspectRatio="xMidYMid slice"><text x="60" y="64" text-anchor="middle" font-family="Impact,Arial Black,sans-serif" font-size="60" fill="#f3d77a" fill-opacity=".2">${esc(nm.split(' ').map(x=>x[0]).join('').slice(0,2))}</text></svg></div><span class="tct must">Prospect</span><div class="tcb"><b class="tcn">${esc(nm)}</b><span class="tcc">On tape</span></div></div><div class="tcback">TK<small>Tap to watch</small></div></div></div><div class="tclt"><span class="tclk">A tape on your desk</span><b>${nm?'Someone sent a tape':'A tape landed'}</b></div>`;
+  hd.innerHTML=`<div class="tclc"><div class="tkc fc tcdown" role="button" tabindex="0" aria-label="Watch the tape"><div class="tcf"><div class="tcg">${esc(nm.split(' ').map(x=>x[0]).join('').slice(0,2))}</div><span class="tct must">Prospect</span><div class="tcb"><b class="tcn">${esc(nm)}</b><span class="tcc">On tape</span></div></div><div class="tcback">TK<small>Tap to watch</small></div></div></div><div class="tclt"><span class="tclk">A tape on your desk</span><b>${nm?'Someone sent a tape':'A tape landed'}</b></div>`;
   const k=m.querySelector('.ibx-k');const q=m.querySelector('.ibx-q');(q||k).after(hd);m.querySelectorAll(':scope>.h.mhd').forEach(x=>x.style.display='none');
   const c=hd.querySelector('.tcdown');const flip=()=>{if(c.classList.contains('up'))return;c.classList.add('up');buzz();const b=hd.querySelector('.tclt b');if(b&&nm)b.textContent=nm};c.addEventListener('click',flip);c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}})}
  /* the rest of the line: face-down cards */
@@ -377,21 +391,24 @@ if(typeof tvWeek==='function'){const tw=tvWeek;tvWeek=window.tvWeek=function(){l
 
 /* ---------------- styles ---------------- */
 const css=document.createElement('style');css.textContent=`
-html.tcards .tkc{--w:92px;position:relative;flex:none;width:var(--w);aspect-ratio:3/4;max-width:100%;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:transform .3s cubic-bezier(.2,.9,.3,1.2),opacity .2s;cursor:pointer}
-.tkc .tcf{position:absolute;inset:0;overflow:hidden;background:#0c0c0e url(card-bg.jpg) center/cover;clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));box-shadow:inset 0 0 0 1px #3a3c44}
-.tkc .tcf::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;z-index:3;background:var(--face)}.tkc.hl .tcf::before{background:var(--heel)}
-.tkc.ch .tcf{box-shadow:inset 0 0 0 2px #f1d27a,inset 0 0 18px rgba(246,221,142,.3)}
-.tkc .tcp{position:absolute;inset:0}.tkc .tcp img,.tkc .tcp svg{width:100%;height:100%;object-fit:cover;display:block}
-.tkc .tco{position:absolute;top:4px;left:7px;z-index:3;background:#000;color:var(--gold2);font:900 italic calc(var(--w)*.17)/1 'BC',Impact,sans-serif;padding:2px 6px 1px 4px;clip-path:var(--slant)}
-.tkc .tct{position:absolute;left:4px;top:calc(var(--w)*.28);z-index:3;max-width:calc(100% - 4px);font:800 italic calc(var(--w)*.105)/1.15 'BC',sans-serif;letter-spacing:.05em;text-transform:uppercase;padding:2px 9px 1px 5px;background:#1d1e23;color:var(--text);clip-path:polygon(0 0,100% 0,calc(100% - 6px) 100%,0 100%);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tkc .tct.must{background:var(--gold);color:#111}.tkc .tct.feud{background:var(--red);color:#fff}.tkc .tct.hot{background:#1d3324;color:var(--good)}.tkc .tct.rub{background:#26264a;color:#c3c0ff}.tkc .tct.gold{background:#2c2410;color:var(--gold2)}
-.tkc .tcb{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:22px 5px 5px 8px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.86) 40%,#000)}
-.tkc .tcn{display:block;font:800 italic calc(var(--w)*.15)/.95 'BC',sans-serif;text-transform:uppercase;letter-spacing:.01em;overflow-wrap:anywhere}.tkc .tcn.ln{font-size:calc(var(--w)*.13)}
-.tkc .tcc{display:block;margin-top:2px;font:700 calc(var(--w)*.1)/1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--good)}.tkc .tcc.t{color:var(--gold)}.tkc .tcc.b{color:var(--bad)}
-.tkc .tcbelt{display:block;margin:3px -5px -5px -8px;padding:2px 6px;font:900 italic calc(var(--w)*.095)/1.1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#140f02;background:linear-gradient(90deg,var(--gold3),var(--gold),var(--gold3));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tkc.worn .tcp{filter:saturate(.3) brightness(.7)}.tkc.worn .tcf::after{content:"";position:absolute;inset:0;z-index:1;background:repeating-linear-gradient(115deg,transparent 0 9px,rgba(255,255,255,.04) 9px 10px)}
-.tkc.used .tcf::after{content:"ON CARD";position:absolute;left:50%;top:46%;z-index:4;transform:translate(-50%,-50%) rotate(-14deg);font:900 italic calc(var(--w)*.15)/1 'BC',sans-serif;letter-spacing:.06em;color:var(--gold);border:2px solid var(--gold);padding:2px 6px;background:rgba(0,0,0,.65);white-space:nowrap}
-.tkc .tcw{position:absolute;left:50%;top:-10px;z-index:5;transform:translateX(-50%);font:900 italic 11px/1 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;background:var(--gold);color:#111;padding:3px 9px 2px;clip-path:var(--slant);white-space:nowrap}.tkc .tcw.pin{background:#1d1e23;color:var(--bad);box-shadow:inset 0 0 0 1px var(--bad)}
+html.tcards .tkc{--w:92px;position:relative;flex:none;width:var(--w);aspect-ratio:5/7;max-width:100%;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:transform .3s cubic-bezier(.2,.9,.3,1.2),opacity .2s;cursor:pointer}
+.tkc .tcf{position:absolute;inset:0;overflow:hidden;border-radius:3px;background:#111 url(card-bg.jpg) center/cover;box-shadow:inset 0 0 0 1px #3a3b42,0 6px 14px rgba(0,0,0,.55)}
+.tkc .tcf::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;z-index:4;background:var(--face)}.tkc.hl .tcf::before{background:var(--heel)}
+.tkc.ch .tcf{box-shadow:inset 0 0 0 2px var(--gold),0 6px 14px rgba(0,0,0,.55)}
+.tkc .tcg{position:absolute;right:-6px;top:13%;font:900 italic calc(var(--w)*.62)/.8 'BC',Impact,sans-serif;letter-spacing:-.04em;color:rgba(242,193,78,.13);pointer-events:none}
+.tkc .tcp{position:absolute;inset:0}.tkc .tcp img,.tkc .tcp svg{width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block}
+.tkc .tcf.ph::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.45),transparent 28%,transparent 48%,rgba(0,0,0,.92) 80%)}
+.tkc .tco{position:absolute;left:9px;top:6px;z-index:3;font:900 italic calc(var(--w)*.21)/1 'BC',Impact,sans-serif;color:#fff;text-shadow:0 1px 0 #000,0 0 8px rgba(0,0,0,.6)}
+.tkc .tct{position:absolute;left:5px;top:calc(var(--w)*.3);z-index:3;max-width:calc(100% - 5px);font:800 italic calc(var(--w)*.105)/1.2 'BC',sans-serif;letter-spacing:.05em;text-transform:uppercase;padding:2px 10px 2px 6px;background:#1e1e22;color:var(--text);clip-path:polygon(0 0,100% 0,calc(100% - 6px) 100%,0 100%);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tkc .tct.must{background:var(--gold);color:#111}.tkc .tct.feud{background:var(--red);color:#fff}.tkc .tct.hot{background:#22382a;color:var(--good)}.tkc .tct.rub{background:#2a2a40;color:#b9b6ff}.tkc .tct.gold{background:#2c2410;color:var(--gold2)}
+.tkc .tcb{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:0 5px 6px 9px}
+.tkc .tcn{display:block;font:900 italic calc(var(--w)*.15)/.92 'BC',sans-serif;text-transform:uppercase;letter-spacing:.005em;text-wrap:balance;overflow-wrap:anywhere;text-shadow:0 1px 0 #000}.tkc .tcn.ln{font-size:calc(var(--w)*.135)}
+.tkc .tcc{display:block;margin-top:3px;font:700 calc(var(--w)*.11)/1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--good)}.tkc .tcc.t{color:var(--gold)}.tkc .tcc.b{color:var(--bad)}
+.tkc.ch .tcb{padding-bottom:calc(var(--w)*.2)}
+.tkc .tcbelt{position:absolute;left:5px;right:0;bottom:0;height:calc(var(--w)*.17);display:flex;align-items:center;padding-left:5px;font:900 italic calc(var(--w)*.1)/1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#140f02;background:linear-gradient(90deg,var(--gold3),var(--gold),var(--gold3));white-space:nowrap;overflow:hidden}
+.tkc.worn .tcp,.tkc.worn .tcg{filter:saturate(.3) brightness(.7)}.tkc.worn .tcf{background-blend-mode:luminosity}.tkc.worn .tcb::before{content:"";position:absolute;left:0;right:0;bottom:0;height:400%;z-index:-1;background:repeating-linear-gradient(115deg,transparent 0 9px,rgba(255,255,255,.04) 9px 10px);pointer-events:none}
+.tkc.used .tcf::after{content:"ON CARD";position:absolute;left:50%;top:44%;inset:auto;z-index:5;transform:translate(-50%,-50%) rotate(-14deg);font:900 italic calc(var(--w)*.15)/1 'BC',sans-serif;letter-spacing:.06em;color:var(--gold);border:2px solid var(--gold);padding:2px 6px;background:rgba(0,0,0,.65);white-space:nowrap}
+.tkc .tcw{position:absolute;left:50%;top:-11px;z-index:5;transform:translateX(-50%);font:900 italic 11px/1 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;background:var(--gold);color:#111;padding:3px 9px 2px;clip-path:var(--slant);white-space:nowrap}.tkc .tcw.pin{background:#1d1e23;color:var(--bad);box-shadow:inset 0 0 0 1px var(--bad)}
 .tkc:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
 /* the table */
 .tcrord{display:flex;flex-direction:column;gap:10px}
@@ -413,21 +430,27 @@ html.tcards .tkc{--w:92px;position:relative;flex:none;width:var(--w);aspect-rati
 .tcrord.tclock .tcs{cursor:default}
 /* the hand */
 .tcdock{position:sticky;bottom:var(--navh,72px);z-index:5;margin:10px -16px 0;padding:14px 0 8px;background:linear-gradient(180deg,rgba(9,9,10,0),var(--bg,#09090a) 14px)}
+.tcdock.shut{padding:10px 0 6px}
+.tcpull{display:flex;align-items:center;gap:12px;width:calc(100% - 32px);margin:0 16px;padding:8px 14px 9px;background:#141417;box-shadow:inset 0 0 0 1px var(--gold3);border:0;color:var(--text);text-align:left;cursor:pointer;clip-path:var(--slant);position:relative;touch-action:none}
+.tcpull .tcgrip{position:absolute;left:50%;top:4px;width:36px;height:3px;margin-left:-18px;background:#3d3e46;border-radius:2px}
+.tcpull .tcpt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;padding-top:4px}.tcpull .tcpt b{font:900 italic 16px/1 'BC',sans-serif;text-transform:uppercase;letter-spacing:.04em;color:var(--gold)}.tcpull .tcpt span{font-size:12px;color:var(--mut)}
+.tcpull .tcpa{font-size:14px;color:var(--gold)}
+.tcpull.open{width:72px;margin:-6px auto 4px;padding:8px 0 6px;background:none;box-shadow:none;clip-path:none;justify-content:center}.tcpull.open .tcgrip{position:static;margin:0;width:44px;height:4px;background:#55565e}
 .tcdock .tcpks{display:flex;gap:5px;padding:0 16px 8px;overflow-x:auto;scrollbar-width:none}.tcdock .tcpks::-webkit-scrollbar{display:none}
 .tcpk{flex:1 0 auto;display:flex;align-items:center;justify-content:center;gap:4px;font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.03em;text-transform:uppercase;padding:7px 10px 6px 9px;background:#1d1e23;color:var(--mut);clip-path:var(--slant);border:0;white-space:nowrap;overflow:hidden;cursor:pointer}
 .tcpk i{font-style:italic;font-weight:900;color:var(--gold)}.tcpk.done{color:var(--text);box-shadow:inset 0 -2px 0 var(--good)}.tcpk.sp{opacity:.7}
 .tcpk.on{background:var(--gold);color:#111}.tcpk.on i{color:#111}.tcpk.over{background:var(--gold2);color:#111}
-.tcdock .tcbar{display:flex;align-items:center;gap:8px;padding:0 16px 4px}
+.tcdock .tcbar{display:flex;align-items:center;gap:8px;padding:0 16px 4px;touch-action:none}.tcdock .tcpks{touch-action:pan-x}
 .tcdt{flex:1;min-width:0;font:800 italic 13px/1.2 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tcdt b{color:var(--gold)}
 .tcseg{display:flex}.tcseg button{font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:6px 11px 5px;background:#1d1e23;color:var(--mut);clip-path:var(--slant);border:0;cursor:pointer}.tcseg button.on{background:var(--gold);color:#111}
 .tchand{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:16px 16px 4px;min-height:140px;align-items:flex-start}.tchand::-webkit-scrollbar{display:none}
 .tchand .tkc{touch-action:none;cursor:grab}.tchand .tkc.sel{transform:translateY(-14px)}.tchand .tkc.sel .tcf{box-shadow:inset 0 0 0 2px var(--gold)}
 .tchand .tkc.deal,.tchand .tx.deal{animation:tcdeal .36s cubic-bezier(.2,.9,.3,1.15) both}@keyframes tcdeal{from{transform:translateY(60px) rotate(8deg);opacity:0}}
-.tx{flex:none;width:104px;min-height:122px;background:#141417;box-shadow:inset 0 0 0 1px var(--line);clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));padding:9px 8px;display:flex;flex-direction:column;gap:4px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;transition:transform .3s}
+.tx{flex:none;width:96px;aspect-ratio:5/7;background:#141417;box-shadow:inset 0 0 0 1px var(--line),0 6px 14px rgba(0,0,0,.5);border-radius:3px;padding:9px 8px;display:flex;flex-direction:column;gap:4px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;transition:transform .3s}
 .tx.fit{box-shadow:inset 0 0 0 2px var(--gold)}.tx.on{background:var(--gold);color:#111}
 .tx .txk{font:800 italic 10px/1.1 'BC',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}.tx.on .txk,.tx.on .txd{color:#3a2e0a}
-.tx .txn{font:900 italic 17px/.95 'BC',sans-serif;text-transform:uppercase}.tx .txd{font-size:11px;line-height:1.25;color:var(--mut);margin-top:auto}
-.tcdeck{flex:none;width:64px;align-self:stretch;min-height:122px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#141417;box-shadow:inset 0 0 0 1px var(--line);border:0;font:800 italic 12px/1.1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);cursor:pointer}.tcdeck b{font-size:22px}
+.tx .txn{font:900 italic 16px/.95 'BC',sans-serif;text-transform:uppercase;overflow-wrap:anywhere}.tx .txd{font-size:11px;line-height:1.25;color:var(--mut);margin-top:auto}
+.tcdeck{flex:none;width:64px;align-self:stretch;min-height:120px;border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#141417;box-shadow:inset 0 0 0 1px var(--line);border:0;font:800 italic 12px/1.1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);cursor:pointer}.tcdeck b{font-size:22px}
 .tcempty{padding:30px 0;color:var(--mut);font-size:13px}
 .tchint{font-size:12px;color:var(--mut);padding:2px 16px 0}
 .tccf{margin:0 16px 8px;background:#1d1e23;padding:10px 12px;display:flex;align-items:center;gap:8px;font-size:13px}.tccf span{flex:1}
