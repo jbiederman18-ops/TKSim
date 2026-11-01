@@ -143,13 +143,14 @@ function play(i,id,tg,force){if(locked())return;const sl=card()[i];const w=W_(id
  else if(tg.t==='partner'){if(m.sides[tg.i].length>=4)return toast('That side is full.');m.sides[tg.i].push(id)}
  else if(tg.t==='third'){if(m.sides.some(s=>s.length>1))return toast('Triple threats and four-ways are one per corner.');if(m.sides.length>=4)return toast('Four corners is the most.');m.sides.push([id])}
  const was=!!card()[i].d;commit(i,m);TC.sel=null;TC.confirm=null;
- const now=card()[i].d;if(now&&!was&&tg.t==='side'){TC.mode='x';toast('Both sides set. Tap a card to pick the winner, or lay a stipulation.')}
- if(now&&tg.t==='partner'&&now.sides[tg.i].length>1&&typeof hyTeamName==='function'&&!hyTeamName(now.sides[tg.i]))toast(`New pairing: ${hyJoin(now.sides[tg.i])}.`);
+ const now=card()[i].d;if(now&&!was&&tg.t==='side'){TC.mode='x';0}
+ if(now&&tg.t==='partner'&&now.sides[tg.i].length>1&&typeof hyTeamName==='function'&&!hyTeamName(now.sides[tg.i]))0;
  buzz();TC.dealt=1;render();land(i,id)}
 function takeOff(i,id){if(locked())return;const sl=card()[i];if(!sl||!tableOk(sl))return;const m=clone(cur(i));
  if(sl.k==='promo'){if(m.a===id){m.a=m.b||'';m.b=''}else if(m.b===id)m.b='';}
  else{if(sl.d&&typeof promiseOf==='function'&&promiseOf(sl.d))toast('That was a promised match — fans are still expecting it.');m.sides=m.sides.map(s=>s.filter(x=>x!==id));if(m.winner!=null&&!m.sides[m.winner])m.winner=0}
- commit(i,m);TC.mode='w';TC.dealt=1;render();toast(`${W_(id).name} is back in your hand.`)}
+ commit(i,m);TC.mode='w';TC.dealt=1;render();0}
+function crownSide(i,si){if(locked()||typeof crownTap!=='function')return;const t0=toast;toast=window.toast=function(m){if(/won't|can't|costs/.test(m))return t0.apply(this,arguments)};try{crownTap(i,si)}finally{toast=window.toast=t0}buzz()}
 function crown(i,id){if(locked())return;const sl=card()[i];const m=sl&&sl.d;
  if(sl&&sl.k==='promo')return showW(id);
  if(!m){return toast(needTxt(cur(i))+'.')}
@@ -178,8 +179,8 @@ function applyX(i,x){if(locked())return;const sl=card()[i];const [k,v]=[x.slice(
  if(k==='e')return openMatch(i);
  if(sl.k==='promo'){const m=clone(cur(i));m.type=v;commit(i,m);buzz();render();return}
  const d=sl.d;if(!d)return;
- if(k==='s'){d.stip=v;const st=STIPS[v];const f=stipFits(st,d);toast(f.spec.length&&v!=='std'?`${st.n} — suits ${shortNames(f.spec).replace(/&amp;/g,'&')}.`:`${st.n}.`)}
- if(k==='t'){d.title=d.title===v?'':v;if(d.title)toast(`${S.titles[v].n} title on the line.`)}
+ if(k==='s'){d.stip=v;const st=STIPS[v];const f=stipFits(st,d);0}
+ if(k==='t'){d.title=d.title===v?'':v;if(d.title)0}
  if(k==='n')d.pin=v;
  delete d.ev;save();buzz();render()}
 
@@ -193,7 +194,9 @@ function slotHtml(i){const c=card(),sl=c[i];let act=i===TC.act&&!locked();const 
  const tg=act&&TC.open&&TC.mode==='w'?targets(i,m):[];const live=act&&TC.sel&&TC.mode==='w';
  const drop=(t,label,cls)=>`<div class="tcdrop ${cls||''} ${live?'live':''}" data-tct='${JSON.stringify(Object.assign({s:i},t))}'>${label}</div>`;
  const pr=!promo&&sl.d&&typeof promiseOf==='function'?promiseOf(sl.d):null;
- const onC=(id)=>{if(!W_(id))return '';const d=sl.d;let mark='';if(d&&!promo&&!d.nc){if(d.sides[d.winner]&&d.sides[d.winner].includes(id))mark='<span class="tcw">Wins</span>';else{const p=pinCands(d).length>=2?pinOf(d):null;if(p===id)mark='<span class="tcw pin">Takes the pin</span>'}}
+ const onC=(id)=>{if(!W_(id))return '';const d=sl.d;let mark='';if(d&&!promo&&!d.nc){const si=d.sides.findIndex(x=>x.includes(id));const lead=si>=0&&d.sides[si][0]===id;const ok=typeof cwOk==='function'&&cwOk(d)&&!locked();
+   if(si===d.winner)mark=lead?`<span class="tcw">👑 Wins</span>`:'';
+   else{const p=pinCands(d).length>=2?pinOf(d):null;mark=(p===id?'<span class="tcw pin">Takes the pin</span>':'')+(lead&&ok?`<button class="tccr" data-tccr="${i}:${si}" aria-label="Make ${esc(sideName(d.sides[si]))} the winner">👑</button>`:'')}}
   return tcCard(W_(id),{attr:`data-tcon="${i}"`,mark})};
  let mat='',many=false;
  if(promo){mat=(m.a?`<div class="tcside">${onC(m.a)}</div>`:act?`<div class="tcside">${drop({t:'a'},'On the mic')}</div>`:'')
@@ -272,7 +275,7 @@ const inBook=()=>bookOn()&&!locked();
    on another wrestler to trade places, or anywhere outside the card to send it back), hold and let go = details. */
 const HOLD=260;
 document.addEventListener('pointerdown',e=>{if(!inBook()||(e.pointerType==='mouse'&&e.button!==0))return;
- const hc=e.target.closest('#tchand [data-tcw],#tchand .tx');const tc=e.target.closest('.tcs [data-tcon]');if(!hc&&!tc)return;
+ if(e.target.closest('.tccr'))return;const hc=e.target.closest('#tchand [data-tcw],#tchand .tx');const tc=e.target.closest('.tcs [data-tcon]');if(!hc&&!tc)return;
  const el=hc||tc;const h=document.getElementById('tchand');cancelAnimationFrame(MOM);
  PD={el,id:el.dataset.tcw,x2:el.dataset.tcx,x:e.clientX,y:e.clientY,pid:e.pointerId,hand:!!hc,on:tc?+tc.dataset.tcon:null,sl:h?h.scrollLeft:0,lx:e.clientX,lt:Date.now(),v:0};
  clearTimeout(LP);
@@ -292,13 +295,14 @@ document.addEventListener('pointerup',e=>{clearTimeout(LP);if(DR){endDrag(e.clie
  if(p.scrub){SUP=Date.now();let v=p.v*16;const h=document.getElementById('tchand');const step=()=>{if(Math.abs(v)<.4||!h)return;h.scrollLeft-=v;TC.sx=h.scrollLeft;v*=.93;MOM=requestAnimationFrame(step)};MOM=requestAnimationFrame(step);return}
  if(Date.now()-SUP<300)return;SUP=Date.now();
  if(p.long&&p.id)return showW(p.id);
- if(p.hand)tapHand(p);else crown(p.on,p.id)});
+ if(p.hand)tapHand(p);else showW(p.id)});
 document.addEventListener('pointercancel',()=>{clearTimeout(LP);PD=null;if(DR){const d=DR;cleanup();if(d.on!=null&&d.flick&&Math.abs(d.lx-d.x)>12){SUP=Date.now();takeOff(d.on,d.id)}else render()}});
 document.addEventListener('click',e=>{if(!on())return;if((Date.now()-SUP<350||(typeof DG_SUP!=='undefined'&&Date.now()<DG_SUP))&&e.target.closest&&e.target.closest('#tcdock,.tcs')&&(!e.target.closest('button')||e.target.closest('.tcpull'))){e.stopPropagation();e.preventDefault();return}
- if(!inBook())return;const d=e.target.closest&&e.target.closest('.tcdrop');if(d&&TC.sel){e.stopPropagation();const t=JSON.parse(d.dataset.tct);play(t.s,TC.sel,t);return}
+ if(!inBook())return;const cr=e.target.closest&&e.target.closest('[data-tccr]');if(cr){e.stopPropagation();e.preventDefault();const [ci,si]=cr.dataset.tccr.split(':').map(Number);crownSide(ci,si);return}
+ const d=e.target.closest&&e.target.closest('.tcdrop');if(d&&TC.sel){e.stopPropagation();const t=JSON.parse(d.dataset.tct);play(t.s,TC.sel,t);return}
  const s=e.target.closest&&e.target.closest('.tcs');if(s&&!e.target.closest('[data-tcon],button,.tcdrop')){tcAct(+s.dataset.tcs)}},true);
 document.addEventListener('keydown',e=>{if(!inBook()||(e.key!=='Enter'&&e.key!==' '))return;const c=e.target.closest&&e.target.closest('#tchand [data-tcw],#tchand .tx,.tcs [data-tcon]');if(!c)return;e.preventDefault();
- if(c.closest('#tchand'))tapHand({el:c,id:c.dataset.tcw,x2:c.dataset.tcx});else crown(+c.dataset.tcon,c.dataset.tcw)});
+ if(c.closest('#tchand'))tapHand({el:c,id:c.dataset.tcw,x2:c.dataset.tcx});else showW(c.dataset.tcw)});
 document.addEventListener('contextmenu',e=>{if(on()&&e.target.closest&&e.target.closest('.tkc,.tx'))e.preventDefault()});
 function tapHand(p){const i=TC.act;if(p.x2)return applyX(i,p.x2);
  if(TC.sel===p.id){TC.sel=null;return render()}
@@ -329,15 +333,15 @@ function moveTable(i,id,j){/* a card leaves slot i for slot j's next open space 
  const mj=cur(j);const tg=defTarget(j,mj);if(!tg){render();return toast(`${slotLab(j)} is full — drop on someone to swap them.`)}
  if(!canJoin(j,id)){render();return}
  const mi=clone(cur(i));const si=card()[i];if(si.k==='promo'){if(mi.a===id){mi.a=mi.b||'';mi.b=''}else if(mi.b===id)mi.b=''}else{mi.sides=mi.sides.map(s=>s.filter(x=>x!==id))}
- commit(i,mi);TC.act=j;TC.open=true;play(j,id,tg,true);toast(`${W_(id).name} moves to ${slotLab(j)}.`)}
+ commit(i,mi);TC.act=j;TC.open=true;play(j,id,tg,true);0}
 function tradeTable(i,id,j,other){/* two cards on the table trade places */
- if(i===j){const m=clone(cur(i));const sl=card()[i];if(sl.k==='promo'){const a=m.a;m.a=m.b;m.b=a}else m.sides=m.sides.map(s=>s.map(x=>x===id?other:x===other?id:x));commit(i,m);buzz();render();return toast(`${W_(id).name} and ${W_(other).name} switch places.`)}
+ if(i===j){const m=clone(cur(i));const sl=card()[i];if(sl.k==='promo'){const a=m.a;m.a=m.b;m.b=a}else m.sides=m.sides.map(s=>s.map(x=>x===id?other:x===other?id:x));commit(i,m);buzz();render();return 0}
  if(!canJoin(j,id,other)||!canJoin(i,other,id)){render();return}
- commit(i,swapM(i,id,other));commit(j,swapM(j,other,id));buzz();TC.dealt=1;render();toast(`${W_(id).name} and ${W_(other).name} trade places.`)}
+ commit(i,swapM(i,id,other));commit(j,swapM(j,other,id));buzz();TC.dealt=1;render();0}
 function replaceWith(j,other,id,force){/* a card from your hand takes someone's place; they go back to your hand */
  if(!canJoin(j,id,other)){render();return}
  if(!force&&card()[j].k==='match'&&usedIn('p',j).has(id)){TC.confirm={i:j,id,tg:{t:'swap',old:other}};TC.sel=null;render();return}
- commit(j,swapM(j,other,id));TC.act=j;TC.open=true;TC.sel=null;TC.confirm=null;buzz();TC.dealt=1;render();land(j,id);toast(`${W_(id).name} in, ${W_(other).name} back to your hand.`)}
+ commit(j,swapM(j,other,id));TC.act=j;TC.open=true;TC.sel=null;TC.confirm=null;buzz();TC.dealt=1;render();land(j,id);0}
 function endDrag(x,y){const t=hit(x,y);const d=DR;cleanup();SUP=Date.now();
  if(d.x2){if(t||d.vy<-.5)applyX(TC.act,d.x2);else render();return}
  const moved=Math.hypot(x-d.x,y-d.y);
@@ -448,7 +452,10 @@ html.tcards .tkc{--w:92px;position:relative;flex:none;width:var(--w);aspect-rati
 .tkc .tcbelt{position:absolute;left:5px;right:0;bottom:0;height:calc(var(--w)*.17);display:flex;align-items:center;padding-left:5px;font:900 italic calc(var(--w)*.1)/1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#140f02;background:linear-gradient(90deg,var(--gold3),var(--gold),var(--gold3));white-space:nowrap;overflow:hidden}
 .tkc.worn .tcp,.tkc.worn .tcg{filter:saturate(.3) brightness(.7)}.tkc.worn .tcf{background-blend-mode:luminosity}.tkc.worn .tcb::before{content:"";position:absolute;left:0;right:0;bottom:0;height:400%;z-index:-1;background:repeating-linear-gradient(115deg,transparent 0 9px,rgba(255,255,255,.04) 9px 10px);pointer-events:none}
 .tkc.used .tcf::after{content:"ON CARD";position:absolute;left:50%;top:44%;inset:auto;z-index:5;transform:translate(-50%,-50%) rotate(-14deg);font:900 italic calc(var(--w)*.15)/1 'BC',sans-serif;letter-spacing:.06em;color:var(--gold);border:2px solid var(--gold);padding:2px 6px;background:rgba(0,0,0,.65);white-space:nowrap}
-.tkc .tcw{position:absolute;left:50%;top:-11px;z-index:5;transform:translateX(-50%);font:900 italic 11px/1 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;background:var(--gold);color:#111;padding:3px 9px 2px;clip-path:var(--slant);white-space:nowrap}.tkc .tcw.pin{background:#1d1e23;color:var(--bad);box-shadow:inset 0 0 0 1px var(--bad)}
+.tkc .tcw{position:absolute;left:50%;top:-12px;z-index:5;transform:translateX(-50%);font:900 italic 12px/1 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;background:var(--gold);color:#111;padding:3px 9px 2px;clip-path:var(--slant);white-space:nowrap}.tkc .tcw.pin{background:#1d1e23;color:var(--bad);box-shadow:inset 0 0 0 1px var(--bad)}
+.tkc .tccr{position:absolute;left:50%;top:-16px;z-index:6;transform:translateX(-50%);width:38px;height:28px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;background:#141417;border:0;box-shadow:inset 0 0 0 1.5px var(--gold3);clip-path:var(--slant);cursor:pointer;filter:grayscale(.85) brightness(1.1);opacity:.9;touch-action:manipulation}
+.tkc .tccr:hover,.tkc .tccr:focus-visible{filter:none;opacity:1;box-shadow:inset 0 0 0 2px var(--gold)}.tkc .tccr:active{transform:translateX(-50%) scale(.92)}
+.tkc .tcw.pin+.tccr{top:12px}
 .tkc:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
 /* the table */
 .tcrord{display:flex;flex-direction:column;gap:10px}
