@@ -80,7 +80,7 @@ function corner(w,k){if(!w)return '';const sub=typeof lvSub==='function'?lvSub([
 function stageHtml(){const {ctx}=PS;const cam=PS.cam||'a';const two=!!ctx.B;
  return `<div class="sd${two?(typeof foPose==='function'?' duo':''):' solo'}" id="sd" onclick="sdTap()"><div class="sdpan${cam==='b'&&two?' at-b':''}" id="sdpan">${corner(ctx.A,'a')}${two?corner(ctx.B,'b'):''}</div>
  <div class="sdspeed" id="sdspeed"></div><div class="sdflash" id="sdflash"></div>
- <div class="sdcut" id="sdcut"></div><div class="sdtac" id="sdtac"></div><div class="sdfx" id="sdfx"></div></div>`}
+ <div class="sdcut" id="sdcut"></div><div class="sdtac" id="sdtac"></div><div class="sdfx" id="sdfx"></div>${typeof adBadge==='function'?adBadge(ctx.A,ctx.B):''}</div>`}
 function header(){const {scene,ctx}=PS;const lab=scene&&scene.ex&&typeof exLabel==='function'?exLabel(scene):PS.beat==='r'?'The response':PS.beat?'The twist':'On air';
  return liveHd(PS.live&&typeof LQ!=='undefined'&&LQ?LQ.show:'',`Promo · ${lab}`,esc(PT[PS.p.type].n),[],PS.live?'● Live':'Preview')}
 /* an empty box holds the space while the stage plays something, so the sheet doesn't jump */
@@ -125,7 +125,7 @@ function sdTap(){if(!PS||!PS.q||PANNING)return;if(TYPE){TYPE.fin();return}
  PS.qi++;if(PS.qi<PS.q.length)return showPage();
  const after=PS.after;PS.q=null;PS.after=null;if(after)after();else renderPS()}
 document.addEventListener('keydown',e=>{if(!PS||!PS.q||(e.key!==' '&&e.key!=='Enter'))return;if(e.target&&e.target.closest&&e.target.closest('button,input,select,textarea'))return;if(!document.getElementById('sdbox'))return;e.preventDefault();sdTap()});
-function queue(pages,after){if(!pages.length){if(after)after();return}PS.q=pages;PS.qi=0;PS.after=after||null;showPage()}
+function queue(pages,after){if(typeof adPromo==='function')pages=adPromo(pages,PS);if(!pages.length){if(after)after();return}PS.q=pages;PS.qi=0;PS.after=after||null;showPage()}
 
 /* ---------- what your wrestler actually says ----------
    v248: the menu shows tactics ("Go personal"), so the words behind a call are only in how it went. When that

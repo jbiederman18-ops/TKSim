@@ -1744,7 +1744,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v267';
+const APP_VERSION='v268';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4311,9 +4311,9 @@ function diffDD(){const keepIn=()=>{const g=$('#gmName'),r=$('#rvName');const gv
 function startGame(){const g=($('#gmName').value||'').trim()||'You';const r=($('#rvName').value||'').trim()||'The Rival Office';newGame(g,r,SDIFF);tab='home';render();loadRepoPhotos()}
 let CF=null;
 function openCreate(id){if(mpLocked())return;DDO=null;const w=id&&S.w[id];
- CF=w?{id,name:w.name,g:w.g,al:w.al,st:w.st,mode:w.rookie?'rookie':'custom',tier:w.tier||'bluechip',dur:Math.round(durOf(w)),ring:Math.round(w.ring),mic:Math.round(w.mic),pop:Math.round(w.pop),pot:Math.round(w.pot),tr:(w.tr||[]).slice(),auto:false}
-  :{id:null,name:'',g:'M',al:'f',st:'fl',mode:'rookie',tier:'bluechip',dur:60,ring:75,mic:65,pop:50,pot:82,tr:[],auto:true};renderCreate()}
-function cfSet(k,v){CF[k]=v;if(k==='ring'&&CF.pot<+v)CF.pot=+v;if(k==='pot'&&+v<CF.ring)CF.pot=CF.ring;renderCreate()}
+ CF=w?{id,name:w.name,g:w.g,al:w.al,st:w.st,mode:w.rookie?'rookie':'custom',tier:w.tier||'bluechip',dur:Math.round(durOf(w)),ring:Math.round(w.ring),mic:Math.round(w.mic),pop:Math.round(w.pop),pot:Math.round(w.pot),tr:(w.tr||[]).slice(),auto:false,oc:!!w.oc,ocT:true}
+  :{id:null,name:'',g:'M',al:'f',st:'fl',mode:'rookie',tier:'bluechip',dur:60,ring:75,mic:65,pop:50,pot:82,tr:[],auto:true,oc:true,ocT:false};renderCreate()}
+function cfSet(k,v){CF[k]=v;if(k==='mode'&&!CF.ocT)CF.oc=v==='rookie';if(k==='ring'&&CF.pot<+v)CF.pot=+v;if(k==='pot'&&+v<CF.ring)CF.pot=CF.ring;renderCreate()}
 function cfTrait(t){if(CF.auto)CF.auto=false;const i=CF.tr.indexOf(t);if(i>=0)CF.tr.splice(i,1);else{if(CF.tr.length>=2)CF.tr.shift();if(t==='monster')CF.tr=CF.tr.filter(x=>x!=='under');if(t==='under')CF.tr=CF.tr.filter(x=>x!=='monster');CF.tr.push(t)}renderCreate()}
 function cfSlider(k,label,min,max){return `<div class="stat"><div class="row sb"><span>${label}</span><b id="cfv-${k}">${CF[k]}</b></div><input type="range" min="${min}" max="${max}" value="${CF[k]}" oninput="document.getElementById('cfv-${k}').textContent=this.value" onchange="cfSet('${k}',+this.value)"></div>`}
 function renderCreate(){const c=CF;const nm=document.getElementById('cfName');if(nm)c.name=nm.value;
@@ -4327,6 +4327,7 @@ function renderCreate(){const c=CF;const nm=document.getElementById('cfName');if
  <label>Style</label>${seg('st',Object.entries(STYLE_N))}
  <div class="muted tiny" style="margin-top:6px">${fit.strong?'Clicks with':'Works best with'}: <b class="good">${fit.best.join(', ')||'—'}${fit.strong||!fit.best.length?'':` (+${fit.top})`}</b> · Struggles with: <b class="bad">${fit.worst.join(', ')||'—'}</b></div>
  <label>Experience</label>${seg('mode',[['rookie','🌱 Rookie'],['custom','⭐ Established']])}
+ <button class="chip ${c.oc?'on':''}" style="margin-top:10px" onclick="CF.oc=!CF.oc;CF.ocT=true;renderCreate()">🎭 Original character</button><div class="muted tiny" style="margin-top:4px">Tick this only for made-up characters, not real wrestlers. Two original characters get After Dark's charged moments.</div>
  ${c.mode==='rookie'?`${dd('tier',{title:TIERS[c.tier].n,sub:`Potential ${TIERS[c.tier].pot[0]}–${TIERS[c.tier].pot[1]} · ${money(TIERS[c.tier].cost)} fee`,rerender:renderCreate,opts:Object.entries(TIERS).map(([k,t])=>({t:t.n,right:money(t.cost)+' fee',sub:`Grows toward potential ${t.pot[0]}–${t.pot[1]}.`,on:k===c.tier,pick:()=>cfSet('tier',k)}))})}<div class="muted tiny" style="margin-top:6px">Rookies start raw and grow toward their potential by working matches and training. The fee is paid when you sign them from free agency. For a ready-made prospect, check the Prospects section of Free agents.</div>`
   :`<div class="muted tiny" style="margin-top:6px">Set their stats yourself — great for adding real wrestlers who aren't in the game yet.</div>${cfSlider('ring','In-ring',30,99)}${cfSlider('mic','Mic',20,99)}${cfSlider('pop','Popularity',5,99)}${cfSlider('pot','In-ring potential',30,99)}${cfSlider('dur','Durability',10,99)}<div class="muted tiny">Durability: how well their body holds up. Higher means less stamina lost per match and fewer injuries.</div>`}
  <label>Traits <span class="muted" style="text-transform:none;letter-spacing:0">(pick up to 2)</span></label>
@@ -4338,7 +4339,7 @@ function saveCreate(){const c=CF;c.name=($('#cfName').value||'').trim();if(!c.na
  if(isNew||w.rookie!==(c.mode==='rookie')||(c.mode==='rookie'&&w.tier!==c.tier)){
   if(c.mode==='rookie'){const r=makeRookie(c.name,c.g,c.st,c.al,c.tier);r.tier=c.tier;r.fee=TIERS[c.tier].cost;if(w){r.id=w.id}w=r}
   else{w={id:w?w.id:'cw'+partyNid(),name:c.name,g:c.g,st:c.st,al:c.al,own:null,fat:0,inj:0,mor:80,con:0,mom:0,w:0,l:0,last:0,rookie:false}}}
- Object.assign(w,{name:c.name,g:c.g,st:c.st,al:c.al,cw:true});
+ Object.assign(w,{name:c.name,g:c.g,st:c.st,al:c.al,cw:true,oc:!!c.oc});
  if(c.mode==='custom'){w.ring=c.ring;w.mic=c.mic;w.pop=c.pop;w.pop0=c.pop;w.pot=Math.max(c.pot,c.ring);w.potM=Math.min(99,Math.max(c.mic+3,c.mic+(w.pot-c.ring)));w.fee=0;w.rookie=false;w.dur=c.dur}
  w.tr=c.auto||!c.tr.length?autoTraits(w):c.tr.slice();
  S.w[w.id]=w;if(isNew)news(`🆕 ${w.name} entered the free-agent pool.`);save();CF=null;closeModal();
@@ -5288,6 +5289,7 @@ const HOWTO=`<p><b>📅 The calendar:</b> the strip on the Home screen (or <b>WK
 <p><b>Draft board:</b> during the draft, tap <b>Draft board</b> to see every GM's roster as it fills up — round by round, newest pick on top, with payroll and cap room.</p>
 <p><b>Party night:</b> any online league can play in the same room. Start it from the league's Office and everyone locks in their card, then GMs go live one at a time: you make your promo and match calls on your phone while the TV shows every choice and outcome to the room. The week airs when the last GM wraps up. To put it on a TV, open the game there, tap <b>Show a league on this screen</b> and enter the league code — the TV shows who's still booking and plays the results head to head, alternating between shows, with the better segment in each slot winning the round. End party night any time and the league goes back to taking turns with the same save. The TV goes full screen (press <b>F</b> or tap ⛶ to switch) and shows the draft as a live board of every GM's picks. While everyone books, the TV's <b>locker-room feed</b> plays each office visit as it's answered — the ring bell, the wrestler's line, then the answer — and only teases the strategic ones (tampering, the trainer, trades, tapes). On party night the TV plays the sounds and the phones stay quiet.</p>
 <p><b>🔊 Sound effects:</b> the ring bell, the crowd, near falls counted out loud, stars landing and your calls hitting. Switch them off or set the volume in the ⚙️ Game menu.</p>
+<p><b>🌙 After Dark:</b> an optional mode in the ⚙️ Game menu that turns up the heat in live promos and matches. Real wrestlers get raw, personal intensity; two created wrestlers marked 🎭 Original character get flirty, charged tension instead. It adds a line or two here and there and never changes ratings.</p>
 <p><b>Cloud save &amp; backups:</b> turn on cloud save in the ⚙️ Game menu and every solo game you play backs up automatically and syncs both ways with your other devices — enter your sync code on another device and all your games show up in ⇄ Your games there, kept in step whichever one you play. Everything still saves on the device first, so offline play just works and syncs later. If the same game was played on two devices before they synced, you're asked which save to keep and the other is kept as a backup. Deleting a game removes it from your other devices too, but its cloud copy stays under Backups → Deleted games. The game also keeps automatic backups of your last few weeks (Office → Backups).</p>
 <p><b>Show structure</b> counts toward the show rating, the way AEW's quarter-hour numbers reward it: open hot with a strong segment, keep the middle moving (back-to-back promos and dead spots cost you), build through the second half, and make the main event the best thing on the show. Every show needs something for the women's division if you have one. The Show flow card on the booking screen previews it — hold and drag segments to change the running order.</p>
 <p><b>Debuts:</b> anyone you sign during the season arrives with debut buzz. Their first appearance on your show — match or promo — pops the crowd: the bigger the star, the bigger the bump in stars and fans (a PPV debut is bigger still). Wait more than a few weeks and the buzz wears off.</p>
@@ -5317,7 +5319,7 @@ function menuView(){
  return `${pageHead('Game menu','Settings','',{sub:'Your games, photos, saves, online play and the rulebook. Your front office is back on the Office tab.'})}
  <button class="btn" onclick="openGames()">⇄ Switch games</button>
  <button class="card otool mt" onclick="openStudio()"><span class="oti">📷</span><span class="ott"><b>Photo Studio</b><span>${Object.values(S.w).filter(hasPhoto).length} of ${Object.keys(S.w).length} wrestlers have photos · import, checklist, photo packs</span></span><span class="otc">›</span></button>
- ${savesCard()}${typeof sfxCard==='function'?sfxCard():''}${mpOfficeCard()}
+ ${savesCard()}${typeof sfxCard==='function'?sfxCard():''}${typeof adCard==='function'?adCard():''}${mpOfficeCard()}
  ${typeof tutMenuCard==='function'?tutMenuCard():''}
  <details class="card"><summary class="h small">How it all works</summary>${HOWTO}</details>
  <button class="btn sec mt" onclick="go(MENU_BACK==='menu'?'home':MENU_BACK)">‹ Back to the game</button>`}
@@ -6088,6 +6090,7 @@ function hyTidy(root){if(!skinOn()||!root)return;root.querySelectorAll('.small,.
 <script src="crowd.js"></script>
 <script src="matchshow.js"></script>
 <script src="reel.js"></script>
+<script src="afterdark.js"></script>
 <script src="faceoff.js"></script>
 <script src="backstage.js"></script>
 <script src="frontoffice.js"></script>

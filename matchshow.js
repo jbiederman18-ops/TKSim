@@ -304,7 +304,7 @@ function msTitle(m){const k=stipKey(m);return (m.title&&S.titles[m.title]?S.titl
 function msActs(){const a=MS.act||0;return `<div class="msacts">${['Opening','Heat','Finish'].map((t,i)=>`<span class="${i===a?'on':i<a?'done':''}">${t}</span>`).join('')}</div>`}
 function msStage(){const m=MS.m,r=MS.r;const win=(m.sides[m.winner]||[]).map(id=>S.w[id]).filter(Boolean);const bs=(m.sides.find(s=>s.includes(r.B.id))||[r.B.id]).map(id=>S.w[id]).filter(Boolean);
  return `<div class="sd${typeof foPose==='function'?' duo':''}" id="sd" onclick="msTap()"><div class="sdpan${MS.cam==='b'?' at-b':''}" id="sdpan">${msCorner(win,'a')}${msCorner(bs,'b')}</div>
- <div class="sdspeed" id="sdspeed"></div><div class="sdflash" id="sdflash"></div><div class="msbooth" id="msbooth">Commentary</div><div class="sdfx" id="sdfx"></div></div>`}
+ <div class="sdspeed" id="sdspeed"></div><div class="sdflash" id="sdflash"></div><div class="msbooth" id="msbooth">Commentary</div><div class="sdfx" id="sdfx"></div>${typeof adBadge==='function'?adBadge(r.A,r.B):''}</div>`}
 function msHead(){return liveHd(MS.show,`${MS.it&&MS.it.main?`Match ${MS.n} · Main event`:`Match ${MS.n} · 🎬 Highlight reel`}`,esc(msTitle(MS.m)),[],'● Live')+msActs()}
 const MS_HOLD='<div class="sdbox k-cam"><div class="sdsay"></div></div><div class="sdhint">&nbsp;</div>';
 function msFrame(low){openModal(`<div class="sdw msw">${msHead()}${msStage()}<div id="sdlow">${low||MS_HOLD}</div></div>`,true)}
@@ -345,7 +345,7 @@ async function msShow(){const pg=MS.q[MS.qi];if(!pg)return;const low=document.ge
  const fin=()=>{clearInterval(iv);el.textContent=t;MS_TYPE=null;done()};MS_TYPE={fin}}
 function msTap(){if(!MS||!MS.q||MS_PAN)return;if(MS_TYPE){MS_TYPE.fin();return}MS.qi++;if(MS.qi<MS.q.length)return msShow();const a=MS.after;MS.q=null;MS.after=null;if(a)a()}
 document.addEventListener('keydown',e=>{if(!MS||!MS.q||(e.key!==' '&&e.key!=='Enter'))return;if(e.target&&e.target.closest&&e.target.closest('button,input,select,textarea'))return;if(!document.getElementById('sdbox'))return;e.preventDefault();msTap()});
-function msPlay(pages){return new Promise(res=>{pages=pages.filter(Boolean);if(!pages.length)return res();MS.q=pages;MS.qi=0;MS.after=res;msShow()})}
+function msPlay(pages){return new Promise(res=>{pages=pages.filter(Boolean);if(typeof adMatch==='function')pages=adMatch(pages,MS);if(!pages.length)return res();MS.q=pages;MS.qi=0;MS.after=res;msShow()})}
 const msLines=ls=>ls.map(msPage);
 /* the call menu: same buttons as every other call, so party-night TV shows which one you picked */
 function msMenu(q,sub,items){MS.res=null;return new Promise(res=>{MS.menu={q,sub,items,res};msDrawMenu();if(typeof foPose==='function')foPose(null)})}

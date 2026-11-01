@@ -199,6 +199,12 @@ Party night is a way to play an online league, not a separate game. It uses the 
 - Screens slide in the direction you move and the nav highlight glides between tabs. The **ROH** screen has its own red-and-black look.
 - Everything calms down to simple fades if your phone has **Reduce motion** turned on.
 
+## After Dark
+An optional mode under **⚙️ Game menu → After Dark** (off by default). Live promos and matches get a couple of extra, more heated beats — never more than two per segment, and they never change how a segment rates.
+- **Real wrestlers** (the whole roster, plus created wrestlers who are real people) get **raw intensity**: personal, venomous grudges.
+- **Two 🎭 Original characters** (a box on the create screen; ticked by default for rookies, unticked for Established) get **smoulder**: flirty, charged, almost-a-kiss tension. Suggestive, never explicit.
+- A small 🌙 After Dark badge sits on the stage, including on party-night TV.
+
 ## Sound effects
 Sound is on by default; switch it off or set the volume under **⚙️ Game menu → Sound effects**.
 - **Party-night TV:** the ring bell for each office visit and a sound for the answer, a broadcast sting when a GM goes live, the "Picked" stamp, a chime for every draft pick, stars landing one by one, a crowd pop for each round win, a thud for every show thrown over the top rope, a fanfare for the winner and three bells for a new champion.
