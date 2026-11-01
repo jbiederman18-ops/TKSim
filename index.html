@@ -1744,7 +1744,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v268';
+const APP_VERSION='v269';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -6033,7 +6033,7 @@ function hyJoin(ids){const o=ids.slice().sort((a,b)=>S.w[b].pop-S.w[a].pop).map(
 function hyTired(w){return w.inj?'hurt':staWord(100-(w.fat||0))!=='Fresh'?'tired':''}
 /* v217: back to side-by-side plates (v215), sized up, in a slimmer slot frame. */
 function hyFo(w,pos,win){if(!w)return '<div class="fo"><b class="fon">TBD</b></div>';const t=titlesOf(w.id)[0];const ch=hyChip(w);
- return `<div class="fo ${w.al==='f'?'fc':'hl'}${win?' w':''}" data-dg="${pos}" data-dp="${pos}"><div class="fot"><span class="o">${ovr(w)}</span><span class="for">${win?'<span class="wn">WIN</span>':''}${win&&/hych g/.test(ch)?'':ch}</span></div><b class="fon${w.name.length>14?' ln':''}">${esc(w.name)}</b>${t?`<i class="twbelt">${esc(t.n)}</i>`:''}</div>`}
+ return `<div class="fo ${w.al==='f'?'fc':'hl'}${win?' w':''}" data-dg="${pos}" data-dp="${pos}"><span class="fop">${portrait(w)}</span><div class="fot"><span class="o">${ovr(w)}</span><span class="for">${win?'<span class="wn">WIN</span>':''}${win&&/hych g/.test(ch)?'':ch}</span></div><b class="fon${w.name.length>14?' ln':''}">${esc(w.name)}</b>${t?`<i class="twbelt">${esc(t.n)}</i>`:''}</div>`}
 function hyTc(ids,i,si,pis,win){const ws=ids.map(id=>S.w[id]);const avg=Math.round(ws.reduce((a,w)=>a+ovr(w),0)/ws.length);
  const lead=ws.slice().sort((a,b)=>b.pop-a.pop)[0];const nm=hyTeamName(ids)||hyJoin(ids);
  const bt=Object.values(S.titles).find(t=>t.holders.length>=2&&t.holders.every(id=>ids.includes(id)));
@@ -6108,6 +6108,7 @@ function hyTidy(root){if(!skinOn()||!root)return;root.querySelectorAll('.small,.
 <script src="sfx.js"></script>
 <script src="feed.js"></script>
 <script src="solotv.js"></script>
+<script src="split.js"></script>
 <script type="module" src="online.js"></script>
 </body>
 </html>
