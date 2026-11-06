@@ -639,6 +639,16 @@ html.tcards #modal:not(.lobbyM) .sheet:not(.tv-live-sheet){background:linear-gra
 html.tcards #modal:not(.lobbyM) .sheet:not(.tv-live-sheet):before{display:block;top:8px;width:44px;height:4px;margin-left:-22px;background:#55565e;border-radius:2px;clip-path:none}
 html.tcards #modal .mhd{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--text);-webkit-text-fill-color:currentColor;font-size:24px;line-height:1.02;text-wrap:balance}
 html.tcards .wd-pic.tcwd{width:auto;aspect-ratio:auto;overflow:visible;clip-path:none;box-shadow:none}html.tcards .wd-pic.tcwd .tkc{--w:118px;cursor:default}
+/* menu screens (v283): every panel is the same flat tile as the table, headed by a gold label */
+html.tcards.lk-hy .card:not(.showcard):not(.ttape),html.tcards.lk-hy .tile{background:#141417;border:0;box-shadow:inset 0 0 0 1px var(--line)}
+html.tcards.lk-hy .card.tcard,html.tcards.lk-hy .card.mine{box-shadow:inset 3px 0 0 var(--gold),inset 0 0 0 1px var(--line);border-top:0}
+html.tcards.lk-hy .card.warn,html.tcards.lk-hy .card.conbar.warn,html.tcards.lk-hy .card.bstrip.hot{background:#141417;border-top:0;box-shadow:inset 3px 0 0 var(--red),inset 0 0 0 1px var(--line)}
+html.tcards.lk-hy .card.conbar{border-top:0}
+html.tcards.lk-hy .card .h.small,html.tcards.lk-hy .conbar>.row>b{font:800 13px/1.2 'BC','Barlow Condensed',sans-serif!important;font-style:italic!important;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+html.tcards.lk-hy .bstrip .bst b{font:900 italic 19px/1 'BC',sans-serif;text-transform:uppercase}html.tcards.lk-hy .bstrip .bsn{color:var(--gold)}
+html.tcards.lk-hy .tile em{color:rgba(242,193,78,.16)}
+.tcrow .tkc.tccon{--w:92px;width:92px}.tcmore{flex:none;width:92px;aspect-ratio:5/7;border:2px dashed #3d3e46;background:none;color:var(--mut);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:800 italic 12px/1.1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;text-align:center;cursor:pointer;padding:6px}.tcmore b{font-size:24px;color:var(--gold)}
+.tcr .tcrm{display:flex;gap:3px;flex:none;margin-right:10px}.tcr .tcrm .tcmini .tkc{--w:28px;width:28px}
 /* one look everywhere (v282): showdowns, live plates, the reveal, the draft */
 .tcmini{display:inline-flex;flex:none;vertical-align:middle}.tcmini .tkc{--w:30px;width:30px;cursor:inherit;pointer-events:none}.tcmini .tkc .tcb,.tcmini .tkc .tct,.tcmini .tkc .tco,.tcmini .tkc .tcbelt,.tcmini .tkc .tcf::after{display:none}.tcmini .tkc .tcf{box-shadow:inset 0 0 0 1px #3a3b42}.tcmini .tkc.ch .tcf{box-shadow:inset 0 0 0 1.5px var(--gold)}.tcmini .tkc .tcf::before{width:3px}
 html.tcards .sdph.tcin{aspect-ratio:5/7;height:92%;background:none;clip-path:none;box-shadow:none;overflow:visible}html.tcards .sdph.tcin>.tkc{--w:150px;width:100%;height:100%;cursor:default}
