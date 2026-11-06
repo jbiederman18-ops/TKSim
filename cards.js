@@ -463,7 +463,7 @@ function tcBk(inner,cls){return `<span class="tcbk2 ${cls||''}">${inner||''}</sp
 function gmCard(name,you){return `<div class="tkc ${you?'fc':'hl'} tcgm"><div class="tcf"><div class="tcg">${esc(tcIni(name))}</div><span class="tct ${you?'must':''}">${you?'You':'Rival'}</span><div class="tcb"><b class="tcn">${esc(name)}</b><span class="tcc ${you?'t':'m'}">GM</span></div></div></div>`}
 function pileOf(ws,dx){return `<span class="tcpile">${ws.map((w,k)=>`<span style="left:${k*dx}px;top:${k*3}px;transform:rotate(${(k-(ws.length-1)/2)*5}deg)">${tcCard(w,{noWear:true})}</span>`).join('')}</span>`}
 function homeDecks(m){const tl=m.querySelector('.tiles');if(!tl||tl.dataset.tcd)return;tl.dataset.tcd='1';tl.classList.add('tcdecks');const mine=ownList('p');
- tl.querySelectorAll('.tile').forEach(t=>{const nm=(t.querySelector('b')||{}).textContent||'';let pile='';
+ tl.querySelectorAll('.tile').forEach(t=>{const nm=(t.querySelector('b')||{}).textContent||'';let pile='';if(!/^(roster|titles)/i.test(nm))return;t.classList.add('tcdkt');
   if(/^roster/i.test(nm))pile=pileOf(mine.filter(w=>!w.inj).sort((a,b)=>ovr(b)-ovr(a)).slice(0,3),22);
   else if(/^titles/i.test(nm)){const ch=[];Object.values(S.titles).forEach(T=>{const w=W_(T.holders[0]);if(w&&w.own==='p'&&!ch.includes(w))ch.push(w)});pile=ch.length?pileOf(ch.sort((a,b)=>ovr(b)-ovr(a)).slice(0,2),26):tcBk('🏆')}
   else if(/office/i.test(nm))pile=`<span class="tccash"><small>Bank</small><b>${esc(money(S.money.p))}</b></span>`;
@@ -472,16 +472,15 @@ function homeDecks(m){const tl=m.querySelector('.tiles');if(!tl||tl.dataset.tcd)
 function homeWar(m){const n=m.querySelector('.warnames');if(!n||n.dataset.tcd)return;n.dataset.tcd='1';const box=n.closest('.card');const bar=box&&box.querySelector(':scope>.war');
  const pct=bar&&bar.querySelector('i')?parseFloat(bar.querySelector('i').style.width)||50:50;const rows=box?box.querySelectorAll(':scope>.row.sb'):[];
  const wins=`${S.hourWins.p||0}–${S.hourWins.ai||0}`;
- n.outerHTML=`<div class="tcwar">${gmCard(S.gm,true)}<div class="tcrope"><span>Fan war</span><div class="r"><i style="left:${pct}%"></i></div><b>${wins}</b><span>Ratings wins</span></div>${gmCard(S.rival,false)}</div>`;
+ const np=(nm,you)=>`<div class="tcnp ${you?'y':''}"><span>${you?'You':ON()?'Friend':'Rival'}</span><b>${esc(nm)}</b></div>`;
+ n.outerHTML=`<div class="tcwar">${np(S.gm,true)}<div class="tcrope"><span>Fan war</span><div class="r"><i style="left:${pct}%"></i></div><b>${wins}</b><span>Ratings wins</span></div>${np(S.rival,false)}</div>`;
  if(bar)bar.remove()}
 function homeBrief(m){const b=m.querySelector('.bstrip .bsn');if(!b||b.dataset.tcd)return;b.dataset.tcd='1';b.innerHTML=`<span class="tcstk">${tcBk('')}${tcBk(b.textContent)}</span>`}
-function homeMenus(){if(!on()||!S||S.phase!=='season'||typeof tab==='undefined'||tab!=='home')return;const m=document.querySelector('#app main');if(!m)return;homeDecks(m);homeWar(m);homeBrief(m)}
+function homeMenus(){if(!on()||!S||S.phase!=='season'||typeof tab==='undefined'||tab!=='home')return;const m=document.querySelector('#app main');if(!m)return;homeDecks(m);homeWar(m)}
 /* saved games: each one is a show card */
 function showCard(g,big){const lg=g.k==='league';const wk=g.wk?(lg?`Wk ${Math.min(g.wk,SEASON)}/${SEASON}`:`Wk ${g.wk}`):'';
  const st=g.active?['now','Playing now']:g.turn==='mine'?['turn','Your turn']:g.turn==='wait'?['','Waiting']:g.at?['',whenTxt2(g.at)]:['',''];
  return `<span class="tcshow ${lg?'':'solo'} ${big?'cur':''}"><span class="sb">${lg?'League':'Solo'}<i>${esc(wk)}</i></span><span class="sg">${esc(tcIni(g.t))}</span><span class="sn">${esc(g.t)}</span><span class="sw">${esc(g.sub||'')}</span><span class="st ${st[0]}">${esc(st[1])}</span></span>`}
-if(typeof gameRow==='function'){const gr0=gameRow;gameRow=window.gameRow=function(g){if(!on())return gr0.apply(this,arguments);
- return `<div class="tcgame"><button class="tcgo" onclick="${g.active?'closeModal()':gOpen(g)}" aria-label="${esc(g.t)}">${showCard(g)}</button><button class="lbmore tcgm2" onclick="gameMenu('${g.k}','${g.id}',${g.cur?1:0})" aria-label="More options">⋯</button></div>`}}
 if(typeof gameHero==='function'){const gh0=gameHero;gameHero=window.gameHero=function(g){if(!on())return gh0.apply(this,arguments);
  const lab=g.turn==='mine'?"It's your turn":g.active?'Pick up where you left off':g.turn==='wait'?'Waiting on your friends':'Jump back in';const go=g.active?'closeModal()':gOpen(g);
  const stat=(v,l)=>v!=null&&v!==''?`<div><b>${v}</b><span>${l}</span></div>`:'';
@@ -678,11 +677,13 @@ html.tcards.lk-hy .hyb i{transform:none}html.tcards.lk-hy nav.tabs button.on:bef
 html.tcards.lk-hy .tile em,html.tcards.lk-hy .tile:after{display:none}
 .tcbk2{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none;width:var(--bw,66px);aspect-ratio:5/7;border-radius:3px;background:#0c0c0e url(card-bg.jpg) center/cover;box-shadow:inset 0 0 0 1.5px var(--gold3),0 6px 14px rgba(0,0,0,.5);font:900 italic calc(var(--bw,66px)*.36)/1 'BC',sans-serif;color:var(--gold)}
 .tcbk2 .tcst{position:absolute;left:6px;right:4px;bottom:7px;font-size:11px;letter-spacing:.02em;color:var(--gold);text-align:left;white-space:nowrap}
-html.tcards .tiles.tcdecks .tile{height:auto;min-height:0;display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:12px}html.tcards .tiles.tcdecks .tile>svg{display:none}
-.tcdk{position:relative;display:block;height:112px;width:100%}html.tcards .tiles.tcdecks .tile b{position:relative;z-index:1;margin-top:0}
-html.tcards.lk-hy .showcard{background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.78)),#0c0c0e url(card-bg.jpg) center/cover;box-shadow:inset 0 4px 0 var(--red),inset 0 0 0 1px var(--gold3);border-radius:3px;padding-bottom:16px}html.tcards.lk-hy .showcard .kicker{color:var(--gold)}html.tcards.lk-hy .showcard .kicker i{background:var(--red);box-shadow:0 0 8px var(--red)}.tcpile{position:absolute;left:0;top:0;display:block}.tcpile>span{position:absolute}.tcpile .tkc{--w:66px;width:66px;cursor:inherit;pointer-events:none}
+html.tcards .tiles.tcdecks .tile{height:auto;min-height:0;display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:12px}html.tcards .tiles.tcdecks .tile.tcdkt>svg{display:none}html.tcards .tiles.tcdecks .tile:not(.tcdkt){justify-content:flex-end}
+.tcdk{position:relative;display:block;height:112px;width:100%}html.tcards .tiles.tcdecks .tile.tcdkt b{position:relative;z-index:1;margin-top:0}
+html.tcards.lk-hy .showcard{background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.78)),#0c0c0e url(card-bg.jpg) center/cover;box-shadow:inset 0 4px 0 var(--red),inset 0 0 0 1px var(--gold3);border-radius:3px;padding-bottom:16px}html.tcards.lk-hy .showcard .kicker{color:var(--gold)}html.tcards.lk-hy .showcard .kicker i{background:var(--red);box-shadow:0 0 8px var(--red)}.tcpile{position:absolute;left:0;top:0;display:block}.tcpile>span{position:absolute}html.tcards .tcpile .tkc{--w:66px;width:66px;cursor:inherit;pointer-events:none}
 .tccash{position:absolute;left:0;top:0;width:66px;aspect-ratio:5/7;border-radius:3px;background:#0c0c0e url(card-bg.jpg) center/cover;box-shadow:inset 0 0 0 2px var(--gold),0 6px 14px rgba(0,0,0,.5);display:flex;flex-direction:column;justify-content:flex-end;padding:6px 7px}.tccash b{font:900 italic 16px/1 'BC',sans-serif;color:var(--gold2)}.tccash small{font:700 9px/1 'BC',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
-.tcwar{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin:4px 0 12px}.tcwar .tkc{--w:84px;width:84px;cursor:default}
+.tcwar{display:grid;grid-template-columns:minmax(0,1fr) minmax(90px,1.1fr) minmax(0,1fr);align-items:center;gap:10px;margin:4px 0 12px}
+.tcnp{min-width:0;display:flex;flex-direction:column;gap:4px;padding:10px 10px 10px 12px;background:#1d1e23;border-radius:3px;box-shadow:inset 3px 0 0 var(--heel)}.tcnp.y{box-shadow:inset 3px 0 0 var(--gold)}.tcnp:last-child{text-align:right;box-shadow:inset -3px 0 0 var(--heel)}
+.tcnp span{font:700 11px/1 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}.tcnp b{font:900 italic 17px/1 'BC',sans-serif;text-transform:uppercase;text-wrap:balance;overflow-wrap:anywhere}.tcnp.y b{color:var(--gold)}
 .tcrope{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}.tcrope .r{position:relative;width:100%;height:6px;border-radius:3px;background:linear-gradient(90deg,var(--gold) 0 50%,var(--heel) 50%)}.tcrope .r::after{content:"";position:absolute;left:50%;top:-6px;bottom:-6px;width:1px;background:var(--mut)}
 .tcrope .r i{position:absolute;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:var(--gold2);box-shadow:0 0 0 3px #141417,0 0 12px rgba(246,221,142,.6)}
 .tcrope b{font:900 italic 22px/1 'BC',sans-serif;font-variant-numeric:tabular-nums}.tcrope span{font:700 11px/1.2 'BC',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);text-align:center}
@@ -696,7 +697,7 @@ html.tcards .bstrip .bsn{display:flex;align-items:center}.tcstk{position:relativ
 .tcshow .sw{position:absolute;left:9px;right:8px;bottom:calc(var(--gw,120px)*.15);font:700 calc(var(--gw,120px)*.085)/1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tcshow .st{position:absolute;left:0;right:0;bottom:0;height:calc(var(--gw,120px)*.13);display:flex;align-items:center;padding-left:9px;font:900 italic calc(var(--gw,120px)*.085)/1 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;background:#1d1e23;color:var(--mut)}.tcshow .st.turn{background:linear-gradient(90deg,var(--gold3),var(--gold),var(--gold3));color:#140f02}.tcshow .st.now{background:#1d2a22;color:var(--good)}
 .tcgo{border:0;padding:0;background:none;cursor:pointer;display:block}.tcgo:active{transform:scale(.97)}
-html.tcards #games .lblist{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 10px;justify-items:center}
+html.tcards.lk-hy #games .lbtag{border-radius:2px;background:var(--red);color:#fff}html.tcards.lk-hy #games .lbtag.solo{background:#24252b;color:var(--gold)}html.tcards.lk-hy #games .lbst.turn{border-radius:2px}
 .tcgame{position:relative;--gw:min(28vw,124px)}.tcgame .tcgm2{position:absolute;right:4px;top:calc(var(--gw)*.24);width:30px;height:26px;padding:0;border-radius:2px;background:rgba(0,0,0,.6);color:var(--text)}
 .tchero{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:end;margin-bottom:18px;--gw:min(44vw,176px)}
 .tchi{display:flex;flex-direction:column;gap:10px;min-width:0}.tchi .k{font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}.tchi .t{font:900 italic 24px/1 'BC',sans-serif;text-transform:uppercase;text-wrap:balance;overflow-wrap:anywhere}
