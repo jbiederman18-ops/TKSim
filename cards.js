@@ -29,9 +29,9 @@ window.cardsSet=setOn;
 document.documentElement.classList.toggle('tcards',ONF);
 
 /* ---------------- state ---------------- */
-const TC={act:null,mode:'w',sel:null,confirm:null,dr:{},wk:null,dealt:0,sx:0,open:false,tg:null,rep:null,f:'fit'};
+const TC={act:null,mode:'w',sel:null,confirm:null,dr:{},wk:null,dealt:0,sx:0,open:false,tg:null,rep:null,f:'fit',sh:{}};
 function wkKey(){return S?[S.season||0,S.week,S.gm,S.phase].join('|'):''}
-function sync(){const k=wkKey();if(TC.wk!==k){TC.wk=k;TC.dr={};TC.act=null;TC.mode='w';TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;TC.open=false}}
+function sync(){const k=wkKey();if(TC.wk!==k){TC.wk=k;TC.dr={};TC.sh={};TC.act=null;TC.mode='w';TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;TC.open=false}}
 const card=()=>(S&&S.card&&S.card.p)||[];
 const ppvNow=()=>{try{return !!curShow().ppv}catch(e){return false}};
 const W_=id=>S&&S.w[id];
@@ -129,7 +129,18 @@ function targets(i,m){const sl=card()[i];m=m||cur(i);
  if(m.sides.length===2){const lo=Math.min(...sz);m.sides.forEach((s,j)=>{if(s.length<4&&s.length===lo)t.push({t:'partner',i:j})})}
  if(sz.every(n=>n===1)&&m.sides.length<4)t.push({t:'third'});
  return t}
-function defTarget(i,m){const t=targets(i,m);return t.find(x=>x.t==='side'||x.t==='a'||x.t==='b')||(()=>{const p=t.filter(x=>x.t==='partner');return p.length===1?p[0]:null})()}
+/* match shapes (v287): pick Singles, Tag, Trios, Triple threat or Four-way and the table lays out every space; the sheet fills them in turn */
+const SHAPES=[['singles','Singles',2,1],['tag','Tag',2,2],['trios','Trios',2,3],['triple','Triple threat',3,1],['four','Four-way',4,1]];
+function shapeOf(i,m){if(TC.sh[i])return TC.sh[i];const ty=typeFor(m.sides);if(ty&&SHAPES.some(x=>x[0]===ty))return ty;
+ const n=m.sides.filter(x=>x.length).length,per=Math.max(1,...m.sides.map(x=>x.length));return n>=4?'four':n===3?'triple':per>=3?'trios':per===2?'tag':'singles'}
+function shapeDims(k){const x=SHAPES.find(y=>y[0]===k)||SHAPES[0];return [x[2],x[3]]}
+function shapeNext(m,k){const [n,per]=shapeDims(k);for(let r=0;r<per;r++)for(let j=0;j<n;j++){const sd=m.sides[j];if(!sd)return {t:'third'};if(sd.length<=r)return sd.length?{t:'partner',i:j}:{t:'side',i:j}}return null}
+function defTarget(i,m){m=m||cur(i);const sl=card()[i];if(sl&&sl.k==='match'&&TC.sh[i])return shapeNext(m,TC.sh[i]);return defTarget0(i,m)}
+window.tcShape=function(k){const i=TC.act;if(i==null||locked())return;const sl=card()[i];if(!sl||sl.k!=='match')return;const [n,per]=shapeDims(k);
+ const m=clone(cur(i));const before=idsOf(i,m).length;m.sides=m.sides.slice(0,n).map(x=>x.slice(0,per));while(m.sides.length<2)m.sides.push([]);
+ TC.sh[i]=k;const cut=before-idsOf(i,m).length;commit(i,m);TC.tg=null;TC.rep=null;TC.mode=shapeNext(cur(i),k)?'w':TC.mode;TC.f='fit';TC.dealt=1;render();center(i);
+ if(cut>0)toast(`${cut} sent back to the roster.`)};
+function defTarget0(i,m){const t=targets(i,m);return t.find(x=>x.t==='side'||x.t==='a'||x.t==='b')||(()=>{const p=t.filter(x=>x.t==='partner');return p.length===1?p[0]:null})()}
 
 /* ---------------- playing a card ---------------- */
 function commit(i,m){const sl=card()[i];const ppv=ppvNow();
@@ -153,7 +164,7 @@ function play(i,id,tg,force){if(locked())return;const sl=card()[i];const w=W_(id
  if(fullIn('p',i).has(id))return toast(`${w.name} can't take another match tonight — ${DD_MAX} is the limit.`);
  if(card().some(o=>o.k==='xo'&&o.d&&o.d.a===id))return toast(`${w.name} is already in the dream match tonight.`);
  if(!force&&usedIn('p',i).has(id)){TC.confirm={i,id,tg};TC.sel=null;render();return}
- tg=tg||defTarget(i,m);if(!tg)return toast(`${slotLab(i)} is set. Drop on + to add a partner or a third.`);
+ tg=tg||defTarget(i,m);if(!tg)return toast(`${slotLab(i)} is full — pick a bigger match or swap someone out.`);
  if(tg.t==='side')m.sides[tg.i].push(id);
  else if(tg.t==='partner'){if(m.sides[tg.i].length>=4)return toast('That side is full.');m.sides[tg.i].push(id)}
  else if(tg.t==='third'){if(m.sides.some(s=>s.length>1))return toast('Triple threats and four-ways are one per corner.');if(m.sides.length>=4)return toast('Four corners is the most.');m.sides.push([id])}
@@ -223,12 +234,12 @@ function slotHtml(i){const c=card(),sl=c[i];let act=i===TC.act&&!locked();const 
  if(promo){mat=(m.a?`<div class="tcside">${onC(m.a)}</div>`:act?`<div class="tcside">${drop({t:'a'},'On the mic')}</div>`:'')
   +((m.b||(act&&m.a))?`<div class="tcvs">&amp;</div><div class="tcside">${m.b?onC(m.b):drop({t:'b'},PT[m.type]&&PT[m.type].b==='req'?'Opponent':'Second (optional)')}</div>`:'')}
  else if((act&&TC.open)||idsOf(i,m).length){
-  if(idsOf(i,m).length>3)many=true;const act0=act;act=act&&TC.open;
+  if(idsOf(i,m).length>3||(TC.sh[i]&&shapeDims(TC.sh[i])[0]*shapeDims(TC.sh[i])[1]>3))many=true;const act0=act;act=act&&TC.open;
   mat=m.sides.map((s,j)=>{const ps=s.map(onC).join('');const em=!s.length&&(act||idsOf(i,m).length)?drop({t:'side',i:j},j===0?'Pick':'Opponent'):'';
-   const pt=tg.find(t=>t.t==='partner'&&t.i===j)?drop({t:'partner',i:j},'','mini'):'';
+   const shp=TC.sh[i]?shapeDims(TC.sh[i]):null;const pt=shp?Array.from({length:Math.max(0,shp[1]-Math.max(1,s.length))},()=>s.length?drop({t:'partner',i:j},'Partner'):`<div class="tcdrop ghost" aria-hidden="true"><b>+</b>Partner</div>`).join(''):tg.find(t=>t.t==='partner'&&t.i===j)?drop({t:'partner',i:j},'','mini'):'';
    if(!fin||!s.length)return `<div class="tcside">${ps}${em}${pt}</div>`;const wn=sl.d.winner===j;
    return `<div class="tcsg"><div class="tcside">${ps}${em}${pt}</div><button class="tcwin ${wn?'on':''}" ${can&&!wn?'':'disabled'} data-tccr="${i}:${j}" aria-pressed="${wn}" aria-label="${wn?esc(sideName(s))+' wins':'Make '+esc(sideName(s))+' the winner'}"><b>👑</b>${wn?'Wins':'Win'}</button></div>`}).join('<div class="tcvs">vs</div>')
-   +(tg.find(t=>t.t==='third')?`<div class="tcvs">vs</div><div class="tcside">${drop({t:'third'},'Third')}</div>`:'');act=act0}
+   +(TC.sh[i]?Array.from({length:Math.max(0,shapeDims(TC.sh[i])[0]-m.sides.length)},(x,q)=>`<div class="tcvs">vs</div><div class="tcside">${drop({t:'third'},m.sides.length+q===2?'Third':'Fourth')}</div>`).join(''):tg.find(t=>t.t==='third')?`<div class="tcvs">vs</div><div class="tcside">${drop({t:'third'},'Third')}</div>`:'');act=act0}
  const d=sl.d;let mods='';
  if(promo&&m.a&&PT[m.type])mods=`<span class="tcm g">${esc(PT[m.type].n)}</span>`;
  if(!promo&&d){const st=stipKey(d);const f=stipFits(STIPS[st],d);mods=`<span class="tcm ${st!=='std'&&f.spec.length?'g':st==='std'?'q':''}">${esc(STIPS[st].n)}</span>${d.title&&S.titles[d.title]?`<span class="tcm g">${esc(S.titles[d.title].n)} title</span>`:''}${d.ri&&d.ri.x&&W_(d.ri.x)?`<span class="tcm">Run-in · ${esc(ln(W_(d.ri.x)))}</span>`:''}${typeof finOf==='function'&&finOf(d)!=='clean'?'<span class="tcm">Screwy finish</span>':''}`}
@@ -249,7 +260,7 @@ function sheetTitle(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';const 
  if(!tg)return [L,'This match is full'];
  if(tg.t==='side'){const o=m.sides.find((x,j)=>j!==tg.i&&x.length);return [L+(m.sides.length===2?` · ${tg.i?'right':'left'} side`:''),o?`Who faces ${sideName(o)}?`:'Who opens it?']}
  if(tg.t==='partner')return [L,`Partner for ${sideName(m.sides[tg.i])}`];
- if(tg.t==='third')return [L,'Who’s the third corner?'];
+ if(tg.t==='third')return [L,m.sides.length>=3?'Who’s the fourth corner?':'Who’s the third corner?'];
  return [L,'Pick a wrestler']}
 /* who the cards are measured against: the other side (or, when swapping, whoever stays) */
 function sheetAnchor(i,m,tg){const sl=card()[i];
@@ -263,13 +274,13 @@ function sheetCards(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';const 
  return ownList('p').filter(w=>!w.inj&&!here.includes(w.id)&&!full.has(w.id)&&(TC.f==='all'||(TC.f==='ch'?isChamp(w.id):w.al===TC.f)))
   .sort((a,b)=>(promo?b.mic-a.mic:ovr(b)-ovr(a))).map(w=>({w,r:why(w,anchor,i,am,tt)}))}
 function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open)return '';const m=cur(i);const promo=sl.k==='promo';
- const tl=targets(i,m);let tg=TC.rep?null:(TC.tg||defTarget(i,m)||tl[0]||null);if(tg&&!TC.tg&&!defTarget(i,m))TC.tg=tg;
+ const tl=targets(i,m);let tg=TC.rep?null:(TC.tg||defTarget(i,m)||(promo?tl[0]:null)||null);
  const [k,t]=sheetTitle(i,m,tg);const used=usedIn('p',i);
  const hasX=promo?!!m.a:!!sl.d;
  const pc=(x,n)=>tcCard(x.w,{tab:x.r&&x.r[0]?x.r[0]:'',tabc:x.r?x.r[1]:'',used:used.has(x.w.id),cls:TC.dealt?'deal':'',attr:`data-tcpick="${x.w.id}" style="animation-delay:${Math.min(n,8)*30}ms"`});
  let body='';
  if(TC.mode==='x'){const xs=extras(i);body=xs.length?`<div class="tcgx">${xs.map(x=>`<div class="tx ${x.fit?'fit':''} ${x.on?'on':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span></div>`).join('')}</div>`:`<div class="tcempty">${promo?'Pick who’s on the mic first.':'Fill both sides first.'}</div>`}
- else if(!tg&&!TC.rep)body=`<div class="tcempty">Every space in this match is taken. Tap someone on the table to swap them out.</div>`;
+ else if(!tg&&!TC.rep)body=`<div class="tcempty">Every space is filled. Pick a bigger match above to add more, or tap someone on the table to swap them out.</div>`;
  else{const l=sheetCards(i,m,tg);
   if(!l.length)body=`<div class="tcempty">Nobody fits that filter tonight.</div>`;
   else if(TC.f==='fit'){const mu=l.filter(x=>x.r&&x.r[1]==='must'),rest=l.filter(x=>!(x.r&&x.r[1]==='must'));let n=0;
@@ -277,13 +288,14 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open)return ''
   else{let n=0;body=`<div class="tcgrid">${l.map(x=>pc(x,n++)).join('')}</div>`}}
  const fc=[['fit','Best fit'],['ch','Champions'],['f','Faces'],['h','Heels'],['all','All']];
  const chips=`${hasX&&!TC.rep?`<button class="chip ${TC.mode==='x'?'on':''}" onclick="tcMode('${TC.mode==='x'?'w':'x'}')">${promo?'Segment':'Stips &amp; titles'}</button>`:''}${fc.map(([v,n])=>`<button class="chip ${TC.mode==='w'&&TC.f===v?'on':''}" onclick="tcF('${v}')">${n}</button>`).join('')}`;
- const tch=!TC.rep&&TC.mode==='w'&&tl.length>1&&!defTarget(i,m)?`<div class="tcshc">${tl.map((x,j)=>`<button class="chip ${tg&&x.t===tg.t&&x.i===tg.i?'on':''}" onclick="tcTg(${j})">${x.t==='partner'?`+ Partner · ${esc(ln(W_(m.sides[x.i][0])))}`:x.t==='third'?'+ Third corner':x.t==='side'?(x.i?'Right side':'Left side'):'Second'}</button>`).join('')}</div>`:'';
+ const shc=!promo&&!TC.rep?`<div class="tcshc tcshp">${SHAPES.map(([k,n])=>`<button class="chip ${shapeOf(i,m)===k?'on':''}" onclick="tcShape('${k}')">${n}</button>`).join('')}</div>`:'';
+ const tch=false&&!TC.rep&&TC.mode==='w'&&tl.length>1&&!defTarget(i,m)?`<div class="tcshc">${tl.map((x,j)=>`<button class="chip ${tg&&x.t===tg.t&&x.i===tg.i?'on':''}" onclick="tcTg(${j})">${x.t==='partner'?`+ Partner · ${esc(ln(W_(m.sides[x.i][0])))}`:x.t==='third'?'+ Third corner':x.t==='side'?(x.i?'Right side':'Left side'):'Second'}</button>`).join('')}</div>`:'';
  const cf=TC.confirm&&W_(TC.confirm.id)?`<div class="tccf"><span>${esc(W_(TC.confirm.id).name)} is already on the card tonight. A second match costs ${DD_FAT}× the stamina.</span><button class="mini" onclick="tcNo()">No</button><button class="mini on" onclick="tcYes()">Book twice</button></div>`:'';
  const foot=TC.rep&&W_(TC.rep)?`<div class="tcsf"><button class="btn sec" onclick="tcBack()">Send back</button><button class="btn sec" onclick="showW('${TC.rep}')">Details</button></div>`:'';
  TC.dealt=0;
  return `<div class="tcscrim" onclick="tcScrim()"></div><div class="tcdock tcsheet" id="tcdock" role="dialog" aria-label="${esc(t)}"><button class="tcpull open" onclick="tcClose()" aria-label="Close"><span class="tcgrip"></span></button>
  <div class="tcsh"><div class="tcst"><span class="tcsk">${esc(k)}</span><b>${esc(t)}</b></div><button class="tcsx" onclick="tcClose()" aria-label="Close">✕</button></div>
- ${cf}<div class="tcsc">${chips}</div>${tch}<div class="tcsb" id="tcsb">${body}</div>${foot}</div>`}
+ ${cf}${shc}<div class="tcsc">${chips}</div>${tch}<div class="tcsb" id="tcsb">${body}</div>${foot}</div>`}
 function pickAct(){const c=card();if(TC.act!=null&&c[TC.act]&&tableOk(c[TC.act]))return;
  const ok=c.map((sl,i)=>tableOk(sl)?i:-1).filter(i=>i>=0);if(!ok.length){TC.act=null;return}
  const empty=ok.filter(i=>!c[i].opt&&!c[i].d&&!TC.dr[i]);let mi=-1;try{mi=mainMi(c)}catch(e){}
@@ -302,7 +314,7 @@ function decorate(){if(!bookOn())return;sync();const app=document.getElementById
 /* actions the markup calls */
 window.tcAct=function(i,stay){const sl=card()[i];if(!sl)return;if(!tableOk(sl)){if(sl.k==='match')return openMatch(i);if(sl.k==='xo'&&typeof openXo==='function')return openXo(i);return}
  if(TC.act===i&&TC.open){if(!stay)center(i);return}
- if(TC.act!==i||!TC.open){TC.act=i;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;TC.f='fit';TC.mode=(sl.k==='promo'?promoOk(cur(i))&&cur(i).b:!!sl.d)?'x':'w'}
+ if(TC.act!==i||!TC.open){TC.act=i;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;TC.f='fit';if(sl.k==='match'&&!TC.sh[i])TC.sh[i]=shapeOf(i,cur(i));TC.mode=(sl.k==='promo'?promoOk(cur(i))&&cur(i).b:!!sl.d)?'x':'w'}
  TC.open=true;TC.dealt=1;render();if(!stay)center(i)};
 /* put the slot in the middle of the space between the header and the hand */
 function center(i){requestAnimationFrame(()=>requestAnimationFrame(()=>{const el=document.querySelector(`.tcs[data-tcs="${i}"]`);if(!el)return;
@@ -316,16 +328,16 @@ window.tcF=function(k){TC.f=k;TC.mode='w';TC.dealt=1;render();const b=document.g
 window.tcTg=function(j){const t=targets(TC.act,cur(TC.act))[j];if(t){TC.tg=t;TC.dealt=1;render()}};
 window.tcBack=function(){const i=TC.act,id=TC.rep;TC.rep=null;TC.open=false;if(i!=null&&id)takeOff(i,id);else render()};
 /* open the sheet for one space on the table, or to swap out someone already there */
-function sheetAt(i,tg){if(locked())return;const sl=card()[i];if(!sl||!tableOk(sl))return;TC.act=i;TC.tg=tg||null;TC.rep=null;TC.sel=null;TC.confirm=null;TC.mode='w';TC.f='fit';TC.open=true;TC.dealt=1;render();center(i)}
+function sheetAt(i,tg){if(locked())return;const sl=card()[i];if(!sl||!tableOk(sl))return;if(sl.k==='match'&&!TC.sh[i])TC.sh[i]=shapeOf(i,cur(i));TC.act=i;TC.tg=tg||null;TC.rep=null;TC.sel=null;TC.confirm=null;TC.mode='w';TC.f='fit';TC.open=true;TC.dealt=1;render();center(i)}
 function sheetRep(i,id){if(locked())return;const sl=card()[i];if(!sl||!tableOk(sl))return;TC.act=i;TC.tg=null;TC.rep=id;TC.sel=null;TC.confirm=null;TC.mode='w';TC.f='fit';TC.open=true;TC.dealt=1;render();center(i)}
 /* a card tapped in the sheet goes into the space the sheet is filling; then the sheet moves on to the next open space or closes */
 function sheetPick(id){const i=TC.act;if(i==null||locked())return;const before=JSON.stringify(cur(i));
  if(TC.rep){replaceWith(i,TC.rep,id);if(TC.confirm)return;TC.rep=null;return afterPick(i,before)}
- const m=cur(i);const tg=card()[i].k==='promo'?(TC.tg||(!m.a?{t:'a'}:{t:'b'})):(TC.tg||defTarget(i,m)||targets(i,m)[0]);
- if(!tg)return toast(`${slotLab(i)} is full — tap someone on the table to swap them out.`);
+ const m=cur(i);const tg=card()[i].k==='promo'?(TC.tg||(!m.a?{t:'a'}:{t:'b'})):(TC.tg||defTarget(i,m));
+ if(!tg)return toast(`${slotLab(i)} is full — pick a bigger match or swap someone out.`);
  play(i,id,tg);if(TC.confirm)return;afterPick(i,before)}
 function afterPick(i,before){if(JSON.stringify(cur(i))===before)return;TC.tg=null;TC.f='fit';const sl=card()[i];const m=cur(i);
- const more=sl.k==='promo'?!m.b:!sl.d&&!!defTarget(i,m);
+ const more=sl.k==='promo'?!m.b:TC.sh[i]?!!defTarget(i,m):!sl.d&&!!defTarget(i,m);
  if(more){TC.mode='w';TC.open=true;TC.dealt=1}else TC.open=false;render();if(TC.open)center(i)}
 window.tcMode=function(k){TC.mode=k;TC.sel=null;TC.dealt=1;render()};
 window.tcYes=function(){const c=TC.confirm;if(!c)return;TC.confirm=null;const before=JSON.stringify(cur(c.i));if(c.tg&&c.tg.t==='swap'){replaceWith(c.i,c.tg.old,c.id,true);TC.rep=null}else play(c.i,c.id,c.tg,true);afterPick(c.i,before)};
@@ -738,6 +750,7 @@ html.tcards .tv-last .tkc{--w:180px;width:var(--w)}
 .tcst{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.tcsk{font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
 .tcst b{font:900 italic 21px/1.02 'BC',sans-serif;text-transform:uppercase;text-wrap:balance}
 .tcsx{flex:none;width:40px;height:36px;border:0;background:#1d1e23;color:var(--mut);clip-path:var(--slant);font:900 17px/1 'BC',sans-serif;cursor:pointer}
+.tcdrop.ghost{opacity:.5;pointer-events:none}.tcshp{padding-bottom:8px}html.tcards #tcdock .tcshp .chip.on{background:var(--text);color:var(--ink);box-shadow:none}
 .tcsc,.tcshc{flex:none;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:0 16px 10px}.tcsc::-webkit-scrollbar,.tcshc::-webkit-scrollbar{display:none}.tcsc .chip,.tcshc .chip{flex:none;margin:0}
 .tcsb{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;border-top:1px solid var(--line);touch-action:pan-y}
 .tcgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px 10px;justify-items:center;padding:16px 16px 20px}
