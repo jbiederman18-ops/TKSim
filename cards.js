@@ -67,6 +67,18 @@ function tcCard(w,o){o=o||{};const [cw,cc]=condOf(w);const t=titlesOf(w.id)[0];c
  <div class="tcf ${hasPhoto(w)?'ph':''}">${hasPhoto(w)?`<div class="tcp">${portrait(w)}</div>`:`<div class="tcg">${esc(initials(w.name))}</div>`}<span class="tco">${ovr(w)}</span>${o.tab?`<span class="tct ${o.tabc||''}">${esc(o.tab)}</span>`:''}<div class="tcb"><b class="tcn${w.name.length>13?' ln':''}">${esc(w.name)}</b><span class="tcc ${cc}">${esc(o.cond||cw)}</span>${t?`<i class="tcbelt">${esc(t.n)}</i>`:''}</div></div>${o.mark||''}</div>`}
 window.tcCard=tcCard;
 
+/* v280: every wrestler tile in the game (free agents, the draft, pickers, editor slots) is a card when the table is on */
+if(typeof wcard==='function'){const wc0=wcard;
+ const txt=h=>{const d=document.createElement('div');d.innerHTML=String(h||'');return d.textContent.replace(/\s+/g,' ').trim()};
+ wcard=window.wcard=function(w,o){o=o||{};if(!on()||!w)return wc0.apply(this,arguments);
+  const fdv=o.feud&&o.feud.h>=1?o.feud:null;
+  let tab='',tabc='';if(o.bk){tab=o.bk;tabc='must'}else if(o.ask){tab=o.ask.length>26?o.ask.slice(0,24).replace(/\s+\S*$/,'')+'…':o.ask;tabc='must'}else if(o.why){tab=o.why;tabc=/rival|feud/i.test(o.why)?'feud':/asked|promis|due/i.test(o.why)?'must':''}
+  else if(o.fl&&o.fl.length&&o.fl[0].o){tab=`Feud · ${ln(o.fl[0].o)}`;tabc='feud'}else if(fdv&&fdv.o){tab=`Feud · ${ln(fdv.o)}`;tabc='feud'}
+  let cond=txt(o.info);if(o.gain&&w.own){const v=sta(w),a=Math.max(0,v-o.gain);cond=`Stamina ${v}→${a}`}
+  const tags=(w.cw&&!w.own?'<span class="tcnew">New</span>':w.deb&&w.own?'<span class="tcnew">Debut</span>':'');
+  const click=o.dis?'':o.on!=null?o.on:`showW('${w.id}')`;
+  return tcCard(w,{tab,tabc,cond:cond||undefined,noWear:!w.own,cls:`${o.sel?'sel':''} ${o.dis?'dis':''} tcwc`,attr:`${o.attr||''} ${click?`onclick="${click}"`:''} ${o.dis?'aria-disabled="true"':''}`,mark:tags})}}
+
 /* ---------------- dealing a hand ---------------- */
 function defenseDue(id){return Object.values(S.titles||{}).some(t=>t.holders.includes(id)&&t.last!=null&&S.week-t.last>=4&&!card().some(sl=>sl&&sl.k==='match'&&sl.d&&sl.d.title===t.id))}
 function promisedWith(id){let l=[];try{l=unmetPromises(card())}catch(e){}return l.filter(pr=>pr.a===id||pr.b===id).map(pr=>pr.a===id?pr.b:pr.a)}
@@ -614,6 +626,19 @@ html.tcards .twpair .twh[data-k]+.twh[data-k]{animation-delay:.12s}
 .tvpile i{display:block;width:22px;height:30px;background:#0c0c0e url(card-bg.jpg) center/cover;box-shadow:inset 0 0 0 1px var(--gold3);animation:tvslam .35s cubic-bezier(.2,1.3,.4,1) both}
 .tvpile:not(.lk) i{animation:tvbob 1.4s ease-in-out infinite}
 @keyframes tvslam{from{opacity:0;transform:translateY(-40%) scale(1.5) rotate(-8deg)}}@keyframes tvbob{50%{transform:translateY(-4px) rotate(-3deg)}}
+/* every tile, avatar and sheet in the card style (v280) */
+html.tcards .cgrid{gap:16px 10px;justify-items:center}html.tcards .cgrid .tkc{--w:min(28vw,124px);width:var(--w)}
+html.tcards .eslot .tkc{--w:min(30vw,112px);width:var(--w);margin:0 auto}html.tcards .vscol .tkc{--w:min(30vw,112px);width:var(--w);margin:0 auto}
+html.tcards .tkc.sel .tcf{box-shadow:inset 0 0 0 3px var(--gold),0 0 0 2px rgba(242,193,78,.3),0 6px 14px rgba(0,0,0,.55)}html.tcards .tkc.dis{opacity:.45;cursor:default}
+.tkc .tcnew{position:absolute;right:4px;top:6px;z-index:3;font:900 italic 10px/1 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px 2px;background:var(--red);color:#fff;clip-path:var(--slant)}
+html.tcards .wc.empty{aspect-ratio:5/7;width:min(30vw,112px);margin:0 auto;background:none;border:2px dashed #3d3e46;clip-path:none;box-shadow:none;color:var(--gold);font:800 italic 13px/1.1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase}
+html.tcards.lk-hy .fav,html.tcards.lk-hy .lr .fav,html.tcards.lk-hy .duo .fav,html.tcards.lk-hy .tmrow .tmf .fav{width:26px;height:36px;border-radius:2px;clip-path:none;border:0;background:#0c0c0e url(card-bg.jpg) center/cover;box-shadow:inset 3px 0 0 var(--face),inset 0 0 0 1px #3a3b42}
+html.tcards.lk-hy .fav.ah,html.tcards.lk-hy .duo .fav.ah{border:0;box-shadow:inset 3px 0 0 var(--heel),inset 0 0 0 1px #3a3b42}html.tcards.lk-hy .fav.af,html.tcards.lk-hy .duo .fav.af{border:0}
+html.tcards #modal:not(.lobbyM) .sheet:not(.tv-live-sheet){background:linear-gradient(180deg,#1b1c21,#101115);border-top:0;box-shadow:0 -1px 0 var(--gold3),0 -20px 40px rgba(0,0,0,.6);padding-top:26px}
+html.tcards #modal:not(.lobbyM) .sheet:not(.tv-live-sheet):before{display:block;top:8px;width:44px;height:4px;margin-left:-22px;background:#55565e;border-radius:2px;clip-path:none}
+html.tcards #modal .mhd{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--text);-webkit-text-fill-color:currentColor;font-size:24px;line-height:1.02;text-wrap:balance}
+html.tcards .wd-pic.tcwd{width:auto;aspect-ratio:auto;overflow:visible;clip-path:none;box-shadow:none}html.tcards .wd-pic.tcwd .tkc{--w:118px;cursor:default}
+html.tcards .tv-last .tkc{--w:180px;width:var(--w)}
 /* roster, titles and home in cards (v280) */
 .tcrg{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 10px;justify-items:center;margin-top:12px}.tcrg .tkc{--w:min(29vw,124px)}html.tcards .tcrg .tkc{width:var(--w)}
 @media(min-width:620px){.tcrg{grid-template-columns:repeat(5,1fr)}.tcrg .tkc{--w:112px}}
