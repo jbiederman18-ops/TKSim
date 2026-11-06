@@ -1,10 +1,10 @@
 // Tony Khan Simulator — offline support. Bump VERSION whenever you upload a new index.html (and APP_VERSION in index.html to match — that's the label shown in the game).
-const VERSION = 'aegm-v291';
+const VERSION = 'aegm-v293';
 
 const FILES = ['./', './index.html', './fonts/bc-600.woff2', './fonts/bc-700.woff2', './fonts/bc-800i.woff2', './fonts/bc-900i.woff2', './fonts/barlow-500.woff2', './fonts/barlow-600.woff2', './fonts/barlow-700.woff2', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './icon-maskable-512.png',
   './online.js', './firebase-sdk.js', './firebase-config.js',
   './party.js', './scenarios.js', './scenarios2.js', './scenarios3.js', './gimmicks.js', './season.js', './pitches.js', './openchal.js', './deals.js', './vendor/qrcode.js',
-  './crises2.js', './tutorial.js', './challenges.js', './farm.js', './rohleague.js', './morale.js', './retorts.js', './exchange.js', './promoshow.js', './crowd.js', './matchshow.js', './backstage.js', './frontoffice.js', './titlepic.js', './attention.js', './teamsug.js', './history.js', './trades.js', './hype.js', './fx.js', './belts.js', './wwe.js', './inbox.js', './squash.js', './calendar.js', './cut.js', './sfx.js', './feed.js', './solotv.js', './reel.js', './afterdark.js', './faceoff.js', './cards.js', './sfx/cheer.mp3', './sfx/boo.mp3', './sfx/applause.mp3', './card-bg.jpg'];
+  './crises2.js', './tutorial.js', './challenges.js', './farm.js', './rohleague.js', './morale.js', './wrestlervoice.js', './retorts.js', './exchange.js', './promoshow.js', './crowd.js', './matchshow.js', './backstage.js', './frontoffice.js', './titlepic.js', './attention.js', './teamsug.js', './history.js', './trades.js', './hype.js', './fx.js', './belts.js', './wwe.js', './inbox.js', './squash.js', './calendar.js', './cut.js', './sfx.js', './feed.js', './solotv.js', './reel.js', './afterdark.js', './faceoff.js', './cards.js', './sfx/cheer.mp3', './sfx/boo.mp3', './sfx/applause.mp3', './card-bg.jpg'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)));

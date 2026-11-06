@@ -1,166 +1,176 @@
-/* Tony Khan Simulator — After Dark (v268).
-   An optional mode (⚙️ Game menu, off by default) that turns up the temperature in live promos and matches.
-   It only adds lines to what the promo and match showdowns already play — the engine, calls, odds and scoring
-   are untouched, so it never changes how a show rates.
-
-   Two flavours, chosen by who's in the segment:
-     • Smoulder — both wrestlers are created ORIGINAL characters (the 🎭 Original character box on the create
-       screen). Charged, flirty, almost-a-kiss tension. Suggestive, never explicit.
-     • Raw — everyone else, including every real wrestler on the roster and created wrestlers who are real people.
-       Real people never get the smoulder lines: their After Dark is pure intensity — personal, venomous grudges.
-
-   Pacing: at most two extra beats a promo and two a match, so promos don't get longer than they need to be.
-   Lines are written without pronouns for the wrestlers (the game is gender-agnostic).
-   Line codes: A>/B> = what {A}/{B} does (written without the name), a:/b: = said by {A}/{B}, P:/C: = play-by-play /
-   colour commentary, ~ = the camera / the crowd. Loaded after matchshow.js. */
+/* After Dark is broadcast dialogue only. Callers opt in at a known point in
+   the segment, where the extra beat can follow the action already on screen. */
 'use strict';
 (function(){
-const KEY='tksim_ad';
+const KEY='tksim_ad', MODE_KEY='tksim_ad_mode';
+const MODES={auto:'Auto',raw:'Grudge',smoulder:'Tension'};
+const CAP=2, RAW_HEAT=30;
 const on=()=>{try{return localStorage.getItem(KEY)==='1'}catch(e){return false}};
-const PROMO_CAP=2,MATCH_CAP=2,P_OPEN=.7,P_AFTER=.45,P_MATCH=.5;
+function preference(){
+ try{const mode=localStorage.getItem(MODE_KEY);return Object.hasOwn(MODES,mode)?mode:'auto'}catch(e){return 'auto'}
+}
+function flavour(state,A,B){
+ if(!state.adTone){const mode=preference();
+  state.adTone=mode==='auto'?(heatOf(A.id,B.id)>=RAW_HEAT?'raw':'smoulder'):mode}
+ return state.adTone;
+}
+/* The show engine uses Math.random. These cosmetic draws have their own source. */
+const roll=new Uint32Array(1);
+function random(){return crypto.getRandomValues(roll)[0]/0x100000000}
+const USED=new Map();
+function draw(lines){
+ const last=USED.get(lines);
+ const choices=lines.filter(beat=>beat!==last);
+ const beat=choices.length?choices[Math.floor(random()*choices.length)]:lines[0];
+ USED.set(lines,beat);
+ return beat;
+}
+const fillN=(t,A,B)=>t.replace(/\{A\}/g,()=>A.name).replace(/\{B\}/g,()=>B.name);
 
-/* ================= promos ================= */
+/* a/b are spoken lines, p/c are booth calls, x is a camera note.
+   Keep studio dialogue free of physical spots. Match spots can echo the
+   current action, or follow a compatible closing shot, without changing it. */
 const PROMO={
- smoulder:{
-  open:[
-   ['~The lights drop low. Somebody in the crowd wolf-whistles.','A>circles {B} slowly, close enough to feel the heat coming off them.','a:You\'ve been thinking about this all week. Don\'t lie to me.'],
-   ['B>leans in until their foreheads almost touch.','b:Careful. You\'re starting to look like you want this.','~Nobody in the building breathes.'],
-   ['A>takes the mic, eyes never leaving {B}.','a:Every time I close my eyes, there you are. And I hate it.'],
-   ['B>tilts {A}\'s chin up with one finger.','b:Look at me when you lie.'],
-   ['~The camera catches it: neither of them is looking at the crowd anymore.','a:Say my name like that one more time.','B>smirks and says nothing at all.'],
-   ['A>steps in close and whispers something off-mic.','~Whatever it was, {B} has to look away first. The crowd loses its mind.'],
-   ['b:You know what your problem is? You can\'t decide if you want to beat me or—','A>presses a finger to {B}\'s lips.','a:Finish that sentence in the ring.'],
-   ['~A slow, low "ooooh" rolls around the building.','B>looks {A} up and down, taking their time about it.','b:Not bad. Not bad at all.'],
-   ['a:I\'ve studied every inch of you on tape. Every. Inch.','b:Funny. I didn\'t need the tape.'],
-   ['A>straightens {B}\'s collar, far too gently.','a:There. Now you look like someone worth beating.'],
-   ['~Someone in the front row fans themselves with a sign.','b:You\'re staring.','a:You\'re letting me.'],
-   ['B>takes the mic back, fingers brushing {A}\'s and lingering there.','b:Whoops.']],
-  after:[
-   ['B>wets their lips, completely unbothered.','b:Keep talking. I like it when you get worked up.'],
-   ['B>steps into {A}\'s space, chest to chest, breathing hard.','~The referee outside the ring isn\'t sure whether to step in.'],
-   ['b:You say that like you haven\'t been dreaming about me.','~The crowd howls.'],
-   ['B>laughs, low and slow.','b:You\'re cute when you\'re angry.'],
-   ['~For a second it looks like they might kiss. Then it looks like they might kill each other. Maybe both.'],
-   ['B>reaches out and tucks a loose strand of hair behind {A}\'s ear.','b:Easy. Save some of that for later.'],
-   ['B>doesn\'t step back. Doesn\'t blink.','b:Closer. Say it closer.'],
-   ['~The director cuts to a wide shot. The two of them haven\'t moved an inch apart.'],
-   ['b:Mmm. Again.','~The building comes unglued.'],
-   ['B>traces a slow line down {A}\'s arm with one finger.','b:We\'ll finish this somewhere with fewer witnesses.'],
-   ['A>catches {B}\'s wrist mid-gesture and holds it a beat too long.','~Neither one pulls away.'],
-   ['b:You\'re shaking.','a:So are you.']]},
  raw:{
   open:[
-   ['~The lights stay harsh. Nobody\'s playing to the cameras tonight.','A>stares {B} down in dead silence for a full ten seconds.','a:I don\'t like you. I never have.'],
-   ['B>spits on the mat at {A}\'s feet.','~A gasp, then a roar.'],
-   ['a:This isn\'t a storyline anymore. You made it personal, so here we are.'],
-   ['A>pulls the mic close, voice low and shaking.','a:I lie awake planning what I\'m going to do to you.'],
-   ['B>gets right in {A}\'s face, nose to nose.','b:Then do something about it.'],
-   ['~The truck kills the music. It\'s just the two of them and a building holding its breath.'],
-   ['a:Everyone in the back tells me to let it go. I am not letting it go.'],
-   ['B>shoves past security to get closer.','b:You don\'t get to walk away from me this time.'],
-   ['~A fan in the upper deck yells "FIGHT!" and nobody laughs.'],
-   ['A>slams the mic against the turnbuckle, then picks it back up.','a:Sorry. Where was I? Right. You.']],
-  after:[
-   ['B>doesn\'t flinch. Just smiles, cold.','b:That all you\'ve got?'],
-   ['B>grabs {A} by the back of the neck and pulls them in close.','b:Say it again. I dare you.'],
-   ['~Security hits the ring. Both of them shove security away without looking.'],
-   ['b:You\'re going to regret every word of that.'],
-   ['B>breathes hard, jaw clenched, fists white.','~The crowd is on its feet, waiting for the first punch.'],
-   ['b:I\'ll see you in the ring. Bring a doctor.'],
-   ['~Someone in the back cuts the house lights. When they come back up, the two are still nose to nose.'],
-   ['B>laughs, but there\'s nothing funny in it.','b:Keep pushing. See what happens.'],
-   ['B>slaps the mic out of {A}\'s hand.','~It thuds on the canvas and the place erupts.'],
-   ['b:I know where you came from. I know what you\'re scared of. Keep talking.']]}};
-
-/* ================= matches ================= */
+   [['a',"I want the first shot to split your lip. I want you to taste it every time you think about asking for a rematch."]],
+   [['a',"{B}, if you want me to stop, tell the referee. I want everybody to hear you do it."]],
+   [['a',"When you put your hand on the rope, I'm going to make the referee count to four. Then we'll find out if you're stupid enough to reach for it twice."]],
+   [['a',"I can win in three seconds. I want to see how long it takes you to realize I'd rather make you give up."]],
+   [['a',"There's a look people get when they finally realize they have to fight their way out. That's the part I'm here for."]],
+   [['a',"You can come out smiling, {B}. By the end I want the camera close enough to see where the blood gets between your teeth."]]],
+  exchange:[
+   [['a',"That's the voice I want you to use when you're asking the ref to get me off you."],['b',"You'll have to get me down first."]],
+   [['a',"You want to know what I think of you? I'm going to leave it across your chest in the shape of my hand."]],
+   [['a',"Keep going. I want to know which word you're going to regret first."],['b',"All of them if you can make me."]],
+   [['a',"When you're swallowing blood, try saying that again. I want to see which one you choke on."]],
+   [['a',"I was going to settle for a pin. Say it like that one more time and I'll make you give up where everybody can see it."]],
+   [['a',"I'm going to work that arm until you forget which hand you were pointing with."],['b',"Get close enough to take it."]]]},
+ smoulder:{
+  open:[
+   [['a',"I've watched enough tape to know exactly how close you get before you throw a shot. That's the part I keep rewinding."]],
+   [['a',"{B}, you can get close enough to make me forget what I was going to say. The problem is I know I can do the same thing to you."]],
+   [['a',"If you're going to look at me like that, at least wait until I've finished pretending I came out here to talk."]],
+   [['a',"All week I've been thinking about that first lockup. The half second before either of us decides what to do with our hands."]],
+   [['a',"I like it when you try to get under my skin. You always get a little too close and wait to see if I'll move."]],
+   [['a',"The bell only tells me when I have to let go. It doesn't tell me how long I'm allowed to think about it afterward."]]],
+  exchange:[
+   [['a',"You do that thing with your voice when you want me to come closer."],['b',"And you always notice."]],
+   [['a',"Keep looking at my mouth. I'll tell you when you miss something."],['b',"I heard you just fine."]],
+   [['a',"I can feel you waiting for me to back off."],['b',"I was waiting to see if you wanted to."]],
+   [['a',"Careful. There's a difference between getting in my head and making me want you there."],['b',"I know."]],
+   [['a',"Ask me again when there's nobody else to hear what I say."],['b',"I'd rather hear you say it now."]],
+   [['a',"If you wanted me to keep my distance, you'd stop giving me reasons to close it."],['b',"Who said I wanted that?"]]]}
+};
 const MATCH={
- smoulder:{
-  0:[
-   ['~The bell rings. Neither of them moves.','A>circles slowly, eyes locked on {B}.','C:Somebody turn up the air conditioning in here.'],
-   ['A>locks up with {B} and neither one lets go, foreheads pressed together.','a:Missed me?','b:Every single day.'],
-   ['B>wins a test of strength and pulls {A} in close instead of pressing the advantage.','~A low "ooooh" rolls through the crowd.'],
-   ['P:A clean break in the corner... a very slow, very clean break.','C:Longest clean break I have ever seen.'],
-   ['A>slaps {B} across the face. {B} just smiles and steps closer.','b:Do that again.'],
-   ['~They meet in the middle of the ring, close enough to share a breath.','C:I feel like I should look away. I am not looking away.']],
-  1:[
-   ['A>pins {B} against the ropes and holds there, chest heaving.','b:You could finish it. You won\'t.','P:What is going on between these two?'],
-   ['B>reverses the hold and ends up on top, face inches from {A}\'s.','~The camera lingers on the shot a little too long.'],
-   ['C:These two have chemistry you can\'t teach.','P:Chemistry? Is that what we\'re calling it?'],
-   ['A>wraps {B} up in a slow, grinding submission, both of them breathing hard.','a:Give up.','b:Make me.'],
-   ['B>cups {A}\'s jaw gently... then cracks a forearm across it.','~Half the crowd swoons. The other half winces.'],
-   ['~They roll to the floor in a tangle and come up still holding on to each other.','P:Somebody separate them! ...Nobody is separating them.'],
-   ['A>whispers something into {B}\'s ear mid-headlock.','~Whatever it was, {B} goes red and fights out with a fury.']],
-  3:[
-   ['A>helps {B} up. Their hands stay locked a beat too long.','C:Get a room! ...I say that with respect.'],
-   ['B>catches {A} on the ramp, spins them around, and the two just stare at each other, breathing hard.','~The show goes to commercial on that shot.'],
-   ['A>kneels over {B} and brushes the hair out of their eyes.','a:Rematch. Your place or mine.','~The crowd explodes.'],
-   ['B>pulls {A} into a slow, long embrace that nobody can read.','P:Is that respect? A threat? Something else?','C:Yes.'],
-   ['~They stand nose to nose in the middle of the ring long after the bell, saying nothing.','C:I need a cold shower and I wasn\'t even in the match.']]},
  raw:{
-  0:[
-   ['~No handshake. No feeling-out process. The bell rings and they just collide.','P:They hate each other, folks, and they are not hiding it.'],
-   ['A>spits at {B}\'s feet before the bell.','B>doesn\'t wait for the referee.'],
-   ['a:I\'ve waited months for this.','b:Then stop talking.','P:And here we go!'],
-   ['A>and {B} trade open-hand slaps so loud they echo off the rafters.','C:You could hear that in the parking lot.'],
-   ['~The referee tries to check them for weapons. Neither one will look away from the other long enough to let him.']],
-  1:[
-   ['A>grinds a forearm across {B}\'s face.','a:Look at me. LOOK at me.','C:That\'s not wrestling, that\'s a grudge.'],
-   ['B>bites down on {A}\'s fingers to break the hold.','P:Nothing is off limits tonight!'],
-   ['~They spill into the crowd, still swinging. Fans scatter.','P:Security! Somebody!'],
-   ['B>stomps a mudhole in {A} in the corner, screaming the whole time.'],
-   ['A>rakes {B}\'s eyes and drags them back up.','b:Is that all?','C:This is personal. This is so personal.'],
-   ['P:I\'ve called a lot of matches. I don\'t like how this one feels.','C:Me neither. And I can\'t look away.']],
-  3:[
-   ['A>keeps swinging after the bell. It takes three referees to pull them apart.'],
-   ['B>staggers up and points straight at {A}.','b:This isn\'t over. Not even close.'],
-   ['~The winner\'s music hits, but nobody\'s celebrating. They\'re still screaming at each other all the way up the ramp.'],
-   ['A>stands over {B}, breathing hard, and grabs a mic.','a:Again.'],
-   ['B>shoves a referee aside to get one last look at {A}.','~The cameras follow them all the way to the back.']]}};
-
-/* ================= picking and building ================= */
-const USED={};
-function draw(key,list){const u=USED[key]||(USED[key]=new Set());if(u.size>=list.length)u.clear();
- const free=list.map((x,i)=>i).filter(i=>!u.has(i));const i=free[Math.floor(Math.random()*free.length)];u.add(i);return list[i]}
-const orig=w=>!!(w&&w.oc&&w.cw);
-const flavour=(A,B)=>orig(A)&&orig(B)?'smoulder':'raw';
-const fillN=(t,A,B)=>String(t).replace(/\{A\}/g,A.name).replace(/\{B\}/g,B.name);
-/* promo pages: acts are shown "(…)" under the speaker's tab, so they're written without the name */
-function promoPage(l,A,B){const c=l.slice(0,2),t=fillN(l.slice(2),A,B);
- if(l[0]==='~')return {cam:fillN(l.slice(1),A,B)};
- if(c==='A>')return {side:'a',act:t};if(c==='B>')return {side:'b',act:t};
- if(c==='a:')return {side:'a',q:t};if(c==='b:')return {side:'b',q:t};return {cam:fillN(l,A,B)}}
-/* match pages: acts are narration, so they lead with the name */
-function matchPage(l,A,B){const c=l.slice(0,2),t=fillN(l.slice(2),A,B);
- if(l[0]==='~')return {side:null,kind:'cam',t:fillN(l.slice(1),A,B)};
- if(c==='A>')return {side:'a',kind:'act',t:A.name+' '+t};if(c==='B>')return {side:'b',kind:'act',t:B.name+' '+t};
- if(c==='a:')return {side:'a',kind:'q',t};if(c==='b:')return {side:'b',kind:'q',t};
- if(c==='P:')return {side:null,kind:'booth',who:'Play-by-play',t};if(c==='C:')return {side:null,kind:'booth',who:'Colour',t};
- return {side:null,kind:'cam',t:fillN(l,A,B)}}
-
-window.adPromo=function(pages,PS){try{
- if(!on()||!PS||!PS.ctx||!pages||!pages.length)return pages;const A=PS.ctx.A,B=PS.ctx.B;if(!A||!B)return pages;
- if((PS._ad||0)>=PROMO_CAP)return pages;
- const last=pages[pages.length-1];const after=!!(last&&last.stamp);
- if(Math.random()>(after?P_AFTER:P_OPEN))return pages;
- const fl=flavour(A,B);const set=PROMO[fl][after?'after':'open'];
- const add=draw('p'+fl+(after?'a':'o'),set).map(l=>promoPage(l,A,B));PS._ad=(PS._ad||0)+1;
- return after?pages.slice(0,-1).concat(add,[last]):pages.concat(add)}catch(e){console.warn(e);return pages}};
-
-window.adMatch=function(pages,MS){try{
- if(!on()||!MS||!MS.r||!MS.m||!pages||!pages.length)return pages;const A=MS.r.A,B=MS.r.B;if(!A||!B)return pages;
- if((MS.m.sides||[]).length>2||MS.m.type==='rumble'||MS.m.type==='gauntlet')return pages;
- const act=MS.act||0;if(act===2)return pages;   /* never in the middle of a finish */
- if((MS._ad||0)>=MATCH_CAP||Math.random()>P_MATCH)return pages;
- const fl=flavour(A,B);const set=MATCH[fl][act];if(!set)return pages;
- MS._ad=(MS._ad||0)+1;return pages.concat(draw('m'+fl+act,set).map(l=>matchPage(l,A,B)))}catch(e){console.warn(e);return pages}};
-
-/* the badge on the stage — it's in the stage's own markup, so party-night TV shows it too */
-window.adBadge=function(A,B){if(!on()||!A||!B)return '';return `<div class="adbadge${flavour(A,B)==='smoulder'?' sm':''}">🌙 After Dark</div>`};
-
-/* the Game menu card */
-window.adSet=function(v){try{localStorage.setItem(KEY,v?'1':'0')}catch(e){}if(typeof render==='function')render()};
-window.adCard=function(){const o=on();return `<div class="card"><div class="row sb"><div class="h small" style="margin:0">🌙 After Dark</div><div class="chips" style="margin:0"><button class="chip ${o?'on':''}" onclick="adSet(true)">On</button><button class="chip ${o?'':'on'}" onclick="adSet(false)">Off</button></div></div>
- <p class="muted tiny" style="margin:8px 0 0">Live promos and matches get more heated. Real wrestlers get raw, personal intensity. When both wrestlers are created <b>🎭 Original characters</b>, the tension turns flirty and charged. Adds a couple of lines here and there; it never changes how a segment rates.</p></div>`};
+  open:[
+   [['a',"First one across the mouth is free."],['b',"Come collect the second one."]],
+   [['p',"Listen to how quiet they've gone now that the bell's rung."],['c',"You only get that look when the other person can hear you breathe."]],
+   [['a',"When it starts to hurt, look at me."],['b',"I plan to."]],
+   [['c',"Watch the hands. They're both leaving their chins out there because they want an excuse to hit first."]]],
+  heat:[
+   [['c',"There are easier ways to win a match. Neither one of them is looking for one."]],
+   [['p',"Somebody at ringside just flinched harder than either wrestler."],['c',"They're sitting twelve feet away. It sounds a lot worse in there."]],
+   [['c',"Every time they get a second to breathe, they spend it looking for somewhere else to hit."]],
+   [['p',"Keep a camera tight on them. I want to see who takes the first full breath."]]],
+  limb:[
+   [['c',"That's the knee {A} went after. Watch {B} try to put weight on it. {A} is watching, too."]],
+   [['p',"You could hear {B} cry out over the crowd."],['c',"And you could see the second {A} decided to go back to the same leg."]]],
+  cheat:[
+   [['c',"The referee missed the rake. {B} knows exactly whose fingers those were."]],
+   [['p',"{B} is trying to blink the sting out of their eyes."],['c',"Good luck watching for the next one while you're doing that."]]],
+  floor:[
+   [['p',"The fans got out of the way just in time."],['c',"You could hear the barricade hit the concrete. Imagine being the one who went over it."]],
+   [['p',"The people in that row aren't cheering yet. They're still looking for somewhere safe to stand."]]],
+  beat:[
+   [['x',"{A} lunges between two officials for one more forearm. They catch the arm before it lands."],['a',"You can ring it again. I heard it the first time."]],
+   [['p',"The result is official. Look at the way the referees are standing between them."],['c',"They're making sure {B} gets out with what they came in with."]]],
+  jumped:[
+   [['b',"That's for turning your back. You want the rest, turn around."],['p',"Somebody get between them. {B} is still looking for a way in."]],
+   [['x',"{B} drops to one knee and lands one more forearm before a referee hauls them back."],['c',"{B} waited until there was nobody between them. That was the point."]]],
+  hostile:[
+   [['c',"Put whatever result you want in the book. Neither of them got what they came here for."]],
+   [['p',"Keep the camera on them. This is the face they're both going to remember when they get home."]]]},
+ smoulder:{
+  open:[
+   [['b',"You could've taken a step back when the bell rang."],['a',"You first."]],
+   [['a',"How close do you need me?"],['b',"I'll tell you when you get there."]],
+   [['b',"You're staring."],['a',"I like watching you decide how close you're going to get."]],
+   [['p',"The crowd went quiet enough to hear the bell stop ringing."],['c',"Feels like we're interrupting something, doesn't it?"]]],
+  heat:[
+   [['a',"You still want me to give you room?"],['b',"I never asked you to."]],
+   [['b',"You're breathing harder now."],['a',"You keep finding reasons to get close enough to check."]],
+   [['a',"Tell me when you've had enough."],['b',"You'd like hearing me say that, wouldn't you?"]],
+   [['c',"Every time there's space between them, one of them closes it. I can't tell who's doing it on purpose."]],
+   [['b',"You looked away."],['a',"Just long enough to find out if you were still watching."]]],
+  respect:[
+   [['x',"The camera stays on their hands for the last beat of the handshake."],['a',"Funny how much easier it is to let go when somebody tells you to."]],
+   [['b',"Good match."],['a',"Say it again without the cameras."]],
+   [['c',"That handshake took a little longer than it needed to."],['p',"I think they both knew it."]]],
+  stare:[
+   [['b',"You know you can leave."],['a',"I know. You haven't asked me to."]],
+   [['a',"If I move now, are you going to follow me?"],['b',"Do you want me to?"]],
+   [['c',"We can go to break whenever they stop looking at each other. I wouldn't count on that being soon."]]]}
+};
+const PROMO_TYPES=new Set(['callout','champ','contract','interview']);
+const VERBAL=new Set(['mock','flip','brag','defy','personal','threat']);
+const HOSTILE=new Set(['slap','pose','fight','stare']);
+const GRUDGE_SPOTS=new Set(['limb','cheat','floor']);
+function promoEligible(PS){
+ const {A,B,K}=PS.ctx;
+ return !!(PS.live&&A&&B&&PROMO_TYPES.has(PS.p.type)&&K&&(K.has('live')||K.has('studio'))
+   &&!inTeam(A.id,B.id));
+}
+function matchEligible(MS){
+ const {A,B}=MS.r;
+ return !!(A&&B&&!MS.m.nc&&MS.m.type==='singles'&&MS.m.sides.length===2&&MS.m.sides.every(side=>side.length===1));
+}
+function extend(pages,state,pool,odds,pageOf){
+ if(!pages.length||!pool||(state._ad||0)>=CAP||random()>=odds)return pages;
+ const {A,B}=state.ctx||state.r;
+ state._ad=(state._ad||0)+1;
+ return pages.concat(draw(pool).map(([code,line])=>pageOf(code,fillN(line,A,B))));
+}
+function adPromo(pages,PS,slot){
+ if(!on()||!promoEligible(PS))return pages;
+ if(slot==='exchange'&&(!VERBAL.has(PS.scene.m)||PS.st.ex?.bGone||PS.st.gone||PS.ctx.BGONE||PS.ctx.BDOWN))return pages;
+ return extend(pages,PS,PROMO[flavour(PS,PS.ctx.A,PS.ctx.B)][slot],slot==='open'?.8:.7,(side,q)=>({side,q}));
+}
+function adMatch(pages,MS,slot,detail){
+ if(!on()||!matchEligible(MS))return pages;
+ const {A,B}=MS.r, mode=flavour(MS,A,B);
+ let key=slot;
+ if(slot==='post'){
+  if(mode==='raw')key=detail==='beat'||detail==='jumped'?detail:HOSTILE.has(detail)?'hostile':null;
+  else key=detail==='shake'?'respect':detail==='stare'?'stare':null;
+ }else if(slot==='heat'&&mode==='raw'&&GRUDGE_SPOTS.has(detail))key=detail;
+ const odds=slot==='open'?.5:slot==='post'?.9:.8;
+ return extend(pages,MS,MATCH[mode][key],odds,(code,t)=>{
+  if(code==='x')return {kind:'cam',t};
+  if(code==='p'||code==='c')return {kind:'booth',who:code==='p'?'Play-by-play':'Colour',t};
+  return {side:code,kind:'q',t};
+ });
+}
+function adBadge(state,kind){
+ if(!on()||!(kind==='promo'?promoEligible(state):matchEligible(state)))return '';
+ const {A,B}=kind==='promo'?state.ctx:state.r, mode=flavour(state,A,B);
+ return `<div class="adbadge${mode==='smoulder'?' sm':''}">🌙 ${MODES[mode]}</div>`;
+}
+function adSet(v){try{localStorage.setItem(KEY,v?'1':'0')}catch(e){}if(typeof render==='function')render()}
+function adSetMode(mode){
+ if(!Object.hasOwn(MODES,mode))return;
+ try{localStorage.setItem(MODE_KEY,mode)}catch(e){}
+ if(typeof render==='function')render();
+}
+function adCard(){
+ const o=on(), selected=preference();
+ const modes=Object.entries(MODES).map(([mode,label])=>`<button class="chip ${mode===selected?'on':''}" aria-pressed="${mode===selected}" onclick="adSetMode('${mode}')">${label}</button>`).join('');
+ return `<div class="card"><div class="row sb"><div class="h small" style="margin:0">🌙 After Dark</div><div class="chips" style="margin:0"><button class="chip ${o?'on':''}" onclick="adSet(true)">On</button><button class="chip ${o?'':'on'}" onclick="adSet(false)">Off</button></div></div>
+ <p class="muted tiny" style="margin:8px 0 0">Extra dialogue for any roster pairing in eligible live face-offs and singles matches. <b>Grudge</b> brings threats and rougher action. <b>Tension</b> brings mutual flirtation. <b>Auto</b> chooses Grudge for heated rivalries and Tension for the rest. Ratings work the same.</p>
+ ${o?`<div class="chips" role="group" aria-label="After Dark tone" style="margin:8px 0 0">${modes}</div>`:''}</div>`;
+}
+Object.assign(window,{adPromo,adMatch,adBadge,adSet,adSetMode,adCard});
 
 (function(){const c=document.createElement('style');c.textContent=`
 .sd .adbadge{position:absolute;top:8px;right:10px;z-index:5;pointer-events:none;padding:2px 10px 3px;background:rgba(9,9,11,.82);color:#c9b6ff;font:900 italic 12px 'BC','Barlow Condensed',sans-serif;letter-spacing:.08em;text-transform:uppercase;clip-path:var(--sl);border-left:3px solid #7a5cff}

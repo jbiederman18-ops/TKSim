@@ -81,7 +81,7 @@ function corner(w,k){if(!w)return '';const sub=typeof lvSub==='function'?lvSub([
 function stageHtml(){const {ctx}=PS;const cam=PS.cam||'a';const two=!!ctx.B;
  return `<div class="sd${two?(typeof foPose==='function'?' duo':''):' solo'}" id="sd" onclick="sdTap()"><div class="sdpan${cam==='b'&&two?' at-b':''}" id="sdpan">${corner(ctx.A,'a')}${two?corner(ctx.B,'b'):''}</div>
  <div class="sdspeed" id="sdspeed"></div><div class="sdflash" id="sdflash"></div>
- <div class="sdcut" id="sdcut"></div><div class="sdtac" id="sdtac"></div><div class="sdfx" id="sdfx"></div>${typeof adBadge==='function'?adBadge(ctx.A,ctx.B):''}</div>`}
+ <div class="sdcut" id="sdcut"></div><div class="sdtac" id="sdtac"></div><div class="sdfx" id="sdfx"></div>${typeof adBadge==='function'?adBadge(PS,'promo'):''}</div>`}
 function header(){const {scene,ctx}=PS;const lab=scene&&scene.ex&&typeof exLabel==='function'?exLabel(scene):PS.beat==='r'?'The response':PS.beat?'The twist':'On air';
  return liveHd(PS.live&&typeof LQ!=='undefined'&&LQ?LQ.show:'',`Promo · ${lab}`,esc(PT[PS.p.type].n),[],PS.live?'● Live':'Preview')}
 /* an empty box holds the space while the stage plays something, so the sheet doesn't jump */
@@ -126,7 +126,7 @@ function sdTap(){if(!PS||!PS.q||PANNING)return;if(TYPE){TYPE.fin();return}
  PS.qi++;if(PS.qi<PS.q.length)return showPage();
  const after=PS.after;PS.q=null;PS.after=null;if(after)after();else renderPS()}
 document.addEventListener('keydown',e=>{if(!PS||!PS.q||(e.key!==' '&&e.key!=='Enter'))return;if(e.target&&e.target.closest&&e.target.closest('button,input,select,textarea'))return;if(!document.getElementById('sdbox'))return;e.preventDefault();sdTap()});
-function queue(pages,after){if(typeof adPromo==='function')pages=adPromo(pages,PS);if(!pages.length){if(after)after();return}PS.q=pages;PS.qi=0;PS.after=after||null;showPage()}
+function queue(pages,after,slot){if(slot&&typeof adPromo==='function')pages=adPromo(pages,PS,slot);if(!pages.length){if(after)after();return}PS.q=pages;PS.qi=0;PS.after=after||null;showPage()}
 
 /* ---------- what your wrestler actually says ----------
    v248: the menu shows tactics ("Go personal"), so the words behind a call are only in how it went. When that
@@ -138,7 +138,7 @@ function attempt(c,ok,ctx,shown){if(c.wait||c.drop||c.close)return [];
  const N=namesOf(ctx),A=ctx.A;const parse=t=>bubbleParse(t,'a',N).beats;
  if(parse(shown).some(b=>b.side==='a'))return [];
  /* the call as written, from its landed version: the lines up to their first spoken line */
- for(const t of [c.ok,c.g].filter(Boolean).map(t=>fill(t,ctx)).filter(t=>t!==shown)){const bs=parse(t);const qi=bs.findIndex(b=>b.side==='a'&&b.q!=null);if(qi<0)continue;
+ for(const t of [c.ok,c.g].filter(Boolean).map(t=>fill(c.voice&&voiceTier(A)!=='lo'&&typeof voicedPromo==='function'?voicedPromo(t,A,c.voice):t,ctx)).filter(t=>t!==shown)){const bs=parse(t);const qi=bs.findIndex(b=>b.side==='a'&&b.q!=null);if(qi<0)continue;
   const sl=bs.slice(0,qi+1).filter(b=>b.side==='a'&&(b.q!=null||b.act!=null));
   /* on a miss, a long lead-in ("swings the belt flush…") already describes it working — use the call itself instead */
   if(!ok&&sl.some(b=>b.act!=null&&b.act.split(/\s+/).length>4))break;
@@ -167,7 +167,7 @@ renderPS=function(){if(!PS)return;const {scene,ctx}=PS;
   frame('');
   const pre=scene.ex==='time'?()=>{panTo('b').then(()=>shout('Listen up!','blue'))}:null;
   if(pre)pre();
-  return setTimeout(()=>queue(pagesOf(scene.text,owner,ctx,cam),()=>renderPS()),pre?1300:0)}
+  return setTimeout(()=>queue(pagesOf(scene.text,owner,ctx,cam),()=>renderPS(),PS.beat===0?'open':scene.ex==='tac'?'exchange':null),pre?1300:0)}
  if((PS.beat===1||PS.beat==='r'&&scene.last)&&!PS.done&&!scene._md&&typeof mdAdd==='function'){scene._md=1;mdAdd(PS)}
  frame(menuHtml())};
 psChoose=function(ci){if(!PS||PS.done||PS.q)return;const c=PS.scene.ch[ci];if(!c)return;

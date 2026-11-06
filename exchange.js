@@ -58,8 +58,8 @@ const MV={mock:-1,flip:-1,brag:-.5,dismiss:-1,personal:-1.25,threat:-.75,accept:
 /* lines for when nothing written for that answer fits the tactic (ri = how the other wrestler reads it) */
 const GEN={
 pers:[
- {t:'gp1',lb:`Say what nobody else would about {B}`,s:'mic',d:.15,h:12,p:2,ok:`{A} leans in. "I know why your last partner left, {B}. Everybody does." {B}'s jaw tightens.`,g:`{A} waits for {B} to finish, then says it quietly: "You know why nobody in the back trusts you. Want me to tell them?" {B}'s jaw tightens. That one was real.`,no:`{A} leans in. "Your kid's going to watch you lose. Think about that." It goes too far. The groans aren't aimed at {B}.`,b:`{A} leans in. "Remember when you lost to — in Boise, wasn't it?" {B} corrects them, slowly. "Tacoma. And I won."`},
- {t:'gp2',lb:`Bring up {B}'s family`,al:'h',s:'mic',d:.15,h:13,p:2,ok:`{A} smirks. "Your family still skipping your matches?" Low, nasty and right on target.`,g:`{A} tilts their head. "Does your family still watch, {B}? Or did they stop when you did?" Low, nasty and right on target. {B} has to be held back.`,no:`{A} smirks. "Your family still skipping your matches?" Even the people who boo {B} think that was cheap. It just sits there.`,b:`"Your family — your mom — they don't even —" {A} loses the thread. It just sits there.`},
+ {t:'gp1',lb:`Question who {B} trusts when it gets hard`,s:'mic',d:.15,h:12,p:2,ok:`{A} leans in. "When things go wrong, {B}, you start looking for someone else to blame." {B}'s jaw tightens.`,g:`{A} waits for {B} to finish, then says it quietly: "Next time it goes bad out there, everybody watch {B}. First thing they'll do is look for somebody else to blame." {B}'s jaw tightens. That one was real.`,no:`{A} leans in. "The second it gets hard, you'll be looking for the referee to save you." {B} points at the ring and lets the accusation hang. The crowd sides with {B}.`,b:`{A} leans in. "Remember when you lost to — in Boise, wasn't it?" {B} corrects them, slowly. "Tacoma. And I won."`},
+ {t:'gp2',lb:`Accuse {B} of making excuses`,al:'h',s:'mic',d:.15,h:13,p:2,ok:`{A} smirks. "What's the excuse going to be when I beat you?" Low, nasty and right on target.`,g:`{A} tilts their head. "I want you to tell us the excuse now, {B}. That way we can all hear it before I beat you." Low, nasty and right on target. {B} has to be held back.`,no:`{A} smirks. "What's the excuse going to be when I beat you?" {B} tilts their head and waits for a punch line. There isn't one.`,b:`"You'll blame the ref. Or the ropes. Or, uh, the ring?" {A} loses the thread. It just sits there.`},
  {t:'gp3',lb:`Tell {B} everyone knows who they really are`,al:'f',s:'mic',d:.12,h:11,p:2,ok:`"Everybody knows who you really are, {B}. They just stopped saying it out loud." A chorus of "ooooh."`,g:`"You know what I remember about you, {B}? Who you were before all this. Scared. You still are. You just got louder." A chorus of "ooooh."`,no:`{A} points. "I know who you really are, {B}." It comes out bitter instead of cutting.`,b:`"I know who you really are! Deep down. You're — you know what you are." It comes out bitter, not cutting.`},
  {t:'gp4',lb:`Tell {B} it's been personal for months`,hot:1,s:'mic',d:.15,h:12,p:1,ok:`"You want to make this personal? It's been personal since the day you walked in here." {B} goes quiet.`,g:`"Personal?" {A} almost laughs. "I've been carrying what you did around for months, {B}. This stopped being business a long time ago." {B} goes quiet.`,no:`{B} shrugs. "Then act like it."`,b:`"It's personal. Very personal. That's how personal it is." {B} shrugs. "Then act like it."`}],
 face:[
@@ -139,7 +139,10 @@ function bLine(ctx,st,xi,moves){const x=st.ex;const ok=o=>!x.used.has(o.t)&&(!mo
  /* nothing written for this exact call: fall back to the all-purpose answers (the ones written for any insult, brag, promise or mind game) before anything at all */
  if(!el.length){const any=RT.filter(o=>ok(o)&&rtFit(o,ctx,Object.assign({},xi,{anyI:1})));el=any.filter(o=>o.i==='*'||['insult','brag','promise','mind'].every(t=>o.i.split(' ').includes(t)));if(!el.length)el=any}
  if(!el.length)return null;
- return wpick(el,o=>rtSpec(o)*(xi.tier==='hi'&&o.mic==='hi'?2.5:1)*(seenP(o.t)?.03:1)*(o.m===x.lastM?.25:1))}
+ const o=wpick(el,o=>rtSpec(o)*(xi.tier==='hi'&&o.mic==='hi'?2.5:1)*(seenP(o.t)?.03:1)*(o.m===x.lastM?.25:1));
+ if(!o.voice||xi.tier==='lo'||typeof voicedPromo!=='function')return o;
+ const t=voicedPromo(o.t,ctx.B,o.voice);
+ return t===o.t||x.used.has(t)||echoes({t},st)?o:Object.assign({},o,{t,unvoiced:o.t})}
 /* v250: xi / nxi limit an answer to (or keep it away from) what {B} was answering — "kneel", or "shake+ok" for a handshake that happened */
 function gate(o,xi){const k=[xi.i,xi.i+(xi.ok?'+ok':'+no')];return (!o.xi||o.xi.split(' ').some(t=>k.includes(t)))&&(!o.nxi||!o.nxi.split(' ').some(t=>k.includes(t)))}
 /* v253: bm / nbm keep an answer to (or away from) the kind of line {B} just said; bw needs {B} to be walking away */
@@ -147,7 +150,7 @@ const fitsB=(o,e)=>(!o.bw||!!(e.w||e.gone))&&(!o.bm||o.bm.split(' ').includes(e.
 /* v256: once the match is made — a contract on the table, or a challenge already accepted tonight — nobody asks for a yes again */
 const made=(p,st)=>!!(p&&p.type==='contract'||st&&st.chal);
 function genLine(tc,ctx,xi,e,mk){const l=(GEN[tc]||[]).filter(o=>okFor(o,ctx)&&rtExtra(o,ctx,xi)&&gate(o,xi)&&(!e||fitsB(o,e))&&!(mk&&o.ch));return l.length?wpick(l,o=>(seenP(o.ok)?.03:1)*(o.al||o.vs||o.hk||o.bt||o.hot?2:1)):null}
-function tacScene(p,ctx,st,e,ai,pull){const x=st.ex;x.lastM=e.m;x.used.add(e.t);x.M0=x.M;x.bGone=!!e.gone;
+function tacScene(p,ctx,st,e,ai,pull){const x=st.ex;x.lastM=e.m;x.used.add(e.t);if(e.unvoiced)x.used.add(e.unvoiced);x.M0=x.M;x.bGone=!!e.gone;
  if(pull!==false){let v=MV[e.m]||0;const tier=rtTier(ctx.B);if(v<0)v*=tier==='hi'?1.3:tier==='lo'?.6:1;x.M=clamp(x.M+v,-4,4)}
  const xi=xOf(p,ctx,st);const live=tagHit('live',ctx.K||SC_DEF);
  const mk=made(p,st);const pool=(e.ch||[]).concat(FU[e.m]||[]).filter(o=>okFor(o,ctx)&&rtExtra(o,ctx,xi)&&gate(o,xi)&&fitsB(o,e)&&!(mk&&o.ch));
