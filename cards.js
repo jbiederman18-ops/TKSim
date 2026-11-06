@@ -29,9 +29,9 @@ window.cardsSet=setOn;
 document.documentElement.classList.toggle('tcards',ONF);
 
 /* ---------------- state ---------------- */
-const TC={act:null,mode:'w',sel:null,confirm:null,dr:{},wk:null,dealt:0,sx:0,open:false};
+const TC={act:null,mode:'w',sel:null,confirm:null,dr:{},wk:null,dealt:0,sx:0,open:false,tg:null,rep:null,f:'fit'};
 function wkKey(){return S?[S.season||0,S.week,S.gm,S.phase].join('|'):''}
-function sync(){const k=wkKey();if(TC.wk!==k){TC.wk=k;TC.dr={};TC.act=null;TC.mode='w';TC.sel=null;TC.confirm=null}}
+function sync(){const k=wkKey();if(TC.wk!==k){TC.wk=k;TC.dr={};TC.act=null;TC.mode='w';TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;TC.open=false}}
 const card=()=>(S&&S.card&&S.card.p)||[];
 const ppvNow=()=>{try{return !!curShow().ppv}catch(e){return false}};
 const W_=id=>S&&S.w[id];
@@ -95,8 +95,8 @@ function why(w,anchor,i,am,tg){const sl=card()[i],promo=sl.k==='promo';
  if(am.has(w.id))return [askTxt(am,w.id),'must',26];
  if(A.al!==w.al&&tg!=='partner')return [met?'Face v heel':'Never met','',8];
  return [met?'':'Never met','',0]}
-function hand(i){const sl=card()[i];if(!sl)return [];const m=cur(i);const here=idsOf(i,m);const promo=sl.k==='promo';
- const anchor=here.length?here[here.length-1]:null;const tg=defTarget(i,m);const am=askMap();
+function hand(i,o){o=o||{};const sl=card()[i];if(!sl)return [];const m=cur(i);const here=idsOf(i,m);const promo=sl.k==='promo';
+ const anchor=o.anchor!==undefined?o.anchor:here.length?here[here.length-1]:null;const tg=o.tg!==undefined?o.tg:defTarget(i,m);const am=askMap();
  const full=promo?new Set():fullIn('p',i);const used=usedIn('p',i);
  let pool=ownList('p').filter(w=>!w.inj&&!here.includes(w.id)&&!full.has(w.id));
  if(promo&&anchor)pool=pool.filter(w=>!promoPairBooked(anchor,w.id,i));
@@ -105,7 +105,7 @@ function hand(i){const sl=card()[i];if(!sl)return [];const m=cur(i);const here=i
   if(promo&&anchor)v+=Math.min(12,heatOf(anchor,w.id)/4);
   if(used.has(w.id))v-=45;v-=Math.max(0,(100-sta(w))-FAT_OK)/2;
   return {w,r,v}}).sort((a,b)=>b.v-a.v);
- let rubs=0;const out=[];for(const x of sc){if(x.r&&x.r[0]==='Rub'){if(rubs>=2)continue;rubs++}out.push(x);if(out.length>=TC_HAND)break}
+ let rubs=0;const out=[];for(const x of sc){if(x.r&&x.r[0]==='Rub'){if(rubs>=2)continue;rubs++}out.push(x);if(out.length>=(o.n||TC_HAND))break}
  return out}
 
 /* where a played card lands by default, and every place it could land */
@@ -196,8 +196,9 @@ function tellFor(i){const sl=card()[i];const sh=curShow();
  try{const r=rateMatch(sl.d,{ppv:sh.ppv,allin:sh.ppv&&SUPER(S.week),preview:true});return tellHtml(r)}catch(e){return ''}}
 function slotHtml(i){const c=card(),sl=c[i];let act=i===TC.act&&!locked();const m=cur(i);const promo=sl.k==='promo';
  const ml=promo?null:(()=>{try{return mLab(c,i)}catch(e){return {}}})();const main=ml&&ml.main,opt=!!sl.opt;
- const tg=act&&TC.open&&TC.mode==='w'?targets(i,m):[];const live=act&&TC.sel&&TC.mode==='w';
- const drop=(t,label,cls)=>`<div class="tcdrop ${cls||''} ${live?'live':''}" data-tct='${JSON.stringify(Object.assign({s:i},t))}'>${label}</div>`;
+ const tg=act&&TC.open&&TC.mode==='w'&&!TC.rep?targets(i,m):[];const ct=act&&TC.open&&TC.mode==='w'&&!TC.rep?(TC.tg||defTarget(i,m)):null;
+ const same=t=>ct&&ct.t===t.t&&(ct.i==null||ct.i===t.i);
+ const drop=(t,label,cls)=>`<div class="tcdrop ${cls||''} ${same(t)?'live':''}" role="button" tabindex="0" data-tct='${JSON.stringify(Object.assign({s:i},t))}'><b>+</b>${label}</div>`;
  const pr=!promo&&sl.d&&typeof promiseOf==='function'?promiseOf(sl.d):null;
  const fin=!promo&&sl.d&&!sl.d.nc&&typeof cwOk==='function'&&cwOk(sl.d);const pins=fin?pinCands(sl.d):[];const pinNow=pins.length>=2?pinOf(sl.d):null;const can=!locked();
  const onC=(id)=>{if(!W_(id))return '';const d=sl.d;let cls='';if(fin){const si=d.sides.findIndex(x=>x.includes(id));if(si===d.winner)cls='win';else if(pinNow===id)cls='pinned'}
@@ -210,34 +211,66 @@ function slotHtml(i){const c=card(),sl=c[i];let act=i===TC.act&&!locked();const 
   +((m.b||(act&&m.a))?`<div class="tcvs">&amp;</div><div class="tcside">${m.b?onC(m.b):drop({t:'b'},PT[m.type]&&PT[m.type].b==='req'?'Opponent':'Second (optional)')}</div>`:'')}
  else if((act&&TC.open)||idsOf(i,m).length){
   if(idsOf(i,m).length>3)many=true;const act0=act;act=act&&TC.open;
-  mat=m.sides.map((s,j)=>{const ps=s.map(onC).join('');const em=!s.length&&act?drop({t:'side',i:j},j===0?'Play a card':'Opponent'):'';
-   const pt=tg.find(t=>t.t==='partner'&&t.i===j)?drop({t:'partner',i:j},'+','mini'):'';
+  mat=m.sides.map((s,j)=>{const ps=s.map(onC).join('');const em=!s.length&&(act||idsOf(i,m).length)?drop({t:'side',i:j},j===0?'Pick':'Opponent'):'';
+   const pt=tg.find(t=>t.t==='partner'&&t.i===j)?drop({t:'partner',i:j},'','mini'):'';
    if(!fin||!s.length)return `<div class="tcside">${ps}${em}${pt}</div>`;const wn=sl.d.winner===j;
    return `<div class="tcsg"><div class="tcside">${ps}${em}${pt}</div><button class="tcwin ${wn?'on':''}" ${can&&!wn?'':'disabled'} data-tccr="${i}:${j}" aria-pressed="${wn}" aria-label="${wn?esc(sideName(s))+' wins':'Make '+esc(sideName(s))+' the winner'}"><b>👑</b>${wn?'Wins':'Win'}</button></div>`}).join('<div class="tcvs">vs</div>')
-   +(tg.find(t=>t.t==='third')?`<div class="tcvs">vs</div><div class="tcside">${drop({t:'third'},'+ Third')}</div>`:'');act=act0}
+   +(tg.find(t=>t.t==='third')?`<div class="tcvs">vs</div><div class="tcside">${drop({t:'third'},'Third')}</div>`:'');act=act0}
  const d=sl.d;let mods='';
  if(promo&&m.a&&PT[m.type])mods=`<span class="tcm g">${esc(PT[m.type].n)}</span>`;
  if(!promo&&d){const st=stipKey(d);const f=stipFits(STIPS[st],d);mods=`<span class="tcm ${st!=='std'&&f.spec.length?'g':st==='std'?'q':''}">${esc(STIPS[st].n)}</span>${d.title&&S.titles[d.title]?`<span class="tcm g">${esc(S.titles[d.title].n)} title</span>`:''}${d.ri&&d.ri.x&&W_(d.ri.x)?`<span class="tcm">Run-in · ${esc(ln(W_(d.ri.x)))}</span>`:''}${typeof finOf==='function'&&finOf(d)!=='clean'?'<span class="tcm">Screwy finish</span>':''}`}
  const empty=!idsOf(i,m).length;
- const sum=empty&&!act?`<div class="tcsum">${opt?'Optional. Tap here or drag a card in — or leave it empty.':'Tap here or drag a card onto it.'}</div>`
-  :empty&&act&&TC.open?`<div class="tcsum">${promo?'Your best talkers and anyone owed mic time lead your hand.':'Promises, requests and title defenses lead your hand.'}</div>`
+ const sum=empty&&!act?`<div class="tcsum">${opt?'Optional. Tap to book it, or leave it empty.':'Tap to book it.'}</div>`
+  
   :!promo&&d?`<div class="tcsum"><b>${esc(MT[d.type].n)}</b> · ${esc(sideName(d.sides[d.winner]))} wins${pr?` · <span class="gold">${pr.kind==='contract'?'Contracted':pr.kind==='shot'?'Earned title shot':'Promised'}</span>`:''}</div>`:'';
  const tl=tellFor(i);
  return `<div class="tcs ${act?'act':''} ${main?'me':''} ${opt?'opt':''}" data-tcs="${i}" data-dp="slot:${i}">
  <div class="tcnum" data-dg="slot:${i}" title="Hold and drag to move it">${i+1}</div>
  <div class="tcin"><div class="tchd"><span class="tclb">${esc(slotLab(i))}${d&&d.stip==='bng'?' · Blood &amp; Guts':''}</span>${tl?`<span class="tctl">${tl}</span>`:empty&&!act?`<span class="tcbk">${opt?'Add':'Book it'}</span>`:''}${!empty?`<button class="tcdet" onclick="event.stopPropagation();${promo?'openPromo':'openMatch'}(${i})">Details</button>`:''}</div>
  ${sum}${mat?`<div class="tcmat${many?' many':''}">${mat}</div>`:''}${mods?`<div class="tcmods">${mods}</div>`:''}</div></div>`}
-function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl)return '';
- if(!TC.open){const left=card().filter(x=>!x.opt&&!x.d).length;return `<div class="tcdock shut" id="tcdock"><button class="tcpull" onclick="tcOpen()" aria-label="Show your hand"><span class="tcgrip"></span><span class="tcpt"><b>Your hand</b>${left?`<span>${left} slot${left>1?'s':''} to book · tap one or swipe up</span>`:'<span>Card full · tap a slot to change it</span>'}</span><span class="tcpa">▲</span></button></div>`}const m=cur(i);const promo=sl.k==='promo';const ids=idsOf(i,m);
- const title=TC.mode==='x'?`Lay on <b>${esc(slotLab(i))}</b>`:!ids.length?`Dealing for <b>${esc(slotLab(i))}</b>`:defTarget(i,m)||promo?`Best with <b>${esc(W_(ids[ids.length-1]).name)}</b>`:`<b>${esc(slotLab(i))}</b> set · + partner or third`;
- let h='';
- if(TC.mode==='x'){const xs=extras(i);h=xs.length?xs.map(x=>`<div class="tx ${x.fit?'fit':''} ${x.on?'on':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span></div>`).join(''):`<div class="tcempty">${promo?'Play a card first.':'Fill both sides first.'}</div>`}
- else{const l=hand(i);h=l.map((x,k)=>tcCard(x.w,{tab:x.r&&x.r[0]?x.r[0]:'',tabc:x.r?x.r[1]:'',used:usedIn('p',i).has(x.w.id),cls:(TC.sel===x.w.id?'sel ':'')+(TC.dealt?'deal':''),attr:`data-tch="1" style="animation-delay:${k*40}ms"`})).join('')
-  +`<button class="tcdeck" onclick="tcDeck()"><b>${ownList('p').filter(w=>!w.inj).length}</b>Full deck</button>`}
- const chips=card().map((x,j)=>{const done=x.d&&(x.k!=='promo'||promoOk(x.d));return `<button class="tcpk ${j===i?'on':''} ${done?'done':''} ${tableOk(x)?'':'sp'}" data-tcpk="${j}" onclick="tcAct(${j})"><i>${j+1}</i>${esc(chipLab(j))}</button>`}).join('');
+/* the pick sheet (v280): tap a space on the table and the best cards for it slide up; tap one to place it */
+function sheetTitle(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';const L=slotLab(i);
+ if(TC.rep&&W_(TC.rep))return [L,`Who replaces ${W_(TC.rep).name}?`];
+ if(TC.mode==='x')return [L,promo?'Pick the segment':'Stipulation & title'];
+ if(promo)return !m.a?[L,'Who’s on the mic?']:[L,`Who’s out there with ${ln(W_(m.a))}?`];
+ if(!tg)return [L,'This match is full'];
+ if(tg.t==='side'){const o=m.sides.find((x,j)=>j!==tg.i&&x.length);return [L+(m.sides.length===2?` · ${tg.i?'right':'left'} side`:''),o?`Who faces ${sideName(o)}?`:'Who opens it?']}
+ if(tg.t==='partner')return [L,`Partner for ${sideName(m.sides[tg.i])}`];
+ if(tg.t==='third')return [L,'Who’s the third corner?'];
+ return [L,'Pick a wrestler']}
+/* who the cards are measured against: the other side (or, when swapping, whoever stays) */
+function sheetAnchor(i,m,tg){const sl=card()[i];
+ if(sl.k==='promo'){const o=[m.a,m.b].filter(x=>x&&x!==TC.rep);return o[0]||null}
+ if(TC.rep){const si=m.sides.findIndex(x=>x.includes(TC.rep));const o=m.sides.find((x,j)=>j!==si&&x.length);return o?o[0]:null}
+ if(tg&&tg.t==='partner')return m.sides[tg.i][0]||null;
+ const ids=idsOf(i,m);return ids.length?ids[ids.length-1]:null}
+function sheetCards(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';const anchor=sheetAnchor(i,m,tg);const tt=tg&&tg.t;
+ if(TC.f==='fit')return hand(i,{anchor,tg:tg||null,n:12});
+ const here=idsOf(i,m);const full=promo?new Set():fullIn('p',i);const am=askMap();
+ return ownList('p').filter(w=>!w.inj&&!here.includes(w.id)&&!full.has(w.id)&&(TC.f==='all'||(TC.f==='ch'?isChamp(w.id):w.al===TC.f)))
+  .sort((a,b)=>(promo?b.mic-a.mic:ovr(b)-ovr(a))).map(w=>({w,r:why(w,anchor,i,am,tt)}))}
+function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open)return '';const m=cur(i);const promo=sl.k==='promo';
+ const tl=targets(i,m);let tg=TC.rep?null:(TC.tg||defTarget(i,m)||tl[0]||null);if(tg&&!TC.tg&&!defTarget(i,m))TC.tg=tg;
+ const [k,t]=sheetTitle(i,m,tg);const used=usedIn('p',i);
+ const hasX=promo?!!m.a:!!sl.d;
+ const pc=(x,n)=>tcCard(x.w,{tab:x.r&&x.r[0]?x.r[0]:'',tabc:x.r?x.r[1]:'',used:used.has(x.w.id),cls:TC.dealt?'deal':'',attr:`data-tcpick="${x.w.id}" style="animation-delay:${Math.min(n,8)*30}ms"`});
+ let body='';
+ if(TC.mode==='x'){const xs=extras(i);body=xs.length?`<div class="tcgx">${xs.map(x=>`<div class="tx ${x.fit?'fit':''} ${x.on?'on':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span></div>`).join('')}</div>`:`<div class="tcempty">${promo?'Pick who’s on the mic first.':'Fill both sides first.'}</div>`}
+ else if(!tg&&!TC.rep)body=`<div class="tcempty">Every space in this match is taken. Tap someone on the table to swap them out.</div>`;
+ else{const l=sheetCards(i,m,tg);
+  if(!l.length)body=`<div class="tcempty">Nobody fits that filter tonight.</div>`;
+  else if(TC.f==='fit'){const mu=l.filter(x=>x.r&&x.r[1]==='must'),rest=l.filter(x=>!(x.r&&x.r[1]==='must'));let n=0;
+   body=`<div class="tcgrid">${mu.length?`<div class="tcwhy">Needs you tonight</div>${mu.map(x=>pc(x,n++)).join('')}`:''}${rest.length?`<div class="tcwhy">Best fits</div>${rest.map(x=>pc(x,n++)).join('')}`:''}</div>`}
+  else{let n=0;body=`<div class="tcgrid">${l.map(x=>pc(x,n++)).join('')}</div>`}}
+ const fc=[['fit','Best fit'],['ch','Champions'],['f','Faces'],['h','Heels'],['all','All']];
+ const chips=`${hasX&&!TC.rep?`<button class="chip ${TC.mode==='x'?'on':''}" onclick="tcMode('${TC.mode==='x'?'w':'x'}')">${promo?'Segment':'Stips &amp; titles'}</button>`:''}${fc.map(([v,n])=>`<button class="chip ${TC.mode==='w'&&TC.f===v?'on':''}" onclick="tcF('${v}')">${n}</button>`).join('')}`;
+ const tch=!TC.rep&&TC.mode==='w'&&tl.length>1&&!defTarget(i,m)?`<div class="tcshc">${tl.map((x,j)=>`<button class="chip ${tg&&x.t===tg.t&&x.i===tg.i?'on':''}" onclick="tcTg(${j})">${x.t==='partner'?`+ Partner · ${esc(ln(W_(m.sides[x.i][0])))}`:x.t==='third'?'+ Third corner':x.t==='side'?(x.i?'Right side':'Left side'):'Second'}</button>`).join('')}</div>`:'';
  const cf=TC.confirm&&W_(TC.confirm.id)?`<div class="tccf"><span>${esc(W_(TC.confirm.id).name)} is already on the card tonight. A second match costs ${DD_FAT}× the stamina.</span><button class="mini" onclick="tcNo()">No</button><button class="mini on" onclick="tcYes()">Book twice</button></div>`:'';
- return `<div class="tcdock" id="tcdock"><button class="tcpull open" onclick="tcClose()" aria-label="Hide your hand"><span class="tcgrip"></span></button>${cf}<div class="tcpks">${chips}</div><div class="tcbar"><div class="tcdt">${title}</div><div class="tcseg"><button class="${TC.mode==='w'?'on':''}" onclick="tcMode('w')">Wrestlers</button><button class="${TC.mode==='x'?'on':''}" onclick="tcMode('x')">${promo?'Segment':'Stips &amp; more'}</button></div></div>
- <div class="tchand" id="tchand">${h}</div><div class="tchint" ${hintN()>=6?'hidden':''}>${TC.mode==='w'?'Drag a card onto any slot or number. Tap plays it here. Hold for details.':'Gold cards suit them. Tap one to lay it on the slot.'}</div></div>`}
+ const foot=TC.rep&&W_(TC.rep)?`<div class="tcsf"><button class="btn sec" onclick="tcBack()">Send back</button><button class="btn sec" onclick="showW('${TC.rep}')">Details</button></div>`:'';
+ TC.dealt=0;
+ return `<div class="tcscrim" onclick="tcScrim()"></div><div class="tcdock tcsheet" id="tcdock" role="dialog" aria-label="${esc(t)}"><button class="tcpull open" onclick="tcClose()" aria-label="Close"><span class="tcgrip"></span></button>
+ <div class="tcsh"><div class="tcst"><span class="tcsk">${esc(k)}</span><b>${esc(t)}</b></div><button class="tcsx" onclick="tcClose()" aria-label="Close">✕</button></div>
+ ${cf}<div class="tcsc">${chips}</div>${tch}<div class="tcsb" id="tcsb">${body}</div>${foot}</div>`}
 function pickAct(){const c=card();if(TC.act!=null&&c[TC.act]&&tableOk(c[TC.act]))return;
  const ok=c.map((sl,i)=>tableOk(sl)?i:-1).filter(i=>i>=0);if(!ok.length){TC.act=null;return}
  const empty=ok.filter(i=>!c[i].opt&&!c[i].d&&!TC.dr[i]);let mi=-1;try{mi=mainMi(c)}catch(e){}
@@ -256,16 +289,33 @@ function decorate(){if(!bookOn())return;sync();const app=document.getElementById
 /* actions the markup calls */
 window.tcAct=function(i,stay){const sl=card()[i];if(!sl)return;if(!tableOk(sl)){if(sl.k==='match')return openMatch(i);if(sl.k==='xo'&&typeof openXo==='function')return openXo(i);return}
  if(TC.act===i&&TC.open){if(!stay)center(i);return}
- if(TC.act!==i){TC.act=i;TC.sel=null;TC.confirm=null;TC.mode=(sl.k==='promo'?promoOk(cur(i))&&cur(i).b:!!sl.d)?'x':'w'}
+ if(TC.act!==i||!TC.open){TC.act=i;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;TC.f='fit';TC.mode=(sl.k==='promo'?promoOk(cur(i))&&cur(i).b:!!sl.d)?'x':'w'}
  TC.open=true;TC.dealt=1;render();if(!stay)center(i)};
 /* put the slot in the middle of the space between the header and the hand */
 function center(i){requestAnimationFrame(()=>requestAnimationFrame(()=>{const el=document.querySelector(`.tcs[data-tcs="${i}"]`);if(!el)return;
- const hd=document.querySelector('header.top');const dk=document.getElementById('tcdock');const top=hd?hd.getBoundingClientRect().bottom:0;const bot=dk?dk.getBoundingClientRect().top:innerHeight;
- const r=el.getBoundingClientRect();const room=bot-top;const d=r.height>room-16?r.top-(top+8):r.top+r.height/2-(top+room/2);if(Math.abs(d)>4)window.scrollBy({top:d,behavior:'smooth'})}))}
+ const hd=document.querySelector('header.top');const dk=document.getElementById('tcdock');const top=hd?hd.getBoundingClientRect().bottom:0;const bot=dk?(dk.classList.contains('tcsheet')?innerHeight-dk.offsetHeight:dk.getBoundingClientRect().top):innerHeight;
+ const r=el.getBoundingClientRect();const room=bot-top;const d=r.height>room-16?r.top-(top+8):r.top+r.height/2-(top+room/2);if(Math.abs(d)>4)window.scrollBy({top:d,behavior:TC.open?'auto':'smooth'})}))}
 window.tcOpen=function(){if(TC.act==null)pickAct();if(TC.act==null)return;TC.open=true;TC.dealt=1;render();center(TC.act)};
-window.tcClose=function(){TC.open=false;TC.sel=null;TC.confirm=null;render()};
+window.tcClose=function(){TC.open=false;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;render()};
+/* the tap that opened the sheet also lands a click on the backdrop; ignore it */
+window.tcScrim=function(){if(Date.now()-SUP<450)return;tcClose()};
+window.tcF=function(k){TC.f=k;TC.mode='w';TC.dealt=1;render();const b=document.getElementById('tcsb');if(b)b.scrollTop=0};
+window.tcTg=function(j){const t=targets(TC.act,cur(TC.act))[j];if(t){TC.tg=t;TC.dealt=1;render()}};
+window.tcBack=function(){const i=TC.act,id=TC.rep;TC.rep=null;TC.open=false;if(i!=null&&id)takeOff(i,id);else render()};
+/* open the sheet for one space on the table, or to swap out someone already there */
+function sheetAt(i,tg){if(locked())return;const sl=card()[i];if(!sl||!tableOk(sl))return;TC.act=i;TC.tg=tg||null;TC.rep=null;TC.sel=null;TC.confirm=null;TC.mode='w';TC.f='fit';TC.open=true;TC.dealt=1;render();center(i)}
+function sheetRep(i,id){if(locked())return;const sl=card()[i];if(!sl||!tableOk(sl))return;TC.act=i;TC.tg=null;TC.rep=id;TC.sel=null;TC.confirm=null;TC.mode='w';TC.f='fit';TC.open=true;TC.dealt=1;render();center(i)}
+/* a card tapped in the sheet goes into the space the sheet is filling; then the sheet moves on to the next open space or closes */
+function sheetPick(id){const i=TC.act;if(i==null||locked())return;const before=JSON.stringify(cur(i));
+ if(TC.rep){replaceWith(i,TC.rep,id);if(TC.confirm)return;TC.rep=null;return afterPick(i,before)}
+ const m=cur(i);const tg=card()[i].k==='promo'?(TC.tg||(!m.a?{t:'a'}:{t:'b'})):(TC.tg||defTarget(i,m)||targets(i,m)[0]);
+ if(!tg)return toast(`${slotLab(i)} is full — tap someone on the table to swap them out.`);
+ play(i,id,tg);if(TC.confirm)return;afterPick(i,before)}
+function afterPick(i,before){if(JSON.stringify(cur(i))===before)return;TC.tg=null;TC.f='fit';const sl=card()[i];const m=cur(i);
+ const more=sl.k==='promo'?!m.b:!sl.d&&!!defTarget(i,m);
+ if(more){TC.mode='w';TC.open=true;TC.dealt=1}else TC.open=false;render();if(TC.open)center(i)}
 window.tcMode=function(k){TC.mode=k;TC.sel=null;TC.dealt=1;render()};
-window.tcYes=function(){const c=TC.confirm;if(!c)return;TC.confirm=null;if(c.tg&&c.tg.t==='swap')return replaceWith(c.i,c.tg.old,c.id,true);play(c.i,c.id,c.tg,true)};
+window.tcYes=function(){const c=TC.confirm;if(!c)return;TC.confirm=null;const before=JSON.stringify(cur(c.i));if(c.tg&&c.tg.t==='swap'){replaceWith(c.i,c.tg.old,c.id,true);TC.rep=null}else play(c.i,c.id,c.tg,true);afterPick(c.i,before)};
 window.tcNo=function(){TC.confirm=null;render()};
 window.tcDeck=function(){const i=TC.act;const sl=card()[i];if(!sl)return;const m=cur(i);const here=new Set(idsOf(i,m));const promo=sl.k==='promo';
  const anchor=[...here].pop();const opps=anchor?[W_(anchor)]:[];
@@ -304,15 +354,18 @@ document.addEventListener('pointerup',e=>{clearTimeout(LP);if(DR){endDrag(e.clie
  if(p.scrub){SUP=Date.now();let v=p.v*16;const h=document.getElementById('tchand');const step=()=>{if(Math.abs(v)<.4||!h)return;h.scrollLeft-=v;TC.sx=h.scrollLeft;v*=.93;MOM=requestAnimationFrame(step)};MOM=requestAnimationFrame(step);return}
  if(Date.now()-SUP<300)return;SUP=Date.now();
  if(p.long&&p.id)return showW(p.id);
- if(p.hand)tapHand(p);else showW(p.id)});
+ if(p.hand)tapHand(p);else sheetRep(p.on,p.id)});
 document.addEventListener('pointercancel',()=>{clearTimeout(LP);PD=null;if(DR){const d=DR;cleanup();if(d.on!=null&&d.flick&&Math.abs(d.lx-d.x)>12){SUP=Date.now();takeOff(d.on,d.id)}else render()}});
 document.addEventListener('click',e=>{if(!on())return;if((Date.now()-SUP<350||(typeof DG_SUP!=='undefined'&&Date.now()<DG_SUP))&&e.target.closest&&e.target.closest('#tcdock,.tcs')&&(!e.target.closest('button')||e.target.closest('.tcpull'))){e.stopPropagation();e.preventDefault();return}
  if(!inBook())return;const cr=e.target.closest&&e.target.closest('[data-tccr]');if(cr){e.stopPropagation();e.preventDefault();if(cr.disabled)return;const [ci,si]=cr.dataset.tccr.split(':').map(Number);crownSide(ci,si);return}
  const pn=e.target.closest&&e.target.closest('[data-tcpin]');if(pn){e.stopPropagation();e.preventDefault();if(pn.disabled)return;const [ci,id]=pn.dataset.tcpin.split('|');pinPick(+ci,id);return}
- const d=e.target.closest&&e.target.closest('.tcdrop');if(d&&TC.sel){e.stopPropagation();const t=JSON.parse(d.dataset.tct);play(t.s,TC.sel,t);return}
+ const pk=e.target.closest&&e.target.closest('#tcdock [data-tcpick]');if(pk){e.stopPropagation();e.preventDefault();sheetPick(pk.dataset.tcpick);return}
+ const px=e.target.closest&&e.target.closest('#tcdock [data-tcx]');if(px){e.stopPropagation();e.preventDefault();applyX(TC.act,px.dataset.tcx);return}
+ const d=e.target.closest&&e.target.closest('.tcdrop');if(d){e.stopPropagation();const t=JSON.parse(d.dataset.tct);const tg=Object.assign({},t);delete tg.s;sheetAt(t.s,tg);return}
  const s=e.target.closest&&e.target.closest('.tcs');if(s&&!e.target.closest('[data-tcon],button,.tcdrop')){tcAct(+s.dataset.tcs)}},true);
-document.addEventListener('keydown',e=>{if(!inBook()||(e.key!=='Enter'&&e.key!==' '))return;const c=e.target.closest&&e.target.closest('#tchand [data-tcw],#tchand .tx,.tcs [data-tcon]');if(!c)return;e.preventDefault();
- if(c.closest('#tchand'))tapHand({el:c,id:c.dataset.tcw,x2:c.dataset.tcx});else showW(c.dataset.tcw)});
+document.addEventListener('keydown',e=>{if(!inBook())return;if(e.key==='Escape'&&TC.open){tcClose();return}if(e.key!=='Enter'&&e.key!==' ')return;
+ const sk=e.target.closest&&e.target.closest('#tcdock [data-tcpick],#tcdock [data-tcx],.tcdrop');if(sk){e.preventDefault();sk.click();return}const c=e.target.closest&&e.target.closest('#tchand [data-tcw],#tchand .tx,.tcs [data-tcon]');if(!c)return;e.preventDefault();
+ if(c.closest('#tchand'))tapHand({el:c,id:c.dataset.tcw,x2:c.dataset.tcx});else sheetRep(+c.dataset.tcon,c.dataset.tcw)});
 document.addEventListener('contextmenu',e=>{if(on()&&e.target.closest&&e.target.closest('.tkc,.tx'))e.preventDefault()});
 function tapHand(p){const i=TC.act;if(p.x2)return applyX(i,p.x2);
  if(TC.sel===p.id){TC.sel=null;return render()}
@@ -373,19 +426,28 @@ function endDrag(x,y){const t=hit(x,y);const d=DR;cleanup();SUP=Date.now();
 
 /* swipe the hand up to open it, down to put it away */
 {let y0=null,x0=0,pid=null;
- document.addEventListener('pointerdown',e=>{if(!inBook())return;const z=e.target.closest&&e.target.closest('#tcdock .tcpull,#tcdock .tcbar,#tcdock .tcpks');if(!z)return;y0=e.clientY;x0=e.clientX;pid=e.pointerId},true);
+ document.addEventListener('pointerdown',e=>{if(!inBook())return;const z=e.target.closest&&e.target.closest('#tcdock .tcpull,#tcdock .tcsh');if(!z)return;y0=e.clientY;x0=e.clientX;pid=e.pointerId},true);
  document.addEventListener('pointerup',e=>{if(y0===null||e.pointerId!==pid)return;const dy=e.clientY-y0,dx=e.clientX-x0;y0=null;if(Math.abs(dy)<36||Math.abs(dy)<Math.abs(dx))return;
-  SUP=Date.now();if(dy<0&&!TC.open)tcOpen();else if(dy>0&&TC.open)tcClose()},true);
+  SUP=Date.now();if(dy>0&&TC.open)tcClose()},true);
  document.addEventListener('pointercancel',()=>{y0=null},true)}
 /* ---------------- hooks ---------------- */
 if(typeof go==='function'){const g0=go;go=window.go=function(t){if(t==='book'&&tab!=='book'){TC.open=false;TC.sel=null}return g0.apply(this,arguments)}}
 function attnDown(){if(!S||S.phase!=='season'||typeof tab==='undefined'||tab!=='book')return;const m=document.querySelector('#app main');if(!m)return;const a=m.querySelector('.card.attn');if(!a)return;
  const anchor=m.querySelector('.prodstrip')||m.querySelector('.lvdock')||m.querySelector('.btn.live');if(anchor&&anchor.parentElement)anchor.parentElement.insertBefore(a,anchor)}
-const r0=render;render=window.render=function(){const o=r0.apply(this,arguments);try{attnDown()}catch(e){}try{decorate()}catch(e){console.error('cards',e)}return o};
+/* Home (v280): tonight's headliners fanned out on the poster, and the hottest wrestlers as a row of cards */
+function homeDeco(){if(!on()||!S||S.phase!=='season'||typeof tab==='undefined'||tab!=='home')return;const m=document.querySelector('#app main');if(!m||m.querySelector('.tchome'))return;
+ const pc=m.querySelector('.card.showcard:not(.compact)');if(!pc)return;const mine=ownList('p');
+ let ids=[];try{const c=card();const mi=mainMi(c);const d=c[mi]&&c[mi].d;if(d&&d.sides)ids=d.sides.flat()}catch(e){}
+ ids=ids.filter(id=>W_(id)).slice(0,3);if(ids.length<3)mine.filter(w=>!w.inj&&!ids.includes(w.id)).sort((a,b)=>b.pop-a.pop).slice(0,3-ids.length).forEach(w=>ids.push(w.id));
+ if(ids.length){const f=document.createElement('div');f.className='tcfan tchome';f.innerHTML=ids.map(id=>tcCard(W_(id),{noWear:true,attr:`onclick="showW('${id}')"`})).join('');const b=pc.querySelector(':scope>.btn');if(b)b.before(f);else pc.appendChild(f)}
+ const hot=mine.filter(w=>!w.inj&&(w.mom||0)>0).sort((a,b)=>(b.mom||0)-(a.mom||0)||b.pop-a.pop).slice(0,8);
+ if(hot.length>=3){const c=document.createElement('div');c.className='card tchome';c.innerHTML=`<div class="h small">Hottest right now</div><div class="tcrow">${hot.map(w=>tcCard(w,{tab:`▲ ${w.mom}`,tabc:'hot',noWear:true,attr:`onclick="showW('${w.id}')"`})).join('')}</div>`;
+  const cal=m.querySelector('.seascal')||pc;cal.after(c)}}
+const r0=render;render=window.render=function(){const o=r0.apply(this,arguments);try{attnDown()}catch(e){}try{decorate()}catch(e){console.error('cards',e)}try{homeDeco()}catch(e){console.error('cards home',e)}return o};
 /* Settings: a card to switch the table off */
 if(typeof menuView==='function'){const mv=menuView;menuView=window.menuView=function(){const h=mv.apply(this,arguments);
  const cd=`<div class="card"><div class="row sb"><div class="h small" style="margin:0">🃏 Card table</div><div class="chips" style="margin:0"><button class="chip ${on()?'on':''}" onclick="cardsSet(true)">On</button><button class="chip ${on()?'':'on'}" onclick="cardsSet(false)">Off</button></div></div>
- <div class="muted tiny" style="margin-top:6px">${on()?'You book by playing wrestler cards onto the show: drag or tap them in, and your hand is dealt for each slot.':'The classic Book screen: tap a slot to open its editor.'} The office line, live calls, the reveal and party-night TV follow this setting too.</div></div>`;
+ <div class="muted tiny" style="margin-top:6px">${on()?'You book by tapping a space on the show and picking from the best wrestler cards for it. Hold a card on the show to drag it somewhere else.':'The classic Book screen: tap a slot to open its editor.'} The office line, live calls, the reveal and party-night TV follow this setting too.</div></div>`;
  return h.replace(/(<details class="card"><summary class="h small">How it all works)/,cd+'$1')}}
 /* a new week or a new game starts a fresh table */
 if(typeof suggestFill==='function'){const sf=suggestFill;suggestFill=window.suggestFill=function(){TC.dr={};return sf.apply(this,arguments)}}
@@ -552,7 +614,34 @@ html.tcards .twpair .twh[data-k]+.twh[data-k]{animation-delay:.12s}
 .tvpile i{display:block;width:22px;height:30px;background:#0c0c0e url(card-bg.jpg) center/cover;box-shadow:inset 0 0 0 1px var(--gold3);animation:tvslam .35s cubic-bezier(.2,1.3,.4,1) both}
 .tvpile:not(.lk) i{animation:tvbob 1.4s ease-in-out infinite}
 @keyframes tvslam{from{opacity:0;transform:translateY(-40%) scale(1.5) rotate(-8deg)}}@keyframes tvbob{50%{transform:translateY(-4px) rotate(-3deg)}}
-@media (prefers-reduced-motion:reduce){.tkc,.tx,.tchand .tkc.deal,.tvpile i,html.tcards .twpair .twh[data-k]{animation:none!important;transition:none!important}}
+/* roster, titles and home in cards (v280) */
+.tcrg{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 10px;justify-items:center;margin-top:12px}.tcrg .tkc{--w:min(29vw,124px)}html.tcards .tcrg .tkc{width:var(--w)}
+@media(min-width:620px){.tcrg{grid-template-columns:repeat(5,1fr)}.tcrg .tkc{--w:112px}}
+.tlrow .tlc{display:flex;gap:4px;flex:none}.tlrow .tlc .tkc{--w:58px}
+.tcfan{display:flex;justify-content:center;gap:8px;margin:14px 0 4px}.tcfan .tkc{--w:min(24vw,96px)}.tcfan .tkc:nth-child(1){transform:rotate(-5deg) translateY(4px)}.tcfan .tkc:nth-child(3){transform:rotate(5deg) translateY(4px)}
+.tcrow{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 8px;margin:0 -2px}.tcrow::-webkit-scrollbar{display:none}.tcrow .tkc{--w:84px}
+/* the pick sheet (v280) */
+.tcscrim{position:fixed;inset:0;z-index:14;background:rgba(0,0,0,.45);animation:tcfade .2s ease both}@keyframes tcfade{from{opacity:0}}
+.tcdock.tcsheet{position:fixed;left:0;right:0;bottom:0;z-index:15;max-width:640px;margin:0 auto;padding:6px 0 env(safe-area-inset-bottom,0px);max-height:min(66vh,600px);display:flex;flex-direction:column;background:linear-gradient(180deg,#1b1c21,#101115);box-shadow:0 -1px 0 var(--gold3),0 -20px 40px rgba(0,0,0,.6);animation:tcup .3s cubic-bezier(.2,.9,.3,1) both}
+@keyframes tcup{from{transform:translateY(100%)}}
+.tcsheet .tcpull.open{flex:none;margin:0 auto 2px}
+.tcsh{flex:none;display:flex;align-items:flex-end;gap:10px;padding:0 16px 10px;touch-action:none}
+.tcst{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.tcsk{font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.tcst b{font:900 italic 21px/1.02 'BC',sans-serif;text-transform:uppercase;text-wrap:balance}
+.tcsx{flex:none;width:40px;height:36px;border:0;background:#1d1e23;color:var(--mut);clip-path:var(--slant);font:900 17px/1 'BC',sans-serif;cursor:pointer}
+.tcsc,.tcshc{flex:none;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:0 16px 10px}.tcsc::-webkit-scrollbar,.tcshc::-webkit-scrollbar{display:none}.tcsc .chip,.tcshc .chip{flex:none;margin:0}
+.tcsb{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;border-top:1px solid var(--line);touch-action:pan-y}
+.tcgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px 10px;justify-items:center;padding:16px 16px 20px}
+.tcgrid .tkc{--w:min(29vw,118px)}html.tcards .tcgrid .tkc{width:var(--w)}
+.tcgrid .tkc:active{transform:scale(.95)}.tcgrid .tkc.deal{animation:tcdeal .32s cubic-bezier(.2,.9,.3,1.15) both}
+.tcwhy{grid-column:1/-1;justify-self:stretch;font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);border-top:1px solid var(--line);padding-top:14px}.tcwhy:first-child{border:0;padding-top:0}
+.tcgx{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;padding:16px}.tcgx .tx{width:auto;cursor:pointer;touch-action:manipulation}
+.tcsheet .tcempty{padding:28px 16px;text-align:center}
+.tcsf{flex:none;display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--line)}.tcsf .btn{margin:0}
+.tcsheet .tccf{margin:0 16px 10px}
+.tcdrop{cursor:pointer;flex-direction:column;gap:4px}.tcdrop b{font:900 26px/1 'BC',sans-serif;color:var(--gold)}.tcdrop.mini b{font-size:20px}
+.tcs .tcside .tkc{--w:84px}.tcs .tcdrop{width:84px}.tcs .tcdrop.mini{width:36px}.tcs .tcmat.many .tcdrop{width:62px}
+@media (prefers-reduced-motion:reduce){.tcscrim,.tcdock.tcsheet,.tkc,.tx,.tchand .tkc.deal,.tvpile i,html.tcards .twpair .twh[data-k]{animation:none!important;transition:none!important}}
 `;document.head.appendChild(css);
 window.TCARD=TC;
 })();
