@@ -64,8 +64,9 @@ function condOf(w){if(w.inj)return ['Hurt','b'];const sw=staWord(sta(w));if(sw!=
 function tcCard(w,o){o=o||{};const [cw,cc]=condOf(w);const t=titlesOf(w.id)[0];const worn=!o.noWear&&(sta(w)<100-FAT_OK||w.inj);
  const cls=['tkc',w.al==='f'?'fc':'hl',t?'ch':'',worn?'worn':'',o.used?'used':'',o.cls||''].join(' ');
  return `<div class="${cls}" data-tcw="${w.id}" ${o.attr||''} tabindex="0" role="button" aria-label="${esc(w.name)}${t?', '+esc(t.n)+' champion':''}, ${cw}${o.tab?', '+esc(o.tab):''}">
- <div class="tcf ${hasPhoto(w)?'ph':''}">${hasPhoto(w)?`<div class="tcp">${portrait(w)}</div>`:`<div class="tcg">${esc(initials(w.name))}</div>`}<span class="tco">${ovr(w)}</span>${o.tab?`<span class="tct ${o.tabc||''}">${esc(o.tab)}</span>`:''}<div class="tcb"><b class="tcn${w.name.length>13?' ln':''}">${esc(w.name)}</b><span class="tcc ${cc}">${esc(o.cond||cw)}</span>${t?`<i class="tcbelt">${esc(t.n)}</i>`:''}</div></div>${o.mark||''}</div>`}
+ <div class="tcf ${hasPhoto(w)?'ph':''}">${hasPhoto(w)?`<div class="tcp">${portrait(w)}</div>`:`<div class="tcg">${esc(initials(w.name))}</div>`}<span class="tco">${ovr(w)}</span>${o.tab?`<span class="tct ${o.tabc||''}">${esc(o.tab)}</span>`:''}<div class="tcb"><b class="tcn${(o.name||w.name).length>13?' ln':''}">${esc(o.name||w.name)}</b><span class="tcc ${cc}">${esc(o.cond||cw)}</span>${t?`<i class="tcbelt">${esc(t.n)}</i>`:''}</div></div>${o.mark||''}</div>`}
 window.tcCard=tcCard;
+window.tcMini=w=>w&&on()?`<span class="tcmini">${tcCard(w,{noWear:true})}</span>`:'';
 
 /* v280: every wrestler tile in the game (free agents, the draft, pickers, editor slots) is a card when the table is on */
 if(typeof wcard==='function'){const wc0=wcard;
@@ -638,6 +639,15 @@ html.tcards #modal:not(.lobbyM) .sheet:not(.tv-live-sheet){background:linear-gra
 html.tcards #modal:not(.lobbyM) .sheet:not(.tv-live-sheet):before{display:block;top:8px;width:44px;height:4px;margin-left:-22px;background:#55565e;border-radius:2px;clip-path:none}
 html.tcards #modal .mhd{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--text);-webkit-text-fill-color:currentColor;font-size:24px;line-height:1.02;text-wrap:balance}
 html.tcards .wd-pic.tcwd{width:auto;aspect-ratio:auto;overflow:visible;clip-path:none;box-shadow:none}html.tcards .wd-pic.tcwd .tkc{--w:118px;cursor:default}
+/* one look everywhere (v282): showdowns, live plates, the reveal, the draft */
+.tcmini{display:inline-flex;flex:none;vertical-align:middle}.tcmini .tkc{--w:30px;width:30px;cursor:inherit;pointer-events:none}.tcmini .tkc .tcb,.tcmini .tkc .tct,.tcmini .tkc .tco,.tcmini .tkc .tcbelt,.tcmini .tkc .tcf::after{display:none}.tcmini .tkc .tcf{box-shadow:inset 0 0 0 1px #3a3b42}.tcmini .tkc.ch .tcf{box-shadow:inset 0 0 0 1.5px var(--gold)}.tcmini .tkc .tcf::before{width:3px}
+html.tcards .sdph.tcin{aspect-ratio:5/7;height:92%;background:none;clip-path:none;box-shadow:none;overflow:visible}html.tcards .sdph.tcin>.tkc{--w:150px;width:100%;height:100%;cursor:default}
+html.tcards .sdci .sdph.tcin{height:auto;width:72px;position:relative;left:auto;transform:none}html.tcards .sdci .sdph.tcin>.tkc{--w:72px}
+html.tcards .lvp.tcl{background:none;box-shadow:none;padding:0;align-items:center;gap:6px}html.tcards .lvp.tcl .lvcs{display:flex;gap:4px;justify-content:center}html.tcards .lvp.tcl .tkc{--w:88px;width:var(--w);cursor:default}html.tcards .lvfo.many .lvp.tcl .tkc,html.tcards .lvp.tcl .lvcs.n3 .tkc{--w:62px}html.tcards .lvp.tcl .lvcs.n2 .tkc{--w:72px}
+html.tcards .lvp.tcl .lvpn{font-size:15px;text-align:center}
+html.tcards .twpl .tcmini{margin-right:8px}html.tcards .twpl .tcmini .tkc{--w:34px;width:34px}
+html.tcards .tt-pic.tcin{width:auto;height:auto;overflow:visible;clip-path:none;background:none}html.tcards .tt-pic.tcin .tkc{--w:96px}html.tcards .ttape .tt-bg{display:none}
+html.tcards .dtr .tcmini{margin-right:6px}
 html.tcards .tv-last .tkc{--w:180px;width:var(--w)}
 /* roster, titles and home in cards (v280) */
 .tcrg{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 10px;justify-items:center;margin-top:12px}.tcrg .tkc{--w:min(29vw,124px)}html.tcards .tcrg .tkc{width:var(--w)}

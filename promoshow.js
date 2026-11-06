@@ -76,6 +76,7 @@ const short=w=>{const n=String(w.name||'');return n.length>16?n.split(' ').slice
 /* initials stand in on the party TV when a wrestler's photo is a private upload (the feed leaves those out) */
 const inits=w=>String(w.name||'').split(/\s+/).filter(Boolean).map(x=>x[0]).join('').slice(0,3).toUpperCase();
 function corner(w,k){if(!w)return '';const sub=typeof lvSub==='function'?lvSub([w]):'';
+ if(typeof cardsOn==='function'&&cardsOn()&&typeof tcCard==='function')return `<div class="sdc c${k}">${typeof foTag==='string'?foTag:''}<div class="sdph tcin" data-i="${esc(inits(w))}">${tcCard(w,{noWear:true,cond:sub||undefined})}</div></div>`;
  return `<div class="sdc c${k}">${typeof foTag==='string'?foTag:''}<div class="sdph" data-i="${esc(inits(w))}">${portrait(w)}</div><div class="sdpl ${w.al==='f'?'fc':'hl'}"><b>${esc(w.name)}</b>${sub?`<span>${esc(sub)}</span>`:''}</div></div>`}
 function stageHtml(){const {ctx}=PS;const cam=PS.cam||'a';const two=!!ctx.B;
  return `<div class="sd${two?(typeof foPose==='function'?' duo':''):' solo'}" id="sd" onclick="sdTap()"><div class="sdpan${cam==='b'&&two?' at-b':''}" id="sdpan">${corner(ctx.A,'a')}${two?corner(ctx.B,'b'):''}</div>
@@ -92,7 +93,7 @@ async function panTo(k){if(!PS)return;const ctx=PS.ctx;if(k!=='a'&&k!=='b')retur
  const p=document.getElementById('sdpan'),sp=document.getElementById('sdspeed');if(!p)return;if(document.querySelector('#sd.duo')){p.classList.toggle('at-b',k==='b');return}
  if(sp)sp.classList.add('on');p.classList.toggle('at-b',k==='b');await sleep(320);if(sp)sp.classList.remove('on')}
 function cutIn(k){const el=document.getElementById('sdcut');if(!el)return;const w=people(PS.ctx)[k];
- el.innerHTML=(k==='x'||k==='h')&&w?`<div class="sdci"><div class="sdph" data-i="${esc(inits(w))}">${portrait(w)}</div><b>${esc(short(w))}</b></div>`:''}
+ el.innerHTML=(k==='x'||k==='h')&&w?`<div class="sdci">${typeof cardsOn==='function'&&cardsOn()&&typeof tcCard==='function'?`<div class="sdph tcin" data-i="${esc(inits(w))}">${tcCard(w,{noWear:true})}</div>`:`<div class="sdph" data-i="${esc(inits(w))}">${portrait(w)}</div>`}<b>${esc(short(w))}</b></div>`:''}
 async function shout(t,kind){const fx=document.getElementById('sdfx'),sd=document.getElementById('sd'),fl=document.getElementById('sdflash');if(!fx)return;
  fx.innerHTML=`<div class="sdshout ${kind||''}"><span>${esc(t)}</span></div>`;feed();
  if(fl){fl.classList.remove('on');void fl.offsetWidth;fl.classList.add('on')}

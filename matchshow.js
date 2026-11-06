@@ -299,6 +299,7 @@ const msReduce=()=>window.matchMedia&&matchMedia('(prefers-reduced-motion: reduc
 const msSleep=ms=>new Promise(res=>setTimeout(res,msReduce()?Math.min(ms,60):ms));
 const msInits=w=>String(w.name||'').split(/\s+/).filter(Boolean).map(x=>x[0]).join('').slice(0,3).toUpperCase();
 function msCorner(sd,k){const w=sd[0];if(!w)return '';const sub=sd.length>1?sideName(sd.map(x=>x.id)):typeof lvSub==='function'?lvSub([w]):'';
+ if(typeof cardsOn==='function'&&cardsOn()&&typeof tcCard==='function'){const nm=sd.length>1?sideName(sd.map(x=>x.id)):w.name;return `<div class="sdc c${k}">${typeof foTag==='string'?foTag:''}<div class="sdph tcin" data-i="${esc(msInits(w))}">${tcCard(w,{noWear:true,name:nm,cond:sd.length===1&&sub?sub:undefined})}</div></div>`}
  return `<div class="sdc c${k}">${typeof foTag==='string'?foTag:''}<div class="sdph" data-i="${esc(msInits(w))}">${portrait(w)}</div><div class="sdpl ${w.al==='f'?'fc':'hl'}"><b>${esc(sd.length>1?sideName(sd.map(x=>x.id)):w.name)}</b>${sub&&sd.length===1?`<span>${esc(sub)}</span>`:''}</div></div>`}
 function msTitle(m){const k=stipKey(m);return (m.title&&S.titles[m.title]?S.titles[m.title].n+' title':MT[m.type].n)+(k!=='std'&&!SP_STIP[m.type]?' · '+STIPS[k].n:'')}
 function msActs(){const a=MS.act||0;return `<div class="msacts">${['Opening','Heat','Finish'].map((t,i)=>`<span class="${i===a?'on':i<a?'done':''}">${t}</span>`).join('')}</div>`}
