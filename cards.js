@@ -136,6 +136,7 @@ function shapeOf(i,m){if(TC.sh[i])return TC.sh[i];const ty=typeFor(m.sides);if(t
 function shapeDims(k){const x=SHAPES.find(y=>y[0]===k)||SHAPES[0];return [x[2],x[3]]}
 function shapeNext(m,k){const [n,per]=shapeDims(k);for(let r=0;r<per;r++)for(let j=0;j<n;j++){const sd=m.sides[j];if(!sd)return {t:'third'};if(sd.length<=r)return sd.length?{t:'partner',i:j}:{t:'side',i:j}}return null}
 function defTarget(i,m){m=m||cur(i);const sl=card()[i];if(sl&&sl.k==='match'&&TC.sh[i])return shapeNext(m,TC.sh[i]);return defTarget0(i,m)}
+window.tcPType=function(k){const i=TC.act;if(i==null||locked()||!PT[k])return;const sl=card()[i];if(!sl||sl.k!=='promo')return;const m=clone(cur(i));m.type=k;commit(i,m);buzz();const sb=document.getElementById('tcsb'),st=sb?sb.scrollTop:0;render();const nb=document.getElementById('tcsb');if(nb)nb.scrollTop=st};
 window.tcShape=function(k){const i=TC.act;if(i==null||locked())return;const sl=card()[i];if(!sl||sl.k!=='match')return;const [n,per]=shapeDims(k);
  const m=clone(cur(i));const before=idsOf(i,m).length;m.sides=m.sides.slice(0,n).map(x=>x.slice(0,per));while(m.sides.length<2)m.sides.push([]);
  TC.sh[i]=k;const cut=before-idsOf(i,m).length;commit(i,m);TC.tg=null;TC.rep=null;TC.mode=shapeNext(cur(i),k)?'w':TC.mode;TC.dealt=0;const sb=document.getElementById('tcsb'),st=sb?sb.scrollTop:0;render();const nb=document.getElementById('tcsb');if(nb)nb.scrollTop=st;center(i);
@@ -244,13 +245,13 @@ function slotHtml(i){const c=card(),sl=c[i];let act=i===TC.act&&!locked();const 
  if(promo&&m.a&&PT[m.type])mods=`<span class="tcm g">${esc(PT[m.type].n)}</span>`;
  if(!promo&&d){const st=stipKey(d);const f=stipFits(STIPS[st],d);mods=`<span class="tcm ${st!=='std'&&f.spec.length?'g':st==='std'?'q':''}">${esc(STIPS[st].n)}</span>${d.title&&S.titles[d.title]?`<span class="tcm g">${esc(S.titles[d.title].n)} title</span>`:''}${d.ri&&d.ri.x&&W_(d.ri.x)?`<span class="tcm">Run-in · ${esc(ln(W_(d.ri.x)))}</span>`:''}${typeof finOf==='function'&&finOf(d)!=='clean'?'<span class="tcm">Screwy finish</span>':''}`}
  const empty=!idsOf(i,m).length;
- const sum=empty&&!act?`<div class="tcsum">${opt?'Optional. Tap to book it, or leave it empty.':'Tap to book it.'}</div>`
+ const live=act&&TC.open;const sum=empty&&!live?`<div class="tcsum">${opt?'Optional. Tap to book it, or leave it empty.':'Tap to book it.'}</div>`
   
   :!promo&&d?`<div class="tcsum"><b>${esc(MT[d.type].n)}</b> · ${esc(sideName(d.sides[d.winner]))} wins${pr?` · <span class="gold">${pr.kind==='contract'?'Contracted':pr.kind==='shot'?'Earned title shot':'Promised'}</span>`:''}</div>`:'';
  const tl=tellFor(i);
  return `<div class="tcs ${act?'act':''} ${main?'me':''} ${opt?'opt':''}" data-tcs="${i}" data-dp="slot:${i}">
  <div class="tcnum" data-dg="slot:${i}" title="Hold and drag to move it">${i+1}</div>
- <div class="tcin"><div class="tchd"><span class="tclb">${esc(slotLab(i))}${d&&d.stip==='bng'?' · Blood &amp; Guts':''}</span>${tl?`<span class="tctl">${tl}</span>`:empty&&!act?`<span class="tcbk">${opt?'Add':'Book it'}</span>`:''}${!empty?`<button class="tcdet" onclick="event.stopPropagation();${promo?'openPromo':'openMatch'}(${i})">Details</button>`:''}</div>
+ <div class="tcin"><div class="tchd"><span class="tclb">${esc(slotLab(i))}${d&&d.stip==='bng'?' · Blood &amp; Guts':''}</span>${tl?`<span class="tctl">${tl}</span>`:empty&&!live?`<span class="tcbk">${opt?'Add':'Book it'}</span>`:''}${!empty?`<button class="tcdet" onclick="event.stopPropagation();${promo?'openPromo':'openMatch'}(${i})">Details</button>`:''}</div>
  ${sum}${mat?`<div class="tcmat${many?' many':''}">${mat}</div>`:''}${mods?`<div class="tcmods">${mods}</div>`:''}</div></div>`}
 /* the pick sheet (v280): tap a space on the table and the best cards for it slide up; tap one to place it */
 function sheetTitle(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';const L=slotLab(i);
@@ -288,7 +289,7 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
   else{let n=0;body=`<div class="tcgrid">${l.map(x=>pc(x,n++)).join('')}</div>`}}
  const fc=[['fit','Best fit'],['ch','Champions'],['f','Faces'],['h','Heels'],['all','All']];
  const chips=`${hasX&&!TC.rep?`<button class="chip ${TC.mode==='x'?'on':''}" onclick="tcMode('${TC.mode==='x'?'w':'x'}')">${promo?'Segment':'Stips &amp; titles'}</button>`:''}${fc.map(([v,n])=>`<button class="chip ${TC.mode==='w'&&TC.f===v?'on':''}" onclick="tcF('${v}')">${n}</button>`).join('')}`;
- const shc=!promo&&!TC.rep?`<div class="tcshc tcshp">${SHAPES.map(([k,n])=>`<button class="chip ${shapeOf(i,m)===k?'on':''}" onclick="tcShape('${k}')">${n}</button>`).join('')}</div>`:'';
+ const pA=promo&&m.a?W_(m.a):null;const shc=promo&&!TC.rep?`<div class="tcshc tcshp">${Object.entries(PT).filter(([k,t])=>!t.champ||!pA||isChamp(pA.id)).map(([k,t])=>`<button class="chip ${m.type===k?'on':''}" onclick="tcPType('${k}')">${esc(t.n)}</button>`).join('')}</div>`:!promo&&!TC.rep?`<div class="tcshc tcshp">${SHAPES.map(([k,n])=>`<button class="chip ${shapeOf(i,m)===k?'on':''}" onclick="tcShape('${k}')">${n}</button>`).join('')}</div>`:'';
  const tch=false&&!TC.rep&&TC.mode==='w'&&tl.length>1&&!defTarget(i,m)?`<div class="tcshc">${tl.map((x,j)=>`<button class="chip ${tg&&x.t===tg.t&&x.i===tg.i?'on':''}" onclick="tcTg(${j})">${x.t==='partner'?`+ Partner · ${esc(ln(W_(m.sides[x.i][0])))}`:x.t==='third'?'+ Third corner':x.t==='side'?(x.i?'Right side':'Left side'):'Second'}</button>`).join('')}</div>`:'';
  const cf=TC.confirm&&W_(TC.confirm.id)?`<div class="tccf"><span>${esc(W_(TC.confirm.id).name)} is already on the card tonight. A second match costs ${DD_FAT}× the stamina.</span><button class="mini" onclick="tcNo()">No</button><button class="mini on" onclick="tcYes()">Book twice</button></div>`:'';
  const foot=TC.rep&&W_(TC.rep)?`<div class="tcsf"><button class="btn sec" onclick="tcBack()">Send back</button><button class="btn sec" onclick="showW('${TC.rep}')">Details</button></div>`:'';
