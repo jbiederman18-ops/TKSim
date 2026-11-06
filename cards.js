@@ -138,7 +138,7 @@ function shapeNext(m,k){const [n,per]=shapeDims(k);for(let r=0;r<per;r++)for(let
 function defTarget(i,m){m=m||cur(i);const sl=card()[i];if(sl&&sl.k==='match'&&TC.sh[i])return shapeNext(m,TC.sh[i]);return defTarget0(i,m)}
 window.tcShape=function(k){const i=TC.act;if(i==null||locked())return;const sl=card()[i];if(!sl||sl.k!=='match')return;const [n,per]=shapeDims(k);
  const m=clone(cur(i));const before=idsOf(i,m).length;m.sides=m.sides.slice(0,n).map(x=>x.slice(0,per));while(m.sides.length<2)m.sides.push([]);
- TC.sh[i]=k;const cut=before-idsOf(i,m).length;commit(i,m);TC.tg=null;TC.rep=null;TC.mode=shapeNext(cur(i),k)?'w':TC.mode;TC.f='fit';TC.dealt=1;render();center(i);
+ TC.sh[i]=k;const cut=before-idsOf(i,m).length;commit(i,m);TC.tg=null;TC.rep=null;TC.mode=shapeNext(cur(i),k)?'w':TC.mode;TC.dealt=0;const sb=document.getElementById('tcsb'),st=sb?sb.scrollTop:0;render();const nb=document.getElementById('tcsb');if(nb)nb.scrollTop=st;center(i);
  if(cut>0)toast(`${cut} sent back to the roster.`)};
 function defTarget0(i,m){const t=targets(i,m);return t.find(x=>x.t==='side'||x.t==='a'||x.t==='b')||(()=>{const p=t.filter(x=>x.t==='partner');return p.length===1?p[0]:null})()}
 
@@ -273,7 +273,7 @@ function sheetCards(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';const 
  const here=idsOf(i,m);const full=promo?new Set():fullIn('p',i);const am=askMap();
  return ownList('p').filter(w=>!w.inj&&!here.includes(w.id)&&!full.has(w.id)&&(TC.f==='all'||(TC.f==='ch'?isChamp(w.id):w.al===TC.f)))
   .sort((a,b)=>(promo?b.mic-a.mic:ovr(b)-ovr(a))).map(w=>({w,r:why(w,anchor,i,am,tt)}))}
-function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open)return '';const m=cur(i);const promo=sl.k==='promo';
+function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown=false;return ''}const ent=!TC.shown;TC.shown=true;const m=cur(i);const promo=sl.k==='promo';
  const tl=targets(i,m);let tg=TC.rep?null:(TC.tg||defTarget(i,m)||(promo?tl[0]:null)||null);
  const [k,t]=sheetTitle(i,m,tg);const used=usedIn('p',i);
  const hasX=promo?!!m.a:!!sl.d;
@@ -293,7 +293,7 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open)return ''
  const cf=TC.confirm&&W_(TC.confirm.id)?`<div class="tccf"><span>${esc(W_(TC.confirm.id).name)} is already on the card tonight. A second match costs ${DD_FAT}× the stamina.</span><button class="mini" onclick="tcNo()">No</button><button class="mini on" onclick="tcYes()">Book twice</button></div>`:'';
  const foot=TC.rep&&W_(TC.rep)?`<div class="tcsf"><button class="btn sec" onclick="tcBack()">Send back</button><button class="btn sec" onclick="showW('${TC.rep}')">Details</button></div>`:'';
  TC.dealt=0;
- return `<div class="tcscrim" onclick="tcScrim()"></div><div class="tcdock tcsheet" id="tcdock" role="dialog" aria-label="${esc(t)}"><button class="tcpull open" onclick="tcClose()" aria-label="Close"><span class="tcgrip"></span></button>
+ return `<div class="tcscrim ${ent?'enter':''}" onclick="tcScrim()"></div><div class="tcdock tcsheet ${ent?'enter':''}" id="tcdock" role="dialog" aria-label="${esc(t)}"><button class="tcpull open" onclick="tcClose()" aria-label="Close"><span class="tcgrip"></span></button>
  <div class="tcsh"><div class="tcst"><span class="tcsk">${esc(k)}</span><b>${esc(t)}</b></div><button class="tcsx" onclick="tcClose()" aria-label="Close">✕</button></div>
  ${cf}${shc}<div class="tcsc">${chips}</div>${tch}<div class="tcsb" id="tcsb">${body}</div>${foot}</div>`}
 function pickAct(){const c=card();if(TC.act!=null&&c[TC.act]&&tableOk(c[TC.act]))return;
@@ -742,8 +742,8 @@ html.tcards .tv-last .tkc{--w:180px;width:var(--w)}
 .tcfan{display:flex;justify-content:center;gap:8px;margin:14px 0 4px}.tcfan .tkc{--w:min(24vw,96px)}.tcfan .tkc:nth-child(1){transform:rotate(-5deg) translateY(4px)}.tcfan .tkc:nth-child(3){transform:rotate(5deg) translateY(4px)}
 .tcrow{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 8px;margin:0 -2px}.tcrow::-webkit-scrollbar{display:none}.tcrow .tkc{--w:84px}
 /* the pick sheet (v280) */
-.tcscrim{position:fixed;inset:0;z-index:14;background:rgba(0,0,0,.45);animation:tcfade .2s ease both}@keyframes tcfade{from{opacity:0}}
-.tcdock.tcsheet{position:fixed;left:0;right:0;bottom:0;z-index:15;max-width:640px;margin:0 auto;padding:6px 0 env(safe-area-inset-bottom,0px);max-height:min(66vh,600px);display:flex;flex-direction:column;background:linear-gradient(180deg,#1b1c21,#101115);box-shadow:0 -1px 0 var(--gold3),0 -20px 40px rgba(0,0,0,.6);animation:tcup .3s cubic-bezier(.2,.9,.3,1) both}
+.tcscrim{position:fixed;inset:0;z-index:14;background:rgba(0,0,0,.45)}.tcscrim.enter{animation:tcfade .2s ease both}@keyframes tcfade{from{opacity:0}}
+.tcdock.tcsheet{position:fixed;left:0;right:0;bottom:0;z-index:15;max-width:640px;margin:0 auto;padding:6px 0 env(safe-area-inset-bottom,0px);max-height:min(66vh,600px);display:flex;flex-direction:column;background:linear-gradient(180deg,#1b1c21,#101115);box-shadow:0 -1px 0 var(--gold3),0 -20px 40px rgba(0,0,0,.6)}.tcdock.tcsheet.enter{animation:tcup .3s cubic-bezier(.2,.9,.3,1) both}
 @keyframes tcup{from{transform:translateY(100%)}}
 .tcsheet .tcpull.open{flex:none;margin:0 auto 2px}
 .tcsh{flex:none;display:flex;align-items:flex-end;gap:10px;padding:0 16px 10px;touch-action:none}
