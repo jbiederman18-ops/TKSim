@@ -544,7 +544,7 @@ function lineDeck(){if(!on())return;const m=document.querySelector('#modal .sbod
  box.addEventListener('pointerup',end);box.addEventListener('pointercancel',end)}
 
 /* ---------------- live calls: cards you flick up ---------------- */
-function callDeck(){if(!on())return;document.querySelectorAll('#modal .sdmenu:not([data-tcc])').forEach(mn=>{mn.dataset.tcc='1';const cs=[...mn.querySelectorAll(':scope>.choice')];if(cs.length<2)return;
+function callDeck(){return;if(!on())return;document.querySelectorAll('#modal .sdmenu:not([data-tcc])').forEach(mn=>{mn.dataset.tcc='1';const cs=[...mn.querySelectorAll(':scope>.choice')];if(cs.length<2)return;
  const row=document.createElement('div');row.className='tccalls';cs[0].before(row);cs.forEach(c=>{row.appendChild(c);c.classList.add('tccall');flick(c)});
  mn.insertAdjacentHTML('beforeend','<div class="tchint" style="padding:4px 0 0">Flick a card up or tap it to make the call.</div>')})}
 function flick(el){let y0=null,x0=0,pid=null,t0=0;
@@ -734,6 +734,17 @@ html.tcards .lvp.tcl .lvpn{font-size:15px;text-align:center}
 html.tcards .twpl .tcmini{margin-right:8px}html.tcards .twpl .tcmini .tkc{--w:34px;width:34px}
 html.tcards .tt-pic.tcin{width:auto;height:auto;overflow:visible;clip-path:none;background:none}html.tcards .tt-pic.tcin .tkc{--w:96px}html.tcards .ttape .tt-bg{display:none}
 html.tcards .dtr .tcmini{margin-right:6px}
+/* showdowns on a phone (v289): a shorter stage, cards sized to sit inside it, decisions as compact stacked rows */
+html.tcards #modal .sd .sdph.tcin{left:50%;bottom:6%;top:auto;height:82%;width:auto;max-width:90%;aspect-ratio:5/7;transform:translateX(-50%);clip-path:none;box-shadow:none;background:none;overflow:visible}
+html.tcards #modal .sd .sdph.tcin>.tkc{--w:130px;width:auto;height:100%;max-width:100%;aspect-ratio:5/7}
+html.tcards #modal .sd.solo .sdph.tcin{height:84%}
+html.tcards #modal .sd .sdc>:not(.sdph){z-index:3}
+@media (max-width:620px){html.tcards #modal .sd{aspect-ratio:16/9}}
+@media (max-width:620px) and (max-height:720px){html.tcards #modal .sd{aspect-ratio:21/9}html.tcards #modal .sdw .lvhd{padding-top:8px;padding-bottom:8px}html.tcards #modal .sdw .lvhd .lvt{font-size:24px;line-height:1}html.tcards #modal .sdmenu .choice{padding:7px 10px;margin-bottom:5px}html.tcards #modal .sdmenu .callbar,html.tcards #modal .sdmenu>div:first-child{margin-bottom:6px}}
+html.tcards #modal .sdmenu .choice{display:grid;grid-template-columns:30px minmax(0,1fr);column-gap:10px;row-gap:2px;align-items:center;margin:0 0 6px;padding:9px 10px;border-radius:3px;clip-path:none;min-height:0}
+html.tcards #modal .sdmenu .choice .key{position:static;grid-row:1/3;width:30px;height:30px;display:flex;align-items:center;justify-content:center;margin:0;clip-path:none;border-radius:2px}
+html.tcards #modal .sdmenu .choice>div:first-of-type{font-size:15px;line-height:1.25}
+html.tcards #modal .sdmenu .choice .muted.tiny{font-size:11.5px;line-height:1.3;margin:0}
 html.tcards .tv-last .tkc{--w:180px;width:var(--w)}
 /* roster, titles and home in cards (v280) */
 .tcrg{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 10px;justify-items:center;margin-top:12px}.tcrg .tkc{--w:min(29vw,124px)}html.tcards .tcrg .tkc{width:var(--w)}
