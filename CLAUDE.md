@@ -4,8 +4,8 @@
 - Every release: bump `VERSION` in `sw.js` and `APP_VERSION` in `index.html` to match (e.g. `aegm-v131` / `v131`), and add any new file to `FILES` in `sw.js`.
 
 ## Read the code cheaply (important — this repo is big)
-`index.html` is ~1.2MB (~300k tokens). Never read it whole, and never read its top without an offset.
-- **Lines 15–23 are base64 fonts (~200KB).** Skip them.
+`index.html` is ~1MB (~250k tokens). Never read it whole.
+- Fonts live in `fonts/` (moved out of index.html in v290) — never inline them again.
 - Find code with Grep first (function name, a UI string, or a section marker below), then Read only that line range (`offset`/`limit`, ~50–150 lines).
 - Section markers look like `/* ===================== NAME`. Grep `/\* =====` to get current line numbers — the ranges below drift as code changes.
 - Most newer systems live in their own `.js` file. Check the file table before touching `index.html`.
@@ -13,33 +13,33 @@
 - Skip entirely: `firebase-sdk.js` (bundled SDK), `vendor/`, `tools/icon*.svg`, `photos/`, `sfx/`, root `.png` files.
 - Big content files (`scenarios*.js`, `retorts.js`, `gimmicks.js`, PROMOS in index.html) are mostly written lines. Grep for the specific scene or key; don't read them to learn the engine.
 
-## index.html map (line numbers approximate, as of v289)
+## index.html map (line numbers approximate, as of v291)
 | Lines | Section | What's there |
 |---|---|---|
-| 16–1733 | `<style>` | All CSS. The live look is the **v222 Pay-per-view** block (~1276+) plus card styles. Earlier blocks (Balanced, Classic Dynamite, Calmer pass, v212 Hybrid) are older layers that still partly apply. Party-night TV CSS ~520–767. |
-| 1755 | DATA | Roster, titles, PPVs, constants, economy costs (~1822) |
-| 2226 | PROMOS | Promo types and hand-written outcome lines (163KB — grep only) |
-| 2655 | SITUATIONAL MATCH EVENTS | In-match moments, real backstage heat |
-| 2720 | PRODUCER CALLS | |
-| 2757 | HELPERS | |
-| 2768 | ONLINE LEAGUES (2–4 GMs) | League rules/data; Photo Studio ~2887; revenue ~2983; sell-outs ~3003; feud engine ~3036; feud history ~3072 |
-| 3139 | SETUP | New game, draft salary cap ~3162 |
-| 3187 | SCOUTING | Prospects |
-| 3227 | SHOWS | Show rating; stamina ~3305 |
-| 3363 | RUN-INS | |
-| 3471 | 5★ OVERFLOW | |
-| 3495 | FINISHES | |
-| 3636 | PROMO ENGINE | Promo rating logic |
-| 3822 | AI BOOKER | Rival bot + Suggest the rest |
-| 3913 | AIRING | Running a show; free-agent market ~3988 |
-| 4049 | FRONT OFFICE CRISES | Between-show events (more in `crises2.js`) |
-| 4162 | PERSISTENCE | Save/load |
-| 4176 | UI | Main screens/render |
-| 4459 | QUICK BOOKING | Drag & drop, rival auto-fill |
-| 4605 | SHOW STRUCTURE | Book screen, match editor, dropdowns (~4917), feud detail (~4796). 211KB — biggest JS section |
-| 5440 | ONLINE LEAGUE: turns, sync, invites | |
-| 5621–6143 | CLOUD SAVE, YOUR GAMES, BACKUPS, CLOUD SYNC | Save safety — be careful here |
-| 6144–6176 | `<script>` tags | Load order of the external files |
+| 16–1495 | `<style>` | All CSS. The live look is the **v222 Pay-per-view** block (~1089+) plus card styles. Earlier blocks (Balanced, Classic Dynamite, Calmer pass, v212 Hybrid) are older layers that still partly apply — rules with no visible effect were stripped in v291, so what's left is load-bearing. Party-night TV CSS ~420–651. |
+| 1517 | DATA | Roster, titles, PPVs, constants, economy costs (~1584) |
+| 1988 | PROMOS | Promo types and hand-written outcome lines (163KB — grep only) |
+| 2417 | SITUATIONAL MATCH EVENTS | In-match moments, real backstage heat |
+| 2482 | PRODUCER CALLS | |
+| 2519 | HELPERS | |
+| 2530 | ONLINE LEAGUES (2–4 GMs) | League rules/data; Photo Studio ~2649; revenue ~2745; sell-outs ~2765; feud engine ~2798; feud history ~2834 |
+| 2901 | SETUP | New game, draft salary cap ~2924 |
+| 2949 | SCOUTING | Prospects |
+| 2989 | SHOWS | Show rating; stamina ~3067 |
+| 3125 | RUN-INS | |
+| 3233 | 5★ OVERFLOW | |
+| 3257 | FINISHES | |
+| 3398 | PROMO ENGINE | Promo rating logic |
+| 3584 | AI BOOKER | Rival bot + Suggest the rest |
+| 3675 | AIRING | Running a show; free-agent market ~3750 |
+| 3811 | FRONT OFFICE CRISES | Between-show events (more in `crises2.js`) |
+| 3924 | PERSISTENCE | Save/load |
+| 3938 | UI | Main screens/render |
+| 4221 | QUICK BOOKING | Drag & drop, rival auto-fill |
+| 4367 | SHOW STRUCTURE | Book screen, match editor, dropdowns (~4679), feud detail (~4558). 211KB — biggest JS section |
+| 5202 | ONLINE LEAGUE: turns, sync, invites | |
+| 5383–5905 | CLOUD SAVE, YOUR GAMES, BACKUPS, CLOUD SYNC | Save safety — be careful here |
+| 5906–5938 | `<script>` tags | Load order of the external files |
 
 ## External files
 | File | System |
