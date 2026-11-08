@@ -666,6 +666,43 @@ body.tcdragging{user-select:none;-webkit-user-select:none}.tcs,.tcdock{-webkit-u
 html.tcards .twpair .twh[data-k]{animation:tcflip .5s cubic-bezier(.2,.9,.3,1.1) both;transform-origin:50% 50%;backface-visibility:hidden}
 html.tcards .twpair .twh[data-k]+.twh[data-k]{animation-delay:.12s}
 @keyframes tcflip{from{transform:perspective(700px) rotateY(88deg);filter:brightness(.4)}to{transform:none;filter:none}}
+/* v296: the tug of war in the panel look (v284/v285) — flat straight-edged panels with an accent edge, plates like the
+   Home fan-war name plates, and the same thin rope with a round knot. No slants, skews, glows or tinted fills. */
+html.tcards.lk-hy .twsc{gap:10px;margin-top:6px}
+html.tcards.lk-hy .twsc>div{align-items:flex-start;gap:4px;padding:10px 10px 10px 12px;background:#1d1e23;border-radius:3px;box-shadow:inset 3px 0 0 var(--heel)}
+html.tcards.lk-hy .twsc>div.me{box-shadow:inset 3px 0 0 var(--gold)}
+html.tcards.lk-hy .twsc>div:last-child{align-items:flex-end;padding:10px 12px 10px 10px;box-shadow:inset -3px 0 0 var(--heel)}
+html.tcards.lk-hy .twsc span{font:700 11px/1 'BC',sans-serif;letter-spacing:.12em}
+html.tcards.lk-hy .twsc .me span{color:var(--gold)}
+html.tcards.lk-hy .twsc b,html.tcards.lk-hy .twsc .me b{font-size:24px;line-height:1.05;min-height:26px;color:var(--text);text-shadow:none}
+html.tcards.lk-hy .twsc .me b{color:var(--gold)}
+html.tcards.lk-hy .twsc em{font-size:10px;letter-spacing:.12em}
+html.tcards.lk-hy .twrope{height:6px;margin:16px 4px 10px;border:0;border-radius:3px;background:linear-gradient(90deg,var(--gold) 0 50%,var(--heel) 50%)}
+html.tcards.lk-hy .twrope::before{top:-6px;bottom:-6px;width:1px;background:var(--mut)}
+html.tcards.lk-hy .twrope i{width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;transform:none;background:var(--gold2);box-shadow:0 0 0 3px #141417}
+html.tcards.lk-hy .twrope i.ring::after{border-radius:50%;border-color:var(--gold)}
+html.tcards.lk-hy .twrope.jolt{animation:none}
+html.tcards.lk-hy .twrd b{color:var(--red)}
+html.tcards.lk-hy .twh{background:#141417;clip-path:none;border:0;border-radius:3px;padding:10px 10px 10px 14px;box-shadow:inset 3px 0 0 var(--mut),inset 0 0 0 1px var(--line)}
+html.tcards.lk-hy .twh.p{box-shadow:inset 3px 0 0 var(--gold),inset 0 0 0 1px var(--line)}
+html.tcards.lk-hy .twh.ai,html.tcards.lk-hy .twh.x{box-shadow:inset 3px 0 0 var(--heel),inset 0 0 0 1px var(--line)}
+html.tcards.lk-hy .twpair.main .twh{box-shadow:inset 3px 0 0 var(--red),inset 0 0 0 1px var(--line)}
+html.tcards.lk-hy .twpair.main .twh.p{box-shadow:inset 3px 0 0 var(--red),inset 0 0 0 1px var(--gold3)}
+html.tcards.lk-hy .twh.won{background:#141417;box-shadow:inset 3px 0 0 var(--gold),inset 0 0 0 1px var(--gold3)}
+html.tcards.lk-hy .twh.won .twl::after,html.tcards.lk-hy .twh.tie .twl::after{color:var(--gold)}
+html.tcards.lk-hy .twh.empty{opacity:.45}
+html.tcards.lk-hy .twh.flash::after{background:rgba(242,193,78,.12);border-radius:3px}
+html.tcards.lk-hy .twpl{background:#1d1e23;clip-path:none;border-radius:3px;padding:6px 8px 6px 12px;box-shadow:inset 3px 0 0 var(--heel);transform:none;filter:none}
+html.tcards.lk-hy .twpl.fc{box-shadow:inset 3px 0 0 var(--face)}
+html.tcards.lk-hy .twpl::before{display:none}
+html.tcards.lk-hy .twpl .o{border-radius:2px;font-size:16px;background:#0c0c0e;color:var(--gold)}
+html.tcards.lk-hy .twbelt{border-radius:2px}
+html.tcards.lk-hy .tww{border-radius:2px;background:var(--gold);color:var(--ink);transform:scale(0);font-size:11px;letter-spacing:.06em}
+html.tcards.lk-hy .twh.dn .twpl.rw{background:#24252b;transform:none;animation:none;box-shadow:inset 3px 0 0 var(--heel),inset 0 0 0 1px var(--gold)}
+html.tcards.lk-hy .twh.dn .twpl.rw.fc{box-shadow:inset 3px 0 0 var(--face),inset 0 0 0 1px var(--gold)}
+html.tcards.lk-hy .twh.dn .twpl.rw .tww{transform:none;animation:none}
+html.tcards.lk-hy .twh.dn .twpl.rl{filter:none;opacity:.5;transform:none}
+html.tcards.lk-hy .tws{text-shadow:none;color:var(--gold)}
 /* party TV */
 .tvpile{display:flex;justify-content:center;gap:4px;margin-top:8px;min-height:30px}
 .tvpile i{display:block;width:22px;height:30px;background:#0c0c0e url(card-bg.jpg) center/cover;box-shadow:inset 0 0 0 1px var(--gold3);animation:tvslam .35s cubic-bezier(.2,1.3,.4,1) both}
