@@ -91,7 +91,7 @@ function attnItems(){if(!S||S.phase!=='season')return [];
   if(emp.length){const nm=emp.filter(i=>c[i].k==='match').length,np=emp.length-nm;const i0=emp[0];
    const what=[nm?`${nm} match${nm>1?'es':''}`:'',np?`${np} promo${np>1?'s':''}`:''].filter(Boolean).join(' and ');
    const names=emp.map(i=>c[i].k==='match'?(mLab(c,i).main?'Main event':mLab(c,i).lab):'Promo');
-   add({id:'empty',g:A_MUST,i:'📝',h:`Still to book: ${what}`,d:`Every slot not marked optional needs filling before you can go live — or tap ✨ Suggest the rest to fill the gaps.`,
+   add({id:'empty',g:A_MUST,i:'📝',h:`Still to book: ${what}`,d:'',
     s:['b',`Empty: ${names.join(', ')}`],a:[c[i0].k==='match'?'Book a match':'Book a promo',c[i0].k==='match'?`openMatch(${i0})`:`openPromo(${i0})`,1],gate:false,where:null})}}
  if(S.crisis&&typeof CRISES!=='undefined'&&CRISES[S.crisis.k]&&S.w[S.crisis.a]&&S.w[S.crisis.a].own==='p'){const C=CRISES[S.crisis.k];
   add({id:'crisis',g:A_MUST,i:C.i,h:`${C.good?'An opportunity':'A situation'}: ${C.t}`,d:`${S.w[S.crisis.a].name} is involved. It needs a decision before the show.`,s:['b','Waiting on you'],a:['Decide','openCrisis()',1],gate:false,who:[S.crisis.a],where:'🚨 Backstage'})}
@@ -257,7 +257,7 @@ window.attnItems=attnItems;
 const GRP=[[A_MUST,'Before you go live'],[A_CH,'Chances tonight'],[A_MIND,'Keep in mind'],[A_OFF,'Front office']];
 let OPEN=null;
 function stHtml(s){if(!s||!s[1])return '';const k=s[0];return ` · <span class="${k==='ok'?'good':k==='b'?'bad':k==='w'?'warnt':'muted'}">${k==='ok'?'✓ ':k==='b'?'✗ ':''}${esc(s[1])}</span>`}
-function rowHtml(x){return `<div class="atr ${x.s&&x.s[0]==='b'?'bad':''}"><div class="atb"><b>${x.i} ${esc(x.h)}</b><div class="tiny muted">${esc(x.d)}${stHtml(x.s)}</div></div>${x.a?`<button class="mini ${x.a[2]?'on':''}" onclick="${x.a[1]}">${esc(x.a[0])}</button>`:''}</div>`}
+function rowHtml(x){return `<div class="atr ${x.s&&x.s[0]==='b'?'bad':''}"><div class="atb"><b>${x.i} ${esc(x.h)}</b><div class="tiny muted">${esc(x.d)}${x.d?stHtml(x.s):stHtml(x.s).replace(/^ · /,'')}</div></div>${x.a?`<button class="mini ${x.a[2]?'on':''}" onclick="${x.a[1]}">${esc(x.a[0])}</button>`:''}</div>`}
 function attnPanel(){if(!S||S.phase!=='season'||typeof mpLockedQuiet==='function'&&mpLockedQuiet())return '';let l;try{l=attnItems()}catch(e){console.warn(e);return ''}
  if(!OPEN)OPEN={more:false,[A_MUST]:true,[A_CH]:true,[A_MIND]:true,[A_OFF]:true};
  /* on top: only what still blocks a clean go-live. Everything else waits behind one dropdown. */
@@ -455,8 +455,7 @@ window.matchDetails=function(m,sh,notes){const d=mdOf(m,sh);const r=d.r;
  ${chipRow('Requests',req,1)}${chipRow('Holding back',d.back)}
  ${notes||''}
  <div class="row sb" style="padding-top:10px;margin-top:4px;border-top:1px solid var(--line)"><span class="muted">Crowd buzz</span><span class="tellrow" style="margin:0">${tellHtml(r,true)}</span></div>
- <div class="tiny muted" style="margin-top:4px">The exact star breakdown still comes out after the show.</div>
- <details class="whyd" style="margin-top:8px"><summary>Full chemistry breakdown</summary>${whyMatch(m,sh)}</details></div>`};
+  <details class="whyd" style="margin-top:8px"><summary>Full chemistry breakdown</summary>${whyMatch(m,sh)}</details></div>`};
 /* the small pip strip on a booked slot */
 window.slotPips=function(m,sh,i){let d;try{d=mdOf(m,sh)}catch(e){return ''}const ch=attnChips(i);
  return `${d.sq?'':`<div class="mpip"><div>Talent${segH(d.p.talent)}</div><div>Chemistry${segH(d.p.chem)}</div><div>Story${segH(d.p.story)}</div><div>Extras${segH(d.p.extras)}</div></div>`}${ch||(!d.sq&&d.back.length)?`<div class="tags">${ch}${d.sq?'':d.back.slice(0,2).map(([k,t])=>`<span class="tg ${k==='b'?'bad':'warnt'}">${esc(t)}</span>`).join('')}</div>`:''}`};

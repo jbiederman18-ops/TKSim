@@ -67,7 +67,7 @@ function head(n,left){let l=[];try{l=inboxList()}catch(e){}const q=l.map((x,i)=>
 function voiceH(sp,line){const w=S.w[sp];const av=w?`<span class="scav">${face(w)}</span>`:`<span class="scav x">${esc(String(sp).replace(/[^A-Za-z ]/g,'').split(' ').filter(Boolean).map(x=>x[0]).join('').slice(0,2).toUpperCase()||'?')}</span>`;
  return `<div class="scs">${av}<div class="scq"><b class="${w?(w.al==='h'?'heel':'face'):''}">${esc(w?w.name:sp)}</b><q>${esc(line)}</q></div></div>`}
 function deskPage(x,pos,left){const [ic,nm]=KIND[x.k]||[x.s.i,x.s.t];const v=voiceFor(x.k,x.row);
- return `${head(pos,left)}<div class="h mhd mt">${ic} ${esc(nm)}</div><div class="scene brief ibx">${v?voiceH(v[0],v[1]):''}${x.row}</div><p class="muted tiny center" style="margin-top:10px">Give them an answer to call in the next one.</p>`}
+ return `${head(pos,left)}<div class="h mhd mt">${ic} ${esc(nm)}</div><div class="scene brief ibx">${v?voiceH(v[0],v[1]):''}${x.row}</div>`}
 /* ---- showing it ---- */
 function stamp(pos,left){const m=document.querySelector('#modal .sbody');if(!m)return;
  /* a pitch can't be put off from the inbox, and the count sits on top of every decision screen */

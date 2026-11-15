@@ -71,9 +71,9 @@ function tpRow(e){const st=tpStat(e);const C=e.champ&&e.champ[0];const ws=[e.w].
 function titlePicCard(){if(!S||S.phase!=='season')return '';const l=tpList(),bc=tpCases();
  const behind=l.filter(e=>tpStat(e)[0]==='b').length;
  const body=l.length||bc.length?l.map(tpRow).join('')+(bc.length?`<div class="muted tiny" style="margin-top:8px">💼 ${bc.map(w=>esc(w.name)).join(' and ')} ${bc.length>1?'hold':'holds'} Money in the Bank — no build needed, they can cash in any time.</div>`:''):
-  `<div class="muted mt">Nobody is owed a title shot right now. Rumble, Money in the Bank, tournament and Casino Gauntlet winners, title-shot pitches you agree to and contract clauses all land here, along with the feud they need.</div>`;
+  `<div class="muted mt">Nobody is owed a title shot right now.</div>`;
  return `<div class="card tpic"><div class="row sb"><div class="h small" style="margin:0">🎟️ Title picture</div><span class="muted tiny">${l.length?`${l.length} shot${l.length>1?'s':''} owed${behind?` · <b class="bad">${behind} behind</b>`:''}`:''}</span></div>
- <div class="muted tiny" style="margin:4px 0 6px">Earning a shot starts the rivalry. Build it to 🔥${TP_READY} — the gold line — before the night it's on, or the title match falls flat.</div>${body}</div>`}
+ ${l.length?`<div class="muted tiny" style="margin:4px 0 6px">Build each feud to 🔥${TP_READY} — the gold line — before the night, or the title match falls flat.</div>`:''}${body}</div>`}
 /* Home tile line */
 function tpTileTxt(){const l=tpList();if(!l.length)return '';const b=l.filter(e=>tpStat(e)[0]==='b').length;return ` · 🎟️ ${l.length} shot${l.length>1?'s':''}${b?` (${b} behind)`:''}`}
 (function(){const st=document.createElement('style');st.textContent=`.tpbar .tpm{position:absolute;top:-3px;bottom:-3px;left:${TP_READY}%;width:2px;background:var(--gold2);border-radius:1px}.tpr.tpbad{border-left:3px solid var(--red);padding-left:8px}.tpic .tpr+.tpr{margin-top:8px}`;document.head.appendChild(st)})();

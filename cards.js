@@ -245,7 +245,7 @@ function slotHtml(i){const c=card(),sl=c[i];let act=i===TC.act&&!locked();const 
  if(promo&&m.a&&PT[m.type])mods=`<span class="tcm g">${esc(PT[m.type].n)}</span>`;
  if(!promo&&d){const st=stipKey(d);const f=stipFits(STIPS[st],d);mods=`<span class="tcm ${st!=='std'&&f.spec.length?'g':st==='std'?'q':''}">${esc(STIPS[st].n)}</span>${d.title&&S.titles[d.title]?`<span class="tcm g">${esc(S.titles[d.title].n)} title</span>`:''}${d.ri&&d.ri.x&&W_(d.ri.x)?`<span class="tcm">Run-in · ${esc(ln(W_(d.ri.x)))}</span>`:''}${typeof finOf==='function'&&finOf(d)!=='clean'?'<span class="tcm">Screwy finish</span>':''}`}
  const empty=!idsOf(i,m).length;
- const live=act&&TC.open;const sum=empty&&!live?`<div class="tcsum">${opt?'Optional. Tap to book it, or leave it empty.':'Tap to book it.'}</div>`
+ const live=act&&TC.open;const sum=empty&&!live?(opt?`<div class="tcsum">Optional</div>`:'')
   
   :!promo&&d?`<div class="tcsum"><b>${esc(MT[d.type].n)}</b> · ${esc(sideName(d.sides[d.winner]))} wins${pr?` · <span class="gold">${pr.kind==='contract'?'Contracted':pr.kind==='shot'?'Earned title shot':'Promised'}</span>`:''}</div>`:'';
  const tl=tellFor(i);
@@ -487,7 +487,7 @@ function homeWar(m){const n=m.querySelector('.warnames');if(!n||n.dataset.tcd)re
  const wins=`${S.hourWins.p||0}–${S.hourWins.ai||0}`;
  const np=(nm,you)=>`<div class="tcnp ${you?'y':''}"><span>${you?'You':ON()?'Friend':'Rival'}</span><b>${esc(nm)}</b></div>`;
  n.outerHTML=`<div class="tcwar">${np(S.gm,true)}<div class="tcrope"><span>Fan war</span><div class="r"><i style="left:${pct}%"></i></div><b>${wins}</b><span>Ratings wins</span></div>${np(S.rival,false)}</div>`;
- if(bar)bar.remove()}
+ if(bar)bar.remove();const mid=rows[0]&&rows[0].children[1];if(mid&&/Ratings wins/.test(mid.textContent))mid.textContent=''}
 function homeBrief(m){const b=m.querySelector('.bstrip .bsn');if(!b||b.dataset.tcd)return;b.dataset.tcd='1';b.innerHTML=`<span class="tcstk">${tcBk('')}${tcBk(b.textContent)}</span>`}
 function homeMenus(){if(!on()||!S||S.phase!=='season'||typeof tab==='undefined'||tab!=='home')return;const m=document.querySelector('#app main');if(!m)return;homeDecks(m);homeWar(m)}
 /* saved games: each one is a show card */
@@ -534,7 +534,7 @@ function lineDeck(){if(!on())return;const m=document.querySelector('#modal .sbod
  const btns=[...m.querySelectorAll('.scene button, .brow button, .choice')].filter(b=>!b.disabled&&b.offsetParent!==null&&!/later|back|close/i.test(b.textContent));
  if(btns.length!==2)return;const [yes,no]=btns;
  box.insertAdjacentHTML('beforeend',`<div class="tcstamp y">${esc(yes.textContent.trim().slice(0,24))}</div><div class="tcstamp n">${esc(no.textContent.trim().slice(0,24))}</div>`);
- m.insertAdjacentHTML('beforeend','<p class="muted tiny center tcswh">Swipe the card right or left to answer, or tap a button.</p>');
+ if(hintN()<15)m.insertAdjacentHTML('beforeend','<p class="muted tiny center tcswh">Swipe the card right or left to answer, or tap a button.</p>');
  let x0=null,y0=0,dx=0,pid=null,go=false;
  box.addEventListener('pointerdown',e=>{if(e.target.closest('button,a,input,details,summary,select'))return;x0=e.clientX;y0=e.clientY;dx=0;pid=e.pointerId;go=false});
  box.addEventListener('pointermove',e=>{if(x0===null||e.pointerId!==pid)return;dx=e.clientX-x0;const dy=e.clientY-y0;if(!go){if(Math.abs(dx)>14&&Math.abs(dx)>Math.abs(dy)*1.3)go=true;else{if(Math.abs(dy)>14)x0=null;return}}

@@ -1516,7 +1516,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v296';
+const APP_VERSION='v297';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4217,7 +4217,7 @@ function briefStrip(){let l=[];try{l=attnItems()}catch(e){}const must=l.filter(x
 function inaugList(){return S&&S.titles?Object.values(S.titles).filter(t=>t.inaug&&!t.holders.length&&(!t.br||t.br==='p')):[]}
 function inaugCard(){const v=inaugList();if(!v.length||S.phase!=='season')return '';const mine=ownList('p');
  const can=t=>{const per=t.kind==='singles'?1:t.kind==='tag'?2:3;return mine.filter(w=>w.g===t.g&&!w.inj).length>=per*2};
- return `<div class="card warn"><div class="h small">👑 Crown your inaugural champions</div><div class="muted" style="margin-bottom:6px">The titles were split evenly between the ${ON()&&nSeats()>2?nSeats():'two'} shows. These are yours, and they start vacant: book a match, then pick the title in the match editor — the winner becomes the first champion. Nobody else can crown them.</div>
+ return `<div class="card warn"><div class="h small">👑 Crown your inaugural champions</div><div class="muted" style="margin-bottom:6px">The titles were split evenly between the ${ON()&&nSeats()>2?nSeats():'two'} shows. Yours start vacant: put one on the line in any match and the winner becomes the first champion.</div>
  ${v.map(t=>`<div class="row sb" style="margin:3px 0"><span>${esc(t.n)}</span><span class="muted tiny">${t.g==='M'?"Men's":"Women's"} ${t.kind==='singles'?'singles':t.kind==='tag'?'tag team':'trios'}${can(t)?'':' · not enough wrestlers'}</span></div>`).join('')}</div>`}
 /* ===================== QUICK BOOKING: drag & drop, rival auto-fill ===================== */
 const GRIP='<span class="grip" aria-hidden="true"></span>';
@@ -4456,7 +4456,7 @@ function prodStrip(sh){if(!S||S.phase!=='season')return '';const k=prodOf('p',sh
  const up=Object.keys(PROD).filter(id=>id!=='std'&&bank>=prodCost(id,sh));const locked=mpLockedQuiet()||(ON()&&S.online&&S.online.booked&&S.online.booked.p);
  return `<div class="card prodstrip ${k==='std'&&up.length?'nudge':''}"><div class="row sb" style="gap:8px"><div class="h small" style="margin:0">🎆 Production</div><button class="mini ${pin?'on':''}" ${locked?'disabled':''} onclick="prodPinTog()">${pin?`📌 Every ${sh.ppv?'PPV':'TV show'}: ${esc(PROD[pin].n)}`:`📌 Use for every ${sh.ppv?'PPV':'TV show'}`}</button></div>
  <div class="pstr">${Object.entries(PROD).map(([id,p])=>{const c=prodCost(id,sh);const ok=id==='std'||bank>=c;return `<button class="pso ${k===id?'on':''}" ${ok&&!locked?'':'disabled'} onclick="setProd('${id}')"><b>${esc(p.n)}</b><span>${c?money(c):'Free'}</span><small>${p.b?'+'+p.b+'★ show':'No boost'}</small></button>`}).join('')}</div>
- ${k==='std'&&up.length?`<div class="tiny warnt" style="margin-top:6px">You can afford ${up.length>1?'a production boost':esc(PROD[up[0]].n)} tonight — it lifts the whole show's rating.</div>`:''}</div>`}
+ </div>`}
 function prodPinTog(){if(mpLocked())return;const sh=curShow();const kind=sh.ppv?'ppv':'tv';S.prodPin=S.prodPin||{};
  if(S.prodPin[kind]){delete S.prodPin[kind];toast('Production goes back to Standard each week.')}
  else{const k=prodOf('p',sh);if(k==='std')return toast('Pick Pyro & video or Full spectacle first, then pin it.');S.prodPin[kind]=k;toast(`${PROD[k].n} for every ${sh.ppv?'PPV':'TV show'} — whenever the bank can cover it.`)}save();render()}
@@ -5131,7 +5131,7 @@ function aiScout(notes){if(ON())return;const q=aiq();const aiN=ownList('ai').len
  const c=w.fee+mkt(w)*4;if(S.money.ai<c*3)return;S.money.ai-=c;w.id='rk'+partyNid();w.own='ai';w.con=52;w.sal=mkt(w);w.fee=0;S.w[w.id]=w;const n=`🌱 ${S.rival} signed ${(t=>/prospect/.test(t)?t:t+' prospect')(TIERS[w.tier].n.toLowerCase())} ${w.name}.`;news(n);notes.push(n)}
 /* v95: everything about the app itself (not the promotion you're running) lives in its own menu, off the header's ⚙️ */
 function menuView(){
- return `${pageHead('Game menu','Settings','',{sub:'Your games, photos, saves, online play and the rulebook. Your front office is back on the Office tab.'})}
+ return `${pageHead('Game menu','Settings','',{sub:'Your games, photos, saves, online play and the rulebook.'})}
  <button class="btn" onclick="openGames()">⇄ Switch games</button>
  <button class="card otool mt" onclick="openStudio()"><span class="oti">📷</span><span class="ott"><b>Photo Studio</b><span>${Object.values(S.w).filter(hasPhoto).length} of ${Object.keys(S.w).length} wrestlers have photos · import, checklist, photo packs</span></span><span class="otc">›</span></button>
  ${savesCard()}${typeof sfxCard==='function'?sfxCard():''}${typeof adCard==='function'?adCard():''}${mpOfficeCard()}
