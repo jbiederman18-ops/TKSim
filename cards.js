@@ -8,7 +8,7 @@
                  re-deals with the best partners for that wrestler. A third card makes a triple threat; stacking a
                  partner onto a side makes a tag or trios match. Once both sides are set, the hand turns into
                  stipulation, title and pin cards. Tap a card on the table to make that side the winner, swipe it
-                 sideways to send it back. Details opens the full editor (finishes, run-ins, everything else).
+                 sideways to send it back. Booked matches get tabs for stips & titles, the finish and the run-in (v298).
      Office    — the line outside your office is a stack of cards; a two-answer decision can be swiped.
      Live      — calls in the match and promo showdowns are cards you flick up (or tap).
      Reveal    — each segment flips over before its stars fill in.
@@ -203,10 +203,39 @@ function extras(i){const sl=card()[i];const m=cur(i);const out=[];const ppv=ppvN
  stips.sort((a,b)=>(b.on-a.on)||(b.o-a.o));out.push(...stips);
  vac.forEach(T=>out.push({x:`t:${T.id}`,k:'Vacant title',n:`Crown the first ${T.n} champion`,d:d.title===T.id?'Tap to make it non-title.':'The winner takes the belt.',fit:false,on:d.title===T.id}));
 
- out.push({x:'e',k:'Everything else',n:'Finish & run-ins',d:'Open the full match editor.',fit:false,on:false});
  return out}
+/* v298: the finish and the run-in get their own tabs in the sheet */
+const first=t=>String(t||'').split(/(?<=[.!])\s/)[0];
+function finTiles(d){return Object.entries(FINS).map(([k,f])=>{const why=finWhy(d,k);const on=finOf(d)===k;
+ const bits=[];if(!why&&k!=='clean'){if(FIN_HEAT[k]>1)bits.push(`+${Math.round((FIN_HEAT[k]-1)*100)}% heat`);bits.push('loser protected');if((k==='dq'||k==='co')&&d.title)bits.push('title can’t change hands')}
+ return {x:`f:${k}`,k:k==='clean'?'Finish':'Screwy finish',n:f.n,d:why?why+'.':bits.length?bits.join(' · ').replace(/^./,c=>c.toUpperCase())+'.':first(f.d),fit:false,on,dis:!!why}})}
+function riParts(d){return d.sides.flat().filter(Boolean)}
+function riBest(d,k,x){const l=riParts(d).filter(id=>k!=='cost'||!(d.sides[d.winner]||[]).includes(id));return l.sort((a,b)=>heatOf(x,b)-heatOf(x,a)||(W_(b).al!==W_(x).al)-(W_(a).al!==W_(x).al))[0]||''}
+function riHtml(i){const d=card()[i].d;const ri=d.ri||{};const k=RUNIN[ri.k]?ri.k:null;const X=k&&ri.x&&W_(ri.x);const parts=riParts(d);
+ const tile=x=>`<div class="tx ${x.on?'on':''} ${x.dis?'dis':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"${x.dis?' aria-disabled="true"':''}><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b>${x.d?`<span class="txd">${esc(x.d)}</span>`:''}</div>`;
+ let h=`<div class="tcgx lo">`+[{x:'k:none',k:'Run-in',n:'None',d:'The match plays out on its own.',on:!k},...Object.entries(RUNIN).map(([kk,v])=>({x:`k:${kk}`,k:'Run-in',n:v.n,d:first(v.d),on:kk===k}))].map(tile).join('');
+ if(k){h+=`<div class="tcwhy">${esc(RUNIN[k].lab)}</div>`+parts.map(id=>{const w=W_(id);const lock=k==='cost'&&(d.sides[d.winner]||[]).includes(id);
+   return tile({x:`g:${id}`,k:X?`🔥 ${Math.round(heatOf(X.id,id))} with ${ln(X)}`:w.al==='f'?'Face':'Heel',n:w.name,d:lock?'On the winning side — can’t be cost the match.':'',on:ri.t===id,dis:lock})}).join('');
+  const r=riOn(d);
+  if(X&&r){const sh=curShow();let st=2.5;try{const rr=rateMatch(d,{ppv:sh.ppv,preview:true});st=tellStar((rr.lo+rr.hi)/2)}catch(e){}
+   const h0=heatOf(X.id,r.T.id),h1=addHeat(h0,riGain(r,st));const sc=riScore(d);
+   h+=`<div class="tcnote"><b class="good">🔥 ${esc(ln(X))} vs ${esc(ln(r.T))}: ${Math.round(h0)} → ${Math.round(h1)}</b>${riRecent(X.id,r.T.id)?' <span class="bad">· half — they did this recently</span>':''}${r.turn?' <span class="gold">· turn bonus</span>':X.al===r.T.al?' <span class="bad">· same alignment, builds slowly</span>':''}${r.k!==k?' <span class="warnt">· they win the match, so it plays as a post-match attack</span>':''}${r.k==='cost'?`<br><span class="${sc<0?'bad':'good'}">${sc>=1?'Hot feud — fans eat up the interference.':sc<0?'A screwy ending in a normal-rules match drags it down until the feud hits 🔥30.':'No-rules match — interference fits right in.'}</span>`:''}</div>`;
+   const tk=riTurnKind(X,r.T,r.k);if(tk){const on=!!ri.turn;const wh=turnWhip(X);h+=`<div class="tcnote"><button type="button" class="chip ${on?'on':''}" data-tcx="u:1">🔄 ${on?'✓ ':''}Turn ${esc(ln(X))} ${tk==='h'?'heel':'face'}</button>${on&&wh?` <span class="bad">They turned ${wh} week${wh>1?'s':''} ago — fans will have whiplash.</span>`:''}</div>`}}}
+ h+=`</div>`;
+ const pool=ownList('p').filter(w=>!w.inj&&!parts.includes(w.id));const used=usedIn('p',i);const ht=w=>Math.max(0,...parts.map(id=>heatOf(w.id,id)));
+ pool.sort((a,b)=>(b.id===ri.x)-(a.id===ri.x)||ht(b)-ht(a)||ovr(b)-ovr(a));
+ h+=`<div class="tcgrid"><div class="tcwhy">Who runs in</div>${pool.map((w,n)=>{const hv=Math.round(ht(w));const sel=w.id===ri.x&&!!k;
+  return tcCard(w,{tab:sel?'Runs in':hv>=1?`🔥 ${hv}`:'',tabc:sel?'must':hv>=20?'feud':'hot',used:used.has(w.id),cls:(sel?'pickd ':'')+(TC.dealt?'deal':''),attr:`data-tcx="r:${w.id}" style="animation-delay:${Math.min(n,8)*30}ms"`})}).join('')}</div>`;
+ return h}
 function applyX(i,x){if(locked())return;const sl=card()[i];const [k,v]=[x.slice(0,1),x.slice(2)];
  if(k==='e')return openMatch(i);
+ if('fkrgu'.includes(k)&&sl.k==='match'&&sl.d){const d=sl.d;
+  if(k==='f'){if(finWhy(d,v))return toast(finWhy(d,v)+'.');d.fin=v}
+  else if(k==='k'){if(v==='none')delete d.ri;else{const o=d.ri||{};d.ri={k:v,x:o.x||'',t:o.t||'',turn:!!o.turn};if(d.ri.x&&(!d.ri.t||(v==='cost'&&(d.sides[d.winner]||[]).includes(d.ri.t))))d.ri.t=riBest(d,v,d.ri.x)}}
+  else if(k==='r'){if(!d.ri||!RUNIN[d.ri.k])d.ri={k:'cost',x:'',t:'',turn:false};if(d.ri.x===v){delete d.ri}else{d.ri.x=v;if(d.ri.k==='cost'&&!riBest(d,'cost',v))d.ri.k='attack';const t=d.ri.t;if(!t||!riParts(d).includes(t)||(d.ri.k==='cost'&&(d.sides[d.winner]||[]).includes(t)))d.ri.t=riBest(d,d.ri.k,v)}}
+  else if(k==='g'){if(!d.ri)return;if(d.ri.k==='cost'&&(d.sides[d.winner]||[]).includes(v))return toast(`${W_(v).name} wins this match — pick someone on the losing side, or make it a post-match attack.`);d.ri.t=v}
+  else if(k==='u'){if(!d.ri)return;d.ri.turn=!d.ri.turn}
+  delete d.ev;save();buzz();const sb=document.getElementById('tcsb'),st=sb?sb.scrollTop:0;render();const nb=document.getElementById('tcsb');if(nb)nb.scrollTop=st;return}
  if(sl.k==='promo'){const m=clone(cur(i));m.type=v;commit(i,m);buzz();render();return}
  const d=sl.d;if(!d)return;
  if(k==='s'){d.stip=v;const st=STIPS[v];const f=stipFits(st,d);0}
@@ -243,7 +272,11 @@ function slotHtml(i){const c=card(),sl=c[i];let act=i===TC.act&&!locked();const 
    +(TC.sh[i]?Array.from({length:Math.max(0,shapeDims(TC.sh[i])[0]-m.sides.length)},(x,q)=>`<div class="tcvs">vs</div><div class="tcside">${drop({t:'third'},m.sides.length+q===2?'Third':'Fourth')}</div>`).join(''):tg.find(t=>t.t==='third')?`<div class="tcvs">vs</div><div class="tcside">${drop({t:'third'},'Third')}</div>`:'');act=act0}
  const d=sl.d;let mods='';
  if(promo&&m.a&&PT[m.type])mods=`<span class="tcm g">${esc(PT[m.type].n)}</span>`;
- if(!promo&&d){const st=stipKey(d);const f=stipFits(STIPS[st],d);mods=`<span class="tcm ${st!=='std'&&f.spec.length?'g':st==='std'?'q':''}">${esc(STIPS[st].n)}</span>${d.title&&S.titles[d.title]?`<span class="tcm g">${esc(S.titles[d.title].n)} title</span>`:''}${d.ri&&d.ri.x&&W_(d.ri.x)?`<span class="tcm">Run-in · ${esc(ln(W_(d.ri.x)))}</span>`:''}${typeof finOf==='function'&&finOf(d)!=='clean'?'<span class="tcm">Screwy finish</span>':''}`}
+ if(!promo&&d){const st=stipKey(d);const f=stipFits(STIPS[st],d);const tap=tableOk(sl);
+  const tag=(k,cls,txt)=>tap?`<button type="button" class="tcm ${cls}" data-tcm="${i}|${k}">${txt}</button>`:`<span class="tcm ${cls}">${txt}</span>`;
+  const fk=typeof finOf==='function'?finOf(d):'clean';const rx=d.ri&&RUNIN[d.ri.k]&&d.ri.x&&W_(d.ri.x);
+  mods=tag('x',st!=='std'&&f.spec.length?'g':st==='std'?'q':'',esc(STIPS[st].n))+(d.title&&S.titles[d.title]?tag('x','g',`${esc(S.titles[d.title].n)} title`):'')
+   +(d.nc?'':tag('f',fk==='clean'?'q':'',esc(FINS[fk].n)))+(d.nc?'':tag('r',rx?'':'q',rx?`${RUNIN[d.ri.k].i} Run-in · ${esc(ln(rx))}`:'No run-in'))}
  const empty=!idsOf(i,m).length;
  const live=act&&TC.open;const sum=empty&&!live?(opt?`<div class="tcsum">Optional</div>`:'')
   
@@ -257,6 +290,8 @@ function slotHtml(i){const c=card(),sl=c[i];let act=i===TC.act&&!locked();const 
 function sheetTitle(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';const L=slotLab(i);
  if(TC.rep&&W_(TC.rep))return [L,`Who replaces ${W_(TC.rep).name}?`];
  if(TC.mode==='x')return [L,promo?'Pick the segment':'Stipulation & title'];
+ if(TC.mode==='f')return [L,'How it ends'];
+ if(TC.mode==='r')return [L,'Run-in'];
  if(promo)return !m.a?[L,'Who’s on the mic?']:[L,`Who’s out there with ${ln(W_(m.a))}?`];
  if(!tg)return [L,'This match is full'];
  if(tg.t==='side'){const o=m.sides.find((x,j)=>j!==tg.i&&x.length);return [L+(m.sides.length===2?` · ${tg.i?'right':'left'} side`:''),o?`Who faces ${sideName(o)}?`:'Who opens it?']}
@@ -280,7 +315,9 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
  const hasX=promo?!!m.a:!!sl.d;
  const pc=(x,n)=>tcCard(x.w,{tab:x.r&&x.r[0]?x.r[0]:'',tabc:x.r?x.r[1]:'',used:used.has(x.w.id),cls:TC.dealt?'deal':'',attr:`data-tcpick="${x.w.id}" style="animation-delay:${Math.min(n,8)*30}ms"`});
  let body='';
- if(TC.mode==='x'){const xs=extras(i);body=xs.length?`<div class="tcgx">${xs.map(x=>`<div class="tx ${x.fit?'fit':''} ${x.on?'on':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span></div>`).join('')}</div>`:`<div class="tcempty">${promo?'Pick who’s on the mic first.':'Fill both sides first.'}</div>`}
+ if(TC.mode==='f'&&!promo&&sl.d){body=`<div class="tcgx lo">${finTiles(sl.d).map(x=>`<div class="tx ${x.on?'on':''} ${x.dis?'dis':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"${x.dis?' aria-disabled="true"':''}><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span></div>`).join('')}</div>`}
+ else if(TC.mode==='r'&&!promo&&sl.d)body=riHtml(i);
+ else if(TC.mode==='x'){const xs=extras(i);body=xs.length?`<div class="tcgx">${xs.map(x=>`<div class="tx ${x.fit?'fit':''} ${x.on?'on':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span></div>`).join('')}</div>`:`<div class="tcempty">${promo?'Pick who’s on the mic first.':'Fill both sides first.'}</div>`}
  else if(!tg&&!TC.rep)body=`<div class="tcempty">Every space is filled. Pick a bigger match above to add more, or tap someone on the table to swap them out.</div>`;
  else{const l=sheetCards(i,m,tg);
   if(!l.length)body=`<div class="tcempty">Nobody fits that filter tonight.</div>`;
@@ -289,6 +326,8 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
   else{let n=0;body=`<div class="tcgrid">${l.map(x=>pc(x,n++)).join('')}</div>`}}
  const fc=[['fit','Best fit'],['ch','Champions'],['f','Faces'],['h','Heels'],['all','All']];
  const chips=`${hasX&&!TC.rep?`<button class="chip ${TC.mode==='x'?'on':''}" onclick="tcMode('${TC.mode==='x'?'w':'x'}')">${promo?'Segment':'Stips &amp; titles'}</button>`:''}${fc.map(([v,n])=>`<button class="chip ${TC.mode==='w'&&TC.f===v?'on':''}" onclick="tcF('${v}')">${n}</button>`).join('')}`;
+ const fcs=fc.map(([v,n])=>`<button class="chip ${TC.mode==='w'&&TC.f===v?'on':''}" onclick="tcF('${v}')">${n}</button>`).join('');
+ const tabs=!promo&&sl.d&&!TC.rep?[['w','Wrestlers'],['x','Stips &amp; titles'],['f','Finish'],['r','Run-in']].map(([v,n])=>`<button class="tctab ${TC.mode===v?'on':''}" onclick="tcMode('${v}')">${n}</button>`).join(''):'';
  const pA=promo&&m.a?W_(m.a):null;const shc=promo&&!TC.rep?`<div class="tcshc tcshp">${Object.entries(PT).filter(([k,t])=>!t.champ||!pA||isChamp(pA.id)).map(([k,t])=>`<button class="chip ${m.type===k?'on':''}" onclick="tcPType('${k}')">${esc(t.n)}</button>`).join('')}</div>`:!promo&&!TC.rep?`<div class="tcshc tcshp">${SHAPES.map(([k,n])=>`<button class="chip ${shapeOf(i,m)===k?'on':''}" onclick="tcShape('${k}')">${n}</button>`).join('')}</div>`:'';
  const tch=false&&!TC.rep&&TC.mode==='w'&&tl.length>1&&!defTarget(i,m)?`<div class="tcshc">${tl.map((x,j)=>`<button class="chip ${tg&&x.t===tg.t&&x.i===tg.i?'on':''}" onclick="tcTg(${j})">${x.t==='partner'?`+ Partner · ${esc(ln(W_(m.sides[x.i][0])))}`:x.t==='third'?'+ Third corner':x.t==='side'?(x.i?'Right side':'Left side'):'Second'}</button>`).join('')}</div>`:'';
  const cf=TC.confirm&&W_(TC.confirm.id)?`<div class="tccf"><span>${esc(W_(TC.confirm.id).name)} is already on the card tonight. A second match costs ${DD_FAT}× the stamina.</span><button class="mini" onclick="tcNo()">No</button><button class="mini on" onclick="tcYes()">Book twice</button></div>`:'';
@@ -296,7 +335,7 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
  TC.dealt=0;
  return `<div class="tcscrim ${ent?'enter':''}" onclick="tcScrim()"></div><div class="tcdock tcsheet ${ent?'enter':''}" id="tcdock" role="dialog" aria-label="${esc(t)}"><button class="tcpull open" onclick="tcClose()" aria-label="Close"><span class="tcgrip"></span></button>
  <div class="tcsh"><div class="tcst"><span class="tcsk">${esc(k)}</span><b>${esc(t)}</b></div><button class="tcsx" onclick="tcClose()" aria-label="Close">✕</button></div>
- ${cf}${shc}<div class="tcsc">${chips}</div>${tch}<div class="tcsb" id="tcsb">${body}</div>${foot}</div>`}
+ ${cf}${tabs?`<div class="tcsc tctabs">${tabs}</div>`:''}${tabs&&TC.mode!=='w'?'':shc}${tabs&&TC.mode!=='w'?'':`<div class="tcsc">${tabs?fcs:chips}</div>`}${tch}<div class="tcsb" id="tcsb">${body}</div>${foot}</div>`}
 function pickAct(){const c=card();if(TC.act!=null&&c[TC.act]&&tableOk(c[TC.act]))return;
  const ok=c.map((sl,i)=>tableOk(sl)?i:-1).filter(i=>i>=0);if(!ok.length){TC.act=null;return}
  const empty=ok.filter(i=>!c[i].opt&&!c[i].d&&!TC.dr[i]);let mi=-1;try{mi=mainMi(c)}catch(e){}
@@ -340,7 +379,9 @@ function sheetPick(id){const i=TC.act;if(i==null||locked())return;const before=J
 function afterPick(i,before){if(JSON.stringify(cur(i))===before)return;TC.tg=null;TC.f='fit';const sl=card()[i];const m=cur(i);
  const more=sl.k==='promo'?!m.b:TC.sh[i]?!!defTarget(i,m):!sl.d&&!!defTarget(i,m);
  if(more){TC.mode='w';TC.open=true;TC.dealt=1}else TC.open=false;render();if(TC.open)center(i)}
-window.tcMode=function(k){TC.mode=k;TC.sel=null;TC.dealt=1;render()};
+window.tcMode=function(k){TC.mode=k;TC.sel=null;TC.dealt=1;render();const sb=document.getElementById('tcsb');if(sb)sb.scrollTop=0};
+/* v298: the tags under a booked match open the sheet straight to that tab */
+window.tcAt=function(i,k){if(locked())return tcAct(i);const sl=card()[i];if(!sl||!tableOk(sl)||!sl.d)return tcAct(i);TC.act=i;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;TC.f='fit';if(!TC.sh[i])TC.sh[i]=shapeOf(i,cur(i));TC.mode=k;TC.open=true;TC.dealt=1;render();center(i)};
 window.tcYes=function(){const c=TC.confirm;if(!c)return;TC.confirm=null;const before=JSON.stringify(cur(c.i));if(c.tg&&c.tg.t==='swap'){replaceWith(c.i,c.tg.old,c.id,true);TC.rep=null}else play(c.i,c.id,c.tg,true);afterPick(c.i,before)};
 window.tcNo=function(){TC.confirm=null;render()};
 window.tcDeck=function(){const i=TC.act;const sl=card()[i];if(!sl)return;const m=cur(i);const here=new Set(idsOf(i,m));const promo=sl.k==='promo';
@@ -385,6 +426,7 @@ document.addEventListener('pointercancel',()=>{clearTimeout(LP);PD=null;if(DR){c
 document.addEventListener('click',e=>{if(!on())return;if((Date.now()-SUP<350||(typeof DG_SUP!=='undefined'&&Date.now()<DG_SUP))&&e.target.closest&&e.target.closest('#tcdock,.tcs')&&(!e.target.closest('button')||e.target.closest('.tcpull'))){e.stopPropagation();e.preventDefault();return}
  if(!inBook())return;const cr=e.target.closest&&e.target.closest('[data-tccr]');if(cr){e.stopPropagation();e.preventDefault();if(cr.disabled)return;const [ci,si]=cr.dataset.tccr.split(':').map(Number);crownSide(ci,si);return}
  const pn=e.target.closest&&e.target.closest('[data-tcpin]');if(pn){e.stopPropagation();e.preventDefault();if(pn.disabled)return;const [ci,id]=pn.dataset.tcpin.split('|');pinPick(+ci,id);return}
+ const tm=e.target.closest&&e.target.closest('[data-tcm]');if(tm){e.stopPropagation();e.preventDefault();const [ti,tk]=tm.dataset.tcm.split('|');tcAt(+ti,tk);return}
  const pk=e.target.closest&&e.target.closest('#tcdock [data-tcpick]');if(pk){e.stopPropagation();e.preventDefault();sheetPick(pk.dataset.tcpick);return}
  const px=e.target.closest&&e.target.closest('#tcdock [data-tcx]');if(px){e.stopPropagation();e.preventDefault();applyX(TC.act,px.dataset.tcx);return}
  const d=e.target.closest&&e.target.closest('.tcdrop');if(d){e.stopPropagation();const t=JSON.parse(d.dataset.tct);const tg=Object.assign({},t);delete tg.s;sheetAt(t.s,tg);return}
@@ -614,7 +656,17 @@ html.tcards .tkc{--w:92px;position:relative;flex:none;width:var(--w);aspect-rati
 .tcdrop{flex:none;width:76px;aspect-ratio:3/4;border:2px dashed #3d3e46;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px;font:800 italic 12px/1.1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);transition:border-color .15s,background .15s,color .15s}
 .tcdrop.mini{width:36px;aspect-ratio:auto;font-size:18px}.tcdrop.live{border-color:var(--gold);color:var(--gold);background:rgba(242,193,78,.06);animation:tcpulse 1.1s ease-in-out infinite}.tcdrop.over{background:rgba(242,193,78,.22);border-style:solid}
 @keyframes tcpulse{50%{background:rgba(242,193,78,.15)}}
-.tcs .tcmods{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.tcm{font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px 3px 12px;background:#1d1e23;clip-path:var(--slant)}.tcm.g{background:var(--gold);color:#111}.tcm.q{color:var(--mut)}
+.tcs .tcmods{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+button.tcm{border:0;margin:0;cursor:pointer;color:inherit;touch-action:manipulation}
+.tctabs{gap:0;padding-bottom:12px}
+.tctab{flex:1 0 auto;background:none;border:0;border-bottom:2px solid var(--line);color:var(--mut);font:800 italic 13px/1 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:10px 10px 9px;cursor:pointer}
+.tctab.on{color:var(--gold);border-bottom-color:var(--gold)}
+.tx.dis{opacity:.38;cursor:default}
+.tcgx.lo .tx{aspect-ratio:auto;min-height:92px}
+.tcgx.lo .tx .txd{margin-top:6px}
+.tcnote{grid-column:1/-1;font-size:12px;line-height:1.4}
+.tcnote .chip{margin:0}
+.tcgrid .tkc.pickd{outline:3px solid var(--gold);outline-offset:3px}.tcm{font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px 3px 12px;background:#1d1e23;clip-path:var(--slant)}.tcm.g{background:var(--gold);color:#111}.tcm.q{color:var(--mut)}
 .tcrord.tclock .tcs{cursor:default}
 /* the hand */
 .tcdock{position:sticky;bottom:var(--navh,72px);z-index:5;margin:10px -16px 0;padding:14px 0 8px;background:linear-gradient(180deg,rgba(9,9,10,0),var(--bg,#09090a) 14px)}
