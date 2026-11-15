@@ -254,6 +254,75 @@ function msKick(m,r,st,F,lab){const B=r.B;const p=clamp(.25+((B.ring+r.A.ring)/2
 function msPost(c,r,m){const ev=evNew(m);if(c.heat&&r.B)ev.heat.push([r.A.id,r.B.id,c.heat]);if(c.popA)ev.pop.push([r.A.id,c.popA]);if(c.popB&&r.B)ev.pop.push([r.B.id,c.popB]);if(c.morB&&r.B)ev.mor.push([r.B.id,c.morB]);
  ev.notes.push(`🎬 After the bell: ${msFill(c.t,r)}`)}
 function msPostDeal(r,m){if(m.nc||!r.B)return [];return msDeal(MS_POST,r,3)}
+/* ---------- v302: the near-fall chain — push your luck ----------
+   After a kickout lands in a pinfall match you can go again: another near fall, or put it away (the finish call as
+   before). Each extra one cuts the odds and tires everyone out, and swings harder both ways. The crowd peaks at two or
+   three kickouts, then gets tired of them, so late hits pay less. A miss ends the chain, and the deeper you went the
+   worse it goes: a sloppy kickout, then a ref miscount, then a blown finish that ends the match right there. Playing
+   with fire can also hurt someone. The extra near falls have their own ±NF_CAP budget on top of MS_CAP. The rival
+   pushes while the odds are good and stops at a random point (msAuto). */
+const NF_CAP=1.5,NF_MAX=6;
+const NF_CROWD=[{w:'On their feet',m:1},{w:'"This is awesome!"',m:1.1},{w:'"Fight forever!"',m:1.2},{w:'Getting restless',m:.7},{w:'Kickout fatigue',m:.4}];
+const nfCrowd=n=>NF_CROWD[Math.min(n,NF_CROWD.length-1)];
+/* the match showdown's risk tells: Safe / Risky / Playing with fire */
+const msTell=p=>p>=.65?['safe','Safe']:p>=.4?['risky','Risky']:['fire','Playing with fire'];
+const msTellH=p=>{const [k,w]=msTell(p);return `<span class="mstell t-${k}">${w}</span>`};
+const msKickP=r=>clamp(.25+((r.B.ring+r.A.ring)/2)/100*.6,.3,.85);
+function nfOdds(r,n,st){const tired=Math.max(r.A.fat||0,r.B.fat||0)+(st.nfFat||0);return clamp(msKickP(r)-.11*n-Math.max(0,tired-40)/220,.12,.85)}
+const nfSwing=(p,n)=>swingOf(p,.6).w*MS_K*(1+.3*n)*nfCrowd(n+1).m;
+function nfAdd(m,d,st){const ev=evNew(m);st.nf=st.nf||0;const nd=clamp(st.nf+d,-NF_CAP,NF_CAP)-st.nf;st.nf+=nd;ev.stars+=nd;return nd}
+function nfTier(n){const x=Math.random();if(n>=2&&x<.25+.1*n)return 'blown';if(n>=1&&x<.55)return 'ref';return 'sloppy'}
+const NF_LAB={sloppy:'Sloppy kickout',ref:'Ref miscount',blown:'Blown finish'};
+/* roll near fall number n+1 (n kickouts have already landed) */
+function nfRoll(m,r,st,n){const p=nfOdds(r,n,st),w=nfSwing(p,n),ok=Math.random()<p,fat=4+2*n;
+ st.nfFat=(st.nfFat||0)+fat;const ev=evNew(m);m.sides.flat().forEach(id=>ev.fat.push([id,fat]));
+ const tier=ok?null:nfTier(n);let d=nfAdd(m,(ok?1:-1)*w,st);if(tier==='ref')d+=nfAdd(m,-w*.25,st);if(tier==='blown')d+=nfAdd(m,-w*.5,st);
+ const extra=[];
+ if(!ok&&p<.4&&typeof injSev==='function'&&Math.random()<.12*((STIPS[stipKey(m)]||STIPS.std).inj||1)){const X=Math.random()<.5?r.A:r.B;
+  if(!X.inj&&!ev.inj.some(x=>x[0]===X.id)){const wk=injSev(X);ev.inj.push([X.id,wk,1]);extra.push({kind:'cam',side:X===r.A?'a':'b',hurt:!!wk,t:wk?`🚑 ${X.name} is slow to get up. The trainer is out — they'll miss time.`:`😮‍💨 ${X.name} is slow to get up. A scare, but they're OK.`})}}
+ ev.notes.push(`🎬 Near fall ${n+1}: ${ok?'another kickout':NF_LAB[tier]}${d?` (${qStar(d)})`:''}`);
+ return {ok,p,d,tier,extra}}
+/* the words — set[depth], hit[depth] are lists of variants; deeper kickouts get bigger moves and more disbelief */
+const NF_LINES={
+ pin:{q:'{B} is still alive. Go again?',go:'Another near fall',gsub:'Bigger every time. So is the fall.',stop:'Put it away',ssub:'On to the finish.',
+  set:[[[['A','({A} hits {FIN} again and hooks the leg.)'],['p','The same move twice! That has to be it!']]],
+       [[['A','({A} hoists {B} up for one more, the biggest one yet, off the second rope.)',['Again!','']],['p','Surely this time!']]],
+       [[['A','({A} drags {B} to the middle of the ring and collapses on top of them.)'],['c','Neither of them has anything left.']]],
+       [[['A','({A} looks at the referee, then at {B}, and covers one more time.)'],['p','Again?!']]]],
+  hit:[[[['B','({B} kicks out AGAIN!)',['Kicked out!','']],['p','How?! How is {B} still in this?!'],['x','"This is awesome!" shakes the building.']]],
+       [[['B','({B} throws a shoulder up with the referee\'s hand an inch off the mat.)',['No!','']],['x','"Fight forever! Fight forever!"']]],
+       [[['B','({B} kicks out one more time.)',['Kicked out!','']],['c','I mean… at some point, does any of this matter?'],['x','A cheer, but a few people sit back down.']]],
+       [[['B','({B} kicks out. Again.)'],['x','Scattered groans. Somebody yells "Just pin them!"'],['c','The finishers are starting to mean nothing.']]]],
+  botch:{sloppy:[[['B','({B} gets the shoulder up late. Half the building thought it was three.)'],['x','A confused murmur.'],['c','That one was a little too close for comfort.']]],
+   ref:[[['B','({B}\'s shoulder is up a full second before the referee stops counting.)'],['x','Boos for the referee.'],['p','The timing was way off on that one.']]],
+   blown:[[['B','({B} kicks out a beat too early. {A} has nothing left, so they just shove {B} back down and cover.)'],['x','The crowd isn\'t sure what they just saw.'],['c','That\'s not how anyone drew it up.']]]},
+  blownEnd:[['x','1… 2… 3.',['Three','gold']],['p','{A} wins it… somehow.']]},
+ multi:{q:'{C} saved it. Go again?',go:'Another save',gsub:'Bigger every time. So is the fall.',stop:'Put it away',ssub:'On to the finish.',
+  set:[[[['A','({A} covers {B} again in the middle of the ring.)'],['p','Cover! One! Two!']]],
+       [[['A','({A} hits {FIN} on {B} and dives on top.)'],['p','This could be it!']]],
+       [[['A','({A} stacks {B} up with everything they have left.)'],['c','Somebody has to win this eventually.']]]],
+  hit:[[[['x','{C} dives in at two point nine and breaks it up again!',['Saved!','']],['p','Pandemonium!']]],
+       [[['x','{C} flies off the top rope to break it up!',['Broken up!','']],['x','"Fight forever!"']]],
+       [[['x','{C} breaks it up one more time.'],['c','They\'ve done this so many times the crowd is just waiting for it.']]]],
+  botch:{sloppy:[[['x','{C} gets there late and barely clips the cover. Half the building thought it was three.'],['x','A confused murmur.']]],
+   ref:[[['x','{C} breaks it up, but the referee had already stopped counting. Nobody knows what the count was.'],['x','Boos for the referee.']]],
+   blown:[[['x','{C} dives in too early and lands on nobody. {A} shoves {B} back down and covers.'],['c','That\'s not how anyone drew it up.']]]},
+  blownEnd:[['x','1… 2… 3.',['Three','gold']],['p','{A} wins it… somehow.']]}};
+/* the player's chain; returns true if a blown finish ended the match */
+async function nfChain(m,r,F,fk){const L=NF_LINES[fk];if(!L)return false;
+ for(let n=1;n<NF_MAX;){const p=nfOdds(r,n,MS.st),w=nfSwing(p,n),cr=nfCrowd(n+1);
+  const it=await msMenu('🏁 '+msFill(L.q,r),`Near fall ${n+1} · the crowd: ${cr.w.replace(/"/g,'')}`,[{label:msFill(L.go,r),go:1,info:`${msTellH(p)} · ${msSw(w)} · ${esc(msFill(L.gsub,r))}`},{label:msFill(L.stop,r),info:`✅ Guaranteed · ${esc(msFill(L.ssub,r))}`}]);
+  if(!it.go)return false;
+  msFrame('');await msPlay(msLines(fpick(L.set[Math.min(n-1,L.set.length-1)])));if(F.count)for(const c of F.count)await msStamp(c,'count',480);
+  const o=nfRoll(m,r,MS.st,n);MS.res=o.ok?'ok':'no';MS.log.push({lab:`Near fall ${n+1}`,t:o.ok?msFill(L.go,r):NF_LAB[o.tier],ok:o.ok});
+  msFrame('');await msStamp(o.ok?'It lands':'Not quite',o.ok?'ok':'no');
+  if(o.ok){await msPlay(msLines(fpick(L.hit[Math.min(n-1,L.hit.length-1)])).concat(o.extra));n++;continue}
+  await msPlay(msLines(fpick(L.botch[o.tier])).concat(o.extra));
+  if(o.tier==='blown'){if(window.SFX)SFX.three();await msPlay(msLines(L.blownEnd));return true}
+  return false}
+ return false}
+/* the rival's chain: push while the odds are good, stop at a random point; true if a blown finish ended it */
+function nfAuto(m,r,st,fk){if(!NF_LINES[fk])return false;for(let n=1;n<NF_MAX;n++){if(nfOdds(r,n,st)<.5||Math.random()>.55)return false;const o=nfRoll(m,r,st,n);if(!o.ok)return o.tier==='blown'}return false}
 /* is this match getting the showdown? the main event of a live show, not a squash */
 function msOn(m){return !!(m&&m.sides&&m.type!=='squash'&&!(typeof isSq==='function'&&isSq(m))&&validMatch(m))}
 /* the moment for the heat act: forced situations first, then a random moment (always one in the main event) */
@@ -295,7 +364,7 @@ function msAuto(m,brand,big){if(!msOn(m))return;const st={};const r=msRoles(m,br
  const r2=msRoles(m,brand);if(!r2.A||!r2.B)return;
  if(fam!=='none'){const F=MS_FALL[fam==='pin'&&m.sides.length>2&&r2.C?'multi':fam];
   const p=clamp(.25+((r2.B.ring+r2.A.ring)/2)/100*.6,.3,.85);const kick=p>=.6&&Math.random()<.7;
-  if(kick){msKick(m,r2,st,F,'Near fall');if(plan==='fin')runEvAI(g,m);else msRoll(msAIPick(msDeal(FIN[fam]||FIN_PIN,r2,3),r2),r2,m,st,'Finish')}}
+  if(kick){const ko=msKick(m,r2,st,F,'Near fall');if(ko.ok&&nfAuto(m,r2,st,fam==='pin'&&m.sides.length>2&&r2.C?'multi':fam))return msAutoPost(m,brand);if(plan==='fin')runEvAI(g,m);else msRoll(msAIPick(msDeal(FIN[fam]||FIN_PIN,r2,3),r2),r2,m,st,'Finish')}}
  else if(plan==='fin')runEvAI(g,m);
  msAutoPost(m,brand)}
 function msAutoPost(m,brand){const r=msRoles(m,brand);if(!r.A||!r.B)return;const pl=msPostDeal(r,m);if(pl.length)msPost(fpick(pl),r,m)}
@@ -362,7 +431,7 @@ function msDrawMenu(){const M=MS.menu;if(!M)return;const bb=document.getElementB
 function msPick(i){if(!MS||!MS.menu)return;const M=MS.menu;pickFlash(()=>{if(!MS||MS.menu!==M)return;MS.menu=null;M.res(M.items[i])})}
 /* v301: match-showdown swings cut both ways, so the label says so */
 const msSw=w=>swingWord(w).replace(' swing',' swing either way');
-function msInfo(c,r){const p=msChance(c,r);return `${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:''}${STAT_ICON[c.s]} · ${oddsWord(p)} · ${msSw(swingOf(p,c.st).w)}${c.sub?' · '+esc(msFill(c.sub,r)):''}`}
+function msInfo(c,r){const p=msChance(c,r);return `${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:''}${STAT_ICON[c.s]} · ${msTellH(p)} · ${msSw(swingOf(p,c.st).w)}${c.sub?' · '+esc(msFill(c.sub,r)):''}`}
 const msItems=(list,r)=>list.map(c=>({c,label:msFill(c.t,r),info:msInfo(c,r)}));
 async function msCall(list,lab,q,sub){const r=MS.r;const it=await msMenu(q,sub,msItems(list,r));const o=msRoll(it.c,r,MS.m,MS.st,lab);
  MS.log.push({lab,t:it.label,ok:o.ok});MS.res=o.ok?'ok':'no';msFrame('');await msPan('a');await msStamp(o.ok?'It lands':'Not quite',o.ok?'ok':'no');if(it.c.id==='limb'&&o.ok)MS.workedKnee=r.B.id;
@@ -373,7 +442,7 @@ async function msMomentAct(slot){const g=MS.g,m=MS.m,r=g.r;
   gorMor(X,!!it.yes,true);if(!it.yes){const r0=msRoles(m,'p');m._msr={a:r0.A.id,b:r0.B.id};let ng=null;try{ng=genEvent(m,'p',true,true)}finally{delete m._msr}if(ng&&ng.e.need!=='X'&&(msPlan(ng,m)==='heat')===(slot==='heat')){MS.g=ng;ng.gor=1;return msMomentAct(slot)}return null}g.gor=1}
  msFrame('');await msPlay(msNarr(evFill(g.e.text,r)));
  const ch=evChoices(g.e,m,r);const ck=CALLS[callKind(g)];
- const items=ch.map(c=>({c,label:evFill(c.t,r),info:`${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:c.heelA&&r.A.al==='f'?'<span class="heel">😈 Dirty — fans won\'t like it from a face</span> · ':''}${c.always?'✅ Guaranteed':STAT_ICON[c.s]+' · '+oddsWord(evChance(c,r))}${c.flip?' · changes the winner':''}${c.nc?' · no winner':''} · ${callStakes(c,g,c.always?null:evChance(c,r))}${g.sit&&c.tip?` · ${esc(sitTip(c,r))}`:''}${typeof rcTag==='function'?rcTag(c,g):''}`}));
+ const items=ch.map(c=>({c,label:evFill(c.t,r),info:`${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:c.heelA&&r.A.al==='f'?'<span class="heel">😈 Dirty — fans won\'t like it from a face</span> · ':''}${c.always?'✅ Guaranteed':STAT_ICON[c.s]+' · '+msTellH(evChance(c,r))}${c.flip?' · changes the winner':''}${c.nc?' · no winner':''} · ${callStakes(c,g,c.always?null:evChance(c,r))}${g.sit&&c.tip?` · ${esc(sitTip(c,r))}`:''}${typeof rcTag==='function'?rcTag(c,g):''}`}));
  const note=(g.sit?g.info:'')+(g.r&&g.r.CROWD?(g.sit?' · ':'')+'👥 '+esc(g.r.CROWD.text):'');
  const it=await msMenu(`${ck.i} ${ck.n}`,note||ck.l,items);const w0=m.winner;
  const out=g.sit?sitRoll(it.c,r,m):evRoll(it.c,r,m);MS.res=out.success?'ok':'no';MS.log.push({lab:slot==='heat'?'Heat':'Finish',t:it.label,ok:out.success});
@@ -406,9 +475,10 @@ async function msRun(){const m=MS.m;const fam=msFam(m);const plan=msPlan(MS.g,m)
     setup.unshift({kind:'booth',who:'Colour',t:msFill('Watch {B} trying to get a foot underneath them. That knee has been bothering them since the dragon screw.',r)});
    }
    await msPlay(setup);if(F.count)for(const n of F.count)await msStamp(n,'count',560);
-   const it=await msMenu('🏁 '+msFill(F.q,r),'You\'re calling the finish',[{label:msFill(F.kick,r),info:(pk=>`💪 In-ring · ${oddsWord(pk)} · ${msSw(swingOf(pk,.6).w)} · ${esc(msFill(F.ksub,r))}`)(clamp(.25+((r.B.ring+r.A.ring)/2)/100*.6,.3,.85)),kick:1},{label:msFill(F.stay,r),info:`✅ Guaranteed · 🛡️ Small swing · ${esc(msFill(F.ssub,r))}`}]);
+   const it=await msMenu('🏁 '+msFill(F.q,r),'You\'re calling the finish',[{label:msFill(F.kick,r),info:(pk=>`💪 In-ring · ${msTellH(pk)} · ${msSw(swingOf(pk,.6).w)} · ${esc(msFill(F.ksub,r))}`)(msKickP(r)),kick:1},{label:msFill(F.stay,r),info:`✅ Guaranteed · 🛡️ Small swing · ${esc(msFill(F.ssub,r))}`}]);
    if(it.kick){const o=msKick(m,r,MS.st,F,'Near fall');MS.res=o.ok?'ok':'no';MS.log.push({lab:'Near fall',t:it.label,ok:o.ok});msFrame('');await msStamp(o.ok?'It lands':'Not quite',o.ok?'ok':'no');await msPlay(msLines(o.lines));
-    if(plan==='fin'&&MS.g)await msMomentAct('fin');
+    const fk=fam==='pin'&&m.sides.length>2&&r.C?'multi':fam;const blown=o.ok&&await nfChain(m,r,F,fk);
+    if(blown){}else if(plan==='fin'&&MS.g)await msMomentAct('fin');
     else await msCall(msDeal(FIN[fam]||FIN_PIN,r,3),'Finish','🏁 Call the finish',`${esc(r.A.name)} is booked to win. How does it end?`)}
    else{MS.log.push({lab:'Near fall',t:it.label,ok:true});if(window.SFX)SFX.three();evNew(m).notes.push(`🎬 Near fall: ${it.label}`);msFrame('');await msPlay(msLines(F.end))}}
   else if(plan==='fin'&&MS.g)await msMomentAct('fin');
@@ -442,6 +512,9 @@ Object.assign(window,{MS_CAP,msTap,msPick,msNext,msStart,msAuto,msOn,renderMS,ms
 .mscalls li:last-child{border-bottom:0}
 .mslab{font:900 italic 12px 'BC','Barlow Condensed',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--gold2)}
 .msst{color:#cfe0fb}
+.mstell{display:inline-block;font:900 italic 13px/1.2 'BC','Barlow Condensed',sans-serif;letter-spacing:.04em;text-transform:uppercase;padding:1px 7px 2px;clip-path:var(--sl)}
+.mstell.t-safe{background:#2c5d3a;color:#e7f6ea}.mstell.t-risky{background:var(--gold3,#a8842e);color:#16120a}.mstell.t-fire{background:var(--red);color:#fff}
+body.tv .tv-live-sheet .mstell{font-size:18px}
 body.tv .tv-live-sheet .msw .msacts{grid-area:hd;margin-top:56px;align-self:end}
 body.tv .tv-live-sheet .msacts span{font-size:18px}
 body.tv .tv-live-sheet .sdstamp.count{font-size:120px}
