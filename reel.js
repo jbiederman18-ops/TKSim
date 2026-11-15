@@ -2,12 +2,12 @@
    A live show no longer stops for every promo and the main event. Each segment rolls for a highlight reel as it comes up:
    the odds rise with feud heat, a title on the line, a wild stipulation, daring wrestlers (flyers, showmen, brawlers),
    a hot crowd and big shows — plus luck. A highlight reel plays out as the full showdown (the match or promo showdown);
-   everything else resolves quietly and shows up in a short rundown. At most HR_CAP (2) highlight reels a show. v265: lines and moments avoid what you've seen lately (fpick).
+   everything else resolves quietly and shows up in a short rundown. At most hrCap() highlight reels a show (v299: 1 on TV, 2 on a PPV, and only for hot segments). v265: lines and moments avoid what you've seen lately (fpick).
    The crowd builds (or dies) across the night. A hot crowd pushes wrestlers to reach for more: risky calls in a match
    highlight swing further both ways and carry real injury risk. Tired wrestlers miss more.
    Loaded after the main script; everything here is only called once the game is running. */
 'use strict';
-const HR_CAP=2;
+const HR_CAP=1,HR_CAP_PPV=2;
 const HR_DARE={fl:.95,sh:.8,br:.8,te:.55,pw:.5};
 /* ---- the crowd: 0–100, starts from the show's buzz and the size of the night ---- */
 let HRC=50;/* the crowd for whoever is airing right now (live show, the rival, the sim) */
@@ -17,31 +17,43 @@ const hrWord=c=>c<30?'Cold':c<55?'Warm':c<75?'Hot':'Electric';
 const hrCm=()=>clamp(1+(HRC-50)/125,.75,1.4);
 /* a segment moves the crowd: a 3½★ segment keeps it where it is, a great one fires it up, a dud cools it off */
 function hrMove(stars,extra){HRC=clamp(Math.round(HRC+clamp((stars-3.5)*8,-10,10)+(extra||0)),5,100);return HRC}
-/* ---- the odds a segment turns into a highlight reel ---- */
-function hrMatchOdds(m,main,ppv){if(!m||!m.sides||!validMatch(m)||m.type==='squash'||(typeof isSq==='function'&&isSq(m)))return 0;
- const all=m.sides.flat().map(id=>S.w[id]).filter(Boolean);if(all.length<2)return 0;
- let h=0;for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)m.sides[i].forEach(a=>m.sides[j].forEach(b=>{h=Math.max(h,heatOf(a,b))}));
+/* ---- the odds a segment turns into a highlight reel ----
+   v299: highlight reels are a rare treat. A segment only has a shot if it's genuinely hot — a red-hot feud, or a hot one
+   with something big on top (a title, a wild stipulation, the PPV main event, an electric crowd). Everything else plays out
+   in the rundown. Hot main events get the best odds. At most hrCap() a night: 1 on TV, 2 on a PPV — and a disaster brewing
+   backstage (sitEvent) uses the same slot. */
+const HR_HOT=60,HR_WARM=40;
+const hrCap=ppv=>ppv?HR_CAP_PPV:HR_CAP;
+function hrHeat(m){let h=0;for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)m.sides[i].forEach(a=>m.sides[j].forEach(b=>{h=Math.max(h,heatOf(a,b))}));return h}
+/* why this match could be a highlight reel ('' = it can't) */
+function hrWhy(m,main,ppv){if(!m||!m.sides||!validMatch(m)||m.type==='squash'||(typeof isSq==='function'&&isSq(m)))return '';
+ const all=m.sides.flat().map(id=>S.w[id]).filter(Boolean);if(all.length<2)return '';
+ const h=hrHeat(m);const st=STIPS[typeof stipKey==='function'?stipKey(m):m.stip]||STIPS.std;const wild=(st.inj||1)>=1.25||st.g==='big';
+ if(h>=HR_HOT)return 'heat';if(h<HR_WARM)return '';
+ if(m.title)return 'title';if(wild)return 'stip';if(ppv&&main)return 'main';if(HRC>=75)return 'crowd';return ''}
+function hrMatchOdds(m,main,ppv){const why=hrWhy(m,main,ppv);if(!why)return 0;
+ const all=m.sides.flat().map(id=>S.w[id]).filter(Boolean);const h=hrHeat(m);
  const st=STIPS[typeof stipKey==='function'?stipKey(m):m.stip]||STIPS.std;const dare=all.reduce((s,w)=>s+(HR_DARE[w.st]||.6),0)/all.length;
- const p=.08+HRC/260+h/260+(m.title?.12:0)+clamp(((st.inj||1)-1)*.15+(st.g==='big'?.08:0),0,.25)+(dare-.65)*.35+(ppv?.06:0)+(main?.04:0)+(all.length>=4?.04:0);
- return clamp(p,.05,.85)}
-function hrPromoOdds(p,ppv){if(!p||!p.a||!S.w[p.a])return 0;const A=S.w[p.a],B=p.b&&S.w[p.b];
- const mic=Math.max(A.mic,B?B.mic:0);const h=B?heatOf(A.id,B.id):0;
- return clamp(.08+HRC/260+h/220+(mic-70)/300+(B?.05:0)+(ppv?.05:0),.05,.8)}
-const hrOddsWord=p=>p>=.5?'Likely':p>=.3?'Possible':'Unlikely';
-/* the Book screen tag: the odds against the crowd you'd start the night with */
+ const p=.14+(h-HR_WARM)/180+(HRC-50)/300+(m.title?.06:0)+((st.inj||1)>=1.25||st.g==='big'?.05:0)+(dare-.65)*.2+(ppv?.08:0)+(main?.18:0);
+ return clamp(p,.08,.75)}
+function hrPromoOdds(p,ppv){if(!p||!p.a||!S.w[p.a])return 0;const A=S.w[p.a],B=p.b&&S.w[p.b];if(!B)return 0;
+ const h=heatOf(A.id,B.id);if(!(h>=HR_HOT||(h>=HR_WARM&&(ppv||HRC>=75))))return 0;const mic=Math.max(A.mic,B.mic);
+ return clamp(.16+(h-HR_WARM)/180+(mic-75)/300+(HRC-50)/300+(ppv?.08:0),.08,.55)}
+const hrOddsWord=p=>p>=.45?'Likely':p>=.25?'Possible':'Long shot';
+/* the Book screen tag: only segments that could become a highlight reel get one */
 function hrTag(sl,i){try{if(!S||S.phase!=='season'||!sl||!sl.d)return '';const sh=curShow();const c0=HRC;HRC=hrStart('p',sh);
   let p=0;if(sl.k==='match'){const ms=S.card.p.map((x,j)=>x&&x.k==='match'&&x.d?j:-1).filter(j=>j>=0);p=hrMatchOdds(sl.d,i===ms[ms.length-1],sh.ppv)}else if(sl.k==='promo')p=hrPromoOdds(sl.d,sh.ppv);HRC=c0;
   if(!p)return '';const w=hrOddsWord(p);return `<span class="hrtag ${w==='Likely'?'hi':w==='Possible'?'md':''}">🎬 Highlight reel: ${w}</span>`}catch(e){return ''}}
 /* ---- the live show ---- */
 /* decide a segment as it comes up: true = highlight reel */
-function hrRoll(kind,d,main,ppv){if(!LQ||LQ.hr>=HR_CAP)return false;HRC=LQ.crowd;const p=kind==='promo'?hrPromoOdds(d,ppv):hrMatchOdds(d,main,ppv);if(Math.random()<p){LQ.hr++;return true}return false}
+function hrRoll(kind,d,main,ppv){if(!LQ||LQ.hr>=hrCap(ppv))return false;HRC=LQ.crowd;const p=kind==='promo'?hrPromoOdds(d,ppv):hrMatchOdds(d,main,ppv);if(Math.random()<p){LQ.hr++;return true}return false}
 /* a segment finished: move the crowd. Matches use their projected rating plus whatever the calls added. */
 function hrAfter(it){if(!LQ||!it)return;HRC=LQ.crowd;let s=3,txt='';
  if(it.kind==='promo'||it.k==='promo'){const p=S.card.p[it.i]&&S.card.p[it.i].d;s=p&&p.res?p.res.stars:2.5}
  else if(it.m){let base=3;try{base=rateMatch(it.m,{ppv:curShow().ppv,preview:true}).stars}catch(e){}s=base+(it.m.ev&&it.m.ev.stars||0)}
  const was=LQ.crowd;LQ.crowd=hrMove(s);it.crowd=LQ.crowd;it.dc=LQ.crowd-was}
 function hrBug(){if(!LIVE||!LQ||LQ.crowd==null)return '';const c=LQ.crowd;
- return `<div class="hrbug"><span class="hrk">The crowd</span><span class="hrbar"><i style="width:${c}%"></i></span><b class="hrw">${hrWord(c)}</b><span class="hrn">🎬 ${LQ.hr}/${HR_CAP}</span></div>`}
+ return `<div class="hrbug"><span class="hrk">The crowd</span><span class="hrbar"><i style="width:${c}%"></i></span><b class="hrw">${hrWord(c)}</b><span class="hrn">🎬 ${LQ.hr}/${hrCap(LQ.ppv)}</span></div>`}
 /* the quiet segments since the last highlight reel, in one short screen */
 const HR_Q={match:{hi:['A strong match. The crowd is with them.','Good stuff, and the fans let them know it.','They worked hard and it showed.','The fans were up for the finish.','A real crowd-pleaser.','They had the place buzzing by the end.','Better than anyone expected.','That got a standing ovation.','Fans will be talking about that one.'],
  mid:['A solid match. Nothing more, nothing less.','It did its job.','Steady work. Polite applause.','Fine. The crowd stayed with it.','Decent, if a little by the numbers.','Good enough. On to the next one.','A few nice spots, a clean finish.','Workmanlike. Nobody complained.','It moved the story along.'],
@@ -56,14 +68,14 @@ function hrRundown(then,end){const l=LQ.quiet;LQ.quiet=[];
  HR_NEXT=then;openModal(`${liveHd(LQ.show,'The rundown',end?'The show is wrapping up':'Meanwhile on the card',[],'● Live')}<div class="hrrun">${rows}</div><button class="btn" onclick="hrGo()">${end?'Finish the show':'Continue the show ▸'}</button>`,true)}
 let HR_NEXT=null;function hrGo(){const f=HR_NEXT;HR_NEXT=null;if(f)f()}
 /* ---- the rival's show and the balance sim: the same rules, decided on autopilot ---- */
-function hrAuto(card,b,sh){if(!card)return;HRC=hrStart(b,sh);let hits=0;const ms=card.map((x,j)=>x&&x.k==='match'&&x.d&&validMatch(x.d)?j:-1).filter(j=>j>=0);
+function hrAuto(card,b,sh){if(!card)return;HRC=hrStart(b,sh);let hits=0;const cap=hrCap(sh&&sh.ppv);const ms=card.map((x,j)=>x&&x.k==='match'&&x.d&&validMatch(x.d)?j:-1).filter(j=>j>=0);
  card.forEach((sl,j)=>{if(!sl||!sl.d)return;
-  if(sl.k==='promo'){const p=sl.d;if(hits<HR_CAP&&Math.random()<hrPromoOdds(p,sh.ppv))hits++;hrMove(p.res?p.res.stars:2.5);return}
+  if(sl.k==='promo'){const p=sl.d;if(hits<cap&&Math.random()<hrPromoOdds(p,sh.ppv))hits++;hrMove(p.res?p.res.stars:2.5);return}
   if(sl.k!=='match'||!validMatch(sl.d))return;const m=sl.d;const main=j===ms[ms.length-1];
-  if(!(m.ev&&m.ev.hit)){if(hits<HR_CAP&&typeof msOn==='function'&&msOn(m)&&Math.random()<hrMatchOdds(m,main,sh.ppv)){hits++;msAuto(m,b,sh.ppv||main)}
-   else{const g=matchEvent(m,b,sh.ppv||main,0);if(g)runEvAI(g,m)}}
+  if(!(m.ev&&m.ev.hit)){if(hits<cap&&typeof msOn==='function'&&msOn(m)&&Math.random()<hrMatchOdds(m,main,sh.ppv)){hits++;msAuto(m,b,sh.ppv||main)}
+   else{const g=matchEvent(m,b,sh.ppv||main,0);if(g){if(g.sit)hits++;runEvAI(g,m)}}}
   let base=3;try{base=rateMatch(m,{ppv:sh.ppv,preview:true}).stars}catch(e){}hrMove(base+(m.ev&&m.ev.stars||0))})}
-Object.assign(window,{hrStart,hrRoll,hrAfter,hrBug,hrRundown,hrGo,hrAuto,hrTag,hrCm,hrWord});
+Object.assign(window,{hrCap,hrWhy,hrStart,hrRoll,hrAfter,hrBug,hrRundown,hrGo,hrAuto,hrTag,hrCm,hrWord});
 (function(){const c=document.createElement('style');c.textContent=`
 .hrbug{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;margin:-2px 0 10px;font:800 italic 12px/1 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}
 .hrbar{height:9px;background:#15161a;position:relative;clip-path:var(--sl,none);overflow:hidden}.hrbar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#5a6a8a,var(--gold) 55%,#d8261f);transition:width .6s}
