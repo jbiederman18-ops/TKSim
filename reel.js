@@ -34,8 +34,9 @@ function hrWhy(m,main,ppv){if(!m||!m.sides||!validMatch(m)||m.type==='squash'||(
 function hrMatchOdds(m,main,ppv){const why=hrWhy(m,main,ppv);if(!why)return 0;
  const all=m.sides.flat().map(id=>S.w[id]).filter(Boolean);const h=hrHeat(m);
  const st=STIPS[typeof stipKey==='function'?stipKey(m):m.stip]||STIPS.std;const dare=all.reduce((s,w)=>s+(HR_DARE[w.st]||.6),0)/all.length;
- const p=.14+(h-HR_WARM)/180+(HRC-50)/300+(m.title?.06:0)+((st.inj||1)>=1.25||st.g==='big'?.05:0)+(dare-.65)*.2+(ppv?.08:0)+(main?.18:0);
- return clamp(p,.08,.75)}
+ /* v300: match showdowns are rarer still (they swing harder now — MS_K/MS_CAP in matchshow.js) */
+ const p=.04+(h-HR_WARM)/200+(HRC-50)/350+(m.title?.05:0)+((st.inj||1)>=1.25||st.g==='big'?.04:0)+(dare-.65)*.15+(ppv?.07:0)+(main?.16:0);
+ return clamp(p,.03,.6)}
 function hrPromoOdds(p,ppv){if(!p||!p.a||!S.w[p.a])return 0;const A=S.w[p.a],B=p.b&&S.w[p.b];if(!B)return 0;
  const h=heatOf(A.id,B.id);if(!(h>=HR_HOT||(h>=HR_WARM&&(ppv||HRC>=75))))return 0;const mic=Math.max(A.mic,B.mic);
  return clamp(.16+(h-HR_WARM)/180+(mic-75)/300+(HRC-50)/300+(ppv?.08:0),.08,.55)}

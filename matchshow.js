@@ -15,7 +15,7 @@
    rival's rules (msAuto), so neither side gets an edge. Loaded after crowd.js. */
 'use strict';
 (function(){
-const MS_K=.2,MS_CAP=.75;
+const MS_K=.5,MS_CAP=1.5,MS_LK=1.3; /* v300: rarer, so each call swings about twice as hard (was .2/.75 — about 2.5x now), and a miss stings more (MS_LK) */
 /* line codes: A = action by the winner's side, B = action by the loser's side, qa/qb = said by A/B,
    p = play-by-play, c = colour commentary, x = the crowd / camera. Optional 3rd item: a shout [text, 'gold'|''] */
 
@@ -241,7 +241,7 @@ function msAdd(m,d,st){const ev=evNew(m);st.sum=st.sum||0;const nd=clamp(st.sum+
 function msRoll(c,r,m,st,lab){const p=msChance(c,r);const ok=Math.random()<p;const sw=swingOf(p,c.st);
  /* v260: risky calls (under ~60%) swing further in a hot crowd, less in a cold one (reel.js) */
  const cm=p<.6&&typeof hrCm==='function'?hrCm():1;
- const d=msAdd(m,ok?sw.w*MS_K*cm:-sw.l*MS_K*cm,st);const ev=evNew(m);const extra=[];
+ const d=msAdd(m,ok?sw.w*MS_K*cm:-sw.l*MS_K*MS_LK*cm,st);const ev=evNew(m);const extra=[];
  if(p<.6&&typeof injSev==='function'){const A=r.A;const ip=((p<.4?.05:.02)*cm*(ok?.6:1.5)+Math.max(0,(A.fat||0)-50)/1000)*(STIPS[stipKey(m)]||STIPS.std).inj;
   if(Math.random()<ip&&!A.inj&&!ev.inj.some(x=>x[0]===A.id)){const wk=injSev(A);ev.inj.push([A.id,wk,1]);extra.push({kind:'cam',side:'a',hurt:!!wk,t:wk?`🚑 ${A.name} is hurt. The trainer is out — they finish the match, but they'll miss time.`:`😮‍💨 ${A.name} is slow to get up. A scare, but they're OK.`})}}
  if(c.heat&&ok&&r.B)ev.heat.push([r.A.id,r.B.id,c.heat]);if(c.fat)m.sides.flat().forEach(id=>ev.fat.push([id,c.fat]));
@@ -249,7 +249,7 @@ function msRoll(c,r,m,st,lab){const p=msChance(c,r);const ok=Math.random()<p;con
  ev.notes.push(`🎬 ${lab}: ${msFill(c.t,r)} — ${ok?'it lands':'it falls short'}${d?` (${qStar(d)})`:''}`);
  return {ok,d,lines:fpick(ok?c.hit:c.miss),extra}}
 function msKick(m,r,st,F,lab){const B=r.B;const p=clamp(.25+((B.ring+r.A.ring)/2)/100*.6,.3,.85);const ok=Math.random()<p;const sw=swingOf(p,.6);
- const d=msAdd(m,ok?sw.w*MS_K:-sw.l*MS_K,st);const ev=evNew(m);m.sides.flat().forEach(id=>ev.fat.push([id,3]));
+ const d=msAdd(m,ok?sw.w*MS_K:-sw.l*MS_K*MS_LK,st);const ev=evNew(m);m.sides.flat().forEach(id=>ev.fat.push([id,3]));
  ev.notes.push(`🎬 ${lab}: ${msFill(F.kick,r)} — ${ok?'the escape lands':'the escape looks awkward'}${d?` (${qStar(d)})`:''}`);return {ok,d,p,lines:fpick(ok?F.hit:F.miss)}}
 function msPost(c,r,m){const ev=evNew(m);if(c.heat&&r.B)ev.heat.push([r.A.id,r.B.id,c.heat]);if(c.popA)ev.pop.push([r.A.id,c.popA]);if(c.popB&&r.B)ev.pop.push([r.B.id,c.popB]);if(c.morB&&r.B)ev.mor.push([r.B.id,c.morB]);
  ev.notes.push(`🎬 After the bell: ${msFill(c.t,r)}`)}
@@ -422,7 +422,7 @@ function msNext(){if(!MS||!MS.fin)return;MS=null;if(LQ)return liveNext();finishL
 function msStart(it,show,last){const m=it.m;const r=msRoles(m,'p');if(!r.A||!r.B)return false;
  MS={it,m,n:it.n,show,last,r,g:it.g||null,st:{},log:[],cam:'a',act:0};msRun().catch(e=>{console.error(e);if(MS){MS.fin=1;msNext()}});return true}
 function renderMS(){if(!MS)return;if(MS.fin)return msDone();msFrame('');if(MS.q)return msShow();if(MS.menu)return msDrawMenu()}
-Object.assign(window,{msTap,msPick,msNext,msStart,msAuto,msOn,renderMS,msMoment,msReset:()=>{MS=null},msLive:()=>!!MS});
+Object.assign(window,{MS_CAP,msTap,msPick,msNext,msStart,msAuto,msOn,renderMS,msMoment,msReset:()=>{MS=null},msLive:()=>!!MS});
 
 (function(){const c=document.createElement('style');c.textContent=`
 .msacts{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:-4px 0 10px}
