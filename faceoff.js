@@ -47,8 +47,8 @@ function foKind(t,move){t=String(t||'');const lead=/^\W*\{S\}/.test(t);
  for(const k in FO_WEAK)if(FO_WEAK[k].test(t))return foMk(k);
  return null}
 
-const FO_TAG={talk:'🎤 On the mic',move:'💥 On the attack',hit:'Taking it',miss:'❌ Missed it',hurt:'🩹 Hurt',act:''};
-const FO_RTAG={hold:'😣 Trapped',pin:'📌 Pinned',stare:'',kickout:'',dodge:'',spear:'Taking it',weapon:'Taking it'};
+const FO_TAG={talk:'🎤 On the mic',move:'💥 On the attack',hit:'',miss:'❌ Missed it',hurt:'🩹 Hurt',act:''};
+const FO_RTAG={hold:'😣 Trapped',pin:'📌 Pinned',stare:'',kickout:'',dodge:'',spear:'',weapon:''};
 /* the comic burst over whoever takes it, timed to the moment of impact in that move's animation */
 const FO_POW={strike:['POW!',''],spear:['SMASH!',''],slam:['THUD!',''],fly:['BOOM!',''],weapon:['CRACK!','']};
 const FO_KS=['fly','spear','slam','weapon','strike','hold','pin','climb','out','taunt','stare','kickout','tap','dodge','rope'];
