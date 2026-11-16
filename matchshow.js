@@ -395,7 +395,15 @@ async function msStamp(t,cls,ms){const fx=document.getElementById('sdfx');if(!fx
 /* a line code → a page in the box */
 function msPage(l){const [k,t,sh]=l;const r=MS.r;const text=msFill(t,r);
  const side=k==='A'||k==='qa'?'a':k==='B'||k==='qb'?'b':null;const kind=k==='qa'||k==='qb'?'q':k==='A'||k==='B'?'act':k==='p'||k==='c'?'booth':'cam';
- return {side,kind,t:text,who:k==='p'?'Play-by-play':k==='c'?'Colour':'',sh}}
+ return {side,kind,t:text,who:k==='p'?'Play-by-play':k==='c'?'Colour':'',sh,mv:kind==='act'?msMv(t,side):null}}
+/* v306: what move the line shows, so the face-off cards can act it out (foKind in faceoff.js) */
+function msMv(t,side){if(typeof foKind!=='function'||!side)return null;const r=MS.r;const S=side==='a'?'A':'B',O=side==='a'?'B':'A';
+ const tok=String(t).match(/\{(FIN|NEAR|HOLD|TAG)\}/);const move=tok?{name:msFill('{'+tok[1]+'}',r),fin:tok[1]==='FIN'||tok[1]==='TAG'}:null;
+ return foKind(String(t).replace(/\{(A2|A|B)\}/g,(_,x)=>x===S||x==='A2'&&S==='A'?'{S}':x===O?'{O}':'{X}'),move)}
+function msMvNarr(t,side,A,B){if(typeof foKind!=='function'||!side)return null;const me=side==='a'?A:B,them=side==='a'?B:A;let tt=String(t);
+ const names=(w,tag)=>{if(w&&w.name)tt=tt.split(w.name).join(tag)};names(me,'{S}');names(them,'{O}');
+ const mv=['finish','near','hold'].map(k=>[k,me&&wrestlerVoice(me,k)]).find(([,n])=>n&&tt.includes(n));
+ return foKind(tt,mv?{name:mv[1],fin:mv[0]==='finish'}:null)}
 /* moment texts are narration: sentences grouped into pages the box can hold; a page that starts with a wrestler's
    name turns the camera to them, the rest are camera notes */
 function msNarr(text,rr){const g=MS.g&&MS.g.r||{};rr=rr||g;const A=rr.A||MS.r.A,B=rr.B||MS.r.B;
@@ -403,7 +411,7 @@ function msNarr(text,rr){const g=MS.g&&MS.g.r||{};rr=rr||g;const A=rr.A||MS.r.A,
  sent.forEach(x=>{x=x.trim();if(!x)return;if(cur&&(cur+' '+x).length>140){out.push(cur);cur=x}else cur=cur?cur+' '+x:x});if(cur)out.push(cur);
  const sideOf=t=>{const inA=(MS.m.sides[MS.m.winner]||[]).map(id=>S.w[id]&&S.w[id].name).filter(Boolean);const bs=(MS.m.sides.find(sd=>sd.includes(MS.r.B.id))||[]).map(id=>S.w[id]&&S.w[id].name).filter(Boolean);
   if([A&&A.name,...inA].some(n=>n&&t.startsWith(n)))return 'a';if([B&&B.name,...bs].some(n=>n&&t.startsWith(n)))return 'b';return null};
- return out.map(t=>{const sd=sideOf(t);return {side:sd,kind:sd?'act':'cam',t}})}
+ return out.map(t=>{const sd=sideOf(t);return {side:sd,kind:sd?'act':'cam',t,mv:msMvNarr(t,sd,A,B)}})}
 const people0=ctx=>({a:ctx.A,b:ctx.B,x:ctx.X});
 function msBox(pg){const r=MS.r;const w=pg.side==='a'?r.A:pg.side==='b'?r.B:null;
  const tab=pg.kind==='booth'?`<div class="sdtab other">${esc(pg.who)}</div>`:w&&(pg.kind==='q')?`<div class="sdtab ${pg.side==='a'?'mine':'them'}${pg.side==='b'?' r':''}">${esc(w.name)}</div>`:'';
@@ -414,7 +422,7 @@ let MS_PAN=false;
 async function msShow(){const pg=MS.q[MS.qi];if(!pg)return;const low=document.getElementById('sdlow');if(!low){msFrame('');return msShow()}
  /* v256: a tap during the camera whip waits instead of skipping the line that's about to appear */
  if(pg.side){MS_PAN=true;try{await msPan(pg.side)}finally{MS_PAN=false}}const bb=document.getElementById('msbooth');if(bb)bb.classList.toggle('on',pg.kind==='booth');
- if(pg.sh)msShout(pg.sh);/* v261: face-off cards — who's acting lights up (faceoff.js) */if(typeof foPose==='function'){if(pg.hurt)foPose(pg.side,'hurt');else if(pg.kind==='q')foPose(pg.side,'talk');else if(pg.kind==='act'&&pg.side)foPose(pg.side,!MS.res?'move':pg.side==='a'?(MS.res==='no'?'miss':'move'):(MS.res==='no'?'move':'act'));else foPose(null)}low.innerHTML=msBox(pg);msFeed();
+ if(pg.sh)msShout(pg.sh);/* v261: face-off cards — who's acting lights up (faceoff.js) */if(typeof foPose==='function'){if(pg.hurt)foPose(pg.side,'hurt');else if(pg.kind==='q')foPose(pg.side,'talk');else if(pg.kind==='act'&&pg.side)foPose(pg.side,!MS.res?'move':pg.side==='a'?(MS.res==='no'?'miss':'move'):(MS.res==='no'?'move':'act'),undefined,pg.mv&&Object.assign({},pg.mv,{noPow:!!pg.sh}));else foPose(null)}low.innerHTML=msBox(pg);msFeed();
  const spr=pg.side&&document.querySelector(`#sd .c${pg.side} .sdph`);if(spr){spr.classList.remove('talk','hit');void spr.offsetWidth;spr.classList.add(pg.sh?'hit':'talk')}
  const el=document.getElementById('sdsay');const done=()=>{const nx=document.getElementById('sdnx');if(nx)nx.classList.add('on')};if(!el||msReduce())return done();
  const t=el.dataset.t;let i=0;/* v305: the whole line is laid out from the start and the untyped rest stays invisible, so the box never grows and words never hop lines while it types */const A=document.createTextNode(''),H=document.createElement('span');H.className='sdtw';H.textContent=t;el.textContent='';el.append(A,H);const talk=pg.kind==='q'||pg.kind==='booth';const iv=setInterval(()=>{i+=2;A.data=t.slice(0,i);H.firstChild&&(H.firstChild.data=t.slice(i));if(talk&&window.SFX)SFX.blip();if(i>=t.length)fin()},20);
@@ -440,7 +448,7 @@ async function msCall(list,lab,q,sub){const r=MS.r;const it=await msMenu(q,sub,m
 async function msMomentAct(slot){const g=MS.g,m=MS.m,r=g.r;
  if(g.e.need==='X'&&r.X&&!g.gor){const X=r.X;const it=await msMenu('🎧 Your call in gorilla',`${esc(X.name)} wants to go out there and start something`,[{label:'Send them out there',info:`They crash the main event and could start a new rivalry · morale +${GOR_MOR}`,yes:1},{label:'Not tonight',info:`The match goes on as booked · morale −${GOR_MOR}`}]);
   gorMor(X,!!it.yes,true);if(!it.yes){const r0=msRoles(m,'p');m._msr={a:r0.A.id,b:r0.B.id};let ng=null;try{ng=genEvent(m,'p',true,true)}finally{delete m._msr}if(ng&&ng.e.need!=='X'&&(msPlan(ng,m)==='heat')===(slot==='heat')){MS.g=ng;ng.gor=1;return msMomentAct(slot)}return null}g.gor=1}
- msFrame('');await msPlay(msNarr(evFill(g.e.text,r)));
+ msFrame('');MS.res=null;await msPlay(msNarr(evFill(g.e.text,r)));
  const ch=evChoices(g.e,m,r);const ck=CALLS[callKind(g)];
  const items=ch.map(c=>({c,label:evFill(c.t,r),info:`${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:c.heelA&&r.A.al==='f'?'<span class="heel">😈 Dirty — fans won\'t like it from a face</span> · ':''}${c.always?'✅ Guaranteed':STAT_ICON[c.s]+' · '+msTellH(evChance(c,r))}${c.flip?' · changes the winner':''}${c.nc?' · no winner':''} · ${callStakes(c,g,c.always?null:evChance(c,r))}${g.sit&&c.tip?` · ${esc(sitTip(c,r))}`:''}${typeof rcTag==='function'?rcTag(c,g):''}`}));
  const note=(g.sit?g.info:'')+(g.r&&g.r.CROWD?(g.sit?' · ':'')+'👥 '+esc(g.r.CROWD.text):'');
@@ -474,13 +482,13 @@ async function msRun(){const m=MS.m;const fam=msFam(m);const plan=msPlan(MS.g,m)
    if(MS.workedKnee===r.B.id&&m.type==='singles'&&(fam==='pin'||fam==='sub')){
     setup.unshift({kind:'booth',who:'Colour',t:msFill('Watch {B} trying to get a foot underneath them. That knee has been bothering them since the dragon screw.',r)});
    }
-   await msPlay(setup);if(F.count)for(const n of F.count)await msStamp(n,'count',560);
+   MS.res=null;/* v306: the set-up is before any roll — don't carry the heat call's miss into it */await msPlay(setup);if(F.count)for(const n of F.count)await msStamp(n,'count',560);
    const it=await msMenu('🏁 '+msFill(F.q,r),'You\'re calling the finish',[{label:msFill(F.kick,r),info:(pk=>`💪 In-ring · ${msTellH(pk)} · ${msSw(swingOf(pk,.6).w)} · ${esc(msFill(F.ksub,r))}`)(msKickP(r)),kick:1},{label:msFill(F.stay,r),info:`✅ Guaranteed · 🛡️ Small swing · ${esc(msFill(F.ssub,r))}`}]);
    if(it.kick){const o=msKick(m,r,MS.st,F,'Near fall');MS.res=o.ok?'ok':'no';MS.log.push({lab:'Near fall',t:it.label,ok:o.ok});msFrame('');await msStamp(o.ok?'It lands':'Not quite',o.ok?'ok':'no');await msPlay(msLines(o.lines));
     const fk=fam==='pin'&&m.sides.length>2&&r.C?'multi':fam;const blown=o.ok&&await nfChain(m,r,F,fk);
     if(blown){}else if(plan==='fin'&&MS.g)await msMomentAct('fin');
     else await msCall(msDeal(FIN[fam]||FIN_PIN,r,3),'Finish','🏁 Call the finish',`${esc(r.A.name)} is booked to win. How does it end?`)}
-   else{MS.log.push({lab:'Near fall',t:it.label,ok:true});if(window.SFX)SFX.three();evNew(m).notes.push(`🎬 Near fall: ${it.label}`);msFrame('');await msPlay(msLines(F.end))}}
+   else{MS.log.push({lab:'Near fall',t:it.label,ok:true});if(window.SFX)SFX.three();evNew(m).notes.push(`🎬 Near fall: ${it.label}`);msFrame('');MS.res='ok';await msPlay(msLines(F.end))}}
   else if(plan==='fin'&&MS.g)await msMomentAct('fin');
   else{msFrame('');await msPlay([{kind:'cam',t:msFill('{A} gets the win.',r)}])}}
  const r=msRoles(m,'p');MS.r=r;const pl=msPostDeal(r,m);
