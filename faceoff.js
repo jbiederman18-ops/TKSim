@@ -50,7 +50,15 @@ function foKind(t,move){t=String(t||'');const lead=/^\W*\{S\}/.test(t);
 const FO_TAG={talk:'🎤 On the mic',move:'💥 On the attack',hit:'',miss:'❌ Missed it',hurt:'🩹 Hurt',act:''};
 const FO_RTAG={hold:'😣 Trapped',pin:'📌 Pinned',stare:'',kickout:'',dodge:'',spear:'',weapon:''};
 /* the comic burst over whoever takes it, timed to the moment of impact in that move's animation */
-const FO_POW={strike:['POW!',''],spear:['SMASH!',''],slam:['THUD!',''],fly:['BOOM!',''],weapon:['CRACK!','']};
+/* v308: a pool per move, campy '60s-TV-fight style — one is picked at random each hit */
+const FO_POW={strike:['POW!','BAM!','BIFF!','SOCK!','WHAM!','ZOK!','KAPOW!','THWACK!','BOFF!','ZAP!','YOWCH!','OOOF!'],
+ slam:['THUD!','KA-RUNCH!','CRUNCH!','WHAMM!','ZLOPP!','KER-SPLAT!','OOOFF!','MAMMA MIA!','BONK!'],
+ fly:['BOOM!','ZOWIE!','KA-BLAM!','SPLAT!','WHOOSH!','GOLLY GEE!','ZWAPP!'],
+ spear:['SMASH!','KRUNCH!','WHAP!','KER-POW!','OOOFF!','YOWCH!'],
+ weapon:['CRACK!','CLANK!','KLONK!','BONK!','THWACK!','CLANG!'],
+ fin:['KA-BOOM!','MAMMA MIA!','ZOWIE!','KAPOW!','WHAMMM!','HOLY MOLY!'],
+ flymiss:['THUD!','SPLAT!','OUCH!','YOWCH!','KER-PLUNK!']};
+const foPow=k=>{const a=FO_POW[k];return a[Math.floor(Math.random()*a.length)]};
 const FO_KS=['fly','spear','slam','weapon','strike','hold','pin','climb','out','taunt','stare','kickout','tap','dodge','rope'];
 /* side: 'a' | 'b' | null (nobody — commentary, crowd) · role: talk | move | miss | hurt | act · lab: optional tag text
    mv (v306): what the move is (foKind) — the cards act it out: a dive arcs over and crashes down, a slam lifts the
@@ -68,9 +76,9 @@ function foPose(side,role,lab,mv){const sd=document.getElementById('sd');if(!sd|
   if(r){c.classList.add('on',r,...x)}else if(side)c.classList.add('dim');
   let tx='';if(r){if(k===side)tx=lab||(live?(miss?'❌ '+live.lab.replace(/^\S+\s/,''):live.lab):FO_TAG[r]||'');else tx=live?(miss?'':(Object.hasOwn(FO_RTAG,live.k)?FO_RTAG[live.k]:FO_TAG.hit)):FO_TAG[r]||''}
   if(t){t.textContent=tx;t.className='sdact'+(tx?' show '+(k!==side?'hit':r==='act'&&live?'move':r):'')}});
- if(live&&!miss&&!live.solo&&other){const pw=FO_POW[live.k];if(pw&&!(live.noPow)){fx.textContent=live.fin?'BOOM!':pw[0];fx.className='fofx show at-'+other+' p-'+live.k+(live.fin?' fin':'')}
+ if(live&&!miss&&!live.solo&&other){const pw=FO_POW[live.k];if(pw&&!(live.noPow)){fx.textContent=foPow(live.fin?'fin':live.k);fx.className='fofx show at-'+other+' p-'+live.k+(live.fin?' fin':'')+(fx.textContent.length>7?' long':'')}
   if(live.k==='slam'||live.k==='fly'||live.k==='spear'||live.fin)sd.classList.add('q-'+live.k)}
- else if(live&&miss&&live.k==='fly'){fx.textContent='THUD!';fx.className='fofx show at-'+side+' p-flymiss';sd.classList.add('q-fly')}}
+ else if(live&&miss&&live.k==='fly'){fx.textContent=foPow('flymiss');fx.className='fofx show at-'+side+' p-flymiss'+(fx.textContent.length>7?' long':'');sd.classList.add('q-fly')}}
 const foTag='<span class="sdact"></span>';
 Object.assign(window,{foPose,foTag,foKind});
 (function(){const c=document.createElement('style');c.textContent=`
@@ -169,11 +177,13 @@ body.tv .tv-live-sheet .sd.duo .sdpl b{font-size:24px}
 /* the screen jolts on the big landings — "translate" is separate from "transform", which the pan pins down */
 .sd.duo.q-slam .sdpan{animation:foQuake .32s .6s}.sd.duo.q-fly .sdpan{animation:foQuake .32s .68s}.sd.duo.q-spear .sdpan{animation:foQuake .28s .44s}
 @keyframes foQuake{0%,100%{translate:0 0}20%{translate:-5px 3px}40%{translate:5px -2px}60%{translate:-3px 2px}80%{translate:2px -1px}}
-.fofx{position:absolute;top:30%;z-index:6;opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.3) rotate(-8deg);font:900 italic clamp(22px,7vw,38px)/1 'BC','Barlow Condensed',sans-serif;color:#16120a;background:var(--gold);padding:.32em .5em .26em;clip-path:polygon(50% 0,61% 22%,86% 8%,78% 34%,100% 40%,80% 56%,96% 82%,68% 74%,58% 100%,46% 78%,20% 96%,24% 70%,0 62%,20% 46%,4% 20%,32% 26%);letter-spacing:.02em}
-.fofx.at-a{left:27%}.fofx.at-b{left:73%}
+.fofx{position:absolute;top:30%;white-space:nowrap;z-index:6;opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.3) rotate(-8deg);font:900 italic clamp(22px,7vw,38px)/1 'BC','Barlow Condensed',sans-serif;color:#16120a;--burst:var(--gold);letter-spacing:.02em}
+.fofx::before{content:'';position:absolute;inset:-62% -30%;z-index:-1;background:var(--burst);clip-path:polygon(50% 0,61% 22%,86% 8%,78% 34%,100% 40%,80% 56%,96% 82%,68% 74%,58% 100%,46% 78%,20% 96%,24% 70%,0 62%,20% 46%,4% 20%,32% 26%)}
+.fofx.long{font-size:clamp(17px,5.2vw,28px)}.fofx.long::before{inset:-90% -34%}
+.fofx.at-a{left:28%}.fofx.at-b{left:72%}
 .fofx.show{animation:foPow .7s cubic-bezier(.2,1.4,.4,1) both}
-.fofx.p-strike{animation-delay:.12s}.fofx.p-weapon{animation-delay:.32s;background:#f3efe6;color:var(--red)}.fofx.p-spear{animation-delay:.34s;background:var(--red);color:#fff}.fofx.p-slam{animation-delay:.58s;background:var(--red);color:#fff}.fofx.p-fly{animation-delay:.66s}.fofx.p-flymiss{animation-delay:.7s;background:#3a3c44;color:#e6e6e6}
-.fofx.fin{background:var(--gold);color:#16120a;font-size:clamp(28px,9vw,48px);box-shadow:0 0 0 4px #000}
+.fofx.p-strike{animation-delay:.12s}.fofx.p-weapon{animation-delay:.32s;--burst:#f3efe6;color:var(--red)}.fofx.p-spear{animation-delay:.34s;--burst:var(--red);color:#fff}.fofx.p-slam{animation-delay:.58s;--burst:var(--red);color:#fff}.fofx.p-fly{animation-delay:.66s}.fofx.p-flymiss{animation-delay:.7s;--burst:#3a3c44;color:#e6e6e6}
+.fofx.fin{--burst:var(--gold);color:#16120a;font-size:clamp(28px,9vw,48px)}.fofx.fin.long{font-size:clamp(20px,6.4vw,34px)}
 @keyframes foPow{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-8deg)}35%{opacity:1;transform:translate(-50%,-50%) scale(1.15) rotate(-6deg)}70%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-4deg)}100%{opacity:0;transform:translate(-50%,-60%) scale(.95) rotate(-4deg)}}
-body.tv .tv-live-sheet .fofx{font-size:56px}
+body.tv .tv-live-sheet .fofx{font-size:56px}body.tv .tv-live-sheet .fofx.long{font-size:42px}
 @media (prefers-reduced-motion:reduce){html .sd.duo .sdpan{animation:none!important}html .fofx{display:none}}`;document.head.appendChild(c)})();
