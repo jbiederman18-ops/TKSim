@@ -54,7 +54,7 @@ function hrAfter(it){if(!LQ||!it)return;HRC=LQ.crowd;let s=3,txt='';
  else if(it.m){let base=3;try{base=rateMatch(it.m,{ppv:curShow().ppv,preview:true}).stars}catch(e){}s=base+(it.m.ev&&it.m.ev.stars||0)}
  const was=LQ.crowd;LQ.crowd=hrMove(s);it.crowd=LQ.crowd;it.dc=LQ.crowd-was}
 function hrBug(){if(!LIVE||!LQ||LQ.crowd==null)return '';const c=LQ.crowd;
- return `<div class="hrbug"><span class="hrk">The crowd</span><span class="hrbar"><i style="width:${c}%"></i></span><b class="hrw">${hrWord(c)}</b><span class="hrn">🎬 ${LQ.hr}/${hrCap(LQ.ppv)}</span></div>`}
+ return `<div class="hrbug"><span class="hrk">The crowd</span><span class="hrbar"><i style="transform:scaleX(${c/100})"></i></span><b class="hrw">${hrWord(c)}</b><span class="hrn">🎬 ${LQ.hr}/${hrCap(LQ.ppv)}</span></div>`}
 /* the quiet segments since the last highlight reel, in one short screen */
 const HR_Q={match:{hi:['A strong match. The crowd is with them.','Good stuff, and the fans let them know it.','They worked hard and it showed.','The fans were up for the finish.','A real crowd-pleaser.','They had the place buzzing by the end.','Better than anyone expected.','That got a standing ovation.','Fans will be talking about that one.'],
  mid:['A solid match. Nothing more, nothing less.','It did its job.','Steady work. Polite applause.','Fine. The crowd stayed with it.','Decent, if a little by the numbers.','Good enough. On to the next one.','A few nice spots, a clean finish.','Workmanlike. Nobody complained.','It moved the story along.'],
@@ -79,7 +79,7 @@ function hrAuto(card,b,sh){if(!card)return;HRC=hrStart(b,sh);let hits=0;const ca
 Object.assign(window,{hrCap,hrWhy,hrStart,hrRoll,hrAfter,hrBug,hrRundown,hrGo,hrAuto,hrTag,hrCm,hrWord});
 (function(){const c=document.createElement('style');c.textContent=`
 .hrbug{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;margin:-2px 0 10px;font:800 italic 12px/1 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}
-.hrbar{height:9px;background:#15161a;position:relative;clip-path:var(--sl,none);overflow:hidden}.hrbar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#5a6a8a,var(--gold) 55%,#d8261f);transition:width .6s}
+.hrbar{height:9px;background:#15161a;position:relative;clip-path:var(--sl,none);overflow:hidden}.hrbar i{position:absolute;inset:0;transform-origin:0 50%;background:linear-gradient(90deg,#5a6a8a,var(--gold) 55%,#d8261f);transition:transform .6s}
 .hrw{color:var(--gold2);font-size:15px}.hrn{color:var(--text)}
 .hrtag{display:inline-block;margin-top:4px;font:800 italic 11px/1 'BC','Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px 2px;background:#1d1e23;color:var(--mut)}
 .hrtag.hi{background:rgba(216,38,31,.22);color:#ffb4a8}.hrtag.md{background:rgba(242,193,78,.14);color:var(--gold2)}

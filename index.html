@@ -543,7 +543,7 @@ body.tv main.tv-main{padding-bottom:16px}body.tv .ry-elim.gone .ry-fall{transfor
 .ry-end{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:clamp(12px,1.2vw,24px) clamp(16px,1.6vw,30px)}.ry-end.r{flex-direction:row-reverse}.ry-end .ry-pn{margin:0;font-size:clamp(40px,4.4vw,88px)}.ry-so{font-size:clamp(20px,1.8vw,36px)}
 .ry-rope{position:relative;height:14px;background:var(--gold3);margin:clamp(36px,3.6vw,70px) clamp(20px,2vw,40px) 0}
 .ry-mid{position:absolute;left:50%;top:-26px;width:16px;height:66px;margin-left:-8px;background:#3a3a42}
-.ry-knot{position:absolute;left:50%;top:50%;width:clamp(44px,3.8vw,72px);height:clamp(44px,3.8vw,72px);transform:translate(-50%,-50%);background:var(--gold);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);transition:left 1.4s cubic-bezier(.3,1.4,.5,1)}
+.ry-kp{position:absolute;inset:0;pointer-events:none;transition:transform 1.4s cubic-bezier(.3,1.4,.5,1)}.ry-knot{position:absolute;left:50%;top:50%;width:clamp(44px,3.8vw,72px);height:clamp(44px,3.8vw,72px);transform:translate(-50%,-50%);background:var(--gold);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
 .ry-rl{display:flex;justify-content:space-between;margin:clamp(20px,2vw,36px) clamp(20px,2vw,40px) clamp(20px,2.4vw,44px);font:800 italic clamp(14px,1.1vw,20px)/1 'BC',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
 .ry-mes .rv-seg{margin:0}.ry-mes .rv-txt{font-size:clamp(20px,1.8vw,36px)}.ry-mes .rv-stars{font-size:clamp(34px,3.2vw,64px)}
 .ry-win{text-align:center;margin:0 0 clamp(14px,2vw,36px)}
@@ -832,7 +832,7 @@ span.smeter.smeter{position:relative;display:inline-block;line-height:1;letter-s
 @keyframes twPunch{0%{transform:scale(1.18);filter:brightness(1.4)}100%{transform:none;filter:none}}
 .twrope.jolt{animation:twJolt .45s cubic-bezier(.3,.8,.4,1)}
 @keyframes twJolt{0%,100%{transform:none}35%{transform:scaleY(1.15)}}
-.twrope i{transition:left .7s cubic-bezier(.25,1.7,.4,1)}
+.twrope .twkp{position:absolute;inset:0;pointer-events:none;transition:transform .7s cubic-bezier(.25,1.7,.4,1)}
 .twrope i.ring::after{content:"";position:absolute;inset:-4px;border:2px solid var(--gold2);animation:twRing .7s ease-out forwards}
 @keyframes twRing{from{opacity:.9;transform:scale(1)}to{opacity:0;transform:scale(2.4)}}
 .twh.slamw{animation:twSlamW .45s cubic-bezier(.2,1.6,.4,1)}
@@ -1532,7 +1532,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v303';
+const APP_VERSION='v304';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4971,7 +4971,7 @@ function srMark(rd){if(!rd.p||!rd.ai)return;const d=rd.p.s.stars-rd.ai.s.stars;c
  final ratings (main event weight, show structure, production, ads) at the end, always on the side of whoever won */
 function srRope(gap,win,kick){if(!SRV)return;let pos=clamp(-gap*30,-42,42);
  if(win==='p'&&pos>-7)pos=-7;else if(win==='ai'&&pos<7)pos=7;else if(win==='tie')pos=0;SRV.pos=pos;
- const k=document.getElementById('tw-knot');if(k){k.style.left=(50+pos)+'%';if(kick){srKick(k.parentNode,'jolt');srKick(k,'ring')}}}
+ const k=document.getElementById('tw-knot'),kp=document.getElementById('tw-kp');if(k){/* v304: slides with a transform on a full-width carrier, so the move never re-lays out the page */if(kp)kp.style.transform=`translateX(${pos}%)`;else k.style.left=(50+pos)+'%';if(kick){srKick(k.closest('.twrope'),'jolt');srKick(k,'ring')}}}
 /* how far the full show rating moved from its segments alone (show structure, production, ads) */
 function srAdj(o,br){const b=o.blocks.find(x=>x.brand===br);if(!b||!b.segs.length||!o.ratings||o.ratings[br]==null)return 0;
  let s=0,ws=0;b.segs.forEach((x,i)=>{const w=i===b.segs.length-1?1.6:1;s+=x.stars*w;ws+=w});return o.ratings[br]-s/ws}
@@ -4985,7 +4985,7 @@ function srStageHtml(o,nm,tv){const G=nm?nm.p:S.gm,Rv=nm?nm.ai:S.rival;const all
  const html=(`<div id="srv" class="srv tw${tv?' srtv':''}" ${tv?'':'onclick="srTap(event)"'}>
  <div class="sr-top"><span class="livebug"><b>On air</b><span>Week ${o.week}</span></span><div class="sr-title">${esc(o.title)}</div></div>
  ${two?`<div class="twsc"><div class="me" id="srs-p"><span>${esc(G)}</span><b>–</b><em>So far</em></div><div id="srs-ai"><span>${esc(Rv)}</span><b>–</b><em>So far</em></div></div>
- <div class="twrope"><i id="tw-knot"></i></div><div class="twrl"><span>${esc(G)}</span><span>${esc(Rv)}</span></div>`:''}
+ <div class="twrope"><span class="twkp" id="tw-kp"><i id="tw-knot"></i></span></div><div class="twrl"><span>${esc(G)}</span><span>${esc(Rv)}</span></div>`:''}
  <div class="twrd" id="tw-rd"></div>
  <div class="twpair" id="tw-pair"><div class="twh p"><div class="twt">${esc(G)} · ${cnt('p')} segment${cnt('p')===1?'':'s'}</div></div>${two?`<div class="twh ai"><div class="twt">${esc(Rv)} · ${cnt('ai')} segment${cnt('ai')===1?'':'s'}</div></div>`:''}</div>
  <div class="twfoot" id="tw-foot"><div class="twnext" id="tw-next" aria-live="polite"${tv?' hidden':''}>Tap to start ▸</div></div>

@@ -308,7 +308,7 @@ function tvIncoming(d){if(!TV||!d||!d.state)return;if((d.rev||0)<TV.rev&&S)retur
  tvFeedBeatsReveal();
  tvRefresh()}
 function tvEnd(){if(!confirm('Take the league off this screen?'))return;tvStop()}
-function tvStop(){tvFull(false);document.body.style.zoom='';document.body.style.removeProperty('--tvz');if(TV){if(TV.unsub)TV.unsub();if(TV.sideUnsub)TV.sideUnsub();if(TV.reveal&&TV.reveal.t)clearTimeout(TV.reveal.t)}TV=null;LS.del(TV_KEY);document.body.classList.remove('tv');
+function tvStop(){tvFull(false);document.body.style.zoom='';document.body.style.removeProperty('--tvz');if(TV){if(TV.unsub)TV.unsub();if(TV.sideUnsub)TV.sideUnsub();if(TV.reveal&&TV.reveal.t)clearTimeout(TV.reveal.t)}TV=null;LS.del(TV_KEY);document.body.classList.remove('tv');{const ap=document.getElementById('app');if(ap)delete ap.dataset.tvk}
  S=null;try{const a=JSON.parse(LS.get('tksim_active')||'null');const g=a&&LS.get('tksim_game_'+a.code);if(g){LMP={code:a.code,me:a.me,key:a.key};S=JSON.parse(g)}}catch(e){LMP=null}
  if(!S)S=load();if(S){dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);if(!ON())showMigrate()}closeModal();tab='home';ANIM=true;render();if(ON())mpConnect()}
 function tvReplay(){if(!TV||!S||!S.last)return;TV.reveal={key:S.last.season+'-'+S.last.week,pi:0};render()}
@@ -335,16 +335,22 @@ addEventListener('resize',()=>{try{tvScale()}catch(e){}});
 /* v242: shrink an element (CSS zoom) step by step until the TV picture needs no scrolling */
 /* how far the element's bottom runs past the bottom of the TV picture (CSS px in the page's zoomed space; the 24px keeps clear of Skip) */
 function tvPast(el){const bz=+(document.body.style.zoom||1),r=el.getBoundingClientRect();return r.height&&r.bottom>innerHeight-24*bz}
-function tvFit(el,max,min,prop){if(!el)return;max=max||1;min=min||.7;const set=z=>prop?el.style.setProperty(prop,z.toFixed(2)):(el.style.zoom=z===1?'':z.toFixed(2));let z=max;set(z);while(tvPast(el)&&z>min+.001){z=Math.max(min,z-.04);set(z)}}
+/* v304: same steps as before (0.04 down from max, never below min), found by halving instead of one at a time — each check is
+   a full layout, and the old walk could take 20 of them in a single frame right as a reveal animated in */
+function tvFit(el,max,min,prop){if(!el)return;max=max||1;min=min||.7;const set=z=>prop?el.style.setProperty(prop,z.toFixed(2)):(el.style.zoom=z===1?'':z.toFixed(2));
+ const K=Math.max(0,Math.ceil((max-min-.001)/.04)),at=k=>Math.max(min,max-k*.04);set(max);if(!K||!tvPast(el))return;
+ let lo=1,hi=K;while(lo<hi){const m=(lo+hi)>>1;set(at(m));if(tvPast(el))lo=m+1;else hi=m}set(at(lo))}
 /* v264: while a GM is live, each new screen from their phone used to rebuild the whole TV page — every photo reloaded and
    the sheet jumped back to full size before shrinking to fit, so it flashed between every choice. Now only what changed on
    the sheet is swapped (tvMorph), the photos and everything else stay put, and the size only steps down when it must. */
 function tvMorph(el,html){const t=document.createElement('template');t.innerHTML=html;tvMorphKids(el,t.content)}
-function tvMorphKids(a,b){const A=[...a.childNodes],B=[...b.childNodes];
+/* nodes other scripts add after a render (cards.js homeDeco's .tchome card fans) are left where they are */
+function tvMorphKids(a,b){const A=[...a.childNodes].filter(n=>!(n.nodeType===1&&n.classList.contains('tchome'))),B=[...b.childNodes];
  B.forEach((n,i)=>{const o=A[i];if(!o){a.appendChild(n);return}
   if(o.nodeType!==n.nodeType||o.nodeName!==n.nodeName||(n.nodeType===1&&n.nodeName==='IMG'&&o.getAttribute('src')!==n.getAttribute('src'))){a.replaceChild(n,o);return}
   if(n.nodeType===3||n.nodeType===8){if(o.nodeValue!==n.nodeValue)o.nodeValue=n.nodeValue;return}
   if(o.isEqualNode(n))return;
+  if(o.id==='lrf'&&n.id==='lrf')return;
   [...o.attributes].forEach(x=>{if(!n.hasAttribute(x.name))o.removeAttribute(x.name)});[...n.attributes].forEach(x=>{if(o.getAttribute(x.name)!==x.value)o.setAttribute(x.name,x.value)});
   tvMorphKids(o,n)});
  for(let i=A.length-1;i>=B.length;i--)A[i].remove()}
@@ -354,10 +360,16 @@ function tvLiveUpdate(){const ls=document.querySelector('.tv-live-sheet'),f=TV.f
  const sd=!!ls.querySelector('.sdw'),z=+(ls.style.getPropertyValue('--lz')||1.5);if(tvPast(ls))tvFit(ls,z,sd?.7:1,'--lz');if(sd)TV.sdz=+(ls.style.getPropertyValue('--lz')||z);return true}
 function tvRender(){document.body.classList.add('tv');tvScale();const app=$('#app');
  if(!TV.reveal&&S&&S.online&&S.online.live&&partyLiveNow()&&document.querySelector('.tv-live-sheet')&&tvLiveUpdate())return;
- if(TV.reveal&&S&&S.last){if(document.getElementById('rv')&&TV.reveal.built===TV.reveal.key+':'+TV.reveal.pi)return;app.innerHTML=tvHeader()+`<main class="tv-main">${tvRevealHtml()}</main>`;tvRevealRun();return}
- let body;
- if(!S)body=tvWaiting();else if(Object.values(S.names||{}).filter(Boolean).length<nSeats())body=tvLobby();else if(S.phase==='rookies')body=tvRookies();else if(S.phase==='draft')body=tvDraft();else if(S.phase==='over')body=tvOver();else if(S.online&&S.online.live&&partyLiveNow())body=tvLive();else body=tvWeek();
- app.innerHTML=tvHeader()+`<main class="tv-main">${body}</main>`;
+ if(TV.reveal&&S&&S.last){if(document.getElementById('rv')&&TV.reveal.built===TV.reveal.key+':'+TV.reveal.pi)return;app.innerHTML=tvHeader()+`<main class="tv-main">${tvRevealHtml()}</main>`;app.dataset.tvk='rv';tvRevealRun();return}
+ let body,kind;
+ if(!S){body=tvWaiting();kind='wait'}else if(Object.values(S.names||{}).filter(Boolean).length<nSeats()){body=tvLobby();kind='lobby'}else if(S.phase==='rookies'){body=tvRookies();kind='rookies'}else if(S.phase==='draft'){body=tvDraft();kind='draft'}else if(S.phase==='over'){body=tvOver();kind='over'}else if(S.online&&S.online.live&&partyLiveNow()){body=tvLive();kind='live'}else{body=tvWeek();kind='week'}
+ /* v304: every save from any phone used to rebuild the whole TV page — the "Locked in" card piles slammed in again, the
+    booking piles' bob restarted, photos reloaded. When the screen is the same kind as the one already up, only what changed
+    is swapped (tvMorph), so running animations carry on and new ones play just for what's new. The locker-room feed keeps
+    its own live box (feed.js draws it). The live sheet keeps its own path below. */
+ const html=tvHeader()+`<main class="tv-main">${body}</main>`;
+ if(kind!=='live'&&app.dataset.tvk===kind&&app.querySelector('main.tv-main'))tvMorph(app,html);else app.innerHTML=html;
+ app.dataset.tvk=kind;
  const ls=document.querySelector('.tv-live-sheet');if(ls){
   /* v251: a promo showdown may shrink further on a small TV, and keeps one size for the whole promo instead of
      growing and shrinking page by page (it only ever steps down) */
@@ -479,7 +491,7 @@ function ryHtml(L,R,pr){const P=ryPlan(pr),x=pr.blocks.find(b=>b.brand==='x');co
  <section data-sec="elim">${P.out.map((k,i)=>elim(k,i,'Eliminated')).join('')}</section>
  <section data-sec="final"><div class="ry-sub">Final two — the main events settle it</div>
   <div class="ry-two">${[A,B].map((k,j)=>`<div class="ry-end ${j?'r':''}" style="--c:${ryColor(k)}"><b class="ry-pn">${esc(nameOf(k))}</b><span class="ry-so" id="ry-so-${j}"></span></div>`).join('')}</div>
-  <div class="ry-rope"><i class="ry-mid"></i><i class="ry-knot" id="ry-knot"></i></div><div class="ry-rl"><span>◂ ${esc(nameOf(A))}</span><span id="ry-lead" class="gold"></span><span>${esc(nameOf(B))} ▸</span></div>
+  <div class="ry-rope"><i class="ry-mid"></i><span class="ry-kp" id="ry-kp"><i class="ry-knot" id="ry-knot"></i></span></div><div class="ry-rl"><span>◂ ${esc(nameOf(A))}</span><span id="ry-lead" class="gold"></span><span>${esc(nameOf(B))} ▸</span></div>
   <div class="ry-two ry-mes">${mA?rySeg(mA,'ry-f-0','ry-me'):'<div class="muted">No main event.</div>'}${mB?rySeg(mB,'ry-f-1','ry-me'):'<div class="muted">No main event.</div>'}</div></section>
  <section data-sec="out">${elim(B,'x','Over the top rope')}</section>
  <section data-sec="podium"><div class="rv-win ry-win">🏆 ${esc(nameOf(A))} wins the night!</div>
@@ -493,7 +505,7 @@ function ryStage(st,lbl){const rv=document.getElementById('rv');if(!rv)return;rv
  setTimeout(()=>{if(sec.isConnected&&rv.dataset.stage===st&&tvPast(sec))tvFit(sec,+(sec.style.zoom||1),.7)},2000)}
 /* refit the stage on screen once a falling show has landed */
 function ryRefit(){setTimeout(()=>{const rv=document.getElementById('rv');const sec=rv&&rv.querySelector(`[data-sec="${rv.dataset.stage}"]`);if(sec&&tvPast(sec))tvFit(sec,+(sec.style.zoom||1),.7)},1400)}
-function ryKnot(d){const k=document.getElementById('ry-knot');if(k)k.style.left=`${50-clamp(d*45,-40,40)}%`;const l=document.getElementById('ry-lead');if(l)l.textContent=Math.abs(d)<.03?'Dead level':d>0?'◂ Pulling ahead':'Pulling ahead ▸'}
+function ryKnot(d){const k=document.getElementById('ry-kp');if(k)k.style.transform=`translateX(${-clamp(d*45,-40,40)}%)`;const l=document.getElementById('ry-lead');if(l)l.textContent=Math.abs(d)<.03?'Dead level':d>0?'◂ Pulling ahead':'Pulling ahead ▸'}
 function ryAvg(b,withMain){const segs=withMain?b.segs:ryUnder(b);if(!segs.length)return 0;let s=0,w=0;segs.forEach((x,i)=>{const ww=withMain&&i===segs.length-1?1.6:1;s+=x.stars*ww;w+=ww});return s/w}
 function ryRun(R,pr){const P=ryPlan(pr),x=pr.blocks.find(b=>b.brand==='x');const steps=[];const sp=.7;
  if(R.pi===0&&S.last.deals)S.last.deals.forEach((d,i)=>steps.push({id:'rv-d-'+i,n:d.bids.length+1}));

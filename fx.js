@@ -27,7 +27,7 @@ const css=`
 @keyframes fxBelt{from{opacity:0;transform:translateY(60px) scale(.7)}to{opacity:1;transform:none}}
 .fxbi{display:block;max-width:min(88vw,560px);max-height:30vh;object-fit:contain;margin:6px auto 0;filter:drop-shadow(0 10px 30px rgba(0,0,0,.7)) drop-shadow(0 0 26px rgba(246,221,142,.35));animation:fxBelt .7s cubic-bezier(.2,1.2,.3,1) .45s both}
 .fxplate{display:inline-block;margin:10px auto 0;padding:10px 26px;border-top:2px solid var(--gold,#d8b449);border-bottom:2px solid var(--gold,#d8b449);background:linear-gradient(90deg,transparent,rgba(216,180,73,.18),transparent);font:900 italic clamp(16px,4.6vw,30px)/1 'BC',Impact,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#f3e6c4;animation:fxBelt .7s cubic-bezier(.2,1.2,.3,1) .45s both}
-#fxo .bm{position:absolute;bottom:-20%;width:40vmax;height:140vmax;background:linear-gradient(0deg,rgba(255,230,160,.0),rgba(255,230,160,.18) 60%,transparent);transform-origin:50% 100%;pointer-events:none;filter:blur(6px)}
+#fxo .bm{position:absolute;bottom:-20%;width:calc(40vmax / var(--tvz,1));height:calc(140vmax / var(--tvz,1));background:linear-gradient(0deg,rgba(255,230,160,.0),rgba(255,230,160,.18) 60%,transparent);transform-origin:50% 100%;pointer-events:none;filter:blur(6px)}
 #fxo .bm.a{left:5%;animation:fxBeamA 3.2s ease-in-out infinite}#fxo .bm.b{right:5%;animation:fxBeamB 3.2s ease-in-out infinite}
 @keyframes fxBeamA{0%,100%{transform:rotate(-28deg)}50%{transform:rotate(14deg)}}@keyframes fxBeamB{0%,100%{transform:rotate(28deg)}50%{transform:rotate(-14deg)}}
 #fxo.hot .bm{background:linear-gradient(0deg,transparent,rgba(255,120,60,.25) 60%,transparent)}
@@ -76,15 +76,20 @@ function next(){const o=Q.shift();if(!o){ON_=false;return}ON_=true;let el=docume
 window.fxOverlay=overlay;
 function sparks(el,n,hot){for(let i=0;i<n;i++){const s=document.createElement('i');s.className='fxspark';s.style.left=(10+Math.random()*80)+'%';s.style.setProperty('--dx',(Math.random()*160-80)+'px');s.style.setProperty('--dy',-(200+Math.random()*420)+'px');s.style.animationDelay=(Math.random()*1.4)+'s';if(hot)s.style.background='#ff8a3b';el.appendChild(s)}}
 /* fireworks: rockets rise from the bottom and burst into gold, red and white sparks (one canvas, ~3.5s) */
-function fireworks(n){if(RM())return;const old=document.getElementById('fxfw');if(old)old.remove();const c=document.createElement('canvas');c.id='fxfw';const dpr=Math.min(2,window.devicePixelRatio||1);
- c.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;z-index:9998;pointer-events:none';const W=innerWidth,H=innerHeight;c.width=W*dpr;c.height=H*dpr;document.body.appendChild(c);const x=c.getContext('2d');x.scale(dpr,dpr);
+function fireworks(n){if(RM())return;const old=document.getElementById('fxfw');if(old)old.remove();const c=document.createElement('canvas');c.id='fxfw';const W=innerWidth,H=innerHeight;
+ /* v304: on the TV the page is zoomed up (×2 on a 4K set), and 100vw/100vh get zoomed too — the canvas came out four times
+    the size of the screen, most of the show happened off the edge and the browser pushed an 8K layer every frame. Size it in
+    the zoomed page's own pixels, keep the backing store at screen resolution (no more than 4K wide), and draw the streaks as
+    thick as they'd be on the 1080p picture. */
+ const z=+(document.body.style.zoom||1)||1,dpr=Math.min(2,window.devicePixelRatio||1,3840/W),lw=Math.max(1,z);
+ c.style.cssText=`position:fixed;left:0;top:0;width:${W/z}px;height:${H/z}px;z-index:9998;pointer-events:none`;c.width=Math.round(W*dpr);c.height=Math.round(H*dpr);document.body.appendChild(c);const x=c.getContext('2d');x.scale(dpr,dpr);
  const COL=['#f6dd8e','#ffcf4a','#d8b449','#fff1c2','#e8b84a','#ffe08a'];const rockets=[],sparks=[];const N=n||6;
  for(let i=0;i<N;i++)rockets.push({t:i*380+Math.random()*200,x:W*(.15+Math.random()*.7),y:H+10,vy:-(H*.0105+Math.random()*H*.003),ty:H*(.18+Math.random()*.3),c:COL[i%COL.length],live:false,done:false});
  const t0=performance.now();let last=t0;
  const step=now=>{const dt=Math.min(40,now-last)/16.7;last=now;const el=now-t0;x.clearRect(0,0,W,H);x.globalCompositeOperation='lighter';x.lineCap='round';
-  rockets.forEach(r=>{if(r.done||el<r.t)return;r.live=true;r.y+=r.vy*dt;x.strokeStyle=r.c;x.lineWidth=2.4;x.globalAlpha=.9;x.beginPath();x.moveTo(r.x,r.y-r.vy*5);x.lineTo(r.x,r.y);x.stroke();x.globalAlpha=1;
-   if(r.y<=r.ty){r.done=true;const k=46+Math.floor(Math.random()*26),sp=2.4+Math.random()*1.6;for(let j=0;j<k;j++){const a=j/k*Math.PI*2+Math.random()*.1,v=sp*(.6+Math.random()*.5);sparks.push({x:r.x,y:r.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c:Math.random()<.25?'#fff6dc':r.c})}}});
-  for(let i=sparks.length-1;i>=0;i--){const p=sparks[i];p.vy+=.045*dt;p.vx*=.985;p.vy*=.985;p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=.011*dt;if(p.l<=0){sparks.splice(i,1);continue}x.globalAlpha=Math.max(0,p.l);x.strokeStyle=p.c;x.lineWidth=2;x.beginPath();x.moveTo(p.x-p.vx*4,p.y-p.vy*4);x.lineTo(p.x,p.y);x.stroke()}
+  rockets.forEach(r=>{if(r.done||el<r.t)return;r.live=true;r.y+=r.vy*dt;x.strokeStyle=r.c;x.lineWidth=2.4*lw;x.globalAlpha=.9;x.beginPath();x.moveTo(r.x,r.y-r.vy*5);x.lineTo(r.x,r.y);x.stroke();x.globalAlpha=1;
+   if(r.y<=r.ty){r.done=true;const k=46+Math.floor(Math.random()*26),sp=(2.4+Math.random()*1.6)*lw;for(let j=0;j<k;j++){const a=j/k*Math.PI*2+Math.random()*.1,v=sp*(.6+Math.random()*.5);sparks.push({x:r.x,y:r.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c:Math.random()<.25?'#fff6dc':r.c})}}});
+  for(let i=sparks.length-1;i>=0;i--){const p=sparks[i];p.vy+=.045*lw*dt;p.vx*=.985;p.vy*=.985;p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=.011*dt;if(p.l<=0){sparks.splice(i,1);continue}x.globalAlpha=Math.max(0,p.l);x.strokeStyle=p.c;x.lineWidth=2*lw;x.beginPath();x.moveTo(p.x-p.vx*4,p.y-p.vy*4);x.lineTo(p.x,p.y);x.stroke()}
   x.globalAlpha=1;if(el<N*380+3600&&(sparks.length||rockets.some(r=>!r.done)))requestAnimationFrame(step);else c.remove()};
  requestAnimationFrame(step)}
 const confetti=fireworks;window.fxFireworks=fireworks;
