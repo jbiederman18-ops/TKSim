@@ -24,7 +24,11 @@ const PERKS={
  ppv:{i:'📺',n:'Every PPV',d:'On every PPV card for the rest of the season.',v:.08}};
 const PERK_K=['cc','me','shot','ppv'];
 function perkDesc(k){if(k!=='shot')return PERKS[k].d;const wk=wkOf(dealShotBy());return `A title match by ${PPVS[wk]?PPVS[wk]+' (week '+wk+')':'week '+wk}.`}
-const DL_BONUS=[.8,1,1.25,1.5],DL_SAL=[.9,1,1.2,1.4],NG_BONUS=[.7,.85,1],NG_SAL=[.85,.93,1];
+const DL_BONUS=[.8,1,1.25,1.5],DL_SAL=[.9,1,1.2,1.4],NG_BONUS=[.7,.85,1,1.2,1.4],NG_SAL=[.85,.93,1,1.1,1.2];
+/* v315: re-signing — pay over the ask to buy out a demand you refuse; lowballs can offend anyone; counters dig in on what they care about */
+const NG_TOP=2,NG_OFFEND=.9;
+function negRefused(){return !!DL&&DL.mode==='neg'&&DL.ask.perks.some(k=>!DL.perks.has(k))}
+function negInsult(w,o,ask){const raw=dealRaw(o,ask.bonus,ask.sal);if(raw>=NG_OFFEND)return 0;return clamp((NG_OFFEND-raw)*1.4*(1+(55-w.mor)/100)+(w.pop>=80?.08:0)+.04*(w.trust||0),0,.5)}
 let DL=null,GL_OK=false,DEAL_OUT=[];
 
 /* ---------- what a wrestler wants (the same for everyone, every time) ---------- */
@@ -178,8 +182,9 @@ function dealOffer(id){if(mpLocked())return;const w=S.w[id];if(!w||w.own)return;
  renderDeal()}
 function dlOffer(){const w=S.w[DL.id];const B=DL.mode==='sign'?signCost(w):DL.ask.bonus,Sl=DL.mode==='sign'?mkt(w):DL.ask.sal;const bx=DL.mode==='sign'?DL_BONUS:NG_BONUS,sx=DL.mode==='sign'?DL_SAL:NG_SAL;
  return {bonus:Math.max(1,Math.round(B*bx[DL.bi])),sal:Math.max(1,Math.round(Sl*sx[DL.si])),perks:PERK_K.filter(k=>DL.perks.has(k)&&(k!=='cc'||ccRoom(w,'p')))}}
-function dlSet(k,v){if(!DL)return;if(k==='perk'&&v==='cc'&&!DL.perks.has('cc')&&!ccRoom(S.w[DL.id],'p'))return toast(`You already have ${CC_MAX} wrestlers with creative control.`);if(k==='perk'){DL.perks.has(v)?DL.perks.delete(v):DL.perks.add(v)}else DL[k]=v;renderDeal()}
-function dlChips(arr,cur,key,base,unit){return `<div class="chips">${arr.map((x,i)=>`<button class="chip ${cur===i?'on':''}" onclick="dlSet('${key}',${i})">${money(Math.max(1,Math.round(base*x)))}${unit}</button>`).join('')}</div>`}
+function dlSet(k,v){if(!DL)return;const neg=DL.mode==='neg';if(k==='perk'&&v==='cc'&&!DL.perks.has('cc')&&!ccRoom(S.w[DL.id],'p'))return toast(`You already have ${CC_MAX} wrestlers with creative control.`);if(k==='perk'){DL.perks.has(v)?DL.perks.delete(v):DL.perks.add(v)}else DL[k]=v;
+ if(neg&&!negRefused()){DL.bi=Math.min(DL.bi,NG_TOP);DL.si=Math.min(DL.si,NG_TOP)}renderDeal()}
+function dlChips(arr,cur,key,base,unit,max){return `<div class="chips" style="flex-wrap:wrap">${arr.map((x,i)=>max!=null&&i>max?'':`<button class="chip ${cur===i?'on':''}" onclick="dlSet('${key}',${i})">${money(Math.max(1,Math.round(base*x)))}${unit}</button>`).join('')}</div>`}
 function renderDeal(){if(!DL)return;const w=S.w[DL.id];if(!w)return closeModal();if(DL.mode==='neg')return renderNeg();
  const o=dlOffer(),u=dealU(w,o,'p'),[cls,word]=dealWord(u);const W=dealWants(w);const mine=myBid(DL.id),ofr=offerOf(DL.id);
  const others=ofr?Object.keys(ofr.by||{}).filter(k=>k!=='p'):[];const due=ofr?wkOf(ofr.due):dealDue();
@@ -245,30 +250,31 @@ function dealNegotiate(id){if(mpLocked())return;const w=S.w[id];if(!w||w.own!=='
  DL={id,mode:'neg',bi:2,si:2,ask:w.neg.ask,perks:new Set(w.neg.ask.perks.filter(k=>k!=='cc'||ccRoom(w,'p')))};renderDeal()}
 function negLenient(w){return .06+(w.mor-55)/250+dealShow('p')+(w.con>4?.03:0)-.06*(w.trust||0)-(w.pop>=80?.04:0)}
 function negU(w,o,ask){const W=dealWants(w);return 1+(dealRaw(o,ask.bonus,ask.sal)-1)*W.money-.5*dealPerkU(w,ask.perks.filter(k=>!o.perks.includes(k)))}
-function negWord(w,o,ask){if(o.bonus>=ask.bonus&&o.sal>=ask.sal&&ask.perks.every(k=>o.perks.includes(k)))return ['good','They\'ll sign'];const g=negU(w,o,ask)-(1-negLenient(w));return g>=0?['good','They should take this']:g>=-.12?['warnt','Might counter']:g>=-.3?['warnt','They\'ll push back']:['bad','Likely walks away']}
+function negWord(w,o,ask){if(o.bonus>=ask.bonus&&o.sal>=ask.sal&&ask.perks.every(k=>o.perks.includes(k)))return ['good','They\'ll sign'];const g=negU(w,o,ask)-(1-negLenient(w));const ins=negInsult(w,o,ask);if(g>=-.3&&ins>=.15)return ['bad','Could insult them'];return g>=0?['good','They should take this']:g>=-.12?['warnt','Might counter']:g>=-.3?['warnt','They\'ll push back']:['bad','Likely walks away']}
 function renderNeg(){const w=S.w[DL.id];const ask=DL.ask;const o=dlOffer();const [cls,word]=negWord(w,o,ask);const r=w.neg?w.neg.r:1;
  openModal(`<div class="h mhd">✍️ Re-signing ${esc(w.name)}</div><div class="muted">${Math.max(0,w.con)} week${w.con===1?'':'s'} left · morale ${Math.round(w.mor)}${w.trust?` · ${w.trust} broken promise${w.trust>1?'s':''}`:''}${r>1?` · round ${r} of 3`:''}</div>
  <div class="card"><div class="h small">${r>1?'Their counter':'Their demands'}</div><div>💰 ${money(ask.bonus)} to sign · ${money(ask.sal)}/wk for 26 weeks</div>${ask.perks.map(k=>`<div>${PERKS[k].i} ${PERKS[k].n}</div>`).join('')||'<div class="muted tiny">No special demands.</div>'}</div>
- <div class="h small mt">Signing bonus</div>${dlChips(NG_BONUS,DL.bi,'bi',ask.bonus,'')}
- <div class="h small mt">Weekly salary</div>${dlChips(NG_SAL,DL.si,'si',ask.sal,'/wk')}
+ <div class="h small mt">Signing bonus</div>${dlChips(NG_BONUS,DL.bi,'bi',ask.bonus,'',negRefused()?null:NG_TOP)}
+ <div class="h small mt">Weekly salary</div>${dlChips(NG_SAL,DL.si,'si',ask.sal,'/wk',negRefused()?null:NG_TOP)}${negRefused()?`<div class="muted tiny" style="margin-top:6px">Refusing a demand? Offer more than they asked to make up for it.</div>`:''}
  ${ask.perks.includes('cc')&&!ccRoom(w,'p')?`<div class="muted tiny">🎬 You already have ${CC_MAX} wrestlers with creative control, so you can't agree to that one.</div>`:''}${ask.perks.length?`<div class="h small mt">Their demands — tap to agree or refuse</div>${ask.perks.map(k=>`<button class="choice" onclick="dlSet('perk','${k}')" style="${DL.perks.has(k)?'box-shadow:inset 0 0 0 2px var(--gold)':''}"><span class="key"><span>${DL.perks.has(k)?'✓':'✕'}</span></span><div><b>${PERKS[k].n}</b> <span class="tg ${DL.perks.has(k)?'good':'bad'}">${DL.perks.has(k)?'Agreed':'Refused'}</span><div class="muted tiny">${esc(perkDesc(k))}</div></div></button>`).join('')}`:''}
  <div class="card"><div class="row sb"><span>Read of the room</span><b class="${cls==='bad'?'bad':cls==='warnt'?'gold':'good'}">${word}</b></div><div class="muted tiny">Their morale and how hot your show is matter. Bonus due on signing · you have ${money(S.money.p)}.</div></div>
  <button class="btn" ${S.money.p<o.bonus?'disabled':''} onclick="negSend()">${o.bonus===ask.bonus&&o.sal===ask.sal&&o.perks.length===ask.perks.length?'Agree to everything':'Send this offer'} · ${money(o.bonus)}</button><button class="btn ghost" onclick="DL=null;closeModal()">Not now</button>`)}
 function negSend(){if(!DL||mpLocked())return;const w=S.w[DL.id];const ask=DL.ask;const o=dlOffer();if(S.money.p<o.bonus)return toast('Not enough money.');
  const u=negU(w,o,ask),need=1-negLenient(w);const r=w.neg?w.neg.r:1;DL=null;
  const all=o.bonus>=ask.bonus&&o.sal>=ask.sal&&ask.perks.every(k=>o.perks.includes(k));
- if(all||u>=need){S.money.p-=o.bonus;w.sal=o.sal;w.con=Math.max(0,w.con)+26;w.mor=clamp(w.mor+(all?12:6),0,100);delete w.neg;dealTerms(w,o.perks);
+ if(all||(u>=need&&!insulted)){S.money.p-=o.bonus;w.sal=o.sal;w.con=Math.max(0,w.con)+26;w.mor=clamp(w.mor+(all?12:6),0,100);delete w.neg;dealTerms(w,o.perks);
   news(`✍️ ${w.name} re-signed with ${S.gm}.`);save();render();
   return openModal(`<div class="h mhd">🤝 Deal done</div><p><b>${esc(w.name)}</b> is signed through ${w.con} more weeks at ${money(w.sal)}/wk.</p>${o.perks.length?`<p class="muted tiny">In the contract: ${o.perks.map(k=>PERKS[k].i+' '+PERKS[k].n).join(', ')}. You'll see what's owed on the Book screen.</p>`:''}<button class="btn" onclick="closeModal()">OK</button>`)}
- if(u>=need-.3&&r<3){/* they meet you partway: split the money and dig in on the demand they care about most */
-  const W=dealWants(w);const dropped=ask.perks.filter(k=>!o.perks.includes(k)).sort((a,b)=>W[b]-W[a]);const keep=dropped.length&&W[dropped[0]]>=1.3?[dropped[0]]:[];
-  const extra=dropped.length&&!keep.length?1.05:1;
+ const insulted=!all&&Math.random()<negInsult(w,o,ask);
+ if(!insulted&&u>=need-.3&&r<3){/* they meet you partway: split the money and dig in on the demand they care about most */
+  const W=dealWants(w);const dropped=ask.perks.filter(k=>!o.perks.includes(k)).sort((a,b)=>W[b]-W[a]);const keep=dropped.filter((k,j)=>W[k]>=1.15&&(j===0||k==='cc')).slice(0,2);
+  const extra=dropped.length>keep.length?1.1:1;
   const nx={bonus:Math.max(o.bonus,Math.round((ask.bonus+o.bonus)/2*extra)),sal:Math.max(o.sal,Math.round((ask.sal+o.sal)/2*extra)),perks:o.perks.filter(k=>ask.perks.includes(k)).concat(keep)};
   w.neg={r:r+1,wk:AW(),ask:nx};w.mor=clamp(w.mor-2,0,100);save();
   DL={id:w.id,mode:'neg',bi:2,si:2,ask:nx,perks:new Set(nx.perks)};renderDeal();
   return toast(`${w.name} came back with a counter${keep.length?` — they won't budge on ${PERKS[keep[0]].n.toLowerCase()}`:''}.`)}
- w.neg={no:AW()+2};w.mor=clamp(w.mor-6,0,100);save();render();
- openModal(`<div class="h mhd">🚪 ${esc(w.name)} walks away</div><p>They're not taking that. ${w.con<=2?"Their contract is almost up — if nothing changes, they'll test free agency.":'You can try again in two weeks, but they won\'t come cheaper.'}</p><p class="muted tiny">Morale −6.</p><button class="btn" onclick="closeModal()">OK</button>`)}
+ w.neg={no:AW()+2};w.mor=clamp(w.mor-(insulted?10:6),0,100);save();render();
+ openModal(`<div class="h mhd">🚪 ${esc(w.name)} walks away</div><p>${insulted?'They took that offer as an insult. ':'They\'re not taking that. '}${w.con<=2?"Their contract is almost up — if nothing changes, they'll test free agency.":'You can try again in two weeks, but they won\'t come cheaper.'}</p><p class="muted tiny">Morale −${insulted?10:6}.</p><button class="btn" onclick="closeModal()">OK</button>`)}
 
 /* ---------- briefing section ---------- */
 function dealBrief(){const sec=[];const nm=w=>`<a href="#" onclick="closeModal();showW('${w.id}');return false">${esc(w.name)}</a>`;

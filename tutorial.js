@@ -11,7 +11,7 @@
      tour get a "what's new" replay of just those stops.
    • Run `python3 tools/check-tutorial.py` — it plays every stop and tip in a headless browser and fails on any
      missing target or stale value. */
-const TUT_REV=44;
+const TUT_REV=45;
 const TUT_KEY='tksim_tut';
 const TUT_MISS=[];
 
@@ -88,8 +88,8 @@ const TUT_STEPS=[
  b:()=>`Everyone has a stamina bar. A match drains it; a week off (or just a promo) refills it fastest. Below ${tv('FAT_OK',()=>100-FAT_OK,65)} stamina matches suffer, and below ${tv('FAT_RISK',()=>100-FAT_RISK,45)} injuries get likely. Rotate your stars — and check <b>Durability</b> on profiles: some bodies hold up, some don't.`},
 {id:'t.stars',track:'tip',opt:true,since:18,sel:()=>{const g=document.querySelector('main .cgrid, main .tcrg');return g&&g.firstElementChild},sys:['popularity','the rub','development'],t:'Making new stars',
  b:()=>`Your top names can make the next ones. Beating someone more popular gives a wrestler <b>the rub</b> (an upset even more), and teaming with or sharing a multi-person match with a star rubs off too.<br><br>The very top is hard to reach and hard to hold: gains slow past 80 and 90, and stars at ${tv('UPKEEP_AT',()=>UPKEEP_AT,85)}+ slip in weeks they aren't featured. Tap any wrestler to see their best opponents and partners.`},
-{id:'t.morale',track:'tip',opt:true,since:18,sel:'main .card.phead',sys:['morale','contracts','promises','grievances','pitches'],t:'Keep them happy',
- b:()=>`Morale moves every week: TV time, wins, main events and kept promises lift it; sitting at home, clean losses (worst for stars, and worst of all to someone below them), being worn down or underpaid drag it down. Tap anyone to see their <b>Mood</b> and why. Unhappy wrestlers pitch you ideas — answer them. Ignore it and they escalate: pay demands, walkout threats, shoot promos, and real walkouts — and an unhappy star near the end of their deal may get a call from ${tvRival()}. Pitches, grievances, tampering rumors and injury decisions line up outside your office at the start of the week — answer them before you book.`},
+{id:'t.morale',track:'tip',opt:true,since:45,sel:'main .card.phead',sys:['morale','contracts','promises','grievances','pitches'],t:'Keep them happy',
+ b:()=>`Morale moves every week: TV time, wins, main events and kept promises lift it; sitting at home, clean losses (worst for stars, and worst of all to someone below them), being worn down or underpaid drag it down. Tap anyone to see their <b>Mood</b> and why. Unhappy wrestlers pitch you ideas — answer them. Ignore it and they escalate: pay demands, walkout threats, shoot promos, and real walkouts — and an unhappy star near the end of their deal may get a call from ${tvRival()}. Re-signing is a negotiation: refuse a demand and you can pay over their ask to buy it out, but a lowball can insult even a happy wrestler. Pitches, grievances, tampering rumors and injury decisions line up outside your office at the start of the week — answer them before you book.`},
 {id:'t.fa',track:'tip',opt:true,since:18,sel:()=>document.querySelector('main .cgrid')||tutCard(/on the market/i),sys:['free agency','offers','prospects','ROH','farm'],t:'Free agents & prospects',
  b:()=>`A few free agents are on the market at once, each for a few weeks. Big names (55+ popularity) want an offer — money plus promises — and ${tvRival()} can bid too, sealed. Scroll down to <b>Scouting</b>: prospects from the Indies, ROH and overseas. Sign them to AEW, or to your <b>🏟️ ROH</b> roster: ROH books itself every week, and wins and good matches build <b>call-up buzz</b> — the briefing tells you when someone's hot enough to bring up. Prospects also send you <b>tapes and emails</b> in the briefing: pass, keep following, or sign them to ROH.`},
 {id:'t.titles',track:'tip',opt:true,since:22,sel:'main .card.belt',sys:['titles','prestige'],t:'The gold',
