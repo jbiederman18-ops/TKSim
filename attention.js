@@ -109,7 +109,7 @@ function attnItems(){if(!S||S.phase!=='season')return [];
  /* contract perks with a deadline (main events, title shot, every PPV) */
  if(typeof dealOwed==='function')dealOwed().forEach(({w,k})=>{if(w.inj)return;const d=w.deal;let ok=false,urgent=false,txt='';
   if(k==='me'){ok=segs(w.id).some(x=>x.main);urgent=d.me.need-d.me.got>=d.me.by-AW()+1;txt=ok?'In tonight\'s main event':urgent?'Has to be tonight':'Not in the main event tonight'}
-  else if(k==='shot'){ok=segs(w.id).some(x=>x.k==='match'&&x.d.title)||c.some(sl=>sl&&sl.k==='chal'&&sl.d&&sl.d.c===w.id);urgent=AW()>=d.shot.by;txt=ok?'In a title match tonight':urgent?'Due tonight':'Not tonight'}
+  else if(k==='shot'){const pp=(S.promises||[]).find(pr=>pr.kind==='shot'&&pr.a===w.id&&pr.week>S.week);ok=!!pp||segs(w.id).some(x=>x.k==='match'&&x.d.title)||c.some(sl=>sl&&sl.k==='chal'&&sl.d&&sl.d.c===w.id);urgent=AW()>=d.shot.by;txt=pp?`Promised for ${pp.ppv||'week '+pp.week}`:ok?'In a title match tonight':urgent?'Due tonight':'Not tonight'}
   else if(k==='ppv'){if(!sh.ppv)return;ok=onCardW(w.id);urgent=true;txt=ok?'On the card':'Not on the card'}
   const fix=ok?null:k==='me'&&mainIdx()>=0?['Open main event',`openMatch(${mainIdx()})`]:bookBtn(w.id);
   add({id:'deal'+k+w.id,g:A_MUST,i:k==='me'?'⭐':k==='shot'?'🏆':'📺',h:`${w.name}'s contract: ${dealTermTxt(w,k).replace(/^\S+\s/,'')}`,d:'Break a contract promise and they lose morale and trust.',

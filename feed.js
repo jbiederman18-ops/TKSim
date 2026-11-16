@@ -20,7 +20,7 @@ function answerOf(b,cur){const lab=((b.querySelector('.key+div')||b).textContent
  if(cur.tease)return {ans:'hid',a:''};
  const oc=b.getAttribute('onclick')||'';
  if(/pitchChoose\('no'\)/.test(oc))return {ans:'no',a:lab};if(/pitchChoose\('(go|try)'\)/.test(oc))return {ans:'yes',a:lab};
- if(/askAnswer\('[^']*',0\)/.test(oc))return {ans:'no',a:lab};if(/askAnswer\('[^']*',1\)/.test(oc))return {ans:'yes',a:lab};
+ if(/askAnswer\('[^']*',0\)/.test(oc))return {ans:'no',a:lab};if(/askAnswer\('[^']*',[12]\)/.test(oc))return {ans:'yes',a:lab};
  const t=lab.replace(/^[^\w"“]+/,'');return {ans:NO.test(t)?'no':YES.test(t)?'yes':'call',a:lab}}
 function send(ev){const tg=typeof tvTarget==='function'?tvTarget():null;if(!tg||!window.TKO||!TKO.ready)return;if(SENT_CODE!==tg.code){SENT=[];SENT_CODE=tg.code}
  SENT=SENT.concat([ev]).slice(-5);const k='office.'+tg.seat;(TKO.pushSide?TKO.pushSide(tg.code,k,SENT):TKO.push(tg.code,{[k]:SENT})).catch(()=>{})}

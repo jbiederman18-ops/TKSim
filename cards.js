@@ -222,18 +222,28 @@ function hintN(){try{return +localStorage.getItem('tksim_tchint')||0}catch(e){re
 function buzz(){try{localStorage.setItem('tksim_tchint',hintN()+1)}catch(e){}try{navigator.vibrate&&navigator.vibrate(12)}catch(e){}try{window.SFX&&SFX.play&&SFX.play('tap')}catch(e){}}
 
 /* extras: stipulations, titles, the pin, promo segments */
-function extras(i){const sl=card()[i];const m=cur(i);const out=[];const ppv=ppvNow();
+function extras(i,kind){const sl=card()[i];const m=cur(i);const out=[];const ppv=ppvNow();
  if(sl.k==='promo'){const A=W_(m.a),B=m.b&&W_(m.b);
   Object.entries(PT).forEach(([k,t])=>{if(t.champ&&A&&!isChamp(A.id))return;const fit=A?promoFit(k,A,B):'';const need=t.b==='req'&&!B;
    out.push({x:`p:${k}`,k:'Segment',n:t.n,d:need?'Needs a second wrestler.':fit?fit.replace(/^\S+\s/,''):t.d.split('.')[0]+'.',fit:!!fit,on:m.type===k})});return out}
  if(!sl.d)return out;const d=sl.d;
- const ets=eligibleTitles(d).map(t=>S.titles[t]).filter(Boolean);const held=ets.filter(T=>T.holders.length),vac=ets.filter(T=>!T.holders.length);
- held.forEach(T=>out.push({x:`t:${T.id}`,k:'Championship',n:`${T.n} on the line`,d:d.title===T.id?'Tap to make it non-title.':'Counts as a title defense.',fit:true,on:d.title===T.id}));
+ /* v323: titles have their own tab (kind 't'); the Stipulation tab is only stipulations */
+ if(kind==='t')return titleTiles(d);
  const stips=Object.entries(STIPS).filter(([k,s])=>stipOk(k,d.type,ppv)&&!bngLock(s,d)).map(([k,s])=>{const f=stipFits(s,d,ppv);const pr=stipPrice(k,'p');
   const fitN=k!=='std'&&f.spec.length;return {x:`s:${k}`,k:pr?`Stipulation · ${money(pr)}`:'Stipulation',n:s.n,d:fitN?`Suits ${shortNames(f.spec).replace(/&amp;/g,'&')}.`:f.tough.length&&k!=='std'?`Tough for ${shortNames(f.tough).replace(/&amp;/g,'&')}.`:s.d.split('.')[0]+'.',fit:!!fitN,on:stipKey(d)===k,o:fitN?2:k==='std'?1:f.tough.length?-1:0}});
  stips.sort((a,b)=>(b.on-a.on)||(b.o-a.o));out.push(...stips);
- vac.forEach(T=>out.push({x:`t:${T.id}`,k:'Vacant title',n:`Crown the first ${T.n} champion`,d:d.title===T.id?'Tap to make it non-title.':'The winner takes the belt.',fit:false,on:d.title===T.id}));
 
+ return out}
+/* v323: the Title tab — non-title first, then each belt that can go on the line here. A belt that pays off a title shot
+   someone in the match is owed (contract clause, Rumble, pitch, #1 contender…) is marked gold and says so. */
+function titleEts(d){try{return eligibleTitles(d).map(t=>S.titles[t]).filter(Boolean)}catch(e){return []}}
+function titleTiles(d){const ets=titleEts(d);if(!ets.length)return [];const ids=d.sides.flat();
+ let owed=[];try{owed=typeof tpList==='function'?tpList():[]}catch(e){}
+ const out=[{x:'t:',k:'Championship',n:'Non-title',d:'No belt on the line.',fit:false,on:!d.title}];
+ ets.forEach(T=>{const on=d.title===T.id;const ch=T.holders.map(h=>W_(h)).filter(Boolean);
+  const ow=owed.find(e=>e.title===T.id&&ids.includes(e.a));
+  const why=ow?`Pays off ${ln(ow.w)}'s title shot (${ow.lab.toLowerCase()}).`:!ch.length?'The winner takes the belt.':ch.every(c=>ids.includes(c.id))?`${ch.map(ln).join(' & ')} defends.`:'Counts as a title defense.';
+  out.push({x:`t:${T.id}`,k:ch.length?(ow?'Owed title shot':'Championship'):'Vacant title',n:ch.length?`${T.n} on the line`:`Crown the first ${T.n} champion`,d:on?why+' Tap for non-title.':why,fit:!!ow,on})});
  return out}
 /* v298: the finish and the run-in get their own tabs in the sheet */
 const first=t=>String(t||'').split(/(?<=[.!])\s/)[0];
@@ -319,7 +329,7 @@ function slotHtml(i){const c=card(),sl=c[i];if(xoV(sl))return xoHtml(i);let act=
  if(!promo&&d){const st=stipKey(d);const f=stipFits(STIPS[st],d);const tap=editOk(sl)&&!locked();const sq=d.type==='squash',oc=d.type==='open';
   const tag=(k,cls,txt)=>tap?`<button type="button" class="tcm ${cls}" data-tcm="${i}|${k}">${txt}</button>`:`<span class="tcm ${cls}">${txt}</span>`;
   const fk=typeof finOf==='function'?finOf(d):'clean';const rx=d.ri&&RUNIN[d.ri.k]&&d.ri.x&&W_(d.ri.x);
-  mods=((fl||sq)&&st==='std'?'':tag('x',st!=='std'&&f.spec.length?'g':st==='std'?'q':'',esc(STIPS[st].n)))+(d.title&&S.titles[d.title]?tag('x','g',`${esc(S.titles[d.title].n)} title`):'')
+  mods=((fl||sq)&&st==='std'?'':tag('x',st!=='std'&&f.spec.length?'g':st==='std'?'q':'',esc(STIPS[st].n)))+(d.title&&S.titles[d.title]?tag('t','g',`${esc(S.titles[d.title].n)} title`):!fl&&!sq&&!oc&&titleEts(d).some(T=>T.holders.length)?tag('t','q','Non-title'):'')
    +(d.nc||fl||sq||oc?'':tag('f',fk==='clean'?'q':'',esc(FINS[fk].n)))+(d.nc||sq||oc||(tr&&d.tour.k==='c2')?'':tag('r',rx?'':'q',rx?`${RUNIN[d.ri.k].i} Run-in · ${esc(ln(rx))}`:'No run-in'))}
  const empty=!idsOf(i,m).length;
  const live=act&&TC.open;const sum=empty&&!live?(opt?`<div class="tcsum">Optional</div>`:'')
@@ -338,9 +348,10 @@ function sheetTitle(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';const 
  if(TC.rep&&W_(TC.rep))return [L,`Who replaces ${W_(TC.rep).name}?`];
  if(roV(sl)&&TC.mode==='w')return [L,sl.d.tour?'The bracket is set':'Entrants'];
  if(TC.mode==='v')return [L,'Result'];
- if(m.type==='open'&&!TC.mode.match(/[xfr]/))return [L,'Who throws the door open?'];
+ if(m.type==='open'&&!TC.mode.match(/[xtfr]/))return [L,'Who throws the door open?'];
  if(m.type==='squash'&&tg&&tg.t==='side')return [L,tg.i?'Who gets squashed?':'Who wins it?'];
- if(TC.mode==='x')return [L,promo?'Pick the segment':'Stipulation & title'];
+ if(TC.mode==='x')return [L,promo?'Pick the segment':'Stipulation'];
+ if(TC.mode==='t')return [L,'What’s on the line'];
  if(TC.mode==='f')return [L,'How it ends'];
  if(TC.mode==='r')return [L,'Run-in'];
  if(promo)return !m.a?[L,'Who’s on the mic?']:[L,`Who’s out there with ${ln(W_(m.a))}?`];
@@ -383,7 +394,7 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
   ${pl.length>=2?`<div class="tcwhy">${d.type==='rumble'?'Eliminated last (gets a bump)':d.type==='mitb'?'Comes closest (takes the loss)':'Takes the pin'}</div>${pl.map(id=>{const [c,t]=pinRub(d,id);return entC(id,'n:'+id,{tab:id===pn?'Takes it':t.replace(/ for the winner$/,''),tabc:id===pn?'must':c==='good'?'hot':'',cls:(id===pn?'pickd ':'')+(TC.dealt?'deal':'')})}).join('')}`:''}</div>`}
  else if(TC.mode==='f'&&!promo&&sl.d){body=`<div class="tcgx lo">${finTiles(sl.d).map(x=>`<div class="tx ${x.on?'on':''} ${x.dis?'dis':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"${x.dis?' aria-disabled="true"':''}><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span></div>`).join('')}</div>`}
  else if(TC.mode==='r'&&!promo&&sl.d)body=riHtml(i);
- else if(TC.mode==='x'){const xs=extras(i);body=xs.length?`<div class="tcgx">${xs.map(x=>`<div class="tx ${x.fit?'fit':''} ${x.on?'on':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span></div>`).join('')}</div>`:`<div class="tcempty">${promo?'Pick who’s on the mic first.':'Fill both sides first.'}</div>`}
+ else if(TC.mode==='x'||TC.mode==='t'){const xs=extras(i,TC.mode);body=xs.length?`<div class="tcgx">${xs.map(x=>`<div class="tx ${x.fit?'fit':''} ${x.on?'on':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span></div>`).join('')}</div>`:`<div class="tcempty">${promo?'Pick who’s on the mic first.':TC.mode==='t'&&sl.d?'No championship fits this match — a belt needs its champion (or a vacant title’s division) in there.':'Fill both sides first.'}</div>`}
  else if(!tg&&!TC.rep&&m.type==='squash')body=`<div class="tcempty">${esc(sideName(m.sides[0]))} squashes ${esc(sideName(m.sides[1]))}. Tap someone on the card to swap them, or:</div><div class="tcsf"><button class="btn sec" data-tcx="l:1">🧑‍🔧 ${m.loc?'Different local talent':'Use local enhancement talent'}</button></div>`;
  else if(!tg&&!TC.rep&&m.type==='open'){const h=m.open&&m.open.hope&&W_(m.open.hope);body=`<div class="tcempty">🎤 ${esc(sideName(m.sides[0]))} throws the door open. Someone answers live — from your roster or the free agents, usually at the challenger's level.${h?` The crowd is hoping for <b>${esc(h.name)}</b>: give them that (or someone bigger) and the place erupts.`:''}</div>`}
  else if(!tg&&!TC.rep)body=`<div class="tcempty">Every space is filled. Pick a bigger match above to add more, or tap someone on the table to swap them out.</div>`;
@@ -394,9 +405,10 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
    body=lt+`<div class="tcgrid">${mu.length?`<div class="tcwhy">Needs you tonight</div>${mu.map(x=>pc(x,n++)).join('')}`:''}${rest.length?`<div class="tcwhy">Best fits</div>${rest.map(x=>pc(x,n++)).join('')}`:''}${bk.length?`<button class="tcwhy tcab ${TC.ab?'on':''}" onclick="tcAb()" aria-expanded="${TC.ab?'true':'false'}">Already booked tonight · ${bk.length} ${TC.ab?'▴':'▾'}</button>${TC.ab?bk.map(x=>pc(x,n++)).join(''):''}`:''}</div>`}
   else{let n=0;body=lt+`<div class="tcgrid">${l.map(x=>pc(x,n++)).join('')}</div>`}}
  const fc=[['fit','Best fit'],['ch','Champions'],['f','Faces'],['h','Heels'],['all','All']];
- const chips=`${hasX&&!TC.rep?`<button class="chip ${TC.mode==='x'?'on':''}" onclick="tcMode('${TC.mode==='x'?'w':'x'}')">${promo?'Segment':'Stips &amp; titles'}</button>`:''}${fc.map(([v,n])=>`<button class="chip ${TC.mode==='w'&&TC.f===v?'on':''}" onclick="tcF('${v}')">${n}</button>`).join('')}`;
+ const chips=`${hasX&&!TC.rep?`<button class="chip ${TC.mode==='x'?'on':''}" onclick="tcMode('${TC.mode==='x'?'w':'x'}')">${promo?'Segment':'Stipulation'}</button>`:''}${fc.map(([v,n])=>`<button class="chip ${TC.mode==='w'&&TC.f===v?'on':''}" onclick="tcF('${v}')">${n}</button>`).join('')}`;
  const fcs=fc.map(([v,n])=>`<button class="chip ${TC.mode==='w'&&TC.f===v?'on':''}" onclick="tcF('${v}')">${n}</button>`).join('');
- const tabL=TC.rep||promo||xo?null:tr?[['w','Bracket'],['x','Stips &amp; titles'],['f','Finish']].concat(sl.d.tour.k==='c2'?[]:[['r','Run-in']]):fl?[['w','Entrants'],['v','Result'],['r','Run-in']]:!sl.d?null:sl.d.type==='squash'?[['w','Wrestlers'],['x','Title']]:sl.d.type==='open'?[['w','Wrestlers'],['x','Stips &amp; titles']]:[['w','Wrestlers'],['x','Stips &amp; titles'],['f','Finish'],['r','Run-in']];
+ const tT=sl.d&&(titleEts(sl.d).length||sl.d.title)?[['t','Title']]:[];
+ const tabL=TC.rep||promo||xo?null:tr?[['w','Bracket'],['x','Stipulation']].concat(tT,[['f','Finish']],sl.d.tour.k==='c2'?[]:[['r','Run-in']]):fl?[['w','Entrants'],['v','Result'],['r','Run-in']]:!sl.d?null:sl.d.type==='squash'?[['w','Wrestlers']].concat(tT):sl.d.type==='open'?[['w','Wrestlers'],['x','Stipulation']].concat(tT):[['w','Wrestlers'],['x','Stipulation'],['t','Title'],['f','Finish'],['r','Run-in']];
  const tabs=tabL?tabL.map(([v,n])=>`<button class="tctab ${TC.mode===v?'on':''}" onclick="tcMode('${v}')">${n}</button>`).join(''):'';
  const pA=promo&&m.a?W_(m.a):null;const shc=xo?`<div class="tcshc tcshp">${[['a','Yours',m.a],['b',nameOf('ai')+'’s',m.b]].map(([k,n,id])=>`<button class="chip ${tg&&tg.t===k?'on':''}" onclick="tcXo('${k}')">${esc(n)}${id&&W_(id)?' · '+esc(ln(W_(id))):''}</button>`).join('')}</div>`:sp?'':promo&&!TC.rep?`<div class="tcshc tcshp">${Object.entries(PT).filter(([k,t])=>!t.champ||!pA||isChamp(pA.id)).map(([k,t])=>`<button class="chip ${m.type===k?'on':''}" onclick="tcPType('${k}')">${esc(t.n)}</button>`).join('')}</div>`:!promo&&!TC.rep?`<div class="tcshc tcshp">${SHAPES.map(([k,n])=>`<button class="chip ${shapeOf(i,m)===k?'on':''}" onclick="tcShape('${k}')">${n}</button>`).join('')}</div>`:'';
  const tch=false&&!TC.rep&&TC.mode==='w'&&tl.length>1&&!defTarget(i,m)?`<div class="tcshc">${tl.map((x,j)=>`<button class="chip ${tg&&x.t===tg.t&&x.i===tg.i?'on':''}" onclick="tcTg(${j})">${x.t==='partner'?`+ Partner · ${esc(ln(W_(m.sides[x.i][0])))}`:x.t==='third'?'+ Third corner':x.t==='side'?(x.i?'Right side':'Left side'):'Second'}</button>`).join('')}</div>`:'';

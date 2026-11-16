@@ -93,13 +93,20 @@ function askList(){if(typeof window.attnItems!=='function')return [];const wk=AW
  l=l.filter(x=>{if(!askKind(x.id)||(x.s&&x.s[0]==='ok'))return false;const w=S.w[(x.who||[])[0]];if(!w||w.own!=='p'||w.inj)return false;
   const sy=(x.say||[]).find(s=>s&&s[1]&&S.w[s[0]]);if(!sy)return false;
   const r=S.asks[x.id];if(r&&(r.w===wk||(wk-r.w<ASK_AGAIN&&!(askDue(x)&&!r.due))))return false;return true});
+ /* v323: one visit per wrestler — a contract title shot also sits in the title picture, so they'd knock twice */
+ {const seen=new Set();l=l.sort((a,b)=>ASK_K.indexOf(askKind(a.id))-ASK_K.indexOf(askKind(b.id))).filter(x=>{const k=(x.who||[])[0];if(seen.has(k))return false;seen.add(k);return true})}
  /* who's waiting is fixed when the week starts — undoing a booking later doesn't send someone to the door */
  if(!S.askWk||S.askWk.w!==wk){S.askWk={w:wk,ids:l.map(x=>x.id)};Object.keys(S.asks).forEach(k=>{if(wk-S.asks[k].w>8)delete S.asks[k]})}
  const ids=new Set(S.askWk.ids);
  l=l.filter(x=>ids.has(x.id)).sort((a,b)=>(askDue(b)-askDue(a))||(ASK_K.indexOf(askKind(a.id))-ASK_K.indexOf(askKind(b.id))));
  return l.slice(0,Math.max(0,ASK_MAX-answered)).map(x=>{const sy=x.say.find(s=>s&&s[1]&&S.w[s[0]]);return {id:x.id,who:sy[0],line:sy[1],h:x.h,d:x.d,due:askDue(x),it:x}})}
 window.askList=askList;
-function openAsk(id){const a=askList().find(x=>x.id===id);if(!a)return closeModal();const K=askKind(id);const w=S.w[a.who];
+/* v323: a contract title shot can be promised for the next PPV instead of tonight — the match goes on that PPV's card
+   (it follows the belt if it changes hands), the clause's deadline moves to meet it, and the ask is settled. Not offered
+   on a PPV night (tonight already is the big stage) or when there's no champion of yours to face. */
+function askPPV(a){if(!/^dealshot/.test(a.id))return null;const w=S.w[a.who];if(!w||!w.deal||!w.deal.shot||PPVS[S.week]||typeof tpDealTitle!=='function'||typeof nextPPV!=='function')return null;
+ const np=nextPPV();if(!np||!np.in)return null;const t=tpDealTitle(w);const h=t&&S.w[t.holders[0]];if(!h)return null;return {wk:S.week+np.in,n:np.n,in:np.in,t,h}}
+function openAsk(id){const a=askList().find(x=>x.id===id);if(!a)return closeModal();const K=askKind(id);const w=S.w[a.who];const P=askPPV(a);
  const lead=a.it.who&&a.it.who[1]&&S.w[a.it.who[1]]?S.w[a.it.who[1]]:null;
  const cut=w.mor>=75?1:w.mor<40?5:3;
  const yD=`${w.name} expects it on tonight's card — it goes to the top of your checklist. Keep your word and they're fired up; break it and it stings.`;
@@ -108,10 +115,14 @@ function openAsk(id){const a=askList().find(x=>x.id===id);if(!a)return closeModa
  <div class="scene brief ibx">${voiceH(a.who,a.line)}<div class="brow"><span class="muted tiny">${esc(a.d)}</span></div></div>
  <div class="muted tiny" style="margin:8px 0">${esc(w.name)} · ${typeof attnMood==='function'?esc(attnMood(w.mor)):'morale '+Math.round(w.mor)} · POP ${Math.round(w.pop)} · ${w.al==='f'?'Face':'Heel'}</div>
  <button class="choice" onclick="askAnswer('${id}',1)"><span class="key"><span>A</span></span><div>✓ "${esc(K.y)}"</div><div class="muted tiny">${esc(yD)}</div></button>
- <button class="choice" onclick="askAnswer('${id}',0)"><span class="key"><span>B</span></span><div>✋ ${a.due?'"Not tonight"':'"Not this week"'}</div><div class="muted tiny">${esc(nD)}</div></button>`)}
+ ${P?`<button class="choice" onclick="askAnswer('${id}',2)"><span class="key"><span>B</span></span><div>🎟️ "You get your shot at ${esc(P.n)}"</div><div class="muted tiny">${esc(`${w.name} vs ${P.h.name} for the ${P.t.n} title goes on your ${P.n} card (${P.in===1?'next week':P.in+' weeks away'}) and counts for the contract${a.due?' — they\'ll wait for it':''}. Build the feud before then; leave it off that night and it's a broken contract.`)}</div></button>`:''}
+ <button class="choice" onclick="askAnswer('${id}',0)"><span class="key"><span>${P?'C':'B'}</span></span><div>✋ ${a.due?'"Not tonight"':'"Not this week"'}</div><div class="muted tiny">${esc(nD)}</div></button>`)}
 window.askAnswer=function(id,yes){if(typeof mpLocked==='function'&&mpLocked())return;const a=askList().find(x=>x.id===id);if(!a)return closeModal();const w=S.w[a.who];
- S.asks=S.asks||{};S.asks[id]={w:AW(),a:yes?'y':'n',due:a.due?1:0};let txt;
- if(yes){mor(w,3);txt=`✓ ${w.name} walks out fired up. It's at the top of your checklist now — get it on tonight's card.`}
+ const P=yes===2?askPPV(a):null;if(yes===2&&!P)return closeModal();
+ S.asks=S.asks||{};S.asks[id]={w:AW(),a:P?'p':yes?'y':'n',due:a.due?1:0};let txt;
+ if(P){mor(w,3);addPromise({kind:'shot',a:w.id,b:P.h.id,week:P.wk,ppv:P.n,title:P.t.id,why:'Contract clause'});w.deal.shot.by=Math.max(w.deal.shot.by,awBase()+P.wk);
+  txt=`🎟️ ${w.name} shakes on it: ${w.name} vs ${P.h.name} for the ${P.t.n} title at ${P.n}. It's on the calendar and in the title picture — build the feud before then.`}
+ else if(yes){mor(w,3);txt=`✓ ${w.name} walks out fired up. It's at the top of your checklist now — get it on tonight's card.`}
  else{const cut=w.mor>=75?1:w.mor<40?5:3;mor(w,-cut);txt=a.due?`✋ ${w.name} storms out (−${cut} morale). Tonight was the deadline — skipping it still counts against the deal.`:`✋ ${w.name} nods and heads out — not thrilled (−${cut} morale). They'll ask again in a few weeks.`}
  save();try{render()}catch(e){}
  const left=inboxList().length;
