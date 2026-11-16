@@ -42,6 +42,9 @@ function bookOn(){return on()&&S&&S.phase==='season'&&typeof tab!=='undefined'&&
 
 /* which slots play as a table: promos, and matches that aren't one of the special kinds */
 function plain(m){return !!m&&Array.isArray(m.sides)&&!m.tour&&!(typeof isSp==='function'&&isSp(m))&&!['open','gauntlet','squash'].includes(m.type)&&!!MT[m.type]}
+/* v316: tournament matches are locked to their bracket but still drawn on the table (cards, crown, tags) — tap opens the bracket editor */
+function tourV(sl){return !!sl&&sl.k==='match'&&!!sl.d&&!!sl.d.tour&&Array.isArray(sl.d.sides)&&!!MT[sl.d.type]}
+const shown=sl=>tableOk(sl)||tourV(sl);
 function tableOk(sl){if(!sl)return false;if(sl.k==='promo')return true;if(sl.k!=='match')return false;return !sl.d||plain(sl.d)}
 function slotLab(i){const c=card(),sl=c[i];if(!sl)return '';if(sl.k==='promo')return sl.opt?'Bonus promo':'Promo';if(sl.k==='xo')return 'Dream match';if(sl.k==='chal')return 'Challenge';try{const ml=mLab(c,i);return ml.main?'Main event':ml.lab}catch(e){return 'Match'}}
 function chipLab(i){const c=card(),sl=c[i];if(!sl)return '';if(sl.k==='promo')return sl.opt?'Bonus':'Promo';if(sl.k!=='match')return sl.k==='xo'?'Dream':'Special';const d=sl.d;if(d&&!plain(d))return d.type==='rumble'?'Rumble':d.type==='mitb'?'Ladder':d.type==='gauntlet'?'Casino':d.type==='open'?'Open':d.type==='squash'?'Squash':d.tour?'Bracket':'Match';try{const ml=mLab(c,i);return ml.main?'Main':ml.opt?'Bonus':'Match'}catch(e){return 'Match'}}
@@ -180,7 +183,10 @@ function takeOff(i,id){if(locked())return;const sl=card()[i];if(!sl||!tableOk(sl
 function pinPick(i,id){if(locked())return;const d=card()[i]&&card()[i].d;if(!d||!pinCands(d).includes(id))return;
  if(id!==pinOf(d)&&W_(id).own==='p'&&typeof ccOn==='function'&&ccOn(W_(id)))toast(`${W_(id).name} has creative control and won't agree to take the pin.`);
  d.pin=id;delete d.ev;save();buzz();render()}
-function crownSide(i,si){if(locked()||typeof crownTap!=='function')return;const t0=toast;toast=window.toast=function(m){if(/won't|can't|costs/.test(m))return t0.apply(this,arguments)};try{crownTap(i,si)}finally{toast=window.toast=t0}buzz()}
+function crownSide(i,si){if(locked())return;const sl=card()[i];
+ if(tourV(sl)){const m=sl.d;if(!m.sides[si]||m.winner===si)return;const ri=m.ri;if(ri&&ri.k==='cost'&&m.sides[si].includes(ri.t))return toast(`The run-in costs ${W_(ri.t).name} this match — open it to change that first.`);
+  m.winner=si;delete m.ev;save();render();buzz();return toast(`👑 ${sideName(m.sides[si])} advances.`)}
+ if(typeof crownTap!=='function')return;const t0=toast;toast=window.toast=function(m){if(/won't|can't|costs/.test(m))return t0.apply(this,arguments)};try{crownTap(i,si)}finally{toast=window.toast=t0}buzz()}
 function crown(i,id){if(locked())return;const sl=card()[i];const m=sl&&sl.d;
  if(sl&&sl.k==='promo')return showW(id);
  if(!m){return toast(needTxt(cur(i))+'.')}
@@ -254,9 +260,9 @@ function slotHtml(i){const c=card(),sl=c[i];let act=i===TC.act&&!locked();const 
  const same=t=>ct&&ct.t===t.t&&(ct.i==null||ct.i===t.i);
  const drop=(t,label,cls)=>`<div class="tcdrop ${cls||''} ${same(t)?'live':''}" role="button" tabindex="0" data-tct='${JSON.stringify(Object.assign({s:i},t))}'><b>+</b>${label}</div>`;
  const pr=!promo&&sl.d&&typeof promiseOf==='function'?promiseOf(sl.d):null;
- const fin=!promo&&sl.d&&!sl.d.nc&&typeof cwOk==='function'&&cwOk(sl.d);const pins=fin?pinCands(sl.d):[];const pinNow=pins.length>=2?pinOf(sl.d):null;const can=!locked();
+ const ro=!promo&&tourV(sl);const fin=!promo&&sl.d&&!sl.d.nc&&(ro?sl.d.sides.every(s=>s.length):typeof cwOk==='function'&&cwOk(sl.d));const pins=fin&&!ro?pinCands(sl.d):[];const pinNow=pins.length>=2?pinOf(sl.d):null;const can=!locked();
  const onC=(id)=>{if(!W_(id))return '';const d=sl.d;let cls='';if(fin){const si=d.sides.findIndex(x=>x.includes(id));if(si===d.winner)cls='win';else if(pinNow===id)cls='pinned'}
-  const c=tcCard(W_(id),{attr:`data-tcon="${i}"`,cls});
+  const c=tcCard(W_(id),{attr:ro?`data-tcro="${i}"`:`data-tcon="${i}"`,cls});
   /* who takes the pin: a toggle under each card on the losing side(s), when there's more than one to choose from */
   if(pinNow&&pins.includes(id))return `<div class="tccol">${c}<button class="tcpin ${pinNow===id?'on':''}" ${can?'':'disabled'} data-tcpin="${i}|${id}" aria-pressed="${pinNow===id}" aria-label="${esc(W_(id).name)} takes the pin">${pinNow===id?'Takes the pin':'Pin'}</button></div>`;
   return c};
@@ -268,7 +274,7 @@ function slotHtml(i){const c=card(),sl=c[i];let act=i===TC.act&&!locked();const 
   mat=m.sides.map((s,j)=>{const ps=s.map(onC).join('');const em=!s.length&&(act||idsOf(i,m).length)?drop({t:'side',i:j},j===0?'Pick':'Opponent'):'';
    const shp=TC.sh[i]?shapeDims(TC.sh[i]):null;const pt=shp?Array.from({length:Math.max(0,shp[1]-Math.max(1,s.length))},()=>s.length?drop({t:'partner',i:j},'Partner'):`<div class="tcdrop ghost" aria-hidden="true"><b>+</b>Partner</div>`).join(''):tg.find(t=>t.t==='partner'&&t.i===j)?drop({t:'partner',i:j},'','mini'):'';
    if(!fin||!s.length)return `<div class="tcside">${ps}${em}${pt}</div>`;const wn=sl.d.winner===j;
-   return `<div class="tcsg"><div class="tcside">${ps}${em}${pt}</div><button class="tcwin ${wn?'on':''}" ${can&&!wn?'':'disabled'} data-tccr="${i}:${j}" aria-pressed="${wn}" aria-label="${wn?esc(sideName(s))+' wins':'Make '+esc(sideName(s))+' the winner'}"><b>👑</b>${wn?'Wins':'Win'}</button></div>`}).join('<div class="tcvs">vs</div>')
+   return `<div class="tcsg"><div class="tcside">${ps}${em}${pt}</div><button class="tcwin ${wn?'on':''}" ${can&&!wn?'':'disabled'} data-tccr="${i}:${j}" aria-pressed="${wn}" aria-label="${wn?esc(sideName(s))+(ro?' advances':' wins'):'Make '+esc(sideName(s))+' the winner'}"><b>👑</b>${wn?(ro?'Advances':'Wins'):'Win'}</button></div>`}).join('<div class="tcvs">vs</div>')
    +(TC.sh[i]?Array.from({length:Math.max(0,shapeDims(TC.sh[i])[0]-m.sides.length)},(x,q)=>`<div class="tcvs">vs</div><div class="tcside">${drop({t:'third'},m.sides.length+q===2?'Third':'Fourth')}</div>`).join(''):tg.find(t=>t.t==='third')?`<div class="tcvs">vs</div><div class="tcside">${drop({t:'third'},'Third')}</div>`:'');act=act0}
  const d=sl.d;let mods='';
  if(promo&&m.a&&PT[m.type])mods=`<span class="tcm g">${esc(PT[m.type].n)}</span>`;
@@ -276,15 +282,15 @@ function slotHtml(i){const c=card(),sl=c[i];let act=i===TC.act&&!locked();const 
   const tag=(k,cls,txt)=>tap?`<button type="button" class="tcm ${cls}" data-tcm="${i}|${k}">${txt}</button>`:`<span class="tcm ${cls}">${txt}</span>`;
   const fk=typeof finOf==='function'?finOf(d):'clean';const rx=d.ri&&RUNIN[d.ri.k]&&d.ri.x&&W_(d.ri.x);
   mods=tag('x',st!=='std'&&f.spec.length?'g':st==='std'?'q':'',esc(STIPS[st].n))+(d.title&&S.titles[d.title]?tag('x','g',`${esc(S.titles[d.title].n)} title`):'')
-   +(d.nc?'':tag('f',fk==='clean'?'q':'',esc(FINS[fk].n)))+(d.nc?'':tag('r',rx?'':'q',rx?`${RUNIN[d.ri.k].i} Run-in · ${esc(ln(rx))}`:'No run-in'))}
+   +(d.nc?'':tag('f',fk==='clean'?'q':'',esc(FINS[fk].n)))+(d.nc||(ro&&d.tour.k==='c2')?'':tag('r',rx?'':'q',rx?`${RUNIN[d.ri.k].i} Run-in · ${esc(ln(rx))}`:'No run-in'))}
  const empty=!idsOf(i,m).length;
  const live=act&&TC.open;const sum=empty&&!live?(opt?`<div class="tcsum">Optional</div>`:'')
   
-  :!promo&&d?`<div class="tcsum"><b>${esc(MT[d.type].n)}</b> · ${esc(sideName(d.sides[d.winner]))} wins${pr?` · <span class="gold">${pr.kind==='contract'?'Contracted':pr.kind==='shot'?'Earned title shot':'Promised'}</span>`:''}</div>`:'';
+  :!promo&&d?`<div class="tcsum"><b>${esc(MT[d.type].n)}</b> · ${esc(sideName(d.sides[d.winner]))} ${ro?'advances':'wins'}${pr?` · <span class="gold">${pr.kind==='contract'?'Contracted':pr.kind==='shot'?'Earned title shot':'Promised'}</span>`:''}</div>`:'';
  const tl=tellFor(i);
  return `<div class="tcs ${act?'act':''} ${main?'me':''} ${opt?'opt':''}" data-tcs="${i}" data-dp="slot:${i}">
  <div class="tcnum" data-dg="slot:${i}" title="Hold and drag to move it">${i+1}</div>
- <div class="tcin"><div class="tchd"><span class="tclb">${esc(slotLab(i))}${d&&d.stip==='bng'?' · Blood &amp; Guts':''}</span>${tl?`<span class="tctl">${tl}</span>`:empty&&!live?`<span class="tcbk">${opt?'Add':'Book it'}</span>`:''}${!empty?`<button class="tcdet" onclick="event.stopPropagation();${promo?'openPromo':'openMatch'}(${i})">Details</button>`:''}</div>
+ <div class="tcin"><div class="tchd"><span class="tclb">${esc(slotLab(i))}${ro&&TOURS[d.tour.k]?` · ${TOURS[d.tour.k].i} ${esc(TOURS[d.tour.k].n)} ${esc(d.tour.lab)}`:''}${d&&d.stip==='bng'?' · Blood &amp; Guts':''}</span>${tl?`<span class="tctl">${tl}</span>`:empty&&!live?`<span class="tcbk">${opt?'Add':'Book it'}</span>`:''}${!empty?`<button class="tcdet" onclick="event.stopPropagation();${promo?'openPromo':'openMatch'}(${i})">Details</button>`:''}</div>
  ${sum}${mat?`<div class="tcmat${many?' many':''}">${mat}</div>`:''}${mods?`<div class="tcmods">${mods}</div>`:''}</div></div>`}
 /* the pick sheet (v280): tap a space on the table and the best cards for it slide up; tap one to place it */
 function sheetTitle(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';const L=slotLab(i);
@@ -344,7 +350,7 @@ function pickAct(){const c=card();if(TC.act!=null&&c[TC.act]&&tableOk(c[TC.act])
  TC.act=empty.length?(empty.includes(mi)?mi:empty[0]):(ok.includes(mi)?mi:ok[0])}
 function decorate(){if(!bookOn())return;sync();const app=document.getElementById('app');const rord=app&&app.querySelector('main .rord');if(!rord)return;
  const lk=locked();pickAct();const c=card();
- c.forEach((sl,i)=>{if(!tableOk(sl))return;const el=rord.querySelector(`[data-dp="slot:${i}"]`);if(!el)return;const t=document.createElement('template');t.innerHTML=slotHtml(i).trim();el.replaceWith(t.content.firstChild)});
+ c.forEach((sl,i)=>{if(!shown(sl))return;const el=rord.querySelector(`[data-dp="slot:${i}"]`);if(!el)return;const t=document.createElement('template');t.innerHTML=slotHtml(i).trim();el.replaceWith(t.content.firstChild)});
  rord.classList.add('tcrord');if(lk)rord.classList.add('tclock');
  const hd=rord.previousElementSibling;if(hd&&/running order/i.test(hd.textContent))hd.innerHTML=`<div class="h small" style="margin:0">Tonight's card</div><span class="row" style="gap:6px"><button class="mini" onclick="reorderOpen()">Running order</button></span>`;
  if(!lk&&TC.act!=null){const main=app.querySelector('main');const old=main.querySelector('#tcdock');if(old)old.remove();main.insertAdjacentHTML('beforeend',dockHtml());
