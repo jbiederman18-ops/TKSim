@@ -305,7 +305,9 @@ function sheetAnchor(i,m,tg){const sl=card()[i];
  if(tg&&tg.t==='partner')return m.sides[tg.i][0]||null;
  const ids=idsOf(i,m);return ids.length?ids[ids.length-1]:null}
 function sheetCards(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';const anchor=sheetAnchor(i,m,tg);const tt=tg&&tg.t;
- if(TC.f==='fit')return hand(i,{anchor,tg:tg||null,n:12});
+ if(TC.f==='fit'){/* v314: wrestlers already in a match tonight drop out of the best fits into an "Already booked" dropdown */
+  const used=promo?new Set():usedIn('p',i);const h=hand(i,{anchor,tg:tg||null,n:60});let f=0;
+  return h.filter(x=>{const u=used.has(x.w.id)&&!(x.r&&x.r[1]==='must');x.bk=u;if(u)return true;if(x.r&&x.r[1]==='must')return true;return f++<12})}
  const here=idsOf(i,m);const full=promo?new Set():fullIn('p',i);const am=askMap();
  return ownList('p').filter(w=>!w.inj&&!here.includes(w.id)&&!full.has(w.id)&&(TC.f==='all'||(TC.f==='ch'?isChamp(w.id):w.al===TC.f)))
   .sort((a,b)=>(promo?b.mic-a.mic:ovr(b)-ovr(a))).map(w=>({w,r:why(w,anchor,i,am,tt)}))}
@@ -321,8 +323,8 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
  else if(!tg&&!TC.rep)body=`<div class="tcempty">Every space is filled. Pick a bigger match above to add more, or tap someone on the table to swap them out.</div>`;
  else{const l=sheetCards(i,m,tg);
   if(!l.length)body=`<div class="tcempty">Nobody fits that filter tonight.</div>`;
-  else if(TC.f==='fit'){const mu=l.filter(x=>x.r&&x.r[1]==='must'),rest=l.filter(x=>!(x.r&&x.r[1]==='must'));let n=0;
-   body=`<div class="tcgrid">${mu.length?`<div class="tcwhy">Needs you tonight</div>${mu.map(x=>pc(x,n++)).join('')}`:''}${rest.length?`<div class="tcwhy">Best fits</div>${rest.map(x=>pc(x,n++)).join('')}`:''}</div>`}
+  else if(TC.f==='fit'){const mu=l.filter(x=>x.r&&x.r[1]==='must'),rest=l.filter(x=>!x.bk&&!(x.r&&x.r[1]==='must')),bk=l.filter(x=>x.bk);let n=0;
+   body=`<div class="tcgrid">${mu.length?`<div class="tcwhy">Needs you tonight</div>${mu.map(x=>pc(x,n++)).join('')}`:''}${rest.length?`<div class="tcwhy">Best fits</div>${rest.map(x=>pc(x,n++)).join('')}`:''}${bk.length?`<button class="tcwhy tcab ${TC.ab?'on':''}" onclick="tcAb()" aria-expanded="${TC.ab?'true':'false'}">Already booked tonight · ${bk.length} ${TC.ab?'▴':'▾'}</button>${TC.ab?bk.map(x=>pc(x,n++)).join(''):''}`:''}</div>`}
   else{let n=0;body=`<div class="tcgrid">${l.map(x=>pc(x,n++)).join('')}</div>`}}
  const fc=[['fit','Best fit'],['ch','Champions'],['f','Faces'],['h','Heels'],['all','All']];
  const chips=`${hasX&&!TC.rep?`<button class="chip ${TC.mode==='x'?'on':''}" onclick="tcMode('${TC.mode==='x'?'w':'x'}')">${promo?'Segment':'Stips &amp; titles'}</button>`:''}${fc.map(([v,n])=>`<button class="chip ${TC.mode==='w'&&TC.f===v?'on':''}" onclick="tcF('${v}')">${n}</button>`).join('')}`;
@@ -364,6 +366,7 @@ window.tcOpen=function(){if(TC.act==null)pickAct();if(TC.act==null)return;TC.ope
 window.tcClose=function(){TC.open=false;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;render()};
 /* the tap that opened the sheet also lands a click on the backdrop; ignore it */
 window.tcScrim=function(){if(Date.now()-SUP<450)return;tcClose()};
+window.tcAb=function(){TC.ab=!TC.ab;TC.dealt=0;render()};
 window.tcF=function(k){TC.f=k;TC.mode='w';TC.dealt=1;render();const b=document.getElementById('tcsb');if(b)b.scrollTop=0};
 window.tcTg=function(j){const t=targets(TC.act,cur(TC.act))[j];if(t){TC.tg=t;TC.dealt=1;render()}};
 window.tcBack=function(){const i=TC.act,id=TC.rep;TC.rep=null;TC.open=false;if(i!=null&&id)takeOff(i,id);else render()};
@@ -857,7 +860,7 @@ html.tcards .tv-last .tkc{--w:180px;width:var(--w)}
 .tcgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px 10px;justify-items:center;padding:16px 16px 20px}
 .tcgrid .tkc{--w:min(29vw,118px)}html.tcards .tcgrid .tkc{width:var(--w)}
 .tcgrid .tkc:active{transform:scale(.95)}.tcgrid .tkc.deal{animation:tcdeal .32s cubic-bezier(.2,.9,.3,1.15) both}
-.tcwhy{grid-column:1/-1;justify-self:stretch;font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);border-top:1px solid var(--line);padding-top:14px}.tcwhy:first-child{border:0;padding-top:0}
+.tcwhy{grid-column:1/-1;justify-self:stretch;font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);border-top:1px solid var(--line);padding-top:14px}.tcwhy:first-child{border:0;padding-top:0}.tcab{background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;cursor:pointer;width:100%}.tcab:hover,.tcab.on{color:var(--gold)}
 .tcgx{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;padding:16px}.tcgx .tx{width:auto;cursor:pointer;touch-action:manipulation}
 .tcsheet .tcempty{padding:28px 16px;text-align:center}
 .tcsf{flex:none;display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--line)}.tcsf .btn{margin:0}
