@@ -42,9 +42,13 @@ function bookOn(){return on()&&S&&S.phase==='season'&&typeof tab!=='undefined'&&
 
 /* which slots play as a table: promos, and matches that aren't one of the special kinds */
 function plain(m){return !!m&&Array.isArray(m.sides)&&!m.tour&&!(typeof isSp==='function'&&isSp(m))&&!['open','gauntlet','squash'].includes(m.type)&&!!MT[m.type]}
-/* v316: tournament matches are locked to their bracket but still drawn on the table (cards, crown, tags) — tap opens the bracket editor */
-function tourV(sl){return !!sl&&sl.k==='match'&&!!sl.d&&!!sl.d.tour&&Array.isArray(sl.d.sides)&&!!MT[sl.d.type]}
-const shown=sl=>tableOk(sl)||tourV(sl);
+/* v316–317: special matches (tournaments, Rumbles, Money in the Bank, the Casino Gauntlet, open challenges, squashes) and the
+   dream match keep their own editors, but are drawn on the table like everything else: cards, tell, tags. Tapping one opens
+   its editor; nobody can be dragged in or out. Tournament matches also get the 👑 crown to pick who advances. */
+function roV(sl){return !!sl&&sl.k==='match'&&!!sl.d&&Array.isArray(sl.d.sides)&&!!MT[sl.d.type]&&!plain(sl.d)}
+const tourV=sl=>roV(sl)&&!!sl.d.tour;
+const xoV=sl=>!!sl&&sl.k==='xo';
+const shown=sl=>tableOk(sl)||roV(sl)||xoV(sl);
 function tableOk(sl){if(!sl)return false;if(sl.k==='promo')return true;if(sl.k!=='match')return false;return !sl.d||plain(sl.d)}
 function slotLab(i){const c=card(),sl=c[i];if(!sl)return '';if(sl.k==='promo')return sl.opt?'Bonus promo':'Promo';if(sl.k==='xo')return 'Dream match';if(sl.k==='chal')return 'Challenge';try{const ml=mLab(c,i);return ml.main?'Main event':ml.lab}catch(e){return 'Match'}}
 function chipLab(i){const c=card(),sl=c[i];if(!sl)return '';if(sl.k==='promo')return sl.opt?'Bonus':'Promo';if(sl.k!=='match')return sl.k==='xo'?'Dream':'Special';const d=sl.d;if(d&&!plain(d))return d.type==='rumble'?'Rumble':d.type==='mitb'?'Ladder':d.type==='gauntlet'?'Casino':d.type==='open'?'Open':d.type==='squash'?'Squash':d.tour?'Bracket':'Match';try{const ml=mLab(c,i);return ml.main?'Main':ml.opt?'Bonus':'Match'}catch(e){return 'Match'}}
@@ -250,48 +254,57 @@ function applyX(i,x){if(locked())return;const sl=card()[i];const [k,v]=[x.slice(
  delete d.ev;save();buzz();render()}
 
 /* ---------------- drawing the table ---------------- */
-function tellFor(i){const sl=card()[i];const sh=curShow();
+function tellFor(i){const sl=card()[i];const sh=curShow();if(sl.k==='match'&&sl.d&&typeof ocPending==='function'&&ocPending(sl.d))return `<span class="tell muted">🎤 Revealed live</span>`;
  if(sl.k==='promo'){const m=cur(i);if(!m.a)return '';if(!promoOk(m))return `<span class="tell muted">Needs a second wrestler</span>`;try{const t=tellOf(promoEst({type:m.type,a:m.a,b:m.b||null}),true);return `<span class="tell ${t[3]}">${t[1]} ${t[2]}</span>`}catch(e){return ''}}
  if(!sl.d){const m=cur(i);return idsOf(i,m).length?`<span class="tell muted">${needTxt(m)}</span>`:''}
  try{const r=rateMatch(sl.d,{ppv:sh.ppv,allin:sh.ppv&&SUPER(S.week),preview:true});return tellHtml(r)}catch(e){return ''}}
-function slotHtml(i){const c=card(),sl=c[i];let act=i===TC.act&&!locked();const m=cur(i);const promo=sl.k==='promo';
+function xoHtml(i){const sl=card()[i];const d=sl.d;const A=d&&W_(d.a),B=d&&W_(d.b);let tl='';
+ if(A&&B)try{tl=tellHtml(rateMatch({type:'singles',stip:'std',sides:[[A.id],[B.id]],winner:0,title:'',xo:true},{ppv:true,preview:true}))}catch(e){}
+ const lab=`Dream match · ⚔️ ${esc(PPVS[FD_WEEK]||'')}`;
+ return `<div class="tcs opt" data-tcs="${i}" data-dp="slot:${i}">
+ <div class="tcnum">${i+1}</div>
+ <div class="tcin"><div class="tchd"><span class="tclb">${lab}</span>${tl?`<span class="tctl">${tl}</span>`:!A?`<span class="tcbk">Add</span>`:''}${A?`<button class="tcdet" onclick="event.stopPropagation();openXo(${i})">Details</button>`:''}</div>
+ ${A&&B?`<div class="tcsum"><b>First time ever</b> · ${esc(nameOf(B.own||'ai'))}'s star · decided in the ring</div><div class="tcmat"><div class="tcside">${tcCard(A,{attr:`data-tcro="${i}"`})}</div><div class="tcvs">vs</div><div class="tcside">${tcCard(B,{attr:`data-tcro="${i}"`})}</div></div>`:`<div class="tcsum">Optional · one of yours vs one of ${esc(S.rival)}'s</div>`}</div></div>`}
+function slotHtml(i){const c=card(),sl=c[i];if(xoV(sl))return xoHtml(i);let act=i===TC.act&&!locked();const m=cur(i);const promo=sl.k==='promo';
  const ml=promo?null:(()=>{try{return mLab(c,i)}catch(e){return {}}})();const main=ml&&ml.main,opt=!!sl.opt;
  const tg=act&&TC.open&&TC.mode==='w'&&!TC.rep?targets(i,m):[];const ct=act&&TC.open&&TC.mode==='w'&&!TC.rep?(TC.tg||defTarget(i,m)):null;
  const same=t=>ct&&ct.t===t.t&&(ct.i==null||ct.i===t.i);
  const drop=(t,label,cls)=>`<div class="tcdrop ${cls||''} ${same(t)?'live':''}" role="button" tabindex="0" data-tct='${JSON.stringify(Object.assign({s:i},t))}'><b>+</b>${label}</div>`;
  const pr=!promo&&sl.d&&typeof promiseOf==='function'?promiseOf(sl.d):null;
- const ro=!promo&&tourV(sl);const fin=!promo&&sl.d&&!sl.d.nc&&(ro?sl.d.sides.every(s=>s.length):typeof cwOk==='function'&&cwOk(sl.d));const pins=fin&&!ro?pinCands(sl.d):[];const pinNow=pins.length>=2?pinOf(sl.d):null;const can=!locked();
- const onC=(id)=>{if(!W_(id))return '';const d=sl.d;let cls='';if(fin){const si=d.sides.findIndex(x=>x.includes(id));if(si===d.winner)cls='win';else if(pinNow===id)cls='pinned'}
+ const ro=!promo&&roV(sl),tr=ro&&!!sl.d.tour,op=ro&&typeof ocPending==='function'&&ocPending(sl.d);const fin=!promo&&sl.d&&!sl.d.nc&&(ro?tr&&sl.d.sides.every(s=>s.length):typeof cwOk==='function'&&cwOk(sl.d));const pins=fin&&!ro?pinCands(sl.d):[];const pinNow=pins.length>=2?pinOf(sl.d):null;const can=!locked();
+ const onC=(id)=>{if(!W_(id))return '';const d=sl.d;let cls='';if(ro&&!fin&&!op&&!d.nc&&(d.sides[d.winner]||[]).includes(id))cls='win';if(fin){const si=d.sides.findIndex(x=>x.includes(id));if(si===d.winner)cls='win';else if(pinNow===id)cls='pinned'}
   const c=tcCard(W_(id),{attr:ro?`data-tcro="${i}"`:`data-tcon="${i}"`,cls});
   /* who takes the pin: a toggle under each card on the losing side(s), when there's more than one to choose from */
   if(pinNow&&pins.includes(id))return `<div class="tccol">${c}<button class="tcpin ${pinNow===id?'on':''}" ${can?'':'disabled'} data-tcpin="${i}|${id}" aria-pressed="${pinNow===id}" aria-label="${esc(W_(id).name)} takes the pin">${pinNow===id?'Takes the pin':'Pin'}</button></div>`;
   return c};
- let mat='',many=false;
+ let mat='',many=false;const fld=ro&&sl.d.sides.length>4;/* a Rumble, ladder or gauntlet field: a spread of cards, no vs between each */
  if(promo){mat=(m.a?`<div class="tcside">${onC(m.a)}</div>`:act?`<div class="tcside">${drop({t:'a'},'On the mic')}</div>`:'')
   +((m.b||(act&&m.a))?`<div class="tcvs">&amp;</div><div class="tcside">${m.b?onC(m.b):drop({t:'b'},PT[m.type]&&PT[m.type].b==='req'?'Opponent':'Second (optional)')}</div>`:'')}
  else if((act&&TC.open)||idsOf(i,m).length){
   if(idsOf(i,m).length>3||(TC.sh[i]&&shapeDims(TC.sh[i])[0]*shapeDims(TC.sh[i])[1]>3))many=true;const act0=act;act=act&&TC.open;
   mat=m.sides.map((s,j)=>{const ps=s.map(onC).join('');const em=!s.length&&(act||idsOf(i,m).length)?drop({t:'side',i:j},j===0?'Pick':'Opponent'):'';
    const shp=TC.sh[i]?shapeDims(TC.sh[i]):null;const pt=shp?Array.from({length:Math.max(0,shp[1]-Math.max(1,s.length))},()=>s.length?drop({t:'partner',i:j},'Partner'):`<div class="tcdrop ghost" aria-hidden="true"><b>+</b>Partner</div>`).join(''):tg.find(t=>t.t==='partner'&&t.i===j)?drop({t:'partner',i:j},'','mini'):'';
+   if(op&&j>0&&!ps)return `<div class="tcside"><div class="tkc tcq" aria-label="Someone answers live"><div class="tcf"><div class="tcg">?</div><div class="tcb"><b class="tcn">Who answers?</b><span class="tcc">Live</span></div></div></div></div>`;
    if(!fin||!s.length)return `<div class="tcside">${ps}${em}${pt}</div>`;const wn=sl.d.winner===j;
-   return `<div class="tcsg"><div class="tcside">${ps}${em}${pt}</div><button class="tcwin ${wn?'on':''}" ${can&&!wn?'':'disabled'} data-tccr="${i}:${j}" aria-pressed="${wn}" aria-label="${wn?esc(sideName(s))+(ro?' advances':' wins'):'Make '+esc(sideName(s))+' the winner'}"><b>👑</b>${wn?(ro?'Advances':'Wins'):'Win'}</button></div>`}).join('<div class="tcvs">vs</div>')
+   return `<div class="tcsg"><div class="tcside">${ps}${em}${pt}</div><button class="tcwin ${wn?'on':''}" ${can&&!wn?'':'disabled'} data-tccr="${i}:${j}" aria-pressed="${wn}" aria-label="${wn?esc(sideName(s))+(ro?' advances':' wins'):'Make '+esc(sideName(s))+' the winner'}"><b>👑</b>${wn?(ro?'Advances':'Wins'):'Win'}</button></div>`}).join(fld?'':'<div class="tcvs">vs</div>')
    +(TC.sh[i]?Array.from({length:Math.max(0,shapeDims(TC.sh[i])[0]-m.sides.length)},(x,q)=>`<div class="tcvs">vs</div><div class="tcside">${drop({t:'third'},m.sides.length+q===2?'Third':'Fourth')}</div>`).join(''):tg.find(t=>t.t==='third')?`<div class="tcvs">vs</div><div class="tcside">${drop({t:'third'},'Third')}</div>`:'');act=act0}
  const d=sl.d;let mods='';
  if(promo&&m.a&&PT[m.type])mods=`<span class="tcm g">${esc(PT[m.type].n)}</span>`;
  if(!promo&&d){const st=stipKey(d);const f=stipFits(STIPS[st],d);const tap=tableOk(sl);
   const tag=(k,cls,txt)=>tap?`<button type="button" class="tcm ${cls}" data-tcm="${i}|${k}">${txt}</button>`:`<span class="tcm ${cls}">${txt}</span>`;
   const fk=typeof finOf==='function'?finOf(d):'clean';const rx=d.ri&&RUNIN[d.ri.k]&&d.ri.x&&W_(d.ri.x);
-  mods=tag('x',st!=='std'&&f.spec.length?'g':st==='std'?'q':'',esc(STIPS[st].n))+(d.title&&S.titles[d.title]?tag('x','g',`${esc(S.titles[d.title].n)} title`):'')
-   +(d.nc?'':tag('f',fk==='clean'?'q':'',esc(FINS[fk].n)))+(d.nc||(ro&&d.tour.k==='c2')?'':tag('r',rx?'':'q',rx?`${RUNIN[d.ri.k].i} Run-in · ${esc(ln(rx))}`:'No run-in'))}
+  mods=(ro&&!tr&&st==='std'?'':tag('x',st!=='std'&&f.spec.length?'g':st==='std'?'q':'',esc(STIPS[st].n)))+(d.title&&S.titles[d.title]?tag('x','g',`${esc(S.titles[d.title].n)} title`):'')
+   +(d.nc||(ro&&!tr)?'':tag('f',fk==='clean'?'q':'',esc(FINS[fk].n)))+(d.nc||(ro&&!tr)||(tr&&d.tour.k==='c2')?'':tag('r',rx?'':'q',rx?`${RUNIN[d.ri.k].i} Run-in · ${esc(ln(rx))}`:'No run-in'))}
  const empty=!idsOf(i,m).length;
  const live=act&&TC.open;const sum=empty&&!live?(opt?`<div class="tcsum">Optional</div>`:'')
   
+  :!promo&&d&&ro&&!tr?`<div class="tcsum">${op?`<b>${esc(MT.open.n)}</b> · Someone answers live${d.open&&d.open.hope&&W_(d.open.hope)?` · crowd wants ${esc(W_(d.open.hope).name)}`:''}`:`<b>${esc(spName(d)||MT[d.type].n)}</b>${isSp(d)||d.type==='gauntlet'?` · ${d.sides.length} entrants`:''} · ${esc(sideName(d.sides[d.winner]))} ${'wins'}`}</div>`
   :!promo&&d?`<div class="tcsum"><b>${esc(MT[d.type].n)}</b> · ${esc(sideName(d.sides[d.winner]))} ${ro?'advances':'wins'}${pr?` · <span class="gold">${pr.kind==='contract'?'Contracted':pr.kind==='shot'?'Earned title shot':'Promised'}</span>`:''}</div>`:'';
  const tl=tellFor(i);
  return `<div class="tcs ${act?'act':''} ${main?'me':''} ${opt?'opt':''}" data-tcs="${i}" data-dp="slot:${i}">
  <div class="tcnum" data-dg="slot:${i}" title="Hold and drag to move it">${i+1}</div>
- <div class="tcin"><div class="tchd"><span class="tclb">${esc(slotLab(i))}${ro&&TOURS[d.tour.k]?` · ${TOURS[d.tour.k].i} ${esc(TOURS[d.tour.k].n)} ${esc(d.tour.lab)}`:''}${d&&d.stip==='bng'?' · Blood &amp; Guts':''}</span>${tl?`<span class="tctl">${tl}</span>`:empty&&!live?`<span class="tcbk">${opt?'Add':'Book it'}</span>`:''}${!empty?`<button class="tcdet" onclick="event.stopPropagation();${promo?'openPromo':'openMatch'}(${i})">Details</button>`:''}</div>
- ${sum}${mat?`<div class="tcmat${many?' many':''}">${mat}</div>`:''}${mods?`<div class="tcmods">${mods}</div>`:''}</div></div>`}
+ <div class="tcin"><div class="tchd"><span class="tclb">${esc(slotLab(i))}${tr&&TOURS[d.tour.k]?` · ${TOURS[d.tour.k].i} ${esc(TOURS[d.tour.k].n)} ${esc(d.tour.lab)}`:ro&&d.sp&&SPK[d.sp]?` · ${SPK[d.sp].i} ${esc(SPK[d.sp].n)}`:ro&&d.type==='gauntlet'?' · 🎰 Casino Gauntlet':op?' · 🎤 Open challenge':''}${d&&d.stip==='bng'?' · Blood &amp; Guts':''}</span>${tl?`<span class="tctl">${tl}</span>`:empty&&!live?`<span class="tcbk">${opt?'Add':'Book it'}</span>`:''}${!empty?`<button class="tcdet" onclick="event.stopPropagation();${promo?'openPromo':'openMatch'}(${i})">Details</button>`:''}</div>
+ ${sum}${mat?`<div class="tcmat${many?' many':''}${fld?' fld':''}">${mat}</div>`:''}${mods?`<div class="tcmods">${mods}</div>`:''}</div></div>`}
 /* the pick sheet (v280): tap a space on the table and the best cards for it slide up; tap one to place it */
 function sheetTitle(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';const L=slotLab(i);
  if(TC.rep&&W_(TC.rep))return [L,`Who replaces ${W_(TC.rep).name}?`];
@@ -644,6 +657,8 @@ html.tcards .tkc{--w:92px;position:relative;flex:none;width:var(--w);aspect-rati
 .tcwin b{font-size:15px;filter:grayscale(1) brightness(1.2);opacity:.75}.tcwin:not(.on):active{transform:scale(.96)}.tcwin:not(.on):hover,.tcwin:not(.on):focus-visible{color:var(--gold);box-shadow:inset 0 0 0 1.5px var(--gold)}
 .tcwin.on{background:var(--gold);color:#111;box-shadow:none;cursor:default}.tcwin.on b{filter:none;opacity:1}.tcwin:disabled:not(.on){opacity:.5;cursor:default}
 .tcpin{min-height:24px;padding:0 6px;font:800 italic 11px/1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;background:#141417;color:var(--mut);border:0;box-shadow:inset 0 0 0 1px #3d3e46;clip-path:var(--slant);cursor:pointer;white-space:nowrap;touch-action:manipulation}
+.tcs .tcmat.fld{gap:8px}.tcs .tcmat.fld .tcside{flex:0 0 auto}
+.tcq .tcf{box-shadow:inset 0 0 0 2px var(--gold3);background:repeating-linear-gradient(135deg,#18181c 0 10px,#1d1d22 10px 20px)}.tcq .tcg{font-size:40px;color:var(--gold)}
 .tcpin.on{background:var(--red);color:#fff;box-shadow:none}.tcpin:not(.on):hover,.tcpin:not(.on):focus-visible{color:var(--text);box-shadow:inset 0 0 0 1px var(--bad)}
 .tkc.win .tcf{box-shadow:inset 0 0 0 2px var(--gold),0 0 0 2px rgba(242,193,78,.25),0 6px 14px rgba(0,0,0,.55)}
 .tkc.pinned .tcf{box-shadow:inset 0 0 0 2px var(--red),0 6px 14px rgba(0,0,0,.55)}.tkc.pinned .tcp,.tkc.pinned .tcg{filter:saturate(.5) brightness(.8)}
