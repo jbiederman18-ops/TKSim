@@ -250,6 +250,8 @@ function attnItems(){if(!S||S.phase!=='season')return [];
  if(typeof ocOfferLive==='function'&&ocOfferLive())add({id:'ocoffer',g:A_OFF,i:'📝',h:'Someone impressed in your open challenge',d:'Decide in the briefing whether to sign them.',s:['w','Undecided'],a:['Decide','openBrief()'],gate:false,where:null});
  /* a chance is never a blocker: "not yet" there is just worth a look */
  out.forEach(x=>{if(x.g===A_CH&&x.s&&x.s[0]==='b')x.s=['w',x.s[1]]});
+ /* v322: a request you said yes to at your office door (inbox.js) sits on top until it's on tonight's card */
+ const ak=S.asks||{};out.forEach(x=>{const r=ak[x.id];if(!r||r.w!==AW()||r.a!=='y'||!x.s||x.s[0]==='ok')return;x.g=A_MUST;x.gate=false;x.s=['b','You told them yes — not on the card yet'];if(!x.a&&/^stale/.test(x.id)&&x.who&&x.who[1])x.a=['Book it',`feudBook('match','${x.who[0]}','${x.who[1]}')`,1]});
  return out}
 window.attnItems=attnItems;
 
