@@ -54,7 +54,7 @@ function hrAfter(it){if(!LQ||!it)return;HRC=LQ.crowd;let s=3,txt='';
  else if(it.m){let base=3;try{base=rateMatch(it.m,{ppv:curShow().ppv,preview:true}).stars}catch(e){}s=base+(it.m.ev&&it.m.ev.stars||0)}
  const was=LQ.crowd;LQ.crowd=hrMove(s);it.crowd=LQ.crowd;it.dc=LQ.crowd-was}
 function hrBug(){if(!LIVE||!LQ||LQ.crowd==null)return '';const c=LQ.crowd;
- return `<div class="hrbug"><span class="hrk">The crowd</span><span class="hrbar"><i style="transform:scaleX(${c/100})"></i></span><b class="hrw">${hrWord(c)}</b><span class="hrn">🎬 ${LQ.hr}/${hrCap(LQ.ppv)}</span></div>`}
+ return `<div class="hrbug"><span class="hrk">The crowd</span><span class="hrbar"><i style="transform:scaleX(${c/100})"></i></span><b class="hrw">${hrWord(c)}</b><span class="hrn">🎬 ${Math.min(LQ.hr,hrCap(LQ.ppv))}/${hrCap(LQ.ppv)}</span></div>`}
 /* the quiet segments since the last highlight reel, in one short screen */
 const HR_Q={match:{hi:['A strong match. The crowd is with them.','Good stuff, and the fans let them know it.','They worked hard and it showed.','The fans were up for the finish.','A real crowd-pleaser.','They had the place buzzing by the end.','Better than anyone expected.','That got a standing ovation.','Fans will be talking about that one.'],
  mid:['A solid match. Nothing more, nothing less.','It did its job.','Steady work. Polite applause.','Fine. The crowd stayed with it.','Decent, if a little by the numbers.','Good enough. On to the next one.','A few nice spots, a clean finish.','Workmanlike. Nobody complained.','It moved the story along.'],
