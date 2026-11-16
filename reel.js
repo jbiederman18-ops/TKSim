@@ -74,7 +74,7 @@ function hrAuto(card,b,sh){if(!card)return;HRC=hrStart(b,sh);let hits=0;const ca
   if(sl.k==='promo'){const p=sl.d;if(hits<cap&&Math.random()<hrPromoOdds(p,sh.ppv))hits++;hrMove(p.res?p.res.stars:2.5);return}
   if(sl.k!=='match'||!validMatch(sl.d))return;const m=sl.d;const main=j===ms[ms.length-1];
   if(!(m.ev&&m.ev.hit)){if(hits<cap&&typeof msOn==='function'&&msOn(m)&&Math.random()<hrMatchOdds(m,main,sh.ppv)){hits++;msAuto(m,b,sh.ppv||main)}
-   else{const g=matchEvent(m,b,sh.ppv||main,0);if(g){if(g.sit&&b==='p'&&hits>=cap&&typeof quietSit==='function')quietSit(g,m);else{if(g.sit)hits++;runEvAI(g,m)}}}}
+   else{const g=matchEvent(m,b,sh.ppv||main,0);if(g){if(g.sit)hits++;runEvAI(g,m)}}}
   let base=3;try{base=rateMatch(m,{ppv:sh.ppv,preview:true}).stars}catch(e){}hrMove(base+(m.ev&&m.ev.stars||0))})}
 Object.assign(window,{hrCap,hrWhy,hrStart,hrRoll,hrAfter,hrBug,hrRundown,hrGo,hrAuto,hrTag,hrCm,hrWord});
 (function(){const c=document.createElement('style');c.textContent=`
