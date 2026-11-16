@@ -27,7 +27,7 @@ const css=`
 @keyframes fxBelt{from{opacity:0;transform:translateY(60px) scale(.7)}to{opacity:1;transform:none}}
 .fxbi{display:block;max-width:min(88vw,560px);max-height:30vh;object-fit:contain;margin:6px auto 0;filter:drop-shadow(0 10px 30px rgba(0,0,0,.7)) drop-shadow(0 0 26px rgba(246,221,142,.35));animation:fxBelt .7s cubic-bezier(.2,1.2,.3,1) .45s both}
 .fxplate{display:inline-block;margin:10px auto 0;padding:10px 26px;border-top:2px solid var(--gold,#d8b449);border-bottom:2px solid var(--gold,#d8b449);background:linear-gradient(90deg,transparent,rgba(216,180,73,.18),transparent);font:900 italic clamp(16px,4.6vw,30px)/1 'BC',Impact,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#f3e6c4;animation:fxBelt .7s cubic-bezier(.2,1.2,.3,1) .45s both}
-#fxo .bm{position:absolute;bottom:-20%;width:calc(40vmax / var(--tvz,1));height:calc(140vmax / var(--tvz,1));background:linear-gradient(0deg,rgba(255,230,160,.0),rgba(255,230,160,.18) 60%,transparent);transform-origin:50% 100%;pointer-events:none;filter:blur(6px)}
+#fxo .bm{position:absolute;bottom:-20%;width:calc(40vmax / var(--tvz,1));height:calc(140vmax / var(--tvz,1));background:linear-gradient(0deg,rgba(255,230,160,.0),rgba(255,230,160,.18) 60%,transparent);transform-origin:50% 100%;pointer-events:none;-webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);will-change:transform}
 #fxo .bm.a{left:5%;animation:fxBeamA 3.2s ease-in-out infinite}#fxo .bm.b{right:5%;animation:fxBeamB 3.2s ease-in-out infinite}
 @keyframes fxBeamA{0%,100%{transform:rotate(-28deg)}50%{transform:rotate(14deg)}}@keyframes fxBeamB{0%,100%{transform:rotate(28deg)}50%{transform:rotate(-14deg)}}
 #fxo.hot .bm{background:linear-gradient(0deg,transparent,rgba(255,120,60,.25) 60%,transparent)}
@@ -55,7 +55,7 @@ const css=`
 @keyframes fxTick{to{transform:translateX(-100%)}}
 main.fxr>*{animation:fxSlideR .34s cubic-bezier(.2,.8,.2,1) both!important}main.fxl>*{animation:fxSlideL .34s cubic-bezier(.2,.8,.2,1) both!important}
 @keyframes fxSlideR{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}@keyframes fxSlideL{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
-nav.tabs .nvi{position:absolute;top:0;height:3px;background:var(--gold2,#f6dd8e);box-shadow:0 0 10px var(--gold,#d8b449);clip-path:var(--slant);transition:left .32s cubic-bezier(.3,1.2,.4,1),width .32s;z-index:2}
+nav.tabs .nvi{position:absolute;top:0;left:0;height:3px;background:var(--gold2,#f6dd8e);box-shadow:0 0 10px var(--gold,#d8b449);clip-path:var(--slant);transition:transform .32s cubic-bezier(.3,1.2,.4,1);z-index:2}
 nav.tabs.fxn button.on:before{opacity:0}
 .roh-x .phead{background:linear-gradient(135deg,#2a0608,#0b0b0d 60%)!important;border-color:#7a1218!important}
 .roh-x .phead .dround{color:#ff4b4b!important;text-shadow:0 0 22px rgba(255,60,60,.35)!important}
@@ -164,7 +164,11 @@ if(typeof briefItems==='function'){const b0=briefItems;window.briefItems=briefIt
 const ORDER=['home','book','roster','titles','office','menu'];let DIR=null,NAVL=null;
 if(typeof go==='function'){const g0=go;go=function(t){const a=ORDER.indexOf(tab),b=ORDER.indexOf(t);DIR=a>=0&&b>=0&&a!==b?(b>a?'fxr':'fxl'):null;return g0.apply(this,arguments)}}
 function navFx(){const n=document.querySelector('nav.tabs');if(!n)return;const on=n.querySelector('button.on');if(!on){NAVL=null;return}n.classList.add('fxn');let i=n.querySelector('.nvi');if(!i){i=document.createElement('i');i.className='nvi';n.appendChild(i)}
- const L=on.offsetLeft+on.offsetWidth*.1,W=on.offsetWidth*.8;i.style.top=on.offsetTop+'px';i.style.height=on.offsetHeight+'px';if(NAVL&&!RM()){i.style.transition='none';i.style.left=NAVL.l+'px';i.style.width=NAVL.w+'px';void i.offsetWidth;i.style.transition=''}i.style.left=L+'px';i.style.width=W+'px';NAVL={l:L,w:W}}
+ const L=on.offsetLeft+on.offsetWidth*.1,W=on.offsetWidth*.8;
+ /* v305: the highlight glides with a transform instead of left/width, so the slide doesn't re-lay out the page every frame */
+ i.style.top=on.offsetTop+'px';i.style.height=on.offsetHeight+'px';i.style.width=W+'px';
+ if(NAVL&&NAVL.l!==L&&!RM()){i.style.transition='none';i.style.transform=`translateX(${NAVL.l}px)`;void i.offsetWidth;i.style.transition=''}
+ i.style.transform=`translateX(${L}px)`;NAVL={l:L,w:W}}
 if(typeof render==='function'){const r0=render;render=function(){const d=DIR;DIR=null;const out=r0.apply(this,arguments);try{const m=document.querySelector('main');if(m&&d&&!RM()){m.classList.remove('enter');m.classList.add(d)}navFx();numbers()}catch(e){}return out}}
 
 /* ---------------- 8. ROH identity ---------------- */

@@ -117,8 +117,8 @@ async function showPage(){const pg=PS.q[PS.qi];if(!pg)return;
  if(typeof foPose==='function'){if(pg.q!=null&&(pg.side==='a'||pg.side==='b'))foPose(pg.side,'talk');else if(pg.act!=null&&(pg.side==='a'||pg.side==='b'))foPose(pg.side,'act');else foPose(null)}low.innerHTML=boxHtml(pg);feed();
  const spr=pg.side&&document.querySelector(`#sd .c${pg.side} .sdph`);if(spr){spr.classList.remove('talk','hit');void spr.offsetWidth;spr.classList.add(pg.q!=null?'talk':'hit')}
  const el=document.getElementById('sdsay');if(!el||reduce())return done();
- const t=el.dataset.t;let i=0;el.textContent='';
- const talk=pg.q!=null;const iv=setInterval(()=>{i+=2;el.textContent=t.slice(0,i);if(talk&&window.SFX)SFX.blip();if(i>=t.length)fin()},20);
+ const t=el.dataset.t;let i=0;/* v305: the whole line is laid out from the start and the untyped rest stays invisible, so the box never grows and words never hop lines while it types */const A=document.createTextNode(''),H=document.createElement('span');H.className='sdtw';H.textContent=t;el.textContent='';el.append(A,H);
+ const talk=pg.q!=null;const iv=setInterval(()=>{i+=2;A.data=t.slice(0,i);H.firstChild&&(H.firstChild.data=t.slice(i));if(talk&&window.SFX)SFX.blip();if(i>=t.length)fin()},20);
  const fin=()=>{clearInterval(iv);el.textContent=t;TYPE=null;done()};TYPE={fin};
  function done(){const nx=document.getElementById('sdnx');if(nx)nx.classList.add('on')}}
 function sdTap(){if(!PS||!PS.q||PANNING)return;if(TYPE){TYPE.fin();return}
@@ -228,7 +228,7 @@ psChoose=function(ci){if(!PS||PS.done||PS.q)return;const c=PS.scene.ch[ci];if(!c
 .sdtab{position:absolute;top:-1px;left:12px;max-width:78%;padding:3px 14px 4px;font:900 italic 16px/1.1 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;clip-path:var(--sl)}
 .sdtab.mine{background:var(--gold);color:#16120a}.sdtab.them{background:#f3efe6;color:#09090b}.sdtab.other{background:var(--red);color:#fff}
 .sdtab.r{left:auto;right:12px}
-.sdbox:has(.sdtab) .sdsay{margin-top:6px}
+.sdbox:has(.sdtab) .sdtw{visibility:hidden}.sdsay{margin-top:6px}
 .sdsay{font-size:18px;line-height:1.45;font-weight:600;color:var(--text);overflow-wrap:anywhere;min-height:2.9em}
 .sdbox.k-act .sdsay{font-style:italic;font-weight:500;color:#b8c9e8;font-size:16px}
 .sdbox.k-cam .sdsay{font-style:italic;font-weight:500;color:var(--gold2);font-size:16px;text-align:center}

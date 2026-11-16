@@ -8,8 +8,9 @@ const FO_TAG={talk:'🎤 On the mic',move:'💥 On the attack',hit:'Taking it',m
 /* side: 'a' | 'b' | null (nobody — commentary, crowd) · role: talk | move | miss | hurt | act · lab: optional tag text */
 function foPose(side,role,lab){const sd=document.getElementById('sd');if(!sd||!sd.classList.contains('duo'))return;
  const other=side==='a'?'b':side==='b'?'a':null;
+ /* v305: clear both cards, then one reflow to restart their animations (was one forced layout per card) */
+ const CL=['on','dim','talk','move','hit','miss','hurt','act'];sd.querySelectorAll('.sdc.ca,.sdc.cb').forEach(c=>c.classList.remove(...CL));void sd.offsetWidth;
  ['a','b'].forEach(k=>{const c=sd.querySelector('.sdc.c'+k);if(!c)return;const t=c.querySelector('.sdact');
-  c.classList.remove('on','dim','talk','move','hit','miss','hurt','act');void c.offsetWidth;
   let r=null;if(side&&k===side)r=role;else if(k===other&&role==='move')r='hit';
   if(r){c.classList.add('on',r)}else if(side)c.classList.add('dim');
   if(t){const tx=r?(k===side&&lab?lab:FO_TAG[r]||''):'';t.textContent=tx;t.className='sdact'+(tx?' show '+r:'')}})}
