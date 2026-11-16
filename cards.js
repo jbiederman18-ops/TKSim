@@ -325,7 +325,8 @@ function sheetAnchor(i,m,tg){const sl=card()[i];
  const ids=idsOf(i,m);return ids.length?ids[ids.length-1]:null}
 function sheetCards(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';const anchor=sheetAnchor(i,m,tg);const tt=tg&&tg.t;
  if(TC.f==='fit'){/* v314: wrestlers already in a match tonight drop out of the best fits into an "Already booked" dropdown */
-  const used=promo?new Set():usedIn('p',i);const h=hand(i,{anchor,tg:tg||null,n:60});let f=0;
+  /* v320: anyone already on tonight's card in any segment (a match or another promo) counts as booked — promo sheets used to skip this */
+  const used=usedIn('p',i);card().forEach((o,j)=>{if(j!==i&&o.k==='promo'&&o.d){if(o.d.a)used.add(o.d.a);if(o.d.b)used.add(o.d.b)}});const h=hand(i,{anchor,tg:tg||null,n:60});let f=0;
   return h.filter(x=>{const u=used.has(x.w.id)&&!(x.r&&x.r[1]==='must');x.bk=u;if(u)return true;if(x.r&&x.r[1]==='must')return true;return f++<12})}
  const here=idsOf(i,m);const full=promo?new Set():fullIn('p',i);const am=askMap();
  return ownList('p').filter(w=>!w.inj&&!here.includes(w.id)&&!full.has(w.id)&&(TC.f==='all'||(TC.f==='ch'?isChamp(w.id):w.al===TC.f)))
