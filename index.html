@@ -1534,7 +1534,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v318';
+const APP_VERSION='v319';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4607,7 +4607,10 @@ function feudBoard(){const fs=feudList('p').filter(f=>f.h>=8).slice(0,6);
  const rows=fs.map(f=>{const fi=feudInfo(f.a.id,f.b.id);const on=onCard(f.a.id,f.b.id);const inj=[f.a,f.b].filter(w=>w.inj);const same=f.a.al===f.b.al;
   return `<div class="fb ${fi.t>=2?'hot':''}"><div class="row sb"><span class="frow" style="cursor:pointer" onclick="openFeud('${f.a.id}','${f.b.id}')"><span class="fbn">${alSpan(f.a)} <span class="muted">vs</span> ${alSpan(f.b)}</span></span><span class="fh t${fi.t+1}">🔥 ${Math.round(f.h)}</span></div>
   <div class="fbm"><div class="tags" style="margin:0">${fi.t>=0?`<span class="fdt t${fi.t+1}">${FTIER[fi.t][1].replace(/^[🔥 ]+/,'')}</span>`:'<span class="tg">👀 Seeds planted</span>'}${(()=>{const t=feudTag(fi).replace(' · ',' in ').replace(' away','');return t&&fi.t>=0?`<span class="tg ${/⚠️|🥱/.test(t)?'warnt':/💥/.test(t)?'good':''}">${esc(t.replace(/^Pay off at /,'').replace('💥 Pay off at ','💥 ').replace('Goes stale after','Stale after').replace(/ — before .*/,''))}</span>`:''})()}${same?`<span class="tg bad">${f.a.al==='f'?'😇 vs 😇':'😈 vs 😈'}</span>`:''}${!on&&recentMeets(f.a.id,f.b.id).length?'<span class="tg bad">😴 Rematch — use a promo</span>':''}${inj.length?`<span class="tg bad">🚑 ${inj.map(w=>esc(w.name.split(' ').slice(-1)[0])).join(', ')} out</span>`:''}</div><span class="row" style="gap:6px;flex:none">${on?'<span class="good tiny"><b>✓ On the card</b></span>':inj.length?'':`<button class="mini" onclick="feudBook('match','${f.a.id}','${f.b.id}')">+ Match</button><button class="mini" onclick="feudBook('promo','${f.a.id}','${f.b.id}')">+ Promo</button>`}<button class="mini" title="Details / cut your losses" onclick="openFeud('${f.a.id}','${f.b.id}')">⋯</button></span></div></div>`}).join('');
- return `<div class="card"><div class="row sb"><div class="h small" style="margin:0">Your feuds</div><span class="muted tiny">${fs.length?`${fs.length} · tap a name for the story`:''}${(S.fha||[]).length?` · <a href="#" onclick="openPastFeuds();return false" style="color:var(--gold2)">📚 Past feuds</a>`:''}</span></div>${rows||'<div class="muted mt">No feuds yet. Put a face and a heel in the ring or on the mic together to start one.</div>'}</div>`}
+ /* v319: the feud board folds away like the locker room (the choice sticks between sessions) */
+ let op=true;try{op=localStorage.getItem('tksim_feudo')!=='0'}catch(e){}
+ const hot=fs.filter(f=>feudInfo(f.a.id,f.b.id).t>=2).length,todo=fs.filter(f=>!onCard(f.a.id,f.b.id)).length;
+ return `<details class="card lrd fbd" ${op?'open':''} ontoggle="try{localStorage.setItem('tksim_feudo',this.open?'1':'0')}catch(e){}"><summary><span class="h small" style="margin:0">Your feuds</span><span class="muted tiny">${fs.length?`${fs.length} active${hot?` · ${hot} hot`:''}${todo<fs.length?` · ${fs.length-todo} on the card`:''}`:'None yet'}</span></summary>${fs.length||(S.fha||[]).length?`<div class="muted tiny mt">${fs.length?'Tap a name for the story':''}${(S.fha||[]).length?`${fs.length?' · ':''}<a href="#" onclick="openPastFeuds();return false" style="color:var(--gold2)">📚 Past feuds</a>`:''}</div>`:''}${rows||'<div class="muted mt">No feuds yet. Put a face and a heel in the ring or on the mic together to start one.</div>'}</details>`}
 /* ---- feud detail + cutting your losses ---- */
 /* ---- the story so far ---- */
 function fhRec(l,a,b){let x=0,y=0;l.forEach(t=>{if(t.win===a)x++;else if(t.win===b)y++});return [x,y]}

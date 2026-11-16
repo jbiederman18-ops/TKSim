@@ -262,10 +262,11 @@ function renderNeg(){const w=S.w[DL.id];const ask=DL.ask;const o=dlOffer();const
 function negSend(){if(!DL||mpLocked())return;const w=S.w[DL.id];const ask=DL.ask;const o=dlOffer();if(S.money.p<o.bonus)return toast('Not enough money.');
  const u=negU(w,o,ask),need=1-negLenient(w);const r=w.neg?w.neg.r:1;DL=null;
  const all=o.bonus>=ask.bonus&&o.sal>=ask.sal&&ask.perks.every(k=>o.perks.includes(k));
+ /* v319: decide the insult up front — it was read before it was declared, so any offer short of everything threw and did nothing */
+ const insulted=!all&&Math.random()<negInsult(w,o,ask);
  if(all||(u>=need&&!insulted)){S.money.p-=o.bonus;w.sal=o.sal;w.con=Math.max(0,w.con)+26;w.mor=clamp(w.mor+(all?12:6),0,100);delete w.neg;dealTerms(w,o.perks);
   news(`✍️ ${w.name} re-signed with ${S.gm}.`);save();render();
   return openModal(`<div class="h mhd">🤝 Deal done</div><p><b>${esc(w.name)}</b> is signed through ${w.con} more weeks at ${money(w.sal)}/wk.</p>${o.perks.length?`<p class="muted tiny">In the contract: ${o.perks.map(k=>PERKS[k].i+' '+PERKS[k].n).join(', ')}. You'll see what's owed on the Book screen.</p>`:''}<button class="btn" onclick="closeModal()">OK</button>`)}
- const insulted=!all&&Math.random()<negInsult(w,o,ask);
  if(!insulted&&u>=need-.3&&r<3){/* they meet you partway: split the money and dig in on the demand they care about most */
   const W=dealWants(w);const dropped=ask.perks.filter(k=>!o.perks.includes(k)).sort((a,b)=>W[b]-W[a]);const keep=dropped.filter((k,j)=>W[k]>=1.15&&(j===0||k==='cc')).slice(0,2);
   const extra=dropped.length>keep.length?1.1:1;
