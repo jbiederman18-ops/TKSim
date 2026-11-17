@@ -479,7 +479,9 @@ window.tcSeg=function(i){if(tcGo(i))return;const sl=S&&S.card.p[i];if(!sl)return
 /* v328: flick the sheet up to fill the screen, down to shrink it back (then down again to close) */
 /* v335: 'big' only moves the sheet (transform, cheap); 'tall' changes the list's layout (scrolling, spacer) and is
    switched once the slide has finished, so the slide itself never waits on a relayout of the whole card grid */
-let TALL=0;function tallSoon(d){clearTimeout(TALL);TALL=setTimeout(()=>{if(d.isConnected)d.classList.toggle('tall',TC.big)},390)}
+let TALL=0;function tallSoon(d){clearTimeout(TALL);const go=()=>{clearTimeout(TALL);d.removeEventListener('transitionend',te);if(d.isConnected)d.classList.toggle('tall',TC.big)};
+ /* v337: switch as soon as the slide actually ends (the fixed timer could leave the list unscrollable a beat too long) */
+ const te=e=>{if(e.target===d&&e.propertyName==='transform')go()};d.addEventListener('transitionend',te);TALL=setTimeout(go,420)}
 window.tcBig=function(v,quiet){TC.big=!!v;const d=document.getElementById('tcdock');if(d){d.classList.toggle('big',TC.big);tallSoon(d);const b=d.querySelector('.tcpull');if(b){b.setAttribute('aria-expanded',TC.big?'true':'false');b.setAttribute('aria-label',TC.big?'Shrink the sheet':'Fill the screen')}}
  if(!TC.big){const l=document.getElementById('tcsb');if(l&&l.scrollTop){l.dataset.lowering='1';setTimeout(()=>{if(!l.isConnected||TC.big){delete l.dataset.lowering;return}l.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>{delete l.dataset.lowering},520)},400)}if(TC.act!=null)setTimeout(()=>{if(TC.open&&!TC.big)center(TC.act)},400)}};
 /* v334: photos further down the sheet are lazy-loaded, so the first lift to full screen had to fetch and decode them
@@ -665,13 +667,17 @@ function endDrag(x,y){const t=hit(x,y);const d=DR;cleanup();SUP=Date.now();
  document.addEventListener('touchstart',e=>{g=null;if(!TC.open||e.touches.length!==1)return;const t=e.target;if(!t.closest||!t.closest('#tcdock'))return;
   if(t.closest('[data-noflick],input,select,textarea'))return;
   /* v336: chip rows (match shape, filters, tabs) used to be skipped, so a downward swipe there fell through to the page */
-  const zone=t.closest('#tcsb')?'body':t.closest('.tcsc,.tcshc')?'chips':'head';const d=dk();if(!d)return;
+  const zone=t.closest('#tcsb')?'body':t.closest('.tcsc,.tcshc')?'chips':'head';
+  /* v337: a swipe while the sheet is still sliding in: finish the slide-in so the drag isn't hidden behind it */
+  {const d0=dk();if(d0&&d0.classList.contains('enter')){d0.classList.remove('enter');const sc=document.querySelector('.tcscrim.enter');if(sc)sc.classList.remove('enter')}}const d=dk();if(!d)return;
   if(zone==='body'&&TC.big&&sb()&&sb().scrollTop>0)return; /* mid-list: let the cards scroll */
   const y=e.touches[0].clientY;let cur=TC.big?0:offN(d);try{const m=new DOMMatrix(getComputedStyle(d).transform);if(isFinite(m.m42))cur=m.m42}catch(_){}
   const l=sb();g={zone,y0:y,x0:e.touches[0].clientX,on:offN(d),big:TC.big,mode:null,pts:[[e.timeStamp,y]],off:cur,cur,st:l?l.scrollTop:0}},{passive:true,capture:true});
  document.addEventListener('touchmove',e=>{if(!g||!TC.open)return;const y=e.touches[0].clientY,dy=y-g.y0,dx=e.touches[0].clientX-g.x0;const d=dk();if(!d){g=null;return}
   if(!g.mode){
-   if(g.zone==='body'&&g.big&&dy<0){g=null;return}           /* full sheet, pushing up: that's a scroll */
+   /* v337: at full size, don't claim the touch until we know which way it's going. The first move is often only a
+      pixel or two, and claiming it killed the list scroll for that whole swipe — why the first scroll never registered */
+   if(g.zone==='body'&&g.big){if(Math.abs(dy)<3&&Math.abs(dx)<3)return;if(dy<0){g=null;return}} /* pushing up: that's a scroll */
    if(Math.abs(dx)>7&&Math.abs(dx)>Math.abs(dy)){g=null;return}
    if(g.zone==='chips'&&Math.abs(dy)<6)return;                /* chip rows: wait to see if it's a sideways scroll */
    e.preventDefault();if(Math.abs(dy)<5)return;               /* claim the gesture from the first move so iOS never starts a scroll */
