@@ -474,7 +474,7 @@ window.tcGo=tcGo;
 window.tcSeg=function(i){if(tcGo(i))return;const sl=S&&S.card.p[i];if(!sl)return;if(typeof closeModal==='function')closeModal();sl.k==='promo'?openPromo(i):openMatch(i)};
 /* v328: flick the sheet up to fill the screen, down to shrink it back (then down again to close) */
 window.tcBig=function(v,quiet){TC.big=!!v;const d=document.getElementById('tcdock');if(d){d.classList.toggle('big',TC.big);const b=d.querySelector('.tcpull');if(b){b.setAttribute('aria-expanded',TC.big?'true':'false');b.setAttribute('aria-label',TC.big?'Shrink the sheet':'Fill the screen')}}
- if(!TC.big){const l=document.getElementById('tcsb');if(l&&l.scrollTop)l.scrollTo({top:0,behavior:'smooth'});if(TC.act!=null)setTimeout(()=>{if(TC.open&&!TC.big)center(TC.act)},380)}};
+ if(!TC.big){const l=document.getElementById('tcsb');if(l&&l.scrollTop){l.dataset.lowering='1';l.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>{delete l.dataset.lowering},500)}if(TC.act!=null)setTimeout(()=>{if(TC.open&&!TC.big)center(TC.act)},380)}};
 window.tcClose=function(){TC.big=false;TC.open=false;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;render()};
 /* the tap that opened the sheet also lands a click on the backdrop; ignore it */
 window.tcScrim=function(){if(Date.now()-SUP<450)return;tcClose()};
@@ -624,7 +624,12 @@ function endDrag(x,y){const t=hit(x,y);const d=DR;cleanup();SUP=Date.now();
    size it simply sits lower. On phones the cards don't scroll at normal size, so a drag can never be split between the
    sheet and the list: drag up to lift the sheet, then the cards scroll once it's full. Drag down from the top of the cards
    to lower it, and from normal size slide it away to close. */
-{let g=null;const EASE='cubic-bezier(.22,1,.36,1)';
+{let g=null,LOCK=null;const EASE='cubic-bezier(.22,1,.36,1)';
+ /* v333: while the sheet is moving, or sitting at normal size on a phone, the cards stay put — iOS was sliding the list
+    along with the sheet, which read as jitter */
+ const COARSE=matchMedia('(hover:none) and (pointer:coarse)');
+ document.addEventListener('scroll',e=>{const t=e.target;if(!t||t.id!=='tcsb'||!TC.open)return;
+  if(LOCK!=null){if(t.scrollTop!==LOCK)t.scrollTop=LOCK}else if(!TC.big&&COARSE.matches&&t.scrollTop!==0&&!t.dataset.lowering)t.scrollTop=0},true);
  const dk=()=>document.getElementById('tcdock'),sb=()=>document.getElementById('tcsb');
  const offN=d=>Math.max(0,d.offsetHeight-Math.min(innerHeight*.66,600));
  const scrim=(o,t)=>{const sc=document.querySelector('.tcscrim');if(sc){sc.style.transition=t||'none';sc.style.opacity=o}};
@@ -634,17 +639,18 @@ function endDrag(x,y){const t=hit(x,y);const d=DR;cleanup();SUP=Date.now();
   if(t.closest('.tcsc,.tcshapes,.tcfilt,[data-noflick]'))return;
   const zone=t.closest('.tcpull,.tcsh')?'head':t.closest('#tcsb')?'body':null;if(!zone)return;const d=dk();if(!d)return;
   if(zone==='body'&&TC.big&&sb()&&sb().scrollTop>0)return; /* mid-list: let the cards scroll */
-  const y=e.touches[0].clientY;g={zone,y0:y,x0:e.touches[0].clientX,on:offN(d),big:TC.big,mode:null,pts:[[e.timeStamp,y]],off:TC.big?0:offN(d)}},{passive:true,capture:true});
+  const y=e.touches[0].clientY;let cur=TC.big?0:offN(d);try{const m=new DOMMatrix(getComputedStyle(d).transform);if(isFinite(m.m42))cur=m.m42}catch(_){}
+  const l=sb();g={zone,y0:y,x0:e.touches[0].clientX,on:offN(d),big:TC.big,mode:null,pts:[[e.timeStamp,y]],off:cur,cur,st:l?l.scrollTop:0}},{passive:true,capture:true});
  document.addEventListener('touchmove',e=>{if(!g||!TC.open)return;const y=e.touches[0].clientY,dy=y-g.y0,dx=e.touches[0].clientX-g.x0;const d=dk();if(!d){g=null;return}
   if(!g.mode){
    if(g.zone==='body'&&g.big&&dy<0){g=null;return}           /* full sheet, pushing up: that's a scroll */
    if(Math.abs(dx)>7&&Math.abs(dx)>Math.abs(dy)){g=null;return}
    e.preventDefault();if(Math.abs(dy)<5)return;               /* claim the gesture from the first move so iOS never starts a scroll */
-   g.mode='drag';g.y0=y;d.style.transition='none';d.classList.add('drag');return}
+   g.mode='drag';g.y0=y;d.style.transition='none';d.classList.add('drag');LOCK=g.st;return}
   e.preventDefault();g.pts.push([e.timeStamp,y]);if(g.pts.length>6)g.pts.shift();
-  const st=g.big?0:g.on;let off=st+dy;if(off<0)off=Math.max(-28,off*.15);if(g.big&&off>g.on)off=g.on+(off-g.on)*.5;
+  let off=g.cur+dy;if(off<0)off=Math.max(-28,off*.15);if(g.big&&off>g.on)off=g.on+(off-g.on)*.5;
   g.off=off;d.style.transform=`translateY(${off}px)`;scrim(off>g.on?String(Math.max(0,1-(off-g.on)/320)):'')},{passive:false,capture:true});
- const end=()=>{const G=g;g=null;if(!G||G.mode!=='drag'||!TC.open)return;const d=dk();if(!d)return;SUP=Date.now();
+ const end=()=>{const G=g;g=null;LOCK=null;if(!G||G.mode!=='drag'||!TC.open)return;const d=dk();if(!d)return;SUP=Date.now();
   const p=G.pts,a=p[0],z=p[p.length-1],dt=Math.max(16,z[0]-a[0]),v=(z[1]-a[1])/dt; /* px per ms, + is down */
   if(!G.big&&(G.off-G.on>110||(v>.6&&G.off-G.on>24))){d.style.transition='transform .24s cubic-bezier(.4,0,1,1)';d.style.transform='translateY(100%)';scrim('0','opacity .24s');setTimeout(()=>tcClose(),230);return}
   if(G.big)settle(d,!(G.off>80||v>.45));else settle(d,(G.on-G.off)>60||v<-.45)};
