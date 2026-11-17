@@ -2,14 +2,14 @@
    Wrestlers knocking on the door with ideas, demands and requests, and the other out-of-the-ring calls that come with
    their own dialogue (front-office situations, medical calls, tampering, trade offers, signing offers, tapes and emails,
    teams in the making, and since v322 wrestlers' own requests from the briefing — owed title shots, contract clauses,
-   favors, feuds that need an ending), used to sit inside the weekly briefing. Now they line up outside your office at the start of the
+   favors, feuds that need an ending), and since v324 agents for contracts on their last two shows, used to sit inside the weekly briefing. Now they line up outside your office at the start of the
    week: you call them in one at a time, each answered before you get to the briefing and the card. The briefing keeps the rest — the
    show, the locker room's mood, contracts, the calendar.
    How it works: the inbox is a queue built fresh from the game state each time (inboxList). Pitches and situations open
    their own decision screens; everything else is one row taken from the briefing's own sections (so the buttons and
    their effects are exactly the ones the briefing had), with a voice on top. While the inbox is open, closing a sheet
-   or "going back to the briefing" brings you back to the next notification, until none are left — then the briefing
-   opens. Loaded last; hooks in by wrapping openBrief, closeModal, briefItems, goLive, go and a few answer functions. */
+   or "going back to the briefing" brings you back to the next notification, until none are left — then you're back on Home, where the
+   briefing is the news-only "This week" panel (v324). Loaded last; hooks in by wrapping openBrief, closeModal, briefItems, goLive, go and a few answer functions. */
 'use strict';
 (function(){
 let ON_=false;          /* the inbox is the thing on screen (or about to come back) */
@@ -51,11 +51,12 @@ function voiceFor(k,row){
  return null}
 const KIND={tamp:['🕵️','A word about another offer'],med:['🚑','The trainer, with an update'],trade:['🔁','The rival on the line'],cd:['⏳','The countdown debut, at your door'],oc:['📝','Your open challenger is back'],tape:['📼','A tape on your desk'],team:['🤝','Two of them, together']};
 /* who's standing in line for each one */
-function whoOf(x){if(x.k==='ask')return x.a.who;if(x.k==='crisis')return S.crisis&&S.crisis.a;if(x.k==='pitch')return S.pitch&&S.pitch.a;if(x.k==='tape')return '📼';if(x.k==='trade')return '📞';const v=voiceFor(x.k,x.row);return v?v[0]:'?'}
+function whoOf(x){if(x.k==='ask')return x.a.who;if(x.k==='agent')return x.w.id;if(x.k==='crisis')return S.crisis&&S.crisis.a;if(x.k==='pitch')return S.pitch&&S.pitch.a;if(x.k==='tape')return '📼';if(x.k==='trade')return '📞';const v=voiceFor(x.k,x.row);return v?v[0]:'?'}
 /* ---- what's waiting ---- */
 function inboxList(){if(!allowed())return [];const out=[];
  if(S.crisis&&S.w[S.crisis.a]&&S.w[S.crisis.a].own==='p'&&typeof CRISES!=='undefined'&&CRISES[S.crisis.k])out.push({k:'crisis',open:()=>_oc()});
  if(S.pitch&&typeof PITCHES!=='undefined'&&PITCHES[S.pitch.k]&&S.w[S.pitch.a]&&S.w[S.pitch.a].own==='p')out.push({k:'pitch',open:()=>_op()});
+ try{agentList().forEach(w=>out.push({k:'agent',w,open:()=>openAgent(w.id)}))}catch(e){console.warn('inbox agents',e)}
  try{askList().forEach(a=>out.push({k:'ask',a,open:()=>openAsk(a.id)}))}catch(e){console.warn('inbox asks',e)}
  let secs=[];try{secs=B0?B0():[]}catch(e){console.warn('inbox',e)}
  const order=['tamp','med','trade','cd','oc','tape','team'];
@@ -70,6 +71,31 @@ function voiceH(sp,line){const w=S.w[sp];const av=w?`<span class="scav">${face(w
  return `<div class="scs">${av}<div class="scq"><b class="${w?(w.al==='h'?'heel':'face'):''}">${esc(w?w.name:sp)}</b><q>${esc(line)}</q></div></div>`}
 function deskPage(x,pos,left){const [ic,nm]=KIND[x.k]||[x.s.i,x.s.t];const v=voiceFor(x.k,x.row);
  return `${head(pos,left)}<div class="h mhd mt">${ic} ${esc(nm)}</div><div class="scene brief ibx">${v?voiceH(v[0],v[1]):''}${x.row}</div>`}
+/* ---- v324: re-signings. A contract down to its last two shows is the biggest call of the week, so the agent comes to
+   the door instead of waiting in the briefing: open talks (or, if they walked away, re-sign at their price), put it off
+   a week (two shows left only — they'll be back for the last one), or let them test free agency (last show only; the
+   go-live contract check won't ask again). Everyone else's contract stays on Home's countdown, negotiable any time. */
+const AG_SHOWS=2;
+function agentList(){const wk=AW();S.agAsk=S.agAsk||{};Object.keys(S.agAsk).forEach(k=>{if(wk-S.agAsk[k]>4)delete S.agAsk[k]});
+ return ownList('p').filter(w=>w.con<=AG_SHOWS&&S.agAsk[w.id]!==wk&&!(S.conAck&&S.conAck.wk===wk&&S.conAck.ids.includes(w.id))).sort((a,b)=>a.con-b.con||b.pop-a.pop)}
+function openAgent(id){const w=S.w[id];if(!w)return closeModal();const blk=w.neg&&w.neg.no>AW();const last=w.con<=1;
+ const line=typeof sayW==='function'?sayW(last?'agent_last':'agent_urgent',w,{A:w.name}):'';
+ const st=typeof conStakes==='function'?conStakes(w):'';
+ const ask=blk?`They walked away from talks — only a re-sign at their price works now (${money(resignCost(w))}).`:`They want about ${money(askSal(w))}/wk${typeof dealWantList==='function'&&dealWantList(w).length&&w.pop>=58?', plus a say in things':''}.`;
+ openModal(`<div class="h mhd mt">✍️ ${last?'Last show on the contract':'Two shows left on the contract'}</div><div class="duo" style="align-items:center">${face(w)}</div>
+ <div class="scene brief ibx">${line?voiceH(`${w.name}'s agent`,line):''}<div class="brow"><span class="muted tiny">${esc(ask)}${st?' '+esc(st.replace(/^./,c=>c.toUpperCase()))+'.':''}</span></div></div>
+ <div class="muted tiny" style="margin:8px 0">${esc(w.name)} · ${typeof attnMood==='function'?esc(attnMood(w.mor)):'morale '+Math.round(w.mor)} · POP ${Math.round(w.pop)} · ${w.al==='f'?'Face':'Heel'}</div>
+ ${blk?`<button class="choice" onclick="agentAnswer('${id}','sign')"><span class="key"><span>A</span></span><div>✍️ Re-sign at their price · ${esc(money(resignCost(w)))}</div><div class="muted tiny">Another 26 weeks, no haggling.</div></button>`
+  :`<button class="choice" onclick="agentAnswer('${id}','talk')"><span class="key"><span>A</span></span><div>🤝 "Let's talk"</div><div class="muted tiny">Open the negotiation now — money, perks and promises.</div></button>`}
+ ${last?`<button class="choice" onclick="agentAnswer('${id}','go')"><span class="key"><span>B</span></span><div>👋 "Let them test the market"</div><div class="muted tiny">${esc(w.name)} becomes a free agent after tonight's show${isChamp(w.id)?' — and their title goes vacant':''}.</div></button>`
+  :`<button class="choice" onclick="agentAnswer('${id}','wait')"><span class="key"><span>B</span></span><div>⏳ "Let's talk next week"</div><div class="muted tiny">They'll be back for the last show. Talks get pricier near the deadline.</div></button>`}`)}
+window.agentAnswer=function(id,k){if(typeof mpLocked==='function'&&mpLocked())return;const w=S.w[id];if(!w)return closeModal();S.agAsk=S.agAsk||{};S.agAsk[id]=AW();
+ if(k==='talk'){save();dealNegotiate(id);return}/* the talks replace this screen; closing them calls in the next one */
+ if(k==='sign'){save();resign(id);return}
+ if(k==='go'){const a=AW();if(!S.conAck||S.conAck.wk!==a)S.conAck={wk:a,ids:[]};if(!S.conAck.ids.includes(id))S.conAck.ids.push(id)}
+ save();try{render()}catch(e){}const left=inboxList().length;
+ openModal(`<div class="h mhd">✍️ ${esc(w.name)}</div><div class="duo" style="align-items:center">${face(w)}</div><div class="outcome">${esc(k==='go'?`The agent nods. After tonight, ${w.name} is a free agent — anyone can bid, you included.`:`"Next week, then. Don't make us wait longer than that."`)}</div>
+ <button class="btn" onclick="closeModal()">${ON_?(left?`Call in the next one (${left} waiting) ▸`:'Line\'s clear — back to work ▸'):'Back to work'}</button>`)};
 /* ---- v322: requests. The briefing has wrestlers asking for things in their own words — a title shot they're owed, a
    contract clause, a win they were promised for doing the job, a feud that needs its ending — but they only ever said it
    in the rundown. Now they come to the door and ask you directly: say yes (a little morale now; it goes to the top of
@@ -127,7 +153,7 @@ window.askAnswer=function(id,yes){if(typeof mpLocked==='function'&&mpLocked())re
  save();try{render()}catch(e){}
  const left=inboxList().length;
  openModal(`<div class="h mhd">${askKind(id).i} ${esc(a.h)}</div><div class="duo" style="align-items:center">${face(w)}</div><div class="outcome ${yes?'ok':''}">${esc(txt)}</div>
- <button class="btn" onclick="closeModal()">${ON_?(left?`Call in the next one (${left} waiting) ▸`:'Line\'s clear — on to the briefing ▸'):'Back to work'}</button>`)};
+ <button class="btn" onclick="closeModal()">${ON_?(left?`Call in the next one (${left} waiting) ▸`:'Line\'s clear — back to work ▸'):'Back to work'}</button>`)};
 /* when the show goes live: did you keep your word? The card is read just before it airs (askSnap), and settled once
    the show has actually started (a go-live that stops at a checklist or a gate settles nothing) */
 function askSnap(){const wk=AW();const ys=Object.keys(S.asks||{}).filter(k=>{const r=S.asks[k];return r.w===wk&&r.a==='y'&&!r.done});if(!ys.length)return null;
@@ -154,6 +180,7 @@ function openInbox(){const l=inboxList();if(!l.length){ON_=false;N0=0;CUR=null;t
 let CUR=null;
 const TEASE={tamp:1,med:1,trade:1,tape:1};
 function describe(x){const nm=id=>S.w[id]?S.w[id].name:'';
+ if(x.k==='agent'){const w=x.w;return {k:'agent',kick:'✍️ An agent at the door',head:`${w.name}'s contract is ${w.con<=1?'up after tonight':'almost up'}`,w:w.id}}
  if(x.k==='ask'){const K=askKind(x.a.id)||{};return {k:'ask',kick:`${K.i||'🗣️'} ${K.n||'A request'}`,head:x.a.h,w:x.a.who,q:x.a.line}}
  if(x.k==='pitch'){const p=S.pitch,P=PITCHES[p.k],c=pCtx(p);return {k:'pitch',kick:P.cat,head:P.head(c),w:p.a,w2:p.b||null}}
  if(x.k==='crisis'){const c=S.crisis,C=CRISES[c.k];return {k:'crisis',kick:`${C.i} ${C.good?'Opportunity':'Front office'}`,head:C.t,w:c.a,narr:1}}
@@ -168,7 +195,7 @@ window.inboxCur=()=>ON_?CUR:null;
 window.openInbox=openInbox;
 /* once the last one is answered, the briefing */
 /* v237: Home re-draws as the line clears, so its strip never shows people who've already been answered */
-function finish(){ON_=false;N0=0;CUR=null;try{render()}catch(e){}if(typeof _ob==='function')_ob()}
+function finish(){ON_=false;N0=0;CUR=null;try{render()}catch(e){}/* v324: the briefing is a panel on Home now — nothing else opens */}
 /* ---- hooks ---- */
 const _ob=window.openBrief;
 /* v237: the results screen used to open a situation straight away, so the line never formed. Anything that opens a
@@ -193,7 +220,7 @@ if(typeof briefItems==='function'){B0=window.briefItems||briefItems;window.brief
  return sec.map(s=>{if(!deskKind(s))return s;const rows=(s.rows||[]).filter(r=>!isAsk(r));return rows.length?Object.assign({},s,{rows,u:0}):null}).filter(Boolean)}}
 /* the decision screens' "done" buttons carry on to the next notification */
 function nextBtn(){const m=document.querySelector('#modal .sbody');if(!m||!ON_)return;const left=inboxList().length;
- m.querySelectorAll('button.btn').forEach(b=>b.remove());m.insertAdjacentHTML('beforeend',`<button class="btn" onclick="closeModal()">${left?`Call in the next one (${left} waiting) ▸`:'Line\'s clear — on to the briefing ▸'}</button>`)}
+ m.querySelectorAll('button.btn').forEach(b=>b.remove());m.insertAdjacentHTML('beforeend',`<button class="btn" onclick="closeModal()">${left?`Call in the next one (${left} waiting) ▸`:'Line\'s clear — back to work ▸'}</button>`)}
 ['pitchChoose','crisisChoose'].forEach(fn=>{const f=window[fn];if(typeof f!=='function')return;window[fn]=function(){const r=f.apply(this,arguments);try{if(ON_)nextBtn()}catch(e){}return r}});
 /* nothing goes live with a notification unanswered, and the Book screen brings them up first */
 let ASK_PEND=null;

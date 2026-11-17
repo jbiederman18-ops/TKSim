@@ -226,7 +226,7 @@ function pitchChoose(k){if(typeof mpLocked==='function'&&mpLocked())return;const
   if(P.go.start){const sp=P.go.start(x);const t=pitchStart(p,sp);mor(x.A,10);txt=`${PCH.go.i} Promise made: ${t.txt}. ${x.A.name} is fired up — don't let them down.`}else txt=`${PCH.go.i} ${P.go.fx(x)}`}
  else{const cut=pMorCut(x.A,P.no*3);mor(x.A,-cut);txt=`${PCH.no.i} You let ${x.A.name} down gently. They understand — mostly (−${cut} morale).`}
  S.pitch=null;S.pitchNews=(S.pitchNews||[]).concat([{w:AW(),t:txt}]).slice(-12);save();render();
- openModal(`<div class="h mhd">📨 ${esc(P.head(x))}</div><div class="duo" style="align-items:center">${face(x.A)}${x.B?face(x.B):''}</div><div class="outcome ok">${esc(txt)}</div><button class="btn" onclick="openBrief()">Back to the briefing</button><button class="btn sec" onclick="closeModal()">Back to work</button>`)}
+ openModal(`<div class="h mhd">📨 ${esc(P.head(x))}</div><div class="duo" style="align-items:center">${face(x.A)}${x.B?face(x.B):''}</div><div class="outcome ok">${esc(txt)}</div><button class="btn" onclick="openBrief()">Back to work</button><button class="btn sec" onclick="closeModal()">Back to work</button>`)}
 function openPitch(){const p=S.pitch;if(!p||!PITCHES[p.k])return;const P=PITCHES[p.k],x=pCtx(p);if(!x.A||x.A.own!=='p'||(p.b&&!x.B)){S.pitch=null;save();return}
  const said=P.text(x);const line=said[(p.v!=null?p.v:(p.v=RI(0,said.length-1)))%said.length];
  openModal(`<div class="muted"><span class="live-tag" style="background:var(--gold);color:#111">PITCH</span>${esc(P.cat)} · expires after this week</div><div class="h mhd mt">${esc(P.head(x))}</div><div class="duo" style="align-items:center">${face(x.A)}${x.B?face(x.B):''}</div><p class="scene">${p.k==='wacky'?line:esc(line)}</p>

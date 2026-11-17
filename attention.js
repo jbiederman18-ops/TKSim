@@ -160,7 +160,7 @@ function attnItems(){if(!S||S.phase!=='season')return [];
 
  /* contracts ending after this show — the go-live contract check already stops you, so this doesn't double up */
  mine.filter(w=>w.con<=1).forEach(w=>{const blk=w.neg&&w.neg.no>AW();
-  add({id:'conlast'+w.id,g:A_MUST,i:'✍️',h:`${w.name}'s contract ends after this show`,d:`${conStakes(w)?conStakes(w)+' ':''}Re-sign them now or they become a free agent. ${blk?'They walked away from talks — re-signing means paying their price.':`They want about ${money(askSal(w))}/wk.`}`,s:['b','Not re-signed'],
+  add({id:'conlast'+w.id,g:A_MUST,i:'✍️',h:`${w.name}'s contract ends after this show`,d:`${conStakes(w)?conStakes(w)+' ':''}Re-sign them now or they become a free agent. ${blk?'They walked away from talks — re-signing means paying their price.':`They want about ${money(askSal(w))}/wk.`}`,s:S.conAck&&S.conAck.wk===AW()&&S.conAck.ids.includes(w.id)?['ok','Letting them go']:['b','Not re-signed'],
    a:blk?[`Re-sign ${money(resignCost(w))}`,`attnResign('${w.id}')`,1]:['Negotiate',`attnNeg('${w.id}')`,1],gate:false,who:[w.id],where:'📞 On the phone',say:[[`${w.name}'s agent`,sayW('agent_last',w,{A:w.name})]]})});
 
  /* network mandate, due tonight */
@@ -246,14 +246,14 @@ function attnItems(){if(!S||S.phase!=='season')return [];
     s:['n','New this week'],a:['See them',`showW('${w.id}')`],gate:false,who:arr.map(x=>x.id),where:'🆕 The free-agent market',say:[[`${w.name}'s agent`,`${w.name} is a free agent as of this week. We're taking offers.`]]})}}
  {const n=(S.injq||[]).filter(q=>S.w[q.id]&&S.w[q.id].own==='p'&&S.w[q.id].inj>0).length;if(n)add({id:'med',g:A_OFF,i:'🚑',h:`${n} medical decision${n>1?'s':''} waiting`,d:'Let it heal, rush them back, or send them for surgery.',s:['w','Undecided'],a:['Decide','openBrief()'],gate:false,where:null})}
  {const T=S.tamp||{};const n=typeof tampOpen==='function'?tampOpen().length:Object.keys(T).filter(id=>S.w[id]&&S.w[id].own==='p'&&!T[id].let&&!T[id].calm).length;if(n)add({id:'tamp',g:A_OFF,i:'🕵️',h:`${n} tampering rumor${n>1?'s':''}`,d:'The rival is courting someone on your roster.',s:['w','Undecided'],a:['Decide','openBrief()'],gate:false,where:null})}
- if(typeof cdOfferLive==='function'&&cdOfferLive())add({id:'cdoffer',g:A_OFF,i:'⏳',h:'A signing offer from the countdown debut',d:'Decide in the briefing.',s:['w','Undecided'],a:['Decide','openBrief()'],gate:false,where:null});
- if(typeof ocOfferLive==='function'&&ocOfferLive())add({id:'ocoffer',g:A_OFF,i:'📝',h:'Someone impressed in your open challenge',d:'Decide in the briefing whether to sign them.',s:['w','Undecided'],a:['Decide','openBrief()'],gate:false,where:null});
+ if(typeof cdOfferLive==='function'&&cdOfferLive())add({id:'cdoffer',g:A_OFF,i:'⏳',h:'A signing offer from the countdown debut',d:'They\'re waiting outside your office.',s:['w','Undecided'],a:['Decide','openBrief()'],gate:false,where:null});
+ if(typeof ocOfferLive==='function'&&ocOfferLive())add({id:'ocoffer',g:A_OFF,i:'📝',h:'Someone impressed in your open challenge',d:'They\'re waiting outside your office.',s:['w','Undecided'],a:['Decide','openBrief()'],gate:false,where:null});
  /* a chance is never a blocker: "not yet" there is just worth a look */
  out.forEach(x=>{if(x.g===A_CH&&x.s&&x.s[0]==='b')x.s=['w',x.s[1]]});
  /* v322: a request you said yes to at your office door (inbox.js) sits on top until it's on tonight's card */
  const ak=S.asks||{};out.forEach(x=>{const r=ak[x.id];if(!r||r.w!==AW()||r.a!=='y'||!x.s||x.s[0]==='ok')return;x.g=A_MUST;x.gate=false;x.s=['b','You told them yes — not on the card yet'];if(!x.a&&/^stale/.test(x.id)&&x.who&&x.who[1])x.a=['Book it',`feudBook('match','${x.who[0]}','${x.who[1]}')`,1]});
  return out}
-window.attnItems=attnItems;
+window.attnItems=attnItems;window.sayW=sayW;
 
 /* ===================== BOOKING SCREEN ===================== */
 const GRP=[[A_MUST,'Before you go live'],[A_CH,'Chances tonight'],[A_MIND,'Keep in mind'],[A_OFF,'Front office']];
@@ -271,7 +271,7 @@ function attnPanel(){if(!S||S.phase!=='season'||typeof mpLockedQuiet==='function
  return `<div class="card attn"><div class="row sb"><div class="h small" style="margin:0">Needs your attention</div>${top.length?`<span class="tg bad">${top.length} to fix</span>`:'<span class="tg good">Ready</span>'}</div>
  ${top.length?`<div class="atl attop">${top.map(rowHtml).join('')}</div>`:'<div class="muted tiny" style="margin-top:6px">✓ Nothing is blocking tonight\'s show.</div>'}
  ${rest.length?`<details class="atmore" ${OPEN.more?'open':''} ontoggle="attnOpen('more',this.open)"><summary><span>Everything else</span><span class="tiny muted">${cnt}</span></summary>${secs}</details>`:''}
- <div class="tiny muted" style="margin-top:8px"><a href="#" onclick="openBrief();return false" style="color:var(--gold2)">📰 Read this week's briefing</a></div></div>`}
+ <div class="tiny muted" style="margin-top:8px"><a href="#" onclick="openBrief();return false" style="color:var(--gold2)">📰 This week's news is on Home</a></div></div>`}
 window.attnPanel=attnPanel;
 window.attnOpen=(g,o)=>{if(OPEN)OPEN[g]=o};
 /* chips on each segment of the running order: promises it keeps or breaks, heat, creative control */
@@ -362,6 +362,63 @@ function genCard(xs,isNew,g){const one=xs.length===1;const same=!one&&xs.every(x
  const seen=new Set();const rows=xs.map(x=>{const sy=x.say&&x.say.find(s=>s&&s[1]&&!seen.has(s[1]));if(sy)seen.add(sy[1]);const sub=same?(sy?`<i>“${esc(sy[1])}”</i>`:''):esc(x.d)+live(x);return rowH(`${x.i} ${esc(x.h)}${newH(isNew(x))}`,sub,'',btnH(x.a))}).join('');
  return cardH(esc(place(xs[0])||xs[0].h),(same?'':lead?voice(lead[0],lead[1]):'')+rows+(same?`<div class="rdf">${esc(xs[0].d)}</div>`:''),hot)}
 function secH(t,cls){return `<div class="rdsec ${cls||''}"><span>${t}</span><i></i></div>`}
+/* v324: the briefing is news, not decisions. Anyone who needs an answer comes to the office door (inbox.js), anything
+   about tonight's card lives on the Book screen's checklist, and what's left — what happened since last week, the
+   locker room, the market, what's coming — is the "This week" panel on Home. Nothing in it is a decision: names open
+   the wrestler, and the only way out of it is a link to the Book screen. Rows that changed since last week carry NEW;
+   the panel shows the first few and folds the rest (the choice sticks). */
+const WK_SHOW=6;
+const nmA=w=>`<a href="#" onclick="showW('${w.id}');return false" class="${nmC(w)}">${esc(w.name)}</a>`;
+const strip=h=>String(h).replace(/<button[\s\S]*?<\/button>/g,'').replace(/<div class="brow[^"]*"[^>]*>/g,'').replace(/<\/div>\s*$/,'').replace(/closeModal\(\);/g,'');
+function wkRows(){const l=attnItems();let secs=[];try{secs=briefItems()}catch(e){console.warn(e)}
+ const sec=i=>secs.filter(x=>x.i===i);const out=[];const add=(grp,k,ic,html,sig)=>out.push({grp,k,ic,html,sig:sig==null?String(html).replace(/<[^>]+>/g,''):sig});
+ const mine=ownList('p');
+ /* since last week */
+ sec('📬').forEach(x=>x.rows.forEach((r,j)=>add('Since last week','calls'+j,'📬',strip(r))));
+ sec('🏟️').forEach(x=>x.rows.forEach((r,j)=>add('Since last week','roh'+j,'🏟️',strip(r))));
+ /* backstage */
+ const sad=l.filter(x=>/^mor/.test(x.id)).map(x=>S.w[x.who[0]]).filter(Boolean).sort((a,b)=>a.mor-b.mor);
+ if(sad.length){const off=sad.filter(w=>w.mor<SIT_MOR);add('Backstage','mor','😒',`Unhappy: ${sad.map(w=>`${nmA(w)} <span class="muted">(${esc(moodW(w.mor).toLowerCase())})</span>`).join(', ')}.${off.length?` <span class="bad">${esc(off.map(L).join(' and '))} could go off-script in a match.</span>`:''} A win, a main-event spot or a sit-down interview helps.`,sad.map(w=>w.id+moodW(w.mor)).join(','))}
+ const inj=mine.filter(w=>w.inj).sort((a,b)=>a.inj-b.inj);
+ if(inj.length)add('Backstage','inj','🚑',`Out: ${inj.map(w=>`${nmA(w)} <span class="muted">(${w.susp?'suspended':'injured'}, ${w.inj} wk${w.inj===1?'':'s'})</span>`).join(', ')}.`,inj.map(w=>w.id).join(','));
+ const ti=l.find(x=>x.id==='tired');if(ti){const ws=(ti.who||[]).map(id=>S.w[id]).filter(Boolean);const ex=ws.filter(w=>w.fat>=FAT_RISK);
+  add('Backstage','tired','🔋',`${ex.length?'Exhausted':'Worn down'}: ${ws.map(nmA).join(', ')}. ${ex.length?'Rest the exhausted ones or risk an injury.':'Tired wrestlers work a little slower.'}`,ws.map(w=>w.id).sort().join(','))}
+ sec('☢️').forEach(x=>x.rows.forEach((r,j)=>add('Backstage','beef'+j,'☢️',strip(r))));
+ l.filter(x=>/^stale/.test(x.id)).forEach(x=>{const [A,B]=(x.who||[]).map(id=>S.w[id]);if(!A||!B)return;add('Backstage',x.id,'🥱',`${nmA(A)} vs ${nmA(B)} ${esc(x.h.replace(A.name+' vs '+B.name+' ',''))}. <span class="muted">Pay it off at a PPV or blow it off on TV.</span>`,sigOf(x))});
+ /* front office */
+ l.filter(x=>x.id==='arrive'||/^fa/.test(x.id)).forEach(x=>{(x.who||[]).map(id=>S.w[id]).filter(Boolean).forEach(w=>{const last=x.id!=='arrive';
+  add('Front office',(last?'fa':'arr')+w.id,'🆕',`${nmA(w)} <span class="muted">· POP ${Math.round(w.pop)}</span> ${last?`— last week to sign (${money(signCost(w))})`:`just hit the market — wants an offer, and ${esc(S.rival||'the rival')} can bid`}`,last?'last':'new')})});
+ const th=l.find(x=>x.id==='thin');if(th)add('Front office','thin','📋',`${esc(th.h)}. <span class="muted">${esc(th.d)}</span>`,th.h);
+ sec('📨').forEach(x=>x.rows.forEach((r,j)=>add('Front office','offer'+j,'📨',strip(r))));
+ secs.filter(x=>x.i==='🔁'&&/Your trade offers/.test(x.t)).forEach(x=>x.rows.forEach((r,j)=>{const m=r.match(/tradeWithdraw\('([^']+)'\)/);add('Front office','trade'+j,'🔁',strip(r)+(m?` <a href="#" class="muted" onclick="wkTradeX('${m[1]}');return false">Withdraw?</a>`:''))}));
+ /* whatever's left of the office's own sections once the line has taken the decisions (followed prospects and the like) */
+ secs.filter(x=>['🕵️','🚑','⏳','📝','📼','🤝'].includes(x.i)).forEach(x=>(x.rows||[]).forEach((r,j)=>{const t=strip(r);if(t.replace(/<[^>]+>/g,'').trim())add('Front office',x.i+j,x.i,t)}));
+ return out}
+window.wkTradeX=function(id){openModal(`<div class="h mhd">🔁 Withdraw this trade offer?</div><p class="muted">They haven't answered yet. Pull it back and it's as if you never sent it.</p><button class="btn" onclick="tradeWithdraw('${id}');closeModal();render()">Withdraw it</button><button class="btn sec" onclick="closeModal()">Keep it on the table</button>`)};
+window.wkFold=function(){S.wkOpen=!S.wkOpen;save();render()};
+window.weekPanel=function(){if(!S||S.phase!=='season'||typeof mpLockedQuiet==='function'&&mpLockedQuiet())return '';let rows=[],l=[];
+ try{rows=wkRows();l=attnItems()}catch(e){console.warn('week panel',e);return ''}
+ /* NEW since last week: each row's signature against what it said when this week started */
+ if(!S.wkBase||S.wkBase.w!==AW())S.wkBase={w:AW(),sig:Object.assign({},S.wkSig||{}),first:!S.wkSig};
+ const base=S.wkBase.sig;S.wkSig=S.wkSig||{};rows.forEach(r=>{S.wkSig[r.k]=r.sig});
+ rows.forEach(r=>{r.nw=!S.wkBase.first&&base[r.k]!==r.sig});
+ /* new rows first within each group, groups in a fixed order */
+ const G=['Since last week','Backstage','Front office'];rows.sort((a,b)=>G.indexOf(a.grp)-G.indexOf(b.grp)||(b.nw-a.nw));
+ const must=l.filter(x=>x.g===A_MUST&&x.s&&x.s[0]==='b').length,ch=l.filter(x=>x.g===A_CH&&x.s&&x.s[0]!=='ok').length;
+ const np=nextPPV();let cal=[];try{const c=briefItems().find(x=>x.i==='🗓️');if(c)cal=c.rows.map(strip).filter(r=>!/injured|suspended/.test(r))}catch(e){}
+ const open=!!S.wkOpen,shown=open?rows:rows.slice(0,WK_SHOW),more=rows.length-shown.length,nNew=rows.filter(r=>r.nw).length;
+ let g0='';const body=shown.map(r=>{const h=r.grp!==g0?`<div class="wkg">${esc(r.grp)}</div>`:'';g0=r.grp;return `${h}<div class="wkr"><span class="wki">${r.ic}</span><span>${r.html}${r.nw?newH(1):''}</span></div>`}).join('');
+ const tonight=must||ch?`<a href="#" class="wkt ${must?'bad':''}" onclick="go('book');return false"><span>${must?`<b>${must}</b> to handle before you go live`:''}${must&&ch?' · ':''}${ch?`<b>${ch}</b> chance${ch===1?'':'s'} tonight`:''}</span><span>On the Book screen ›</span></a>`:'';
+ return `<div class="card wkp" id="wkp"><div class="row sb"><div class="h small" style="margin:0">📰 This week${nNew?` <span class="rdn">${nNew} new</span>`:''}</div><span class="muted tiny">Week ${S.week}${np?` · ${np.in?`${np.in} wk${np.in===1?'':'s'} to ${esc(np.n)}`:`${esc(np.n)} is this week`}`:''}</span></div>
+ ${tonight}${body||'<div class="muted" style="margin-top:6px">All quiet backstage.</div>'}${more>0||open&&rows.length>WK_SHOW?`<button class="wkm" onclick="wkFold()">${open?'Show less ▴':`${more} more ▾`}</button>`:''}${cal.length?`<div class="wkc">${cal.map(r=>`<span>${r}</span>`).join('')}</div>`:''}</div>`};
+(function(){const c=document.createElement('style');c.textContent=`.wkp .wkg{margin:12px 0 2px;font:800 11px 'BC',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--gold2)}
+.wkp .wkr{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line);font-size:14px;line-height:1.35}.wkp .wkg+.wkr{border-top:0}
+.wkp .wki{flex:none;width:20px;text-align:center}.wkp .wkr a{color:inherit;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:2px}
+.wkp .wkr a.heel{color:#ff9a90}.wkp .wkr a.face{color:#8cc8ff}
+.wkp .wkt{display:flex;justify-content:space-between;gap:8px;margin:10px 0 2px;padding:9px 11px;border:1px solid var(--line);border-left:3px solid var(--gold);color:var(--text);text-decoration:none;font-size:13.5px}
+.wkp .wkt.bad{border-left-color:#ff6b61}.wkp .wkt span:last-child{color:var(--gold2);font-weight:700;white-space:nowrap}
+.wkp .wkm{display:block;width:100%;margin-top:6px;padding:8px;background:none;border:1px solid var(--line);color:var(--mut);font:700 12px 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.wkp .wkc{display:flex;flex-direction:column;gap:3px;margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font-size:12.5px;color:var(--mut)}`;document.head.appendChild(c)})();
 window.briefStory=function(){const sh=curShow();let l=[];try{l=attnItems()}catch(e){console.warn(e)}
  /* what changed since last week's briefing */
  if(!S.brBase||S.brBase.w!==AW()){S.brBase={w:AW(),sig:Object.assign({},S.brSig||{})};}

@@ -472,11 +472,14 @@ function briefHtml(){if(typeof briefStory==='function')return briefStory();const
  return `<div class="h mhd">📰 Week ${S.week} briefing</div><p class="muted" style="margin-top:0">${esc(sh.ppv?sh.name+' is this week.':'Here\'s what needs your attention before you book.')}</p>
  ${sec.length?sec.map(s=>`<div class="card brief ${s.u?'urgent':''}"><div class="h small">${s.i} ${s.t}${s.u?' <span class="tg bad">Act now</span>':''}${s.tag?` <span class="tg good">${s.tag}</span>`:''}</div>${s.rows.join('')}</div>`).join(''):'<div class="card"><div class="muted">All quiet in the front office. Go book a great show.</div></div>'}
  <button class="btn" onclick="closeModal();go('book')">Book the show</button><button class="btn sec" onclick="closeModal()">Close</button>`}
-function openBrief(){if(!S||S.phase!=='season')return;briefMark();openModal(briefHtml())}
+/* v324: the briefing is the "This week" panel on Home (attention.js weekPanel) — no pop-up. Anything that used to
+   reopen the briefing after a decision now lands back on Home with the panel in view. */
+function openBrief(){if(!S||S.phase!=='season')return;briefMark();const m=document.getElementById('modal');if(m&&!m.classList.contains('hidden'))closeModal();
+ if(typeof tab!=='undefined'&&tab!=='home')go('home');else render();setTimeout(()=>{const p=document.getElementById('wkp');if(p&&p.scrollIntoView)try{p.scrollIntoView({block:'start',behavior:'smooth'})}catch(e){}},80)}
 function briefResign(id){resign(id);openBrief()}
 /* show it once per week, the first time Home is on screen with nothing else open */
-function briefAuto(){if(!S||S.phase!=='season'||tab!=='home'||(typeof TV!=='undefined'&&TV)||briefSeen())return;if(typeof ME!=='undefined'&&ME||typeof PS!=='undefined'&&PS||typeof LQ!=='undefined'&&LQ)return;
- if(ON()&&!myTurn())return;const m=document.getElementById('modal');if(!m||!m.classList.contains('hidden'))return;setTimeout(()=>{const m2=document.getElementById('modal');if(S&&tab==='home'&&m2&&m2.classList.contains('hidden')&&!briefSeen())openBrief()},350)}
+/* v324: nothing pops up any more — the office line forms on its own (inbox.js) and the briefing is a panel on Home */
+function briefAuto(){}
 
 /* v111: star ratings were recalibrated (a solid show is ~3½★ now, 5★ is rare) and fan growth slows as a company gets big */
 function starMigrate(st){if(!st||!st.w||st.v111)return;st.v111=1;if(st.phase!=='season'&&st.phase!=='over')return;const S0=S;S=st;try{news('📏 Star ratings have been recalibrated: a solid show now rates about 3½★, a great one 4★ and up, and 5★ is rare. Fan growth also slows as your company gets bigger.')}finally{S=S0}}
