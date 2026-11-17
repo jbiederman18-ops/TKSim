@@ -1,31 +1,29 @@
-/* Tony Khan Simulator — the card table (v273).
+/* Tony Khan Simulator — the card table (v273; tap-to-pick sheet since v280; the only Book screen since v338).
    Every wrestler is a card, and every show is a table you play them onto. This module carries that idea through the
    week, on top of the game's own systems (nothing here changes how a match or promo is rated):
 
-     Booking   — the running order becomes a table. Pick a slot (tap it, or a number above your hand) and you're dealt
-                 a hand of about seven cards for it: promises, requests and title defenses first, then feuds, then
-                 rested stars, each with a reason tab. Play a card (drag it onto any slot, or tap it) and the hand
-                 re-deals with the best partners for that wrestler. A third card makes a triple threat; stacking a
-                 partner onto a side makes a tag or trios match. Once both sides are set, the hand turns into
-                 stipulation, title and pin cards. Tap a card on the table to make that side the winner, swipe it
-                 sideways to send it back. Booked matches get tabs for stips & titles, the finish and the run-in (v298).
+     Booking   — the running order becomes a table drawn over the Book screen's slots (decorate). Tap a space and the
+                 pick sheet slides up (dockHtml): Needs you tonight, Best fits, Already booked tonight, plus Champions /
+                 Faces / Heels / All. A match shape row (Singles, Tag, Trios, 8-man tag, Triple threat, Four-way, Squash,
+                 Open challenge) lays out every space and the sheet fills one whole team, then the next. Booked matches
+                 get tabs: Wrestlers, Stipulation, Title, Finish (incl. TV blow-off and MITB cash-in, v338) and Run-in.
+                 👑 Win under a side picks the winner, Pin picks who takes the fall; hold a card to drag it elsewhere.
      Office    — the line outside your office is a stack of cards; a two-answer decision can be swiped.
-     Live      — calls in the match and promo showdowns are cards you flick up (or tap).
      Reveal    — each segment flips over before its stars fill in.
      Party TV  — each GM's table fills with face-down cards as they book.
 
    Special matches (tournaments, the Rumble, Money in the Bank, the Casino Gauntlet, open challenges, squashes, dream
-   matches) are booked on the table too (v321) — see roV/fieldV below. Settings › Card table switches the whole thing off (the classic Book
-   screen comes back). Loaded last; hooks in by wrapping render, menuView, openInbox, tvWeek and a few others. */
+   matches) are booked on the table too (v321) — see roV/fieldV below. Details on a slot still opens the full match
+   editor. Loaded last; hooks in by wrapping render, openInbox, tvWeek and a few others. */
 'use strict';
 (function(){
 const LS='tksim_cards';
-let ONF=true;try{ONF=localStorage.getItem(LS)!=='0'}catch(e){}
+/* v338: the card table is the only Book screen — the classic screen's Settings toggle is gone (old 'off' choices are cleared) */
+try{localStorage.removeItem(LS)}catch(e){}
+const ONF=true;
 const on=()=>ONF;
 window.cardsOn=on;
 window.TC_HAND=7;
-function setOn(v){ONF=!!v;try{localStorage.setItem(LS,ONF?'1':'0')}catch(e){}document.documentElement.classList.toggle('tcards',ONF);TC.sel=null;TC.confirm=null;try{render()}catch(e){}}
-window.cardsSet=setOn;
 document.documentElement.classList.toggle('tcards',ONF);
 
 /* ---------------- state ---------------- */
@@ -146,9 +144,9 @@ function targets(i,m){const sl=card()[i];m=m||cur(i);
  if(sz.every(n=>n===1)&&m.sides.length<4)t.push({t:'third'});
  return t}
 /* match shapes (v287): pick Singles, Tag, Trios, Triple threat or Four-way and the table lays out every space; the sheet fills them in turn */
-const SHAPES=[['singles','Singles',2,1],['tag','Tag',2,2],['trios','Trios',2,3],['triple','Triple threat',3,1],['four','Four-way',4,1],['squash','Squash',2,1],['open','Open challenge',1,1]];
+const SHAPES=[['singles','Singles',2,1],['tag','Tag',2,2],['trios','Trios',2,3],['eight','8-man tag',2,4],['triple','Triple threat',3,1],['four','Four-way',4,1],['squash','Squash',2,1],['open','Open challenge',1,1]];
 function shapeOf(i,m){if(TC.sh[i])return TC.sh[i];if(m&&(m.type==='squash'||m.type==='open'))return m.type;const ty=typeFor(m.sides);if(ty&&SHAPES.some(x=>x[0]===ty))return ty;
- const n=m.sides.filter(x=>x.length).length,per=Math.max(1,...m.sides.map(x=>x.length));return n>=4?'four':n===3?'triple':per>=3?'trios':per===2?'tag':'singles'}
+ const n=m.sides.filter(x=>x.length).length,per=Math.max(1,...m.sides.map(x=>x.length));return n>=4?'four':n===3?'triple':per>=4?'eight':per>=3?'trios':per===2?'tag':'singles'}
 function shapeDims(k){const x=SHAPES.find(y=>y[0]===k)||SHAPES[0];return [x[2],x[3]]}
 function shapeNext(m,k){const [n,per]=shapeDims(k);/* v328: one whole team, then the next — no bouncing between sides */for(let j=0;j<n;j++){const sd=m.sides[j];if(!sd)return {t:'third'};if(sd.length<per)return sd.length?{t:'partner',i:j}:{t:'side',i:j}}return null}
 function defTarget(i,m){m=m||cur(i);const sl=card()[i];if(sl&&sl.k==='match'&&TC.sh[i])return shapeNext(m,TC.sh[i]);return defTarget0(i,m)}
@@ -247,6 +245,22 @@ function titleTiles(d){const ets=titleEts(d);if(!ets.length)return [];const ids=
   const why=ow?`Pays off ${ln(ow.w)}'s title shot (${ow.lab.toLowerCase()}).`:!ch.length?'The winner takes the belt.':ch.every(c=>ids.includes(c.id))?`${ch.map(ln).join(' & ')} defends.`:'Counts as a title defense.';
   out.push({x:`t:${T.id}`,k:ch.length?(ow?'Owed title shot':'Championship'):'Vacant title',n:ch.length?`${T.n} on the line`:`Crown the first ${T.n} champion`,d:on?why+' Tap for non-title.':why,fit:!!ow,on})});
  return out}
+/* v338: the Finish tab also carries the TV blow-off and Money in the Bank cash-ins, which used to live only in the full
+   match editor. Same rules as the editor (boPairs / boRow, cashOpts / cashRow). */
+function boOk(d){try{const sh=curShow();return !sh.ppv&&!d.tour&&d.type!=='gauntlet'&&!isSp(d)&&!isSq(d)&&d.type!=='open'&&boPairs(d).length>0}catch(e){return false}}
+function cashL(d){try{return typeof cashOpts==='function'?cashOpts(d,'p'):[]}catch(e){return []}}
+function finExtras(d){const tile=x=>`<div class="tx ${x.on?'on':''} ${x.fit?'fit':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span></div>`;let h='';
+ if(!boOk(d)&&d.bo)delete d.bo;
+ if(boOk(d)){const l=boPairs(d);const nm=l.map(([a,b])=>`${ln(W_(a))} vs ${ln(W_(b))}`).join(', ');const gim=stipKey(d)!=='std';
+  h+=`<div class="tcwhy">End the feud tonight</div><div class="tcgx">${tile({x:'b:1',k:`💥 Blow-off · 🔥${Math.round(Math.max(...l.map(x=>x[2])))}`,n:d.bo?'✓ This is the blow-off':'Make it the blow-off',d:d.bo?`A clean win (or an upset) ends ${nm} here${gim?` — the ${STIPS[stipKey(d)].n} makes it a fitting end`:''}. A dirty finish leaves it unsettled. Tap to undo.`:`${nm}. A smaller payoff than a PPV blow-off.`,on:!!d.bo,fit:!!d.bo})}</div>`}
+ const cl=cashL(d);if(d.cash&&!cl.some(o=>o.a===d.cash.a&&o.t===d.cash.t))delete d.cash;
+ if(cl.length){const c=d.cash;const ts=[{x:'c:',k:'💼 Money in the Bank',n:'No cash-in',d:'Keep the briefcase for another night.',on:!c}];
+  cl.forEach(o=>{const T=S.titles[o.t],A=ln(W_(o.a)),C=ln(W_(o.c));const bell=d.type==='singles'&&d.title===o.t&&d.sides.flat().includes(o.a);
+   if(bell)ts.push({x:`c:${o.a}|${o.t}|bell`,k:'💼 Announced cash-in',n:`This match is ${A}'s cash-in`,d:`Uses the briefcase — the ${T.n} title is on the line and the finish decides it (+¼★).`,on:!!(c&&c.a===o.a&&c.t===o.t&&c.bell)});
+   else ts.push({x:`c:${o.a}|${o.t}|w`,k:'💼 Right after the match',n:`${A} cashes in and wins`,d:`The ${T.n} title changes hands on a worn-out ${C} (+½★).`,on:!!(c&&c.a===o.a&&c.t===o.t&&!c.bell&&c.w),fit:true},
+    {x:`c:${o.a}|${o.t}|s`,k:'💼 Right after the match',n:`${C} survives the cash-in`,d:'The briefcase is gone, but the champion pulls it out (+¼★).',on:!!(c&&c.a===o.a&&c.t===o.t&&!c.bell&&!c.w)})});
+  h+=`<div class="tcwhy">Money in the Bank</div><div class="tcgx">${ts.map(tile).join('')}</div>`}
+ return h?h+'<div class="tcwhy">Finish</div>':''}
 /* v298: the finish and the run-in get their own tabs in the sheet */
 const first=t=>String(t||'').split(/(?<=[.!])\s/)[0];
 function finTiles(d){return Object.entries(FINS).map(([k,f])=>{const why=finWhy(d,k);const on=finOf(d)===k;
@@ -277,6 +291,10 @@ function applyX(i,x){if(locked())return;const sl=card()[i];const [k,v]=[x.slice(
  if(k==='n'&&sl.d&&roV(sl)){pinPick(i,v);return}
  if(k==='l'&&sl.k==='match'){const m=clone(cur(i));if(m.type!=='squash')return;const W=W_((m.sides[0]||[])[0]);if(!W)return toast('Pick the winner first.');let n=null;try{n=sqLocal(W,'p',card().map((y,j)=>j===i?null:y),(m.sides[1]||[])[0])}catch(e){}if(!n)return toast('No local talent available right now.');m.sides[1]=[n.id];m.loc=1;commit(i,m);TC.open=false;buzz();render();land(i,n.id);return}
  if(k==='e')return openMatch(i);/* (legacy) */
+ if('bc'.includes(k)&&sl.k==='match'&&sl.d){const d=sl.d;
+  if(k==='b'){if(!boOk(d))return;d.bo=!d.bo;if(!d.bo)delete d.bo}
+  else{if(!v)delete d.cash;else{const [a,t,md]=v.split('|');if(!cashL(d).some(o=>o.a===a&&o.t===t))return;d.cash=md==='bell'?{a,t,bell:1}:{a,t,w:md==='w'?1:0}}}
+  delete d.ev;save();buzz();const sb=document.getElementById('tcsb'),st=sb?sb.scrollTop:0;render();const nb=document.getElementById('tcsb');if(nb)nb.scrollTop=st;return}
  if('fkrgu'.includes(k)&&sl.k==='match'&&sl.d){const d=sl.d;
   if(k==='f'){if(finWhy(d,v))return toast(finWhy(d,v)+'.');d.fin=v}
   else if(k==='k'){if(v==='none')delete d.ri;else{const o=d.ri||{};d.ri={k:v,x:o.x||'',t:o.t||'',turn:!!o.turn};if(d.ri.x&&(!d.ri.t||(v==='cost'&&(d.sides[d.winner]||[]).includes(d.ri.t))))d.ri.t=riBest(d,v,d.ri.x)}}
@@ -332,7 +350,7 @@ function slotHtml(i){const c=card(),sl=c[i];if(xoV(sl))return xoHtml(i);let act=
   const tag=(k,cls,txt)=>tap?`<button type="button" class="tcm ${cls}" data-tcm="${i}|${k}">${txt}</button>`:`<span class="tcm ${cls}">${txt}</span>`;
   const fk=typeof finOf==='function'?finOf(d):'clean';const rx=d.ri&&RUNIN[d.ri.k]&&d.ri.x&&W_(d.ri.x);
   mods=((fl||sq)&&st==='std'?'':tag('x',st!=='std'&&f.spec.length?'g':st==='std'?'q':'',esc(STIPS[st].n)))+(d.title&&S.titles[d.title]?tag('t','g',`${esc(S.titles[d.title].n)} title`):!fl&&!sq&&!oc&&titleEts(d).some(T=>T.holders.length)?tag('t','q','Non-title'):'')
-   +(d.nc||fl||sq||oc?'':tag('f',fk==='clean'?'q':'',esc(FINS[fk].n)))+(d.nc||sq||oc||(tr&&d.tour.k==='c2')?'':tag('r',rx?'':'q',rx?`${RUNIN[d.ri.k].i} Run-in · ${esc(ln(rx))}`:'No run-in'))}
+   +(d.nc||fl||sq||oc?'':tag('f',fk==='clean'?'q':'',esc(FINS[fk].n)))+(d.bo&&!fl&&!sq&&!oc?tag('f','g','💥 Blow-off'):'')+(d.cash&&W_(d.cash.a)?tag('f','g',`💼 ${esc(ln(W_(d.cash.a)))} cashes in`):'')+(d.nc||sq||oc||(tr&&d.tour.k==='c2')?'':tag('r',rx?'':'q',rx?`${RUNIN[d.ri.k].i} Run-in · ${esc(ln(rx))}`:'No run-in'))}
  const empty=!idsOf(i,m).length;
  const live=act&&TC.open;const sum=empty&&!live?(opt?`<div class="tcsum">Optional</div>`:'')
   
@@ -394,7 +412,7 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
  else if(fl&&TC.mode==='v'){const d=sl.d;const pl=pinCands(d);const pn=pinOf(d);
   body=`<div class="tcgrid"><div class="tcwhy">Who wins${d.type==='rumble'?` · a title shot at ${esc(PPVS[WM_WEEK]||'WrestleMania')}`:d.type==='mitb'?' · the briefcase':' · a title shot'}</div>${d.sides.map((s,j)=>s[0]&&W_(s[0])?entC(s[0],'w:'+j,{tab:j===d.winner?'Wins':'',tabc:'must',cls:(j===d.winner?'pickd ':'')+(TC.dealt?'deal':'')}):'').join('')}
   ${pl.length>=2?`<div class="tcwhy">${d.type==='rumble'?'Eliminated last (gets a bump)':d.type==='mitb'?'Comes closest (takes the loss)':'Takes the pin'}</div>${pl.map(id=>{const [c,t]=pinRub(d,id);return entC(id,'n:'+id,{tab:id===pn?'Takes it':t.replace(/ for the winner$/,''),tabc:id===pn?'must':c==='good'?'hot':'',cls:(id===pn?'pickd ':'')+(TC.dealt?'deal':'')})}).join('')}`:''}</div>`}
- else if(TC.mode==='f'&&!promo&&sl.d){body=`<div class="tcgx lo">${finTiles(sl.d).map(x=>`<div class="tx ${x.on?'on':''} ${x.dis?'dis':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"${x.dis?' aria-disabled="true"':''}><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span></div>`).join('')}</div>`}
+ else if(TC.mode==='f'&&!promo&&sl.d){body=finExtras(sl.d)+`<div class="tcgx lo">${finTiles(sl.d).map(x=>`<div class="tx ${x.on?'on':''} ${x.dis?'dis':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"${x.dis?' aria-disabled="true"':''}><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span></div>`).join('')}</div>`}
  else if(TC.mode==='r'&&!promo&&sl.d)body=riHtml(i);
  else if(TC.mode==='x'||TC.mode==='t'){const xs=extras(i,TC.mode);body=xs.length?`<div class="tcgx">${xs.map(x=>`<div class="tx ${x.fit?'fit':''} ${x.on?'on':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span></div>`).join('')}</div>`:`<div class="tcempty">${promo?'Pick who’s on the mic first.':TC.mode==='t'&&sl.d?'No championship fits this match — a belt needs its champion (or a vacant title’s division) in there.':'Fill both sides first.'}</div>`}
  else if(!tg&&!TC.rep&&m.type==='squash')body=`<div class="tcempty">${esc(sideName(m.sides[0]))} squashes ${esc(sideName(m.sides[1]))}. Tap someone on the card to swap them, or:</div><div class="tcsf"><button class="btn sec" data-tcx="l:1">🧑‍🔧 ${m.loc?'Different local talent':'Use local enhancement talent'}</button></div>`;
@@ -744,11 +762,6 @@ if(typeof gameHero==='function'){const gh0=gameHero;gameHero=window.gameHero=fun
  ${g.wk||g.fans?`<div class="tchs">${stat(g.wk?`${Math.min(g.wk,SEASON)}<small>/${SEASON}</small>`:'','Week')}${stat(g.fans?fmtFans(g.fans):'','Fans')}</div>`:''}
  <div class="tcha"><button class="btn" onclick="${go}">${g.turn==='mine'?'Take your turn':'Continue'}</button><button class="btn sec" onclick="gameMenu('${g.k}','${g.id}',${g.cur?1:0})" aria-label="More options">⋯</button></div></div></div>`}}
 const r0=render;render=window.render=function(){const o=r0.apply(this,arguments);try{attnDown()}catch(e){}try{decorate()}catch(e){console.error('cards',e)}try{homeDeco()}catch(e){console.error('cards home',e)}try{homeMenus()}catch(e){console.error('cards menus',e)}return o};
-/* Settings: a card to switch the table off */
-if(typeof menuView==='function'){const mv=menuView;menuView=window.menuView=function(){const h=mv.apply(this,arguments);
- const cd=`<div class="card"><div class="row sb"><div class="h small" style="margin:0">🃏 Card table</div><div class="chips" style="margin:0"><button class="chip ${on()?'on':''}" onclick="cardsSet(true)">On</button><button class="chip ${on()?'':'on'}" onclick="cardsSet(false)">Off</button></div></div>
- <div class="muted tiny" style="margin-top:6px">${on()?'You book by tapping a space on the show and picking from the best wrestler cards for it. Hold a card on the show to drag it somewhere else.':'The classic Book screen: tap a slot to open its editor.'} The office line, live calls, the reveal and party-night TV follow this setting too.</div></div>`;
- return h.replace(/(<details class="card"><summary class="h small">How it all works)/,cd+'$1')}}
 /* a new week or a new game starts a fresh table */
 if(typeof suggestFill==='function'){const sf=suggestFill;suggestFill=window.suggestFill=function(){TC.dr={};return sf.apply(this,arguments)}}
 if(typeof clearCard==='function'){const cc=clearCard;clearCard=window.clearCard=function(){TC.dr={};return cc.apply(this,arguments)}}
@@ -787,18 +800,7 @@ function lineDeck(){if(!on())return;const m=document.querySelector('#modal .sbod
   else{box.style.transform='';box.querySelectorAll('.tcstamp').forEach(s=>s.style.opacity=0)}};
  box.addEventListener('pointerup',end);box.addEventListener('pointercancel',end)}
 
-/* ---------------- live calls: cards you flick up ---------------- */
-function callDeck(){return;if(!on())return;document.querySelectorAll('#modal .sdmenu:not([data-tcc])').forEach(mn=>{mn.dataset.tcc='1';const cs=[...mn.querySelectorAll(':scope>.choice')];if(cs.length<2)return;
- const row=document.createElement('div');row.className='tccalls';cs[0].before(row);cs.forEach(c=>{row.appendChild(c);c.classList.add('tccall');flick(c)});
- mn.insertAdjacentHTML('beforeend','<div class="tchint" style="padding:4px 0 0">Flick a card up or tap it to make the call.</div>')})}
-function flick(el){let y0=null,x0=0,pid=null,t0=0;
- el.addEventListener('pointerdown',e=>{y0=e.clientY;x0=e.clientX;pid=e.pointerId;t0=Date.now()});
- el.addEventListener('pointermove',e=>{if(y0===null||e.pointerId!==pid)return;const dy=e.clientY-y0;if(Math.abs(e.clientX-x0)>Math.abs(dy)&&Math.abs(e.clientX-x0)>10){y0=null;el.style.transform='';return}if(dy<0){el.style.transition='none';el.style.transform=`translateY(${Math.max(-90,dy)}px)`}});
- const end=e=>{if(y0===null)return;const dy=e.clientY-y0;y0=null;el.style.transition='';if(dy<-40){el.style.transform='translateY(-120px)';el.style.opacity='.0';buzz();setTimeout(()=>{el.style.opacity='';el.click()},160);SUP=Date.now()}else el.style.transform=''};
- el.addEventListener('pointerup',end);el.addEventListener('pointercancel',()=>{y0=null;el.style.transform=''})}
-/* the flick fires its own click; the browser's click after a flick is swallowed */
-document.addEventListener('click',e=>{const c=e.target.closest&&e.target.closest('.tccall');if(c&&e.isTrusted&&Date.now()-SUP<400){e.stopPropagation();e.preventDefault()}},true);
-const mo=new MutationObserver(()=>{try{lineDeck()}catch(e){}try{callDeck()}catch(e){}});
+const mo=new MutationObserver(()=>{try{lineDeck()}catch(e){}});
 function watch(){const m=document.getElementById('modal');if(m)mo.observe(m,{childList:true,subtree:true});else setTimeout(watch,300)}
 watch();
 
@@ -913,11 +915,6 @@ body.tcdragging{user-select:none;-webkit-user-select:none}.tcs,.tcdock{-webkit-u
 .tcstamp{position:absolute;top:18px;z-index:9;font:900 italic 24px/1 'BC',sans-serif;letter-spacing:.05em;text-transform:uppercase;padding:4px 12px;border:3px solid;opacity:0;pointer-events:none;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgba(0,0,0,.7)}
 .tcstamp.y{left:16px;color:var(--good);transform:rotate(-10deg)}.tcstamp.n{right:16px;color:var(--bad);transform:rotate(10deg)}
 /* live calls */
-.tccalls{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:14px 2px 6px;margin:0 -2px}.tccalls::-webkit-scrollbar{display:none}
-.tccalls .choice.tccall{flex:1 0 132px;max-width:190px;margin:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:150px;padding:12px 10px;background:#0c0c0e url(card-bg.jpg) center/cover;box-shadow:inset 0 0 0 1px #3a3c44;border:0;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));transition:transform .25s cubic-bezier(.2,.9,.3,1.2),opacity .16s;touch-action:pan-x}
-.tccalls .choice.tccall>div:first-of-type{font:800 italic 17px/1.05 'BC',sans-serif;text-transform:uppercase;letter-spacing:.01em}
-.tccalls .choice.tccall .muted.tiny{margin-top:auto;font-size:11.5px;line-height:1.3}
-.tccalls .choice.tccall .key{position:static}
 /* the reveal: each segment flips over before its stars fill */
 html.tcards .twpair .twh[data-k]{animation:tcflip .5s cubic-bezier(.2,.9,.3,1.1) both;transform-origin:50% 50%;backface-visibility:hidden}
 html.tcards .twpair .twh[data-k]+.twh[data-k]{animation-delay:.12s}

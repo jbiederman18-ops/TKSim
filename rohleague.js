@@ -94,12 +94,12 @@ window.tapeAct=function(i,k){if(typeof mpLocked==='function'&&mpLocked())return;
  if(k==='roh'){const c=signCostF(w);if(S.money.p<c)return toast('Not enough money.');if(farmL('p').length>=FARM_MAX)return toast(`Your ROH roster is full (${FARM_MAX}).`);if(w.real&&taken(w.id))return toast(`${w.name} already signed elsewhere.`);
   S.money.p-=c;if(!w.real)w.id='rk'+partyNid();w.fee=0;w.con=w.real?40:52;w.mor=85;toFarm(w,'p');news(`📼 ${S.gm} signed ${w.name} off their ${t.kind==='email'?'email':'tape'} to an ROH deal.`);toast(`${w.name} joins your ROH roster.`)}
  else if(k==='follow'){S.follow=S.follow||[];if(S.follow.length>=MAX_FOLLOW)return toast(`You're following ${MAX_FOLLOW} already — drop someone from the watchlist on the ROH screen.`);S.follow.push({w,since:AW(),last:AW()});toast(`Following ${w.name}. They'll send updates.`)}
- S.tapes.splice(i,1);save();if(document.querySelector('#modal .brief'))openBrief();else render()};
+ S.tapes.splice(i,1);save();render()};
 window.followAct=function(i,k){if(typeof mpLocked==='function'&&mpLocked())return;const f=(S.follow||[])[i];if(!f)return;const w=f.w;
- if(k==='keep'){f.seen=AW();save();if(document.querySelector('#modal .brief'))openBrief();else render();return}
+ if(k==='keep'){f.seen=AW();save();render();return}
  if(k==='roh'){const c=signCostF(w);if(S.money.p<c)return toast('Not enough money.');if(farmL('p').length>=FARM_MAX)return toast(`Your ROH roster is full (${FARM_MAX}).`);
   S.money.p-=c;if(!w.real)w.id='rk'+partyNid();w.fee=0;w.con=w.real?40:52;w.mor=85;toFarm(w,'p');news(`👀 ${S.gm} signed ${w.name} to an ROH deal after following them for ${AW()-f.since} weeks.`);toast(`${w.name} joins your ROH roster.`)}
- S.follow.splice(i,1);save();if(document.querySelector('#modal .brief'))openBrief();else render()};
+ S.follow.splice(i,1);save();render()};
 function followRow(f,i){const w=f.w;const c=signCostF(w);const full=farmL('p').length>=FARM_MAX;
  return `<div class="brow"><b>👀 ${esc(w.name)}</b> <span class="muted tiny">· following ${AW()-f.since} wk</span><br><span class="muted tiny">RNG ${Math.round(w.ring)} · MIC ${Math.round(w.mic)} · ${STYLE_N[w.st]}${f.n?' · '+esc(f.n):''}</span>
   <div class="row" style="gap:6px;margin-top:6px"><button class="mini" ${S.money.p<c||full?'disabled':''} onclick="followAct(${i},'roh')">🏟️ Sign to ROH · ${money(c)}</button><button class="mini" onclick="followAct(${i},'keep')">Keep following</button><button class="mini" onclick="followAct(${i},'drop')">Stop following</button></div></div>`}
@@ -107,7 +107,7 @@ function followRow(f,i){const w=f.w;const c=signCostF(w);const full=farmL('p').l
 /* ---------------- briefing ---------------- */
 function resRow(r,meIds){const tl=r.title?`${TT[r.title].i} ${TT[r.title].n}${r.newc?' — NEW CHAMPION':r.crown?' — crowned':r.keep?' — retained':''} · `:'';const mine=meIds.has(r.win);
  return `<div class="brow">${tl}<b class="${mine?'good':meIds.has(r.a)||meIds.has(r.b)?'bad':''}">${esc(r.wn)}</b> def. ${esc(r.win===r.a?r.bn:r.an)} <span class="stars">${stars(r.st)}</span></div>`}
-window.rohBack=function(){if(document.querySelector('#modal .brief'))openBrief();else render()};
+window.rohBack=function(){render()};
 window.rohNotYet=function(id){const w=S.w[id]||(farmL('p').find(x=>x.id===id));if(w)w.cuNo=AW();save();rohBack()};
 function rohBrief(){const out=[];const me=farmL('p');const ids=new Set(me.map(w=>w.id));const R=S.rohL;
  if(S.tapes&&S.tapes.length)out.push({i:'📼',t:`Tapes & emails · ${S.tapes.length}`,tag:'New',rows:S.tapes.map(tapeRow)});

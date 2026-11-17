@@ -468,10 +468,6 @@ function briefItems(){const mine=ownList('p');const sec=cdBrief().concat(typeof 
  const fa=Object.values(S.w).filter(w=>onMarket(w)&&!w.cw&&faLeft(w)===1&&w.pop>=55).sort((a,b)=>b.pop-a.pop).slice(0,4);
  if(fa.length)sec.push({rep:1,i:'🆕',t:'Last week to sign',rows:fa.map(w=>`<div class="brow">${nm(w)} · POP ${Math.round(w.pop)} · signs for ${money(signCost(w))}</div>`)});
  return sec}
-function briefHtml(){if(typeof briefStory==='function')return briefStory();const sec=briefItems();const sh=curShow();
- return `<div class="h mhd">📰 Week ${S.week} briefing</div><p class="muted" style="margin-top:0">${esc(sh.ppv?sh.name+' is this week.':'Here\'s what needs your attention before you book.')}</p>
- ${sec.length?sec.map(s=>`<div class="card brief ${s.u?'urgent':''}"><div class="h small">${s.i} ${s.t}${s.u?' <span class="tg bad">Act now</span>':''}${s.tag?` <span class="tg good">${s.tag}</span>`:''}</div>${s.rows.join('')}</div>`).join(''):'<div class="card"><div class="muted">All quiet in the front office. Go book a great show.</div></div>'}
- <button class="btn" onclick="closeModal();go('book')">Book the show</button><button class="btn sec" onclick="closeModal()">Close</button>`}
 /* v324: the briefing is the "This week" panel on Home (attention.js weekPanel) — no pop-up. Anything that used to
    reopen the briefing after a decision now lands back on Home with the panel in view. */
 function openBrief(){if(!S||S.phase!=='season')return;briefMark();const m=document.getElementById('modal');if(m&&!m.classList.contains('hidden'))closeModal();

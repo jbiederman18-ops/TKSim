@@ -1,8 +1,7 @@
-/* Tony Khan Simulator — Needs your attention + the story briefing (v183).
-   One list, built fresh from the game state, of everything that matters for booking this week. The booking screen shows
-   it as a checklist (each item checked live against tonight's card, with a button that jumps to the fix), and the weekly
-   briefing tells the same items as scenes, in the wrestlers' own words. Because both read the same list, anything new
-   that needs attention shows up in both places.
+/* Tony Khan Simulator — Needs your attention (v183) + the This week panel on Home (v324).
+   One list, built fresh from the game state, of everything that matters for booking this week. The Book screen shows
+   it as a checklist (each item checked live against tonight's card, with a button that jumps to the fix); decisions in
+   it go to the line outside your office (inbox.js), and the news-only This week panel on Home reads it too.
    Groups: must    — skip it and it costs fans, morale or a promise ("Before you go live"; the go-live check reads these)
            chance  — optional, but it pays ("Chances tonight")
            mind    — risks on tonight's card ("Keep in mind")
@@ -25,7 +24,7 @@ const inMatchW=id=>segs(id).some(x=>x.k==='match');
 function together(a,b){return segs(a).find(x=>segs(b).some(y=>y.i===x.i))||null}
 function against(a,b){return segs(a).find(x=>x.k==='match'&&x.d.sides&&(()=>{const si=x.d.sides.findIndex(s=>s.includes(a)),sj=x.d.sides.findIndex(s=>s.includes(b));return si>=0&&sj>=0&&si!==sj})())||null}
 function sameSide(a,b){return segs(a).find(x=>x.k==='match'&&x.d.sides&&x.d.sides.some(s=>s.includes(a)&&s.includes(b)))||null}
-function segName(i){const c=card();const sl=c[i];if(!sl)return 'a segment';if(sl.k==='match'){const m=mLab(c,i);return m.main?'the main event':m.opt?'the bonus match':m.lab}return sl.k==='promo'?'a promo':'a segment'}
+function segName(i){const c=card();const sl=c[i];if(!sl)return 'a segment';if(sl.k==='match'){const m=mLab(c,i);return m.main?'the main event':m.lab}return sl.k==='promo'?'a promo':'a segment'}
 const emptyMatch=()=>card().findIndex(sl=>sl&&sl.k==='match'&&!sl.d);
 const emptyPromo=()=>card().findIndex(sl=>sl&&sl.k==='promo'&&!sl.d);
 const mainIdx=()=>{const c=card();for(let i=c.length-1;i>=0;i--)if(c[i]&&c[i].k==='match')return i;return -1};
@@ -291,16 +290,7 @@ window.attnBookPromo=function(i,id){closeModal();if(typeof tcGo==='function'&&tc
 window.attnNeg=function(id){closeModal();dealNegotiate(id)};
 window.attnResign=function(id){resign(id);render()};
 
-/* ===================== THE BRIEFING ===================== */
-function av(sp){const w=S.w[sp];if(w)return `<span class="scav">${face(w)}</span>`;const ini=String(sp).replace(/[^A-Za-z ]/g,'').split(' ').filter(Boolean).map(x=>x[0]).join('').slice(0,2).toUpperCase();return `<span class="scav x">${esc(ini||'?')}</span>`}
-const TAG={[A_MUST]:'On your checklist',[A_CH]:'Chance tonight',[A_MIND]:'Keep in mind',[A_OFF]:'Front office'};
-function sceneHtml(x){const says=(x.say||[]).filter(s=>s&&s[1]);
- return `<div class="scene ${x.g===A_MUST&&x.s[0]==='b'?'hot':''}"><div class="scw">${esc(x.where||x.i)}</div>${says.map(([sp,line])=>{const w=S.w[sp];return `<div class="scs">${av(sp)}<div class="scq"><b class="${w?(w.al==='f'?'face':'heel'):''}">${esc(w?w.name:sp)}</b><q>${esc(line)}</q></div></div>`}).join('')}
- <div class="scm"><span>${x.i} ${esc(x.h)}. <span class="muted">${esc(x.d)}</span></span><span class="sct">${TAG[x.g]}</span></div>${x.a&&x.a[1]!=='openBrief()'?`<div class="row" style="margin-top:8px"><button class="mini" onclick="closeModal();${x.a[1]}">${esc(x.a[0])}</button></div>`:''}</div>`}
-/* v195: the Rundown. The briefing reads like a run sheet: what blocks tonight's show, the chances, then backstage and the
-   front office. Scenes from the same place are one card with one voice (the hallway, the trainer's room, the phone, the
-   free-agent market), people show as chips, and advice that applies to everyone in a card is said once. Nothing is held
-   back any more — instead anything that changed since last week's briefing carries a NEW tag. */
+/* ===================== THIS WEEK PANEL (news on Home, v324) ===================== */
 function sigOf(x){const id=x.id;
  if(id==='mand'){const md=S.mand&&S.mand.p;return md?md.k+(md.due-S.week<=0?'|due':''):''}
  if(id==='idle'){return (x.who||[]).join(',')}
@@ -310,58 +300,8 @@ function sigOf(x){const id=x.id;
  if(/^stale/.test(id))return x.h.includes('has gone stale')?'stale':'soon';
  if(/^con/.test(id)){const w=S.w[(x.who||[])[0]];return w?(w.con<=1?'last':w.con<=CON_URGENT?'urgent':'soon'):x.h}
  return x.h}
-const place=x=>(x.where||'').replace(/^\S+\s+/,'');
 const nmC=w=>w?(w.al==='h'?'heel':'face'):'';
-const btnH=(a,cls)=>a&&a[1]!=='openBrief()'?`<button class="mini ${a[2]?'on':''} ${cls||''}" onclick="closeModal();${a[1]}">${esc(a[0])}</button>`:'';
-const pillH=(t,k)=>t?`<span class="rdp ${k||''}">${esc(t)}</span>`:'';
 const newH=on=>on?'<span class="rdn">New</span>':'';
-function voice(sp,line){if(!line)return '';const w=S.w[sp];return `<div class="scs">${av(sp)}<div class="scq"><b class="${w?nmC(w):''}">${esc(w?w.name:sp)}</b><q>${esc(line)}</q></div></div>`}
-const rowH=(title,sub,pill,btn,cls)=>`<div class="rdr ${cls||''}"><div class="rdt"><b>${title}</b>${sub?`<div class="rds">${sub}</div>`:''}</div>${pill||''}${btn||''}</div>`;
-function cardH(head,body,hot){return `<div class="scene rdg ${hot?'hot':''}"><div class="scw">${head}</div>${body}</div>`}
-/* contract calls: one card, one agent, soonest deal first. The stakes are said short: titles, briefcase, unpaid feud. */
-function stakesShort(w){const out=[];const ts=titlesOf(w.id);if(ts.length)out.push(`${ts.map(t=>t.n).join(', ')} title${ts.length>1?'s':''} go${ts.length>1?'':'es'} vacant if they leave`);
- if(S.mitb&&S.mitb[w.id])out.push('the briefcase leaves with them');
- let hot=null;for(const k in S.heat){if(S.heat[k]<35)continue;const [a,b]=k.split('|');const o=a===w.id?b:b===w.id?a:null;if(o&&S.w[o]&&S.w[o].own==='p'&&(!hot||S.heat[k]>hot[1]))hot=[o,S.heat[k]]}
- if(hot)out.push(`feud with ${L(S.w[hot[0]])} ends unpaid`);return out.join(' · ')}
-function phoneCard(xs,isNew,head,last){const ws=xs.map(x=>({x,w:S.w[x.who[0]]})).filter(o=>o.w).sort((a,b)=>a.w.con-b.w.con);if(!ws.length)return '';const lead=ws[0].w;
- const line=lead.con<=1?sayW('agent_last',lead,{A:lead.name}):sayW(lead.con<=CON_URGENT?'agent_urgent':'agent_soon',lead,{A:lead.name});
- const rows=ws.map(({x,w})=>{const blk=w.neg&&w.neg.no>AW();const st=stakesShort(w);
-  const ask=blk?`walked away · ${w.neg.no>AW()+w.con-1?'re-sign at their price':'back week '+wkOf(w.neg.no)}`:`asks ~${money(askSal(w))}/wk`;
-  if(last)return rowH(`${esc(w.name)}${newH(isNew(x))}`,esc([ask.replace(/^./,c=>c.toUpperCase()),st].filter(Boolean).join(' · ')),pillH('Last show','bad'),btnH(x.a));
-  /* the rest: compact rows, the whole row opens the talks */
-  const act=x.a&&x.a[1]!=='openBrief()'?x.a[1]:`attnNeg('${w.id}')`;
-  return `<button class="rdr rdrb" onclick="closeModal();${act}">${pillH(`${w.con} wk${w.con===1?'':'s'}`,conLvl(w))}<span class="rdt"><b>${esc(w.name)}</b> <span class="rds" style="display:inline">· ${esc(ask)}</span>${newH(isNew(x))}${st?`<span class="rds" style="display:block">${esc(st)}</span>`:''}</span><span class="rdch">›</span></button>`}).join('');
- return cardH(head,voice(`${lead.name}'s agent`,line)+rows+`<div class="rdf">${last?'':'Weeks left on each deal · tap one to negotiate. '}Talks get pricier near the deadline.</div>`,last)}
-/* the market: new arrivals and last calls together */
-function marketCard(xs,isNew){const rows=[];let say=null;
- xs.forEach(x=>{if(!say&&x.say&&x.say[0])say=x.say[0];(x.who||[]).map(id=>S.w[id]).filter(Boolean).forEach(w=>{const last=x.id!=='arrive';
-  rows.push(rowH(`${esc(w.name)} <span class="rds" style="display:inline">· POP ${Math.round(w.pop)}</span>${newH(isNew(x))}`,last?`Signs for ${money(signCost(w))} · gone after this week`:`Just hit the market · wants an offer (money + promises) · ${esc(S.rival||'the rival')} can bid`,
-   pillH(last?'Last week':`${faLeft(w)} wk${faLeft(w)===1?'':'s'}`,last?'bad':'warnt'),btnH(['See them',`showW('${w.id}')`])))})});
- return rows.length?cardH('The free-agent market',(say?voice(say[0],say[1]):'')+rows.join(''),false):''}
-/* the hallway: unhappy people as chips, one voice (the angriest), the fix said once */
-function hallCard(xs,isNew){const ws=xs.map(x=>({x,w:S.w[x.who[0]]})).filter(o=>o.w).sort((a,b)=>a.w.mor-b.w.mor);if(!ws.length)return '';const lead=ws[0];
- const chips=ws.map(({x,w})=>{const a=x.a&&x.a[1]!=='openBrief()'?x.a[1]:`showW('${w.id}')`;const m=moodW(w.mor);return `<button class="rdc" onclick="closeModal();${a}"><span class="${nmC(w)}">${esc(w.name)}</span><i class="${w.mor<35?'bad':'warnt'}">${esc(m.toLowerCase())}</i>${newH(isNew(x))}</button>`}).join('');
- const off=ws.filter(o=>o.w.mor<SIT_MOR).map(o=>L(o.w));
- return cardH(`The hallway · ${ws.length} unhappy`,voice(lead.w.id,lead.x.say&&lead.x.say[0]&&lead.x.say[0][1])+`<div class="rdcs">${chips}</div><div class="rdf">${ws.length>1?'Any of them: a':'A'} win, a main-event spot or a sit-down interview helps.${off.length?` ${esc(off.join(' and '))} could go off-script in a match.`:''} Tap a name to book them.</div>`,false)}
-/* the trainer's room */
-function tiredCard(x,isNew){const ws=(x.who||[]).map(id=>S.w[id]).filter(Boolean);if(!ws.length)return '';const ex=ws.filter(w=>w.fat>=FAT_RISK);
- const chips=ws.map(w=>`<button class="rdc ${inMatchW(w.id)?'on':''}" onclick="closeModal();showW('${w.id}')"><span>${esc(w.name)}</span><i class="${w.fat>=FAT_RISK?'bad':'warnt'}">${w.fat>=FAT_RISK?'exhausted':'tired'}</i>${inMatchW(w.id)?'<i class="gold">booked tonight</i>':''}</button>`).join('');
- const says=(x.say||[]).filter(s=>s&&s[1]);const sp=says.find(s=>ex.some(w=>w.id===s[0]))||says[0];
- return cardH(`The trainer's room · ${ex.length?`${ex.length} exhausted`:`${ws.length} worn down`}${newH(isNew(x))}`,(sp?voice(sp[0],sp[1]):'')+`<div class="rdcs">${chips}</div><div class="rdf">${ex.length?'Rest the exhausted ones or risk an injury.':'Tired wrestlers work a little slower.'}</div>`,false)}
-/* the champions: one row per title */
-function titleCard(x,isNew){const says=(x.say||[]).filter(s=>s&&s[1]);const rows=(x.rows||[]).map(r=>rowH(esc(r.t)+(r.ok?' <span class="good tiny">· defended tonight</span>':''),'',pillH(`${r.wk} wks`,r.wk>=5?'bad':'warnt'),btnH(r.a))).join('');
- return cardH(`The champions · ${(x.rows||[]).length} overdue${newH(isNew(x))}`,(says[0]?voice(says[0][0],says[0][1]):'')+(says[1]&&says[1][0]!==says[0][0]?`<div class="rdf" style="margin-top:2px"><i>${esc(S.w[says[1][0]]?L(S.w[says[1][0]]):'')}: “${esc(says[1][1])}”</i></div>`:'')+rows+'<div class="rdf">Idle titles lose prestige every week.</div>',false)}
-/* anything else: items from one place share a card. One item: its voice, then the row. Several: if they share the
-   same advice, each row carries its own line and the advice is said once at the bottom. */
-function genCard(xs,isNew,g){const one=xs.length===1;const same=!one&&xs.every(x=>x.d===xs[0].d);const hot=g===A_MUST&&xs.some(x=>x.s&&x.s[0]==='b');
- const live=x=>(g===A_MUST||g===A_CH)&&x.s&&x.s[1]&&x.s[0]!=='n'?` · <span class="${x.s[0]==='ok'?'good':x.s[0]==='b'?'bad':'warnt'}">${esc(x.s[1])}</span>`:'';
- /* the network's lines just restate the goal, so its card skips the voice; the chant is its own headline */
- const lead=xs[0].where&&/network/i.test(xs[0].where)?null:xs[0].say&&xs[0].say.find(s=>s&&s[1]);
- if(xs.length===1&&xs[0].id==='chant'){const x=xs[0];const q=(x.say[0][1].match(/[“"](.+)[”"]/)||[])[1];
-  return cardH('The fans',rowH(`📣 “${esc(q||x.h)}”${newH(isNew(x))}`,`${esc(x.h)}. ${esc(x.d)}${live(x)}`,'',btnH(x.a)),false)}
- const seen=new Set();const rows=xs.map(x=>{const sy=x.say&&x.say.find(s=>s&&s[1]&&!seen.has(s[1]));if(sy)seen.add(sy[1]);const sub=same?(sy?`<i>“${esc(sy[1])}”</i>`:''):esc(x.d)+live(x);return rowH(`${x.i} ${esc(x.h)}${newH(isNew(x))}`,sub,'',btnH(x.a))}).join('');
- return cardH(esc(place(xs[0])||xs[0].h),(same?'':lead?voice(lead[0],lead[1]):'')+rows+(same?`<div class="rdf">${esc(xs[0].d)}</div>`:''),hot)}
-function secH(t,cls){return `<div class="rdsec ${cls||''}"><span>${t}</span><i></i></div>`}
 /* v324: the briefing is news, not decisions. Anyone who needs an answer comes to the office door (inbox.js), anything
    about tonight's card lives on the Book screen's checklist, and what's left — what happened since last week, the
    locker room, the market, what's coming — is the "This week" panel on Home. Nothing in it is a decision: names open
@@ -384,8 +324,6 @@ function wkRows(secs){const l=attnItems();
  const ti=l.find(x=>x.id==='tired');if(ti){const ws=(ti.who||[]).map(id=>S.w[id]).filter(Boolean);const ex=ws.filter(w=>w.fat>=FAT_RISK);
   add('Backstage','tired','🔋',`${ex.length?'Exhausted':'Worn down'}: ${ws.map(nmA).join(', ')}. ${ex.length?'Rest the exhausted ones or risk an injury.':'Tired wrestlers work a little slower.'}`,ws.map(w=>w.id).sort().join(','))}
  sec('☢️').forEach(x=>x.rows.forEach((r,j)=>add('Backstage','beef'+j,'☢️',strip(r))));
- /* the card table puts the hottest wrestlers on Home as cards; the classic look gets them here */
- if(!(typeof cardsOn==='function'&&cardsOn())&&typeof hotList==='function'){const h=hotList();if(h.length)add('Backstage','hot','🔥',`Hot right now: ${h.map(x=>nmA(x.w)).join(', ')}. Feature them, or put them next to someone you want to build.`,h.map(x=>x.w.id).join(','))}
  l.filter(x=>/^stale/.test(x.id)).forEach(x=>{const [A,B]=(x.who||[]).map(id=>S.w[id]);if(!A||!B)return;add('Backstage',x.id,'🥱',`${nmA(A)} vs ${nmA(B)} ${esc(x.h.replace(A.name+' vs '+B.name+' ',''))}. <span class="muted">Pay it off at a PPV or blow it off on TV.</span>`,sigOf(x))});
  /* front office */
  l.filter(x=>x.id==='arrive'||/^fa/.test(x.id)).forEach(x=>{(x.who||[]).map(id=>S.w[id]).filter(Boolean).forEach(w=>{const last=x.id!=='arrive';
@@ -423,37 +361,6 @@ window.weekPanel=function(){if(!S||S.phase!=='season'||typeof mpLockedQuiet==='f
 .wkp .wkt.bad{border-left-color:#ff6b61}.wkp .wkt span:last-child{color:var(--gold2);font-weight:700;white-space:nowrap}
 .wkp .wkm{display:block;width:100%;margin-top:6px;padding:8px;background:none;border:1px solid var(--line);color:var(--mut);font:700 12px 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
 .wkp .wkc{display:flex;flex-direction:column;gap:3px;margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font-size:12.5px;color:var(--mut)}`;document.head.appendChild(c)})();
-window.briefStory=function(){const sh=curShow();let l=[];try{l=attnItems()}catch(e){console.warn(e)}
- /* what changed since last week's briefing */
- if(!S.brBase||S.brBase.w!==AW()){S.brBase={w:AW(),sig:Object.assign({},S.brSig||{})};}
- const base=S.brBase.sig;const first=!S.brSig;const isNew=x=>!first&&base[x.id]!==sigOf(x);
- S.brSig=S.brSig||{};l.forEach(x=>S.brSig[x.id]=sigOf(x));
- let secs=[];try{secs=briefItems().filter(s=>!s.rep)}catch(e){console.warn(e)}
- const hotS=secs.find(s=>s.i==='🔥'),calS=secs.find(s=>s.i==='🗓️');const desk=secs.filter(s=>s!==hotS&&s!==calS);
- const deskH=s=>`<div class="scene brief rdg ${s.u?'hot':''}"><div class="scw">${s.i} ${s.t}${s.u?' <span class="tg bad">Act now</span>':''}${s.tag?` <span class="tg good">${s.tag}</span>`:''}</div>${s.rows.join('')}</div>`;
- /* build one group's cards, merging by place */
- const build=g=>{const xs=l.filter(x=>x.g===g&&x.where);const out=[];const done=new Set();
-  const take=f=>{const r=xs.filter(x=>!done.has(x)&&f(x));r.forEach(x=>done.add(x));return r};
-  xs.forEach(x=>{if(done.has(x))return;
-   if(/^con/.test(x.id)){const r=take(y=>/^con/.test(y.id));out.push(phoneCard(r,isNew,g===A_MUST?'On the phone · last show':'Contracts coming up',g===A_MUST));return}
-   if(x.id==='arrive'||/^fa/.test(x.id)){out.push(marketCard(take(y=>y.id==='arrive'||/^fa/.test(y.id)),isNew));return}
-   if(/^mor/.test(x.id)){out.push(hallCard(take(y=>/^mor/.test(y.id)),isNew));return}
-   if(x.id==='tired'){take(y=>y===x);out.push(tiredCard(x,isNew));return}
-   if(x.id==='idle'&&x.rows){take(y=>y===x);out.push(titleCard(x,isNew));return}
-   const p=x.where;out.push(genCard(take(y=>y.where===p),isNew,g))});
-  return out.filter(Boolean).join('')};
- const must=build(A_MUST),ch=build(A_CH),mind=build(A_MIND),off=build(A_OFF);
- const urg=desk.filter(s=>s.u),calm=desk.filter(s=>!s.u);
- const n=g=>l.filter(x=>x.g===g&&x.where).length;
- const nMust=n(A_MUST)+urg.length,nCh=n(A_CH),nRest=n(A_MIND)+n(A_OFF)+calm.length;
- const np=nextPPV();
- const head=`<div class="kick">Week ${S.week}${np?` · ${np.in?`${np.in} week${np.in===1?'':'s'} to ${esc(np.n)}`:`${esc(np.n)} is this week`}`:''}</div><div class="h mhd" style="margin-top:2px">📰 The briefing</div>
- <div class="rdk"><div class="m"><b>${nMust}</b><span>before you go live</span></div><div class="c"><b>${nCh}</b><span>chance${nCh===1?'':'s'} tonight</span></div><div><b>${nRest}</b><span>to keep in mind</span></div></div>`;
- const hot=hotS?`${secH('Hot right now')}<div class="scene rdg">${hotList().map((x,i)=>rowH(`<span class="rdi">${i+1}</span><a href="#" onclick="closeModal();showW('${x.w.id}');return false">${esc(x.w.name)}</a> <span class="rds" style="display:inline">· ${Math.round(x.w.pop)}${(x.w.strk||0)>=3?` · ${x.w.strk} straight wins`:''}${x.gain>=1?` · +${Math.round(x.gain)} pop`:''}${x.w.lme!=null&&AW()-x.w.lme<=1?' · fresh off a main event':''}</span>`,'','','')).join('')}<div class="rdf">Feature them, or put them next to someone you want to build.</div></div>`:'';
- const cal=calS?`<div class="rdcal">${calS.rows.map(r=>`<span>${r.replace(/^<div class="brow">|<\/div>$/g,'')}</span>`).join('')}</div>`:'';
- const body=(must||urg.length?secH('Before you go live','bad')+urg.map(deskH).join('')+must:'')+(ch?secH('Chances tonight','gold')+ch:'')+(mind?secH('Backstage')+mind:'')+(off||calm.length?secH('Front office')+off+calm.map(deskH).join(''):'');
- return `<div class="rundown">${head}${body||'<div class="card"><div class="muted">All quiet backstage. Go book a great show.</div></div>'}${hot}${cal}</div>
- <button class="btn" onclick="closeModal();go('book')">Start booking ▸</button><button class="btn sec" onclick="closeModal()">Close</button>`};
 })();
 
 /* ===================== MATCH & PROMO DETAILS (v183) =====================

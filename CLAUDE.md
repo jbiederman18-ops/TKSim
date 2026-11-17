@@ -13,7 +13,7 @@
 - Skip entirely: `firebase-sdk.js` (bundled SDK), `vendor/`, `tools/icon*.svg`, `photos/`, `sfx/`, root `.png` files.
 - Big content files (`scenarios*.js`, `retorts.js`, `gimmicks.js`, PROMOS in index.html) are mostly written lines. Grep for the specific scene or key; don't read them to learn the engine.
 
-## index.html map (line numbers approximate, as of v291)
+## index.html map (line numbers approximate, as of v291 — grep the section markers for current ones)
 | Lines | Section | What's there |
 |---|---|---|
 | 16–1495 | `<style>` | All CSS. The live look is the **v222 Pay-per-view** block (~1089+) plus card styles. Earlier blocks (Balanced, Classic Dynamite, Calmer pass, v212 Hybrid) are older layers that still partly apply — rules with no visible effect were stripped in v291, so what's left is load-bearing. Party-night TV CSS ~420–651. |
@@ -35,7 +35,7 @@
 | 3811 | FRONT OFFICE CRISES | Between-show events (more in `crises2.js`) |
 | 3924 | PERSISTENCE | Save/load |
 | 3938 | UI | Main screens/render |
-| 4221 | QUICK BOOKING | Drag & drop, rival auto-fill |
+| 4221 | QUICK BOOKING | Drag & drop for the running order |
 | 4367 | SHOW STRUCTURE | Book screen, match editor, dropdowns (~4679), feud detail (~4558). 211KB — biggest JS section |
 | 5202 | ONLINE LEAGUE: turns, sync, invites | |
 | 5383–5905 | CLOUD SAVE, YOUR GAMES, BACKUPS, CLOUD SYNC | Save safety — be careful here |
@@ -44,8 +44,8 @@
 ## External files
 | File | System |
 |---|---|
-| `cards.js` | Card table: tap-to-pick booking sheet, wrestler cards (v273+) |
-| `attention.js` | Needs your attention + Rundown briefing |
+| `cards.js` | Card table: tap-to-pick booking sheet, wrestler cards (v273+). The only Book screen since v338 — it draws over `bookView`'s slots, so the classic slot markup is still the base |
+| `attention.js` | Needs your attention checklist + the This week news panel on Home (v324) |
 | `inbox.js` | The line outside your office (Monday decisions) |
 | `season.js` | Season systems, calendar flow |
 | `calendar.js` | Season calendar screen |

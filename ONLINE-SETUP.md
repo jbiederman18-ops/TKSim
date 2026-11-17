@@ -17,7 +17,7 @@ Firebase holds the shared league. It's free at this size. Setup takes about 15 m
 6. **Get the push key.** In **Project settings → Cloud Messaging → Web Push certificates**, click **Generate key pair**. Paste the long key into `vapidKey` in `firebase-config.js`.
 7. Commit `firebase-config.js`. These values are safe to publish. Firebase web keys aren't secrets, and the security rules are what protect the leagues.
 
-After that, **Host a league**, **Join a league** and **Cloud save** all work in the game (on the start screen, or in **Office**).
+After that, **Host a league**, **Join a league** and **Cloud save** all work in the game (on the start screen, or in the **⚙️ Game menu**).
 
 > Already published the rules from an earlier version? Paste the latest `firebase/firestore.rules` again. Cloud saves need the new `saves` section.
 > v262: party night's TV feed has its own `live` section in the rules. Paste the latest rules again so phones stop re-downloading the whole league on every live tap (it still works without it, just heavier).
@@ -36,7 +36,7 @@ Notifications are sent by a small Cloud Function in [`firebase/functions`](fireb
    (cd functions && npm install)
    firebase deploy --only firestore:rules,functions
    ```
-3. In the game, go to **Office → Online league → Turn on turn alerts** on each phone.
+3. In the game, open the **⚙️ Game menu → Online league** and turn on alerts on each phone.
 
 **iPhone:** notifications only work from the installed app. Open the site in Safari, tap **Share → Add to Home Screen**, open the game from the home screen, then turn alerts on. This needs iOS 16.4 or newer.
 
@@ -44,24 +44,24 @@ Notifications are sent by a small Cloud Function in [`firebase/functions`](fireb
 
 ## How a league plays
 
-- **Host:** start screen or Office → **Host a league** → pick **2, 3 or 4 GMs** → send the 6-letter code (the **Share invite** button does this).
+- **Host:** start screen or **⚙️ Game menu → Host a league** → pick **2, 3 or 4 GMs** → send the 6-letter code (the **Share invite** button does this).
 - **Friends:** open the game → **Join a league** → enter the code. Each friend takes the next open seat.
-- **Before the draft:** each GM gets a turn to create wrestlers, so the draft starts once everyone has joined. The draft goes in turns in a random order, the same order every round. **Auto-draft me** lets the game pick for you whenever you're on the clock. You can switch it on or off any time during the draft, even when it isn't your pick, and it keeps picking for you with the app closed.
+- **Before the draft:** everyone creates wrestlers at the same time, and the draft starts once the last GM is ready. The draft goes in turns in a random order, the same order every round. **Auto-draft me** lets the game pick for you whenever you're on the clock. You can switch it on or off any time during the draft, even when it isn't your pick, and it keeps picking for you with the app closed.
 - **Schedule:** with 2 GMs it's head-to-head every week. In leagues with 3 or 4 GMs, every show competes every week and the night is ranked: 1st gets the biggest fan bump (and the ratings win), the places below get smaller bumps and last gets none, just like losing a head-to-head. The best main event of the night earns +3K. (3- and 4-GM leagues created before v239 keep their round robin, with byes, until you start a new league.)
-- **Each week:** GMs book one at a time. When it's your turn, you book, go live, and pass to the next GM. The last one to book airs the week. Everyone sees every matchup's results, and the order rotates so a different GM goes first next week. You get a notification when it's your turn and when results are in.
-- **Party night:** everyone in the same room? Office → **Party night** switches the league to booking all at once, and any screen can show the league on a TV (**Show a league on this screen** + the league code). End it any time and the league goes back to taking turns. See the README.
-- **Winning:** the most fans after All In wins the league. Promises, the Performance Center and front-office situations are private to each GM. Free agents, titles and feuds are shared.
-- **Changing phones:** Office → **Other device** shows your private seat code (`CODE-XXXXXXXX`). On the new device, enter it in **Join a league**. You also need this when moving from a Safari tab to the installed app, because they keep separate storage.
-- Your solo game stays separate. Use **Office → Switch to my solo game** to go back and forth.
+- **Each week:** everyone books the same week at the same time, on their own phone, whenever suits them — make your calls, lock in, and the week airs the moment the last GM locks in. Cards stay secret until then. You get a notification when the results are in. (Prefer the old way? The league's **Office → League weeks → Take turns** has GMs book one at a time, with a turn alert when it's yours.)
+- **Party night:** everyone in the same room? **Start party night** (Home, or the league's Office): everyone books at once, then GMs go live one at a time while the TV shows every call to the room. Any screen can show the league (**Show a league on this screen** + the league code). End it any time and the league carries on as normal. See the README.
+- **Winning:** the most fans gained by the end of the season (Survivor Series) wins the league. Promises, the Performance Center and front-office situations are private to each GM. Free agents, titles and feuds are shared.
+- **Changing phones:** in **⇄ Your games**, tap **⋯ → Move** on the league to get your private seat code (`CODE-XXXXXXXX`). On the new device, tap **⇄ → Receive a game** and paste it. You also need this when moving from a Safari tab to the installed app, because they keep separate storage.
+- Your solo game stays separate. Use **⇄ Your games** to go back and forth.
 - League size is fixed once created. If a friend drops out, their seat waits for them, so pick the size you'll actually play with.
 
 ## Cloud save
 
-- **Turning it on:** Office → **Cloud save → Turn on cloud save** gives you a 12-character sync code. On any other device (phone, iPad, computer, or the installed app vs. a Safari tab), go to **Cloud save → I have a sync code** or **☁️ Load my cloud save** on the start screen and enter it.
+- **Turning it on:** **⚙️ Game menu → Saves & backups → Turn on cloud save** gives you a 12-character sync code. On any other device (phone, iPad, computer, or the installed app vs. a Safari tab), go to **Cloud save → I have a sync code** or **☁️ Load my cloud save** on the start screen and enter it.
 - **Saving:** every change saves on the device first, then uploads in the background. Offline play just works. The upload waits until you're back online and never overwrites a newer save from another device.
 - **Conflicts:** if two devices were both played offline, the game asks which one to keep. The other one is saved as a backup.
 - **Leagues:** your online leagues come along too. Opening one on a new device moves your seat there automatically. Turn alerts go to whichever device you used last, so turn them on for each device.
-- **Backups:** the game keeps the last 5 weeks on the device and in the cloud, plus a snapshot whenever something is about to replace your save (loading from the cloud, importing a file, restoring a backup, starting a new game). Office → **Backups** restores any of them.
+- **Backups:** the game keeps the last 5 weeks on the device and in the cloud, plus a snapshot whenever something is about to replace your save (loading from the cloud, importing a file, restoring a backup, starting a new game). **⚙️ Game menu → Saves & backups → Backups on this device** restores any of them.
 - **Not included:** custom photos stay on each device, because they're too big for the cloud. Use **Export Photo Pack / Import Photo Pack** to move them.
 
 ## Updating Firebase later

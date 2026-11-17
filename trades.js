@@ -56,7 +56,7 @@ function execute(t){const A=loc(t.from),B=loc(t.to);t.give.forEach(id=>move(id,B
  const n=`🔁 TRADE: ${nameOf(A)} sends ${t.give.map(id=>S.w[id].name).join(' & ')||'cash'} to ${nameOf(B)} for ${t.get.map(id=>S.w[id].name).join(' & ')||'cash'}${t.cash?` (${money(Math.abs(t.cash))} to ${nameOf(t.cash>0?B:A)})`:''}.`;news(n);return n}
 window.tradeSend=function(){if(typeof mpLocked==='function'&&mpLocked())return;const t={id:'tr'+partyNid(),from:me(),to:TB.to,give:TB.give.slice(),get:TB.get.slice(),cash:TB.cash,at:AW()};
  const bad=valid(t);if(bad)return toast(bad);
- if(ON()){S.trades=(S.trades||[]).filter(x=>!(x.from===t.from&&x.to===t.to));S.trades.push(t);news(`🔁 ${S.gm} sent ${nameOf(loc(t.to))} a trade offer.`);save();closeModal();render();toast('Offer sent — it waits in their briefing.');return}
+ if(ON()){S.trades=(S.trades||[]).filter(x=>!(x.from===t.from&&x.to===t.to));S.trades.push(t);news(`🔁 ${S.gm} sent ${nameOf(loc(t.to))} a trade offer.`);save();closeModal();render();toast('Offer sent — it waits outside their office.');return}
  const give=sum(t.give)+Math.max(0,t.cash),get=sum(t.get)+Math.max(0,-t.cash);const need=Math.round(get*(1+margin()));const aiN=ownList('ai').length-t.get.length+t.give.length;
  let out;
  if(aiN<18&&t.give.length<t.get.length)out={k:'no',t:`"We can't spare the bodies right now." ${S.rival} turns it down.`};
@@ -78,7 +78,7 @@ window.tradeAnswer=function(id,yes){if(typeof mpLocked==='function'&&mpLocked())
  else news(`🔁 ${nameOf(loc(t.to))} turned down ${nameOf(loc(t.from))}'s trade offer.`);
  S.trades.splice(i,1);save();refresh()};
 window.tradeWithdraw=function(id){S.trades=(S.trades||[]).filter(t=>t.id!==id);save();refresh()};
-function refresh(){if(document.querySelector('#modal .brief'))openBrief();else{closeModal();render()}}
+function refresh(){closeModal();render()}
 if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(){const out=e0.apply(this,arguments);try{S.trades=(S.trades||[]).filter(t=>AW()-t.at<=(ON()?3:1));rivalOffer()}catch(e){console.warn('trades',e)}return out}}
 function offerRow(t){const giveN=t.give.map(id=>S.w[id]?esc(S.w[id].name):'?').join(' & ')||'cash',getN=t.get.map(id=>S.w[id]?esc(S.w[id].name):'?').join(' & ')||'cash';
  const cash=t.cash?` · ${money(Math.abs(t.cash))} ${t.cash>0?'to you':'from you'}`:'';

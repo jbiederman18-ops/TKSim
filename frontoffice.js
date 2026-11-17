@@ -38,7 +38,7 @@ window.tampTalk=function(id){const w=mineW(id),t=S.tamp&&S.tamp[id];if(!w||!t||t
  else{if(typeof mlog==='function')mlog(w,2,'You sat down with them');toast(`${w.name} listens, but they're still taking the call.`)}
  save();tampRefresh()};
 window.tampLet=function(id){const t=S.tamp&&S.tamp[id];if(!t)return;t.let=1;save();tampRefresh();toast("Understood. If they leave, it won't be a surprise.")};
-function tampRefresh(){if(document.querySelector('#modal .brief'))openBrief();else render()}
+function tampRefresh(){render()}
 /* the deal runs out with the rival already in their ear: offline, the rival signs them on the spot */
 if(typeof leave==='function'){const l0=leave;leave=function(w,msg,notes){const t=w&&S.tamp&&S.tamp[w.id];const was=w&&w.own;
  if(t&&was==='p'&&!ON()&&/contract expired/.test(msg||'')){delete S.tamp[w.id];w.own='ai';w.sal=t.offer;w.con=RI(26,40);w.mor=80;w.deb=AW();S.training=S.training.filter(x=>x.id!==w.id);
