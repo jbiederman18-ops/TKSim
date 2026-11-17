@@ -444,7 +444,7 @@ window.tcAct=function(i,stay){const sl=card()[i];if(!sl)return;if(!editOk(sl)){i
  TC.open=true;TC.dealt=1;render();if(!stay)center(i)};
 /* put the slot in the middle of the space between the header and the hand */
 function center(i){requestAnimationFrame(()=>requestAnimationFrame(()=>{const el=document.querySelector(`.tcs[data-tcs="${i}"]`);if(!el)return;
- const hd=document.querySelector('header.top');const dk=document.getElementById('tcdock');const top=hd?hd.getBoundingClientRect().bottom:0;const bot=dk?(dk.classList.contains('tcsheet')?innerHeight-dk.offsetHeight:dk.getBoundingClientRect().top):innerHeight;
+ const hd=document.querySelector('header.top');const dk=document.getElementById('tcdock');const top=hd?hd.getBoundingClientRect().bottom:0;const bot=dk?(dk.classList.contains('tcsheet')?innerHeight-(TC.big?dk.offsetHeight:Math.min(dk.offsetHeight,innerHeight*.66,600)):dk.getBoundingClientRect().top):innerHeight;
  const r=el.getBoundingClientRect();const room=bot-top;const d=r.height>room-16?r.top-(top+8):r.top+r.height/2-(top+room/2);if(Math.abs(d)>4)window.scrollBy({top:d,behavior:TC.open?'auto':'smooth'})}))}
 window.tcOpen=function(){if(TC.act==null)pickAct();if(TC.act==null)return;TC.open=true;TC.dealt=1;render();center(TC.act)};
 /* v327: every way into booking from outside the Book screen (Needs your attention, feud and title-shot buttons, Blood & Guts)
@@ -473,7 +473,8 @@ window.tcGo=tcGo;
 /* "Open it" on a segment that's already on the card */
 window.tcSeg=function(i){if(tcGo(i))return;const sl=S&&S.card.p[i];if(!sl)return;if(typeof closeModal==='function')closeModal();sl.k==='promo'?openPromo(i):openMatch(i)};
 /* v328: flick the sheet up to fill the screen, down to shrink it back (then down again to close) */
-window.tcBig=function(v){TC.big=!!v;const d=document.getElementById('tcdock');if(d){d.classList.toggle('big',TC.big);const b=d.querySelector('.tcpull');if(b){b.setAttribute('aria-expanded',TC.big?'true':'false');b.setAttribute('aria-label',TC.big?'Shrink the sheet':'Fill the screen')}}if(!TC.big&&TC.act!=null)center(TC.act)};
+window.tcBig=function(v,quiet){TC.big=!!v;const d=document.getElementById('tcdock');if(d){d.classList.toggle('big',TC.big);const b=d.querySelector('.tcpull');if(b){b.setAttribute('aria-expanded',TC.big?'true':'false');b.setAttribute('aria-label',TC.big?'Shrink the sheet':'Fill the screen')}}
+ if(!TC.big){const l=document.getElementById('tcsb');if(l&&l.scrollTop)l.scrollTo({top:0,behavior:'smooth'});if(TC.act!=null)setTimeout(()=>{if(TC.open&&!TC.big)center(TC.act)},380)}};
 window.tcClose=function(){TC.big=false;TC.open=false;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;render()};
 /* the tap that opened the sheet also lands a click on the backdrop; ignore it */
 window.tcScrim=function(){if(Date.now()-SUP<450)return;tcClose()};
@@ -619,35 +620,34 @@ function endDrag(x,y){const t=hit(x,y);const d=DR;cleanup();SUP=Date.now();
  document.addEventListener('pointerup',e=>{if(y0===null||e.pointerId!==pid)return;const dy=e.clientY-y0,dx=e.clientX-x0;y0=null;if(Math.abs(dy)<36||Math.abs(dy)<Math.abs(dx))return;
   SUP=Date.now();if(!TC.open)return;if(dy<0){if(!TC.big)tcBig(true)}else if(TC.big)tcBig(false);else tcClose()},true);
  document.addEventListener('pointercancel',()=>{y0=null},true)}
-/* v331: the sheet follows your finger instead of snapping. Drag up (on the handle, the title, or the cards when the sheet
-   isn't full yet) and it grows with you; let go past a short distance or with a flick and it settles full-screen, otherwise
-   it eases back. Drag down from the top of the cards to shrink it, or slide a normal-size sheet away to close it. */
-let PDN=0;{let g=null,SAT=null;const EASE='cubic-bezier(.22,1,.36,1)';
+/* v332: the sheet moves with transform only (no layout work per frame, so no jitter). It's always full height; at normal
+   size it simply sits lower. On phones the cards don't scroll at normal size, so a drag can never be split between the
+   sheet and the list: drag up to lift the sheet, then the cards scroll once it's full. Drag down from the top of the cards
+   to lower it, and from normal size slide it away to close. */
+{let g=null;const EASE='cubic-bezier(.22,1,.36,1)';
  const dk=()=>document.getElementById('tcdock'),sb=()=>document.getElementById('tcsb');
- const sat=()=>{if(SAT==null){const p=document.createElement('div');p.style.cssText='position:fixed;top:0;height:env(safe-area-inset-top,0px);visibility:hidden';document.body.appendChild(p);SAT=p.offsetHeight;p.remove()}return SAT};
- const hB=()=>(window.visualViewport?visualViewport.height:innerHeight)-sat()-10,hN=()=>Math.min(innerHeight*.66,600);
- function settle(d,big,y){d.style.transition=`max-height .34s ${EASE},transform .34s ${EASE}`;d.style.transform='';d.style.maxHeight=(big?hB():Math.min(hN(),y==null?hN():y))+'px';
-  const sc=document.querySelector('.tcscrim');if(sc){sc.style.transition='opacity .34s';sc.style.opacity=''}
-  TC.big=big;d.classList.toggle('big',big);const b=d.querySelector('.tcpull');if(b){b.setAttribute('aria-expanded',big?'true':'false');b.setAttribute('aria-label',big?'Shrink the sheet':'Fill the screen')}
-  setTimeout(()=>{if(d.isConnected){d.style.transition='';d.style.maxHeight='';d.classList.remove('drag')}if(!big&&TC.open&&TC.act!=null)center(TC.act)},360)}
+ const offN=d=>Math.max(0,d.offsetHeight-Math.min(innerHeight*.66,600));
+ const scrim=(o,t)=>{const sc=document.querySelector('.tcscrim');if(sc){sc.style.transition=t||'none';sc.style.opacity=o}};
+ function settle(d,big){d.style.transition=`transform .36s ${EASE}`;d.style.transform='';scrim('','opacity .36s');window.tcBig(big,true);
+  setTimeout(()=>{if(d.isConnected){d.style.transition='';d.classList.remove('drag')}},380)}
  document.addEventListener('touchstart',e=>{g=null;if(!TC.open||e.touches.length!==1)return;const t=e.target;if(!t.closest||!t.closest('#tcdock'))return;
+  if(t.closest('.tcsc,.tcshapes,.tcfilt,[data-noflick]'))return;
   const zone=t.closest('.tcpull,.tcsh')?'head':t.closest('#tcsb')?'body':null;if(!zone)return;const d=dk();if(!d)return;
-  const y=e.touches[0].clientY;g={zone,y0:y,x0:e.touches[0].clientX,h0:d.offsetHeight,mode:null,pts:[[e.timeStamp,y]],h:d.offsetHeight,ty:0}},{passive:true,capture:true});
+  if(zone==='body'&&TC.big&&sb()&&sb().scrollTop>0)return; /* mid-list: let the cards scroll */
+  const y=e.touches[0].clientY;g={zone,y0:y,x0:e.touches[0].clientX,on:offN(d),big:TC.big,mode:null,pts:[[e.timeStamp,y]],off:TC.big?0:offN(d)}},{passive:true,capture:true});
  document.addEventListener('touchmove',e=>{if(!g||!TC.open)return;const y=e.touches[0].clientY,dy=y-g.y0,dx=e.touches[0].clientX-g.x0;const d=dk();if(!d){g=null;return}
-  if(!g.mode){if(Math.abs(dy)<7&&Math.abs(dx)<7)return;if(Math.abs(dx)>Math.abs(dy)){g=null;return}
-   const top=g.zone==='head'||(sb()&&sb().scrollTop<=0);
-   if(dy<0&&!TC.big)g.mode='drag';else if(dy>0&&top)g.mode='drag';else{g=null;return}
-   g.y0=y;d.style.transition='none';d.classList.add('drag');return}
+  if(!g.mode){
+   if(g.zone==='body'&&g.big&&dy<0){g=null;return}           /* full sheet, pushing up: that's a scroll */
+   if(Math.abs(dx)>7&&Math.abs(dx)>Math.abs(dy)){g=null;return}
+   e.preventDefault();if(Math.abs(dy)<5)return;               /* claim the gesture from the first move so iOS never starts a scroll */
+   g.mode='drag';g.y0=y;d.style.transition='none';d.classList.add('drag');return}
   e.preventDefault();g.pts.push([e.timeStamp,y]);if(g.pts.length>6)g.pts.shift();
-  const base=TC.big?Math.min(hN(),g.h0):g.h0,max=hB();let h=g.h0-dy,ty=0;
-  if(h>max)h=max+(h-max)*.18;if(h<base){ty=TC.big?0:base-h;h=TC.big?base-(base-h)*.25:base}
-  g.h=h;g.ty=ty;d.style.maxHeight=h+'px';d.style.transform=ty?`translateY(${ty}px)`:'';
-  const sc=document.querySelector('.tcscrim');if(sc){sc.style.transition='none';sc.style.opacity=ty?String(Math.max(0,1-ty/320)):''}},{passive:false,capture:true});
- const end=e=>{const G=g;g=null;if(!G||G.mode!=='drag'||!TC.open)return;const d=dk();if(!d)return;SUP=Date.now();PDN=Date.now()+500;
+  const st=g.big?0:g.on;let off=st+dy;if(off<0)off=Math.max(-28,off*.15);if(g.big&&off>g.on)off=g.on+(off-g.on)*.5;
+  g.off=off;d.style.transform=`translateY(${off}px)`;scrim(off>g.on?String(Math.max(0,1-(off-g.on)/320)):'')},{passive:false,capture:true});
+ const end=()=>{const G=g;g=null;if(!G||G.mode!=='drag'||!TC.open)return;const d=dk();if(!d)return;SUP=Date.now();
   const p=G.pts,a=p[0],z=p[p.length-1],dt=Math.max(16,z[0]-a[0]),v=(z[1]-a[1])/dt; /* px per ms, + is down */
-  if(G.ty>0&&(G.ty>110||v>.6)){d.style.transition=`transform .24s cubic-bezier(.4,0,1,1)`;d.style.transform='translateY(110%)';const sc=document.querySelector('.tcscrim');if(sc){sc.style.transition='opacity .24s';sc.style.opacity='0'}
-   setTimeout(()=>{tcClose()},230);return}
-  if(TC.big)settle(d,!((G.h0-G.h)>80||v>.45));else settle(d,(G.h-G.h0)>60||v<-.45,G.h0)};
+  if(!G.big&&(G.off-G.on>110||(v>.6&&G.off-G.on>24))){d.style.transition='transform .24s cubic-bezier(.4,0,1,1)';d.style.transform='translateY(100%)';scrim('0','opacity .24s');setTimeout(()=>tcClose(),230);return}
+  if(G.big)settle(d,!(G.off>80||v>.45));else settle(d,(G.on-G.off)>60||v<-.45)};
  document.addEventListener('touchend',end,{passive:true,capture:true});document.addEventListener('touchcancel',end,{passive:true,capture:true})}
 /* ---------------- hooks ---------------- */
 if(typeof go==='function'){const g0=go;go=window.go=function(t){if(t==='book'&&tab!=='book'){TC.open=false;TC.sel=null}return g0.apply(this,arguments)}}
@@ -1001,7 +1001,12 @@ html.tcards .tv-last .tkc{--w:180px;width:var(--w)}
 .tcdock.tcsheet{position:fixed;left:0;right:0;bottom:0;z-index:15;max-width:640px;margin:0 auto;padding:6px 0 env(safe-area-inset-bottom,0px);max-height:min(66vh,600px);display:flex;flex-direction:column;background:linear-gradient(180deg,#1b1c21,#101115);box-shadow:0 -1px 0 var(--gold3),0 -20px 40px rgba(0,0,0,.6)}.tcdock.tcsheet.enter{animation:tcup .3s cubic-bezier(.2,.9,.3,1) both}
 @keyframes tcup{from{transform:translateY(100%)}}
 .tcsheet .tcpull.open{flex:none;margin:0 auto 2px}
-.tcdock.tcsheet{transition:max-height .34s cubic-bezier(.22,1,.36,1)}.tcdock.tcsheet.drag{will-change:max-height,transform}.tcdock.tcsheet.drag .tcsb{overscroll-behavior:none}.tcdock.tcsheet.big{max-height:calc(100dvh - env(safe-area-inset-top,0px) - 10px)}.tcdock.tcsheet.big .tcsb{flex:1}
+/* v332: one full-height sheet that slides on transform — normal size just sits lower */
+.tcdock.tcsheet{--tcH:calc(100dvh - env(safe-area-inset-top,0px) - 10px);height:var(--tcH);max-height:none;transform:translateY(max(0px,calc(var(--tcH) - min(66vh,600px))));transition:transform .36s cubic-bezier(.22,1,.36,1);will-change:transform;backface-visibility:hidden}
+.tcdock.tcsheet.big{transform:none}.tcdock.tcsheet::after{content:'';position:absolute;left:0;right:0;top:100%;height:40px;background:#101115}
+.tcdock.tcsheet.enter{animation:tcupS .34s cubic-bezier(.22,1,.36,1) backwards}@keyframes tcupS{from{transform:translateY(100%)}}
+.tcdock.tcsheet .tcsb{flex:1}.tcdock.tcsheet:not(.big) .tcsb{padding-bottom:max(0px,calc(var(--tcH) - min(66vh,600px)))}.tcdock.tcsheet.drag .tcsb{overscroll-behavior:none}
+@media (hover:none) and (pointer:coarse){.tcdock.tcsheet:not(.big) .tcsb{overflow:hidden;touch-action:none}.tcdock.tcsheet .tcpull,.tcdock.tcsheet .tcsh{touch-action:none}}
 .tcsh{flex:none;display:flex;align-items:flex-end;gap:10px;padding:0 16px 10px;touch-action:none}
 .tcst{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.tcsk{font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
 .tcst b{font:900 italic 21px/1.02 'BC',sans-serif;text-transform:uppercase;text-wrap:balance}
