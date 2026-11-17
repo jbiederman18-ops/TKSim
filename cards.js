@@ -381,7 +381,7 @@ function sheetCards(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';if(sl.
  const here=idsOf(i,m);const full=promo?new Set():fullIn('p',i);const am=askMap();
  const g0=spG(sl);return ownList('p').filter(w=>!w.inj&&!here.includes(w.id)&&!full.has(w.id)&&(!g0||w.g===g0)&&(TC.f==='all'||(TC.f==='ch'?isChamp(w.id):w.al===TC.f)))
   .sort((a,b)=>(promo?b.mic-a.mic:ovr(b)-ovr(a))).map(w=>({w,r:why(w,anchor,i,am,tt)}))}
-function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown=false;return ''}const ent=!TC.shown;TC.shown=true;if(ent)TC.big=false;const m=cur(i);const promo=sl.k==='promo';
+function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown=false;return ''}const ent=!TC.shown;TC.shown=true;if(ent)TC.big=false;warmSoon();const m=cur(i);const promo=sl.k==='promo';
  const xo=sl.k==='xo',sp=roV(sl),tr=sp&&!!sl.d.tour,fl=sp&&!tr;
  const tl=targets(i,m);let tg=TC.rep?null:(TC.tg||defTarget(i,m)||(promo||xo?tl[0]:null)||null);if(xo&&!tg)tg={t:TC.rep&&TC.rep===m.a?'a':'b'};
  const [k,t]=sheetTitle(i,m,tg);const used=usedIn('p',i);
@@ -475,7 +475,20 @@ window.tcSeg=function(i){if(tcGo(i))return;const sl=S&&S.card.p[i];if(!sl)return
 /* v328: flick the sheet up to fill the screen, down to shrink it back (then down again to close) */
 window.tcBig=function(v,quiet){TC.big=!!v;const d=document.getElementById('tcdock');if(d){d.classList.toggle('big',TC.big);const b=d.querySelector('.tcpull');if(b){b.setAttribute('aria-expanded',TC.big?'true':'false');b.setAttribute('aria-label',TC.big?'Shrink the sheet':'Fill the screen')}}
  if(!TC.big){const l=document.getElementById('tcsb');if(l&&l.scrollTop){l.dataset.lowering='1';l.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>{delete l.dataset.lowering},500)}if(TC.act!=null)setTimeout(()=>{if(TC.open&&!TC.big)center(TC.act)},380)}};
-window.tcClose=function(){TC.big=false;TC.open=false;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;render()};
+/* v334: photos further down the sheet are lazy-loaded, so the first lift to full screen had to fetch and decode them
+   mid-animation (the hitch). Once the sheet has settled, load and decode them quietly so they're ready. */
+let WARM=0;function warmSoon(){clearTimeout(WARM);WARM=setTimeout(()=>{const go=()=>{const l=document.getElementById('tcsb');if(!l)return;
+ l.querySelectorAll('img').forEach(im=>{if(im.loading==='lazy')im.loading='eager';if(im.decode)im.decode().catch(()=>{})})};
+ window.requestIdleCallback?requestIdleCallback(go,{timeout:600}):go()},450)}
+/* v334: closing collapses the open match row; hold that row where it is on screen so the page doesn't jump underneath */
+function keepPlace(i,fn){const q=()=>i==null?null:document.querySelector(`.tcs[data-tcs="${i}"]`);const a=q();const y0=a?a.getBoundingClientRect().top:null;fn();
+ if(y0==null)return;const b=q();if(!b)return;const want=b.getBoundingClientRect().top+scrollY-y0;
+ const root=document.scrollingElement||document.documentElement,max=root.scrollHeight-innerHeight;
+ if(want<=max+1){if(Math.abs(want-scrollY)>1)window.scrollTo({top:want,behavior:'instant'});return}
+ /* the page got shorter than where we were: hold the spot with a spacer, then glide down to the new bottom */
+ const m=document.querySelector('#app main')||document.body;const pad=Math.ceil(want-max);m.style.paddingBottom=`calc(${getComputedStyle(m).paddingBottom} + ${pad}px)`;
+ window.scrollTo({top:want,behavior:'instant'});requestAnimationFrame(()=>{window.scrollTo({top:max,behavior:'smooth'});setTimeout(()=>{m.style.paddingBottom='';},520)})}
+window.tcClose=function(){keepPlace(TC.act,()=>{TC.big=false;TC.open=false;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;render()})};
 /* the tap that opened the sheet also lands a click on the backdrop; ignore it */
 window.tcScrim=function(){if(Date.now()-SUP<450)return;tcClose()};
 window.tcAb=function(){TC.ab=!TC.ab;TC.dealt=0;render()};
@@ -496,7 +509,7 @@ function sheetPick(id){const i=TC.act;if(i==null||locked())return;const before=J
  PHOLD=1;try{play(i,id,tg)}finally{const h=PHOLD;PHOLD=0;if(TC.confirm)return;if(!afterPick(i,before)&&h===2){render()}if(h===2)land(i,id)}}
 function afterPick(i,before){if(JSON.stringify(cur(i))===before)return false;TC.tg=null;TC.f='fit';const sl=card()[i];const m=cur(i);
  const more=roV(sl)?false:sl.k==='promo'?!m.b:TC.sh[i]?!!defTarget(i,m):!sl.d&&!!defTarget(i,m);
- if(more){TC.mode='w';TC.open=true;TC.dealt=1}else TC.open=false;render();if(TC.open)center(i);return true}
+ if(more){TC.mode='w';TC.open=true;TC.dealt=1;render();center(i)}else{TC.open=false;keepPlace(i,render)}return true}
 window.tcMode=function(k){TC.mode=k;TC.sel=null;TC.dealt=1;render();const sb=document.getElementById('tcsb');if(sb)sb.scrollTop=0};
 /* v298: the tags under a booked match open the sheet straight to that tab */
 window.tcAt=function(i,k){if(locked())return tcAct(i);const sl=card()[i];if(!sl||!editOk(sl)||!sl.d)return tcAct(i);TC.act=i;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;TC.f='fit';if(!roV(sl)&&!TC.sh[i])TC.sh[i]=shapeOf(i,cur(i));TC.mode=k;TC.open=true;TC.dealt=1;render();center(i)};
