@@ -183,13 +183,15 @@ function commit(i,m){const sl=card()[i];const ppv=ppvNow();
   sl.d=m;delete TC.dr[i]}
  else{TC.dr[i]=m;if(sl.d)sl.d=null}
  save()}
+/* v330: a pick from the sheet renders once (afterPick), not twice — PHOLD tells play() to leave the redraw to it */
+let PHOLD=0;
 function play(i,id,tg,force){if(locked())return;const sl=card()[i];const w=W_(id);if(!sl||!w||!tableOk(sl))return;
  const m=clone(cur(i));
  if(idsOf(i,m).includes(id))return toast(`${w.name} is already in this ${sl.k==='promo'?'segment':'match'}.`);
  if(sl.k==='promo'){const k=tg&&tg.t==='b'?'b':!m.a?'a':'b';const other=k==='a'?m.b:m.a;
   if(other&&promoPairBooked(other,id,i))return toast(`${w.name} and ${W_(other).name} already share a promo tonight.`);
   m[k]=id;if(k==='a'&&PT[m.type]&&PT[m.type].champ&&!isChamp(id))m.type='callout';
-  commit(i,m);TC.sel=null;TC.confirm=null;if(k==='b'||!m.b)TC.mode=m.b?'x':'w';buzz();TC.dealt=1;render();land(i,id);return}
+  commit(i,m);TC.sel=null;TC.confirm=null;if(k==='b'||!m.b)TC.mode=m.b?'x':'w';buzz();TC.dealt=1;if(PHOLD){PHOLD=2;return}render();land(i,id);return}
  if(fullIn('p',i).has(id))return toast(`${w.name} can't take another match tonight — ${DD_MAX} is the limit.`);
  if(card().some(o=>o.k==='xo'&&o.d&&o.d.a===id))return toast(`${w.name} is already in the dream match tonight.`);
  if(!force&&usedIn('p',i).has(id)){TC.confirm={i,id,tg};TC.sel=null;render();return}
@@ -200,7 +202,7 @@ function play(i,id,tg,force){if(locked())return;const sl=card()[i];const w=W_(id
  const was=!!card()[i].d;commit(i,m);TC.sel=null;TC.confirm=null;
  const now=card()[i].d;if(now&&!was&&tg.t==='side'){TC.mode='x';0}
  if(now&&tg.t==='partner'&&now.sides[tg.i].length>1&&typeof hyTeamName==='function'&&!hyTeamName(now.sides[tg.i]))0;
- buzz();TC.dealt=1;render();land(i,id)}
+ buzz();TC.dealt=1;if(PHOLD){PHOLD=2;return}render();land(i,id)}
 function takeOff(i,id){if(locked())return;const sl=card()[i];if(!sl||!tableOk(sl))return;const m=clone(cur(i));
  if(sl.k==='promo'){if(m.a===id){m.a=m.b||'';m.b=''}else if(m.b===id)m.b='';}
  else{if(sl.d&&typeof promiseOf==='function'&&promiseOf(sl.d))toast('That was a promised match — fans are still expecting it.');m.sides=m.sides.map(s=>s.filter(x=>x!==id));if(m.winner!=null&&!m.sides[m.winner])m.winner=0}
@@ -490,10 +492,10 @@ function sheetPick(id){const i=TC.act;if(i==null||locked())return;const before=J
  if(TC.rep){replaceWith(i,TC.rep,id);if(TC.confirm)return;TC.rep=null;return afterPick(i,before)}
  const m=cur(i);const tg=card()[i].k==='promo'?(TC.tg||(!m.a?{t:'a'}:{t:'b'})):(TC.tg||defTarget(i,m));
  if(!tg)return toast(`${slotLab(i)} is full — pick a bigger match or swap someone out.`);
- play(i,id,tg);if(TC.confirm)return;afterPick(i,before)}
-function afterPick(i,before){if(JSON.stringify(cur(i))===before)return;TC.tg=null;TC.f='fit';const sl=card()[i];const m=cur(i);
+ PHOLD=1;try{play(i,id,tg)}finally{const h=PHOLD;PHOLD=0;if(TC.confirm)return;if(!afterPick(i,before)&&h===2){render()}if(h===2)land(i,id)}}
+function afterPick(i,before){if(JSON.stringify(cur(i))===before)return false;TC.tg=null;TC.f='fit';const sl=card()[i];const m=cur(i);
  const more=roV(sl)?false:sl.k==='promo'?!m.b:TC.sh[i]?!!defTarget(i,m):!sl.d&&!!defTarget(i,m);
- if(more){TC.mode='w';TC.open=true;TC.dealt=1}else TC.open=false;render();if(TC.open)center(i)}
+ if(more){TC.mode='w';TC.open=true;TC.dealt=1}else TC.open=false;render();if(TC.open)center(i);return true}
 window.tcMode=function(k){TC.mode=k;TC.sel=null;TC.dealt=1;render();const sb=document.getElementById('tcsb');if(sb)sb.scrollTop=0};
 /* v298: the tags under a booked match open the sheet straight to that tab */
 window.tcAt=function(i,k){if(locked())return tcAct(i);const sl=card()[i];if(!sl||!editOk(sl)||!sl.d)return tcAct(i);TC.act=i;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;TC.f='fit';if(!roV(sl)&&!TC.sh[i])TC.sh[i]=shapeOf(i,cur(i));TC.mode=k;TC.open=true;TC.dealt=1;render();center(i)};
