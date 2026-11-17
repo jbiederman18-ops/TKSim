@@ -150,7 +150,7 @@ const SHAPES=[['singles','Singles',2,1],['tag','Tag',2,2],['trios','Trios',2,3],
 function shapeOf(i,m){if(TC.sh[i])return TC.sh[i];if(m&&(m.type==='squash'||m.type==='open'))return m.type;const ty=typeFor(m.sides);if(ty&&SHAPES.some(x=>x[0]===ty))return ty;
  const n=m.sides.filter(x=>x.length).length,per=Math.max(1,...m.sides.map(x=>x.length));return n>=4?'four':n===3?'triple':per>=3?'trios':per===2?'tag':'singles'}
 function shapeDims(k){const x=SHAPES.find(y=>y[0]===k)||SHAPES[0];return [x[2],x[3]]}
-function shapeNext(m,k){const [n,per]=shapeDims(k);for(let r=0;r<per;r++)for(let j=0;j<n;j++){const sd=m.sides[j];if(!sd)return {t:'third'};if(sd.length<=r)return sd.length?{t:'partner',i:j}:{t:'side',i:j}}return null}
+function shapeNext(m,k){const [n,per]=shapeDims(k);/* v328: one whole team, then the next — no bouncing between sides */for(let j=0;j<n;j++){const sd=m.sides[j];if(!sd)return {t:'third'};if(sd.length<per)return sd.length?{t:'partner',i:j}:{t:'side',i:j}}return null}
 function defTarget(i,m){m=m||cur(i);const sl=card()[i];if(sl&&sl.k==='match'&&TC.sh[i])return shapeNext(m,TC.sh[i]);return defTarget0(i,m)}
 window.tcPType=function(k){const i=TC.act;if(i==null||locked()||!PT[k])return;const sl=card()[i];if(!sl||sl.k!=='promo')return;const m=clone(cur(i));m.type=k;commit(i,m);buzz();const sb=document.getElementById('tcsb'),st=sb?sb.scrollTop:0;render();const nb=document.getElementById('tcsb');if(nb)nb.scrollTop=st};
 window.tcShape=function(k){const i=TC.act;if(i==null||locked())return;const sl=card()[i];if(!sl||sl.k!=='match')return;const [n,per]=shapeDims(k);
@@ -379,7 +379,7 @@ function sheetCards(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';if(sl.
  const here=idsOf(i,m);const full=promo?new Set():fullIn('p',i);const am=askMap();
  const g0=spG(sl);return ownList('p').filter(w=>!w.inj&&!here.includes(w.id)&&!full.has(w.id)&&(!g0||w.g===g0)&&(TC.f==='all'||(TC.f==='ch'?isChamp(w.id):w.al===TC.f)))
   .sort((a,b)=>(promo?b.mic-a.mic:ovr(b)-ovr(a))).map(w=>({w,r:why(w,anchor,i,am,tt)}))}
-function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown=false;return ''}const ent=!TC.shown;TC.shown=true;const m=cur(i);const promo=sl.k==='promo';
+function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown=false;return ''}const ent=!TC.shown;TC.shown=true;if(ent)TC.big=false;const m=cur(i);const promo=sl.k==='promo';
  const xo=sl.k==='xo',sp=roV(sl),tr=sp&&!!sl.d.tour,fl=sp&&!tr;
  const tl=targets(i,m);let tg=TC.rep?null:(TC.tg||defTarget(i,m)||(promo||xo?tl[0]:null)||null);if(xo&&!tg)tg={t:TC.rep&&TC.rep===m.a?'a':'b'};
  const [k,t]=sheetTitle(i,m,tg);const used=usedIn('p',i);
@@ -416,7 +416,7 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
  const foot=TC.rep&&W_(TC.rep)?`<div class="tcsf">${fl?`<button class="btn sec" onclick="tcRepX()">Keep ${esc(ln(W_(TC.rep)))}</button>`:`<button class="btn sec" onclick="tcBack()">Send back</button>`}<button class="btn sec" onclick="showW('${TC.rep}')">Details</button></div>`:xo&&sl.d?`<div class="tcsf"><button class="btn sec" onclick="tcXoClear()">Call it off</button></div>`:'';
  const showF=!tr&&!(fl&&!TC.rep);
  TC.dealt=0;
- return `<div class="tcscrim ${ent?'enter':''}" onclick="tcScrim()"></div><div class="tcdock tcsheet ${ent?'enter':''}" id="tcdock" role="dialog" aria-label="${esc(t)}"><button class="tcpull open" onclick="tcClose()" aria-label="Close"><span class="tcgrip"></span></button>
+ return `<div class="tcscrim ${ent?'enter':''}" onclick="tcScrim()"></div><div class="tcdock tcsheet ${ent?'enter':''} ${TC.big?'big':''}" id="tcdock" role="dialog" aria-label="${esc(t)}"><button class="tcpull open" onclick="tcBig(!TC.big)" aria-label="${TC.big?'Shrink the sheet':'Fill the screen'}" aria-expanded="${TC.big?'true':'false'}"><span class="tcgrip"></span></button>
  <div class="tcsh"><div class="tcst"><span class="tcsk">${esc(k)}</span><b>${esc(t)}</b></div><button class="tcsx" onclick="tcClose()" aria-label="Close">✕</button></div>
  ${cf}${tabs?`<div class="tcsc tctabs">${tabs}</div>`:''}${tabs&&TC.mode!=='w'?'':shc}${(tabs&&TC.mode!=='w')||!showF?'':`<div class="tcsc">${tabs||xo?fcs:chips}</div>`}${tch}<div class="tcsb" id="tcsb">${body}</div>${foot}</div>`}
 function pickAct(){const c=card();if(TC.act!=null&&c[TC.act]&&editOk(c[TC.act]))return;
@@ -470,7 +470,9 @@ window.tcGo=tcGo;
   if(!tcGo(i))return oBB.apply(this,arguments);try{window.tcShape('trios');const m=cur(i);if(m&&!c[i].d){m.stip='bng';TC.dr[i]=m}}catch(e){}render();center(i)}}
 /* "Open it" on a segment that's already on the card */
 window.tcSeg=function(i){if(tcGo(i))return;const sl=S&&S.card.p[i];if(!sl)return;if(typeof closeModal==='function')closeModal();sl.k==='promo'?openPromo(i):openMatch(i)};
-window.tcClose=function(){TC.open=false;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;render()};
+/* v328: flick the sheet up to fill the screen, down to shrink it back (then down again to close) */
+window.tcBig=function(v){TC.big=!!v;const d=document.getElementById('tcdock');if(d){d.classList.toggle('big',TC.big);const b=d.querySelector('.tcpull');if(b){b.setAttribute('aria-expanded',TC.big?'true':'false');b.setAttribute('aria-label',TC.big?'Shrink the sheet':'Fill the screen')}}if(!TC.big&&TC.act!=null)center(TC.act)};
+window.tcClose=function(){TC.big=false;TC.open=false;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;render()};
 /* the tap that opened the sheet also lands a click on the backdrop; ignore it */
 window.tcScrim=function(){if(Date.now()-SUP<450)return;tcClose()};
 window.tcAb=function(){TC.ab=!TC.ab;TC.dealt=0;render()};
@@ -613,8 +615,10 @@ function endDrag(x,y){const t=hit(x,y);const d=DR;cleanup();SUP=Date.now();
 {let y0=null,x0=0,pid=null;
  document.addEventListener('pointerdown',e=>{if(!inBook())return;const z=e.target.closest&&e.target.closest('#tcdock .tcpull,#tcdock .tcsh');if(!z)return;y0=e.clientY;x0=e.clientX;pid=e.pointerId},true);
  document.addEventListener('pointerup',e=>{if(y0===null||e.pointerId!==pid)return;const dy=e.clientY-y0,dx=e.clientX-x0;y0=null;if(Math.abs(dy)<36||Math.abs(dy)<Math.abs(dx))return;
-  SUP=Date.now();if(dy>0&&TC.open)tcClose()},true);
+  SUP=Date.now();if(!TC.open)return;if(dy<0){if(!TC.big)tcBig(true)}else if(TC.big)tcBig(false);else tcClose()},true);
  document.addEventListener('pointercancel',()=>{y0=null},true)}
+/* scrolling the cards themselves grows the sheet too, like a phone's own sheets */
+document.addEventListener('scroll',e=>{const t=e.target;if(!TC.open||TC.big||!t||t.id!=='tcsb')return;if(t.scrollTop>28)tcBig(true)},true);
 /* ---------------- hooks ---------------- */
 if(typeof go==='function'){const g0=go;go=window.go=function(t){if(t==='book'&&tab!=='book'){TC.open=false;TC.sel=null}return g0.apply(this,arguments)}}
 function attnDown(){if(!S||S.phase!=='season'||typeof tab==='undefined'||tab!=='book')return;const m=document.querySelector('#app main');if(!m)return;const a=m.querySelector('.card.attn');if(!a)return;
@@ -967,6 +971,7 @@ html.tcards .tv-last .tkc{--w:180px;width:var(--w)}
 .tcdock.tcsheet{position:fixed;left:0;right:0;bottom:0;z-index:15;max-width:640px;margin:0 auto;padding:6px 0 env(safe-area-inset-bottom,0px);max-height:min(66vh,600px);display:flex;flex-direction:column;background:linear-gradient(180deg,#1b1c21,#101115);box-shadow:0 -1px 0 var(--gold3),0 -20px 40px rgba(0,0,0,.6)}.tcdock.tcsheet.enter{animation:tcup .3s cubic-bezier(.2,.9,.3,1) both}
 @keyframes tcup{from{transform:translateY(100%)}}
 .tcsheet .tcpull.open{flex:none;margin:0 auto 2px}
+.tcdock.tcsheet{transition:max-height .28s cubic-bezier(.2,.9,.3,1)}.tcdock.tcsheet.big{max-height:calc(100dvh - env(safe-area-inset-top,0px) - 10px)}.tcdock.tcsheet.big .tcsb{flex:1}
 .tcsh{flex:none;display:flex;align-items:flex-end;gap:10px;padding:0 16px 10px;touch-action:none}
 .tcst{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.tcsk{font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
 .tcst b{font:900 italic 21px/1.02 'BC',sans-serif;text-transform:uppercase;text-wrap:balance}
