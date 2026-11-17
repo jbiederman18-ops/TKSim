@@ -445,6 +445,31 @@ function center(i){requestAnimationFrame(()=>requestAnimationFrame(()=>{const el
  const hd=document.querySelector('header.top');const dk=document.getElementById('tcdock');const top=hd?hd.getBoundingClientRect().bottom:0;const bot=dk?(dk.classList.contains('tcsheet')?innerHeight-dk.offsetHeight:dk.getBoundingClientRect().top):innerHeight;
  const r=el.getBoundingClientRect();const room=bot-top;const d=r.height>room-16?r.top-(top+8):r.top+r.height/2-(top+room/2);if(Math.abs(d)>4)window.scrollBy({top:d,behavior:TC.open?'auto':'smooth'})}))}
 window.tcOpen=function(){if(TC.act==null)pickAct();if(TC.act==null)return;TC.open=true;TC.dealt=1;render();center(TC.act)};
+/* v327: every way into booking from outside the Book screen (Needs your attention, feud and title-shot buttons, Blood & Guts)
+   lands on the card table with the sheet open, instead of the classic match/promo editors. ids are placed in order; the
+   sheet then moves on to whoever's still missing. Returns false when the table can't take it, so callers fall back. */
+function tcGo(i,ids){try{if(!on()||locked()||!S||S.phase!=='season')return false;const sl=card()[i];if(!sl||!editOk(sl))return false;
+ if(typeof closeModal==='function')closeModal();if(typeof tab!=='undefined'&&tab!=='book'){tab='book';window.scrollTo(0,0)}
+ ids=(ids||[]).filter(id=>id&&W_(id));
+ if(!ids.length){if(sl.d&&!roV(sl)&&!xoV(sl))return window.tcAt(i,'w'),true;return window.tcAct(i),true}
+ if(sl.d&&!roV(sl)&&!xoV(sl)){window.tcAt(i,'w');return true}
+ sheetAt(i);for(const id of ids){if(idsOf(i).includes(id))continue;TC.tg=null;sheetPick(id);if(TC.confirm)break}
+ if(!TC.open&&!TC.confirm)render();return true}catch(e){console.warn('tcGo',e);return false}}
+window.tcGo=tcGo;
+{const oMW=window.openMatchWith,oPW=window.openPromoWith,oFB=window.feudBook,oBB=window.bngBook;
+ if(oMW)window.openMatchWith=function(i,id){const w=S&&S.w[id];if(!w||w.inj)return;if(fullIn('p',i).has(id))return toast(`${w.name} can't take another match tonight.`);return tcGo(i,[id])||oMW.apply(this,arguments)};
+ if(oPW)window.openPromoWith=function(i,id){return tcGo(i,[id])||oPW.apply(this,arguments)};
+ if(oFB)window.feudBook=function(kind,a,b){if(!on()||locked())return oFB.apply(this,arguments);const c=S.card.p;const i=c.findIndex(sl=>sl.k===kind&&!sl.d);
+  if(i<0)return toast(`Every ${kind} slot is full — clear one first.`);
+  if(kind==='match'){const used=fullIn('p');const busy=[a,b].filter(id=>used.has(id));if(busy.length)return toast(`${busy.map(id=>S.w[id].name).join(' and ')} can't take another match tonight.`)}
+  const ord=kind==='promo'?[S.w[a],S.w[b]].filter(Boolean).sort((p,q)=>q.mic-p.mic).map(w=>w.id):[a,b];
+  return tcGo(i,ord)||oFB.apply(this,arguments)};
+ if(oBB)window.bngBook=function(){if(!on()||locked())return oBB.apply(this,arguments);const c=S.card.p;const open=c.map((sl,i)=>sl&&sl.k==='match'&&!sl.d?i:-1).filter(i=>i>=0);
+  if(!open.length)return toast('Every match slot is booked — open one up (or swap a match to Blood & Guts in its Stipulation tab).');
+  const main=open.filter(i=>{try{return mLab(c,i).main}catch(e){return false}});const i=main.length?main[0]:open.filter(i=>!c[i].opt)[0]!=null?open.filter(i=>!c[i].opt)[0]:open[0];
+  if(!tcGo(i))return oBB.apply(this,arguments);try{window.tcShape('trios');const m=cur(i);if(m&&!c[i].d){m.stip='bng';TC.dr[i]=m}}catch(e){}render();center(i)}}
+/* "Open it" on a segment that's already on the card */
+window.tcSeg=function(i){if(tcGo(i))return;const sl=S&&S.card.p[i];if(!sl)return;if(typeof closeModal==='function')closeModal();sl.k==='promo'?openPromo(i):openMatch(i)};
 window.tcClose=function(){TC.open=false;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;render()};
 /* the tap that opened the sheet also lands a click on the backdrop; ignore it */
 window.tcScrim=function(){if(Date.now()-SUP<450)return;tcClose()};

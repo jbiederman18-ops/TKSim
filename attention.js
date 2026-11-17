@@ -30,7 +30,7 @@ const emptyMatch=()=>card().findIndex(sl=>sl&&sl.k==='match'&&!sl.d);
 const emptyPromo=()=>card().findIndex(sl=>sl&&sl.k==='promo'&&!sl.d);
 const mainIdx=()=>{const c=card();for(let i=c.length-1;i>=0;i--)if(c[i]&&c[i].k==='match')return i;return -1};
 /* the button that puts a wrestler on the card: their segment if booked, else an open match, else an open promo */
-function bookBtn(id,label){const s=segs(id);if(s.length)return ['Open it',s[0].k==='promo'?`openPromo(${s[0].i})`:`openMatch(${s[0].i})`];
+function bookBtn(id,label){const s=segs(id);if(s.length)return ['Open it',s[0].k==='promo'?`tcSeg(${s[0].i})`:`tcSeg(${s[0].i})`];
  const m=emptyMatch();if(m>=0)return [label||'Book them',`attnBookMatch(${m},'${id}')`];const p=emptyPromo();if(p>=0)return [label||'Book them',`attnBookPromo(${p},'${id}')`];return null}
 /* steady wording per week, so scenes don't reshuffle on every render */
 function pickS(arr,seed){if(!arr||!arr.length)return '';let h=0;const s=seed+'|'+AW();for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return arr[Math.abs(h)%arr.length]}
@@ -92,7 +92,7 @@ function attnItems(){if(!S||S.phase!=='season')return [];
    const what=[nm?`${nm} match${nm>1?'es':''}`:'',np?`${np} promo${np>1?'s':''}`:''].filter(Boolean).join(' and ');
    const names=emp.map(i=>c[i].k==='match'?(mLab(c,i).main?'Main event':mLab(c,i).lab):'Promo');
    add({id:'empty',g:A_MUST,i:'📝',h:`Still to book: ${what}`,d:'',
-    s:['b',`Empty: ${names.join(', ')}`],a:[c[i0].k==='match'?'Book a match':'Book a promo',c[i0].k==='match'?`openMatch(${i0})`:`openPromo(${i0})`,1],gate:false,where:null})}}
+    s:['b',`Empty: ${names.join(', ')}`],a:[c[i0].k==='match'?'Book a match':'Book a promo',c[i0].k==='match'?`tcSeg(${i0})`:`tcSeg(${i0})`,1],gate:false,where:null})}}
  if(S.crisis&&typeof CRISES!=='undefined'&&CRISES[S.crisis.k]&&S.w[S.crisis.a]&&S.w[S.crisis.a].own==='p'){const C=CRISES[S.crisis.k];
   add({id:'crisis',g:A_MUST,i:C.i,h:`${C.good?'An opportunity':'A situation'}: ${C.t}`,d:`${S.w[S.crisis.a].name} is involved. It needs a decision before the show.`,s:['b','Waiting on you'],a:['Decide','openCrisis()',1],gate:false,who:[S.crisis.a],where:'🚨 Backstage'})}
 
@@ -111,7 +111,7 @@ function attnItems(){if(!S||S.phase!=='season')return [];
   if(k==='me'){ok=segs(w.id).some(x=>x.main);urgent=d.me.need-d.me.got>=d.me.by-AW()+1;txt=ok?'In tonight\'s main event':urgent?'Has to be tonight':'Not in the main event tonight'}
   else if(k==='shot'){const pp=(S.promises||[]).find(pr=>pr.kind==='shot'&&pr.a===w.id&&pr.week>S.week);ok=!!pp||segs(w.id).some(x=>x.k==='match'&&x.d.title)||c.some(sl=>sl&&sl.k==='chal'&&sl.d&&sl.d.c===w.id);urgent=AW()>=d.shot.by;txt=pp?`Promised for ${pp.ppv||'week '+pp.week}`:ok?'In a title match tonight':urgent?'Due tonight':'Not tonight'}
   else if(k==='ppv'){if(!sh.ppv)return;ok=onCardW(w.id);urgent=true;txt=ok?'On the card':'Not on the card'}
-  const fix=ok?null:k==='me'&&mainIdx()>=0?['Open main event',`openMatch(${mainIdx()})`]:bookBtn(w.id);
+  const fix=ok?null:k==='me'&&mainIdx()>=0?['Open main event',`tcSeg(${mainIdx()})`]:bookBtn(w.id);
   add({id:'deal'+k+w.id,g:A_MUST,i:k==='me'?'⭐':k==='shot'?'🏆':'📺',h:`${w.name}'s contract: ${dealTermTxt(w,k).replace(/^\S+\s/,'')}`,d:'Break a contract promise and they lose morale and trust.',
    s:ok?['ok',txt]:[urgent?'b':'w',txt],a:fix,who:[w.id],where:'📜 The fine print',say:[[w.id,sayW('deal_'+k,w,{n:k==='me'?d.me.need-d.me.got:''})]],request:w.id,askT:'Contract: '+dealTermTxt(w,k).replace(/^\S+\s/,''),
    chip:i=>{const s=segs(w.id).find(x=>x.i===i);if(!s)return null;if(k==='me')return s.main?['ok',`${L(w)}'s main-event clause`]:['w',`${L(w)} is owed the main event`];if(k==='shot')return s.d.title?['ok',`${L(w)}'s title-shot clause`]:null;return ['ok',`${L(w)}'s PPV clause`]}})});
@@ -122,14 +122,14 @@ function attnItems(){if(!S||S.phase!=='season')return [];
   const sg=segs(t.a);
   switch(t.goal){
    case 'seg':{const s=sg.find(x=>!t.kind||x.k===t.kind);ok=!!s;txt=ok?`On the card in ${segName(s.i)}${t.min?` — needs ${t.min}★+`:''}`:`No ${t.kind||'segment'} for them tonight`;if(!ok)fix=t.kind==='promo'&&emptyPromo()>=0?['Book a promo',`attnBookPromo(${emptyPromo()},'${t.a}')`]:bookBtn(t.a);break}
-   case 'me':{ok=sg.some(x=>x.main);txt=ok?'In tonight\'s main event':'Not in the main event';if(!ok&&mainIdx()>=0)fix=['Open main event',`openMatch(${mainIdx()})`];break}
-   case 'wins':{const s=sg.find(x=>x.k==='match');ok=!!(s&&s.d.sides[s.d.winner]&&s.d.sides[s.d.winner].includes(t.a));txt=ok?'Booked to win tonight':s?'Booked to lose tonight':'No match for them tonight';fix=s?['Open it',`openMatch(${s.i})`]:bookBtn(t.a);break}
+   case 'me':{ok=sg.some(x=>x.main);txt=ok?'In tonight\'s main event':'Not in the main event';if(!ok&&mainIdx()>=0)fix=['Open main event',`tcSeg(${mainIdx()})`];break}
+   case 'wins':{const s=sg.find(x=>x.k==='match');ok=!!(s&&s.d.sides[s.d.winner]&&s.d.sides[s.d.winner].includes(t.a));txt=ok?'Booked to win tonight':s?'Booked to lose tonight':'No match for them tonight';fix=s?['Open it',`tcSeg(${s.i})`]:bookBtn(t.a);break}
    case 'title':{ok=sg.some(x=>x.k==='match'&&x.d.title===t.title);txt=ok?'In the title match tonight':'Not in a title match tonight';fix=ok?null:bookBtn(t.a);break}
    case 'vs':{ok=!!(B&&against(t.a,t.b));txt=ok?`Facing ${B.name} tonight`:`Not facing ${B?B.name:'them'} tonight`;fix=ok?null:B?['Book it',`feudBook('match','${t.a}','${t.b}')`]:null;break}
    case 'pair':{ok=!!(B&&together(t.a,t.b));txt=ok?`With ${B.name} tonight`:`Not with ${B?B.name:'them'} tonight`;fix=ok?null:bookBtn(t.a);break}
    case 'team':{ok=!!(B&&sameSide(t.a,t.b));txt=ok?`Teaming with ${B.name} tonight`:`Not teaming with ${B?B.name:'them'} tonight`;fix=ok?null:bookBtn(t.a);break}
-   case 'rest':{bad=inMatchW(t.a);ok=!bad;txt=bad?'Booked in a match — you promised a week off':'Resting, as promised';const s=sg.find(x=>x.k==='match');fix=bad&&s?['Swap them out',`openMatch(${s.i})`]:null;break}
-   case 'avoid':{const s=B&&together(t.a,t.b);bad=!!s;ok=!bad;txt=bad?`In the same segment as ${B.name}`:`Kept away from ${B?B.name:'them'}`;fix=s?['Open it',s.k==='promo'?`openPromo(${s.i})`:`openMatch(${s.i})`]:null;break}
+   case 'rest':{bad=inMatchW(t.a);ok=!bad;txt=bad?'Booked in a match — you promised a week off':'Resting, as promised';const s=sg.find(x=>x.k==='match');fix=bad&&s?['Swap them out',`tcSeg(${s.i})`]:null;break}
+   case 'avoid':{const s=B&&together(t.a,t.b);bad=!!s;ok=!bad;txt=bad?`In the same segment as ${B.name}`:`Kept away from ${B?B.name:'them'}`;fix=s?['Open it',s.k==='promo'?`tcSeg(${s.i})`:`tcSeg(${s.i})`]:null;break}
    case 'ppv':{ok=!!sh.ppv&&onCardW(t.a);txt=sh.ppv?(ok?'On the PPV card':'Not on the PPV card'):'Waits for the next PPV';break}
    default:txt=''}
   const k=ok?'ok':bad||(must&&t.goal!=='ppv')?'b':t.goal==='ppv'&&!sh.ppv?'n':'w';
@@ -150,12 +150,12 @@ function attnItems(){if(!S||S.phase!=='season')return [];
    const s=c.findIndex(sl=>sl&&sl.k==='match'&&sl.d&&sl.d.title===tid);return {tid,t,H,wk:S.week-t.last,s,hs:segs(H.id).find(x=>x.k==='match')}}).filter(Boolean).sort((a,b)=>b.wk-a.wk);
   if(st.length){const open=st.filter(x=>x.s<0);const top=open[0]||st[0];const one=st.length===1;
    const who=x=>x.t.holders.map(id=>S.w[id]?L(S.w[id]):'').join(' & ');
-   const fix=!open.length?null:top.hs?['Put it on the line',`openMatch(${top.hs.i})`]:bookBtn(top.H.id,'Book a defense');
+   const fix=!open.length?null:top.hs?['Put it on the line',`tcSeg(${top.hs.i})`]:bookBtn(top.H.id,'Book a defense');
    add({id:'idle',g:A_MIND,i:'🏆',h:one?`${top.t.n} title: ${top.wk} weeks without a defense`:`${st.length} titles need defending`,
     d:one?'An idle title loses prestige every week it isn\'t defended.':`Most overdue: ${open.map(x=>`${x.t.n} (${x.wk} wks)`).slice(0,3).join(', ')||'none tonight'}. Idle titles lose prestige every week — rotate defenses.`,
     s:!open.length?['ok',one?`Defended tonight in ${segName(top.s)}`:'All defended tonight']:open.length<st.length?['w',`${st.length-open.length} of ${st.length} defended tonight`]:top.hs?['w',`${who(top)} ${top.t.holders.length>1?'are':'is'} booked, but the ${top.t.n} title isn't on the line`]:['w',`${who(top)} ${top.t.holders.length>1?'aren\'t':'isn\'t'} on the card`],
     a:fix,gate:false,who:st.flatMap(x=>x.t.holders),where:'🏆 The champions',
-    rows:st.map(x=>({t:x.t.n,wk:x.wk,ok:x.s>=0,a:x.s>=0?null:x.hs?['Defend',`openMatch(${x.hs.i})`]:bookBtn(x.H.id,'Defend')})),
+    rows:st.map(x=>({t:x.t.n,wk:x.wk,ok:x.s>=0,a:x.s>=0?null:x.hs?['Defend',`tcSeg(${x.hs.i})`]:bookBtn(x.H.id,'Defend')})),
     say:open.slice(0,2).map(x=>[x.H.id,sayW('title_idle',x.H,{n:x.wk})]),chip:i=>st.some(x=>x.s===i)?['ok','Title defense']:null})}}
 
  /* contracts ending after this show — the go-live contract check already stops you, so this doesn't double up */
@@ -194,7 +194,7 @@ function attnItems(){if(!S||S.phase!=='season')return [];
  /* ---------- keep in mind ---------- */
  {const seen=new Set();for(let i=0;i<mine.length;i++)for(let j=i+1;j<mine.length;j++){const v=beefOf(mine[i].id,mine[j].id);if(v<25)continue;const A=mine[i],B=mine[j];const tg=together(A.id,B.id);
   add({id:'beef'+key(A.id,B.id),g:A_MIND,i:'☢️',h:`Real heat backstage: ${A.name} and ${B.name}`,d:v>=BEEF_MIN?'Putting them in a ring together could turn ugly.':'Simmering. Keep them apart and it cools off.',
-   s:tg?[v>=BEEF_MIN?'b':'w',`Together in ${segName(tg.i)}`]:['ok','Kept apart'],a:tg?['Open it',tg.k==='promo'?`openPromo(${tg.i})`:`openMatch(${tg.i})`]:null,gate:false,who:[A.id,B.id],where:'☢️ Catering',
+   s:tg?[v>=BEEF_MIN?'b':'w',`Together in ${segName(tg.i)}`]:['ok','Kept apart'],a:tg?['Open it',tg.k==='promo'?`tcSeg(${tg.i})`:`tcSeg(${tg.i})`]:null,gate:false,who:[A.id,B.id],where:'☢️ Catering',
    say:[['Locker room whispers',fill(pickS(v>=BEEF_MIN?SAY.beef_hot:SAY.beef_warm,'beef'+key(A.id,B.id)),{A:A.name,B:B.name})]],chip:i=>tg&&tg.i===i?[v>=BEEF_MIN?'b':'w',`Real heat: ${L(A)} & ${L(B)}`]:null})}}
  /* worn down */
  {const tired=mine.filter(w=>!w.inj&&sta(w)<100-FAT_OK);const ex=tired.filter(w=>w.fat>=FAT_RISK);const onT=tired.filter(w=>inMatchW(w.id));
@@ -287,7 +287,7 @@ window.attnGate=function(){if(OK_WK===AW())return false;let l;try{l=attnItems()}
  <button class="btn" onclick="closeModal()">Fix it first</button><button class="btn sec" onclick="attnGoAnyway()">Go live anyway</button>`);return true};
 window.attnGoAnyway=function(){OK_WK=AW();closeModal();goLive()};
 window.attnBookMatch=function(i,id){closeModal();if(typeof openMatchWith==='function')openMatchWith(i,id)};
-window.attnBookPromo=function(i,id){closeModal();if(typeof openPromo!=='function')return;openPromo(i);if(typeof PE!=='undefined'&&PE){PE.a=id;if(PE.b===id)PE.b='';renderPromoEd(true)}};
+window.attnBookPromo=function(i,id){closeModal();if(typeof tcGo==='function'&&tcGo(i,[id]))return;if(typeof openPromo!=='function')return;openPromo(i);if(typeof PE!=='undefined'&&PE){PE.a=id;if(PE.b===id)PE.b='';renderPromoEd(true)}};
 window.attnNeg=function(id){closeModal();dealNegotiate(id)};
 window.attnResign=function(id){resign(id);render()};
 

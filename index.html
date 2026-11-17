@@ -1534,7 +1534,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v326';
+const APP_VERSION='v327';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4464,7 +4464,7 @@ function flowCard(sh){const segs=[];S.card.p.forEach(sl=>{if(!sl.d||fixedK(sl))r
    special about tonight, whether the war is booked, and a one-tap way to set one up */
 function bngHero(sh){if(!S||sh.ppv||S.week!==BNG_WEEK||S.phase!=='season')return '';const c=S.card.p||[];const i=c.findIndex(sl=>sl&&sl.k==='match'&&sl.d&&sl.d.stip==='bng');
  const d=i>=0?c[i].d:null;
- return `<div class="card bngh"><div class="bngk">Once a year · tonight only</div><div class="bngn">🩸 Blood &amp; Guts</div><div class="bngd">Two rings, one double cage. Book one trios or 8-man war between factions with real heat — the bigger the feud, the bigger the night.</div>${d?`<button class="bngb done" onclick="openMatch(${i})"><span>✓ Booked · Match ${i+1}</span><b>${esc(d.sides.map(sideName).join(' vs '))}</b></button>`:`<button class="bngb" onclick="bngBook()"><span>Not on the card yet</span><b>Book the war ▸</b></button>`}</div>`}
+ return `<div class="card bngh"><div class="bngk">Once a year · tonight only</div><div class="bngn">🩸 Blood &amp; Guts</div><div class="bngd">Two rings, one double cage. Book one trios or 8-man war between factions with real heat — the bigger the feud, the bigger the night.</div>${d?`<button class="bngb done" onclick="window.tcSeg?tcSeg(${i}):openMatch(${i})"><span>✓ Booked · Match ${i+1}</span><b>${esc(d.sides.map(sideName).join(' vs '))}</b></button>`:`<button class="bngb" onclick="bngBook()"><span>Not on the card yet</span><b>Book the war ▸</b></button>`}</div>`}
 function bngBook(){if(mpLocked())return;const c=S.card.p;const open=c.map((sl,i)=>sl&&sl.k==='match'&&!sl.d?i:-1).filter(i=>i>=0);
  if(!open.length)return toast('Every match slot is booked — open one up (or swap a match to Blood & Guts in the match editor).');
  const main=open.filter(i=>{try{return mLab(c,i).main}catch(e){return false}});const i=main.length?main[0]:open.filter(i=>!c[i].opt)[0]!=null?open.filter(i=>!c[i].opt)[0]:open[0];
