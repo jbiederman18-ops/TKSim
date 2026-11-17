@@ -54,7 +54,6 @@ const editOk=sl=>!!sl&&(tableOk(sl)||roV(sl)||xoV(sl));
 const spG=sl=>sl&&sl.k==='match'&&sl.d&&sl.d.sp&&SPK[sl.d.sp]?SPK[sl.d.sp].g:null;
 function tableOk(sl){if(!sl)return false;if(sl.k==='promo')return true;if(sl.k!=='match')return false;return !sl.d||plain(sl.d)}
 function slotLab(i){const c=card(),sl=c[i];if(!sl)return '';if(sl.k==='promo')return sl.opt?'Bonus promo':'Promo';if(sl.k==='xo')return 'Dream match';if(sl.k==='chal')return 'Challenge';try{const ml=mLab(c,i);return ml.main?'Main event':ml.lab}catch(e){return 'Match'}}
-function chipLab(i){const c=card(),sl=c[i];if(!sl)return '';if(sl.k==='promo')return sl.opt?'Bonus':'Promo';if(sl.k!=='match')return sl.k==='xo'?'Dream':'Special';const d=sl.d;if(d&&!plain(d))return d.type==='rumble'?'Rumble':d.type==='mitb'?'Ladder':d.type==='gauntlet'?'Casino':d.type==='open'?'Open':d.type==='squash'?'Squash':d.tour?'Bracket':'Match';try{const ml=mLab(c,i);return ml.main?'Main':ml.opt?'Bonus':'Match'}catch(e){return 'Match'}}
 
 /* the working model of a slot: a half-built match lives in TC.dr until it's legal, then it goes on the card */
 function cur(i){const sl=card()[i];if(!sl)return null;if(TC.dr[i])return TC.dr[i];
@@ -468,7 +467,6 @@ function center(i){const w=(TC.entAt||0)+360-Date.now();if(TC.open&&w>0){setTime
 function center0(i,bh){requestAnimationFrame(()=>requestAnimationFrame(()=>{const el=document.querySelector(`.tcs[data-tcs="${i}"]`);if(!el)return;
  const hd=document.querySelector('header.top');const dk=document.getElementById('tcdock');const top=hd?hd.getBoundingClientRect().bottom:0;const bot=dk?(dk.classList.contains('tcsheet')?innerHeight-(TC.big?dk.offsetHeight:Math.min(dk.offsetHeight,innerHeight*.66,600)):dk.getBoundingClientRect().top):innerHeight;
  const r=el.getBoundingClientRect();const room=bot-top;const d=r.height>room-16?r.top-(top+8):r.top+r.height/2-(top+room/2);if(Math.abs(d)>4)window.scrollBy({top:d,behavior:bh||(TC.open?'auto':'smooth')})}))}
-window.tcOpen=function(){if(TC.act==null)pickAct();if(TC.act==null)return;TC.open=true;TC.dealt=1;paint();center(TC.act)};
 /* v327: every way into booking from outside the Book screen (Needs your attention, feud and title-shot buttons, Blood & Guts)
    lands on the card table with the sheet open, instead of the classic match/promo editors. ids are placed in order; the
    sheet then moves on to whoever's still missing. Returns false when the table can't take it, so callers fall back. */
@@ -552,14 +550,6 @@ window.tcNo=function(){TC.confirm=null;render()};
 window.tcRepX=function(){TC.rep=null;TC.dealt=1;render()};
 window.tcXo=function(k){TC.tg={t:k};TC.rep=null;TC.mode='w';TC.dealt=1;render()};
 window.tcXoClear=function(){const i=TC.act;const sl=card()[i];if(!sl||sl.k!=='xo'||locked())return;sl.d=null;delete TC.dr[i];save();TC.open=false;render()};
-window.tcDeck=function(){const i=TC.act;const sl=card()[i];if(!sl)return;const m=cur(i);const here=new Set(idsOf(i,m));const promo=sl.k==='promo';
- const anchor=[...here].pop();const opps=anchor?[W_(anchor)]:[];
- openPicker({title:`Play a card into ${slotLab(i)}`,bk:true,except:i,sort:'fit',g:'all',fitMic:promo,
-  bkNote:promo?'They can still cut this promo too.':`Anyone can work up to ${DD_MAX} matches a show — the second costs ${DD_FAT}× the stamina.`,
-  rival:w=>pkRival(w,opps),chem:opps.length&&!promo?w=>chemOpp(w,opps[0]):null,feud:w=>opps.length?feudVs(w,opps):hotFeud(w),
-  pool:()=>ownList('p').filter(w=>!w.inj&&!here.has(w.id)&&(promo||!fullIn('p',i).has(w.id))),
-  info:w=>promo?`<em class="chm ${w.mic>=85?'cg':w.mic>=70?'cn':'cb'}">Mic ${Math.round(w.mic)}</em>`:anchor?`<em class="chm">${esc(chemWord(chemOpp(w,W_(anchor))))}${metPair(w.id,anchor)?'':' ❓'}</em>`:'',
-  onPick:id=>{closeModal();if(id)setTimeout(()=>play(i,id,null),30)},back:()=>closeModal()})};
 
 /* ---------------- touch: drag, flick, tap, hold, swipe off ---------------- */
 let PD=null,DR=null,LP=null,SUP=0,MOM=0,AS=0;
@@ -734,7 +724,6 @@ function homeDeco(){if(!on()||!S||S.phase!=='season'||typeof tab==='undefined'||
 /* ---------------- menus as cards (v284): Home's tiles become decks, the brand war a face-off, saved games show cards ---------------- */
 const tcIni=n=>String(n||'').split(/\s+/).filter(Boolean).map(x=>x[0]).join('').slice(0,2).toUpperCase();
 function tcBk(inner,cls){return `<span class="tcbk2 ${cls||''}">${inner||''}</span>`}
-function gmCard(name,you){return `<div class="tkc ${you?'fc':'hl'} tcgm"><div class="tcf"><div class="tcg">${esc(tcIni(name))}</div><span class="tct ${you?'must':''}">${you?'You':'Rival'}</span><div class="tcb"><b class="tcn">${esc(name)}</b><span class="tcc ${you?'t':'m'}">GM</span></div></div></div>`}
 function pileOf(ws,dx){return `<span class="tcpile">${ws.map((w,k)=>`<span style="left:${k*dx}px;top:${k*3}px;transform:rotate(${(k-(ws.length-1)/2)*5}deg)">${tcCard(w,{noWear:true})}</span>`).join('')}</span>`}
 function homeDecks(m){const tl=m.querySelector('.tiles');if(!tl||tl.dataset.tcd)return;tl.dataset.tcd='1';tl.classList.add('tcdecks');const mine=ownList('p');
  tl.querySelectorAll('.tile').forEach(t=>{const nm=(t.querySelector('b')||{}).textContent||'';let pile='';if(!/^(roster|titles)/i.test(nm))return;t.classList.add('tcdkt');
@@ -749,7 +738,6 @@ function homeWar(m){const n=m.querySelector('.warnames');if(!n||n.dataset.tcd)re
  const np=(nm,you)=>`<div class="tcnp ${you?'y':''}"><span>${you?'You':ON()?'Friend':'Rival'}</span><b>${esc(nm)}</b></div>`;
  n.outerHTML=`<div class="tcwar">${np(S.gm,true)}<div class="tcrope"><span>Fan war</span><div class="r"><i style="left:${pct}%"></i></div><b>${wins}</b><span>Ratings wins</span></div>${np(S.rival,false)}</div>`;
  if(bar)bar.remove();const mid=rows[0]&&rows[0].children[1];if(mid&&/Ratings wins/.test(mid.textContent))mid.textContent=''}
-function homeBrief(m){const b=m.querySelector('.bstrip .bsn');if(!b||b.dataset.tcd)return;b.dataset.tcd='1';b.innerHTML=`<span class="tcstk">${tcBk('')}${tcBk(b.textContent)}</span>`}
 function homeMenus(){if(!on()||!S||S.phase!=='season'||typeof tab==='undefined'||tab!=='home')return;const m=document.querySelector('#app main');if(!m)return;homeDecks(m);homeWar(m)}
 /* saved games: each one is a show card */
 function showCard(g,big){const lg=g.k==='league';const wk=g.wk?(lg?`Wk ${Math.min(g.wk,SEASON)}/${SEASON}`:`Wk ${g.wk}`):'';

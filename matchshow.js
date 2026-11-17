@@ -212,7 +212,6 @@ const msSoft=(out)=>!!(out&&/\b(?:kid|child|tears|bursts into tears|hugs?)\b/i.t
 
 /* ---------- engine ---------- */
 let MS=null;
-const msW=w=>w&&typeof w==='object';
 function msFam(m){if(m.type==='gauntlet')return 'none';if(m.type==='rumble')return 'rumble';if(m.type==='mitb')return 'ladder';
  const k=stipKey(m);return k==='sub'?'sub':k==='iquit'?'iquit':k==='ladder'?'ladder':k==='tables'?'tables':k==='lms'?'lms':k==='coffin'?'coffin':k==='bng'?'bng':'pin'}
 function msRoles(m,brand){const win=m.sides[m.winner]||[];const A=S.w[win[0]];const A2=win.length>1?S.w[win[1]]:null;
@@ -412,7 +411,6 @@ function msNarr(text,rr){const g=MS.g&&MS.g.r||{};rr=rr||g;const A=rr.A||MS.r.A,
  const sideOf=t=>{const inA=(MS.m.sides[MS.m.winner]||[]).map(id=>S.w[id]&&S.w[id].name).filter(Boolean);const bs=(MS.m.sides.find(sd=>sd.includes(MS.r.B.id))||[]).map(id=>S.w[id]&&S.w[id].name).filter(Boolean);
   if([A&&A.name,...inA].some(n=>n&&t.startsWith(n)))return 'a';if([B&&B.name,...bs].some(n=>n&&t.startsWith(n)))return 'b';return null};
  return out.map(t=>{const sd=sideOf(t);return {side:sd,kind:sd?'act':'cam',t,mv:msMvNarr(t,sd,A,B)}})}
-const people0=ctx=>({a:ctx.A,b:ctx.B,x:ctx.X});
 function msBox(pg){const r=MS.r;const w=pg.side==='a'?r.A:pg.side==='b'?r.B:null;
  const tab=pg.kind==='booth'?`<div class="sdtab other">${esc(pg.who)}</div>`:w&&(pg.kind==='q')?`<div class="sdtab ${pg.side==='a'?'mine':'them'}${pg.side==='b'?' r':''}">${esc(w.name)}</div>`:'';
  const text=pg.kind==='q'?`“${pg.t}”`:pg.t;

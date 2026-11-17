@@ -11,7 +11,6 @@ const PCH={try:{i:'🧪',n:'Give it a try'},go:{i:'🚀',n:'Go for it'},no:{i:'�
 const PSTAR=v=>`${v}★`;
 /* ---- small helpers ---- */
 function pOwn(id){const w=S.w[id];return w&&w.own==='p'?w:null}
-function pFree(w){return w&&w.own==='p'&&!w.inj}
 function pLast(w){return w.name.split(' ').slice(-1)[0]}
 function pNote(notes,t){S.pitchNews=(S.pitchNews||[]).concat([{w:AW(),t}]).slice(-12);if(notes&&!ON())notes.push(t)}
 function pBusy(id){return (S.trials||[]).some(t=>t.a===id||t.b===id)||(S.pitch&&(S.pitch.a===id||S.pitch.b===id))}

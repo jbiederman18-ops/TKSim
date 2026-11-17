@@ -1,6 +1,6 @@
 /* Tony Khan Simulator — season systems (v80).
    Tournaments (Continental Classic, Owen Hart Cups), the Casino Gauntlet, Forbidden Door dream matches,
-   network mandates, card suggestions, free-agent bidding wars, season scoring and the offseason.
+   network mandates, card suggestions, season scoring and the offseason.
    Loaded before index.html's main script; everything here runs lazily, so it can use the main script's helpers. */
 'use strict';
 
@@ -303,16 +303,6 @@ function suggestFill(){if(mpLocked())return;const before=S.card.p.filter(sl=>sl.
 function clearCard(){if(mpLocked())return;if(!confirm('Clear everything on this card except promised, tournament, Royal Rumble and Money in the Bank matches?'))return;
  S.card.p.forEach(sl=>{if(!sl.d)return;if(sl.k==='match'&&(sl.d.tour||sl.d.sp||promiseOf(sl.d)))return;sl.d=null});save();render()}
 
-/* ===================== BIDDING WARS ===================== */
-/* when a star hits the market, the rival may want them too */
-function bidWar(id){const w=S.w[id];if(ON()||!w||w.pop<70||S.phase!=='season')return false;const c=signCost(w);
- if(S.money.ai<c*1.4||ownList('ai').length>=30||w.bid===AW())return false;if(Math.random()>.55)return false;w.bid=AW();
- const c2=Math.round(c*1.35),s2=Math.round(mkt(w)*1.2);
- openModal(`<div class="h mhd">💰 Bidding war!</div><p>${esc(S.rival)} wants <b>${esc(w.name)}</b> too, and they've made a big offer. Match it or walk away.</p>
- <div class="card"><div class="row sb"><span>Signing bonus</span><b>${money(c2)}</b></div><div class="row sb"><span>Salary</span><b>${money(s2)}/wk</b></div><div class="muted tiny">Normally ${money(c)} and ${money(mkt(w))}/wk.</div></div>
- <button class="btn" ${S.money.p<c2?'disabled':''} onclick="bidWin('${id}')">Outbid them · ${money(c2)}</button><button class="btn sec" onclick="bidLose('${id}')">Walk away</button>`);return true}
-function bidWin(id){const w=S.w[id];const c2=Math.round(signCost(w)*1.35);if(S.money.p<c2)return toast('Not enough money.');S.money.p-=c2;w.sal=Math.round(mkt(w)*1.2);w.own='p';w.con=26;w.mor=85;w.fee=0;w.deb=AW();news(`💰 ${S.gm} won a bidding war with ${S.rival} for ${w.name}.`);save();closeModal();render();toast(`${w.name} signed! Put them on a show soon for a debut pop.`)}
-function bidLose(id){const w=S.w[id];const c=signCost(w);S.money.ai-=c;w.sal=mkt(w);w.own='ai';w.con=RI(20,40);w.mor=80;w.deb=AW();const n=`✍️ ${S.rival} won the bidding war for ${w.name}.`;news(n);save();closeModal();render();toast(n)}
 
 /* ===================== SEASON SCORING ===================== */
 /* each season's fan war is decided by fans gained that season — the running total is your all-time fanbase */
@@ -398,6 +388,7 @@ function tpSave(){if(!TP||TP.sel.length!==4)return;const k=TP.k,D=TOURS[k];const
  const msg=[];if(S.week===tourFirst(D)&&S.card&&S.card.p)msg.push(...tourReslot(k));
  news(`${D.i} ${S.gm} set the ${D.n} field: ${t.ent.map(id=>S.w[id].name).join(', ')}.`);save();closeModal();render();toast(`${D.i} Field locked in.${msg.length?' '+msg.join(' '):''}`)}
 /* the first round is already on this week's card: swap in the new field's matches, freeing anyone they clash with */
+
 function tourReslot(k){const c=S.card.p;const msg=[];const free=[];c.forEach((sl,i)=>{if(sl.k==='match'&&sl.d&&sl.d.tour&&sl.d.tour.k===k){sl.d=null;free.push(i)}});
  const ms=tourPairs('p').filter(x=>x.k===k).map(tourMatch);const ids=new Set(ms.flatMap(m=>m.sides.flat()));
  c.forEach((sl,i)=>{if(!sl.d)return;const who=sl.k==='match'?sl.d.sides.flat():sl.k==='promo'?[sl.d.a,sl.d.b]:sl.k==='chal'?[sl.d.c]:sl.k==='xo'?[sl.d.a]:[];
@@ -409,10 +400,6 @@ function tourReslot(k){const c=S.card.p;const msg=[];const free=[];c.forEach((sl
  briefItems() still gathers the week's sections (contracts, morale, backstage heat, stale feuds, the calendar, the
  market…), and other files add theirs. Since v324 nothing pops up: inbox.js takes the rows that need an answer to the
  office line, attention.js weekPanel() shows the rest on Home as news, and tonight's to-dos are the Book checklist. */
-const BRIEF_KEY='tks_brief';
-function briefId(){return ((typeof LMP!=='undefined'&&LMP&&LMP.code)||'solo')+':'+(S.gm||'')+':'+S.season}
-function briefSeen(){try{const m=JSON.parse(localStorage.getItem(BRIEF_KEY)||'{}');return m[briefId()]===AW()}catch(e){return false}}
-function briefMark(){try{const m=JSON.parse(localStorage.getItem(BRIEF_KEY)||'{}');m[briefId()]=AW();const ks=Object.keys(m);if(ks.length>20)delete m[ks[0]];localStorage.setItem(BRIEF_KEY,JSON.stringify(m))}catch(e){}}
 /* v138: contracts kept sneaking up on people, so the countdown now follows you: a Home card, the top of the briefing,
  a 📝 tag on the Book screen and a check before you go live on anyone's last show. */
 const CON_SOON=5,CON_STAR=9,CON_URGENT=3;
@@ -470,7 +457,7 @@ function briefItems(){const mine=ownList('p');const sec=cdBrief().concat(typeof 
  return sec}
 /* v324: the briefing is the "This week" panel on Home (attention.js weekPanel) — no pop-up. Anything that used to
    reopen the briefing after a decision now lands back on Home with the panel in view. */
-function openBrief(){if(!S||S.phase!=='season')return;briefMark();const m=document.getElementById('modal');if(m&&!m.classList.contains('hidden'))closeModal();
+function openBrief(){if(!S||S.phase!=='season')return;const m=document.getElementById('modal');if(m&&!m.classList.contains('hidden'))closeModal();
  if(typeof tab!=='undefined'&&tab!=='home')go('home');else render();setTimeout(()=>{const p=document.getElementById('wkp');if(p&&p.scrollIntoView)try{p.scrollIntoView({block:'start',behavior:'smooth'})}catch(e){}},80)}
 function briefResign(id){resign(id);openBrief()}
 /* show it once per week, the first time Home is on screen with nothing else open */

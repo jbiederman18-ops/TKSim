@@ -76,5 +76,4 @@ function brief(){const out=[];tampPrune();
  return out}
 if(typeof briefItems==='function'){const b0=briefItems;window.briefItems=briefItems=function(){const sec=b0.apply(this,arguments);try{const x=brief();if(x.length)sec.unshift(...x)}catch(e){console.warn(e)}return sec}}
 /* a red card on Home too, so a decision is never missed */
-/* v201: front-office decisions are counted in the briefing strip on Home */
 })();

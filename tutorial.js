@@ -19,7 +19,6 @@ const TUT_MISS=[];
 function tv(k,f,fb){try{const v=f();if(v===undefined||v===null||(typeof v==='number'&&!isFinite(v)))throw 0;return v}catch(e){if(!TUT_MISS.includes(k))TUT_MISS.push(k);return fb}}
 const tvMoney=n=>tv('money',()=>money(n),'$'+Math.round(n/1000)+'K');
 const tvCap=()=>tv('draft cap',()=>S.draft.cap,0);
-const tvTier=i=>tv('FTIER',()=>FTIER[i][0],[20,45,75][i]);
 const tvPPVs=()=>tv('PPVS',()=>Object.values(PPVS),[]);
 const tvRival=()=>tv('rival name',()=>ON()?'the other GMs':esc(S.rival),'the rival');
 

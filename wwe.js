@@ -193,7 +193,6 @@ function isWWE(w){return !!w&&!w.cw&&!w.rookie&&wweIds().has(w.id)}
 const RR_WEEK=4,WM_WEEK=12,MITB_WEEK=20;
 /* the world titles of each division: what the Rumble winner challenges for and what a briefcase can be cashed in on */
 const WORLD_T={M:['world','wwe','whc'],F:['wworld','wwew','wwewc']};
-const isWorldT=(id,g)=>(g?WORLD_T[g]:WORLD_T.M.concat(WORLD_T.F)).includes(id);
 
 /* ===================== ROYAL RUMBLE & MONEY IN THE BANK ===================== */
 /* sp: the special matches that lock onto every brand's card on those PPVs. size: entrants (fewer if the division is thin),

@@ -1,7 +1,7 @@
 /* Tony Khan Simulator — Party night.
    Party night is a way to play an online league, not a separate game: same league, same save, same code.
-   - Any GM turns it on from their phone (Office → Party night). While it's on, everyone creates wrestlers and
-     books their show at the same time instead of taking turns, and the week airs as soon as the last GM locks in.
+   - Any GM turns it on from their phone (Start party night on Home, or the league's Office). While it's on, everyone
+     creates wrestlers and books at the same time, then goes live one at a time with the TV showing every call.
    - Any screen can be the TV: open the game there, tap "Show a league on this screen" and enter the league code.
      The TV only watches the league. It shows who's still booking and plays each week's results segment by segment.
    - Once every card is locked in, the GMs go live one at a time: the TV shows that GM's promo beats and match

@@ -13,7 +13,6 @@
 const MAXN=2,CASH_MAX=1000,STEP=25;
 const me=()=>canonKey('p');
 const loc=seat=>localKey(seat);
-const seatName=seat=>nameOf(loc(seat));
 const tradable=w=>!!(w&&w.own&&!isChamp(w.id));
 function worth(w){const v=val(w);const c=.6+.4*Math.min(1,(w.con||0)/26);return Math.round(Math.max(20,Math.pow(Math.max(0,v-40),2)*1.1)*c)}
 window.tradeWorth=worth;

@@ -5,8 +5,8 @@
      • tpList()      — the shots, built fresh from the game state (promises, pitch trials, contracts, contenders, briefcases)
      • tpSync(notes) — earning a shot starts the rivalry: contender and champion get a little heat (TP_SEED) the first
                        time they're paired, and a shot that's already booked follows the belt if it changes hands
-     • titlePicCard() — the panel at the top of the Titles screen; the Book screen's checklist and the weekly briefing
-                       nudge you to build the ones coming up, and Suggest the rest gives them a promo
+     • titlePicCard() — the panel at the top of the Titles screen; the Book screen's checklist nudges you
+                       to build the ones coming up (🎤 Build it books the face-to-face promo)
    Loaded after the main script. */
 'use strict';
 const TP_READY=35,TP_SEED=15,TP_PACE=8,TP_NUDGE=4,TP_CTD_WKS=10;
@@ -59,7 +59,6 @@ function tpContender(tid,a,b,notes){if(!S||!S.titles[tid])return;S.ctd=S.ctd||{}
 /* go build it: straight to the Book screen with a face-to-face promo (or a match if the promos are full) */
 function tpBuild(a,b){if(typeof mpLocked==='function'&&mpLocked())return;go('book');const c=S.card&&S.card.p||[];const k=c.some(sl=>sl.k==='promo'&&!sl.d)?'promo':'match';feudBook(k,a,b)}
 /* Suggest the rest: one callout promo for each shot that needs building, soonest first */
-function tpPromos(exP){return tpList().filter(e=>tpNeedsBuild(e)&&!exP.has(e.a)&&!exP.has(e.champ[0].id)).map(e=>{const[x,y]=[e.w,e.champ[0]].sort((p,q)=>q.mic-p.mic);return {type:'callout',a:x.id,b:y.id}})}
 function tpRow(e){const st=tpStat(e);const C=e.champ&&e.champ[0];const ws=[e.w].concat(e.B?[e.B]:[]);
  const who=`${ws.map(w=>alSpan(w)).join(' &amp; ')}${C?` <span class="muted">vs</span> ${e.champ.map(c=>alSpan(c)).join(' &amp; ')}`:''}`;
  const cls=st[0]==='ok'?'good':st[0]==='b'?'bad':st[0]==='w'?'warnt':'';

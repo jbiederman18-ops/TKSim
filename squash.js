@@ -13,7 +13,6 @@
 const SQ_WIN=6,SQ_DIM=[1,.6,.3,0],SQ_CAP=2.5;
 const isSq=m=>!!m&&m.type==='squash';
 /* is this wrestler local enhancement talent (unsigned) in this match? */
-const sqLocalW=w=>!!w&&!w.own;
 /* local talent: a low-level unsigned wrestler of the same division who isn't already booked */
 function sqLocal(W,brand,card,not){if(!W)return null;const used=new Set();(card||[]).forEach(sl=>{if(sl&&sl.d&&sl.k==='match'&&sl.d.sides)sl.d.sides.flat().forEach(x=>x&&used.add(x))});
  const pool=Object.values(S.w).filter(w=>!w.own&&!w.inj&&w.g===W.g&&!w.cw&&w.id!==W.id&&w.id!==not&&!used.has(w.id));if(!pool.length)return null;

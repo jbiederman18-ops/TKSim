@@ -67,7 +67,6 @@ function inboxList(){if(!allowed())return [];const out=[];
  secs.map(s=>({s,k:deskKind(s)})).filter(x=>x.k).sort((a,b)=>order.indexOf(a.k)-order.indexOf(b.k)).forEach(({s,k})=>(s.rows||[]).forEach(row=>{if(isAsk(row))out.push({k,row,s})}));
  return out}
 window.inboxList=inboxList;
-window.inboxCount=()=>{try{return inboxList().length}catch(e){return 0}};
 function qAv(id,on){const w=S.w[id];if(w)return `<span class="ibx-a ${on?'on':''}">${face(w)}</span>`;const t=/^[A-Za-z]/.test(String(id))?String(id).split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase():id;return `<span class="ibx-a x ${on?'on':''}">${esc(t||'?')}</span>`}
 function head(n,left){let l=[];try{l=inboxList()}catch(e){}const q=l.map((x,i)=>qAv(whoOf(x),i===0)).join('');
  return `<div class="ibx-k"><span class="live-tag" style="background:var(--gold);color:#111">🚪 YOUR OFFICE</span>${left>1?`${left} waiting outside`:'Last one in line'} · ${n} of ${n+left-1}</div>${q?`<div class="ibx-q">${q}</div>`:''}`}
