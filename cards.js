@@ -618,7 +618,13 @@ function endDrag(x,y){const t=hit(x,y);const d=DR;cleanup();SUP=Date.now();
   SUP=Date.now();if(!TC.open)return;if(dy<0){if(!TC.big)tcBig(true)}else if(TC.big)tcBig(false);else tcClose()},true);
  document.addEventListener('pointercancel',()=>{y0=null},true)}
 /* scrolling the cards themselves grows the sheet too, like a phone's own sheets */
-document.addEventListener('scroll',e=>{const t=e.target;if(!TC.open||TC.big||!t||t.id!=='tcsb')return;if(t.scrollTop>28)tcBig(true)},true);
+document.addEventListener('scroll',e=>{const t=e.target;if(!TC.open||TC.big||!t||t.id!=='tcsb'||Date.now()<PDN)return;if(t.scrollTop>28)tcBig(true)},true);
+/* v329: pull down on the cards when they're already scrolled to the top: a full-screen sheet shrinks back, a normal one closes */
+let PDN=0;{let ty=null,tx=0,done=false;
+ document.addEventListener('touchstart',e=>{const b=e.target.closest&&e.target.closest('#tcsb');if(!b||!TC.open||e.touches.length!==1){ty=null;return}ty=b.scrollTop<=0?e.touches[0].clientY:null;tx=e.touches[0].clientX;done=false},{passive:true,capture:true});
+ document.addEventListener('touchmove',e=>{if(ty===null||done)return;const b=document.getElementById('tcsb');if(!b||b.scrollTop>0){ty=null;return}
+  const dy=e.touches[0].clientY-ty,dx=e.touches[0].clientX-tx;if(dy>56&&dy>Math.abs(dx)*1.5){done=true;SUP=Date.now();PDN=Date.now()+500;if(TC.big)tcBig(false);else tcClose()}},{passive:true,capture:true});
+ document.addEventListener('touchend',()=>{ty=null},{passive:true,capture:true})}
 /* ---------------- hooks ---------------- */
 if(typeof go==='function'){const g0=go;go=window.go=function(t){if(t==='book'&&tab!=='book'){TC.open=false;TC.sel=null}return g0.apply(this,arguments)}}
 function attnDown(){if(!S||S.phase!=='season'||typeof tab==='undefined'||tab!=='book')return;const m=document.querySelector('#app main');if(!m)return;const a=m.querySelector('.card.attn');if(!a)return;
