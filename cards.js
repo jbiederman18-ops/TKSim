@@ -615,18 +615,40 @@ function endDrag(x,y){const t=hit(x,y);const d=DR;cleanup();SUP=Date.now();
 
 /* swipe the hand up to open it, down to put it away */
 {let y0=null,x0=0,pid=null;
- document.addEventListener('pointerdown',e=>{if(!inBook())return;const z=e.target.closest&&e.target.closest('#tcdock .tcpull,#tcdock .tcsh');if(!z)return;y0=e.clientY;x0=e.clientX;pid=e.pointerId},true);
+ document.addEventListener('pointerdown',e=>{if(!inBook()||e.pointerType==='touch')return;const z=e.target.closest&&e.target.closest('#tcdock .tcpull,#tcdock .tcsh');if(!z)return;y0=e.clientY;x0=e.clientX;pid=e.pointerId},true);
  document.addEventListener('pointerup',e=>{if(y0===null||e.pointerId!==pid)return;const dy=e.clientY-y0,dx=e.clientX-x0;y0=null;if(Math.abs(dy)<36||Math.abs(dy)<Math.abs(dx))return;
   SUP=Date.now();if(!TC.open)return;if(dy<0){if(!TC.big)tcBig(true)}else if(TC.big)tcBig(false);else tcClose()},true);
  document.addEventListener('pointercancel',()=>{y0=null},true)}
-/* scrolling the cards themselves grows the sheet too, like a phone's own sheets */
-document.addEventListener('scroll',e=>{const t=e.target;if(!TC.open||TC.big||!t||t.id!=='tcsb'||Date.now()<PDN)return;if(t.scrollTop>28)tcBig(true)},true);
-/* v329: pull down on the cards when they're already scrolled to the top: a full-screen sheet shrinks back, a normal one closes */
-let PDN=0;{let ty=null,tx=0,done=false;
- document.addEventListener('touchstart',e=>{const b=e.target.closest&&e.target.closest('#tcsb');if(!b||!TC.open||e.touches.length!==1){ty=null;return}ty=b.scrollTop<=0?e.touches[0].clientY:null;tx=e.touches[0].clientX;done=false},{passive:true,capture:true});
- document.addEventListener('touchmove',e=>{if(ty===null||done)return;const b=document.getElementById('tcsb');if(!b||b.scrollTop>0){ty=null;return}
-  const dy=e.touches[0].clientY-ty,dx=e.touches[0].clientX-tx;if(dy>56&&dy>Math.abs(dx)*1.5){done=true;SUP=Date.now();PDN=Date.now()+500;if(TC.big)tcBig(false);else tcClose()}},{passive:true,capture:true});
- document.addEventListener('touchend',()=>{ty=null},{passive:true,capture:true})}
+/* v331: the sheet follows your finger instead of snapping. Drag up (on the handle, the title, or the cards when the sheet
+   isn't full yet) and it grows with you; let go past a short distance or with a flick and it settles full-screen, otherwise
+   it eases back. Drag down from the top of the cards to shrink it, or slide a normal-size sheet away to close it. */
+let PDN=0;{let g=null,SAT=null;const EASE='cubic-bezier(.22,1,.36,1)';
+ const dk=()=>document.getElementById('tcdock'),sb=()=>document.getElementById('tcsb');
+ const sat=()=>{if(SAT==null){const p=document.createElement('div');p.style.cssText='position:fixed;top:0;height:env(safe-area-inset-top,0px);visibility:hidden';document.body.appendChild(p);SAT=p.offsetHeight;p.remove()}return SAT};
+ const hB=()=>(window.visualViewport?visualViewport.height:innerHeight)-sat()-10,hN=()=>Math.min(innerHeight*.66,600);
+ function settle(d,big,y){d.style.transition=`max-height .34s ${EASE},transform .34s ${EASE}`;d.style.transform='';d.style.maxHeight=(big?hB():Math.min(hN(),y==null?hN():y))+'px';
+  const sc=document.querySelector('.tcscrim');if(sc){sc.style.transition='opacity .34s';sc.style.opacity=''}
+  TC.big=big;d.classList.toggle('big',big);const b=d.querySelector('.tcpull');if(b){b.setAttribute('aria-expanded',big?'true':'false');b.setAttribute('aria-label',big?'Shrink the sheet':'Fill the screen')}
+  setTimeout(()=>{if(d.isConnected){d.style.transition='';d.style.maxHeight='';d.classList.remove('drag')}if(!big&&TC.open&&TC.act!=null)center(TC.act)},360)}
+ document.addEventListener('touchstart',e=>{g=null;if(!TC.open||e.touches.length!==1)return;const t=e.target;if(!t.closest||!t.closest('#tcdock'))return;
+  const zone=t.closest('.tcpull,.tcsh')?'head':t.closest('#tcsb')?'body':null;if(!zone)return;const d=dk();if(!d)return;
+  const y=e.touches[0].clientY;g={zone,y0:y,x0:e.touches[0].clientX,h0:d.offsetHeight,mode:null,pts:[[e.timeStamp,y]],h:d.offsetHeight,ty:0}},{passive:true,capture:true});
+ document.addEventListener('touchmove',e=>{if(!g||!TC.open)return;const y=e.touches[0].clientY,dy=y-g.y0,dx=e.touches[0].clientX-g.x0;const d=dk();if(!d){g=null;return}
+  if(!g.mode){if(Math.abs(dy)<7&&Math.abs(dx)<7)return;if(Math.abs(dx)>Math.abs(dy)){g=null;return}
+   const top=g.zone==='head'||(sb()&&sb().scrollTop<=0);
+   if(dy<0&&!TC.big)g.mode='drag';else if(dy>0&&top)g.mode='drag';else{g=null;return}
+   g.y0=y;d.style.transition='none';d.classList.add('drag');return}
+  e.preventDefault();g.pts.push([e.timeStamp,y]);if(g.pts.length>6)g.pts.shift();
+  const base=TC.big?Math.min(hN(),g.h0):g.h0,max=hB();let h=g.h0-dy,ty=0;
+  if(h>max)h=max+(h-max)*.18;if(h<base){ty=TC.big?0:base-h;h=TC.big?base-(base-h)*.25:base}
+  g.h=h;g.ty=ty;d.style.maxHeight=h+'px';d.style.transform=ty?`translateY(${ty}px)`:'';
+  const sc=document.querySelector('.tcscrim');if(sc){sc.style.transition='none';sc.style.opacity=ty?String(Math.max(0,1-ty/320)):''}},{passive:false,capture:true});
+ const end=e=>{const G=g;g=null;if(!G||G.mode!=='drag'||!TC.open)return;const d=dk();if(!d)return;SUP=Date.now();PDN=Date.now()+500;
+  const p=G.pts,a=p[0],z=p[p.length-1],dt=Math.max(16,z[0]-a[0]),v=(z[1]-a[1])/dt; /* px per ms, + is down */
+  if(G.ty>0&&(G.ty>110||v>.6)){d.style.transition=`transform .24s cubic-bezier(.4,0,1,1)`;d.style.transform='translateY(110%)';const sc=document.querySelector('.tcscrim');if(sc){sc.style.transition='opacity .24s';sc.style.opacity='0'}
+   setTimeout(()=>{tcClose()},230);return}
+  if(TC.big)settle(d,!((G.h0-G.h)>80||v>.45));else settle(d,(G.h-G.h0)>60||v<-.45,G.h0)};
+ document.addEventListener('touchend',end,{passive:true,capture:true});document.addEventListener('touchcancel',end,{passive:true,capture:true})}
 /* ---------------- hooks ---------------- */
 if(typeof go==='function'){const g0=go;go=window.go=function(t){if(t==='book'&&tab!=='book'){TC.open=false;TC.sel=null}return g0.apply(this,arguments)}}
 function attnDown(){if(!S||S.phase!=='season'||typeof tab==='undefined'||tab!=='book')return;const m=document.querySelector('#app main');if(!m)return;const a=m.querySelector('.card.attn');if(!a)return;
@@ -979,7 +1001,7 @@ html.tcards .tv-last .tkc{--w:180px;width:var(--w)}
 .tcdock.tcsheet{position:fixed;left:0;right:0;bottom:0;z-index:15;max-width:640px;margin:0 auto;padding:6px 0 env(safe-area-inset-bottom,0px);max-height:min(66vh,600px);display:flex;flex-direction:column;background:linear-gradient(180deg,#1b1c21,#101115);box-shadow:0 -1px 0 var(--gold3),0 -20px 40px rgba(0,0,0,.6)}.tcdock.tcsheet.enter{animation:tcup .3s cubic-bezier(.2,.9,.3,1) both}
 @keyframes tcup{from{transform:translateY(100%)}}
 .tcsheet .tcpull.open{flex:none;margin:0 auto 2px}
-.tcdock.tcsheet{transition:max-height .28s cubic-bezier(.2,.9,.3,1)}.tcdock.tcsheet.big{max-height:calc(100dvh - env(safe-area-inset-top,0px) - 10px)}.tcdock.tcsheet.big .tcsb{flex:1}
+.tcdock.tcsheet{transition:max-height .34s cubic-bezier(.22,1,.36,1)}.tcdock.tcsheet.drag{will-change:max-height,transform}.tcdock.tcsheet.drag .tcsb{overscroll-behavior:none}.tcdock.tcsheet.big{max-height:calc(100dvh - env(safe-area-inset-top,0px) - 10px)}.tcdock.tcsheet.big .tcsb{flex:1}
 .tcsh{flex:none;display:flex;align-items:flex-end;gap:10px;padding:0 16px 10px;touch-action:none}
 .tcst{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.tcsk{font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
 .tcst b{font:900 italic 21px/1.02 'BC',sans-serif;text-transform:uppercase;text-wrap:balance}
