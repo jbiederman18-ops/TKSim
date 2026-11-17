@@ -375,7 +375,7 @@ function sheetCards(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';if(sl.
  if(TC.f==='fit'){/* v314: wrestlers already in a match tonight drop out of the best fits into an "Already booked" dropdown */
   /* v320: anyone already on tonight's card in any segment (a match or another promo) counts as booked — promo sheets used to skip this */
   const used=usedIn('p',i);card().forEach((o,j)=>{if(j!==i&&o.k==='promo'&&o.d){if(o.d.a)used.add(o.d.a);if(o.d.b)used.add(o.d.b)}});const h=hand(i,{anchor,tg:tg||null,n:60});let f=0;
-  return h.filter(x=>{const u=used.has(x.w.id)&&!(x.r&&x.r[1]==='must');x.bk=u;if(u)return true;if(x.r&&x.r[1]==='must')return true;return f++<12})}
+  return h.filter(x=>{/* v326: booked means booked — a contract or request no longer keeps someone already on the card up top */const u=used.has(x.w.id);x.bk=u;if(u)return true;if(x.r&&x.r[1]==='must')return true;return f++<12})}
  const here=idsOf(i,m);const full=promo?new Set():fullIn('p',i);const am=askMap();
  const g0=spG(sl);return ownList('p').filter(w=>!w.inj&&!here.includes(w.id)&&!full.has(w.id)&&(!g0||w.g===g0)&&(TC.f==='all'||(TC.f==='ch'?isChamp(w.id):w.al===TC.f)))
   .sort((a,b)=>(promo?b.mic-a.mic:ovr(b)-ovr(a))).map(w=>({w,r:why(w,anchor,i,am,tt)}))}
@@ -401,7 +401,7 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
  else{const l=sheetCards(i,m,tg);
   const lt=m.type==='squash'&&tg&&tg.t==='side'&&tg.i===1&&!TC.rep?`<div class="tcsf"><button class="btn sec" data-tcx="l:1">🧑‍🔧 Use local enhancement talent — costs nothing</button></div>`:'';
   if(!l.length)body=lt+`<div class="tcempty">Nobody fits that filter tonight.</div>`;
-  else if(TC.f==='fit'){const mu=l.filter(x=>x.r&&x.r[1]==='must'),rest=l.filter(x=>!x.bk&&!(x.r&&x.r[1]==='must')),bk=l.filter(x=>x.bk);let n=0;
+  else if(TC.f==='fit'){const mu=l.filter(x=>!x.bk&&x.r&&x.r[1]==='must'),rest=l.filter(x=>!x.bk&&!(x.r&&x.r[1]==='must')),bk=l.filter(x=>x.bk);let n=0;
    body=lt+`<div class="tcgrid">${mu.length?`<div class="tcwhy">Needs you tonight</div>${mu.map(x=>pc(x,n++)).join('')}`:''}${rest.length?`<div class="tcwhy">Best fits</div>${rest.map(x=>pc(x,n++)).join('')}`:''}${bk.length?`<button class="tcwhy tcab ${TC.ab?'on':''}" onclick="tcAb()" aria-expanded="${TC.ab?'true':'false'}">Already booked tonight · ${bk.length} ${TC.ab?'▴':'▾'}</button>${TC.ab?bk.map(x=>pc(x,n++)).join(''):''}`:''}</div>`}
   else{let n=0;body=lt+`<div class="tcgrid">${l.map(x=>pc(x,n++)).join('')}</div>`}}
  const fc=[['fit','Best fit'],['ch','Champions'],['f','Faces'],['h','Heels'],['all','All']];
@@ -716,7 +716,8 @@ html.tcards .tkc{--w:92px;position:relative;flex:none;width:var(--w);aspect-rati
 .tkc.ch .tcb{padding-bottom:calc(var(--w)*.2)}
 .tkc .tcbelt{position:absolute;left:5px;right:0;bottom:0;height:calc(var(--w)*.17);display:flex;align-items:center;padding-left:5px;font:900 italic calc(var(--w)*.1)/1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#140f02;background:linear-gradient(90deg,var(--gold3),var(--gold),var(--gold3));white-space:nowrap;overflow:hidden}
 .tkc.worn .tcp,.tkc.worn .tcg{filter:saturate(.3) brightness(.7)}.tkc.worn .tcf{background-blend-mode:luminosity}.tkc.worn .tcb::before{content:"";position:absolute;left:0;right:0;bottom:0;height:400%;z-index:-1;background:repeating-linear-gradient(115deg,transparent 0 9px,rgba(255,255,255,.04) 9px 10px);pointer-events:none}
-.tkc.used .tcf::after{content:"ON CARD";position:absolute;left:50%;top:44%;inset:auto;z-index:5;transform:translate(-50%,-50%) rotate(-14deg);font:900 italic calc(var(--w)*.15)/1 'BC',sans-serif;letter-spacing:.06em;color:var(--gold);border:2px solid var(--gold);padding:2px 6px;background:rgba(0,0,0,.65);white-space:nowrap}
+/* v326: stamp sits on the card itself — on the photo layer it wiped out the name shading, and inset:auto cancelled the centring */
+.tkc.used::after{content:"ON CARD";position:absolute;left:50%;top:44%;z-index:6;pointer-events:none;transform:translate(-50%,-50%) rotate(-14deg);font:900 italic calc(var(--w)*.15)/1 'BC',sans-serif;letter-spacing:.06em;color:var(--gold);border:2px solid var(--gold);padding:2px 6px;background:rgba(0,0,0,.65);white-space:nowrap}
 .tkc .tcw{position:absolute;left:50%;top:-12px;z-index:5;transform:translateX(-50%);font:900 italic 12px/1 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;background:var(--gold);color:#111;padding:3px 9px 2px;clip-path:var(--slant);white-space:nowrap}.tkc .tcw.pin{background:#1d1e23;color:var(--bad);box-shadow:inset 0 0 0 1px var(--bad)}
 .tkc .tccr{position:absolute;left:50%;top:-16px;z-index:6;transform:translateX(-50%);width:38px;height:28px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;background:#141417;border:0;box-shadow:inset 0 0 0 1.5px var(--gold3);clip-path:var(--slant);cursor:pointer;filter:grayscale(.85) brightness(1.1);opacity:.9;touch-action:manipulation}
 .tkc .tccr:hover,.tkc .tccr:focus-visible{filter:none;opacity:1;box-shadow:inset 0 0 0 2px var(--gold)}.tkc .tccr:active{transform:translateX(-50%) scale(.92)}
@@ -910,7 +911,7 @@ html.tcards.lk-hy .tile em{color:rgba(242,193,78,.16)}
 .tcrow .tkc.tccon{--w:92px;width:92px}.tcmore{flex:none;width:92px;aspect-ratio:5/7;border:2px dashed #3d3e46;background:none;color:var(--mut);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:800 italic 12px/1.1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;text-align:center;cursor:pointer;padding:6px}.tcmore b{font-size:24px;color:var(--gold)}
 .tcr .tcrm{display:flex;gap:3px;flex:none;margin-right:10px}.tcr .tcrm .tcmini .tkc{--w:28px;width:28px}
 /* one look everywhere (v282): showdowns, live plates, the reveal, the draft */
-.tcmini{display:inline-flex;flex:none;vertical-align:middle}.tcmini .tkc{--w:30px;width:30px;cursor:inherit;pointer-events:none}.tcmini .tkc .tcb,.tcmini .tkc .tct,.tcmini .tkc .tco,.tcmini .tkc .tcbelt,.tcmini .tkc .tcf::after{display:none}.tcmini .tkc .tcf{box-shadow:inset 0 0 0 1px #3a3b42}.tcmini .tkc.ch .tcf{box-shadow:inset 0 0 0 1.5px var(--gold)}.tcmini .tkc .tcf::before{width:3px}
+.tcmini{display:inline-flex;flex:none;vertical-align:middle}.tcmini .tkc{--w:30px;width:30px;cursor:inherit;pointer-events:none}.tcmini .tkc .tcb,.tcmini .tkc .tct,.tcmini .tkc .tco,.tcmini .tkc .tcbelt,.tcmini .tkc .tcf::after,.tcmini .tkc::after{display:none}.tcmini .tkc .tcf{box-shadow:inset 0 0 0 1px #3a3b42}.tcmini .tkc.ch .tcf{box-shadow:inset 0 0 0 1.5px var(--gold)}.tcmini .tkc .tcf::before{width:3px}
 html.tcards .sdph.tcin{aspect-ratio:5/7;height:92%;background:none;clip-path:none;box-shadow:none;overflow:visible}html.tcards .sdph.tcin>.tkc{--w:150px;width:100%;height:100%;cursor:default}
 html.tcards .sdci .sdph.tcin{height:auto;width:72px;position:relative;left:auto;transform:none}html.tcards .sdci .sdph.tcin>.tkc{--w:72px}
 html.tcards .lvp.tcl{background:none;box-shadow:none;padding:0;align-items:center;gap:6px}html.tcards .lvp.tcl .lvcs{display:flex;gap:4px;justify-content:center}html.tcards .lvp.tcl .tkc{--w:88px;width:var(--w);cursor:default}html.tcards .lvfo.many .lvp.tcl .tkc,html.tcards .lvp.tcl .lvcs.n3 .tkc{--w:62px}html.tcards .lvp.tcl .lvcs.n2 .tkc{--w:72px}
