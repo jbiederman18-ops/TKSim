@@ -268,7 +268,7 @@ function riHtml(i){const d=card()[i].d;const ri=d.ri||{};const k=RUNIN[ri.k]?ri.
  const pool=ownList('p').filter(w=>!w.inj&&!parts.includes(w.id));const used=usedIn('p',i);const ht=w=>Math.max(0,...parts.map(id=>heatOf(w.id,id)));
  pool.sort((a,b)=>(b.id===ri.x)-(a.id===ri.x)||ht(b)-ht(a)||ovr(b)-ovr(a));
  h+=`<div class="tcgrid"><div class="tcwhy">Who runs in</div>${pool.map((w,n)=>{const hv=Math.round(ht(w));const sel=w.id===ri.x&&!!k;
-  return tcCard(w,{tab:sel?'Runs in':hv>=1?`🔥 ${hv}`:'',tabc:sel?'must':hv>=20?'feud':'hot',used:used.has(w.id),cls:(sel?'pickd ':'')+(TC.dealt?'deal':''),attr:`data-tcx="r:${w.id}" style="animation-delay:${Math.min(n,8)*30}ms"`})}).join('')}</div>`;
+  return tcCard(w,{tab:sel?'Runs in':hv>=1?`🔥 ${hv}`:'',tabc:sel?'must':hv>=20?'feud':'hot',used:used.has(w.id),cls:(sel?'pickd ':'')+(TC.dealt&&n<9?'deal':''),attr:`data-tcx="r:${w.id}" style="animation-delay:${Math.min(n,8)*30}ms"`})}).join('')}</div>`;
  return h}
 function applyX(i,x){if(locked())return;const sl=card()[i];const [k,v]=[x.slice(0,1),x.slice(2)];
  /* v321: special-match controls in the sheet */
@@ -386,7 +386,7 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
  const tl=targets(i,m);let tg=TC.rep?null:(TC.tg||defTarget(i,m)||(promo||xo?tl[0]:null)||null);if(xo&&!tg)tg={t:TC.rep&&TC.rep===m.a?'a':'b'};
  const [k,t]=sheetTitle(i,m,tg);const used=usedIn('p',i);
  const hasX=promo?!!m.a:!!sl.d;
- const pc=(x,n)=>tcCard(x.w,{tab:x.r&&x.r[0]?x.r[0]:'',tabc:x.r?x.r[1]:'',used:used.has(x.w.id),cls:TC.dealt?'deal':'',attr:`data-tcpick="${x.w.id}" style="animation-delay:${Math.min(n,8)*30}ms"`});
+ const pc=(x,n)=>tcCard(x.w,{tab:x.r&&x.r[0]?x.r[0]:'',tabc:x.r?x.r[1]:'',used:used.has(x.w.id),cls:TC.dealt&&n<9?'deal':'',attr:`data-tcpick="${x.w.id}" style="animation-delay:${Math.min(n,8)*30}ms"`});
  let body='';
  const entC=(id,x,o)=>tcCard(W_(id),Object.assign({cls:TC.dealt?'deal':'',attr:`data-tcx="${x}"`},o||{}));
  if(tr&&TC.mode==='w'){const TD=TOURS[sl.d.tour.k];body=`<div class="tcempty">${TD?`${TD.i} ${esc(TD.n)} · ${esc(sl.d.tour.lab)}. `:''}The bracket is set — tap <b>👑 Win</b> under a side on the card to pick who advances. The other tabs set the stipulation, the finish${sl.d.tour.k==='c2'?'':' and any run-in'}.</div>`}
@@ -418,7 +418,7 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
  const foot=TC.rep&&W_(TC.rep)?`<div class="tcsf">${fl?`<button class="btn sec" onclick="tcRepX()">Keep ${esc(ln(W_(TC.rep)))}</button>`:`<button class="btn sec" onclick="tcBack()">Send back</button>`}<button class="btn sec" onclick="showW('${TC.rep}')">Details</button></div>`:xo&&sl.d?`<div class="tcsf"><button class="btn sec" onclick="tcXoClear()">Call it off</button></div>`:'';
  const showF=!tr&&!(fl&&!TC.rep);
  TC.dealt=0;
- return `<div class="tcscrim ${ent?'enter':''}" onclick="tcScrim()"></div><div class="tcdock tcsheet ${ent?'enter':''} ${TC.big?'big':''}" id="tcdock" role="dialog" aria-label="${esc(t)}"><button class="tcpull open" onclick="tcBig(!TC.big)" aria-label="${TC.big?'Shrink the sheet':'Fill the screen'}" aria-expanded="${TC.big?'true':'false'}"><span class="tcgrip"></span></button>
+ return `<div class="tcscrim ${ent?'enter':''}" onclick="tcScrim()"></div><div class="tcdock tcsheet ${ent?'enter':''} ${TC.big?'big tall':''}" id="tcdock" role="dialog" aria-label="${esc(t)}"><button class="tcpull open" onclick="tcBig(!TC.big)" aria-label="${TC.big?'Shrink the sheet':'Fill the screen'}" aria-expanded="${TC.big?'true':'false'}"><span class="tcgrip"></span></button>
  <div class="tcsh"><div class="tcst"><span class="tcsk">${esc(k)}</span><b>${esc(t)}</b></div><button class="tcsx" onclick="tcClose()" aria-label="Close">✕</button></div>
  ${cf}${tabs?`<div class="tcsc tctabs">${tabs}</div>`:''}${tabs&&TC.mode!=='w'?'':shc}${(tabs&&TC.mode!=='w')||!showF?'':`<div class="tcsc">${tabs||xo?fcs:chips}</div>`}${tch}<div class="tcsb" id="tcsb">${body}</div>${foot}</div>`}
 function pickAct(){const c=card();if(TC.act!=null&&c[TC.act]&&editOk(c[TC.act]))return;
@@ -473,7 +473,10 @@ window.tcGo=tcGo;
 /* "Open it" on a segment that's already on the card */
 window.tcSeg=function(i){if(tcGo(i))return;const sl=S&&S.card.p[i];if(!sl)return;if(typeof closeModal==='function')closeModal();sl.k==='promo'?openPromo(i):openMatch(i)};
 /* v328: flick the sheet up to fill the screen, down to shrink it back (then down again to close) */
-window.tcBig=function(v,quiet){TC.big=!!v;const d=document.getElementById('tcdock');if(d){d.classList.toggle('big',TC.big);const b=d.querySelector('.tcpull');if(b){b.setAttribute('aria-expanded',TC.big?'true':'false');b.setAttribute('aria-label',TC.big?'Shrink the sheet':'Fill the screen')}}
+/* v335: 'big' only moves the sheet (transform, cheap); 'tall' changes the list's layout (scrolling, spacer) and is
+   switched once the slide has finished, so the slide itself never waits on a relayout of the whole card grid */
+let TALL=0;function tallSoon(d){clearTimeout(TALL);TALL=setTimeout(()=>{if(d.isConnected)d.classList.toggle('tall',TC.big)},390)}
+window.tcBig=function(v,quiet){TC.big=!!v;const d=document.getElementById('tcdock');if(d){d.classList.toggle('big',TC.big);tallSoon(d);const b=d.querySelector('.tcpull');if(b){b.setAttribute('aria-expanded',TC.big?'true':'false');b.setAttribute('aria-label',TC.big?'Shrink the sheet':'Fill the screen')}}
  if(!TC.big){const l=document.getElementById('tcsb');if(l&&l.scrollTop){l.dataset.lowering='1';l.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>{delete l.dataset.lowering},500)}if(TC.act!=null)setTimeout(()=>{if(TC.open&&!TC.big)center(TC.act)},380)}};
 /* v334: photos further down the sheet are lazy-loaded, so the first lift to full screen had to fetch and decode them
    mid-animation (the hitch). Once the sheet has settled, load and decode them quietly so they're ready. */
@@ -637,7 +640,7 @@ function endDrag(x,y){const t=hit(x,y);const d=DR;cleanup();SUP=Date.now();
    size it simply sits lower. On phones the cards don't scroll at normal size, so a drag can never be split between the
    sheet and the list: drag up to lift the sheet, then the cards scroll once it's full. Drag down from the top of the cards
    to lower it, and from normal size slide it away to close. */
-{let g=null,LOCK=null;const EASE='cubic-bezier(.22,1,.36,1)';
+{let g=null,LOCK=null,SCO=null;const EASE='cubic-bezier(.2,.8,.2,1)';
  /* v333: while the sheet is moving, or sitting at normal size on a phone, the cards stay put — iOS was sliding the list
     along with the sheet, which read as jitter */
  const COARSE=matchMedia('(hover:none) and (pointer:coarse)');
@@ -645,8 +648,8 @@ function endDrag(x,y){const t=hit(x,y);const d=DR;cleanup();SUP=Date.now();
   if(LOCK!=null){if(t.scrollTop!==LOCK)t.scrollTop=LOCK}else if(!TC.big&&COARSE.matches&&t.scrollTop!==0&&!t.dataset.lowering)t.scrollTop=0},true);
  const dk=()=>document.getElementById('tcdock'),sb=()=>document.getElementById('tcsb');
  const offN=d=>Math.max(0,d.offsetHeight-Math.min(innerHeight*.66,600));
- const scrim=(o,t)=>{const sc=document.querySelector('.tcscrim');if(sc){sc.style.transition=t||'none';sc.style.opacity=o}};
- function settle(d,big){d.style.transition=`transform .36s ${EASE}`;d.style.transform='';scrim('','opacity .36s');window.tcBig(big,true);
+ const scrim=(o,t)=>{if(o===SCO&&!t)return;SCO=o;const sc=document.querySelector('.tcscrim');if(sc){sc.style.transition=t||'none';sc.style.opacity=o}};
+ function settle(d,big){d.style.transition=`transform .38s ${EASE}`;d.style.transform='';scrim('','opacity .36s');window.tcBig(big,true);
   setTimeout(()=>{if(d.isConnected){d.style.transition='';d.classList.remove('drag')}},380)}
  document.addEventListener('touchstart',e=>{g=null;if(!TC.open||e.touches.length!==1)return;const t=e.target;if(!t.closest||!t.closest('#tcdock'))return;
   if(t.closest('.tcsc,.tcshapes,.tcfilt,[data-noflick]'))return;
@@ -1021,11 +1024,11 @@ html.tcards .tv-last .tkc{--w:180px;width:var(--w)}
 @keyframes tcup{from{transform:translateY(100%)}}
 .tcsheet .tcpull.open{flex:none;margin:0 auto 2px}
 /* v332: one full-height sheet that slides on transform — normal size just sits lower */
-.tcdock.tcsheet{--tcH:calc(100dvh - env(safe-area-inset-top,0px) - 10px);height:var(--tcH);max-height:none;transform:translateY(max(0px,calc(var(--tcH) - min(66vh,600px))));transition:transform .36s cubic-bezier(.22,1,.36,1);will-change:transform;backface-visibility:hidden}
-.tcdock.tcsheet.big{transform:none}.tcdock.tcsheet::after{content:'';position:absolute;left:0;right:0;top:100%;height:40px;background:#101115}
+.tcdock.tcsheet{--tcH:calc(100dvh - env(safe-area-inset-top,0px) - 10px);height:var(--tcH);max-height:none;transform:translateY(max(0px,calc(var(--tcH) - min(66vh,600px))));transition:transform .38s cubic-bezier(.2,.8,.2,1);will-change:transform;backface-visibility:hidden}
+.tcdock.tcsheet.big{transform:none}.tcdock.tcsheet{contain:layout paint style}.tcdock.tcsheet::after{content:'';position:absolute;left:0;right:0;top:100%;height:40px;background:#101115}
 .tcdock.tcsheet.enter{animation:tcupS .34s cubic-bezier(.22,1,.36,1) backwards}@keyframes tcupS{from{transform:translateY(100%)}}
-.tcdock.tcsheet .tcsb{flex:1}.tcdock.tcsheet:not(.big) .tcsb{padding-bottom:max(0px,calc(var(--tcH) - min(66vh,600px)))}.tcdock.tcsheet.drag .tcsb{overscroll-behavior:none}
-@media (hover:none) and (pointer:coarse){.tcdock.tcsheet:not(.big) .tcsb{overflow:hidden;touch-action:none}.tcdock.tcsheet .tcpull,.tcdock.tcsheet .tcsh{touch-action:none}}
+.tcdock.tcsheet .tcsb{flex:1}.tcdock.tcsheet:not(.tall) .tcsb{padding-bottom:max(0px,calc(var(--tcH) - min(66vh,600px)))}.tcdock.tcsheet.drag .tcsb{overscroll-behavior:none}
+@media (hover:none) and (pointer:coarse){.tcdock.tcsheet:not(.tall) .tcsb{overflow:hidden;touch-action:none}.tcdock.tcsheet .tcpull,.tcdock.tcsheet .tcsh{touch-action:none}}
 .tcsh{flex:none;display:flex;align-items:flex-end;gap:10px;padding:0 16px 10px;touch-action:none}
 .tcst{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.tcsk{font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
 .tcst b{font:900 italic 21px/1.02 'BC',sans-serif;text-transform:uppercase;text-wrap:balance}
@@ -1035,7 +1038,8 @@ html.tcards .tv-last .tkc{--w:180px;width:var(--w)}
 .tcsb{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;border-top:1px solid var(--line);touch-action:pan-y}
 .tcgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px 10px;justify-items:center;padding:16px 16px 20px}
 .tcgrid .tkc{--w:min(29vw,118px)}html.tcards .tcgrid .tkc{width:var(--w)}
-.tcgrid .tkc:active{transform:scale(.95)}.tcgrid .tkc.deal{animation:tcdeal .32s cubic-bezier(.2,.9,.3,1.15) both}
+.tcgrid .tkc:active{transform:scale(.95)}/* v335: only the first rows deal in (the rest are below the fold anyway) — thirty cards animating at once was the early-swipe stutter */
+.tcgrid .tkc.deal{animation:tcdeal .32s cubic-bezier(.2,.9,.3,1.15) backwards}
 .tcwhy{grid-column:1/-1;justify-self:stretch;font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);border-top:1px solid var(--line);padding-top:14px}.tcwhy:first-child{border:0;padding-top:0}.tcab{background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;cursor:pointer;width:100%}.tcab:hover,.tcab.on{color:var(--gold)}
 .tcgx{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;padding:16px}.tcgx .tx{width:auto;cursor:pointer;touch-action:manipulation}
 .tcsheet .tcempty{padding:28px 16px;text-align:center}
