@@ -4,7 +4,7 @@
      2. Debuts & call-ups — a titantron entrance with a name slam and light sweeps; hotter ROH buzz = bigger pop
      3. Results that hit — 5★ segments shake with a star burst, flat ones go grey, "You win the night" sets off fireworks
      4. Live numbers — fans and money in the header count up or down with a floating +/- chip; hype bars fill
-     5. Wrestler cards — mood badge for unhappy wrestlers, a soft face/heel edge glow, ROH buzz meters (the hottest names are listed in the briefing)
+     5. Wrestler cards — mood badge for unhappy wrestlers, a soft face/heel edge glow, ROH buzz meters (the hottest names are on Home)
      6. (retired in v225 — the live header's face-off plates carry the names now)
      7. Smoother navigation — screens slide in the direction you move, and the bottom-nav highlight glides between tabs
      8. ROH identity — the ROH screen gets its own red-and-black HonorClub styling

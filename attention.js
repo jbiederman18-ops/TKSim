@@ -370,7 +370,7 @@ function secH(t,cls){return `<div class="rdsec ${cls||''}"><span>${t}</span><i><
 const WK_SHOW=6;
 const nmA=w=>`<a href="#" onclick="showW('${w.id}');return false" class="${nmC(w)}">${esc(w.name)}</a>`;
 const strip=h=>String(h).replace(/<button[\s\S]*?<\/button>/g,'').replace(/<div class="brow[^"]*"[^>]*>/g,'').replace(/<\/div>\s*$/,'').replace(/closeModal\(\);/g,'');
-function wkRows(){const l=attnItems();let secs=[];try{secs=briefItems()}catch(e){console.warn(e)}
+function wkRows(secs){const l=attnItems();
  const sec=i=>secs.filter(x=>x.i===i);const out=[];const add=(grp,k,ic,html,sig)=>out.push({grp,k,ic,html,sig:sig==null?String(html).replace(/<[^>]+>/g,''):sig});
  const mine=ownList('p');
  /* since last week */
@@ -384,20 +384,23 @@ function wkRows(){const l=attnItems();let secs=[];try{secs=briefItems()}catch(e)
  const ti=l.find(x=>x.id==='tired');if(ti){const ws=(ti.who||[]).map(id=>S.w[id]).filter(Boolean);const ex=ws.filter(w=>w.fat>=FAT_RISK);
   add('Backstage','tired','🔋',`${ex.length?'Exhausted':'Worn down'}: ${ws.map(nmA).join(', ')}. ${ex.length?'Rest the exhausted ones or risk an injury.':'Tired wrestlers work a little slower.'}`,ws.map(w=>w.id).sort().join(','))}
  sec('☢️').forEach(x=>x.rows.forEach((r,j)=>add('Backstage','beef'+j,'☢️',strip(r))));
+ /* the card table puts the hottest wrestlers on Home as cards; the classic look gets them here */
+ if(!(typeof cardsOn==='function'&&cardsOn())&&typeof hotList==='function'){const h=hotList();if(h.length)add('Backstage','hot','🔥',`Hot right now: ${h.map(x=>nmA(x.w)).join(', ')}. Feature them, or put them next to someone you want to build.`,h.map(x=>x.w.id).join(','))}
  l.filter(x=>/^stale/.test(x.id)).forEach(x=>{const [A,B]=(x.who||[]).map(id=>S.w[id]);if(!A||!B)return;add('Backstage',x.id,'🥱',`${nmA(A)} vs ${nmA(B)} ${esc(x.h.replace(A.name+' vs '+B.name+' ',''))}. <span class="muted">Pay it off at a PPV or blow it off on TV.</span>`,sigOf(x))});
  /* front office */
  l.filter(x=>x.id==='arrive'||/^fa/.test(x.id)).forEach(x=>{(x.who||[]).map(id=>S.w[id]).filter(Boolean).forEach(w=>{const last=x.id!=='arrive';
   add('Front office',(last?'fa':'arr')+w.id,'🆕',`${nmA(w)} <span class="muted">· POP ${Math.round(w.pop)}</span> ${last?`— last week to sign (${money(signCost(w))})`:`just hit the market — wants an offer, and ${esc(S.rival||'the rival')} can bid`}`,last?'last':'new')})});
  const th=l.find(x=>x.id==='thin');if(th)add('Front office','thin','📋',`${esc(th.h)}. <span class="muted">${esc(th.d)}</span>`,th.h);
- sec('📨').forEach(x=>x.rows.forEach((r,j)=>add('Front office','offer'+j,'📨',strip(r))));
+ secs.filter(x=>x.i==='📨'&&/^Sealed offers/.test(x.t)).forEach(x=>x.rows.forEach((r,j)=>add('Front office','offer'+j,'📨',strip(r))));
  secs.filter(x=>x.i==='🔁'&&/Your trade offers/.test(x.t)).forEach(x=>x.rows.forEach((r,j)=>{const m=r.match(/tradeWithdraw\('([^']+)'\)/);add('Front office','trade'+j,'🔁',strip(r)+(m?` <a href="#" class="muted" onclick="wkTradeX('${m[1]}');return false">Withdraw?</a>`:''))}));
  /* whatever's left of the office's own sections once the line has taken the decisions (followed prospects and the like) */
- secs.filter(x=>['🕵️','🚑','⏳','📝','📼','🤝'].includes(x.i)).forEach(x=>(x.rows||[]).forEach((r,j)=>{const t=strip(r);if(t.replace(/<[^>]+>/g,'').trim())add('Front office',x.i+j,x.i,t)}));
+ secs.filter(x=>['🕵️','⏳','📝','📼','🤝','👀','📣'].includes(x.i)||x.i==='🚑'&&/^Medical/.test(x.t||'')).forEach(x=>(x.rows||[]).forEach((r,j)=>{const t=strip(r);if(t.replace(/<[^>]+>/g,'').trim())add('Front office',x.i+j,x.i,t)}));
  return out}
 window.wkTradeX=function(id){openModal(`<div class="h mhd">🔁 Withdraw this trade offer?</div><p class="muted">They haven't answered yet. Pull it back and it's as if you never sent it.</p><button class="btn" onclick="tradeWithdraw('${id}');closeModal();render()">Withdraw it</button><button class="btn sec" onclick="closeModal()">Keep it on the table</button>`)};
 window.wkFold=function(){S.wkOpen=!S.wkOpen;save();render()};
 window.weekPanel=function(){if(!S||S.phase!=='season'||typeof mpLockedQuiet==='function'&&mpLockedQuiet())return '';let rows=[],l=[];
- try{rows=wkRows();l=attnItems()}catch(e){console.warn('week panel',e);return ''}
+ let secs=[];try{secs=briefItems()}catch(e){console.warn(e)}
+ try{rows=wkRows(secs);l=attnItems()}catch(e){console.warn('week panel',e);return ''}
  /* NEW since last week: each row's signature against what it said when this week started */
  if(!S.wkBase||S.wkBase.w!==AW())S.wkBase={w:AW(),sig:Object.assign({},S.wkSig||{}),first:!S.wkSig};
  const base=S.wkBase.sig;S.wkSig=S.wkSig||{};rows.forEach(r=>{S.wkSig[r.k]=r.sig});
@@ -405,7 +408,8 @@ window.weekPanel=function(){if(!S||S.phase!=='season'||typeof mpLockedQuiet==='f
  /* new rows first within each group, groups in a fixed order */
  const G=['Since last week','Backstage','Front office'];rows.sort((a,b)=>G.indexOf(a.grp)-G.indexOf(b.grp)||(b.nw-a.nw));
  const must=l.filter(x=>x.g===A_MUST&&x.s&&x.s[0]==='b').length,ch=l.filter(x=>x.g===A_CH&&x.s&&x.s[0]!=='ok').length;
- const np=nextPPV();let cal=[];try{const c=briefItems().find(x=>x.i==='🗓️');if(c)cal=c.rows.map(strip).filter(r=>!/injured|suspended/.test(r))}catch(e){}
+ const np=nextPPV();let cal=[];{const c=secs.find(x=>x.i==='🗓️');if(c)cal=c.rows.map(strip).filter(r=>!/injured|suspended/.test(r))}
+ {const b=l.find(x=>x.id==='bng');if(b&&/weeks?$/.test(b.h)||b&&/next week/.test(b.h))cal.unshift(`🩸 <b>${esc(b.h)}</b> — build a faction war with real heat`)}
  const open=!!S.wkOpen,shown=open?rows:rows.slice(0,WK_SHOW),more=rows.length-shown.length,nNew=rows.filter(r=>r.nw).length;
  let g0='';const body=shown.map(r=>{const h=r.grp!==g0?`<div class="wkg">${esc(r.grp)}</div>`:'';g0=r.grp;return `${h}<div class="wkr"><span class="wki">${r.ic}</span><span>${r.html}${r.nw?newH(1):''}</span></div>`}).join('');
  const tonight=must||ch?`<a href="#" class="wkt ${must?'bad':''}" onclick="go('book');return false"><span>${must?`<b>${must}</b> to handle before you go live`:''}${must&&ch?' · ':''}${ch?`<b>${ch}</b> chance${ch===1?'':'s'} tonight`:''}</span><span>On the Book screen ›</span></a>`:'';

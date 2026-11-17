@@ -4,7 +4,7 @@
    Women's) defended every other week by the top contender in the standings. A hot ROH run — wins, good matches,
    a title — means a bigger debut pop when you call someone up. Results show in the weekly briefing and on the ROH screen.
    TAPES: prospects send you an email or their tape most weeks. Pass, keep following them (they send updates as they
-   improve, get a little pricier, and may sign elsewhere), or sign them to ROH from the briefing.
+   improve, get a little pricier, and may sign elsewhere), or sign them to ROH from the office line.
    Tapes and the watchlist are private to each GM in a league; the ROH league itself is shared.
    Loaded after farm.js; hooks in by wrapping globals. */
 'use strict';
@@ -96,22 +96,28 @@ window.tapeAct=function(i,k){if(typeof mpLocked==='function'&&mpLocked())return;
  else if(k==='follow'){S.follow=S.follow||[];if(S.follow.length>=MAX_FOLLOW)return toast(`You're following ${MAX_FOLLOW} already — drop someone from the watchlist on the ROH screen.`);S.follow.push({w,since:AW(),last:AW()});toast(`Following ${w.name}. They'll send updates.`)}
  S.tapes.splice(i,1);save();if(document.querySelector('#modal .brief'))openBrief();else render()};
 window.followAct=function(i,k){if(typeof mpLocked==='function'&&mpLocked())return;const f=(S.follow||[])[i];if(!f)return;const w=f.w;
+ if(k==='keep'){f.seen=AW();save();if(document.querySelector('#modal .brief'))openBrief();else render();return}
  if(k==='roh'){const c=signCostF(w);if(S.money.p<c)return toast('Not enough money.');if(farmL('p').length>=FARM_MAX)return toast(`Your ROH roster is full (${FARM_MAX}).`);
   S.money.p-=c;if(!w.real)w.id='rk'+partyNid();w.fee=0;w.con=w.real?40:52;w.mor=85;toFarm(w,'p');news(`👀 ${S.gm} signed ${w.name} to an ROH deal after following them for ${AW()-f.since} weeks.`);toast(`${w.name} joins your ROH roster.`)}
  S.follow.splice(i,1);save();if(document.querySelector('#modal .brief'))openBrief();else render()};
 function followRow(f,i){const w=f.w;const c=signCostF(w);const full=farmL('p').length>=FARM_MAX;
  return `<div class="brow"><b>👀 ${esc(w.name)}</b> <span class="muted tiny">· following ${AW()-f.since} wk</span><br><span class="muted tiny">RNG ${Math.round(w.ring)} · MIC ${Math.round(w.mic)} · ${STYLE_N[w.st]}${f.n?' · '+esc(f.n):''}</span>
-  <div class="row" style="gap:6px;margin-top:6px"><button class="mini" ${S.money.p<c||full?'disabled':''} onclick="followAct(${i},'roh')">🏟️ Sign to ROH · ${money(c)}</button><button class="mini" onclick="followAct(${i},'drop')">Stop following</button></div></div>`}
+  <div class="row" style="gap:6px;margin-top:6px"><button class="mini" ${S.money.p<c||full?'disabled':''} onclick="followAct(${i},'roh')">🏟️ Sign to ROH · ${money(c)}</button><button class="mini" onclick="followAct(${i},'keep')">Keep following</button><button class="mini" onclick="followAct(${i},'drop')">Stop following</button></div></div>`}
 
 /* ---------------- briefing ---------------- */
 function resRow(r,meIds){const tl=r.title?`${TT[r.title].i} ${TT[r.title].n}${r.newc?' — NEW CHAMPION':r.crown?' — crowned':r.keep?' — retained':''} · `:'';const mine=meIds.has(r.win);
  return `<div class="brow">${tl}<b class="${mine?'good':meIds.has(r.a)||meIds.has(r.b)?'bad':''}">${esc(r.wn)}</b> def. ${esc(r.win===r.a?r.bn:r.an)} <span class="stars">${stars(r.st)}</span></div>`}
+window.rohBack=function(){if(document.querySelector('#modal .brief'))openBrief();else render()};
+window.rohNotYet=function(id){const w=S.w[id]||(farmL('p').find(x=>x.id===id));if(w)w.cuNo=AW();save();rohBack()};
 function rohBrief(){const out=[];const me=farmL('p');const ids=new Set(me.map(w=>w.id));const R=S.rohL;
  if(S.tapes&&S.tapes.length)out.push({i:'📼',t:`Tapes & emails · ${S.tapes.length}`,tag:'New',rows:S.tapes.map(tapeRow)});
- const upd=(S.follow||[]).filter(f=>f.last===AW()-1||f.last===AW());if(upd.length)out.push({i:'👀',t:'Watchlist updates',rows:(S.follow||[]).map((f,i)=>upd.includes(f)?followRow(f,i):'').filter(Boolean)});
+ const upd=(S.follow||[]).filter(f=>(f.last===AW()-1||f.last===AW())&&f.seen!==AW());if(upd.length)out.push({i:'👀',t:'Watchlist updates',rows:(S.follow||[]).map((f,i)=>upd.includes(f)?followRow(f,i):'').filter(Boolean)});
  if(R&&R.res&&R.res[0]&&me.length){const l=R.res[0].l.filter(r=>ids.has(r.a)||ids.has(r.b)||(r.title&&(r.newc||r.crown)));
   const hot=me.filter(w=>(w.buzz||0)>=9);
-  if(l.length)out.push({i:'🏟️',t:'ROH on HonorClub',rows:l.map(r=>resRow(r,ids)).concat(hot.map(w=>`<div class="brow">🔥 <b>${esc(w.name)}</b> has <b>hot</b> buzz (${w.rw||0}–${w.rl||0} on ROH) — it may be time to bring them up to AEW.<div style="margin-top:6px"><button class="mini" onclick="callUp('${w.id}');if(document.querySelector('#modal .brief'))openBrief()">📣 Call up now</button></div></div>`))})}
+  if(l.length)out.push({i:'🏟️',t:'ROH on HonorClub',rows:l.map(r=>resRow(r,ids)).concat(hot.map(w=>`<div class="brow">🔥 <b>${esc(w.name)}</b> has <b>hot</b> buzz (${w.rw||0}–${w.rl||0} on ROH) — call them up any time from your ROH roster.</div>`))})
+  /* v324: a prospect who turns hot knocks on the office door once (then every 4 weeks they stay hot) */
+  const ask=hot.filter(w=>!w.cuNo||AW()-w.cuNo>=4);
+  if(ask.length)out.push({i:'📣',t:'Ready for the call-up',rows:ask.map(w=>`<div class="brow">🔥 <b>${esc(w.name)}</b> · ${w.rw||0}–${w.rl||0} on ROH, <b>hot</b> buzz — the hotter they are, the bigger their AEW debut.<div class="row" style="gap:6px;margin-top:6px"><button class="mini on" onclick="callUp('${w.id}');rohBack()">📣 Call them up</button><button class="mini" onclick="rohNotYet('${w.id}')">Not yet</button></div></div>`)})}
  return out}
 if(typeof briefItems==='function'){const b0=briefItems;window.briefItems=briefItems=function(){const sec=b0.apply(this,arguments);try{const x=rohBrief();if(x.length){const at=sec.findIndex(s=>s.i==='🗓️');if(at<0)sec.push(...x);else sec.splice(at,0,...x)}}catch(e){console.warn('roh brief',e)}return sec}}
 

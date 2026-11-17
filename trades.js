@@ -3,8 +3,8 @@
    of theirs, with cash either way. Champions can't be traded, and nobody can go over 30 wrestlers.
    SOLO: the rival answers on the spot — accept, counter (they want more cash), or decline — judging each wrestler's
    worth (overall, upside, contract length). On Hard they drive a harder bargain. Every few weeks the rival may also
-   send you an offer of its own; it waits in the briefing for a week.
-   LEAGUES: offers go to another GM and wait in their briefing until they accept or decline (or you withdraw). Trades are
+   send you an offer of its own; it waits outside your office for a week.
+   LEAGUES: offers go to another GM and wait outside their office until they accept or decline (or you withdraw). Trades are
    shared league data; seats are stored in their league form so they survive every view.
    Traded wrestlers keep their contracts; happy ones take it a little hard, unhappy ones welcome the fresh start.
    Loaded after the main script; hooks in by wrapping globals. */

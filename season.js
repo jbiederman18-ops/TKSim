@@ -406,9 +406,9 @@ function tourReslot(k){const c=S.card.p;const msg=[];const free=[];c.forEach((sl
  ms.forEach(m=>{const i=slots.shift();if(i!=null)c[i].d=m});return msg}
 
 /* ===================== WEEKLY BRIEFING (v95) =====================
- The first time you open Home each week, a briefing lands on your desk: what needs your attention before it becomes
- a problem — contracts running out, unhappy or burnt-out talent, real backstage heat, feuds going stale, what's
- coming on the calendar, and free agents about to leave the market. It can be reopened from Home any time. */
+ briefItems() still gathers the week's sections (contracts, morale, backstage heat, stale feuds, the calendar, the
+ market…), and other files add theirs. Since v324 nothing pops up: inbox.js takes the rows that need an answer to the
+ office line, attention.js weekPanel() shows the rest on Home as news, and tonight's to-dos are the Book checklist. */
 const BRIEF_KEY='tks_brief';
 function briefId(){return ((typeof LMP!=='undefined'&&LMP&&LMP.code)||'solo')+':'+(S.gm||'')+':'+S.season}
 function briefSeen(){try{const m=JSON.parse(localStorage.getItem(BRIEF_KEY)||'{}');return m[briefId()]===AW()}catch(e){return false}}
@@ -503,7 +503,7 @@ function calMigrate(st){if(!st||!st.w||st.cal2)return;st.cal2=1;if(st.awb==null)
 
 /* ===================== THE COUNTDOWN (v138) =====================
  The "countdown clock" promo twist now goes somewhere. A clock appears on the big screen during one of your solo
- promos and counts down for CD_WKS weeks (it shows in the briefing). When it hits zero, a real free agent from the other
+ promos and counts down for CD_WKS weeks (it shows in the This week panel). When it hits zero, a real free agent from the other
  side of the face/heel line debuts and goes after the wrestler who had the mic — instant heat — and you get first
  dibs on signing them that week at a discount. The more the promo hyped the clock, the bigger the debut.
  If you or the rival sign them before the clock runs out, the debut happens anyway — for whoever signed them. */
