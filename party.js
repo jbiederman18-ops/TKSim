@@ -214,7 +214,7 @@ function tvFeedTurn(){return partyLiveTurn()||(typeof stvOn==='function'&&stvOn(
 function partyFeed(html,now){const tg=tvTarget();if(!tg||!window.TKO||!TKO.ready)return;clearTimeout(FEED_T);
  /* v259: photos are stored on each device, too big to send — keep a placeholder with the wrestler's id and let the TV
     fill it in from its own photos (or the repo's), so party night isn't photo-less */
- html=String(html||'').replace(/<img\b[^>]*src="data:[^"]*"[^>]*>/gi,m=>{const id=(m.match(/data-ph="([^"]+)"/)||[])[1];return id?`<img data-ph="${id}" alt="">`:''}).slice(0,90000);
+ html=String(html||'').replace(/<img\b[^>]*src="(?:data|blob):[^"]*"[^>]*>/gi,m=>{const id=(m.match(/data-ph="([^"]+)"/)||[])[1];return id?`<img data-ph="${id}" alt="">`:''}).slice(0,90000);
  /* v238: the "picked" tag belongs on how that call played out — if the next screen is already a fresh decision (say, a gorilla pitch
     that went straight back to the show), drop it instead of labelling the new choices with the old pick */
  if(html&&!now&&FEED_PICK&&/class="[^"]*\bchoice\b/.test(html)&&!/class="[^"]*\bchoice\b[^"]*"[^>]*\bdisabled\b/.test(html)&&!/class="ppick"/.test(html))FEED_PICK=null;

@@ -381,7 +381,7 @@ function sheetCards(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';if(sl.
  const here=idsOf(i,m);const full=promo?new Set():fullIn('p',i);const am=askMap();
  const g0=spG(sl);return ownList('p').filter(w=>!w.inj&&!here.includes(w.id)&&!full.has(w.id)&&(!g0||w.g===g0)&&(TC.f==='all'||(TC.f==='ch'?isChamp(w.id):w.al===TC.f)))
   .sort((a,b)=>(promo?b.mic-a.mic:ovr(b)-ovr(a))).map(w=>({w,r:why(w,anchor,i,am,tt)}))}
-function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown=false;return ''}const ent=!TC.shown;TC.shown=true;if(ent)TC.big=false;warmSoon();const m=cur(i);const promo=sl.k==='promo';
+function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown=false;return ''}const ent=!TC.shown;TC.shown=true;if(ent){TC.big=false;TC.entAt=Date.now()}warmSoon();const m=cur(i);const promo=sl.k==='promo';
  const xo=sl.k==='xo',sp=roV(sl),tr=sp&&!!sl.d.tour,fl=sp&&!tr;
  const tl=targets(i,m);let tg=TC.rep?null:(TC.tg||defTarget(i,m)||(promo||xo?tl[0]:null)||null);if(xo&&!tg)tg={t:TC.rep&&TC.rep===m.a?'a':'b'};
  const [k,t]=sheetTitle(i,m,tg);const used=usedIn('p',i);
@@ -419,7 +419,7 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
  const showF=!tr&&!(fl&&!TC.rep);
  TC.dealt=0;
  return `<div class="tcscrim ${ent?'enter':''}" onclick="tcScrim()"></div><div class="tcdock tcsheet ${ent?'enter':''} ${TC.big?'big tall':''}" id="tcdock" role="dialog" aria-label="${esc(t)}"><button class="tcpull open" onclick="tcBig(!TC.big)" aria-label="${TC.big?'Shrink the sheet':'Fill the screen'}" aria-expanded="${TC.big?'true':'false'}"><span class="tcgrip"></span></button>
- <div class="tcsh"><div class="tcst"><span class="tcsk">${esc(k)}</span><b>${esc(t)}</b></div><button class="tcsx" onclick="tcClose()" aria-label="Close">✕</button></div>
+ <div class="tcsh"><div class="tcst"><span class="tcsk">${esc(k)}</span><b>${esc(t)}</b></div><button class="tcsx" onclick="tcShut()" aria-label="Close">✕</button></div>
  ${cf}${tabs?`<div class="tcsc tctabs">${tabs}</div>`:''}${tabs&&TC.mode!=='w'?'':shc}${(tabs&&TC.mode!=='w')||!showF?'':`<div class="tcsc">${tabs||xo?fcs:chips}</div>`}${tch}<div class="tcsb" id="tcsb">${body}</div>${foot}</div>`}
 function pickAct(){const c=card();if(TC.act!=null&&c[TC.act]&&editOk(c[TC.act]))return;
  const ok=c.map((sl,i)=>tableOk(sl)?i:-1).filter(i=>i>=0);if(!ok.length){TC.act=null;return}
@@ -430,23 +430,27 @@ function decorate(){if(!bookOn())return;sync();const app=document.getElementById
  c.forEach((sl,i)=>{if(!shown(sl))return;const el=rord.querySelector(`[data-dp="slot:${i}"]`);if(!el)return;const t=document.createElement('template');t.innerHTML=slotHtml(i).trim();el.replaceWith(t.content.firstChild)});
  rord.classList.add('tcrord');if(lk)rord.classList.add('tclock');
  const hd=rord.previousElementSibling;if(hd&&/running order/i.test(hd.textContent))hd.innerHTML=`<div class="h small" style="margin:0">Tonight's card</div><span class="row" style="gap:6px"><button class="mini" onclick="reorderOpen()">Running order</button></span>`;
- if(!lk&&TC.act!=null){const main=app.querySelector('main');const old=main.querySelector('#tcdock');if(old)old.remove();main.insertAdjacentHTML('beforeend',dockHtml());
+ if(!lk&&TC.act!=null){const main=app.querySelector('main');const old=main.querySelector('#tcdock');if(old)old.remove();main.querySelectorAll('.tcscrim').forEach(x=>x.remove());main.insertAdjacentHTML('beforeend',dockHtml());
   const pk=document.querySelector('.tcpk.on');if(pk&&pk.scrollIntoView)try{pk.scrollIntoView({inline:'nearest',block:'nearest'})}catch(e){}
   const h=document.getElementById('tchand');if(h){h.scrollLeft=TC.dealt?0:TC.sx;h.addEventListener('scroll',()=>{TC.sx=h.scrollLeft},{passive:true})}TC.dealt=0;
   document.body.classList.add('tcbody')}
- else document.body.classList.remove('tcbody')}
+ else{document.body.classList.remove('tcbody');const m=app.querySelector('main');if(m){const o=m.querySelector('#tcdock.tcsheet');if(o)o.remove();m.querySelectorAll('.tcscrim').forEach(x=>x.remove())}}}
+/* v336: opening, closing and flipping filters only change the table and the sheet, so repaint just those instead of
+   rebuilding the whole Book screen (which re-read every photo right as the slide started — the hitch) */
+function paint(){try{const app=document.getElementById('app');if(!bookOn()||!app||!app.querySelector('main .rord'))return render();decorate()}catch(e){console.warn('tc paint',e);render()}}
 
 /* actions the markup calls */
 window.tcAct=function(i,stay){const sl=card()[i];if(!sl)return;if(!editOk(sl)){if(sl.k==='match')return openMatch(i);if(sl.k==='xo'&&typeof openXo==='function')return openXo(i);return}
- if(roV(sl)||xoV(sl)){if(TC.act===i&&TC.open){if(!stay)center(i);return}TC.act=i;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;TC.f='fit';TC.mode='w';TC.open=true;TC.dealt=1;render();if(!stay)center(i);return}
+ if(roV(sl)||xoV(sl)){if(TC.act===i&&TC.open){if(!stay)center(i);return}TC.act=i;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;TC.f='fit';TC.mode='w';TC.open=true;TC.dealt=1;paint();if(!stay)center(i);return}
  if(TC.act===i&&TC.open){if(!stay)center(i);return}
  if(TC.act!==i||!TC.open){TC.act=i;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;TC.f='fit';if(sl.k==='match'&&!TC.sh[i])TC.sh[i]=shapeOf(i,cur(i));TC.mode=(sl.k==='promo'?promoOk(cur(i))&&cur(i).b:!!sl.d)?'x':'w'}
- TC.open=true;TC.dealt=1;render();if(!stay)center(i)};
+ TC.open=true;TC.dealt=1;paint();if(!stay)center(i)};
 /* put the slot in the middle of the space between the header and the hand */
-function center(i){requestAnimationFrame(()=>requestAnimationFrame(()=>{const el=document.querySelector(`.tcs[data-tcs="${i}"]`);if(!el)return;
+function center(i){const w=(TC.entAt||0)+360-Date.now();if(TC.open&&w>0){setTimeout(()=>center0(i,'smooth'),w);return}center0(i)}
+function center0(i,bh){requestAnimationFrame(()=>requestAnimationFrame(()=>{const el=document.querySelector(`.tcs[data-tcs="${i}"]`);if(!el)return;
  const hd=document.querySelector('header.top');const dk=document.getElementById('tcdock');const top=hd?hd.getBoundingClientRect().bottom:0;const bot=dk?(dk.classList.contains('tcsheet')?innerHeight-(TC.big?dk.offsetHeight:Math.min(dk.offsetHeight,innerHeight*.66,600)):dk.getBoundingClientRect().top):innerHeight;
- const r=el.getBoundingClientRect();const room=bot-top;const d=r.height>room-16?r.top-(top+8):r.top+r.height/2-(top+room/2);if(Math.abs(d)>4)window.scrollBy({top:d,behavior:TC.open?'auto':'smooth'})}))}
-window.tcOpen=function(){if(TC.act==null)pickAct();if(TC.act==null)return;TC.open=true;TC.dealt=1;render();center(TC.act)};
+ const r=el.getBoundingClientRect();const room=bot-top;const d=r.height>room-16?r.top-(top+8):r.top+r.height/2-(top+room/2);if(Math.abs(d)>4)window.scrollBy({top:d,behavior:bh||(TC.open?'auto':'smooth')})}))}
+window.tcOpen=function(){if(TC.act==null)pickAct();if(TC.act==null)return;TC.open=true;TC.dealt=1;paint();center(TC.act)};
 /* v327: every way into booking from outside the Book screen (Needs your attention, feud and title-shot buttons, Blood & Guts)
    lands on the card table with the sheet open, instead of the classic match/promo editors. ids are placed in order; the
    sheet then moves on to whoever's still missing. Returns false when the table can't take it, so callers fall back. */
@@ -477,12 +481,14 @@ window.tcSeg=function(i){if(tcGo(i))return;const sl=S&&S.card.p[i];if(!sl)return
    switched once the slide has finished, so the slide itself never waits on a relayout of the whole card grid */
 let TALL=0;function tallSoon(d){clearTimeout(TALL);TALL=setTimeout(()=>{if(d.isConnected)d.classList.toggle('tall',TC.big)},390)}
 window.tcBig=function(v,quiet){TC.big=!!v;const d=document.getElementById('tcdock');if(d){d.classList.toggle('big',TC.big);tallSoon(d);const b=d.querySelector('.tcpull');if(b){b.setAttribute('aria-expanded',TC.big?'true':'false');b.setAttribute('aria-label',TC.big?'Shrink the sheet':'Fill the screen')}}
- if(!TC.big){const l=document.getElementById('tcsb');if(l&&l.scrollTop){l.dataset.lowering='1';l.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>{delete l.dataset.lowering},500)}if(TC.act!=null)setTimeout(()=>{if(TC.open&&!TC.big)center(TC.act)},380)}};
+ if(!TC.big){const l=document.getElementById('tcsb');if(l&&l.scrollTop){l.dataset.lowering='1';setTimeout(()=>{if(!l.isConnected||TC.big){delete l.dataset.lowering;return}l.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>{delete l.dataset.lowering},520)},400)}if(TC.act!=null)setTimeout(()=>{if(TC.open&&!TC.big)center(TC.act)},400)}};
 /* v334: photos further down the sheet are lazy-loaded, so the first lift to full screen had to fetch and decode them
    mid-animation (the hitch). Once the sheet has settled, load and decode them quietly so they're ready. */
 let WARM=0;function warmSoon(){clearTimeout(WARM);WARM=setTimeout(()=>{const go=()=>{const l=document.getElementById('tcsb');if(!l)return;
- l.querySelectorAll('img').forEach(im=>{if(im.loading==='lazy')im.loading='eager';if(im.decode)im.decode().catch(()=>{})})};
- window.requestIdleCallback?requestIdleCallback(go,{timeout:600}):go()},450)}
+ const q=[...l.querySelectorAll('img')];const idle=f=>window.requestIdleCallback?requestIdleCallback(f,{timeout:500}):setTimeout(f,60);
+  /* v336: a few at a time, so the first scroll isn't fighting forty photo decodes at once */
+  const batch=()=>{if(!l.isConnected)return;q.splice(0,4).forEach(im=>{if(im.loading==='lazy')im.loading='eager';if(im.decode)im.decode().catch(()=>{})});if(q.length)idle(batch)};batch()};
+ idle0(go)},450)}const idle0=f=>window.requestIdleCallback?requestIdleCallback(f,{timeout:600}):f();
 /* v334: closing collapses the open match row; hold that row where it is on screen so the page doesn't jump underneath */
 function keepPlace(i,fn){const q=()=>i==null?null:document.querySelector(`.tcs[data-tcs="${i}"]`);const a=q();const y0=a?a.getBoundingClientRect().top:null;fn();
  if(y0==null)return;const b=q();if(!b)return;const want=b.getBoundingClientRect().top+scrollY-y0;
@@ -491,12 +497,17 @@ function keepPlace(i,fn){const q=()=>i==null?null:document.querySelector(`.tcs[d
  /* the page got shorter than where we were: hold the spot with a spacer, then glide down to the new bottom */
  const m=document.querySelector('#app main')||document.body;const pad=Math.ceil(want-max);m.style.paddingBottom=`calc(${getComputedStyle(m).paddingBottom} + ${pad}px)`;
  window.scrollTo({top:want,behavior:'instant'});requestAnimationFrame(()=>{window.scrollTo({top:max,behavior:'smooth'});setTimeout(()=>{m.style.paddingBottom='';},520)})}
-window.tcClose=function(){keepPlace(TC.act,()=>{TC.big=false;TC.open=false;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;render()})};
+window.tcClose=function(){SHUT=0;keepPlace(TC.act,()=>{TC.big=false;TC.open=false;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;paint()})};
+/* v336: the ✕, a tap on the backdrop and Escape slide the sheet away first, like a swipe does, instead of it vanishing */
+let SHUT=0;window.tcShut=function(){if(SHUT)return;const d=document.getElementById('tcdock');
+ if(!d||!d.classList.contains('tcsheet')||matchMedia('(prefers-reduced-motion:reduce)').matches)return tcClose();
+ SHUT=1;d.style.transition='transform .26s cubic-bezier(.4,0,1,1)';d.style.transform='translateY(100%)';const sc=document.querySelector('.tcscrim');if(sc){sc.style.transition='opacity .26s';sc.style.opacity='0'}
+ setTimeout(()=>{if(SHUT)tcClose()},250)};
 /* the tap that opened the sheet also lands a click on the backdrop; ignore it */
-window.tcScrim=function(){if(Date.now()-SUP<450)return;tcClose()};
-window.tcAb=function(){TC.ab=!TC.ab;TC.dealt=0;render()};
-window.tcF=function(k){TC.f=k;TC.mode='w';TC.dealt=1;render();const b=document.getElementById('tcsb');if(b)b.scrollTop=0};
-window.tcTg=function(j){const t=targets(TC.act,cur(TC.act))[j];if(t){TC.tg=t;TC.dealt=1;render()}};
+window.tcScrim=function(){if(Date.now()-SUP<450)return;tcShut()};
+window.tcAb=function(){TC.ab=!TC.ab;TC.dealt=0;paint()};
+window.tcF=function(k){TC.f=k;TC.mode='w';TC.dealt=1;paint();const b=document.getElementById('tcsb');if(b)b.scrollTop=0};
+window.tcTg=function(j){const t=targets(TC.act,cur(TC.act))[j];if(t){TC.tg=t;TC.dealt=1;paint()}};
 window.tcBack=function(){const i=TC.act,id=TC.rep;TC.rep=null;TC.open=false;if(i!=null&&id)takeOff(i,id);else render()};
 /* open the sheet for one space on the table, or to swap out someone already there */
 function sheetAt(i,tg){if(locked())return;const sl=card()[i];if(!sl||!editOk(sl))return;if(sl.k==='match'&&!roV(sl)&&!TC.sh[i])TC.sh[i]=shapeOf(i,cur(i));TC.act=i;TC.tg=tg||null;TC.rep=null;TC.sel=null;TC.confirm=null;TC.mode='w';TC.f='fit';TC.open=true;TC.dealt=1;render();center(i)}
@@ -513,7 +524,7 @@ function sheetPick(id){const i=TC.act;if(i==null||locked())return;const before=J
 function afterPick(i,before){if(JSON.stringify(cur(i))===before)return false;TC.tg=null;TC.f='fit';const sl=card()[i];const m=cur(i);
  const more=roV(sl)?false:sl.k==='promo'?!m.b:TC.sh[i]?!!defTarget(i,m):!sl.d&&!!defTarget(i,m);
  if(more){TC.mode='w';TC.open=true;TC.dealt=1;render();center(i)}else{TC.open=false;keepPlace(i,render)}return true}
-window.tcMode=function(k){TC.mode=k;TC.sel=null;TC.dealt=1;render();const sb=document.getElementById('tcsb');if(sb)sb.scrollTop=0};
+window.tcMode=function(k){TC.mode=k;TC.sel=null;TC.dealt=1;paint();const sb=document.getElementById('tcsb');if(sb)sb.scrollTop=0};
 /* v298: the tags under a booked match open the sheet straight to that tab */
 window.tcAt=function(i,k){if(locked())return tcAct(i);const sl=card()[i];if(!sl||!editOk(sl)||!sl.d)return tcAct(i);TC.act=i;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;TC.f='fit';if(!roV(sl)&&!TC.sh[i])TC.sh[i]=shapeOf(i,cur(i));TC.mode=k;TC.open=true;TC.dealt=1;render();center(i)};
 window.tcYes=function(){const c=TC.confirm;if(!c)return;TC.confirm=null;const before=JSON.stringify(cur(c.i));if(c.tg&&c.tg.t==='swap'){replaceWith(c.i,c.tg.old,c.id,true);TC.rep=null}else play(c.i,c.id,c.tg,true);afterPick(c.i,before)};
@@ -569,7 +580,7 @@ document.addEventListener('click',e=>{if(!on())return;if((Date.now()-SUP<350||(t
  const px=e.target.closest&&e.target.closest('#tcdock [data-tcx]');if(px){e.stopPropagation();e.preventDefault();applyX(TC.act,px.dataset.tcx);return}
  const d=e.target.closest&&e.target.closest('.tcdrop');if(d){e.stopPropagation();const t=JSON.parse(d.dataset.tct);const tg=Object.assign({},t);delete tg.s;sheetAt(t.s,tg);return}
  const s=e.target.closest&&e.target.closest('.tcs');if(s&&!e.target.closest('[data-tcon],button,.tcdrop')){tcAct(+s.dataset.tcs)}},true);
-document.addEventListener('keydown',e=>{if(!inBook())return;if(e.key==='Escape'&&TC.open){tcClose();return}if(e.key!=='Enter'&&e.key!==' ')return;
+document.addEventListener('keydown',e=>{if(!inBook())return;if(e.key==='Escape'&&TC.open){tcShut();return}if(e.key!=='Enter'&&e.key!==' ')return;
  const sk=e.target.closest&&e.target.closest('#tcdock [data-tcpick],#tcdock [data-tcx],.tcdrop');if(sk){e.preventDefault();sk.click();return}const c=e.target.closest&&e.target.closest('#tchand [data-tcw],#tchand .tx,.tcs [data-tcon]');if(!c)return;e.preventDefault();
  if(c.closest('#tchand'))tapHand({el:c,id:c.dataset.tcw,x2:c.dataset.tcx});else sheetRep(+c.dataset.tcon,c.dataset.tcw)});
 document.addEventListener('contextmenu',e=>{if(on()&&e.target.closest&&e.target.closest('.tkc,.tx'))e.preventDefault()});
@@ -634,7 +645,7 @@ function endDrag(x,y){const t=hit(x,y);const d=DR;cleanup();SUP=Date.now();
 {let y0=null,x0=0,pid=null;
  document.addEventListener('pointerdown',e=>{if(!inBook()||e.pointerType==='touch')return;const z=e.target.closest&&e.target.closest('#tcdock .tcpull,#tcdock .tcsh');if(!z)return;y0=e.clientY;x0=e.clientX;pid=e.pointerId},true);
  document.addEventListener('pointerup',e=>{if(y0===null||e.pointerId!==pid)return;const dy=e.clientY-y0,dx=e.clientX-x0;y0=null;if(Math.abs(dy)<36||Math.abs(dy)<Math.abs(dx))return;
-  SUP=Date.now();if(!TC.open)return;if(dy<0){if(!TC.big)tcBig(true)}else if(TC.big)tcBig(false);else tcClose()},true);
+  SUP=Date.now();if(!TC.open)return;if(dy<0){if(!TC.big)tcBig(true)}else if(TC.big)tcBig(false);else tcShut()},true);
  document.addEventListener('pointercancel',()=>{y0=null},true)}
 /* v332: the sheet moves with transform only (no layout work per frame, so no jitter). It's always full height; at normal
    size it simply sits lower. On phones the cards don't scroll at normal size, so a drag can never be split between the
@@ -652,8 +663,9 @@ function endDrag(x,y){const t=hit(x,y);const d=DR;cleanup();SUP=Date.now();
  function settle(d,big){d.style.transition=`transform .38s ${EASE}`;d.style.transform='';scrim('','opacity .36s');window.tcBig(big,true);
   setTimeout(()=>{if(d.isConnected){d.style.transition='';d.classList.remove('drag')}},380)}
  document.addEventListener('touchstart',e=>{g=null;if(!TC.open||e.touches.length!==1)return;const t=e.target;if(!t.closest||!t.closest('#tcdock'))return;
-  if(t.closest('.tcsc,.tcshapes,.tcfilt,[data-noflick]'))return;
-  const zone=t.closest('.tcpull,.tcsh')?'head':t.closest('#tcsb')?'body':null;if(!zone)return;const d=dk();if(!d)return;
+  if(t.closest('[data-noflick],input,select,textarea'))return;
+  /* v336: chip rows (match shape, filters, tabs) used to be skipped, so a downward swipe there fell through to the page */
+  const zone=t.closest('#tcsb')?'body':t.closest('.tcsc,.tcshc')?'chips':'head';const d=dk();if(!d)return;
   if(zone==='body'&&TC.big&&sb()&&sb().scrollTop>0)return; /* mid-list: let the cards scroll */
   const y=e.touches[0].clientY;let cur=TC.big?0:offN(d);try{const m=new DOMMatrix(getComputedStyle(d).transform);if(isFinite(m.m42))cur=m.m42}catch(_){}
   const l=sb();g={zone,y0:y,x0:e.touches[0].clientX,on:offN(d),big:TC.big,mode:null,pts:[[e.timeStamp,y]],off:cur,cur,st:l?l.scrollTop:0}},{passive:true,capture:true});
@@ -661,6 +673,7 @@ function endDrag(x,y){const t=hit(x,y);const d=DR;cleanup();SUP=Date.now();
   if(!g.mode){
    if(g.zone==='body'&&g.big&&dy<0){g=null;return}           /* full sheet, pushing up: that's a scroll */
    if(Math.abs(dx)>7&&Math.abs(dx)>Math.abs(dy)){g=null;return}
+   if(g.zone==='chips'&&Math.abs(dy)<6)return;                /* chip rows: wait to see if it's a sideways scroll */
    e.preventDefault();if(Math.abs(dy)<5)return;               /* claim the gesture from the first move so iOS never starts a scroll */
    g.mode='drag';g.y0=y;d.style.transition='none';d.classList.add('drag');LOCK=g.st;return}
   e.preventDefault();g.pts.push([e.timeStamp,y]);if(g.pts.length>6)g.pts.shift();
@@ -670,8 +683,17 @@ function endDrag(x,y){const t=hit(x,y);const d=DR;cleanup();SUP=Date.now();
   const p=G.pts,a=p[0],z=p[p.length-1],dt=Math.max(16,z[0]-a[0]),v=(z[1]-a[1])/dt; /* px per ms, + is down */
   if(!G.big&&(G.off-G.on>110||(v>.6&&G.off-G.on>24))){d.style.transition='transform .24s cubic-bezier(.4,0,1,1)';d.style.transform='translateY(100%)';scrim('0','opacity .24s');setTimeout(()=>tcClose(),230);return}
   if(G.big)settle(d,!(G.off>80||v>.45));else settle(d,(G.on-G.off)>60||v<-.45)};
+ document.addEventListener('touchmove',e=>{if(TC.open&&e.target&&e.target.classList&&e.target.classList.contains('tcscrim'))e.preventDefault()},{passive:false,capture:true});
  document.addEventListener('touchend',end,{passive:true,capture:true});document.addEventListener('touchcancel',end,{passive:true,capture:true})}
 /* ---------------- hooks ---------------- */
+/* v336: uploaded photos are saved as long text (data URLs). Every redraw pasted all of that text back into the page and
+   the phone re-read and re-unpacked each photo. Hand the page a short blob link per photo instead — made once, reused on
+   every redraw, so the phone keeps the unpacked picture. The saved photo itself is untouched. */
+{const BL={};const blobOf=(id,src)=>{const e=BL[id];if(e&&e.s===src)return e.u;
+  try{const c=src.indexOf(',');const meta=src.slice(5,c);if(!/;base64$/.test(meta))return src;const b=atob(src.slice(c+1));const a=new Uint8Array(b.length);for(let k=0;k<b.length;k++)a[k]=b.charCodeAt(k);
+   const u=URL.createObjectURL(new Blob([a],{type:meta.split(';')[0]||'image/jpeg'}));if(e)setTimeout(()=>{try{URL.revokeObjectURL(e.u)}catch(_){}},8000);BL[id]={s:src,u};return u}catch(_){return src}};
+ if(typeof portrait==='function'&&typeof IMG!=='undefined'){const p0=portrait;portrait=window.portrait=function(w){const h=p0.apply(this,arguments);
+  try{const src=w&&IMG[w.id];if(src&&typeof src==='string'&&src.startsWith('data:')&&h.indexOf(src)>=0)return h.replace(`src="${src}"`,`src="${blobOf(w.id,src)}" decoding="async"`)}catch(_){}return h}}}
 if(typeof go==='function'){const g0=go;go=window.go=function(t){if(t==='book'&&tab!=='book'){TC.open=false;TC.sel=null}return g0.apply(this,arguments)}}
 function attnDown(){if(!S||S.phase!=='season'||typeof tab==='undefined'||tab!=='book')return;const m=document.querySelector('#app main');if(!m)return;const a=m.querySelector('.card.attn');if(!a)return;
  const anchor=m.querySelector('.prodstrip')||m.querySelector('.lvdock')||m.querySelector('.btn.live');if(anchor&&anchor.parentElement)anchor.parentElement.insertBefore(a,anchor)}
@@ -1027,6 +1049,7 @@ html.tcards .tv-last .tkc{--w:180px;width:var(--w)}
 .tcdock.tcsheet{--tcH:calc(100dvh - env(safe-area-inset-top,0px) - 10px);height:var(--tcH);max-height:none;transform:translateY(max(0px,calc(var(--tcH) - min(66vh,600px))));transition:transform .38s cubic-bezier(.2,.8,.2,1);will-change:transform;backface-visibility:hidden}
 .tcdock.tcsheet.big{transform:none}.tcdock.tcsheet{contain:layout paint style}.tcdock.tcsheet::after{content:'';position:absolute;left:0;right:0;top:100%;height:40px;background:#101115}
 .tcdock.tcsheet.enter{animation:tcupS .34s cubic-bezier(.22,1,.36,1) backwards}@keyframes tcupS{from{transform:translateY(100%)}}
+.tcscrim{touch-action:none;overscroll-behavior:none}.tcdock.tcsheet{overscroll-behavior:none}.tcdock.tcsheet .tcsc,.tcdock.tcsheet .tcshc{touch-action:pan-x;overscroll-behavior:contain}.tcdock.tcsheet .tccf,.tcdock.tcsheet .tcsf{touch-action:none}
 .tcdock.tcsheet .tcsb{flex:1}.tcdock.tcsheet:not(.tall) .tcsb{padding-bottom:max(0px,calc(var(--tcH) - min(66vh,600px)))}.tcdock.tcsheet.drag .tcsb{overscroll-behavior:none}
 @media (hover:none) and (pointer:coarse){.tcdock.tcsheet:not(.tall) .tcsb{overflow:hidden;touch-action:none}.tcdock.tcsheet .tcpull,.tcdock.tcsheet .tcsh{touch-action:none}}
 .tcsh{flex:none;display:flex;align-items:flex-end;gap:10px;padding:0 16px 10px;touch-action:none}
