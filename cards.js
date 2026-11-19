@@ -71,10 +71,14 @@ function promoOk(p){return !!(p.a&&PT[p.type]&&(PT[p.type].b!=='req'||p.b))}
 /* ---------------- the card ---------------- */
 function condOf(w){if(w.inj)return ['Hurt','b'];const sw=staWord(sta(w));if(sw!=='Fresh')return [sw,sw==='Tired'?'t':'b'];
  if(w.own==='p'&&typeof moodWord==='function'&&w.mor<50)return [moodWord(w.mor)[1],w.mor<35?'b':'t'];return ['Fresh','']}
+/* v344: the stat strip — Ring, Mic and Pop instead of one overall, since matches run on Ring (and Pop) and promos on Mic (and Pop).
+ The wrestler's best stat is lit gold, so a talker and a worker read differently at a glance. */
+function tcStrip(w){const v=[['RNG',w.ring],['MIC',w.mic],['POP',w.pop]].map(([l,x])=>[l,Math.round(x)]);const hi=Math.max(...v.map(x=>x[1]));
+ return `<div class="tkst">${v.map(([l,x])=>`<span${x===hi?' class="hi"':''}><b>${x}</b><i>${l}</i></span>`).join('')}</div>`}
 function tcCard(w,o){o=o||{};const [cw,cc]=condOf(w);const t=titlesOf(w.id)[0];const worn=!o.noWear&&(sta(w)<100-FAT_OK||w.inj);
  const cls=['tkc',w.al==='f'?'fc':'hl',t?'ch':'',worn?'worn':'',o.used?'used':'',o.cls||''].join(' ');
- return `<div class="${cls}" data-tcw="${w.id}" ${o.attr||''} tabindex="0" role="button" aria-label="${esc(w.name)}${t?', '+esc(t.n)+' champion':''}, ${cw}${o.tab?', '+esc(o.tab):''}">
- <div class="tcf ${hasPhoto(w)?'ph':''}">${hasPhoto(w)?`<div class="tcp">${portrait(w)}</div>`:`<div class="tcg">${esc(initials(w.name))}</div>`}<span class="tco">${ovr(w)}</span>${o.tab?`<span class="tct ${o.tabc||''}">${esc(o.tab)}</span>`:''}<div class="tcb"><b class="tcn${(o.name||w.name).length>13?' ln':''}">${esc(o.name||w.name)}</b><span class="tcc ${cc}">${esc(o.cond||cw)}</span>${t?`<i class="tcbelt">${esc(t.n)}</i>`:''}</div></div>${o.mark||''}</div>`}
+ return `<div class="${cls}" data-tcw="${w.id}" ${o.attr||''} tabindex="0" role="button" aria-label="${esc(w.name)}, ring ${Math.round(w.ring)}, mic ${Math.round(w.mic)}, pop ${Math.round(w.pop)}${t?', '+esc(t.n)+' champion':''}, ${cw}${o.tab?', '+esc(o.tab):''}">
+ <div class="tcf ${hasPhoto(w)?'ph':''}">${hasPhoto(w)?`<div class="tcp">${portrait(w)}</div>`:`<div class="tcg">${esc(initials(w.name))}</div>`}${o.tab?`<span class="tct ${o.tabc||''}">${esc(o.tab)}</span>`:''}<div class="tcb">${tcStrip(w)}<b class="tcn${(o.name||w.name).length>13?' ln':''}">${esc(o.name||w.name)}</b><span class="tcc ${cc}">${esc(o.cond||cw)}</span>${t?`<i class="tcbelt">${esc(t.n)}</i>`:''}</div></div>${o.mark||''}</div>`}
 window.tcCard=tcCard;
 window.tcMini=w=>w&&on()?`<span class="tcmini">${tcCard(w,{noWear:true})}</span>`:'';
 
@@ -809,8 +813,11 @@ html.tcards .tkc{--w:92px;position:relative;flex:none;width:var(--w);aspect-rati
 .tkc .tcg{position:absolute;right:-6px;top:13%;font:900 italic calc(var(--w)*.62)/.8 'BC',Impact,sans-serif;letter-spacing:-.04em;color:rgba(242,193,78,.13);pointer-events:none}
 .tkc .tcp{position:absolute;inset:0}.tkc .tcp img,.tkc .tcp svg{width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block}
 .tkc .tcf.ph::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.45),transparent 28%,transparent 48%,rgba(0,0,0,.92) 80%)}
-.tkc .tco{position:absolute;left:9px;top:6px;z-index:3;font:900 italic calc(var(--w)*.21)/1 'BC',Impact,sans-serif;color:#fff;text-shadow:0 1px 0 #000,0 0 8px rgba(0,0,0,.6)}
-.tkc .tct{position:absolute;left:5px;top:calc(var(--w)*.3);z-index:3;max-width:calc(100% - 5px);font:800 italic calc(var(--w)*.105)/1.15 'BC',sans-serif;letter-spacing:.04em;text-transform:uppercase;padding:2px 10px 2px 6px;background:#1e1e22;color:var(--text);clip-path:polygon(0 0,100% 0,calc(100% - 6px) 100%,0 100%);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.tkc .tkst{display:flex;gap:2px;margin:0 0 calc(var(--w)*.05)}.tkc .tkst span{flex:1;display:flex;flex-direction:column;align-items:center;padding:calc(var(--w)*.02) 0;background:rgba(10,10,12,.82);box-shadow:inset 0 0 0 1px #3a3b42}
+.tkc .tkst b{font:900 italic calc(var(--w)*.13)/1 'BC',sans-serif;color:#fff}.tkc .tkst i{font:700 calc(var(--w)*.065)/1 'BC',sans-serif;font-style:normal;letter-spacing:.08em;color:var(--mut);margin-top:1px}
+.tkc .tkst .hi{box-shadow:inset 0 0 0 1px var(--gold3)}.tkc .tkst .hi b{color:var(--gold)}
+.tcs .tcmat.many .tkc .tkst,.tlrow .tkc .tkst,.twcd .tkc .tkst{display:none}
+.tkc .tct{position:absolute;left:5px;top:6px;z-index:3;max-width:calc(100% - 5px);font:800 italic calc(var(--w)*.105)/1.15 'BC',sans-serif;letter-spacing:.04em;text-transform:uppercase;padding:2px 10px 2px 6px;background:#1e1e22;color:var(--text);clip-path:polygon(0 0,100% 0,calc(100% - 6px) 100%,0 100%);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
 .tkc .tct.must{background:var(--gold);color:#111}.tkc .tct.feud{background:var(--red);color:#fff}.tkc .tct.hot{background:#22382a;color:var(--good)}.tkc .tct.rub{background:#2a2a40;color:#b9b6ff}.tkc .tct.gold{background:#2c2410;color:var(--gold2)}
 .tkc .tcb{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:0 5px 6px 9px}
 .tkc .tcn{display:block;font:900 italic calc(var(--w)*.15)/.92 'BC',sans-serif;text-transform:uppercase;letter-spacing:.005em;text-wrap:balance;overflow-wrap:anywhere;text-shadow:0 1px 0 #000}.tkc .tcn.ln{font-size:calc(var(--w)*.135)}
@@ -1008,7 +1015,7 @@ html.tcards.lk-hy .tile em{color:rgba(242,193,78,.16)}
 .tcrow .tkc.tccon{--w:92px;width:92px}.tcmore{flex:none;width:92px;aspect-ratio:5/7;border:2px dashed #3d3e46;background:none;color:var(--mut);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:800 italic 12px/1.1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;text-align:center;cursor:pointer;padding:6px}.tcmore b{font-size:24px;color:var(--gold)}
 .tcr .tcrm{display:flex;gap:3px;flex:none;margin-right:10px}.tcr .tcrm .tcmini .tkc{--w:28px;width:28px}
 /* one look everywhere (v282): showdowns, live plates, the reveal, the draft */
-.tcmini{display:inline-flex;flex:none;vertical-align:middle}.tcmini .tkc{--w:30px;width:30px;cursor:inherit;pointer-events:none}.tcmini .tkc .tcb,.tcmini .tkc .tct,.tcmini .tkc .tco,.tcmini .tkc .tcbelt,.tcmini .tkc .tcf::after,.tcmini .tkc::after{display:none}.tcmini .tkc .tcf{box-shadow:inset 0 0 0 1px #3a3b42}.tcmini .tkc.ch .tcf{box-shadow:inset 0 0 0 1.5px var(--gold)}.tcmini .tkc .tcf::before{width:3px}
+.tcmini{display:inline-flex;flex:none;vertical-align:middle}.tcmini .tkc{--w:30px;width:30px;cursor:inherit;pointer-events:none}.tcmini .tkc .tcb,.tcmini .tkc .tct,.tcmini .tkc .tcbelt,.tcmini .tkc .tcf::after,.tcmini .tkc::after{display:none}.tcmini .tkc .tcf{box-shadow:inset 0 0 0 1px #3a3b42}.tcmini .tkc.ch .tcf{box-shadow:inset 0 0 0 1.5px var(--gold)}.tcmini .tkc .tcf::before{width:3px}
 html.tcards .sdph.tcin{aspect-ratio:5/7;height:92%;background:none;clip-path:none;box-shadow:none;overflow:visible}html.tcards .sdph.tcin>.tkc{--w:150px;width:100%;height:100%;cursor:default}
 html.tcards .sdci .sdph.tcin{height:auto;width:72px;position:relative;left:auto;transform:none}html.tcards .sdci .sdph.tcin>.tkc{--w:72px}
 html.tcards .lvp.tcl{background:none;box-shadow:none;padding:0;align-items:center;gap:6px}html.tcards .lvp.tcl .lvcs{display:flex;gap:4px;justify-content:center}html.tcards .lvp.tcl .tkc{--w:88px;width:var(--w);cursor:default}html.tcards .lvfo.many .lvp.tcl .tkc,html.tcards .lvp.tcl .lvcs.n3 .tkc{--w:62px}html.tcards .lvp.tcl .lvcs.n2 .tkc{--w:72px}
