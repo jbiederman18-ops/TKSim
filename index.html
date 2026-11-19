@@ -648,8 +648,17 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 /* show structure */
 .flow{margin:6px 0 8px;padding:8px 10px;background:rgba(255,255,255,.04);border-radius:6px}
 .fl{font-size:13px;line-height:1.35;margin-top:3px}
-.flowbar{display:flex;align-items:flex-end;gap:4px;height:50px;margin:10px 0 8px}
-.flowbar i{flex:1;border-radius:2px 2px 0 0;background:#e8c35a;opacity:.85}
+/* v348: Show flow graph */
+.flowg{position:relative;height:124px;margin:12px 0 0;border-bottom:1px solid var(--s3,#2a2a30)}.flowg svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.flowg .fb{fill:var(--gold,#f2c14e)}.flowg .fb.promo{fill:#6f9cf0}.flowg .fb.bad{fill:var(--bad,#ef6f66)}.flowg .fn{fill:#f4f1ea;opacity:.9}
+.flowg polyline{stroke:#f4f1ea;stroke-opacity:.55;stroke-width:1.5;stroke-dasharray:4 4}
+.flowg.sel [data-i]:not(.on){opacity:.4}.flowg .fb.on{stroke:#fff;stroke-width:1.5px;vector-effect:non-scaling-stroke}
+.flhit{position:absolute;inset:0;display:flex}.flhit button{flex:1;min-width:0;border:0;padding:0;background:transparent;cursor:pointer}.flhit button:focus-visible{outline:2px solid var(--gold2,#f5cf68);outline-offset:-2px}
+.fllab{display:flex;margin-top:6px}.fllab span{flex:1;min-width:0;text-align:center;font:700 11px/1 'BC',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}.fllab span.bad{color:var(--bad)}
+.flcap{min-height:18px;margin-top:9px;font-size:13px;line-height:1.3}
+.flkey{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px;font-size:11.5px;color:var(--mut)}.flkey span{display:flex;align-items:center;gap:5px}.flkey i{display:block;width:9px;height:9px}
+.flkey .kl{width:16px;height:0;border-top:1.5px dashed rgba(244,241,234,.7)}.flkey .km{background:var(--gold,#f2c14e)}.flkey .kp{background:#6f9cf0}.flkey .kb{background:var(--bad,#ef6f66)}
+.flowc .flw{font:900 italic 17px/1 'BC',sans-serif;text-transform:uppercase}
 /* ===== Classic Dynamite refresh: the house look plus Dynamite broadcast touches ===== */
 .showcard:not(.ppv){background:radial-gradient(120% 78% at 50% 115%,rgba(255,122,46,.92) 0%,rgba(150,32,10,.72) 26%,rgba(40,12,6,.55) 52%,transparent 76%),linear-gradient(180deg,#121317 0%,#140b08 100%);border-color:#4b2c1a}
 .showcard.col{background:radial-gradient(120% 78% at 50% 115%,rgba(226,51,43,.92) 0%,rgba(120,16,12,.72) 28%,rgba(36,10,10,.55) 52%,transparent 76%),linear-gradient(180deg,#121317 0%,#130909 100%);border-color:#4b2220}.showcard .spark{position:absolute;inset:0;pointer-events:none}
@@ -1222,9 +1231,6 @@ html.lk-hy .hfb i{background:var(--ember)}
 html.lk-hy .pipm i.on{background:var(--gold)}
 html.lk-hy .fcurve i{border-radius:0;background:#6d4a28;clip-path:var(--sl)}
 html.lk-hy .fcurve i.hot{background:var(--ember)}
-html.lk-hy .flowbar i{border-radius:0;clip-path:var(--sl)}
-html.lk-hy .flowbar i:not(.promo){background:var(--gold)}
-html.lk-hy .flowbar i.promo{background:#6f9cf0}
 html.lk-hy .calstrip .cw{border-radius:0;clip-path:polygon(3px 0,100% 0,calc(100% - 3px) 100%,0 100%)}
 html.lk-hy .calrow{border-radius:0}
 html.lk-hy details.calpast{border:0;border-radius:0;background:#0f0f12;clip-path:var(--cut)}
@@ -1489,7 +1495,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v347';
+const APP_VERSION='v348';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -3140,6 +3146,7 @@ function heatPlanHtml(m,ppv){const l=heatPlan(m,ppv);if(!l.length)return '';cons
 function metPair(a,b){if(!S||!a||!b)return true;const k=key(a,b);return !!((S.mh&&S.mh[k]&&S.mh[k].length)||(S.mhx&&S.mhx[k]&&S.mhx[k].length)||(S.chem&&S.chem[k]!=null)||inTeam(a,b))}
 const SPARK_LO=-4,SPARK_HI=5;
 /* v128: in a match with 3+ people the top two names carry the crowd; everyone else counts for less */
+function ringCarry(v){const s=v.slice().sort((a,b)=>b-a);let t=0,ws=0;s.forEach((x,i)=>{const w=i<2?1:.6;t+=x*w;ws+=w});return ws?t/ws:0}
 function topHeavy(v){const s=v.slice().sort((a,b)=>b-a);let t=0,ws=0;s.forEach((x,i)=>{const w=i<2?1:.4;t+=x*w;ws+=w});return ws?t/ws:0}
 const TAG_T=['tag','trios','eight'];
 /* v128: role mix — a multi-person match wants different kinds of wrestler (and someone to boo) */
@@ -3153,7 +3160,10 @@ function rateMatch(m,ctx){ctx=ctx||{};
  const sides=m.sides.map(s=>s.map(id=>S.w[id]));const all=sides.flat();const n=all.length;const big=n>=3;const tagT=TAG_T.includes(m.type);
  const mean=f=>all.reduce((s,w)=>s+f(w),0)/n;
  /* v260: a match is only as good as the people in it — the weakest worker pulls it down (it used to lean on the best one) */
- const ring=mean(w=>w.ring)*.75+Math.min(...all.map(w=>w.ring))*.25+RING_LIFT;const pop=big?topHeavy(all.map(w=>w.pop)):mean(w=>w.pop);
+ /* v348: in tags, trios, 8-man tags, triple threats and four-ways the best workers carry a weaker one — the top two count
+  fully and everyone else at 0.6, with no weakest-link drag. Singles keep the weakest link; Rumbles, MITB and gauntlets are unchanged. */
+ const carry=big&&!(typeof isSp==='function'&&isSp(m))&&m.type!=='gauntlet'&&m.type!=='squash';
+ const ring=(carry?ringCarry(all.map(w=>w.ring)):mean(w=>w.ring)*.75+Math.min(...all.map(w=>w.ring))*.25)+RING_LIFT;const pop=big?topHeavy(all.map(w=>w.pop)):mean(w=>w.pop);
  let oc=0,on=0,hs=0,hmax=0,tc=0,tn=0,uo=0,ut=0,spO=0,spT=0;const sparks=[];
  for(let i=0;i<sides.length;i++)for(let j=i+1;j<sides.length;j++)for(const a of sides[i])for(const b of sides[j]){oc+=chemOpp(a,b)+(m.tour?tourAl(a,b):0);const h=heatOf(a.id,b.id);hs+=h;hmax=Math.max(hmax,h);on++;
   if(!metPair(a.id,b.id)){uo++;if(!ctx.preview){const v=Math.round(R(SPARK_LO,SPARK_HI)*10)/10;sparks.push({a:a.id,b:b.id,v});spO+=v}}}
@@ -4339,21 +4349,24 @@ function debutTag(ws,ppv){const d=ws.filter(w=>w&&w.deb);if(!d.length)return '';
    middle moving (back-to-back talking segments and dead spots are where viewers leave), build through
    the back half, and close on a main event that's the best thing on the show. */
 function segMeta(sl,st){const ids=sl.k==='match'?sl.d.sides.flat():[sl.d.a,sl.d.b].filter(Boolean);const ws=ids.map(id=>S.w[id]).filter(Boolean);
- return {k:sl.k,s:st,stp:sl.k==='match'?stipKey(sl.d):null,mt:sl.k==='match'?sl.d.type:null,f:ws.some(w=>w.g==='F'),name:sl.k==='match'?vsLine(sl.d):ws[0]?ws[0].name+"'s "+PT[sl.d.type].n.toLowerCase():'A promo'}}
+ /* v348: a rub match — a star working someone well below them — is how new stars get made, so the flow doesn't hold a
+  short bar against it as a dead spot or a flat opener (its own lower rating still counts) */
+ const pp=ws.map(w=>w.pop);const rub=sl.k==='match'&&ws.length>1&&Math.max(...pp)>=70&&Math.max(...pp)-Math.min(...pp)>=20;
+ return {k:sl.k,s:st,rub,stp:sl.k==='match'?stipKey(sl.d):null,mt:sl.k==='match'?sl.d.type:null,f:ws.some(w=>w.g==='F'),name:sl.k==='match'?vsLine(sl.d):ws[0]?ws[0].name+"'s "+PT[sl.d.type].n.toLowerCase():'A promo'}}
 function flowScore(segs,ppv,brand){const out={mod:0,notes:[]};const n=segs.length;if(n<3)return out;
- const add=(d,t)=>{out.mod+=d;out.notes.push({d,t})};const mean=a=>a.reduce((x,y)=>x+y.s,0)/a.length;
+ const add=(d,t,i,k)=>{out.mod+=d;out.notes.push({d,t,i,k})};const mean=a=>a.reduce((x,y)=>x+y.s,0)/a.length;
  const avg=mean(segs),mts=segs.filter(x=>x.k==='match'),top=Math.max(0,...mts.map(x=>x.s));/* promos don't compete with the main event — matches do */const op=segs[0],me=segs[n-1];
- if(op.s>=Math.max(avg+.25,3.25)||op.s>=4)add(.15,`Hot opener — ${op.name} grabbed the audience early`);
- else if(op.s<=avg-.75)add(-.15,`Flat opener — ${op.name} gave viewers a reason to change the channel`);
- if(me.k!=='match')add(-.25,'The show went off the air on talking, not a main event match');
- else if(me.s>=top)add(.2,'The main event was the best thing on the show');
- else if(top-me.s>=.75)add(-.25,`The main event got outshone — ${mts.find(x=>x.s===top).name} stole the show`);
- else if(top-me.s>=.5)add(-.1,'The main event didn\'t quite top the rest of the card');
+ if(op.s>=Math.max(avg+.25,3.25)||op.s>=4)add(.15,`Hot opener — ${op.name} grabbed the audience early`,0,'hot');
+ else if(op.s<=avg-.75&&!op.rub)add(-.15,`Flat opener — ${op.name} gave viewers a reason to change the channel`,0,'flat');
+ if(me.k!=='match')add(-.25,'The show went off the air on talking, not a main event match',n-1,'talk');
+ else if(me.s>=top)add(.2,'The main event was the best thing on the show',n-1,'best');
+ else if(top-me.s>=.75)add(-.25,`The main event got outshone — ${mts.find(x=>x.s===top).name} stole the show`,n-1,'out');
+ else if(top-me.s>=.5)add(-.1,'The main event didn\'t quite top the rest of the card',n-1,'out');
  const mid=segs.slice(1,-1),h=Math.floor(mid.length/2);
  if(h>=2){const f=mean(mid.slice(0,h)),b=mean(mid.slice(-h));if(b>=f+.25)add(.1,'The show built momentum through the back half');else if(f>=b+.5)add(-.15,'Front-loaded — the back half sagged before the main event')}
- let pp=0;for(let i=1;i<n;i++)if(segs[i].k==='promo'&&segs[i-1].k==='promo')pp++;if(pp)add(-.15*pp,pp>1?`${pp} stretches of back-to-back promos stalled the pace`:'Back-to-back promos stalled the pace');
+ let pp=0;for(let i=1;i<n;i++)if(segs[i].k==='promo'&&segs[i-1].k==='promo'){pp++;out.notes.push({d:0,t:'',i,k:'pp'})}if(pp)add(-.15*pp,pp>1?`${pp} stretches of back-to-back promos stalled the pace`:'Back-to-back promos stalled the pace');
  if(!ppv){let run=0,mx=0;segs.forEach(x=>{run=x.k==='match'?run+1:0;mx=Math.max(mx,run)});if(mx>=4)add(-.1,`${mx} straight matches with no story segment — the crowd burned out`)}
- const dead=mid.filter(x=>x.s<=avg-1).slice(0,2);dead.forEach(x=>add(-.1,`Dead spot — ${x.name} lost the crowd`));
+ const dead=mid.filter(x=>x.s<=avg-1&&!x.rub).slice(0,2);dead.forEach(x=>add(-.1,`Dead spot — ${x.name} lost the crowd`,segs.indexOf(x),'dead'));
  /* v95: variety. A PPV that mixes up its gimmicks and match types feels like an event; the same match five times doesn't */
  {const sp=mts.map(x=>x.stp).filter(x=>x&&x!=='std');const ds=new Set(sp).size;const dt=new Set(mts.map(x=>x.mt).filter(Boolean)).size;
   if(ppv){if(ds>=3)add(.2,`Something for everyone — ${ds} different stipulations made it feel like an event`);else if(ds===2)add(.1,'Two different stipulation matches broke up the card');else if(ds===1&&mts.length>=4)add(.05,'A gimmick match broke up the card')}
@@ -4363,7 +4376,7 @@ function flowScore(segs,ppv,brand){const out={mod:0,notes:[]};const n=segs.lengt
  if(!segs.some(x=>x.f)&&brand&&Object.values(S.w).filter(w=>w.own===brand&&w.g==='F'&&!w.inj).length>=2)add(-.1,'Nothing for the women\'s division tonight');
  out.mod=Math.round(clamp(out.mod,-.6,.6)*100)/100;return out}
 function flowWord(m){return m>=.3?'Great flow':m>=.1?'Good flow':m>-.1?'Even':m>-.3?'Choppy':'Poorly paced'}
-function flowHtml(f){if(!f||!f.notes||!f.notes.length)return '';return `<div class="flow"><div class="row sb"><span class="muted tiny">SHOW STRUCTURE · ${flowWord(f.mod)}</span><b class="${f.mod>0?'good':f.mod<0?'bad':'muted'}">${f.mod>0?'+':f.mod<0?'−':'±'}${Math.abs(f.mod).toFixed(2)}★</b></div>${f.notes.map(x=>`<div class="fl ${x.d>0?'good':'bad'}">${x.d>0?'+':'−'} ${esc(x.t)}</div>`).join('')}</div>`}
+function flowHtml(f){if(!f||!f.notes||!f.notes.some(x=>x.t))return '';return `<div class="flow"><div class="row sb"><span class="muted tiny">SHOW STRUCTURE · ${flowWord(f.mod)}</span><b class="${f.mod>0?'good':f.mod<0?'bad':'muted'}">${f.mod>0?'+':f.mod<0?'−':'±'}${Math.abs(f.mod).toFixed(2)}★</b></div>${f.notes.filter(x=>x.t).map(x=>`<div class="fl ${x.d>0?'good':'bad'}">${x.d>0?'+':'−'} ${esc(x.t)}</div>`).join('')}</div>`}
 /* booking-screen preview: projected matches use the middle of their range, promos a rough guess from mic skill */
 /* v235: the promo crowd buzz is calibrated to what promos actually score. It used to skip the curve every promo goes
    through (a good promo is ~3½★, like a match), so it ran almost a full star high — 🔥🔥 promos landed around 3★.
@@ -4377,14 +4390,35 @@ function promoEst(p){const A=S.w[p.a],B=p.b&&S.w[p.b];if(!A)return 2;const mm=w=
  const b0=(mic*.45+pop*.3)/20;let s=1.115*b0+.438*Math.max(0,b0-2.7)+.313*mm(A)/100-.801+(PEST_T[p.type]||0);
  if(p.type==='turn'&&typeof turnWhip==='function'&&turnWhip(A))s-=.75;if(B&&p.type==='attack'&&typeof boilingOver==='function'&&boilingOver(p.a,p.b))s+=.25;
  return clamp(Math.round(s*4)/4,.5,5)}
-function flowCard(sh){const segs=[];S.card.p.forEach(sl=>{if(!sl.d||fixedK(sl))return;let st;
+/* v348: the Show flow card is a graph, not a list. Each segment is a bar (its crowd-buzz band — never an exact star readout),
+ the dashed line is the shape the show rating rewards for this card, and a bar turns red when flowScore itself is docking the
+ show for it. The verdict and the red bars come from flowScore run on the same projections the rest of the Book screen uses —
+ not on the rounded bands — so the preview can't flag something the show won't (or miss something it will). */
+function flowIdeal(segs){const n=segs.length,a=segs.reduce((x,y)=>x+y.s,0)/n;
+ const topO=Math.max(0,...segs.slice(0,-1).filter(x=>x.k==='match').map(x=>x.s));
+ /* opener: the "hot opener" bar; middle: may dip a touch, then builds (back half above the front); main event: top every other match */
+ return segs.map((x,i)=>clamp(i===0?Math.min(4,Math.max(a+.25,3.25)):i===n-1?Math.max(topO,a+.25):a-.15+.3*(n>3?(i-1)/(n-3):0),.5,5))}
+const FLOW_WHY={flat:'flat for an opener',dead:'a dead spot — well below the rest of the show',out:'the main event isn’t the best match on the show',talk:'the show ends on talking, not a main event',pp:'back-to-back talking'};
+function flowCard(sh){const segs=[],pv=[];S.card.p.forEach(sl=>{if(!sl.d||fixedK(sl))return;let st;
   if(sl.k==='match'){const m=sl.d;if(!validMatch(m))return;const r=rateMatch(m,{ppv:sh.ppv,allin:sh.ppv&&SUPER(S.week),preview:true});st=(r.lo+r.hi)/2}else st=promoEst(sl.d);
-  const ids=sl.k==='match'?sl.d.sides.flat():[sl.d.a,sl.d.b];st=clamp(st+Math.min(1,ids.map(id=>S.w[id]).filter(w=>w&&w.deb).reduce((a,w)=>a+debutStars(w,sh.ppv),0)),.25,5);segs.push(segMeta(sl,tellStar(st)))});
+  const ids=sl.k==='match'?sl.d.sides.flat():[sl.d.a,sl.d.b];st=clamp(st+Math.min(1,ids.map(id=>S.w[id]).filter(w=>w&&w.deb).reduce((a,w)=>a+debutStars(w,sh.ppv),0)),.25,5);
+  segs.push(segMeta(sl,st));pv.push(tellStar(st))});
  if(segs.length<3)return '';
- const f=flowScore(segs,sh.ppv,'p');
- return `<div class="card flowc"><div class="row sb"><div class="h small" style="margin:0">Show flow</div><b class="${f.mod>0?'good':f.mod<0?'bad':'muted'}">${flowWord(f.mod)}</b></div>
- <div class="flowbar">${segs.map(x=>`<i class="${x.k}" style="height:${Math.round(8+x.s/5*40)}px" title="${esc(x.name)}"></i>`).join('')}</div>
- ${f.notes.length?f.notes.map(x=>`<div class="fl ${x.d>0?'good':'bad'}">${x.d>0?'+':'−'} ${esc(x.t)}</div>`).join(''):'<div class="muted tiny">Solid running order — nothing helping or hurting it.</div>'}</div>`}
+ const f=flowScore(segs,sh.ppv,'p');const n=segs.length,bad={};f.notes.forEach(x=>{if(x.i!=null&&x.d<=0&&FLOW_WHY[x.k])bad[x.i]=x.k});
+ const tg=flowIdeal(segs),H=50,y=v=>H-v/5*(H-3),cx=i=>i*10+5;
+ window.FLOWSEGS=segs.map((x,i)=>({slot:i===n-1?'Main event':i===0?'Opener':'Segment '+(i+1),name:x.name,why:bad[i]?FLOW_WHY[bad[i]]:x.rub&&x.k==='match'?'a rub match, so the flow doesn’t hold it against the show':''}));
+ const bars=segs.map((x,i)=>`<rect data-i="${i}" class="fb ${bad[i]?'bad':x.k}" x="${i*10+1.6}" y="${y(pv[i]).toFixed(2)}" width="6.8" height="${(H-y(pv[i])).toFixed(2)}"/><rect data-i="${i}" class="fn" x="${i*10+1}" y="${(y(tg[i])-.6).toFixed(2)}" width="8" height="1.2"/>`).join('');
+ const line=tg.map((t,i)=>`${cx(i)},${y(t).toFixed(2)}`).join(' ');
+ return `<div class="card flowc"><div class="row sb"><div class="h small" style="margin:0">Show flow</div><b class="flw ${f.mod>=.1?'good':f.mod<=-.1?'bad':'muted'}">${flowWord(f.mod)}</b></div>
+ <div class="flowg"><svg viewBox="0 0 ${n*10} ${H}" preserveAspectRatio="none" aria-hidden="true">${bars}<polyline points="${line}" fill="none" vector-effect="non-scaling-stroke"/></svg>
+ <div class="flhit">${segs.map((x,i)=>`<button aria-label="${esc(FLOWSEGS[i].slot+': '+x.name+(FLOWSEGS[i].why?' — '+FLOWSEGS[i].why:''))}" onclick="flowTap(${i})"></button>`).join('')}</div></div>
+ <div class="fllab">${segs.map((x,i)=>`<span class="${bad[i]?'bad':''}">${i===0?'Open':i===n-1?'Main':i+1}</span>`).join('')}</div>
+ <div class="flcap" id="flcap"></div>
+ <div class="flkey"><span><i class="kl"></i>Ideal shape</span><span><i class="km"></i>Match</span><span><i class="kp"></i>Promo</span><span><i class="kb"></i>Costing you</span></div></div>`}
+function flowTap(i){const g=document.querySelector('.flowc .flowg'),c=document.getElementById('flcap');if(!g||!c||!window.FLOWSEGS)return;
+ const on=g.dataset.sel===String(i);g.dataset.sel=on?'':String(i);g.classList.toggle('sel',!on);
+ g.querySelectorAll('[data-i]').forEach(r=>r.classList.toggle('on',!on&&r.dataset.i===String(i)));
+ const x=FLOWSEGS[i];c.textContent=on||!x?'':`${x.slot} · ${x.name}${x.why?' — '+x.why:''}`}
 /* v234: Blood & Guts night leads the Book screen — the show's own name on the poster, and a card saying what's
    special about tonight, whether the war is booked, and a one-tap way to set one up */
 function bngHero(sh){if(!S||sh.ppv||S.week!==BNG_WEEK||S.phase!=='season')return '';const c=S.card.p||[];const i=c.findIndex(sl=>sl&&sl.k==='match'&&sl.d&&sl.d.stip==='bng');
@@ -5101,7 +5135,7 @@ const HOWTO=`<p><b>📅 The calendar:</b> the strip on the Home screen (or <b>WK
 <p>Top AEW and WWE wrestlers have their own wording for challenges, replies and solo callouts. In the ring, signature moves can appear on pinfall, submission and tag-team calls. An awkward escape on a near fall still leads to the finish you call.</p>
 <p><b>🌙 After Dark</b> in the ⚙️ Game menu adds up to two optional beats to eligible live face-offs and singles matches with any wrestler. Choose <b>Grudge</b> for sharper threats and rougher action, <b>Tension</b> for mutual flirtation, or <b>Auto</b> to use Grudge for heated rivalries and Tension for other pairings. The extra lines have no effect on ratings.</p>
 <p><b>Cloud save &amp; backups:</b> turn on cloud save in the ⚙️ Game menu and every solo game you play backs up automatically and syncs both ways with your other devices — enter your sync code on another device and all your games show up in ⇄ Your games there, kept in step whichever one you play. Everything still saves on the device first, so offline play just works and syncs later. If the same game was played on two devices before they synced, you're asked which save to keep and the other is kept as a backup. Deleting a game removes it from your other devices too, but its cloud copy stays under Backups → Deleted games. The game also keeps automatic backups of your last few weeks (⚙️ Game menu → Saves &amp; backups).</p>
-<p><b>Show structure</b> counts toward the show rating, the way AEW's quarter-hour numbers reward it: open hot with a strong segment, keep the middle moving (back-to-back promos and dead spots cost you), build through the second half, and make the main event the best thing on the show. Every show needs something for the women's division if you have one. The Show flow card on the booking screen previews it — hold and drag segments to change the running order.</p>
+<p><b>Show structure</b> counts toward the show rating, the way AEW's quarter-hour numbers reward it: open hot with a strong segment, keep the middle moving (back-to-back promos and dead spots cost you), build through the second half, and make the main event the best thing on the show. Every show needs something for the women's division if you have one. The Show flow graph on the booking screen previews it: each bar is a segment, the dashed line is the shape the rating rewards, and a red bar is one the show is being docked for (tap a bar to see why). A rub match — a star working someone well below them — is never counted as a dead spot or a flat opener.</p>
 <p><b>Debuts:</b> anyone you sign during the season arrives with debut buzz. Their first appearance on your show — match or promo — pops the crowd: the bigger the star, the bigger the bump in stars and fans (a PPV debut is bigger still). Wait more than a few weeks and the buzz wears off.</p>
 
 <p><b>Fans:</b> each week you book all of Dynamite while the rival books Collision. Your show earns or loses fans based on its rating (the main event counts most), with a bonus for beating the rival's show. PPVs swing far more fans, and WrestleMania and All In count double. <b>Each season is won by the fans you gain that season</b> — your all-time fanbase carries over (it still drives TV money, tickets and PPV buys), but next season's fan war starts level.</p>
