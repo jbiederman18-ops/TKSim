@@ -186,12 +186,14 @@ function weekGoalsCard(){if(S.phase!=='season')return '';if(!S.goal||!S.goal.p||
  Matches use their projected range, promos a guess from mic skill, the show the same weighting the ratings use. */
 function cardProj(){const sh=curShow();const c=(S.card&&S.card.p)||[];const ctx={ppv:sh.ppv,allin:sh.ppv&&SUPER(S.week),preview:true};
  const P={sh,booked:0,me:null,women:0,title:0,tag:0,stip:0,pr:null,nm:0,loMid:5,loHi:5,rk:0,newch:false,tagdef:false,deb:false,show:null};
- const ch=S.chant&&S.chant.p&&S.chant.p.w===AW()?S.chant.p.id:null;let chUsed=false;
+ const ch=S.chant&&S.chant.p&&S.chant.p.w===AW()?S.chant.p.id:null;let chUsed=false;const stUsed=new Set();
  const meSlot=c.map((sl,i)=>sl.k==='match'?i:-1).filter(i=>i>=0).pop();
  const mids=[],his=[],meta=[];
  c.forEach((sl,si)=>{if(!sl.d||fixedK(sl))return;
   if(sl.k==='match'){const m=sl.d;if(!validMatch(m))return;const ids=m.sides.flat();const ws=ids.map(id=>S.w[id]);if(ws.some(w=>w.inj))return;
    const r=rateMatch(m,ctx);let bump=Math.min(1,ws.filter(w=>w.deb).reduce((a,w)=>a+debutStars(w,sh.ppv),0));if(ch&&!chUsed&&ids.includes(ch)){bump+=.25;chUsed=true}
+   /* v350: a chair stashed under the ring comes out in that wrestler's next match (+¼★ live, see stashHit) — count it here too */
+   {const sid=ids.find(id=>S.stash&&S.stash[id]!=null&&S.stash[id]<AW()&&AW()-S.stash[id]<=10&&!stUsed.has(id));if(sid){bump+=.25;stUsed.add(sid)}}
    const mid=clamp((r.lo+r.hi)/2+bump,.25,5),hi=clamp(r.hi+bump,.25,5);P.booked++;P.nm++;mids.push(mid);his.push(hi);meta.push(segMeta(sl,mid));
    if(ws.some(w=>w.g==='F'))P.women++;if(m.title)P.title++;if(m.type==='tag'||m.type==='trios'||m.type==='tag8'||m.sides[0].length>1)P.tag++;if(stipKey(m)!=='std')P.stip++;
    P.loMid=Math.min(P.loMid,mid);P.loHi=Math.min(P.loHi,hi);if(si===meSlot)P.me={mid,hi,lo:clamp(r.lo+bump,.25,5)};
@@ -209,6 +211,7 @@ function cardProj(){const sh=curShow();const c=(S.card&&S.card.p)||[];const ctx=
  if(mids.length){const wavg=v=>{let s=0,ws=0;v.forEach((x,i)=>{const w=i===v.length-1?1.6:1;s+=x*w;ws+=w});return s/ws};
   const fm=flowScore(meta,sh.ppv,'p').mod;const pk=prodOf('p',sh);const pb=PROD[pk]&&PROD[pk].b||0;
   P.show={mid:clamp(wavg(mids)+fm+pb,0,5),hi:clamp(wavg(his)+fm+pb,0,5)}}
+ P.meta=meta;/* v350: the Show flow graph draws from these same segments, so it can't disagree with the projection */
  return P}
 /* status: y = on track, m = could go either way, n = not yet, x = doesn't apply this week */
 const LV=(s,t)=>({s,t});
@@ -441,7 +444,7 @@ function briefItems(){const mine=ownList('p');const sec=cdBrief().concat(typeof 
  if(bf.length)sec.push({rep:1,i:'☢️',t:'Backstage drama',u:bf.some(x=>x[2]>=BEEF_MIN),rows:bf.slice(0,4).map(([A,B,v])=>`<div class="brow">${nm(A)} & ${nm(B)} · real heat <b class="${v>=BEEF_MIN?'bad':''}">${v}</b><br><span class="muted tiny">${v>=BEEF_MIN?'Putting them in a ring together could turn ugly':'Simmering — keep them apart and it will cool off'}</span></div>`)});
  /* feuds going stale */
  const fs=[];for(const k in S.heat){const f=S.fs&&S.fs[k];const [a,b]=k.split('|');const A=S.w[a],B=S.w[b];if(!f||f.paid||!A||!B||(A.own!=='p'&&B.own!=='p')||S.heat[k]<20)continue;const age=AW()-f.start;if(f.stale||age>=5)fs.push({A,B,h:S.heat[k],left:8-age,stale:f.stale})}
- if(fs.length){const np=nextPPV();sec.push({rep:1,i:'🥱',t:'Feuds that need a payoff',u:fs.some(x=>x.stale),rows:fs.sort((a,b)=>a.left-b.left).slice(0,5).map(x=>`<div class="brow">${nm(x.A)} vs ${nm(x.B)} · heat <b>${Math.round(x.h)}</b><br><span class="muted tiny">${x.stale?'Already stale and cooling fast':`Goes stale in ${Math.max(1,x.left)} week${x.left===1?'':'s'}`}${np?` — blow it off at ${esc(np.n)}${np.in?` (${np.in} wk${np.in===1?'':'s'})`:' (this week)'}`:''}</span></div>`)})}
+ if(fs.length){const np=nextPPV();sec.push({rep:1,i:'🥱',t:'Feuds that need a payoff',u:fs.some(x=>x.stale),rows:fs.sort((a,b)=>a.left-b.left).slice(0,5).map(x=>`<div class="brow">${nm(x.A)} vs ${nm(x.B)} · heat <b>${Math.round(x.h)}</b><br><span class="muted tiny">${x.stale?'Already stale and cooling fast':`Goes stale in ${Math.max(1,x.left)} week${x.left===1?'':'s'}`}${x.stale?' — blow it off on TV, freshen it with a gimmick match'+(np&&x.h>=35?`, or end it at ${esc(np.n)}${np.in?` (${np.in} wk${np.in===1?'':'s'})`:' (this week)'}`:''):np?(x.h>=35?` — blow it off at ${esc(np.n)}${np.in?` (${np.in} wk${np.in===1?'':'s'})`:' (this week)'}`:` — build it past 35 to end it at ${esc(np.n)}, or keep it fresh with a gimmick match`):''}</span></div>`)})}
  /* calendar */
  const cal=[];{const l=cdLeft();if(l!=null&&S.w[S.cdown.a])cal.push(`⏳ The countdown from ${esc(S.w[S.cdown.a].name)}'s promo hits zero ${l?`in <b>${l} week${l>1?'s':''}</b>`:'<b>after this show</b>'}`)}const np=nextPPV();if(np)cal.push(`📅 <b>${esc(np.n)}</b> ${np.in?`in ${np.in} week${np.in===1?'':'s'}`:'is <b>this week</b>'}`);
  for(const k in TOURS){const D=TOURS[k];const first=tourFirst(D);const d=first-S.week;if(d>=0&&d<=3)cal.push(`${D.i} <b>${esc(D.n)}</b> ${d?`starts in ${d} week${d===1?'':'s'} — pick your field`:'starts <b>this week</b>'}`);else if(S.week>first&&S.week<=D.final)cal.push(`${D.i} <b>${esc(D.n)}</b> is under way${S.week===D.final?' — the final is this week':''}`)}

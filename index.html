@@ -1495,7 +1495,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v349';
+const APP_VERSION='v350';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -2630,7 +2630,7 @@ function addPhoto(id){const i=fileInput();i.accept='image/*';i.onchange=async()=
 /* ---------- Photo Studio ---------- */
 let UNQ=[];
 function matchFile(name){const f='-'+slug(name.replace(/\.[^.]+$/,'').replace(/([a-z])([A-Z])/g,'$1 $2').replace(/[_+.]/g,' '))+'-';let best=null,bl=0;
- Object.values(S.w).forEach(w=>{const t=slug(w.name).split('-');const keys=[t.join('-')];if(t.length>2)keys.push(t.slice(-2).join('-'));if(t[0]==='the')keys.push(t.slice(1).join('-'));
+ Object.values(S.w).forEach(w=>{const t=slug(w.name).split('-');const keys=[t.join('-')];if(t.length>2)keys.push(t.slice(-2).join('-'));if(t[0]==='the')keys.push(t.slice(1).join('-'));if(w.aka)keys.push(slug(w.aka));/* v350: a rebranded wrestler still matches a photo named for their old name */
   keys.forEach(k=>{if((k.length>=4||(k===keys[0]&&k.length>=2))&&f.includes('-'+k+'-')&&k.length>bl){best=w;bl=k.length}})});
  if(best)return best;
  const fc=f.replace(/-/g,'');Object.values(S.w).forEach(w=>{const k=slug(w.name).replace(/-/g,'');if(k.length>=5&&fc.includes(k)&&k.length>bl){best=w;bl=k.length}});
@@ -2691,7 +2691,7 @@ function studioAdd(id){const i=fileInput();i.accept='image/*';i.onchange=async()
 function exportPhotos(){const n=Object.keys(IMG).length;if(!n)return toast('No photos to export yet.');const names={};Object.keys(IMG).forEach(id=>{if(S.w[id])names[id]=S.w[id].name});
  const blob=new Blob([JSON.stringify({type:'all-elite-gm-photos',v:1,names,img:IMG})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`tony-khan-sim-photos-${n}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);toast(`Exported ${n} photos.`)}
 function importPhotos(){const i=fileInput();i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);const src=d.img||d.__img;if(!src)throw 0;
- const backup=Object.assign({},IMG);let n=0;for(const id in src){let tid=S.w[id]?id:null;if(!tid&&d.names&&d.names[id]){const w=Object.values(S.w).find(x=>x.name===d.names[id]);if(w)tid=w.id}if(tid&&typeof src[id]==='string'&&src[id].startsWith('data:image/')){IMG[tid]=src[id];n++}}
+ const backup=Object.assign({},IMG);let n=0;for(const id in src){let tid=S.w[id]?id:null;if(!tid&&d.names&&d.names[id]){const w=Object.values(S.w).find(x=>x.name===d.names[id])||Object.values(S.w).find(x=>x.aka===d.names[id]);if(w)tid=w.id}if(tid&&typeof src[id]==='string'&&src[id].startsWith('data:image/')){IMG[tid]=src[id];n++}}
  if(!saveImg()){IMG=backup;return toast('Not enough storage for that pack.')}render();toast(`Imported ${n} photos.`);openStudio()}catch(e){toast("That file isn't a photo pack.")}};r.readAsText(f)};i.click()}
 function delPhoto(id){delete IMG[id];saveImg();showW(id);render()}
 function mkW(line){const [n,g,st,al,r,m,p,pt]=line.split('|');const ring=+r,mic=+m,pop=+p;const pot=pt?+pt:Math.min(99,ring+3);
@@ -4368,9 +4368,9 @@ function flowScore(segs,ppv,brand){const out={mod:0,notes:[]};const n=segs.lengt
  else if(top-me.s>=.75)add(-.25,`The main event got outshone — ${mts.find(x=>x.s===top).name} stole the show`,n-1,'out');
  else if(top-me.s>=.5)add(-.1,'The main event didn\'t quite top the rest of the card',n-1,'out');
  const mid=segs.slice(1,-1),h=Math.floor(mid.length/2);
- if(h>=2){const f=mean(mid.slice(0,h)),b=mean(mid.slice(-h));if(b>=f+.25)add(.1,'The show built momentum through the back half');else if(f>=b+.5)add(-.15,'Front-loaded — the back half sagged before the main event')}
+ if(h>=2){const f=mean(mid.slice(0,h)),b=mean(mid.slice(-h));if(b>=f+.25)add(.1,'The show built momentum through the back half');else if(f>=b+.5){add(-.15,'Front-loaded — the back half sagged before the main event');/* v350: mark the sagging back half on the graph */mid.slice(-h).forEach(x=>out.notes.push({d:0,t:'',i:segs.indexOf(x),k:'sag'}))}}
  let pp=0;for(let i=1;i<n;i++)if(segs[i].k==='promo'&&segs[i-1].k==='promo'){pp++;out.notes.push({d:0,t:'',i,k:'pp'})}if(pp)add(-.15*pp,pp>1?`${pp} stretches of back-to-back promos stalled the pace`:'Back-to-back promos stalled the pace');
- if(!ppv){let run=0,mx=0;segs.forEach(x=>{run=x.k==='match'?run+1:0;mx=Math.max(mx,run)});if(mx>=4)add(-.1,`${mx} straight matches with no story segment — the crowd burned out`)}
+ if(!ppv){let run=0,mx=0,end=0;segs.forEach((x,i)=>{run=x.k==='match'?run+1:0;if(run>mx){mx=run;end=i}});if(mx>=4){add(-.1,`${mx} straight matches with no story segment — the crowd burned out`);/* v350: mark where the run burns the crowd out (its 4th match on) */for(let i=end-mx+4;i<=Math.min(end,n-2);i++)out.notes.push({d:0,t:'',i,k:'run'})}}
  const dead=mid.filter(x=>x.s<=avg-1&&!x.rub).slice(0,2);dead.forEach(x=>add(-.1,`Dead spot — ${x.name} lost the crowd`,segs.indexOf(x),'dead'));
  /* v95: variety. A PPV that mixes up its gimmicks and match types feels like an event; the same match five times doesn't */
  {const sp=mts.map(x=>x.stp).filter(x=>x&&x!=='std');const ds=new Set(sp).size;const dt=new Set(mts.map(x=>x.mt).filter(Boolean)).size;
@@ -4378,7 +4378,7 @@ function flowScore(segs,ppv,brand){const out={mod:0,notes:[]};const n=segs.lengt
   else if(ds>=2)add(.05,'Mixed up the gimmicks on free TV');
   /* v122: TV is 3 matches now, so 3 different match types earns the mix there */
   if(ppv?(mts.length>=4&&dt>=4):(mts.length>=3&&dt>=3))add(.05,'A good mix of singles, tags and multi-person matches')}
- if(!segs.some(x=>x.f)&&brand&&Object.values(S.w).filter(w=>w.own===brand&&w.g==='F'&&!w.inj).length>=2)add(-.1,'Nothing for the women\'s division tonight');
+ if(!segs.some(x=>x.f)&&brand&&Object.values(S.w).filter(w=>w.own===brand&&w.g==='F'&&!w.inj).length>=2)add(-.1,'Nothing for the women\'s division tonight',null,'women');
  out.mod=Math.round(clamp(out.mod,-.6,.6)*100)/100;return out}
 function flowWord(m){return m>=.3?'Great flow':m>=.1?'Good flow':m>-.1?'Even':m>-.3?'Choppy':'Poorly paced'}
 function flowHtml(f){if(!f||!f.notes||!f.notes.some(x=>x.t))return '';return `<div class="flow"><div class="row sb"><span class="muted tiny">SHOW STRUCTURE · ${flowWord(f.mod)}</span><b class="${f.mod>0?'good':f.mod<0?'bad':'muted'}">${f.mod>0?'+':f.mod<0?'−':'±'}${Math.abs(f.mod).toFixed(2)}★</b></div>${f.notes.filter(x=>x.t).map(x=>`<div class="fl ${x.d>0?'good':'bad'}">${x.d>0?'+':'−'} ${esc(x.t)}</div>`).join('')}</div>`}
@@ -4403,12 +4403,9 @@ function flowIdeal(segs){const n=segs.length,a=segs.reduce((x,y)=>x+y.s,0)/n;
  const topO=Math.max(0,...segs.slice(0,-1).filter(x=>x.k==='match').map(x=>x.s));
  /* opener: the "hot opener" bar; middle: may dip a touch, then builds (back half above the front); main event: top every other match */
  return segs.map((x,i)=>clamp(i===0?Math.min(4,Math.max(a+.25,3.25)):i===n-1?Math.max(topO,a+.25):a-.15+.3*(n>3?(i-1)/(n-3):0),.5,5))}
-const FLOW_WHY={flat:'flat for an opener',dead:'a dead spot — well below the rest of the show',out:'the main event isn’t the best match on the show',talk:'the show ends on talking, not a main event',pp:'back-to-back talking'};
-function flowCard(sh){const segs=[],pv=[];S.card.p.forEach(sl=>{if(!sl.d||fixedK(sl))return;let st;
-  if(sl.k==='match'){const m=sl.d;if(!validMatch(m))return;const r=rateMatch(m,{ppv:sh.ppv,allin:sh.ppv&&SUPER(S.week),preview:true});st=(r.lo+r.hi)/2}else st=promoEst(sl.d);
-  const ids=sl.k==='match'?sl.d.sides.flat():[sl.d.a,sl.d.b];st=clamp(st+Math.min(1,ids.map(id=>S.w[id]).filter(w=>w&&w.deb).reduce((a,w)=>a+debutStars(w,sh.ppv),0)),.25,5);
-  segs.push(segMeta(sl,st));pv.push(tellStar(st))});
- if(segs.length<3)return '';
+const FLOW_WHY={sag:'the back half sags before the main event',run:'too many matches in a row with no story segment',flat:'flat for an opener',dead:'a dead spot — well below the rest of the show',out:'the main event isn’t the best match on the show',talk:'the show ends on talking, not a main event',pp:'back-to-back talking'};
+function flowCard(sh){/* v350: the same segments (chants, a stashed chair, injured wrestlers left out…) the projected rating uses */
+ let segs=[];try{segs=(cardProj().meta||[]).slice()}catch(e){segs=[]}const pv=segs.map(x=>tellStar(x.s));
  const f=flowScore(segs,sh.ppv,'p');const n=segs.length,bad={};f.notes.forEach(x=>{if(x.i!=null&&x.d<=0&&FLOW_WHY[x.k])bad[x.i]=x.k});
  const tg=flowIdeal(segs),H=50,y=v=>H-v/5*(H-3),cx=i=>i*10+5;
  window.FLOWSEGS=segs.map((x,i)=>({slot:i===n-1?'Main event':i===0?'Opener':'Segment '+(i+1),name:x.name,why:bad[i]?FLOW_WHY[bad[i]]:x.rub&&x.k==='match'?'a rub match, so the flow doesn’t hold it against the show':''}));
@@ -4418,7 +4415,7 @@ function flowCard(sh){const segs=[],pv=[];S.card.p.forEach(sl=>{if(!sl.d||fixedK
  <div class="flowg"><svg viewBox="0 0 ${n*10} ${H}" preserveAspectRatio="none" aria-hidden="true">${bars}<polyline points="${line}" fill="none" vector-effect="non-scaling-stroke"/></svg>
  <div class="flhit">${segs.map((x,i)=>`<button aria-label="${esc(FLOWSEGS[i].slot+': '+x.name+(FLOWSEGS[i].why?' — '+FLOWSEGS[i].why:''))}" onclick="flowTap(${i})"></button>`).join('')}</div></div>
  <div class="fllab">${segs.map((x,i)=>`<span class="${bad[i]?'bad':''}">${i===0?'Open':i===n-1?'Main':i+1}</span>`).join('')}</div>
- <div class="flcap" id="flcap"></div>
+ <div class="flcap" id="flcap"></div>${f.notes.some(x=>x.k==='women')?`<div class="bad" style="font-size:12.5px;margin-top:4px">Costing you: nothing for the women’s division tonight</div>`:''}
  <div class="flkey"><span><i class="kl"></i>Ideal shape</span><span><i class="km"></i>Match</span><span><i class="kp"></i>Promo</span><span><i class="kb"></i>Costing you</span></div></div>`}
 function flowTap(i){const g=document.querySelector('.flowc .flowg'),c=document.getElementById('flcap');if(!g||!c||!window.FLOWSEGS)return;
  const on=g.dataset.sel===String(i);g.dataset.sel=on?'':String(i);g.classList.toggle('sel',!on);

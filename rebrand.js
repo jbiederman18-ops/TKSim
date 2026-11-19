@@ -10,7 +10,11 @@
 (function(){
 const MONO=['Vortex','Havoc','Onyx','Ember','Riot','Solace','Nova','Brick','Zenith','Wraith','Saint','Rook','Blaze','Mercy','Titan','Venom','Halo','Static','Jinx','Echo','Ravage','Lynx','Ash','Fury','Ghost','Spark','Kaos','Sable','Dagger','Valor'];
 const NICK=['"The Natural"','"Big Time"','"The Spark"','"Hollywood"','"Wildcat"','"The Sniper"','"Sweet"','"The Phenom"','"Lights Out"','"The Prodigy"'];
-const used=n=>Object.values(S.w||{}).some(x=>x.name.toLowerCase()===n.toLowerCase());
+/* v350: every name in the game, not only signed wrestlers — both ROH rosters, the scouting boards, tapes and the watchlist */
+function allNames(){const l=Object.values(S.w||{});try{Object.values(S.farm||{}).forEach(f=>l.push(...Object.values((f&&f.r)||{})))}catch(e){}
+ try{const s=S.scout||{};Object.values(s).forEach(v=>{if(Array.isArray(v))l.push(...v)})}catch(e){}
+ try{(S.tapes||[]).concat(S.follow||[]).forEach(x=>{if(x&&x.w)l.push(x.w)})}catch(e){}return l}
+const used=(n,self)=>allNames().some(x=>x&&x!==self&&x.name&&x.name.toLowerCase()===n.toLowerCase());
 function ideas(w){const out=[];const add=n=>{if(n&&n!==w.name&&!used(n)&&!out.includes(n))out.push(n)};
  const F=w.g==='M'?FIRST_M:FIRST_F;const last=w.name.split(' ').slice(-1)[0];
  for(let i=0;i<12&&out.length<1;i++)add(pick(MONO));
@@ -39,7 +43,7 @@ window.rbMore=function(){if(!RB)return;RB.n=clean((document.getElementById('rbNa
 window.rbAl=function(a){if(!RB)return;RB.n=clean((document.getElementById('rbName')||{}).value)||RB.n;RB.al=a;sheet()};
 window.rbCancel=function(){RB=null;closeModal()};
 window.rbGo=function(){const r=RB;if(!r)return;RB=null;const w=r.w;let nm=clean((document.getElementById('rbName')||{}).value)||w.name;
- if(nm!==w.name&&used(nm)){RB=r;r.n=nm;return toast(`There's already a ${nm} in the game.`)}
+ if(nm!==w.name&&used(nm,w)){RB=r;r.n=nm;return toast(`There's already a ${nm} in the game.`)}
  const old={name:w.name,al:w.al,aka:w.aka};const ren=nm!==w.name,turn=r.al!==w.al;
  if(ren){w.aka=w.aka||old.name;w.name=nm}if(turn)w.al=r.al;
  /* the sheet goes first, so the original's own toasts and entrance land on a clear screen (and the office line moves on) */
