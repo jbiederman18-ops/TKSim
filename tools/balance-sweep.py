@@ -15,12 +15,15 @@ The default bot clears the Needs your attention checklist (promises, clauses, de
 office line, then taps Suggest the rest — an attentive player who leaves the creative booking to the assistant.
 --compare runs the same bot on both builds, so it is meaningful from v260 (highlight reels) on.
 
-Baseline (v352, Normal, 20 games x 2 seasons) — compare new numbers against these:
-  default bot   show ~3.55-3.65, ~21% of nights, 0-10% of seasons, morale ~65-69
-  --lazy        show ~3.8, ~35% of nights, 25-35% of seasons, morale ~63-65
-  --engaged     show ~3.75-3.85, ~30% of nights, ~50% of seasons, morale ~74
-Known (v352): clearing the checklist costs ~0.2 show stars a week (each must-do books a weaker match than Suggest would)
-and isn't paid back in fans, so the default bot trails --lazy. Fix that in the game, not by changing the bot.
+Baseline (v353, Normal, 15-30 games x 2 seasons — season 1 / season 2) — compare new numbers against these:
+  default bot   show ~3.63/3.79, ~28-31% of nights, ~20/53% of seasons, fans ~610K/465K, morale ~66-70, injured ~0.35/wk
+  --lazy        show ~3.8, ~37% of nights, ~35% of seasons, fans ~530K, morale ~63, injured ~0.7/wk
+  --engaged     show ~3.78/3.92, ~32% of nights, ~55/65% of seasons, fans ~700K/550K, morale ~74
+v353 made mood show in the work (morPerf) and stopped Suggest protecting tired wrestlers, so a GM who manages the roster
+now gains more fans than one who only taps Suggest; the lazy GM still wins more single nights. Feud heat is worth about
++0.09 stars a match and +20 points of season wins to the engaged bot; raising HEAT_TV/HEAT_PPV barely adds to that (the
+rival feuds too, and hot matches run into the top of the star curve).
+--diff normal runs one difficulty; a variant's 'pre' script runs before the bot (handy for testing a constant).
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
 
@@ -32,7 +35,7 @@ def port():
     s = socket.socket(); s.bind(('127.0.0.1', 0)); p = s.getsockname()[1]; s.close(); return p
 
 
-async def run(variants, games, weeks, spend=True):
+async def run(variants, games, weeks, spend=True, diffs=('easy', 'normal', 'hard')):
     from playwright.async_api import async_playwright
     srv, results = [], {}
     for v in variants.values():
@@ -54,12 +57,13 @@ async def run(variants, games, weeks, spend=True):
                     pg.on('dialog', lambda d: asyncio.ensure_future(d.dismiss()))
                     try:
                         await pg.goto(f"http://127.0.0.1:{v['port']}/index.html"); await pg.wait_for_timeout(800)
+                        if v.get('pre'): await pg.add_script_tag(content=v['pre'])
                         await pg.add_script_tag(content=SIM)
                         r = await pg.evaluate(f"SIM({{diff:'{diff}',weeks:{weeks},spend:{str(spend).lower()},engaged:{str(v.get('engaged', False)).lower()},checklist:{str(v.get('checklist', True)).lower()},skip:{json.dumps(v.get('skip', []))},pitch:{json.dumps(v.get('pitch'))}}})")
                     except Exception as e:
                         r = {'seasons': [], 'errs': ['runner: ' + str(e)[:200]]}
                     r['perr'] = perr; results.setdefault(f'{name}|{diff}', []).append(r); await ctx.close()
-            await asyncio.gather(*[one(n, d) for n in variants for d in ('easy', 'normal', 'hard') for _ in range(games)])
+            await asyncio.gather(*[one(n, d) for n in variants for d in diffs for _ in range(games)])
             await b.close()
     finally:
         for s in srv: s.kill()
@@ -97,6 +101,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--games', type=int, default=10); ap.add_argument('--seasons', type=int, default=2)
     ap.add_argument('--compare', help='an older commit/tag to run side by side')
+    ap.add_argument('--diff', choices=['easy', 'normal', 'hard'], help='one difficulty only (faster)')
     ap.add_argument('--frugal', action='store_true', help='the bot never buys production')
     ap.add_argument('--engaged', action='store_true', help='also a hands-on booker (stips, finishes, run-ins, title challenges) to compare with Suggest the rest')
     ap.add_argument('--lazy', action='store_true', help='also a GM who only taps Suggest the rest and ignores the checklist')
@@ -112,7 +117,7 @@ def main():
         wt = tempfile.mkdtemp(prefix='tksim-'); subprocess.run(['git', '-C', ROOT, 'worktree', 'add', '-q', '--detach', wt, a.compare], check=True)
         variants[a.compare] = {'dir': wt}
     try:
-        t = time.time(); res = asyncio.run(run(variants, a.games, a.seasons * 41, not a.frugal))
+        t = time.time(); res = asyncio.run(run(variants, a.games, a.seasons * 41, not a.frugal, (a.diff,) if a.diff else ('easy', 'normal', 'hard')))
         print(f'{sum(len(v) for v in res.values())} games in {round(time.time() - t)}s\n'); table(res)
     finally:
         if wt: subprocess.run(['git', '-C', ROOT, 'worktree', 'remove', '--force', wt])

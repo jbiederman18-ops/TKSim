@@ -8,6 +8,7 @@
      weekly goal and the crowd's chant. Since v265 Suggest the rest ignores all of that on purpose, so a bot that only
      taps Suggest breaks every promise and its morale and fans fall well below any real player's. opt.checklist=false
      keeps that "lazy" GM for comparison.
+   • stamina: anyone close to injury risk sits the week out (Suggest stopped protecting tired wrestlers in v353)
    • the card: Suggest the rest (or the old hands-on assistant with opt.engaged), then calls made by the rival's rules
    • money: production bought the way the rival buys it (opt.spend, on by default in the sweep)
    For digging into a result: opt.skip leaves out checklist steps by name (promises, clauses, trials, defenses, goal, chant,
@@ -98,7 +99,7 @@ window.SIM = async function (opt) {
 
   const seasons = [];
   let cur = null;
-  const startSeason = () => { cur = { season: S.season, weeks: 0, rp: [], rai: [], wins: 0, injP: 0, injAI: 0, promoStars: [], matchStars: [], fans0: { p: S.fans.p, ai: S.fans.ai }, crises: 0, errs: 0, titleChanges: 0, checklist: 0, cl: {} } };
+  const startSeason = () => { cur = { season: S.season, weeks: 0, rp: [], rai: [], wins: 0, injP: 0, injAI: 0, promoStars: [], matchStars: [], fans0: { p: S.fans.p, ai: S.fans.ai }, crises: 0, errs: 0, titleChanges: 0, checklist: 0, cl: {}, rested: 0 } };
   startSeason();
 
   for (let wk = 0; wk < opt.weeks; wk++) {
@@ -115,7 +116,11 @@ window.SIM = async function (opt) {
       if (owned('p').length < 22) { const fa = Object.values(S.w).filter(w => !w.own && onMarket(w) && !dealNeedsOffer(w)).sort((a, b) => ovr(b) - ovr(a))[0]; if (fa && S.money.p > signCost(fa) * 3) { S.money.p -= signCost(fa); fa.sal = mkt(fa); fa.own = 'p'; fa.con = 26; fa.mor = 80; fa.fee = 0 } }
       // book: the checklist first, then the assistant
       if (opt.checklist) cur.checklist += bookChecklist();
-      if (opt.engaged && typeof suggestCardEngaged === 'function') S.card.p = suggestCardEngaged(); else suggestFill();
+      // stamina (v353: Suggest no longer protects tired wrestlers): the attentive bot sits anyone near injury risk out
+      const rested = opt.checklist && typeof FAT_RISK !== 'undefined' ? owned('p').filter(w => !w.inj && sta(w) < 100 - FAT_RISK) : [];
+      rested.forEach(w => w.own = 'rest');
+      try { if (opt.engaged && typeof suggestCardEngaged === 'function') S.card.p = suggestCardEngaged(); else suggestFill() } finally { rested.forEach(w => w.own = 'p') }
+      cur.rested += rested.length;
       // Money in the Bank: cash in by the same rules the rival uses
       if (typeof aiCash === 'function') aiCash('p', S.card.p, curShow());
       if (opt.spend) { S.prod = S.prod || {}; const m = S.money.p / econCap(); S.prod.p = curShow().ppv ? (m > 5 ? 'max' : m > 2 ? 'plus' : 'std') : (m > 6 ? 'max' : m > 3.2 ? 'plus' : 'std') }

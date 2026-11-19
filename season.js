@@ -258,7 +258,7 @@ function rivalAdHtml(mode){const a=rivalAd();if(!a)return '';const nm=esc(curSho
 /* the GM's assistant books the empty slots — keeps everything you've already booked, promised or entered in a tournament */
 /* ===== Suggest the rest (v265): the best matches on paper, nothing more =====
    It books the strongest matches it can from the wrestlers themselves — popularity (top-heavy), in-ring ability, style
-   chemistry, face vs heel, freshness (no rematch from the last few weeks) and stamina. It ignores everything from the
+   chemistry, face vs heel and freshness (no rematch from the last few weeks) — since v353 not stamina or morale. It ignores everything from the
    briefing: promises, contract clauses, pitches, title defenses, the weekly goal, the crowd chant and feuds/rivalries are
    all the GM's to handle. Every match it books is a plain singles match with a clean finish and no title on the line.
    Since v352 the game's own match preview (minus feud heat) picks the matches. Anything already on the card stays put. */
@@ -267,7 +267,6 @@ function suggestCard(){const sh=curShow();const c=JSON.parse(JSON.stringify(S.ca
  const W=id=>S.w[id];const ok=id=>{const w=W(id);return !!(w&&w.own==='p'&&!w.inj&&!used.has(id))};
  const mIdx=()=>c.map((sl,i)=>sl.k==='match'&&!sl.opt?i:-1).filter(i=>i>=0);const mainI=()=>{const l=mIdx();return l[l.length-1]};
  const empty=()=>mIdx().filter(i=>!c[i].d);
- const fit=w=>sta(w)>=100-FAT_RISK;
  /* how good a match looks from the two wrestlers alone */
  const score=(A,B)=>{const hi=Math.max(A.pop,B.pop),lo=Math.min(A.pop,B.pop);
   return hi*.6+lo*.4+(Math.min(A.ring,B.ring)-70)*.5+chemOpp(A,B)*1.2+(A.al!==B.al?8:0)+(A.g===B.g?4:0)-recentMeets(A.id,B.id).length*25};
@@ -276,11 +275,14 @@ function suggestCard(){const sh=curShow();const c=JSON.parse(JSON.stringify(S.ca
  /* v352: the game's own match preview decides, minus feud heat (rivalries stay the GM's call). The quick score above only
     shortlists pairs from the whole healthy roster — v265 picked from the top 18 names with it alone, which booked matches
     about a quarter of a star weaker than the rating engine would pick. */
+ /* v353: on ability alone — feud heat, tired legs and morale are taken back out: building feuds, resting people and keeping
+    them happy are the GM's job, so Suggest will happily book someone exhausted or miserable if they're the best on paper */
+ const NOT=['Feud heat','Tired legs','Morale'];
  const real=(sides,main)=>{const m={type:'singles',stip:'std',sides,winner:0,title:''};m.winner=winner(m.sides);
-  try{const r=rateMatch(m,{ppv:sh.ppv,preview:true,main});const h=r.bd&&r.bd.parts.find(p=>p[0]==='Feud heat');return r.raw-(h?h[1]:0)}catch(e){return -1e9}};
+  try{const r=rateMatch(m,{ppv:sh.ppv,preview:true,main});return r.raw-(r.bd?r.bd.parts.filter(p=>NOT.includes(p[0])).reduce((a,p)=>a+p[1],0):0)}catch(e){return -1e9}};
  /* fill the main event first, then the rest — each with the best pair still available */
  const mi=mainI();const order=empty().sort((x,y)=>(x===mi?-1:y===mi?1:x-y));
- order.forEach(i=>{const l=ownList('p').filter(w=>ok(w.id)&&fit(w));const cand=[];
+ order.forEach(i=>{const l=ownList('p').filter(w=>ok(w.id));const cand=[];
   for(let x=0;x<l.length;x++)for(let y=x+1;y<l.length;y++){if(inTeam(l[x].id,l[y].id))continue;cand.push([score(l[x],l[y]),l[x],l[y]])}
   let best=null,bv=-1e9;cand.sort((a,b)=>b[0]-a[0]).slice(0,40).forEach(([,A,B])=>{const sd=[[A.id],[B.id]];const v=real(sd,i===mi);if(v>bv){bv=v;best=sd}});
   if(best)put(i,best)});
