@@ -222,7 +222,7 @@ function attnItems(){if(!S||S.phase!=='season')return [];
  /* feuds going stale */
  let nStale=0;const isHot=()=>false;
  for(const k of Object.keys(S.heat).sort((x,y)=>{const fx=S.fs&&S.fs[x],fy=S.fs&&S.fs[y];return (fx?fx.start:1e9)-(fy?fy.start:1e9)})){const f=S.fs&&S.fs[k];if(isHot(k)||nStale>=2)continue;const [a,b]=k.split('|');const A=S.w[a],B=S.w[b];if(!f||f.paid||!A||!B||A.own!=='p'||B.own!=='p'||S.heat[k]<20)continue;const age=AW()-f.start;if(!f.stale&&age<5)continue;const left=8-age;nStale++;
-  add({id:'stale'+k,g:A_MIND,i:'🥱',h:`${A.name} vs ${B.name} ${f.stale?'has gone stale':`goes stale in ${Math.max(1,left)} week${left===1?'':'s'}`}`,d:'Pay it off at a PPV, or blow it off on TV, before the crowd stops caring.',s:against(a,b)?['ok','On tonight\'s card']:['n','Not tonight'],a:null,gate:false,who:[a,b],where:'🥱 The crowd is restless',
+  add({id:'stale'+k,g:A_MIND,i:'🥱',h:`${A.name} vs ${B.name} ${f.stale?'has gone stale':`goes stale in ${Math.max(1,left)} week${left===1?'':'s'}`}`,d:f.stale?'Blow it off on TV (any stale feud can be), pay it off at a PPV, or freshen it with a gimmick match.':'Pay it off at a PPV, or keep it fresh with a big TV moment — a gimmick match, or taking it to the next level.',s:against(a,b)?['ok','On tonight\'s card']:['n','Not tonight'],a:null,gate:false,who:[a,b],where:'🥱 The crowd is restless',
    say:[[a,fill(pickS(SAY.stale,'stale'+k),{B:B.name})]]})}
 
  /* ---------- front office ---------- */
