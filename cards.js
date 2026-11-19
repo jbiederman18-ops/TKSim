@@ -72,7 +72,7 @@ function promoOk(p){return !!(p.a&&PT[p.type]&&(PT[p.type].b!=='req'||p.b))}
 function condOf(w){if(w.inj)return ['Hurt','b'];const sw=staWord(sta(w));if(sw!=='Fresh')return [sw,sw==='Tired'?'t':'b'];
  if(w.own==='p'&&typeof moodWord==='function'&&w.mor<50)return [moodWord(w.mor)[1],w.mor<35?'b':'t'];return ['Fresh','']}
 /* v344: the stat strip — Ring, Mic and Pop instead of one overall, since matches run on Ring (and Pop) and promos on Mic (and Pop).
- v345: one plain line under the name (no boxes over the photo); the best stat is bold white (gold stays for champions), none on a tie. */
+ v346: photo shows further down behind the text (lighter, lower fade; shadowed text) and tighter spacing. v345: one plain line under the name (no boxes over the photo); the best stat is bold white (gold stays for champions), none on a tie. */
 function tcStrip(w){const v=[['RNG',w.ring],['MIC',w.mic],['POP',w.pop]].map(([l,x])=>[l,Math.round(x)]);const hi=Math.max(...v.map(x=>x[1]));const one=v.filter(x=>x[1]===hi).length===1;
  return `<div class="tkst">${v.map(([l,x])=>`<span${one&&x===hi?' class="hi"':''}><b>${x}</b><i>${l}</i></span>`).join('')}</div>`}
 function tcCard(w,o){o=o||{};const [cw,cc]=condOf(w);const t=titlesOf(w.id)[0];const worn=!o.noWear&&(sta(w)<100-FAT_OK||w.inj);
@@ -812,11 +812,11 @@ html.tcards .tkc{--w:92px;position:relative;flex:none;width:var(--w);aspect-rati
 .tkc.ch .tcf{box-shadow:inset 0 0 0 2px var(--gold),0 6px 14px rgba(0,0,0,.55)}
 .tkc .tcg{position:absolute;right:-6px;top:13%;font:900 italic calc(var(--w)*.62)/.8 'BC',Impact,sans-serif;letter-spacing:-.04em;color:rgba(242,193,78,.13);pointer-events:none}
 .tkc .tcp{position:absolute;inset:0}.tkc .tcp img,.tkc .tcp svg{width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block}
-.tkc .tcf.ph::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.45),transparent 28%,transparent 44%,rgba(0,0,0,.92) 76%)}
-.tkc .tkst{display:flex;align-items:baseline;gap:calc(var(--w)*.045);margin:calc(var(--w)*.035) 0 0;white-space:nowrap;text-shadow:0 1px 0 #000}
+.tkc .tcf.ph::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.45),transparent 28%,transparent 50%,rgba(0,0,0,.88) 90%)}
+.tkc .tkst{display:flex;align-items:baseline;gap:calc(var(--w)*.045);margin:calc(var(--w)*.02) 0 0;white-space:nowrap;text-shadow:0 1px 0 #000,0 0 6px rgba(0,0,0,.9)}
 .tkc .tkst span{flex:none}.tkc .tkst span+span::before{content:'·';color:#5f5e5a;margin-right:calc(var(--w)*.045);font:700 calc(var(--w)*.1)/1 sans-serif}
 .tkc .tkst b{font:800 italic calc(var(--w)*.115)/1 'BC',sans-serif;color:#cfcbc2}.tkc .tkst i{font:700 calc(var(--w)*.06)/1 'BC',sans-serif;font-style:normal;letter-spacing:.06em;color:#8f8c86;margin-left:1px}
-.tkc .tkst .hi b{font-weight:900;color:#fff}.tkc .tkst+.tcc{margin-top:calc(var(--w)*.04)}
+.tkc .tkst .hi b{font-weight:900;color:#fff}.tkc .tkst+.tcc{margin-top:calc(var(--w)*.025)}.tkc .tcc{text-shadow:0 1px 0 #000,0 0 6px rgba(0,0,0,.9)}
 .tcs .tcmat.many .tkc .tkst,.tlrow .tkc .tkst,.twcd .tkc .tkst{display:none}
 .tkc .tct{position:absolute;left:5px;top:6px;z-index:3;max-width:calc(100% - 5px);font:800 italic calc(var(--w)*.105)/1.15 'BC',sans-serif;letter-spacing:.04em;text-transform:uppercase;padding:2px 10px 2px 6px;background:#1e1e22;color:var(--text);clip-path:polygon(0 0,100% 0,calc(100% - 6px) 100%,0 100%);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
 .tkc .tct.must{background:var(--gold);color:#111}.tkc .tct.feud{background:var(--red);color:#fff}.tkc .tct.hot{background:#22382a;color:var(--good)}.tkc .tct.rub{background:#2a2a40;color:#b9b6ff}.tkc .tct.gold{background:#2c2410;color:var(--gold2)}
@@ -1061,8 +1061,8 @@ html.tcards .tv-last .tkc{--w:180px;width:var(--w)}
 .tcdrop.ghost{opacity:.5;pointer-events:none}.tcshp{padding-bottom:8px}html.tcards #tcdock .tcshp .chip.on{background:var(--text);color:var(--ink);box-shadow:none}
 .tcsc,.tcshc{flex:none;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:0 16px 10px}.tcsc::-webkit-scrollbar,.tcshc::-webkit-scrollbar{display:none}.tcsc .chip,.tcshc .chip{flex:none;margin:0}
 .tcsb{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;border-top:1px solid var(--line);touch-action:pan-y}
-.tcgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px 10px;justify-items:center;padding:16px 16px 20px}
-.tcgrid .tkc{--w:min(29vw,118px)}html.tcards .tcgrid .tkc{width:var(--w)}
+.tcgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 8px;justify-items:center;padding:14px 12px 20px;container-type:inline-size}
+html.tcards .tcgrid .tkc{--w:min(29vw,118px);--w:min(calc((100cqw - 40px)/3),150px)}/* v346: cards fill their column instead of floating in gaps */html.tcards .tcgrid .tkc{width:var(--w)}
 .tcgrid .tkc:active{transform:scale(.95)}/* v335: only the first rows deal in (the rest are below the fold anyway) — thirty cards animating at once was the early-swipe stutter */
 .tcgrid .tkc.deal{animation:tcdeal .32s cubic-bezier(.2,.9,.3,1.15) backwards}
 .tcwhy{grid-column:1/-1;justify-self:stretch;font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);border-top:1px solid var(--line);padding-top:14px}.tcwhy:first-child{border:0;padding-top:0}.tcab{background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;cursor:pointer;width:100%}.tcab:hover,.tcab.on{color:var(--gold)}
