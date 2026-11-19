@@ -48,7 +48,7 @@ function stvShow(){if(!STV)return;openModal(`<i class="mp-ok" hidden></i><div cl
  <p class="muted">It works just like party night with you as the only GM: the TV shows your booking night and office answers, mirrors your live show while you make the calls here, then plays the results. Your phone stays quiet — the TV has the sound. The computer GM's show counts as locked in.</p>
  <p class="muted tiny">Use a different device (or a different browser) for the TV — a browser that's showing a TV opens as the TV until you tap Exit TV.</p>
  <button class="btn" onclick="closeModal()">Got it</button><button class="btn ghost danger" onclick="stvStop()">Take it off the TV</button>`)}
-/* Office → solo game */
+/* ⚙️ Game menu → solo game */
 function stvOfficeCard(){if(!S||S.online)return '';const on=!!STV;
  return `<div class="card"><div class="h small">📺 Solo TV</div><div class="muted tiny" style="margin:2px 0 8px">${on?`Your solo game is on the TV · code <b class="gold">${esc(STV.code)}</b>`:'Try the party-night TV on your own: put this game on a TV and play it from your phone.'}</div>
  ${on?`<div class="row"><button class="btn sec" onclick="stvShow()">Show the code</button><button class="btn ghost danger" onclick="stvStop()">Take it off the TV</button></div>`:`<button class="btn sec" onclick="stvStart()">Put my game on a TV</button>`}</div>`}

@@ -64,9 +64,9 @@ const HR_Q={match:{hi:['A strong match. The crowd is with them.','Good stuff, an
  lo:['The promo fell flat.','The crowd wasn\'t buying it.','It went on too long.','A few lines got lost in the noise.','Crickets in the cheap seats.','The crowd talked over most of it.']}};
 function hrLine(it){const k=it.kind==='promo'?'promo':'match';const d=it.dc||0;return fpick(HR_Q[k][d>=4?'hi':d<=-3?'lo':'mid'])}
 function hrWho(it){if(it.kind==='promo'){const p=S.card.p[it.i]&&S.card.p[it.i].d;return p?[p.a,p.b].filter(Boolean).map(id=>S.w[id]&&S.w[id].name).join(' & '):''}return it.m.sides.map(sd=>sideName(sd)).join(' vs ')}
-function hrRundown(then,end){const l=LQ.quiet;LQ.quiet=[];
+function hrRundown(then,end,title){const l=LQ.quiet;LQ.quiet=[];
  const rows=l.map(it=>`<div class="hrrow"><span class="hrl">${esc(it.kind==='promo'?'Promo':it.main?'Main event':'Match '+it.n)}</span><span class="hrt"><b>${esc(hrWho(it))}</b><small>${esc(hrLine(it))}</small></span><span class="hrd ${it.dc>0?'up':it.dc<0?'dn':''}">${it.dc>0?'▲':it.dc<0?'▼':'–'}</span></div>`).join('');
- HR_NEXT=then;openModal(`${liveHd(LQ.show,'The rundown',end?'The show is wrapping up':'Meanwhile on the card',[],'● Live')}<div class="hrrun">${rows}</div><button class="btn" onclick="hrGo()">${end?'Finish the show':'Continue the show ▸'}</button>`,true)}
+ HR_NEXT=then;openModal(`${liveHd(LQ.show,'The rundown',title||(end?'The show is wrapping up':'Meanwhile on the card'),[],'● Live')}<div class="hrrun">${rows}</div><button class="btn" onclick="hrGo()">${end?'Finish the show':'Continue the show ▸'}</button>`,true)}
 let HR_NEXT=null;function hrGo(){const f=HR_NEXT;HR_NEXT=null;if(f)f()}
 /* ---- the rival's show and the balance sim: the same rules, decided on autopilot ---- */
 function hrAuto(card,b,sh){if(!card)return;HRC=hrStart(b,sh);let hits=0;const cap=hrCap(sh&&sh.ppv);const ms=card.map((x,j)=>x&&x.k==='match'&&x.d&&validMatch(x.d)?j:-1).filter(j=>j>=0);

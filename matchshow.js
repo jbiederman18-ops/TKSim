@@ -528,6 +528,8 @@ body.tv .tv-live-sheet .mstell{font-size:18px}
 body.tv .tv-live-sheet .msw .msacts{grid-area:hd;margin-top:56px;align-self:end}
 body.tv .tv-live-sheet .msacts span{font-size:18px}
 body.tv .tv-live-sheet .sdstamp.count{font-size:120px}
+/* v351: the result has no face-off stage, so it spans the sheet instead of leaving the left half empty */
+body.tv .tv-live-sheet .sdw:has(>.msres)>*{grid-column:1/-1}body.tv .tv-live-sheet .sdw>.msres{justify-self:center;width:min(100%,1100px)}
 body.tv .tv-live-sheet .msres h3{font-size:34px}body.tv .tv-live-sheet .mscalls li{font-size:22px;grid-template-columns:120px minmax(0,1fr) auto}
 `;document.head.appendChild(c)})();
 })();

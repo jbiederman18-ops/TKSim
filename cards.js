@@ -720,7 +720,7 @@ if(typeof go==='function'){const g0=go;go=window.go=function(t){if(t==='book'&&t
 function attnDown(){if(!S||S.phase!=='season'||typeof tab==='undefined'||tab!=='book')return;const m=document.querySelector('#app main');if(!m)return;const a=m.querySelector('.card.attn');if(!a)return;
  const anchor=m.querySelector('.prodstrip')||m.querySelector('.lvdock')||m.querySelector('.btn.live');if(anchor&&anchor.parentElement)anchor.parentElement.insertBefore(a,anchor)}
 /* Home (v280): tonight's headliners fanned out on the poster, and the hottest wrestlers as a row of cards */
-function homeDeco(){if(!on()||!S||S.phase!=='season'||typeof tab==='undefined'||tab!=='home')return;const m=document.querySelector('#app main');if(!m||m.querySelector('.tchome'))return;
+function homeDeco(){/* v351: never on the party TV — seat p there is just the first GM, and their main event is secret */if(typeof TV!=='undefined'&&TV)return;if(!on()||!S||S.phase!=='season'||typeof tab==='undefined'||tab!=='home')return;const m=document.querySelector('#app main');if(!m||m.querySelector('.tchome'))return;
  const pc=m.querySelector('.card.showcard:not(.compact)');if(!pc)return;const mine=ownList('p');
  let ids=[];try{const c=card();const mi=mainMi(c);const d=c[mi]&&c[mi].d;if(d&&d.sides)ids=d.sides.flat()}catch(e){}
  ids=ids.filter(id=>W_(id)).slice(0,3);if(ids.length<3)mine.filter(w=>!w.inj&&!ids.includes(w.id)).sort((a,b)=>b.pop-a.pop).slice(0,3-ids.length).forEach(w=>ids.push(w.id));
@@ -803,7 +803,9 @@ watch();
 /* ---------------- party-night TV: face-down cards on each GM's table ---------------- */
 if(typeof tvWeek==='function'){const tw=tvWeek;tvWeek=window.tvWeek=function(){let h=tw.apply(this,arguments);if(!on())return h;let n=5;try{n=cardOf(curShow().ppv).length}catch(e){}
  return h.replace(/(<div class="tv-gm ([^"]*)"[\s\S]*?<div class="tv-lock">[\s\S]*?<\/div>)/g,(all,blk,cls)=>{const lk=/\blk\b/.test(cls);
-  return blk+`<div class="tvpile ${lk?'lk':''}">${Array.from({length:lk?n:1},(_,k)=>`<i style="animation-delay:${k*90}ms"></i>`).join('')}</div>`})}}
+  /* v351: one face-down card per segment that GM actually booked (an empty optional slot isn't a card) */
+  let m=n;try{const sd=(blk.match(/data-seat="([^"]+)"/)||[])[1];const c=sd&&S.card&&S.card[localKey(sd)];if(Array.isArray(c))m=c.filter(sl=>sl&&sl.d).length||n}catch(e){}
+  return blk+`<div class="tvpile ${lk?'lk':''}">${Array.from({length:lk?m:1},(_,k)=>`<i style="animation-delay:${k*90}ms"></i>`).join('')}</div>`})}}
 
 /* ---------------- styles ---------------- */
 const css=document.createElement('style');css.textContent=`
