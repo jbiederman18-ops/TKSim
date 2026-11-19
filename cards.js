@@ -73,12 +73,13 @@ function condOf(w){if(w.inj)return ['Hurt','b'];const sw=staWord(sta(w));if(sw!=
  if(w.own==='p'&&typeof moodWord==='function'&&w.mor<50)return [moodWord(w.mor)[1],w.mor<35?'b':'t'];return ['Fresh','']}
 /* v344: the stat strip — Ring, Mic and Pop instead of one overall, since matches run on Ring (and Pop) and promos on Mic (and Pop).
  v346: photo shows further down behind the text (lighter, lower fade; shadowed text) and tighter spacing. v345: one plain line under the name (no boxes over the photo); the best stat is bold white (gold stays for champions), none on a tie. */
-function tcStrip(w){const v=[['RNG',w.ring],['MIC',w.mic],['POP',w.pop]].map(([l,x])=>[l,Math.round(x)]);const hi=Math.max(...v.map(x=>x[1]));const one=v.filter(x=>x[1]===hi).length===1;
- return `<div class="tkst">${v.map(([l,x])=>`<span${one&&x===hi?' class="hi"':''}><b>${x}</b><i>${l}</i></span>`).join('')}</div>`}
+function tcStrip(w,lit){const v=[['r','R',w.ring],['m','M',w.mic],['p','P',w.pop]].map(([k,l,x])=>[k,l,Math.round(x)]);const hi=Math.max(...v.map(x=>x[2]));const one=v.filter(x=>x[2]===hi).length===1;
+ /* v347: in a pick sheet or on the table, the stat that rates that slot lights up (Ring for a match, Mic for a promo) and the other two dim */
+ return `<div class="tkst${lit?' lit':''}">${v.map(([k,l,x])=>`<span class="${lit?(k===lit?'on':''):(one&&x===hi?'hi':'')}"><b>${x}</b><i>${l}</i></span>`).join('')}</div>`}
 function tcCard(w,o){o=o||{};const [cw,cc]=condOf(w);const t=titlesOf(w.id)[0];const worn=!o.noWear&&(sta(w)<100-FAT_OK||w.inj);
  const cls=['tkc',w.al==='f'?'fc':'hl',t?'ch':'',worn?'worn':'',o.used?'used':'',o.cls||''].join(' ');
  return `<div class="${cls}" data-tcw="${w.id}" ${o.attr||''} tabindex="0" role="button" aria-label="${esc(w.name)}, ring ${Math.round(w.ring)}, mic ${Math.round(w.mic)}, pop ${Math.round(w.pop)}${t?', '+esc(t.n)+' champion':''}, ${cw}${o.tab?', '+esc(o.tab):''}">
- <div class="tcf ${hasPhoto(w)?'ph':''}">${hasPhoto(w)?`<div class="tcp">${portrait(w)}</div>`:`<div class="tcg">${esc(initials(w.name))}</div>`}${o.tab?`<span class="tct ${o.tabc||''}">${esc(o.tab)}</span>`:''}<div class="tcb"><b class="tcn${(o.name||w.name).length>13?' ln':''}">${esc(o.name||w.name)}</b>${tcStrip(w)}<span class="tcc ${cc}">${esc(o.cond||cw)}</span>${t?`<i class="tcbelt">${esc(t.n)}</i>`:''}</div></div>${o.mark||''}</div>`}
+ <div class="tcf ${hasPhoto(w)?'ph':''}">${hasPhoto(w)?`<div class="tcp">${portrait(w)}</div>`:`<div class="tcg">${esc(initials(w.name))}</div>`}${o.tab?`<span class="tct ${o.tabc||''}">${esc(o.tab)}</span>`:''}<div class="tcb"><b class="tcn${(o.name||w.name).length>13?' ln':''}">${esc(o.name||w.name)}</b>${tcStrip(w,o.lit)}<span class="tcc ${cc}">${esc(o.cond||cw)}</span>${t?`<i class="tcbelt">${esc(t.n)}</i>`:''}</div></div>${o.mark||''}</div>`}
 window.tcCard=tcCard;
 window.tcMini=w=>w&&on()?`<span class="tcmini">${tcCard(w,{noWear:true})}</span>`:'';
 
@@ -335,7 +336,7 @@ function slotHtml(i){const c=card(),sl=c[i];if(xoV(sl))return xoHtml(i);let act=
  const pr=!promo&&sl.d&&typeof promiseOf==='function'?promiseOf(sl.d):null;
  const ro=!promo&&roV(sl),tr=ro&&!!sl.d.tour,fl=ro&&!tr,op=!promo&&!!m&&m.type==='open'&&!(m.open&&m.open.who);const fin=!promo&&sl.d&&!sl.d.nc&&(ro?tr&&sl.d.sides.every(s=>s.length):typeof cwOk==='function'&&cwOk(sl.d));const pins=fin&&!ro?pinCands(sl.d):[];const pinNow=pins.length>=2?pinOf(sl.d):null;const can=!locked();
  const onC=(id)=>{if(!W_(id))return '';const d=sl.d;let cls='';if(fl&&!d.nc&&(d.sides[d.winner]||[]).includes(id))cls='win';if(fin){const si=d.sides.findIndex(x=>x.includes(id));if(si===d.winner)cls='win';else if(pinNow===id)cls='pinned'}
-  const c=tcCard(W_(id),{attr:tr?`data-tcro="${i}"`:`data-tcon="${i}"`,cls});
+  const c=tcCard(W_(id),{lit:promo?'m':'r',attr:tr?`data-tcro="${i}"`:`data-tcon="${i}"`,cls});
   /* who takes the pin: a toggle under each card on the losing side(s), when there's more than one to choose from */
   if(pinNow&&pins.includes(id))return `<div class="tccol">${c}<button class="tcpin ${pinNow===id?'on':''}" ${can?'':'disabled'} data-tcpin="${i}|${id}" aria-pressed="${pinNow===id}" aria-label="${esc(W_(id).name)} takes the pin">${pinNow===id?'Takes the pin':'Pin'}</button></div>`;
   return c};
@@ -410,9 +411,9 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
  const tl=targets(i,m);let tg=TC.rep?null:(TC.tg||defTarget(i,m)||(promo||xo?tl[0]:null)||null);if(xo&&!tg)tg={t:TC.rep&&TC.rep===m.a?'a':'b'};
  const [k,t]=sheetTitle(i,m,tg);const used=usedIn('p',i);
  const hasX=promo?!!m.a:!!sl.d;
- const pc=(x,n)=>tcCard(x.w,{tab:x.r&&x.r[0]?x.r[0]:'',tabc:x.r?x.r[1]:'',used:used.has(x.w.id),cls:TC.dealt&&n<9?'deal':'',attr:`data-tcpick="${x.w.id}" style="animation-delay:${Math.min(n,8)*30}ms"`});
+ const lit=promo?'m':xo?'':'r';const pc=(x,n)=>tcCard(x.w,{lit,tab:x.r&&x.r[0]?x.r[0]:'',tabc:x.r?x.r[1]:'',used:used.has(x.w.id),cls:TC.dealt&&n<9?'deal':'',attr:`data-tcpick="${x.w.id}" style="animation-delay:${Math.min(n,8)*30}ms"`});
  let body='';
- const entC=(id,x,o)=>tcCard(W_(id),Object.assign({cls:TC.dealt?'deal':'',attr:`data-tcx="${x}"`},o||{}));
+ const entC=(id,x,o)=>tcCard(W_(id),Object.assign({lit,cls:TC.dealt?'deal':'',attr:`data-tcx="${x}"`},o||{}));
  if(tr&&TC.mode==='w'){const TD=TOURS[sl.d.tour.k];body=`<div class="tcempty">${TD?`${TD.i} ${esc(TD.n)} · ${esc(sl.d.tour.lab)}. `:''}The bracket is set — tap <b>👑 Win</b> under a side on the card to pick who advances. The other tabs set the stipulation, the finish${sl.d.tour.k==='c2'?'':' and any run-in'}.</div>`}
  else if(fl&&TC.mode==='w'&&!TC.rep){body=`<div class="tcgrid"><div class="tcwhy">Tap an entrant to swap them out</div>${sl.d.sides.map((s,j)=>s[0]&&W_(s[0])?entC(s[0],'e:'+s[0],{tab:j===sl.d.winner?'Wins':'',tabc:'must'}):'').join('')}</div>`}
  else if(fl&&TC.mode==='v'){const d=sl.d;const pl=pinCands(d);const pn=pinOf(d);
@@ -813,10 +814,15 @@ html.tcards .tkc{--w:92px;position:relative;flex:none;width:var(--w);aspect-rati
 .tkc .tcg{position:absolute;right:-6px;top:13%;font:900 italic calc(var(--w)*.62)/.8 'BC',Impact,sans-serif;letter-spacing:-.04em;color:rgba(242,193,78,.13);pointer-events:none}
 .tkc .tcp{position:absolute;inset:0}.tkc .tcp img,.tkc .tcp svg{width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block}
 .tkc .tcf.ph::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.45),transparent 28%,transparent 50%,rgba(0,0,0,.88) 90%)}
-.tkc .tkst{display:flex;align-items:baseline;gap:calc(var(--w)*.045);margin:calc(var(--w)*.02) 0 0;white-space:nowrap;text-shadow:0 1px 0 #000,0 0 6px rgba(0,0,0,.9)}
-.tkc .tkst span{flex:none}.tkc .tkst span+span::before{content:'·';color:#5f5e5a;margin-right:calc(var(--w)*.045);font:700 calc(var(--w)*.1)/1 sans-serif}
-.tkc .tkst b{font:800 italic calc(var(--w)*.115)/1 'BC',sans-serif;color:#cfcbc2}.tkc .tkst i{font:700 calc(var(--w)*.06)/1 'BC',sans-serif;font-style:normal;letter-spacing:.06em;color:#8f8c86;margin-left:1px}
-.tkc .tkst .hi b{font-weight:900;color:#fff}.tkc .tkst+.tcc{margin-top:calc(var(--w)*.025)}.tkc .tcc{text-shadow:0 1px 0 #000,0 0 6px rgba(0,0,0,.9)}
+.tkc .tkst{display:flex;align-items:baseline;gap:calc(var(--w)*.075);margin:calc(var(--w)*.02) 0 0;white-space:nowrap;position:relative;text-shadow:0 1px 0 #000,0 0 6px rgba(0,0,0,.9)}
+.tkc .tkst::before{content:"";position:absolute;left:-12px;right:-6px;top:-4px;bottom:-4px;z-index:-1;background:linear-gradient(90deg,rgba(0,0,0,.62),rgba(0,0,0,.5) 75%,rgba(0,0,0,0));filter:blur(4px);pointer-events:none}
+.tkc .tkst span{flex:none;display:inline-flex;align-items:baseline}
+.tkc .tkst i{order:1;font:900 italic calc(var(--w)*.085)/1 'BC',sans-serif;color:#d8d4cc;margin-right:2px}
+.tkc .tkst b{order:2;font:800 italic calc(var(--w)*.13)/1 'BC',sans-serif;color:#fff}
+.tkc .tkst .hi b{font-weight:900;font-size:calc(var(--w)*.145)}
+.tkc .tkst.lit span{opacity:.55}.tkc .tkst.lit b{font-size:calc(var(--w)*.12)}.tkc .tkst.lit i{color:#8f8c86}
+.tkc .tkst.lit .on{opacity:1}.tkc .tkst.lit .on b{font-weight:900;font-size:calc(var(--w)*.16)}.tkc .tkst.lit .on i{color:#fff}
+.tkc .tkst+.tcc{margin-top:calc(var(--w)*.025)}.tkc .tcc{text-shadow:0 1px 0 #000,0 0 6px rgba(0,0,0,.9)}
 .tcs .tcmat.many .tkc .tkst,.tlrow .tkc .tkst,.twcd .tkc .tkst{display:none}
 .tkc .tct{position:absolute;left:5px;top:6px;z-index:3;max-width:calc(100% - 5px);font:800 italic calc(var(--w)*.105)/1.15 'BC',sans-serif;letter-spacing:.04em;text-transform:uppercase;padding:2px 10px 2px 6px;background:#1e1e22;color:var(--text);clip-path:polygon(0 0,100% 0,calc(100% - 6px) 100%,0 100%);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
 .tkc .tct.must{background:var(--gold);color:#111}.tkc .tct.feud{background:var(--red);color:#fff}.tkc .tct.hot{background:#22382a;color:var(--good)}.tkc .tct.rub{background:#2a2a40;color:#b9b6ff}.tkc .tct.gold{background:#2c2410;color:var(--gold2)}
