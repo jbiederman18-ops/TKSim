@@ -72,13 +72,13 @@ function promoOk(p){return !!(p.a&&PT[p.type]&&(PT[p.type].b!=='req'||p.b))}
 function condOf(w){if(w.inj)return ['Hurt','b'];const sw=staWord(sta(w));if(sw!=='Fresh')return [sw,sw==='Tired'?'t':'b'];
  if(w.own==='p'&&typeof moodWord==='function'&&w.mor<50)return [moodWord(w.mor)[1],w.mor<35?'b':'t'];return ['Fresh','']}
 /* v344: the stat strip — Ring, Mic and Pop instead of one overall, since matches run on Ring (and Pop) and promos on Mic (and Pop).
- The wrestler's best stat is lit gold, so a talker and a worker read differently at a glance. */
-function tcStrip(w){const v=[['RNG',w.ring],['MIC',w.mic],['POP',w.pop]].map(([l,x])=>[l,Math.round(x)]);const hi=Math.max(...v.map(x=>x[1]));
- return `<div class="tkst">${v.map(([l,x])=>`<span${x===hi?' class="hi"':''}><b>${x}</b><i>${l}</i></span>`).join('')}</div>`}
+ v345: one plain line under the name (no boxes over the photo); the best stat is bold white (gold stays for champions), none on a tie. */
+function tcStrip(w){const v=[['RNG',w.ring],['MIC',w.mic],['POP',w.pop]].map(([l,x])=>[l,Math.round(x)]);const hi=Math.max(...v.map(x=>x[1]));const one=v.filter(x=>x[1]===hi).length===1;
+ return `<div class="tkst">${v.map(([l,x])=>`<span${one&&x===hi?' class="hi"':''}><b>${x}</b><i>${l}</i></span>`).join('')}</div>`}
 function tcCard(w,o){o=o||{};const [cw,cc]=condOf(w);const t=titlesOf(w.id)[0];const worn=!o.noWear&&(sta(w)<100-FAT_OK||w.inj);
  const cls=['tkc',w.al==='f'?'fc':'hl',t?'ch':'',worn?'worn':'',o.used?'used':'',o.cls||''].join(' ');
  return `<div class="${cls}" data-tcw="${w.id}" ${o.attr||''} tabindex="0" role="button" aria-label="${esc(w.name)}, ring ${Math.round(w.ring)}, mic ${Math.round(w.mic)}, pop ${Math.round(w.pop)}${t?', '+esc(t.n)+' champion':''}, ${cw}${o.tab?', '+esc(o.tab):''}">
- <div class="tcf ${hasPhoto(w)?'ph':''}">${hasPhoto(w)?`<div class="tcp">${portrait(w)}</div>`:`<div class="tcg">${esc(initials(w.name))}</div>`}${o.tab?`<span class="tct ${o.tabc||''}">${esc(o.tab)}</span>`:''}<div class="tcb">${tcStrip(w)}<b class="tcn${(o.name||w.name).length>13?' ln':''}">${esc(o.name||w.name)}</b><span class="tcc ${cc}">${esc(o.cond||cw)}</span>${t?`<i class="tcbelt">${esc(t.n)}</i>`:''}</div></div>${o.mark||''}</div>`}
+ <div class="tcf ${hasPhoto(w)?'ph':''}">${hasPhoto(w)?`<div class="tcp">${portrait(w)}</div>`:`<div class="tcg">${esc(initials(w.name))}</div>`}${o.tab?`<span class="tct ${o.tabc||''}">${esc(o.tab)}</span>`:''}<div class="tcb"><b class="tcn${(o.name||w.name).length>13?' ln':''}">${esc(o.name||w.name)}</b>${tcStrip(w)}<span class="tcc ${cc}">${esc(o.cond||cw)}</span>${t?`<i class="tcbelt">${esc(t.n)}</i>`:''}</div></div>${o.mark||''}</div>`}
 window.tcCard=tcCard;
 window.tcMini=w=>w&&on()?`<span class="tcmini">${tcCard(w,{noWear:true})}</span>`:'';
 
@@ -812,10 +812,11 @@ html.tcards .tkc{--w:92px;position:relative;flex:none;width:var(--w);aspect-rati
 .tkc.ch .tcf{box-shadow:inset 0 0 0 2px var(--gold),0 6px 14px rgba(0,0,0,.55)}
 .tkc .tcg{position:absolute;right:-6px;top:13%;font:900 italic calc(var(--w)*.62)/.8 'BC',Impact,sans-serif;letter-spacing:-.04em;color:rgba(242,193,78,.13);pointer-events:none}
 .tkc .tcp{position:absolute;inset:0}.tkc .tcp img,.tkc .tcp svg{width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block}
-.tkc .tcf.ph::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.45),transparent 28%,transparent 48%,rgba(0,0,0,.92) 80%)}
-.tkc .tkst{display:flex;gap:2px;margin:0 0 calc(var(--w)*.05)}.tkc .tkst span{flex:1;display:flex;flex-direction:column;align-items:center;padding:calc(var(--w)*.02) 0;background:rgba(10,10,12,.82);box-shadow:inset 0 0 0 1px #3a3b42}
-.tkc .tkst b{font:900 italic calc(var(--w)*.13)/1 'BC',sans-serif;color:#fff}.tkc .tkst i{font:700 calc(var(--w)*.065)/1 'BC',sans-serif;font-style:normal;letter-spacing:.08em;color:var(--mut);margin-top:1px}
-.tkc .tkst .hi{box-shadow:inset 0 0 0 1px var(--gold3)}.tkc .tkst .hi b{color:var(--gold)}
+.tkc .tcf.ph::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.45),transparent 28%,transparent 44%,rgba(0,0,0,.92) 76%)}
+.tkc .tkst{display:flex;align-items:baseline;gap:calc(var(--w)*.045);margin:calc(var(--w)*.035) 0 0;white-space:nowrap;text-shadow:0 1px 0 #000}
+.tkc .tkst span{flex:none}.tkc .tkst span+span::before{content:'·';color:#5f5e5a;margin-right:calc(var(--w)*.045);font:700 calc(var(--w)*.1)/1 sans-serif}
+.tkc .tkst b{font:800 italic calc(var(--w)*.115)/1 'BC',sans-serif;color:#cfcbc2}.tkc .tkst i{font:700 calc(var(--w)*.06)/1 'BC',sans-serif;font-style:normal;letter-spacing:.06em;color:#8f8c86;margin-left:1px}
+.tkc .tkst .hi b{font-weight:900;color:#fff}.tkc .tkst+.tcc{margin-top:calc(var(--w)*.04)}
 .tcs .tcmat.many .tkc .tkst,.tlrow .tkc .tkst,.twcd .tkc .tkst{display:none}
 .tkc .tct{position:absolute;left:5px;top:6px;z-index:3;max-width:calc(100% - 5px);font:800 italic calc(var(--w)*.105)/1.15 'BC',sans-serif;letter-spacing:.04em;text-transform:uppercase;padding:2px 10px 2px 6px;background:#1e1e22;color:var(--text);clip-path:polygon(0 0,100% 0,calc(100% - 6px) 100%,0 100%);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
 .tkc .tct.must{background:var(--gold);color:#111}.tkc .tct.feud{background:var(--red);color:#fff}.tkc .tct.hot{background:#22382a;color:var(--good)}.tkc .tct.rub{background:#2a2a40;color:#b9b6ff}.tkc .tct.gold{background:#2c2410;color:var(--gold2)}
