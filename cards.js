@@ -127,6 +127,9 @@ function hand(i,o){o=o||{};const sl=card()[i];if(!sl)return [];const m=cur(i);co
   v+=promo?(w.mic-70)/3:(ovr(w)-75)/3;if(anchor&&!promo)v+=Math.max(-6,Math.min(10,chemOpp(W_(anchor),w)));
   if(promo&&anchor)v+=Math.min(12,heatOf(anchor,w.id)/4);
   if(used.has(w.id))v-=45;v-=Math.max(0,(100-sta(w))-FAT_OK)/2;
+  /* v341: once one side is picked, their rivals lead the best fits (hottest first) — rating, chemistry and tiredness only
+     order the rest. Not for a tag partner: that's who stands with them, not across from them. */
+  if(anchor&&r&&r[1]==='feud'&&!(tg&&tg.t==='partner'))v+=200;
   return {w,r,v}}).sort((a,b)=>b.v-a.v);
  let rubs=0;const out=[];for(const x of sc){if(x.r&&x.r[0]==='Rub'){if(rubs>=2)continue;rubs++}out.push(x);if(out.length>=(o.n||TC_HAND))break}
  return out}

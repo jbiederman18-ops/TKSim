@@ -65,7 +65,24 @@ function inboxList(){if(!allowed())return [];const out=[];
  let secs=[];try{secs=B0?B0():[]}catch(e){console.warn('inbox',e)}
  const order=['tamp','med','trade','cd','oc','tape','follow','callup','team'];
  secs.map(s=>({s,k:deskKind(s)})).filter(x=>x.k).sort((a,b)=>order.indexOf(a.k)-order.indexOf(b.k)).forEach(({s,k})=>(s.rows||[]).forEach(row=>{if(isAsk(row))out.push({k,row,s})}));
- return out}
+ return lineup(out)}
+/* v341: the line was everyone with something to say, every week, and nothing goes live until it's clear — by mid-season
+   that was 7–11 visits before you could book. Now at most DESK_MAX people get in each week, picked by urgency when the
+   week's line first forms. What can't wait always gets in (a front-office situation, a pitch, a contract on its last
+   show, the trainer). Everyone else waits for a later week — they're still there, in the same order. */
+const DESK_MAX=3;window.DESK_MAX=DESK_MAX;
+function dKey(x){if(x.k==='crisis'||x.k==='pitch')return x.k;if(x.k==='agent')return 'ag:'+x.w.id;if(x.k==='ask')return 'ask:'+x.a.id;
+ const q=(x.row||'').match(/\('([^']+)'/);if(q)return x.k+':'+q[1];const b=(x.row||'').match(/<b>([^<]+)<\/b>/);return x.k+':'+(b?b[1]:(x.row||'').length)}
+const dUrgent=x=>x.k==='crisis'||x.k==='pitch'||x.k==='med'||(x.k==='agent'&&x.w.con<=1);
+const D_RANK=x=>x.k==='crisis'?0:x.k==='pitch'?1:x.k==='agent'&&x.w.con<=1?2:x.k==='med'?3:x.k==='tamp'?4:x.k==='agent'?5:x.k==='ask'&&x.a.due?6:
+ ({trade:7,cd:8,oc:8,ask:9,callup:10,tape:11,follow:12,team:13})[x.k]||14;
+function lineup(out){const wk=AW();
+ if(!S.deskWk||S.deskWk.w!==wk){const pick=out.map((x,i)=>({x,i})).sort((a,b)=>D_RANK(a.x)-D_RANK(b.x)||a.i-b.i).map(o=>o.x);const keys=[];
+  pick.forEach(x=>{if(dUrgent(x)||keys.length<DESK_MAX)keys.push(dKey(x))});S.deskWk={w:wk,keys}}
+ const K=new Set(S.deskWk.keys);
+ /* something urgent that turns up mid-week still gets in */
+ out.forEach(x=>{const k=dKey(x);if(!K.has(k)&&dUrgent(x)){S.deskWk.keys.push(k);K.add(k)}});
+ return out.filter(x=>K.has(dKey(x)))}
 window.inboxList=inboxList;
 function qAv(id,on){const w=S.w[id];if(w)return `<span class="ibx-a ${on?'on':''}">${face(w)}</span>`;const t=/^[A-Za-z]/.test(String(id))?String(id).split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase():id;return `<span class="ibx-a x ${on?'on':''}">${esc(t||'?')}</span>`}
 function head(n,left){let l=[];try{l=inboxList()}catch(e){}const q=l.map((x,i)=>qAv(whoOf(x),i===0)).join('');
@@ -80,7 +97,8 @@ function deskPage(x,pos,left){const [ic,nm]=KIND[x.k]||[x.s.i,x.s.t];const v=voi
    go-live contract check won't ask again). Everyone else's contract stays on Home's countdown, negotiable any time. */
 const AG_SHOWS=2;
 function agentList(){const wk=AW();S.agAsk=S.agAsk||{};Object.keys(S.agAsk).forEach(k=>{if(wk-S.agAsk[k]>4)delete S.agAsk[k]});
- return ownList('p').filter(w=>w.con<=AG_SHOWS&&S.agAsk[w.id]!==wk&&!(S.conAck&&S.conAck.wk===wk&&S.conAck.ids.includes(w.id))).sort((a,b)=>a.con-b.con||b.pop-a.pop)}
+ /* v341: two shows out only for the names that matter (55+ popularity or a champion); everyone else's agent comes once, on the last show */
+ return ownList('p').filter(w=>w.con<=AG_SHOWS&&(w.con<=1||w.pop>=55||isChamp(w.id))&&S.agAsk[w.id]!==wk&&!(S.conAck&&S.conAck.wk===wk&&S.conAck.ids.includes(w.id))).sort((a,b)=>a.con-b.con||b.pop-a.pop)}
 function openAgent(id){const w=S.w[id];if(!w)return closeModal();const blk=w.neg&&w.neg.no>AW();const last=w.con<=1;
  const line=typeof sayW==='function'?sayW(last?'agent_last':'agent_urgent',w,{A:w.name}):'';
  const st=typeof conStakes==='function'?conStakes(w):'';
@@ -106,7 +124,7 @@ window.agentAnswer=function(id,k){if(typeof mpLocked==='function'&&mpLocked())re
    or not this week (a little disappointment; they ask again in a few weeks, or right away if a deadline arrives).
    Built from the same attention list, so a request is exactly what the checklist and briefing already show. Asked at
    the start of the week only (nobody walks in mid-booking), at most ASK_MAX a week. */
-const ASK_MAX=3,ASK_AGAIN=3;
+const ASK_MAX=2,ASK_AGAIN=3;/* v341: two a week (was 3) */
 const ASK_K=[
  {re:/^dealshot/,i:'🏆',n:'Holding you to their title shot',y:'It\'s on tonight\'s card'},
  {re:/^tp/,i:'🎟️',n:'Owed a title shot',y:'You\'ll get your face-to-face tonight'},
@@ -174,9 +192,17 @@ function stamp(pos,left){const m=document.querySelector('#modal .sbody');if(!m)r
 function openInbox(){const l=inboxList();if(!l.length){ON_=false;N0=0;CUR=null;try{render()}catch(e){}return false}
  if(!ON_){ON_=true;N0=l.length}const pos=Math.max(1,N0-l.length+1);const x=l[0];
  try{CUR=describe(x)}catch(e){CUR=null}
- try{if(x.open){x.open();stamp(pos,l.length)}else openModal(deskPage(x,pos,l.length))}catch(e){console.warn('inbox',e);ON_=false;return false}
+ try{if(x.open){x.open();stamp(pos,l.length)}else{openModal(deskPage(x,pos,l.length));deskWatch(x)}}catch(e){console.warn('inbox',e);ON_=false;return false}
  try{if(CUR&&!CUR.q){const sc=document.querySelector('#modal .scene q, #modal .scene');if(sc)CUR.q=sc.textContent.trim().slice(0,240)}}catch(e){}
  return true}
+/* v341: a desk row's buttons are the briefing's own (callUp, tapeAct, followAct…) — they do the job and re-draw Home, but
+   nothing moved the office on, so the page sat there looking dead. Once a tap settles the row (it's gone from the line)
+   and the button didn't open a screen of its own, the line carries on to the next one. A refused tap (no money, a
+   full roster) leaves the row waiting, so the page stays put. */
+function deskWatch(x){const m=document.querySelector('#modal .sbody');if(!m)return;const mark=document.createElement('i');mark.className='ibx-mark';mark.hidden=true;m.appendChild(mark);
+ m.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled||!m.contains(b)||b.classList.contains('btn'))return;
+  setTimeout(()=>{if(!ON_||!mark.isConnected)return;const mm=document.getElementById('modal');if(!mm||mm.classList.contains('hidden'))return;
+   let still=false;try{still=inboxList().some(y=>y.row===x.row)}catch(err){}if(!still)closeModal()},60)})}
 /* v258: what's on screen right now, for the party-night TV's locker-room feed (feed.js) — who's in the office, what kind of
    visit it is, a headline and their line. Tampering, the trainer, trade offers and tapes are strategy: the TV only
    teases those (the room never sees who called, the money, the weeks out or the trade). */

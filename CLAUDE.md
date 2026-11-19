@@ -46,7 +46,7 @@
 |---|---|
 | `cards.js` | Card table: tap-to-pick booking sheet, wrestler cards (v273+). The only Book screen since v338 — it draws over `bookView`'s slots, so the classic slot markup is still the base |
 | `attention.js` | Needs your attention checklist + the This week news panel on Home (v324) |
-| `inbox.js` | The line outside your office (Monday decisions) |
+| `inbox.js` | The line outside your office (Monday decisions; max `DESK_MAX` a week since v341) |
 | `season.js` | Season systems, calendar flow |
 | `calendar.js` | Season calendar screen |
 | `wwe.js` | WWE roster, titles, PPVs, supplemental draft |
@@ -66,6 +66,7 @@
 | `deals.js` | Contracts with strings, negotiation |
 | `frontoffice.js`, `trades.js` | Tampering, injury decisions, trades |
 | `farm.js`, `rohleague.js`, `gimmicks.js` | ROH farm, prospect tapes, gimmick prospects |
+| `rebrand.js` | Fresh-start sheet (new ring name, face/heel) before a call-up or an ROH signing (v341) |
 | `history.js`, `hype.js`, `titlepic.js` | History book, PPV build-up, title picture |
 | `squash.js`, `openchal.js`, `teamsug.js` | Squash matches, open challenges, suggested tag teams |
 | `challenges.js` | Challenge scenarios |

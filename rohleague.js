@@ -66,7 +66,7 @@ if(typeof callUp==='function'){const c0=callUp;window.callUp=callUp=function(id)
 ['farmRelease','farmExc'].forEach(fn=>{const f0=window[fn];if(typeof f0!=='function')return;window[fn]=function(id){const before=!!F('p').r[id];const out=f0.apply(this,arguments);const w=F('p').r[id];if(before&&(!w||w.exc))vacate(id,!w?'was released':'left on excursion',null);return out}});
 
 /* ---------------- tapes & the watchlist ---------------- */
-const MAX_TAPES=3,MAX_FOLLOW=6;
+const MAX_TAPES=2,MAX_FOLLOW=6;/* v341: two waiting at most, and fewer arrive (the office line was crowded) */
 const ORGS=['the Northeast indies','a Texas promotion','the Midwest scene','a Florida promotion','the West Coast indies','a Southern territory','the Pacific Northwest scene'];
 function tapeGen(){const r=Math.random();let w=null,from='';
  const onB=new Set([].concat((S.scout||{}).l||[],(S.scout||{}).roh||[],(S.scout||{}).intl||[],(S.tapes||[]).map(t=>t.w),(S.follow||[]).map(t=>t.w)).map(x=>x.id));
@@ -76,12 +76,12 @@ function tapeGen(){const r=Math.random();let w=null,from='';
  if(!w&&r<.75){w=rohGen();from='ROH tryouts'}
  if(!w){w=intlGen();if(w)from=INTL[w.from].n}
  if(!w)return null;if(!w.real)w.id='tp'+partyNid();w.from0=from;return w}
-function tapeTick(notes){if(S.phase!=='season'||S.week<2)return;const a=AW();S.tapes=(S.tapes||[]).filter(t=>{if(a-t.at>=2){return false}return true});S.follow=S.follow||[];
+function tapeTick(notes){if(S.phase!=='season'||S.week<2)return;const a=AW();S.tapes=(S.tapes||[]).filter(t=>{if(a-t.at>=3){return false}/* v341: three weeks, so a tape that waits a week for a spot at the door is still there */return true});S.follow=S.follow||[];
  /* the watchlist: updates every 3 weeks, and after a while someone else may sign them */
  S.follow=S.follow.filter(f=>{const w=f.w;if(w.real&&taken(w.id))return false;
   if(a-f.since>=4&&Math.random()<.07){const n=`📼 ${w.name}, who you were following, signed somewhere else.`;notes.push(n);news(n);return false}
   if(a-f.last>=3){f.last=a;const g=RI(1,3);w.ring=Math.min(w.pot,w.ring+g);w.mic=Math.min(w.potM||w.pot,w.mic+RI(0,2));w.pop=Math.min(45,w.pop+1);w.fee=Math.round(w.fee*1.08);f.up=(f.up||0)+1;f.n=`New tape: in-ring up ${g} to ${Math.round(w.ring)}.`}return true});
- if(S.tapes.length>=MAX_TAPES||Math.random()>.55)return;const w=tapeGen();if(!w)return;
+ if(S.tapes.length>=MAX_TAPES||Math.random()>.35)return;const w=tapeGen();if(!w)return;
  S.tapes.push({w,at:a,kind:w.real||Math.random()<.5?'email':'tape'})}
 function tapeLine(t){const w=t.w;const T=TIERS[w.tier]||TIERS.prospect;const org=w.org?esc(w.org):esc(w.from0||'the indies');
  const v=w.real?(t.kind==='email'?`"Huge fan of what you're building. I'm wrapping up with ${org} — I'd love to talk ROH."`:`${org} highlights, cut together by ${esc(w.name)}'s agent.`)

@@ -264,8 +264,12 @@ const NF_CAP=1.5,NF_MAX=6;
 const NF_CROWD=[{w:'On their feet',m:1},{w:'"This is awesome!"',m:1.1},{w:'"Fight forever!"',m:1.2},{w:'Getting restless',m:.7},{w:'Kickout fatigue',m:.4}];
 const nfCrowd=n=>NF_CROWD[Math.min(n,NF_CROWD.length-1)];
 /* the match showdown's risk tells: Safe / Risky / Playing with fire */
-const msTell=p=>p>=.65?['safe','Safe']:p>=.4?['risky','Risky']:['fire','Playing with fire'];
-const msTellH=p=>{const [k,w]=msTell(p);return `<span class="mstell t-${k}">${w}</span>`};
+/* v341: the tell reads the odds AND the swing shown next to it, and says the worse of the two — "Safe" used to sit beside
+   a medium or big swing (65–80% calls), which isn't safe. Safe = good odds and a small swing; a medium or big swing is
+   at least Risky; a huge one is Playing with fire. With no swing shown (w omitted) it's the odds alone. */
+const MS_TELL=[['safe','Safe'],['risky','Risky'],['fire','Playing with fire']];
+const msTell=(p,w)=>{const a=p>=.65?0:p>=.4?1:2;const b=w==null?0:w>=.8?2:w>=.3?1:0;return MS_TELL[Math.max(a,b)]};
+const msTellH=(p,w)=>{const [k,t]=msTell(p,w);return `<span class="mstell t-${k}">${t}</span>`};
 const msKickP=r=>clamp(.25+((r.B.ring+r.A.ring)/2)/100*.6,.3,.85);
 function nfOdds(r,n,st){const tired=Math.max(r.A.fat||0,r.B.fat||0)+(st.nfFat||0);return clamp(msKickP(r)-.11*n-Math.max(0,tired-40)/220,.12,.85)}
 const nfSwing=(p,n)=>swingOf(p,.6).w*MS_K*(1+.3*n)*nfCrowd(n+1).m;
@@ -310,7 +314,7 @@ const NF_LINES={
 /* the player's chain; returns true if a blown finish ended the match */
 async function nfChain(m,r,F,fk){const L=NF_LINES[fk];if(!L)return false;
  for(let n=1;n<NF_MAX;){const p=nfOdds(r,n,MS.st),w=nfSwing(p,n),cr=nfCrowd(n+1);
-  const it=await msMenu('🏁 '+msFill(L.q,r),`Near fall ${n+1} · the crowd: ${cr.w.replace(/"/g,'')}`,[{label:msFill(L.go,r),go:1,info:`${msTellH(p)} · ${msSw(w)} · ${esc(msFill(L.gsub,r))}`},{label:msFill(L.stop,r),info:`✅ Guaranteed · ${esc(msFill(L.ssub,r))}`}]);
+  const it=await msMenu('🏁 '+msFill(L.q,r),`Near fall ${n+1} · the crowd: ${cr.w.replace(/"/g,'')}`,[{label:msFill(L.go,r),go:1,info:`${msTellH(p,w)} · ${msSw(w)} · ${esc(msFill(L.gsub,r))}`},{label:msFill(L.stop,r),info:`✅ Guaranteed · ${esc(msFill(L.ssub,r))}`}]);
   if(!it.go)return false;
   msFrame('');await msPlay(msLines(fpick(L.set[Math.min(n-1,L.set.length-1)])));if(F.count)for(const c of F.count)await msStamp(c,'count',480);
   const o=nfRoll(m,r,MS.st,n);MS.res=o.ok?'ok':'no';MS.log.push({lab:`Near fall ${n+1}`,t:o.ok?msFill(L.go,r):NF_LAB[o.tier],ok:o.ok});
@@ -437,7 +441,7 @@ function msDrawMenu(){const M=MS.menu;if(!M)return;const bb=document.getElementB
 function msPick(i){if(!MS||!MS.menu)return;const M=MS.menu;pickFlash(()=>{if(!MS||MS.menu!==M)return;MS.menu=null;M.res(M.items[i])})}
 /* v301: match-showdown swings cut both ways, so the label says so */
 const msSw=w=>swingWord(w).replace(' swing',' swing either way');
-function msInfo(c,r){const p=msChance(c,r);return `${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:''}${STAT_ICON[c.s]} · ${msTellH(p)} · ${msSw(swingOf(p,c.st).w)}${c.sub?' · '+esc(msFill(c.sub,r)):''}`}
+function msInfo(c,r){const p=msChance(c,r);return `${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:''}${STAT_ICON[c.s]} · ${msTellH(p,swingOf(p,c.st).w)} · ${msSw(swingOf(p,c.st).w)}${c.sub?' · '+esc(msFill(c.sub,r)):''}`}
 const msItems=(list,r)=>list.map(c=>({c,label:msFill(c.t,r),info:msInfo(c,r)}));
 async function msCall(list,lab,q,sub){const r=MS.r;const it=await msMenu(q,sub,msItems(list,r));const o=msRoll(it.c,r,MS.m,MS.st,lab);
  MS.log.push({lab,t:it.label,ok:o.ok});MS.res=o.ok?'ok':'no';msFrame('');await msPan('a');await msStamp(o.ok?'It lands':'Not quite',o.ok?'ok':'no');if(it.c.id==='limb'&&o.ok)MS.workedKnee=r.B.id;
@@ -448,7 +452,7 @@ async function msMomentAct(slot){const g=MS.g,m=MS.m,r=g.r;
   gorMor(X,!!it.yes,true);if(!it.yes){const r0=msRoles(m,'p');m._msr={a:r0.A.id,b:r0.B.id};let ng=null;try{ng=genEvent(m,'p',true,true)}finally{delete m._msr}if(ng&&ng.e.need!=='X'&&(msPlan(ng,m)==='heat')===(slot==='heat')){MS.g=ng;ng.gor=1;return msMomentAct(slot)}return null}g.gor=1}
  msFrame('');MS.res=null;await msPlay(msNarr(evFill(g.e.text,r)));
  const ch=evChoices(g.e,m,r);const ck=CALLS[callKind(g)];
- const items=ch.map(c=>({c,label:evFill(c.t,r),info:`${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:c.heelA&&r.A.al==='f'?'<span class="heel">😈 Dirty — fans won\'t like it from a face</span> · ':''}${c.always?'✅ Guaranteed':STAT_ICON[c.s]+' · '+msTellH(evChance(c,r))}${c.flip?' · changes the winner':''}${c.nc?' · no winner':''} · ${callStakes(c,g,c.always?null:evChance(c,r))}${g.sit&&c.tip?` · ${esc(sitTip(c,r))}`:''}${typeof rcTag==='function'?rcTag(c,g):''}`}));
+ const items=ch.map(c=>({c,label:evFill(c.t,r),info:`${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:c.heelA&&r.A.al==='f'?'<span class="heel">😈 Dirty — fans won\'t like it from a face</span> · ':''}${c.always?'✅ Guaranteed':STAT_ICON[c.s]+' · '+msTellH(evChance(c,r),riskScaled(c)&&!g.sit?swingOf(evChance(c,r),c.st||0).w:null)}${c.flip?' · changes the winner':''}${c.nc?' · no winner':''} · ${callStakes(c,g,c.always?null:evChance(c,r))}${g.sit&&c.tip?` · ${esc(sitTip(c,r))}`:''}${typeof rcTag==='function'?rcTag(c,g):''}`}));
  const note=(g.sit?g.info:'')+(g.r&&g.r.CROWD?(g.sit?' · ':'')+'👥 '+esc(g.r.CROWD.text):'');
  const it=await msMenu(`${ck.i} ${ck.n}`,note||ck.l,items);const w0=m.winner;
  const out=g.sit?sitRoll(it.c,r,m):evRoll(it.c,r,m);MS.res=out.success?'ok':'no';MS.log.push({lab:slot==='heat'?'Heat':'Finish',t:it.label,ok:out.success});
@@ -481,7 +485,7 @@ async function msRun(){const m=MS.m;const fam=msFam(m);const plan=msPlan(MS.g,m)
     setup.unshift({kind:'booth',who:'Colour',t:msFill('Watch {B} trying to get a foot underneath them. That knee has been bothering them since the dragon screw.',r)});
    }
    MS.res=null;/* v306: the set-up is before any roll — don't carry the heat call's miss into it */await msPlay(setup);if(F.count)for(const n of F.count)await msStamp(n,'count',560);
-   const it=await msMenu('🏁 '+msFill(F.q,r),'You\'re calling the finish',[{label:msFill(F.kick,r),info:(pk=>`💪 In-ring · ${msTellH(pk)} · ${msSw(swingOf(pk,.6).w)} · ${esc(msFill(F.ksub,r))}`)(msKickP(r)),kick:1},{label:msFill(F.stay,r),info:`✅ Guaranteed · 🛡️ Small swing · ${esc(msFill(F.ssub,r))}`}]);
+   const it=await msMenu('🏁 '+msFill(F.q,r),'You\'re calling the finish',[{label:msFill(F.kick,r),info:(pk=>`💪 In-ring · ${msTellH(pk,swingOf(pk,.6).w)} · ${msSw(swingOf(pk,.6).w)} · ${esc(msFill(F.ksub,r))}`)(msKickP(r)),kick:1},{label:msFill(F.stay,r),info:`✅ Guaranteed · 🛡️ Small swing · ${esc(msFill(F.ssub,r))}`}]);
    if(it.kick){const o=msKick(m,r,MS.st,F,'Near fall');MS.res=o.ok?'ok':'no';MS.log.push({lab:'Near fall',t:it.label,ok:o.ok});msFrame('');await msStamp(o.ok?'It lands':'Not quite',o.ok?'ok':'no');await msPlay(msLines(o.lines));
     const fk=fam==='pin'&&m.sides.length>2&&r.C?'multi':fam;const blown=o.ok&&await nfChain(m,r,F,fk);
     if(blown){}else if(plan==='fin'&&MS.g)await msMomentAct('fin');
