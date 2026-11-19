@@ -102,22 +102,22 @@ window.followAct=function(i,k){if(typeof mpLocked==='function'&&mpLocked())retur
  S.follow.splice(i,1);save();render()};
 function followRow(f,i){const w=f.w;const c=signCostF(w);const full=farmL('p').length>=FARM_MAX;
  return `<div class="brow"><b>👀 ${esc(w.name)}</b> <span class="muted tiny">· following ${AW()-f.since} wk</span><br><span class="muted tiny">RNG ${Math.round(w.ring)} · MIC ${Math.round(w.mic)} · ${STYLE_N[w.st]}${f.n?' · '+esc(f.n):''}</span>
-  <div class="row" style="gap:6px;margin-top:6px"><button class="mini" ${S.money.p<c||full?'disabled':''} onclick="followAct(${i},'roh')">🏟️ Sign to ROH · ${money(c)}</button><button class="mini" onclick="followAct(${i},'keep')">Keep following</button><button class="mini" onclick="followAct(${i},'drop')">Stop following</button></div></div>`}
+  <div class="row" style="gap:6px;margin-top:6px"><button class="mini" ${S.money.p<c||full?'disabled':''} onclick="followAct(${i},'roh')">🏟️ Sign to ROH · ${money(c)}</button><button class="mini" onclick="followAct(${i},'keep')">Keep following</button><button class="mini" onclick="followAct(${i},'drop')">Stop following</button></div><span class="wkonly"> <a href="#" onclick="rohGo();return false">Watchlist on the ROH screen ›</a></span></div>`}
 
 /* ---------------- briefing ---------------- */
 function resRow(r,meIds){const tl=r.title?`${TT[r.title].i} ${TT[r.title].n}${r.newc?' — NEW CHAMPION':r.crown?' — crowned':r.keep?' — retained':''} · `:'';const mine=meIds.has(r.win);
  return `<div class="brow">${tl}<b class="${mine?'good':meIds.has(r.a)||meIds.has(r.b)?'bad':''}">${esc(r.wn)}</b> def. ${esc(r.win===r.a?r.bn:r.an)} <span class="stars">${stars(r.st)}</span></div>`}
 window.rohBack=function(){render()};
+window.rohGo=function(){try{closeModal()}catch(e){}rf='roh';go('roster')};
 window.rohNotYet=function(id){const w=S.w[id]||(farmL('p').find(x=>x.id===id));if(w)w.cuNo=AW();save();rohBack()};
 function rohBrief(){const out=[];const me=farmL('p');const ids=new Set(me.map(w=>w.id));const R=S.rohL;
  if(S.tapes&&S.tapes.length)out.push({i:'📼',t:`Tapes & emails · ${S.tapes.length}`,tag:'New',rows:S.tapes.map(tapeRow)});
  const upd=(S.follow||[]).filter(f=>(f.last===AW()-1||f.last===AW())&&f.seen!==AW());if(upd.length)out.push({i:'👀',t:'Watchlist updates',rows:(S.follow||[]).map((f,i)=>upd.includes(f)?followRow(f,i):'').filter(Boolean)});
  if(R&&R.res&&R.res[0]&&me.length){const l=R.res[0].l.filter(r=>ids.has(r.a)||ids.has(r.b)||(r.title&&(r.newc||r.crown)));
   const hot=me.filter(w=>(w.buzz||0)>=9);
-  if(l.length)out.push({i:'🏟️',t:'ROH on HonorClub',rows:l.map(r=>resRow(r,ids)).concat(hot.map(w=>`<div class="brow">🔥 <b>${esc(w.name)}</b> has <b>hot</b> buzz (${w.rw||0}–${w.rl||0} on ROH) — call them up any time from your ROH roster.</div>`))})
-  /* v324: a prospect who turns hot knocks on the office door once (then every 4 weeks they stay hot) */
-  const ask=hot.filter(w=>!w.cuNo||AW()-w.cuNo>=4);
-  if(ask.length)out.push({i:'📣',t:'Ready for the call-up',rows:ask.map(w=>`<div class="brow">🔥 <b>${esc(w.name)}</b> · ${w.rw||0}–${w.rl||0} on ROH, <b>hot</b> buzz — the hotter they are, the bigger their AEW debut.<div class="row" style="gap:6px;margin-top:6px"><button class="mini on" onclick="callUp('${w.id}');rohBack()">📣 Call them up</button><button class="mini" onclick="rohNotYet('${w.id}')">Not yet</button></div></div>`)})}
+  if(l.length)out.push({i:'🏟️',t:'ROH on HonorClub',rows:l.map(r=>resRow(r,ids)).concat(hot.map(w=>`<div class="brow">🔥 <b>${esc(w.name)}</b> has <b>hot</b> buzz (${w.rw||0}–${w.rl||0} on ROH) — the hotter they are, the bigger their AEW debut. <a href="#" onclick="rohGo();return false">Call them up from ROH ›</a></div>`))})
+  /* v342: no office visit for a hot prospect any more — "not yet" did nothing and the call-up is always on the ROH
+     screen, so the row above (in This week) says so and links there */}
  return out}
 if(typeof briefItems==='function'){const b0=briefItems;window.briefItems=briefItems=function(){const sec=b0.apply(this,arguments);try{const x=rohBrief();if(x.length){const at=sec.findIndex(s=>s.i==='🗓️');if(at<0)sec.push(...x);else sec.splice(at,0,...x)}}catch(e){console.warn('roh brief',e)}return sec}}
 

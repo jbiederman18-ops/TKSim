@@ -1,7 +1,6 @@
 /* Tony Khan Simulator — suggested tag teams (v227).
    When you keep pairing the same wrestlers in tag or trios matches without making them a team, or an unnamed pairing wins
-   tag or trios gold, the game suggests making it official — with a name ready to edit. Suggestions show in the weekly
-   briefing (Front office) and on the Front office's Tag teams & factions card. "Not a team" drops a suggestion; a title
+   tag or trios gold, the game suggests making it official — with a name ready to edit. Suggestions show in This week (Front office, a news row since v342 — no office visit) and on the Front office's Tag teams & factions card. "Not a team" drops a suggestion; a title
    win can still bring it back once.
    State: S.tsug = {c:{key:times teamed}, l:[{k,ids,why,at}], no:[keys dismissed]}.
    Loaded after the main script and attention.js; hooks in by wrapping globals. */
@@ -75,7 +74,7 @@ window.saveTeam=function(){const k=TE&&TE.ideas?TSK:null;const ids=TE&&TE.m.slic
 
 /* ---------- where it shows ---------- */
 function why(s){const T=TS();return s.why==='gold'?`Won the ${esc(s.t||'tag')} titles together`:`Teamed up ${T.c[s.k]||TS_N} times`}
-function rowB(s,close){const c=close?'closeModal();':'';return `<div class="brow" style="margin-bottom:10px"><b>${esc(names(s.ids))}</b><br><span class="muted tiny">${why(s)} · suggested name: ${esc(nameIdeas(s.ids)[0]||'')}</span><div class="row" style="gap:6px;margin-top:6px"><button class="mini" onclick="${c}tsOpen('${s.k}')">Name the team</button><button class="mini ghost" onclick="${c}tsNo('${s.k}')">Not a team</button></div></div>`}
+function rowB(s,close){const c=close?'closeModal();':'';return `<div class="brow" style="margin-bottom:10px"><b>${esc(names(s.ids))}</b><br><span class="muted tiny">${why(s)} · suggested name: ${esc(nameIdeas(s.ids)[0]||'')}</span><div class="row" style="gap:6px;margin-top:6px"><button class="mini" onclick="${c}tsOpen('${s.k}')">Name the team</button><button class="mini ghost" onclick="${c}tsNo('${s.k}')">Not a team</button></div>${close?`<span class="wkonly"> <a href="#" onclick="go('office');return false">Name them in the Front office ›</a></span>`:''}</div>`}
 const _brief=window.briefItems;
 window.briefItems=function(){const out=_brief.apply(this,arguments);
  try{const l=live();if(l.length)out.push({i:'🤝',t:l.length>1?'Teams in the making':'A team in the making',rows:l.map(s=>rowB(s,true))})}catch(e){console.warn(e)}

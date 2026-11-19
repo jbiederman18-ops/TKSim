@@ -360,6 +360,7 @@ window.weekPanel=function(){if(!S||S.phase!=='season'||typeof mpLockedQuiet==='f
 .wkp .wkt{display:flex;justify-content:space-between;gap:8px;margin:10px 0 2px;padding:9px 11px;border:1px solid var(--line);border-left:3px solid var(--gold);color:var(--text);text-decoration:none;font-size:13.5px}
 .wkp .wkt.bad{border-left-color:#ff6b61}.wkp .wkt span:last-child{color:var(--gold2);font-weight:700;white-space:nowrap}
 .wkp .wkm{display:block;width:100%;margin-top:6px;padding:8px;background:none;border:1px solid var(--line);color:var(--mut);font:700 12px 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.wkonly{display:none}.wkp .wkonly{display:inline}
 .wkp .wkc{display:flex;flex-direction:column;gap:3px;margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font-size:12.5px;color:var(--mut)}`;document.head.appendChild(c)})();
 })();
 
