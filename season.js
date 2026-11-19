@@ -260,8 +260,8 @@ function rivalAdHtml(mode){const a=rivalAd();if(!a)return '';const nm=esc(curSho
    It books the strongest matches it can from the wrestlers themselves — popularity (top-heavy), in-ring ability, style
    chemistry, face vs heel, freshness (no rematch from the last few weeks) and stamina. It ignores everything from the
    briefing: promises, contract clauses, pitches, title defenses, the weekly goal, the crowd chant and feuds/rivalries are
-   all the GM's to handle. Every match it books is a plain singles match with a clean finish and no title on the line;
-   bonus slots stay empty. Anything already on the card stays put. */
+   all the GM's to handle. Every match it books is a plain singles match with a clean finish and no title on the line.
+   Since v352 the game's own match preview (minus feud heat) picks the matches. Anything already on the card stays put. */
 function suggestCard(){const sh=curShow();const c=JSON.parse(JSON.stringify(S.card.p));const used=new Set();
  c.forEach(sl=>{if(!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(id=>id&&used.add(id));if(sl.k==='promo'){used.add(sl.d.a);if(sl.d.b)used.add(sl.d.b)}if(sl.k==='chal'&&sl.d.c)used.add(sl.d.c);if(sl.k==='xo')used.add(sl.d.a)});
  const W=id=>S.w[id];const ok=id=>{const w=W(id);return !!(w&&w.own==='p'&&!w.inj&&!used.has(id))};
@@ -273,11 +273,17 @@ function suggestCard(){const sh=curShow();const c=JSON.parse(JSON.stringify(S.ca
   return hi*.6+lo*.4+(Math.min(A.ring,B.ring)-70)*.5+chemOpp(A,B)*1.2+(A.al!==B.al?8:0)+(A.g===B.g?4:0)-recentMeets(A.id,B.id).length*25};
  const winner=sides=>{let bi=0,bv=-1e9;sides.forEach((sd,i)=>{const v=avg(sd.map(id=>W(id).pop+(W(id).mom||0)*3));if(v>bv){bv=v;bi=i}});return bi};
  const put=(i,sides)=>{c[i].d={type:'singles',stip:'std',sides,winner:winner(sides),title:''};sides.flat().forEach(id=>used.add(id))};
- /* fill the main event first, then the opener, then the rest — each with the best pair still available */
+ /* v352: the game's own match preview decides, minus feud heat (rivalries stay the GM's call). The quick score above only
+    shortlists pairs from the whole healthy roster — v265 picked from the top 18 names with it alone, which booked matches
+    about a quarter of a star weaker than the rating engine would pick. */
+ const real=(sides,main)=>{const m={type:'singles',stip:'std',sides,winner:0,title:''};m.winner=winner(m.sides);
+  try{const r=rateMatch(m,{ppv:sh.ppv,preview:true,main});const h=r.bd&&r.bd.parts.find(p=>p[0]==='Feud heat');return r.raw-(h?h[1]:0)}catch(e){return -1e9}};
+ /* fill the main event first, then the rest — each with the best pair still available */
  const mi=mainI();const order=empty().sort((x,y)=>(x===mi?-1:y===mi?1:x-y));
- order.forEach(i=>{const l=ownList('p').filter(w=>ok(w.id)&&fit(w)).sort((a,b)=>(b.pop+b.ring)-(a.pop+a.ring)).slice(0,18);let best=null,bv=-1e9;
-  for(let x=0;x<l.length;x++)for(let y=x+1;y<l.length;y++){if(inTeam(l[x].id,l[y].id))continue;const v=score(l[x],l[y]);if(v>bv){bv=v;best=[l[x],l[y]]}}
-  if(best)put(i,[[best[0].id],[best[1].id]])});
+ order.forEach(i=>{const l=ownList('p').filter(w=>ok(w.id)&&fit(w));const cand=[];
+  for(let x=0;x<l.length;x++)for(let y=x+1;y<l.length;y++){if(inTeam(l[x].id,l[y].id))continue;cand.push([score(l[x],l[y]),l[x],l[y]])}
+  let best=null,bv=-1e9;cand.sort((a,b)=>b[0]-a[0]).slice(0,40).forEach(([,A,B])=>{const sd=[[A.id],[B.id]];const v=real(sd,i===mi);if(v>bv){bv=v;best=sd}});
+  if(best)put(i,best)});
  /* a thin roster: the freshest two who can go, so a required slot is never left empty */
  empty().forEach(i=>{const l=ownList('p').filter(w=>!w.inj).sort((a,b)=>sta(b)-sta(a));const a=l.find(w=>!used.has(w.id))||l[0];const o=a&&(l.find(w=>w.id!==a.id&&!used.has(w.id))||l.find(w=>w.id!==a.id));if(a&&o)put(i,[[a.id],[o.id]])});
  /* promos: the best talkers not already on the card */

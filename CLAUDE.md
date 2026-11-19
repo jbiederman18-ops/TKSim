@@ -82,7 +82,10 @@ The Rookie GM orientation lives in `tutorial.js`. When you change, add or remove
 2. Pull numbers from the game with `tv()` (e.g. `cardMatches`, `SEASON`, `PPVS`, `FAT_OK`, `UPKEEP_AT`, `FTIER`) instead of typing them.
 3. If returning players should see the change, bump `TUT_REV` and set that stop's `since` to the new value — they get a short "What's new" replay of just those stops.
 4. Update the matching paragraph in `HOWTO` (index.html) and the README.
-5. Run `python3 tools/check-tutorial.py` (needs `pip install playwright`). It plays every stop and tip headlessly and must pass. GitHub runs it on every push too.
+5. Keep every stop under `TUT_WORDS` words (it's a card on a phone) — the full detail goes in `HOWTO`.
+6. Run `python3 tools/check-tutorial.py` (needs `pip install playwright`; set `CHROME_PATH` if Playwright's own Chromium isn't installed). It plays every stop and tip headlessly, checks word counts, the "What's new" replay for stops at the current `TUT_REV` and the results tip after a real show, and must pass. GitHub runs it on every push too.
 
 ## Balance sweeps
-`python3 tools/balance-sweep.py --compare <older-commit>` plays full seasons headlessly (bot books with Suggest the rest and decides like the offline rival) and prints show ratings, fan war results, money, popularity spread, morale, injuries and errors side by side. Run it after any change to ratings, fans, money, popularity, stamina or the card. Only print the summary lines you need.
+`python3 tools/balance-sweep.py --compare <older-commit>` plays full seasons headlessly and prints show ratings, nights and seasons won, fans, money, popularity spread, morale, injuries and errors side by side (~1 min; older commits are fetched automatically). Run it after any change to ratings, fans, money, popularity, stamina, the card or Suggest the rest. Only print the summary lines you need.
+- The default bot is an attentive player: answers the office line, books the Needs your attention must-dos (promises, clauses, title defenses — it crowns vacant belts too — the weekly goal, the chant), then taps Suggest the rest and buys production like the rival. `--lazy` only taps Suggest; `--engaged` books like a sharp rival.
+- Baselines and known issues are in the script's docstring — compare against them rather than against old targets.

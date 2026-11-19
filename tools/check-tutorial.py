@@ -2,7 +2,9 @@
 """Plays the whole Rookie GM orientation in a headless browser and fails if any stop is broken.
 
 Checks: the draft and first-week tours are offered to a new player, every stop finds what it points at,
-every live number in the text still resolves (TUT_MISS is empty), each coach tip fires, and nothing throws.
+every live number in the text still resolves (TUT_MISS is empty), each coach tip fires (the results tip after a real
+show), no stop is longer than TUT_WORDS, returning players get a "What's new" replay of the stops changed since their
+version, a reworded tip comes back once, and nothing throws.
 
     pip install playwright && python3 -m playwright install chromium
     python3 tools/check-tutorial.py            # add --shots DIR to save a screenshot of every stop
@@ -75,7 +77,7 @@ async def main(shots):
             await pg.evaluate('simDraft()')
             await pg.wait_for_timeout(800)
             if await pg.evaluate("!document.querySelector('#modal').classList.contains('hidden')"):
-                problems.append('the weekly briefing opened on top of the tour offer')
+                problems.append('a sheet (the office line?) opened on top of the first-week tour offer')
                 await pg.evaluate('closeModal()')
             if await expect_offer('first-week'):
                 await walk('first-week')
@@ -106,12 +108,38 @@ async def main(shots):
                 else:
                     visited.append(tid); await shot(tid); await pg.evaluate('tutNext()')
             await pg.evaluate("rf='mine';go('book')"); await pg.wait_for_timeout(400)
+            wk = await pg.evaluate('AW()')
             await pg.evaluate('goLive()'); await pg.wait_for_timeout(300)
             await pg.evaluate('finishLive()'); await pg.wait_for_timeout(300)
+            if await pg.evaluate('AW()') == wk:
+                problems.append('Go live did not air the week-1 show (something at the office door, or the card is not full?)')
             await pg.evaluate("typeof srSkip==='function'&&srSkip()"); await pg.wait_for_timeout(300)
             await pg.evaluate("document.getElementById('srv')&&showResults()"); await pg.wait_for_timeout(900)
             if await pg.evaluate("!!(TUT&&TUT.steps[0].id==='t.results')"):
                 visited.append('t.results'); await shot('t.results'); await pg.evaluate('tutNext()')
+            else:
+                problems.append("t.results: the Why that rating? tip did not appear after the first show")
+            await pg.evaluate("typeof closeModal==='function'&&closeModal()"); await pg.wait_for_timeout(300)
+
+            # every stop fits on a phone card
+            for sid, words, cap in await pg.evaluate("""TUT_STEPS.map(s=>{const d=document.createElement('div');d.innerHTML=s.b();
+                    return [s.id,d.textContent.split(/\\s+/).filter(Boolean).length,TUT_WORDS]})"""):
+                if words > cap:
+                    problems.append(f'{sid}: {words} words — keep stops under {cap} (put the detail in HOWTO)')
+
+            # a returning player who took an older tour is offered just the stops changed since
+            want = await pg.evaluate("TUT_STEPS.filter(s=>s.track==='season'&&s.since===TUT_REV).map(s=>s.id)")
+            if want:
+                await pg.evaluate("tutPut({season:TUT_REV-1});go('home')"); await pg.wait_for_timeout(1400)
+                got = await pg.evaluate("TUT_OFFER&&TUT_OFFER.ids||null")
+                if sorted(got or []) != sorted(want):
+                    problems.append(f"What's new: expected a replay of {want}, got {got}")
+                elif await expect_offer("what's-new"):
+                    await walk("what's-new")
+            # a tip seen before its text last changed comes back once; seen after, it stays quiet
+            if not await pg.evaluate("""(()=>{const s=TUT_STEPS.find(x=>x.track==='tip'&&x.since>1);if(!s)return true;
+                    const o={};o[s.id]=s.since-1;const n={};n[s.id]=s.since;return !tipSeen(o,s.id)&&tipSeen(n,s.id)})()"""):
+                problems.append('tipSeen: a reworded tip does not come back (or comes back every time)')
 
             missing = await pg.evaluate('TUT_MISS')
             for m in missing:
