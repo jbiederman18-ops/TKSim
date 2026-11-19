@@ -117,3 +117,10 @@ if(typeof applyMatch==='function'){const a0=applyMatch;applyMatch=function(m,res
 if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){try{if(S.ccOwe&&S.ccOwe.length){const n=notes||[];
   S.ccOwe=S.ccOwe.filter(x=>{const w=S.w[x.a];if(!w||!w.own)return false;if(AW()<x.by)return true;breach(w,w.own,`the ${x.k==='big'?'big win':ccOweLabel(x).replace(/^a /,'')} you promised for doing the job never came`,n);return false})}}catch(e){console.warn('cc owe',e)}
  return e0.apply(this,arguments)}}
+
+/* v354: storylines that pay off — anything a wrestler was owed and got on tonight's show brings fans in (deliverFans, index.html) */
+if(typeof applyMatch==='function'){const a0=applyMatch;applyMatch=function(m,res,ctx,notes){let due=[];
+ try{if(typeof DELIVER_FANS!=='undefined'&&DELIVER_FANS&&m&&m.sides&&!(ctx&&ctx.preview)){const seen=new Set();m.sides.flat().forEach(id=>{const w=S.w[id];if(!w||!w.own||seen.has(id))return;const why=owedWhy(w,m,ctx||{});if(why){seen.add(id);due.push([w,why])}})}}catch(e){console.warn('deliver',e)}
+ const out=a0.apply(this,arguments);
+ try{due.forEach(([w,why])=>{if(!w.inj)deliverFans(w.own,why,w,notes||[])})}catch(e){console.warn('deliver',e)}
+ return out}}

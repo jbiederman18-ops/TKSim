@@ -62,8 +62,10 @@ function dealTermTxt(w,k){const d=w.deal||{};
  if(k==='me')return `⭐ Main event ${d.me.need-d.me.got} more time${d.me.need-d.me.got>1?'s':''} by week ${wkOf(d.me.by)}`;
  if(k==='shot'){const wk=wkOf(d.shot.by);return `🏆 A title match by ${PPVS[wk]?esc(PPVS[wk])+' (week '+wk+')':'week '+wk}`}
  return '📺 On every PPV card this season'}
-function breach(w,b,what,notes){w.mor=clamp(w.mor-15,0,100);w.trust=(w.trust||0)+1;
- const n=`💔 ${w.name}: ${what} — that was in the contract (morale −15${w.trust>=2?', and they\'re losing trust in '+nameOf(b):''}).`;notes.push(n);if(b==='p'||ON())news(n);
+/* v354: a broken contract term pays out — their agent invokes the clause (BREACH_PAY weeks of salary) */
+let BREACH_PAY=6;
+function breach(w,b,what,notes){w.mor=clamp(w.mor-15,0,100);w.trust=(w.trust||0)+1;const owe=BREACH_PAY&&S.money&&S.money[b]!=null?Math.round(sal(w)*BREACH_PAY):0;if(owe){S.money[b]-=owe;what+=` (their agent collects ${money(owe)})`}
+ if(typeof ripple==='function')ripple(w,b);const n=`💔 ${w.name}: ${what} — that was in the contract (morale −15${w.trust>=2?', and they\'re losing trust in '+nameOf(b):''}).`;notes.push(n);if(b==='p'||ON())news(n);
  if(w.trust>=3&&Math.random()<.5)leave(w,`😤 ${w.name} walked out on ${nameOf(b)} after one broken promise too many.`,notes)}
 /* a promise kept: they're happier, and a little trust comes back */
 function kept(w,what,notes){w.mor=clamp(w.mor+6,0,100);if(w.trust)w.trust--;notes.push(`✅ ${w.name} ${what} (morale +6).`)}

@@ -15,14 +15,15 @@ The default bot clears the Needs your attention checklist (promises, clauses, de
 office line, then taps Suggest the rest — an attentive player who leaves the creative booking to the assistant.
 --compare runs the same bot on both builds, so it is meaningful from v260 (highlight reels) on.
 
-Baseline (v353, Normal, 15-30 games x 2 seasons — season 1 / season 2) — compare new numbers against these:
-  default bot   show ~3.63/3.79, ~28-31% of nights, ~20/53% of seasons, fans ~610K/465K, morale ~66-70, injured ~0.35/wk
-  --lazy        show ~3.8, ~37% of nights, ~35% of seasons, fans ~530K, morale ~63, injured ~0.7/wk
-  --engaged     show ~3.78/3.92, ~32% of nights, ~55/65% of seasons, fans ~700K/550K, morale ~74
-v353 made mood show in the work (morPerf) and stopped Suggest protecting tired wrestlers, so a GM who manages the roster
-now gains more fans than one who only taps Suggest; the lazy GM still wins more single nights. Feud heat is worth about
-+0.09 stars a match and +20 points of season wins to the engaged bot; raising HEAT_TV/HEAT_PPV barely adds to that (the
-rival feuds too, and hot matches run into the top of the star curve).
+Baseline (v354, Normal, 15-24 games x 3 seasons — season 1 / 2 / 3) — compare new numbers against these:
+  default bot   show ~3.62/3.74/3.83, ~24-35% of nights, ~46/70/75% of seasons, fans ~685K/465K, morale ~63-71, bank ~$0.5-2.1M
+  --lazy        show ~3.81/3.79/3.67, ~35% of nights, ~17/58/4% of seasons, fans ~620K/420K/315K, injured ~0.5-0.9/wk
+  skip every checklist step but still rest people (variant {'skip': [...all steps]}): show ~3.83, ~37-40% of nights,
+                ~42/54/29% of seasons — the "ignore what they want" GM wins more nights but fewer seasons, as designed
+v354 made keeping your word pay (OWE_K lift in the match, DELIVER_FANS per delivery, RIPPLE when you break it) and made
+neglect cost money (INJ_BILL rehab, BREACH_PAY, WAGE_K .5 -> .6). Before it, ignoring every must-do while resting people
+won ~35-50% of seasons to the attentive GM's ~10-45%. Money still builds up from season 2 (~$1.5-3M): a real sink would be
+a new system. Opponents for must-dos are picked with the real match preview (opt.crude: the old pop formula).
 --diff normal runs one difficulty; a variant's 'pre' script runs before the bot (handy for testing a constant).
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
@@ -59,7 +60,7 @@ async def run(variants, games, weeks, spend=True, diffs=('easy', 'normal', 'hard
                         await pg.goto(f"http://127.0.0.1:{v['port']}/index.html"); await pg.wait_for_timeout(800)
                         if v.get('pre'): await pg.add_script_tag(content=v['pre'])
                         await pg.add_script_tag(content=SIM)
-                        r = await pg.evaluate(f"SIM({{diff:'{diff}',weeks:{weeks},spend:{str(spend).lower()},engaged:{str(v.get('engaged', False)).lower()},checklist:{str(v.get('checklist', True)).lower()},skip:{json.dumps(v.get('skip', []))},pitch:{json.dumps(v.get('pitch'))}}})")
+                        r = await pg.evaluate(f"SIM({{diff:'{diff}',weeks:{weeks},spend:{str(spend).lower()},engaged:{str(v.get('engaged', False)).lower()},crude:{str(v.get('crude', False)).lower()},checklist:{str(v.get('checklist', True)).lower()},skip:{json.dumps(v.get('skip', []))},pitch:{json.dumps(v.get('pitch'))}}})")
                     except Exception as e:
                         r = {'seasons': [], 'errs': ['runner: ' + str(e)[:200]]}
                     r['perr'] = perr; results.setdefault(f'{name}|{diff}', []).append(r); await ctx.close()

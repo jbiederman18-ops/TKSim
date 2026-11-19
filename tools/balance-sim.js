@@ -38,7 +38,11 @@ window.SIM = async function (opt) {
     const onCard = id => c.some(sl => sl.d && (sl.k === 'match' ? sl.d.sides.flat().includes(id) : sl.k === 'promo' && (sl.d.a === id || sl.d.b === id)));
     const fit = w => sta(w) >= 100 - FAT_RISK;
     const pool = (g, ex) => ownList('p').filter(w => ok(w.id) && (!g || w.g === g) && fit(w) && !(ex || []).includes(w.id)).sort((a, b) => b.pop - a.pop);
-    const oppFor = (a, ex, g) => { let bo = null, bv = -1e9; pool(g || W(a).g, [a].concat(ex || [])).slice(0, 12).forEach(w => { if (inTeam(a, w.id)) return; const v = w.pop + heatOf(a, w.id) * 1.2 + chemOpp(W(a), w) * 1.2 - recentMeets(a, w.id).length * 25; if (v > bv) { bv = v; bo = w } }); return bo };
+    /* v354: picks the opponent the way a player reads the match tell — the game's own preview (opt.crude: the old pop formula) */
+    const oppFor = (a, ex, g) => { let bo = null, bv = -1e9; pool(g || W(a).g, [a].concat(ex || [])).slice(0, opt.crude ? 12 : 30).forEach(w => { if (inTeam(a, w.id)) return;
+      let v; if (opt.crude) v = w.pop + heatOf(a, w.id) * 1.2 + chemOpp(W(a), w) * 1.2 - recentMeets(a, w.id).length * 25;
+      else { try { v = rateMatch({ type: 'singles', stip: 'std', sides: [[a], [w.id]], winner: 0, title: '' }, { ppv: sh.ppv, preview: true }).raw } catch (e) { v = -1e9 } }
+      if (v > bv) { bv = v; bo = w } }); return bo };
     const winner = (sides, force) => { if (force != null) return force; let bi = 0, bv = -1e9; sides.forEach((sd, i) => { const v = avg(sd.map(id => W(id).pop + (W(id).mom || 0) * 3)) + (sd.some(id => typeof ccOn === 'function' && ccOn(W(id))) ? 50 : 0); if (v > bv) { bv = v; bi = i } }); return bi };
     const put = (i, type, sides, o) => { o = o || {}; c[i].d = { type, stip: o.stip || 'std', sides, winner: winner(sides, o.win), title: o.title || '' }; sides.flat().forEach(id => used.add(id)); n++ };
     const slotFor = main => { const e = empty(); if (!e.length) return -1; const mi = mainI(); if (main) return e.includes(mi) ? mi : -1; const nm = e.filter(i => i !== mi); return nm.length ? nm[0] : e[0] };
@@ -117,7 +121,7 @@ window.SIM = async function (opt) {
       // book: the checklist first, then the assistant
       if (opt.checklist) cur.checklist += bookChecklist();
       // stamina (v353: Suggest no longer protects tired wrestlers): the attentive bot sits anyone near injury risk out
-      const rested = opt.checklist && typeof FAT_RISK !== 'undefined' ? owned('p').filter(w => !w.inj && sta(w) < 100 - FAT_RISK) : [];
+      const rested = opt.checklist && !(opt.skip || []).includes('rest') && typeof FAT_RISK !== 'undefined' ? owned('p').filter(w => !w.inj && sta(w) < 100 - FAT_RISK) : [];
       rested.forEach(w => w.own = 'rest');
       try { if (opt.engaged && typeof suggestCardEngaged === 'function') S.card.p = suggestCardEngaged(); else suggestFill() } finally { rested.forEach(w => w.own = 'p') }
       cur.rested += rested.length;

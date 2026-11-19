@@ -277,7 +277,7 @@ function suggestCard(){const sh=curShow();const c=JSON.parse(JSON.stringify(S.ca
     about a quarter of a star weaker than the rating engine would pick. */
  /* v353: on ability alone — feud heat, tired legs and morale are taken back out: building feuds, resting people and keeping
     them happy are the GM's job, so Suggest will happily book someone exhausted or miserable if they're the best on paper */
- const NOT=['Feud heat','Tired legs','Morale'];
+ const NOT=['Feud heat','Tired legs','Morale','Getting what they were owed'];
  const real=(sides,main)=>{const m={type:'singles',stip:'std',sides,winner:0,title:''};m.winner=winner(m.sides);
   try{const r=rateMatch(m,{ppv:sh.ppv,preview:true,main});return r.raw-(r.bd?r.bd.parts.filter(p=>NOT.includes(p[0])).reduce((a,p)=>a+p[1],0):0)}catch(e){return -1e9}};
  /* fill the main event first, then the rest — each with the best pair still available */

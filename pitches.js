@@ -207,7 +207,7 @@ function pitchTick(notes){if(S.phase!=='season')return;bothSides(()=>pitchTickOn
 function pitchTickOne(notes){S.trials=(S.trials||[]).filter(t=>!t.b||S.w[t.b]);if(S.pitch&&S.pitch.b&&!S.w[S.pitch.b])S.pitch=null;
  const p=S.pitch;if(p&&AW()>p.w){const A=S.w[p.a];S.pitch=null;if(A&&A.own==='p'){const P=PITCHES[p.k];mor(A,-pMorCut(A,(P?P.no:2)*3));pNote(notes,`📨 ${A.name} never heard back about their idea and took it as a no.`)}}
  S.trials=S.trials.filter(t=>{const P=PITCHES[t.k];if(!P)return false;if(t.k==='partner'&&!pTeamOf(t.a,t.b))return false;if(!pOwn(t.a)||(t.b&&!pOwn(t.b))){if(t.k==='partner'){const tm=pTeamOf(t.a,t.b);if(tm)S.teams=S.teams.filter(x=>x!==tm)}return false}
-  if(AW()>t.end){const good=t.goal==='rest'||t.goal==='avoid';pNote(notes,good?P.ok(t):P.fail(t));return false}return true});
+  if(AW()>t.end){const good=t.goal==='rest'||t.goal==='avoid';pNote(notes,good?P.ok(t):P.fail(t));if(!good&&typeof ripple==='function')ripple(S.w[t.a]);return false}return true});
  if(!S.pitch&&S.week>=2&&S.week<SEASON&&AW()-(S.pitchLast||0)>=1&&Math.random()<pPitchP())pitchGen()}
 /* v153: a pitch can come any week — about every two weeks, more often when people are unhappy */
 function pPitchP(){const up=ownList('p').filter(w=>w.mor<55).length;return Math.min(.9,.45+up*.06)}
