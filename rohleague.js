@@ -116,8 +116,10 @@ function rohBrief(){const out=[];const me=farmL('p');const ids=new Set(me.map(w=
  if(R&&R.res&&R.res[0]&&me.length){const l=R.res[0].l.filter(r=>ids.has(r.a)||ids.has(r.b)||(r.title&&(r.newc||r.crown)));
   const hot=me.filter(w=>(w.buzz||0)>=9);
   if(l.length)out.push({i:'🏟️',t:'ROH on HonorClub',rows:l.map(r=>resRow(r,ids)).concat(hot.map(w=>`<div class="brow">🔥 <b>${esc(w.name)}</b> has <b>hot</b> buzz (${w.rw||0}–${w.rl||0} on ROH) — the hotter they are, the bigger their AEW debut. <a href="#" onclick="rohGo();return false">Call them up from ROH ›</a></div>`))})
-  /* v342: no office visit for a hot prospect any more — "not yet" did nothing and the call-up is always on the ROH
-     screen, so the row above (in This week) says so and links there */}
+  /* v324: a prospect who turns hot knocks on the office door once (then every 4 weeks they stay hot). v343: back after
+     v342 took it out; the row above stays in This week with its link to the ROH screen */
+  const ask=hot.filter(w=>!w.cuNo||AW()-w.cuNo>=4);
+  if(ask.length)out.push({i:'📣',t:'Ready for the call-up',rows:ask.map(w=>`<div class="brow">🔥 <b>${esc(w.name)}</b> · ${w.rw||0}–${w.rl||0} on ROH, <b>hot</b> buzz — the hotter they are, the bigger their AEW debut.<div class="row" style="gap:6px;margin-top:6px"><button class="mini on" onclick="callUp('${w.id}');rohBack()">📣 Call them up</button><button class="mini" onclick="rohNotYet('${w.id}')">Not yet</button></div></div>`)})}
  return out}
 if(typeof briefItems==='function'){const b0=briefItems;window.briefItems=briefItems=function(){const sec=b0.apply(this,arguments);try{const x=rohBrief();if(x.length){const at=sec.findIndex(s=>s.i==='🗓️');if(at<0)sec.push(...x);else sec.splice(at,0,...x)}}catch(e){console.warn('roh brief',e)}return sec}}
 

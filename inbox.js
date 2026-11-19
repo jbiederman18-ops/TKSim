@@ -22,9 +22,10 @@ const DESK=[            /* briefing sections that are really decisions: one noti
  {k:'cd',test:s=>s.i==='⏳'},
  {k:'oc',test:s=>s.i==='📝'},
  {k:'tape',test:s=>s.i==='📼'},
- /* v342: watchlist updates, "ready for the call-up" and suggested teams left the door: nothing happens if you don't
-    answer (you keep following, they stay in ROH, the pair stays unnamed) and the action is always there — sign or call
-    up on the ROH screen, name the team in the Front office. They're rows in This week instead. */];
+ {k:'callup',test:s=>s.i==='📣'}            /* a hot ROH prospect asking to be called up (back at the door in v343) */
+ /* v342: watchlist updates and suggested teams left the door: nothing happens if you don't answer (you keep following,
+    the pair stays unnamed) and the action is always there — the ROH screen's watchlist, the Front office. They're rows
+    in This week instead. */];
 const deskKind=s=>{const d=DESK.find(d=>d.test(s));return d?d.k:null};
 const isAsk=row=>/<button/.test(row);
 let B0=null;            /* the briefing's sections before the inbox takes its rows out */
@@ -44,12 +45,13 @@ function voiceFor(k,row){
    `It's not great, boss. ${w.inj} week${w.inj===1?'':'s'} the safe way. Your call on how hard we push it.`,
    `${firstName(w)} wants to be back tomorrow. They always do. Here are the real options.`],id)]}
  if(k==='trade')return [S.rival,pickL(['I put something on your desk. Have a look before I change my mind.','Fair deal for both of us. You know it is.','I think this helps us both. Let me know by the end of the week.'],row.length)];
+ if(k==='callup'){const m=row.match(/callUp\('([^']+)'\)/);const w=m&&(S.w[m[1]]||(typeof farmList==='function'&&farmList('p').find(x=>x.id===m[1])));return [w?(S.w[w.id]?w.id:w.name):'ROH',w?pickL([`I'm ready. Every week in ROH is a week I'm not on your show.`,`They're chanting my name in ROH. Bring me up and I'll make them chant it on TV.`],w.id):'One of your ROH prospects is ready.']}
  if(k==='cd'){const c=typeof cdOfferLive==='function'&&cdOfferLive();const w=c&&S.w[c.x];if(!w)return null;
   return [w.id,pickL([`I told you I'd be there when it hit zero. Now let's talk about where I go next.`,`You saw what happened out there. Every company in the business saw it. Make me an offer.`],w.id)]}
  if(k==='oc'){const o=typeof ocOfferLive==='function'&&ocOfferLive();const w=o&&S.w[o.id];if(!w)return null;
   return [w.id,pickL([`You gave me a shot out there. Give me a contract and I'll prove it wasn't a fluke.`,`I answered the challenge. Now I'm asking one: put me on the roster.`],w.id)]}
  return null}
-const KIND={tamp:['🕵️','A word about another offer'],med:['🚑','The trainer, with an update'],trade:['🔁','The rival on the line'],cd:['⏳','The countdown debut, at your door'],oc:['📝','Your open challenger is back'],tape:['📼','A tape on your desk']};
+const KIND={callup:['📣','Ready for the call-up'],tamp:['🕵️','A word about another offer'],med:['🚑','The trainer, with an update'],trade:['🔁','The rival on the line'],cd:['⏳','The countdown debut, at your door'],oc:['📝','Your open challenger is back'],tape:['📼','A tape on your desk']};
 /* who's standing in line for each one */
 function whoOf(x){if(x.k==='ask')return x.a.who;if(x.k==='agent')return x.w.id;if(x.k==='crisis')return S.crisis&&S.crisis.a;if(x.k==='pitch')return S.pitch&&S.pitch.a;if(x.k==='tape')return '📼';if(x.k==='trade')return '📞';const v=voiceFor(x.k,x.row);return v?v[0]:'?'}
 /* ---- what's waiting ---- */
@@ -59,7 +61,7 @@ function inboxList(){if(!allowed())return [];const out=[];
  try{agentList().forEach(w=>out.push({k:'agent',w,open:()=>openAgent(w.id)}))}catch(e){console.warn('inbox agents',e)}
  try{askList().forEach(a=>out.push({k:'ask',a,open:()=>openAsk(a.id)}))}catch(e){console.warn('inbox asks',e)}
  let secs=[];try{secs=B0?B0():[]}catch(e){console.warn('inbox',e)}
- const order=['tamp','med','trade','cd','oc','tape'];
+ const order=['tamp','med','trade','cd','oc','tape','callup'];
  secs.map(s=>({s,k:deskKind(s)})).filter(x=>x.k).sort((a,b)=>order.indexOf(a.k)-order.indexOf(b.k)).forEach(({s,k})=>(s.rows||[]).forEach(row=>{if(isAsk(row))out.push({k,row,s})}));
  return lineup(out)}
 /* v341: the line was everyone with something to say, every week, and nothing goes live until it's clear — by mid-season
@@ -71,7 +73,7 @@ function dKey(x){if(x.k==='crisis'||x.k==='pitch')return x.k;if(x.k==='agent')re
  const q=(x.row||'').match(/\('([^']+)'/);if(q)return x.k+':'+q[1];const b=(x.row||'').match(/<b>([^<]+)<\/b>/);return x.k+':'+(b?b[1]:(x.row||'').length)}
 const dUrgent=x=>x.k==='crisis'||x.k==='pitch'||x.k==='med'||(x.k==='agent'&&x.w.con<=1);
 const D_RANK=x=>x.k==='crisis'?0:x.k==='pitch'?1:x.k==='agent'&&x.w.con<=1?2:x.k==='med'?3:x.k==='tamp'?4:x.k==='agent'?5:x.k==='ask'&&x.a.due?6:
- ({trade:7,cd:8,oc:8,ask:9,tape:11})[x.k]||14;
+ ({trade:7,cd:8,oc:8,ask:9,callup:10,tape:11})[x.k]||14;
 function lineup(out){const wk=AW();
  if(!S.deskWk||S.deskWk.w!==wk){const pick=out.map((x,i)=>({x,i})).sort((a,b)=>D_RANK(a.x)-D_RANK(b.x)||a.i-b.i).map(o=>o.x);const keys=[];
   pick.forEach(x=>{if(dUrgent(x)||keys.length<DESK_MAX)keys.push(dKey(x))});S.deskWk={w:wk,keys}}
