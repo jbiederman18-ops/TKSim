@@ -167,13 +167,15 @@ const GOALS={
 const goalReward=()=>({cash:Math.max(10,Math.round(econCap()*.05/5)*5),fans:3000});
 /* goals handed out before the fix carried the $5M payout; cap them at the real reward */
 const goalCash=g=>Math.min(g.cash||0,goalReward().cash);
+/* v362: what booking the chanted wrestler is worth to that segment (stars) and in fans */
+let CHANT_ST=.5,CHANT_FANS=5000;
 const CHANTS=['“We want {L}!”','“{U}! {U}! {U}!”','“Let’s go {L}!”','“{L} deserves it!”'];
 function weekTick(){if(S.phase!=='season')return;S.goal=S.goal||{};S.chant=S.chant||{};const sh=curShow();const wk=AW();
  brands().filter(b=>b==='p'||ON()).forEach(b=>{if(!S.goal[b]||S.goal[b].w!==wk){const last=S.goal[b]&&S.goal[b].k;const l=Object.keys(GOALS).filter(k=>k!==last&&GOALS[k].ok(sh,b));if(l.length){const rw=goalReward();S.goal[b]={k:pick(l),w:wk,cash:rw.cash,fans:rw.fans}}}
   if(!S.chant[b]||S.chant[b].w!==wk){const was=S.chant[b]&&S.chant[b].id;const pool=ownList(b).filter(w=>!w.inj&&w.id!==was&&w.pop<80);if(pool.length){const w=pick(pool);const L=w.name.split(' ').slice(-1)[0];S.chant[b]={id:w.id,w:wk,t:pick(CHANTS).replace('{L}',L).replace(/\{U\}/g,L.toUpperCase())}}}})}
 /* the crowd gets its wish: first segment on the card with the chanted wrestler gets the pop */
 function chantHit(b,ids){const c=S.chant&&S.chant[b];if(!c||c.w!==AW()||c.hit||!ids.includes(c.id))return null;const w=S.w[c.id];if(!w)return null;
- c.hit=true;w.pop=clamp(w.pop+2,1,100);w.mor=clamp(w.mor+5,0,100);return `📣 The crowd got its wish — ${w.name}! The place comes unglued (+¼★, +2 popularity, +2K fans).`}
+ c.hit=true;w.pop=clamp(w.pop+2,1,100);w.mor=clamp(w.mor+5,0,100);return `📣 The crowd got its wish — ${w.name}! The place comes unglued (+${CHANT_ST>=.5?'½':'¼'}★, +2 popularity, +${fmtFans(CHANT_FANS)} fans).`}
 function goalCheck(b,inf,rating,show,notes){const g=S.goal&&S.goal[b];if(!g||g.w!==AW()||g.done||!GOALS[g.k])return;
  if(!GOALS[g.k].chk(inf,rating,show))return;g.done=true;g.cash=goalCash(g);S.money[b]+=g.cash;S.fans[b]+=g.fans;
  if(b==='p'||ON())notes.push(`🎯 ${ON()?nameOf(b)+': ':''}Weekly goal hit — ${GOALS[g.k].n} (+${money(g.cash)}, +${fmtFans(g.fans)} fans).`)}
@@ -191,7 +193,7 @@ function cardProj(){const sh=curShow();const c=(S.card&&S.card.p)||[];const ctx=
  const mids=[],his=[],meta=[];
  c.forEach((sl,si)=>{if(!sl.d||fixedK(sl))return;
   if(sl.k==='match'){const m=sl.d;if(!validMatch(m))return;const ids=m.sides.flat();const ws=ids.map(id=>S.w[id]);if(ws.some(w=>w.inj))return;
-   const r=rateMatch(m,ctx);let bump=Math.min(1,ws.filter(w=>w.deb).reduce((a,w)=>a+debutStars(w,sh.ppv),0));if(ch&&!chUsed&&ids.includes(ch)){bump+=.25;chUsed=true}
+   const r=rateMatch(m,ctx);let bump=Math.min(1,ws.filter(w=>w.deb).reduce((a,w)=>a+debutStars(w,sh.ppv),0));if(ch&&!chUsed&&ids.includes(ch)){bump+=CHANT_ST;chUsed=true}
    /* v350: a chair stashed under the ring comes out in that wrestler's next match (+¼★ live, see stashHit) — count it here too */
    {const sid=ids.find(id=>S.stash&&S.stash[id]!=null&&S.stash[id]<AW()&&AW()-S.stash[id]<=10&&!stUsed.has(id));if(sid){bump+=.25;stUsed.add(sid)}}
    const mid=clamp((r.lo+r.hi)/2+bump,.25,5),hi=clamp(r.hi+bump,.25,5);P.booked++;P.nm++;mids.push(mid);his.push(hi);meta.push(segMeta(sl,mid));
@@ -205,7 +207,7 @@ function cardProj(){const sh=curShow();const c=(S.card&&S.card.p)||[];const ctx=
     if(win===held&&t.kind!=='singles'&&S.w[t.holders[0]]&&S.w[t.holders[0]].own==='p')P.tagdef=true}
    else if(t&&!t.holders.length&&win){const wo=S.w[(m.sides[m.winner]||[])[0]];if(wo&&wo.own==='p')P.newch=true}}
   else if(sl.k==='promo'){const p=sl.d;if(!S.w[p.a])return;let st=p.res?p.res.stars:promoEst(p);const ids=[p.a,p.b].filter(Boolean);
-   st+=Math.min(1,ids.map(id=>S.w[id]).filter(w=>w&&w.deb).reduce((a,w)=>a+debutStars(w,sh.ppv),0));if(ch&&!chUsed&&ids.includes(ch)){st+=.25;chUsed=true}
+   st+=Math.min(1,ids.map(id=>S.w[id]).filter(w=>w&&w.deb).reduce((a,w)=>a+debutStars(w,sh.ppv),0));if(ch&&!chUsed&&ids.includes(ch)){st+=CHANT_ST;chUsed=true}
    st=clamp(st,.5,5);P.booked++;P.pr=Math.max(P.pr||0,st);mids.push(st);his.push(st);meta.push(segMeta(sl,st));
    if(ids.some(id=>S.w[id]&&S.w[id].deb&&S.w[id].own==='p'))P.deb=true}});
  if(mids.length){const wavg=v=>{let s=0,ws=0;v.forEach((x,i)=>{const w=i===v.length-1?1.6:1;s+=x*w;ws+=w});return s/ws};

@@ -36,6 +36,10 @@ v361 (backstage friend groups, FG_SHARE .35), Normal, 40 games x 3 seasons vs v3
   (show ~3.8, seasons 50/70/45%). Friends move morale, but morale only shows in the work below 50 / above 75, so it doesn't
   separate the two styles yet. Tried: smooth morale slope (pivot 65/68, k .08-.12) with FG_SHARE .35-.5 lifts both bots
   ~0.1-0.15 stars and inflates seasons won; the neglectful GM's featured stars stay happy, so it doesn't separate them either.
+v362 (locker-room mood LR_K .2 under LR_MID 66, chant +1/2 star and 5K fans), Normal, 40 games x 3 seasons, seasons won:
+  default bot 78/65/65%, skip-every-step bot 33/50/47%, --lazy 33/47/25% (v361: 47/55/50 vs 50/70/45). Ignoring still wins
+  more single nights (35% vs 26-30%) and ends ~$1.4M richer by season 3 (money needs the venue ladder). Before v362 the chant
+  and trial-promo steps cost more show quality than they paid, and neglect almost never broke a promise or contract term.
 --diff normal runs one difficulty; a variant's 'pre' script runs before the bot (handy for testing a constant).
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time

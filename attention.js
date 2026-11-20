@@ -181,7 +181,7 @@ function attnItems(){if(!S||S.phase!=='season')return [];
    say:[['Network executive',fill(pickS(SAY.net_goal,'goal'),{n:GOALS[g.k].n.toLowerCase()})]]})}
  const ch=S.chant&&S.chant.p;
  if(ch&&ch.w===AW()&&!ch.hit&&S.w[ch.id]&&S.w[ch.id].own==='p'&&!S.w[ch.id].inj){const w=S.w[ch.id];const on=onCardW(w.id);
-  add({id:'chant',g:A_CH,i:'📣',h:`The crowd is chanting for ${w.name}`,d:'Put them anywhere on the card for a pop: +¼★, popularity and fans.',s:on?['ok','On the card']:['w','Not on the card'],a:on?null:bookBtn(w.id,'Book them'),who:[w.id],where:'📣 The fans',
+  add({id:'chant',g:A_CH,i:'📣',h:`The crowd is chanting for ${w.name}`,d:`Put them anywhere on the card for a pop: +${CHANT_ST>=.5?'½':'¼'}★, popularity and fans.`,s:on?['ok','On the card']:['w','Not on the card'],a:on?null:bookBtn(w.id,'Book them'),who:[w.id],where:'📣 The fans',
    say:[['Fan forums',fill(pickS(SAY.chant,'chant'),{n:ch.t})]],chip:i=>segs(w.id).some(x=>x.i===i)?['ok','The crowd gets its wish']:null})}
  {const a=typeof rivalAd==='function'?rivalAd():null;if(a){const P=cardProj();const mine2=P.me?P.me.mid:null;const theirs=(a.lo+a.hi)/2;
   add({id:'rival',g:A_CH,i:'📻',h:`Beat ${sh.theirs||'the rival'}'s main event for +3K fans`,d:`${vsLine(a.m)} · ${tellWord(theirs)}`,s:mine2==null?['n','Book your main event to compare']:tellStar(mine2)>=tellStar(theirs)?['ok',`Yours: ${tellWord(mine2)}`]:['w',`Yours: ${tellWord(mine2)}`],a:null,where:'📻 Across the dial',
@@ -319,6 +319,8 @@ function wkRows(secs){const l=attnItems();
  /* backstage */
  const sad=l.filter(x=>/^mor/.test(x.id)).map(x=>S.w[x.who[0]]).filter(Boolean).sort((a,b)=>a.mor-b.mor);
  if(sad.length){const off=sad.filter(w=>w.mor<SIT_MOR);add('Backstage','mor','😒',`Unhappy: ${sad.map(w=>`${nmA(w)} <span class="muted">(${esc(moodW(w.mor).toLowerCase())})</span>`).join(', ')}.${off.length?` <span class="bad">${esc(off.map(L).join(' and '))} could go off-script in a match.</span>`:''} A win, a main-event spot or a sit-down interview helps.`,sad.map(w=>w.id+moodW(w.mor)).join(','))}
+ /* v362: the whole locker room's mood — below LR_MID every segment on the show pays a little */
+ try{if(typeof lockerMood==='function'&&LR_K&&mine.length){const lm=lockerMood('p');if(lm<LR_MID)add('Backstage','lr','🌧️',`The locker room is down (average morale ${Math.round(lm)}). Everyone's work suffers a little until it picks up: keep promises, answer pitches, get people on TV.`,'lr'+Math.round(lm/3))}}catch(e){}
  const inj=mine.filter(w=>w.inj).sort((a,b)=>a.inj-b.inj);
  if(inj.length)add('Backstage','inj','🚑',`Out: ${inj.map(w=>`${nmA(w)} <span class="muted">(${w.susp?'suspended':'injured'}, ${w.inj} wk${w.inj===1?'':'s'})</span>`).join(', ')}.`,inj.map(w=>w.id).join(','));
  const ti=l.find(x=>x.id==='tired');if(ti){const ws=(ti.who||[]).map(id=>S.w[id]).filter(Boolean);const ex=ws.filter(w=>w.fat>=FAT_RISK);
