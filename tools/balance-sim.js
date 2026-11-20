@@ -122,6 +122,8 @@ window.SIM = async function (opt) {
       // the office line
       if (S.crisis) { cur.crises++; try { const C = CRISES[S.crisis.k]; if (C) C.ch[Math.floor(Math.random() * C.ch.length)].fx(crisisCtx()) } catch (e) { errs.push('crisis ' + e.message) } S.crisis = null }
       answerPitch();
+      // v356: the network exec's visit — the viewership bonus is collected at the office after each PPV
+      if (S.view && S.view.p && S.view.p.due && S.view.p.amt > 0) { S.money.p += S.view.p.amt; S.view.p = { amt: 0, wks: 0 } }
       // contracts: same rule the offline rival uses
       owned('p').forEach(w => { if (w.con <= 1) { const c = resignCost(w); if (S.money.p >= c && w.mor > 25) { S.money.p -= c; resigned += c; w.sal = askSal(w); w.con += 26 } } });
       // free agency: top up a thin roster from the market

@@ -53,11 +53,12 @@ function voiceFor(k,row){
  return null}
 const KIND={callup:['📣','Ready for the call-up'],tamp:['🕵️','A word about another offer'],med:['🚑','The trainer, with an update'],trade:['🔁','The rival on the line'],cd:['⏳','The countdown debut, at your door'],oc:['📝','Your open challenger is back'],tape:['📼','A tape on your desk']};
 /* who's standing in line for each one */
-function whoOf(x){if(x.k==='ask')return x.a.who;if(x.k==='agent')return x.w.id;if(x.k==='crisis')return S.crisis&&S.crisis.a;if(x.k==='pitch')return S.pitch&&S.pitch.a;if(x.k==='tape')return '📼';if(x.k==='trade')return '📞';const v=voiceFor(x.k,x.row);return v?v[0]:'?'}
+function whoOf(x){if(x.k==='ask')return x.a.who;if(x.k==='agent')return x.w.id;if(x.k==='crisis')return S.crisis&&S.crisis.a;if(x.k==='pitch')return S.pitch&&S.pitch.a;if(x.k==='tape')return '📼';if(x.k==='net')return NET_WHO;if(x.k==='trade')return '📞';const v=voiceFor(x.k,x.row);return v?v[0]:'?'}
 /* ---- what's waiting ---- */
 function inboxList(){if(!allowed())return [];const out=[];
  if(S.crisis&&S.w[S.crisis.a]&&S.w[S.crisis.a].own==='p'&&typeof CRISES!=='undefined'&&CRISES[S.crisis.k])out.push({k:'crisis',open:()=>_oc()});
  if(S.pitch&&typeof PITCHES!=='undefined'&&PITCHES[S.pitch.k]&&S.w[S.pitch.a]&&S.w[S.pitch.a].own==='p')out.push({k:'pitch',open:()=>_op()});
+ try{if(netDue())out.push({k:'net',open:openNet})}catch(e){console.warn('inbox net',e)}
  try{agentList().forEach(w=>out.push({k:'agent',w,open:()=>openAgent(w.id)}))}catch(e){console.warn('inbox agents',e)}
  try{askList().forEach(a=>out.push({k:'ask',a,open:()=>openAsk(a.id)}))}catch(e){console.warn('inbox asks',e)}
  let secs=[];try{secs=B0?B0():[]}catch(e){console.warn('inbox',e)}
@@ -69,10 +70,10 @@ function inboxList(){if(!allowed())return [];const out=[];
    week's line first forms. What can't wait always gets in (a front-office situation, a pitch, a contract on its last
    show, the trainer). Everyone else waits for a later week — they're still there, in the same order. */
 const DESK_MAX=3;window.DESK_MAX=DESK_MAX;
-function dKey(x){if(x.k==='crisis'||x.k==='pitch')return x.k;if(x.k==='agent')return 'ag:'+x.w.id;if(x.k==='ask')return 'ask:'+x.a.id;
+function dKey(x){if(x.k==='crisis'||x.k==='pitch'||x.k==='net')return x.k;if(x.k==='agent')return 'ag:'+x.w.id;if(x.k==='ask')return 'ask:'+x.a.id;
  const q=(x.row||'').match(/\('([^']+)'/);if(q)return x.k+':'+q[1];const b=(x.row||'').match(/<b>([^<]+)<\/b>/);return x.k+':'+(b?b[1]:(x.row||'').length)}
 const dUrgent=x=>x.k==='crisis'||x.k==='pitch'||x.k==='med'||(x.k==='agent'&&x.w.con<=1);
-const D_RANK=x=>x.k==='crisis'?0:x.k==='pitch'?1:x.k==='agent'&&x.w.con<=1?2:x.k==='med'?3:x.k==='tamp'?4:x.k==='agent'?5:x.k==='ask'&&x.a.due?6:
+const D_RANK=x=>x.k==='crisis'?0:x.k==='pitch'?1:x.k==='agent'&&x.w.con<=1?2:x.k==='med'?3:x.k==='tamp'?4:x.k==='agent'?5:x.k==='net'?5.5:x.k==='ask'&&x.a.due?6:
  ({trade:7,cd:8,oc:8,ask:9,callup:10,tape:11})[x.k]||14;
 function lineup(out){const wk=AW();
  if(!S.deskWk||S.deskWk.w!==wk){const pick=out.map((x,i)=>({x,i})).sort((a,b)=>D_RANK(a.x)-D_RANK(b.x)||a.i-b.i).map(o=>o.x);const keys=[];
@@ -114,6 +115,30 @@ window.agentAnswer=function(id,k){if(typeof mpLocked==='function'&&mpLocked())re
  if(k==='go'){const a=AW();if(!S.conAck||S.conAck.wk!==a)S.conAck={wk:a,ids:[]};if(!S.conAck.ids.includes(id))S.conAck.ids.push(id)}
  save();try{render()}catch(e){}const left=inboxList().length;
  openModal(`<div class="h mhd">✍️ ${esc(w.name)}</div><div class="duo" style="align-items:center">${face(w)}</div><div class="outcome">${esc(k==='go'?`The agent nods. After tonight, ${w.name} is a free agent — anyone can bid, you included.`:`"Next week, then. Don't make us wait longer than that."`)}</div>
+ <button class="btn" onclick="closeModal()">${ON_?(left?`Call in the next one (${left} waiting) ▸`:'Line\'s clear — back to work ▸'):'Back to work'}</button>`)};
+/* ---- v356: the network's executive. Your viewership bonus (tvBonus: the network's share of your audience growing past
+   what the TV deal was signed for) builds up every week, and the week after each PPV the network's executive comes to the
+   door with the check. Nothing to decide — it's the payoff for growing the brand — so it's one visit, then back to work.
+   What they say follows how much your audience has grown this season and how your last few shows have rated. */
+const NET_WHO='The network exec';
+function netDue(){const v=S.view&&S.view.p;return !!(v&&v.due&&v.amt>0)}
+function netLine(v){const g=S.fans0&&S.fans0.p?S.fans.p/S.fans0.p:1,bz=typeof buzzOf==='function'?buzzOf('p'):3.5,seed=v.amt+'|'+S.week;
+ const up=Math.round((g-1)*100);
+ if(bz>=4)return pickL([`Have you seen the overnights? Because the whole building upstairs has. Here's your piece of it — keep doing whatever this is.`,
+  `I've worked in this business a long time and I don't get to say this much: people are talking about your show. Here's the network's thanks.`,
+  `My boss called me at home to ask what's going on with your show. That's never good news for me, but it's great news for you. Here.`],seed);
+ if(up>=40)return pickL([`Your audience is up ${up}% since the season started. The deal says we pay for viewers, so here we are.`,
+  `Every week there are more people watching than we signed up for. That's a nice problem to have — here's the check.`,
+  `Advertisers keep asking about your show. That money has to go somewhere, so it's going to you.`],seed);
+ return pickL([`Numbers are trending the right way. Not a fortune, but the network pays for every new viewer.`,
+  `It's a start. More people watched than the deal was built on, so the network owes you a little.`,
+  `Small check this time. Grow the audience and I'll bring a bigger one.`],seed)}
+function openNet(){const v=S.view&&S.view.p;if(!v||!v.amt)return closeModal();
+ openModal(`<div class="h mhd mt">📺 The network, with a check</div><div class="scene brief ibx">${voiceH(NET_WHO,netLine(v))}<div class="brow"><span class="muted tiny">Your viewership bonus from the last ${v.wks} week${v.wks===1?'':'s'}: ${esc(money(v.amt))}. It builds up as your audience grows past what your TV deal was signed for, and arrives after each PPV.</span></div></div>
+ <button class="choice" onclick="netTake()"><span class="key"><span>A</span></span><div>🤝 "Pleasure doing business" · +${esc(money(v.amt))}</div><div class="muted tiny">It goes straight into the bank.</div></button>`)}
+window.netTake=function(){if(typeof mpLocked==='function'&&mpLocked())return;const v=S.view&&S.view.p;if(!v||!v.amt)return closeModal();const amt=v.amt;
+ S.money.p+=amt;S.view.p={amt:0,wks:0};news(`📺 The network paid ${S.gm||'you'} a ${money(amt)} viewership bonus.`);save();try{render()}catch(e){}const left=inboxList().length;
+ openModal(`<div class="h mhd">📺 +${esc(money(amt))}</div><div class="outcome ok">${esc(pickL(['The exec shakes your hand on the way out. "Same time after the next PPV, I hope."','"Don\'t spend it all on pyro." They\'re already on the phone before the door closes.','"Keep them watching." The door clicks shut.'],amt))}</div>
  <button class="btn" onclick="closeModal()">${ON_?(left?`Call in the next one (${left} waiting) ▸`:'Line\'s clear — back to work ▸'):'Back to work'}</button>`)};
 /* ---- v322: requests. The briefing has wrestlers asking for things in their own words — a title shot they're owed, a
    contract clause, a win they were promised for doing the job, a feud that needs its ending — but they only ever said it
@@ -211,6 +236,7 @@ function describe(x){const nm=id=>S.w[id]?S.w[id].name:'';
  if(x.k==='agent'){const w=x.w;return {k:'agent',kick:'✍️ An agent at the door',head:`${w.name}'s contract is ${w.con<=1?'up after tonight':'almost up'}`,w:w.id}}
  if(x.k==='ask'){const K=askKind(x.a.id)||{};return {k:'ask',kick:`${K.i||'🗣️'} ${K.n||'A request'}`,head:x.a.h,w:x.a.who,q:x.a.line}}
  if(x.k==='pitch'){const p=S.pitch,P=PITCHES[p.k],c=pCtx(p);return {k:'pitch',kick:P.cat,head:P.head(c),w:p.a,w2:p.b||null}}
+ if(x.k==='net')return {k:'net',kick:'📺 The network, at your door',head:'A check for the viewership',w:null,tease:1};
  if(x.k==='crisis'){const c=S.crisis,C=CRISES[c.k];return {k:'crisis',kick:`${C.i} ${C.good?'Opportunity':'Front office'}`,head:C.t,w:c.a,narr:1}}
  const [ic,kn]=KIND[x.k]||[x.s.i,x.s.t];const v=voiceFor(x.k,x.row);const who=v&&S.w[v[0]]?v[0]:null;
  const ids=[...new Set((x.row.match(/'[^'\s<>]{1,80}'/g)||[]).flatMap(t=>t.slice(1,-1).split(/[|,]/)).filter(id=>S.w[id]))];
