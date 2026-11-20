@@ -1503,7 +1503,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v359';
+const APP_VERSION='v360';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -3831,12 +3831,12 @@ const TOP_K1=.4,TOP_K2=.22,UPKEEP_AT=85;
 const GROW_K=150,GROW_KM=160,SKILL_AT=85,SKILL_SLIP=.05,SKILL_N=61,UPS_K=.05,UPS_W=.1,TRN_K=.03,AI_TRN=72,AI_TOP=89;
 function room(v){v=+v||0;return v>=99?0:Math.min(99-v,(99-v)*(99-v)/GROW_K)}
 function roomM(v){v=+v||0;return v>=99?0:Math.min(99-v,(99-v)*(99-v)/GROW_KM)}
-/* v359: everyone also has a hidden learning speed for In-ring and for Mic (about 0.65×–1.55×, most near 1×), rolled fresh
+/* v359: everyone also has a hidden learning speed for In-ring and for Mic (0.64×–1.57× at the extremes, most near 1×), rolled fresh
    for every new game from S.seed, so the same roster develops differently each time. It scales gains, not the curve's room:
    no ceilings, just some who get there faster. After LEARN_SEEN gains on your roster the extremes show on the profile. */
 const LEARN_SPREAD=.9,LEARN_SEEN=12,LEARN_FAST=1.25,LEARN_SLOW=.8;
 function learnU(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return ((h>>>0)%100000)/100000}
-function learnSpd(w,k){if(!S.seed)S.seed=Math.floor(Math.random()*1e9);const b=S.seed+'|'+w.id+'|'+k;return Math.exp(((learnU(b+'a')+learnU(b+'b'))/2-.5)*LEARN_SPREAD)}
+function learnSpd(w,k){if(!S.seed)S.seed=ON()&&typeof LMP!=='undefined'&&LMP&&LMP.code?Math.floor(learnU('lg|'+LMP.code)*1e9)+1:Math.floor(Math.random()*1e9);/* v360: an old league with no seed derives it from the league code, so every phone rolls the same one */const b=S.seed+'|'+w.id+'|'+k;return Math.exp(((learnU(b+'a')+learnU(b+'b'))/2-.5)*LEARN_SPREAD)}
 function learnTag(w,k){if(w.own!=='p'||(w.gx||0)<LEARN_SEEN)return '';const v=learnSpd(w,k);return v>=LEARN_FAST?' · 📈 Quick study':v<=LEARN_SLOW?' · 🐢 Slow learner':''}
 function addR(w,a){if(w.own==='ai'&&!ON()&&w.ring>=AI_TOP)return;if(a>0){w.ring=Math.min(99,w.ring+Math.min(a*learnSpd(w,'r'),room(w.ring)));w.gx=(w.gx||0)+1}}
 function addM(w,a){if(w.own==='ai'&&!ON()&&w.mic>=AI_TOP)return;if(a>0){w.mic=Math.min(99,w.mic+Math.min(a*learnSpd(w,'m'),roomM(w.mic)));w.gx=(w.gx||0)+1}}

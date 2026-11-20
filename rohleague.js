@@ -80,7 +80,7 @@ function tapeTick(notes){if(S.phase!=='season'||S.week<2)return;const a=AW();S.t
  /* the watchlist: updates every 3 weeks, and after a while someone else may sign them */
  S.follow=S.follow.filter(f=>{const w=f.w;if(w.real&&taken(w.id))return false;
   if(a-f.since>=4&&Math.random()<.07){const n=`📼 ${w.name}, who you were following, signed somewhere else.`;notes.push(n);news(n);return false}
-  if(a-f.last>=3){f.last=a;const g=RI(1,3);addR(w,g);addM(w,RI(0,2));w.pop=Math.min(45,w.pop+1);w.fee=Math.round(w.fee*1.08);f.up=(f.up||0)+1;f.n=`New tape: in-ring up ${g} to ${Math.round(w.ring)}.`}return true});
+  if(a-f.last>=3){f.last=a;const r0=w.ring;addR(w,RI(1,3));addM(w,RI(0,2));const g=Math.max(1,Math.round(w.ring-r0));w.pop=Math.min(45,w.pop+1);w.fee=Math.round(w.fee*1.08);f.up=(f.up||0)+1;f.n=`New tape: in-ring up ${g} to ${Math.round(w.ring)}.`}return true});
  if(S.tapes.length>=MAX_TAPES||Math.random()>.35)return;const w=tapeGen();if(!w)return;
  S.tapes.push({w,at:a,kind:w.real||Math.random()<.5?'email':'tape'})}
 function tapeLine(t){const w=t.w;const T=TIERS[w.tier]||TIERS.prospect;const org=w.org?esc(w.org):esc(w.from0||'the indies');
