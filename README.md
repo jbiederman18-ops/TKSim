@@ -48,6 +48,7 @@ Now and then a countdown clock appears during a solo promo. Three weeks later a 
 ## No ceilings: how wrestlers grow (v358)
 - **There's no potential rating.** Every wrestler grows on the same curve, so anyone can be built into a megastar. Raw talent learns fast; In-ring and Mic gains slow past 80 and crawl past 90. Working matches (faster against better opponents and in better matches), promos for Mic, and Performance Center training all feed it. A wrestler's profile says where they are: Learning fast, Growing, Gains slowing, Elite or Rare air.
 - **The top is hard to hold.** In-ring of 85+ slips a little in any week without a strong enough match (3★ through the low 90s, about 3½★ at 95) or in-ring training. Popularity already worked this way.
+- **Hidden learning speed.** Everyone has a secret speed for In-ring and for Mic (most near normal, a few much faster or slower), rolled fresh every new game, so the same roster develops differently each time. Work with someone for a while and their profile shows the extremes: 📈 Quick study or 🐢 Slow learner.
 - **Rookie tiers** (Prospect, Blue-Chip, Generational) now set how polished a rookie starts and what they cost, not how good they can get.
 - **The offline rival** only trains wrestlers below 72 in-ring, and its stars stop climbing at 89+ (no upkeep slip for them either), which keeps it where it was against you with potential. Leagues have no offline rival, so every GM grows the same way.
 
