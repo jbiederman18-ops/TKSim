@@ -21,6 +21,10 @@ let FG_SHARE=.35;const FG_MIN=3,FG_SIZE=5,FG_LONER=.12,FG_STAR=75,FG_VIS=2,FG_PE
 const fgHum=b=>!!b&&(typeof MOR_HUM!=='function'||MOR_HUM(b));
 const fgPair=(a,b)=>a<b?a+'|'+b:b+'|'+a;
 let FG_REVEAL_P=.3,FG_REVEAL_N=3,FG_REVEAL_M=0,FG_SPLIT=.025,FG_SPLIT_HEAT=.3;const FG_ALONE=[5,9];
+/* v369: a visit waits outside the office up to FG_WAIT weeks (the line holds DESK_MAX a week). A split that never gets its
+   visit (it waited too long, or another split came first) still makes the news, so a known friendship never ends silently. */
+const FG_WAIT=4;
+function fgDriftNews(b){const v=S.fgd&&S.fgd[b];if(!v)return;delete S.fgd[b];const A=S.w[v.a],Y=S.w[v.y];if(A&&Y&&b==='p')fgNews(`💔 ${A.name} and ${Y.name} aren't friends anymore.`)}
 /* league news is shared by every GM, so friendships go to the private feed there */
 function fgNews(t){if(typeof ON==='function'&&ON()){S.pitchNews=(S.pitchNews||[]).concat([{w:AW(),t}]).slice(-12)}else news(t)}
 const fgIsKnown=(a,b)=>!!(S.fgk&&S.fgk[fgPair(a,b)]);
@@ -93,13 +97,13 @@ function fgChurn(b){if(!fgHum(b)||!S.fg||!S.fgm||!S.fgm[b])return;const wk=AW();
   S.fg[L.id]='l'+(++S.fgN);S.fgx[L.id]={old:g,back:wk+RI(FG_ALONE[0],FG_ALONE[1])};
   /* v364: they come and tell you themselves (inbox.js) — about the friend they were closest to, or the one they fell out with */
   const Y=hot?hot.find(w=>w!==L):(known.length?known:m.filter(o=>o!==L)).slice().sort((a,c)=>c.pop-a.pop)[0];
-  if(Y){S.fgd=S.fgd||{};S.fgd[b]={a:L.id,y:Y.id,known:fgIsKnown(L.id,Y.id)||known.includes(Y),hot:!!hot,w:wk}}
+  if(Y){S.fgd=S.fgd||{};if(S.fgd[b])fgDriftNews(b);S.fgd[b]={a:L.id,y:Y.id,known:fgIsKnown(L.id,Y.id)||known.includes(Y),hot:!!hot,w:wk}}
   known.forEach(o=>{delete S.fgk[fgPair(L.id,o.id)]})});
  /* after some time alone, they find a different group */
  r.forEach(w=>{const x=S.fgx[w.id];if(!x||wk<x.back)return;const open=Object.entries(groups).filter(([g,m])=>g!==x.old&&m.length<FG_SIZE&&!m.includes(w));
   delete S.fgx[w.id];if(!open.length)return;const ws=open.map(([g,m])=>fgFit(w,m));let t=Math.random()*ws.reduce((a,v)=>a+v,0);let g=open[open.length-1][0];
   for(let i=0;i<open.length;i++){t-=ws[i];if(t<=0){g=open[i][0];break}}S.fg[w.id]=g;groups[g].push(w)})}
-if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(){fgSyncAll();try{brands().forEach(fgChurn)}catch(e){console.warn('friends churn',e)}if(S.fgv)Object.keys(S.fgv).forEach(b=>{const v=S.fgv[b];if(v&&v.w<AW()-1)delete S.fgv[b]});if(S.fgd)Object.keys(S.fgd).forEach(b=>{const v=S.fgd[b];if(v&&v.w<AW()-1)delete S.fgd[b]});return e0.apply(this,arguments)}}
+if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(){fgSyncAll();try{brands().forEach(fgChurn)}catch(e){console.warn('friends churn',e)}if(S.fgv)Object.keys(S.fgv).forEach(b=>{const v=S.fgv[b];if(v&&v.w<AW()-FG_WAIT)delete S.fgv[b]});if(S.fgd)Object.keys(S.fgd).forEach(b=>{const v=S.fgd[b];if(v&&v.w<AW()-FG_WAIT)fgDriftNews(b)});return e0.apply(this,arguments)}}
 /* the office visit (inbox.js shows it): a top star, about a friend */
 function fgVisit(){const v=S.fgv&&S.fgv.p;if(!v)return null;const F=S.w[v.f],A=S.w[v.a];if(!F||!A||F.own!=='p'||F.inj)return null;return {v,F,A}}
 function fgCost(F,A){return Math.max(15,Math.round((sal(F)+sal(A))*1.5))}

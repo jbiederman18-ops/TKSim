@@ -71,11 +71,13 @@ function inboxList(){if(!allowed())return [];const out=[];
    that was 7–11 visits before you could book. Now at most DESK_MAX people get in each week, picked by urgency when the
    week's line first forms. What can't wait always gets in (a front-office situation, a pitch, a contract on its last
    show, the trainer). Everyone else waits for a later week — they're still there, in the same order. */
+/* v369: the network exec and friends (a friend's visit, someone who fell out with their group) come right after the
+   front-office business and before contract talks that can still wait, and they keep waiting outside until there's room. */
 const DESK_MAX=3;window.DESK_MAX=DESK_MAX;
 function dKey(x){if(x.k==='crisis'||x.k==='pitch'||x.k==='net'||x.k==='fg'||x.k==='fgd')return x.k;if(x.k==='agent')return 'ag:'+x.w.id;if(x.k==='ask')return 'ask:'+x.a.id;
  const q=(x.row||'').match(/\('([^']+)'/);if(q)return x.k+':'+q[1];const b=(x.row||'').match(/<b>([^<]+)<\/b>/);return x.k+':'+(b?b[1]:(x.row||'').length)}
 const dUrgent=x=>x.k==='crisis'||x.k==='pitch'||x.k==='med'||(x.k==='agent'&&x.w.con<=1);
-const D_RANK=x=>x.k==='crisis'?0:x.k==='pitch'?1:x.k==='agent'&&x.w.con<=1?2:x.k==='med'?3:x.k==='tamp'?4:x.k==='agent'?5:x.k==='net'?5.5:x.k==='fg'?5.7:x.k==='fgd'?5.8:x.k==='ask'&&x.a.due?6:
+const D_RANK=x=>x.k==='crisis'?0:x.k==='pitch'?1:x.k==='agent'&&x.w.con<=1?2:x.k==='med'?3:x.k==='tamp'?4:x.k==='net'?4.2:x.k==='fgd'?4.4:x.k==='fg'?4.6:x.k==='agent'?5:x.k==='ask'&&x.a.due?6:
  ({trade:7,cd:8,oc:8,ask:9,callup:10,tape:11})[x.k]||14;
 function lineup(out){const wk=AW();
  if(!S.deskWk||S.deskWk.w!==wk){const pick=out.map((x,i)=>({x,i})).sort((a,b)=>D_RANK(a.x)-D_RANK(b.x)||a.i-b.i).map(o=>o.x);const keys=[];
