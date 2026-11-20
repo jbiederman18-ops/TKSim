@@ -24,6 +24,10 @@ v354 made keeping your word pay (OWE_K lift in the match, DELIVER_FANS per deliv
 neglect cost money (INJ_BILL rehab, BREACH_PAY, WAGE_K .5 -> .6). Before it, ignoring every must-do while resting people
 won ~35-50% of seasons to the attentive GM's ~10-45%. Money still builds up from season 2 (~$1.5-3M): a real sink would be
 a new system. Opponents for must-dos are picked with the real match preview (opt.crude: the old pop formula).
+v355 (draft money choice: START_BANK $350K, TV_BASE/TV_GROW + in-season viewership bonus, DRAFT_CON 16-52 wks), Normal,
+18 games x 3 seasons: default bot show ~3.63/3.75/3.82, fans ~686K/478K/474K (same as v354), bank ~$0.95M/1.26M/2.05M
+(v354: 0.61/1.62/1.88), seasons won ~39/56/56% (close races; v354's 67/50/50% is within noise of it). For the draft itself and
+the early weeks use tools/draft-sweep.py (strategies stars / auto / cap .85 / .7 / .55, week-by-week bank and red %).
 --diff normal runs one difficulty; a variant's 'pre' script runs before the bot (handy for testing a constant).
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time

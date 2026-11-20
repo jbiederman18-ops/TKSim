@@ -99,7 +99,15 @@ window.SIM = async function (opt) {
 
   newGame('Bot', 'Rival', opt.diff);
   // draft: both sides use the game's own draft picker
-  let g = 0; while (S.phase === 'draft' && g++ < 2000) { const b = onClock(); const c = draftChoice(b); if (!c) { finishDraft(); break } draftPick(c.id, b) }
+  /* opt.draft (draft-sweep.py): how the bot spends its cap. 'auto' = the game's picker; 'stars' = the most popular
+     wrestler that fits every pick, cheap fill at the end; a number (e.g. .7) = the game's picker held to that share of the cap */
+  const dr = opt.draft == null ? 'auto' : opt.draft;
+  if (typeof dr === 'number' && S.draft) S.draft.capB = { p: Math.round(S.draft.cap * dr), ai: S.draft.cap };
+  const starPick = () => { const mine = ownList('p'), needF = mine.length >= 3 && mine.filter(w => w.g === 'F').length / mine.length < .3; let l = Object.values(S.w).filter(w => inPool(w) && draftOk(w, 'p')); if (needF && l.some(w => w.g === 'F')) l = l.filter(w => w.g === 'F'); return l.sort((a, b) => b.pop - a.pop || mkt(a) - mkt(b))[0] };
+  let g = 0; while (S.phase === 'draft' && g++ < 2000) { const b = onClock(); const c = b === 'p' && dr === 'stars' ? starPick() || draftChoice(b) : draftChoice(b); if (!c) { finishDraft(); break } draftPick(c.id, b) }
+  const draftOut = { payroll: payroll('p'), cap: econCap(), draftCap: S.draft && S.draft.cap, bank: S.money.p, top6: ownList('p').map(w => w.pop).sort((a, b) => b - a).slice(0, 6).reduce((a, x) => a + x, 0) / 6, n80: ownList('p').filter(w => w.pop >= 80).length, aiPay: payroll('ai'), aiBank: S.money.ai };
+  if (S.draft) delete S.draft.capB;
+  const wlog = []; let signed = 0, resigned = 0, faSpend = 0;
 
   const seasons = [];
   let cur = null;
@@ -115,8 +123,12 @@ window.SIM = async function (opt) {
       if (S.crisis) { cur.crises++; try { const C = CRISES[S.crisis.k]; if (C) C.ch[Math.floor(Math.random() * C.ch.length)].fx(crisisCtx()) } catch (e) { errs.push('crisis ' + e.message) } S.crisis = null }
       answerPitch();
       // contracts: same rule the offline rival uses
-      owned('p').forEach(w => { if (w.con <= 1) { const c = resignCost(w); if (S.money.p >= c && w.mor > 25) { S.money.p -= c; w.sal = askSal(w); w.con += 26 } } });
+      owned('p').forEach(w => { if (w.con <= 1) { const c = resignCost(w); if (S.money.p >= c && w.mor > 25) { S.money.p -= c; resigned += c; w.sal = askSal(w); w.con += 26 } } });
       // free agency: top up a thin roster from the market
+      /* opt.invest: spend the bank on the best free agent the weekly budget can carry (sealed-bid stars at their asking price) */
+      if (opt.invest && S.phase === 'season' && owned('p').length < 30) { const room = weekEst('p') * opt.invest - payroll('p');
+        const fa = Object.values(S.w).filter(w => !w.own && !w.inj && onMarket(w) && mkt(w) <= room).sort((a, b) => b.pop - a.pop)[0];
+        if (fa && fa.pop >= 60 && S.money.p - signCost(fa) >= econCap() * 1.5) { faSpend += signCost(fa); S.money.p -= signCost(fa); fa.sal = mkt(fa); fa.own = 'p'; fa.con = 26; fa.mor = 80; fa.fee = 0; fa.deb = AW(); signed++ } }
       if (owned('p').length < 22) { const fa = Object.values(S.w).filter(w => !w.own && onMarket(w) && !dealNeedsOffer(w)).sort((a, b) => ovr(b) - ovr(a))[0]; if (fa && S.money.p > signCost(fa) * 3) { S.money.p -= signCost(fa); fa.sal = mkt(fa); fa.own = 'p'; fa.con = 26; fa.mor = 80; fa.fee = 0 } }
       // book: the checklist first, then the assistant
       if (opt.checklist) cur.checklist += bookChecklist();
@@ -144,6 +156,9 @@ window.SIM = async function (opt) {
       if (o && o.blocks) { const PN = new Set(Object.values(PT).map(x => x.n)); o.blocks.filter(b => b.brand === 'p').forEach(b => b.segs.forEach(s => (PN.has(s.sub) ? cur.promoStars : cur.matchStars).push(s.stars))) }
       cur.injP += owned('p').filter(w => w.inj > 0).length; cur.injAI += owned('ai').filter(w => w.inj > 0).length;
       cur.weeks++;
+      if (S.season === 1 && wlog.length < (opt.logWeeks || 0)) { const fa = Object.values(S.w).filter(w => !w.own && onMarket(w)).sort((a, b) => b.pop - a.pop)[0];
+        wlog.push({ w: wlog.length + 1, ppv: !!sh.ppv, m: S.money.p, mai: S.money.ai, r: o && o.ratings ? o.ratings.p : null, rai: o && o.ratings ? o.ratings.ai : null, won: o && o.hourWin === 'p' ? 1 : 0, f: S.fans.p, fai: S.fans.ai,
+          mor: owned('p').reduce((a, w) => a + w.mor, 0) / Math.max(1, owned('p').length), pay: payroll('p'), debt: (S.debt && S.debt.p) || 0, n: owned('p').length, faTop: fa ? fa.pop : 0, signed, fin: S.fin && S.fin.p, cash: o && o.cash && o.cash.p && { tix: o.cash.p.tix, merch: o.cash.p.merch, ad: o.cash.p.ad, gate: o.cash.p.gate || 0, spons: o.cash.p.spons, bill: o.cash.p.bill || 0, prod: o.cash.p.prod || 0, stip: o.cash.p.stip || 0, ceil: o.cash.p.ceil || 0, net: o.cash.p.net }, rs: resigned, fa$: faSpend }) }
       const bad = nanScan(); if (bad.length) errs.push('NaN: ' + bad.slice(0, 5).join(','));
     } catch (e) { errs.push((e && e.stack || String(e)).split('\n').slice(0, 2).join(' ')); cur.errs++; if (cur.errs > 5) break }
   }
@@ -161,5 +176,5 @@ window.SIM = async function (opt) {
     };
   }
   if (cur.weeks) { cur.end = snapshot(); seasons.push(cur) }
-  return { seasons, errs };
+  return { seasons, errs, draft: draftOut, wlog };
 };
