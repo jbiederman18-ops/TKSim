@@ -31,6 +31,11 @@ the early weeks use tools/draft-sweep.py (strategies stars / auto / cap .85 / .7
 v358 (no potential: shared growth curve, in-ring upkeep at 85+, offline rival stops climbing at 89+), Normal, 60 games x 3 seasons:
   default bot show ~3.58/3.68/3.77 vs v357's 3.63/3.74/3.79 (rival ~3.86/3.92/3.99 vs 3.91/4.00/3.99, so the gap is the same),
   seasons won ~48/58/47% vs 47/50/50%, promo stars ~0.1 lower from season 2. Easy/hard within noise.
+v361 (backstage friend groups, FG_SHARE .35), Normal, 40 games x 3 seasons vs v360: default bot show 3.59/3.71/3.80 vs
+  3.58/3.72/3.82, seasons won 47/55/50% vs 53/42/60% (noise), morale ~5 higher in season 1; skip-every-step bot unchanged
+  (show ~3.8, seasons 50/70/45%). Friends move morale, but morale only shows in the work below 50 / above 75, so it doesn't
+  separate the two styles yet. Tried: smooth morale slope (pivot 65/68, k .08-.12) with FG_SHARE .35-.5 lifts both bots
+  ~0.1-0.15 stars and inflates seasons won; the neglectful GM's featured stars stay happy, so it doesn't separate them either.
 --diff normal runs one difficulty; a variant's 'pre' script runs before the bot (handy for testing a constant).
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time

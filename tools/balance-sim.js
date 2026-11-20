@@ -124,6 +124,8 @@ window.SIM = async function (opt) {
       answerPitch();
       // v356: the network exec's visit — the viewership bonus is collected at the office after each PPV
       if (S.view && S.view.p && S.view.p.due && S.view.p.amt > 0) { S.money.p += S.view.p.amt; S.view.p = { amt: 0, wks: 0 } }
+      // v361: a top star at the door about a friend — the attentive bot pays to make a broken promise right, the others brush it off
+      if (typeof fgVisit === 'function' && fgVisit()) { const f = fgVisit(); try { fgAnswer(f.v.d < 0 && opt.checklist && !(opt.skip || []).length ? 0 : 1) } catch (e) { errs.push('friends ' + e.message) } }
       // contracts: same rule the offline rival uses
       owned('p').forEach(w => { if (w.con <= 1) { const c = resignCost(w); if (S.money.p >= c && w.mor > 25) { S.money.p -= c; resigned += c; w.sal = askSal(w); w.con += 26 } } });
       // free agency: top up a thin roster from the market

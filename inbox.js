@@ -53,12 +53,13 @@ function voiceFor(k,row){
  return null}
 const KIND={callup:['📣','Ready for the call-up'],tamp:['🕵️','A word about another offer'],med:['🚑','The trainer, with an update'],trade:['🔁','The rival on the line'],cd:['⏳','The countdown debut, at your door'],oc:['📝','Your open challenger is back'],tape:['📼','A tape on your desk']};
 /* who's standing in line for each one */
-function whoOf(x){if(x.k==='ask')return x.a.who;if(x.k==='agent')return x.w.id;if(x.k==='crisis')return S.crisis&&S.crisis.a;if(x.k==='pitch')return S.pitch&&S.pitch.a;if(x.k==='tape')return '📼';if(x.k==='net')return NET_WHO;if(x.k==='trade')return '📞';const v=voiceFor(x.k,x.row);return v?v[0]:'?'}
+function whoOf(x){if(x.k==='ask')return x.a.who;if(x.k==='agent')return x.w.id;if(x.k==='crisis')return S.crisis&&S.crisis.a;if(x.k==='pitch')return S.pitch&&S.pitch.a;if(x.k==='tape')return '📼';if(x.k==='net')return NET_WHO;if(x.k==='fg'){const f=fgVisit();return f?f.F.id:'?'}if(x.k==='trade')return '📞';const v=voiceFor(x.k,x.row);return v?v[0]:'?'}
 /* ---- what's waiting ---- */
 function inboxList(){if(!allowed())return [];const out=[];
  if(S.crisis&&S.w[S.crisis.a]&&S.w[S.crisis.a].own==='p'&&typeof CRISES!=='undefined'&&CRISES[S.crisis.k])out.push({k:'crisis',open:()=>_oc()});
  if(S.pitch&&typeof PITCHES!=='undefined'&&PITCHES[S.pitch.k]&&S.w[S.pitch.a]&&S.w[S.pitch.a].own==='p')out.push({k:'pitch',open:()=>_op()});
  try{if(netDue())out.push({k:'net',open:openNet})}catch(e){console.warn('inbox net',e)}
+ try{if(typeof fgVisit==='function'&&fgVisit())out.push({k:'fg',open:openFg})}catch(e){console.warn('inbox friends',e)}
  try{agentList().forEach(w=>out.push({k:'agent',w,open:()=>openAgent(w.id)}))}catch(e){console.warn('inbox agents',e)}
  try{askList().forEach(a=>out.push({k:'ask',a,open:()=>openAsk(a.id)}))}catch(e){console.warn('inbox asks',e)}
  let secs=[];try{secs=B0?B0():[]}catch(e){console.warn('inbox',e)}
@@ -70,10 +71,10 @@ function inboxList(){if(!allowed())return [];const out=[];
    week's line first forms. What can't wait always gets in (a front-office situation, a pitch, a contract on its last
    show, the trainer). Everyone else waits for a later week — they're still there, in the same order. */
 const DESK_MAX=3;window.DESK_MAX=DESK_MAX;
-function dKey(x){if(x.k==='crisis'||x.k==='pitch'||x.k==='net')return x.k;if(x.k==='agent')return 'ag:'+x.w.id;if(x.k==='ask')return 'ask:'+x.a.id;
+function dKey(x){if(x.k==='crisis'||x.k==='pitch'||x.k==='net'||x.k==='fg')return x.k;if(x.k==='agent')return 'ag:'+x.w.id;if(x.k==='ask')return 'ask:'+x.a.id;
  const q=(x.row||'').match(/\('([^']+)'/);if(q)return x.k+':'+q[1];const b=(x.row||'').match(/<b>([^<]+)<\/b>/);return x.k+':'+(b?b[1]:(x.row||'').length)}
 const dUrgent=x=>x.k==='crisis'||x.k==='pitch'||x.k==='med'||(x.k==='agent'&&x.w.con<=1);
-const D_RANK=x=>x.k==='crisis'?0:x.k==='pitch'?1:x.k==='agent'&&x.w.con<=1?2:x.k==='med'?3:x.k==='tamp'?4:x.k==='agent'?5:x.k==='net'?5.5:x.k==='ask'&&x.a.due?6:
+const D_RANK=x=>x.k==='crisis'?0:x.k==='pitch'?1:x.k==='agent'&&x.w.con<=1?2:x.k==='med'?3:x.k==='tamp'?4:x.k==='agent'?5:x.k==='net'?5.5:x.k==='fg'?5.7:x.k==='ask'&&x.a.due?6:
  ({trade:7,cd:8,oc:8,ask:9,callup:10,tape:11})[x.k]||14;
 function lineup(out){const wk=AW();
  if(!S.deskWk||S.deskWk.w!==wk){const pick=out.map((x,i)=>({x,i})).sort((a,b)=>D_RANK(a.x)-D_RANK(b.x)||a.i-b.i).map(o=>o.x);const keys=[];
@@ -140,6 +141,25 @@ window.netTake=function(){if(typeof mpLocked==='function'&&mpLocked())return;con
  S.money.p+=amt;S.view.p={amt:0,wks:0};news(`📺 The network paid ${S.gm||'you'} a ${money(amt)} viewership bonus.`);save();try{render()}catch(e){}const left=inboxList().length;
  openModal(`<div class="h mhd">📺 +${esc(money(amt))}</div><div class="outcome ok">${esc(pickL(['The exec shakes your hand on the way out. "Same time after the next PPV, I hope."','"Don\'t spend it all on pyro." They\'re already on the phone before the door closes.','"Keep them watching." The door clicks shut.'],amt))}</div>
  <button class="btn" onclick="closeModal()">${ON_?(left?`Call in the next one (${left} waiting) ▸`:'Line\'s clear — back to work ▸'):'Back to work'}</button>`)};
+/* ---- v361: a top star at the door about a friend (friends.js). Backstage friend groups are secret; this is one of the
+   ways you find out. Angry about a broken promise: smooth it over with a bonus for the friend (most of the hit undone) or
+   call it business (it lingers). Thankful for a kept promise or a title win: take them both to dinner, or just say thanks. */
+function fgLine(f){const {v,F,A}=f,a=firstName(A),seed=F.id+A.id;
+ if(v.d<0)return pickL([`${a} and I go back a long way. You gave your word and you didn't keep it. Don't think the rest of us didn't notice.`,
+  `I'm not here about me. I'm here about ${a}. The way they got treated this week isn't right, and I want to know what you're going to do about it.`,
+  `${a} is my friend. When you do that to them, you're doing it to me too.`],seed);
+ return pickL([`I just wanted to say thanks for looking after ${a}. That means a lot to me. To a lot of us.`,
+  `Did you see ${a} last night? I've known them since we were nobodies. Whatever you're doing, keep doing it.`,
+  `${a} called me in tears, the good kind. I owe you one.`],seed)}
+function openFg(){const f=fgVisit();if(!f)return closeModal();const {v,F,A}=f;const c=fgCost(F,A);
+ openModal(`<div class="h mhd mt">🤝 ${esc(F.name)}, about a friend</div><div class="scene brief ibx">${voiceH(F.id,fgLine(f))}<div class="brow"><span class="muted tiny">${esc(F.name)} and ${esc(A.name)} are close backstage. What happens to one, the other feels.</span></div></div>
+ ${v.d<0?`<button class="choice" onclick="fgPick(0)"><span class="key"><span>A</span></span><div>💵 "Let me make it right" · −${esc(money(c))}</div><div class="muted tiny">A bonus for ${esc(A.name)}. Takes most of the sting out for both.</div></button>
+ <button class="choice" onclick="fgPick(1)"><span class="key"><span>B</span></span><div>🤷 "It's business"</div><div class="muted tiny">Free. ${esc(F.name)} won't forget it.</div></button>`
+ :`<button class="choice" onclick="fgPick(0)"><span class="key"><span>A</span></span><div>🍽️ "Dinner's on me, bring ${esc(firstName(A))}" · −${esc(money(15))}</div><div class="muted tiny">A little more goodwill for both.</div></button>
+ <button class="choice" onclick="fgPick(1)"><span class="key"><span>B</span></span><div>🙂 "Glad to hear it"</div><div class="muted tiny">Free.</div></button>`}`)}
+window.fgPick=function(i){if(typeof mpLocked==='function'&&mpLocked())return;const t=fgAnswer(i);if(!t)return closeModal();try{render()}catch(e){}const left=inboxList().length;
+ openModal(`<div class="h mhd">🤝 Backstage</div><div class="outcome ok">${esc(t)}</div>
+ <button class="btn" onclick="closeModal()">${ON_?(left?`Call in the next one (${left} waiting) ▸`:'Line\'s clear — back to work ▸'):'Back to work'}</button>`)};
 /* ---- v322: requests. The briefing has wrestlers asking for things in their own words — a title shot they're owed, a
    contract clause, a win they were promised for doing the job, a feud that needs its ending — but they only ever said it
    in the rundown. Now they come to the door and ask you directly: say yes (a little morale now; it goes to the top of
@@ -205,7 +225,8 @@ function askSnap(){const wk=AW();const ys=Object.keys(S.asks||{}).filter(k=>{con
  let l=[];try{l=window.attnItems()}catch(e){return null}
  return ys.map(k=>{const x=l.find(y=>y.id===k);return x?{k,w:(x.who||[])[0],ok:!!(x.s&&x.s[0]==='ok')}:{k,gone:1}})}
 function askSettle(snap){const wk=AW();snap.forEach(o=>{const r=S.asks[o.k];if(!r||r.done)return;r.done=1;const w=S.w[o.w];if(o.gone||!w||w.own!=='p')return;
- let t;if(o.ok){mor(w,4);t=`🗣️ You told ${w.name} yes, and you kept your word (+4 morale).`}else{mor(w,-8);t=`🗣️ You told ${w.name} yes, then left it off the card. They noticed (−8 morale).`}
+ const m0=w.mor;let t;if(o.ok){mor(w,4);t=`🗣️ You told ${w.name} yes, and you kept your word (+4 morale).`}else{mor(w,-8);t=`🗣️ You told ${w.name} yes, then left it off the card. They noticed (−8 morale).`}
+ try{if(typeof fgSpread==='function')fgSpread(w,w.mor-m0,'promise')}catch(e){console.warn(e)}
  S.pitchNews=(S.pitchNews||[]).concat([{w:wk,t}]).slice(-12);news(t)})}
 
 /* ---- showing it ---- */
