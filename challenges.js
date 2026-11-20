@@ -16,9 +16,8 @@ const store=()=>{try{return JSON.parse(localStorage.getItem(CS_KEY)||'{}')||{}}c
 const keep=o=>{try{localStorage.setItem(CS_KEY,JSON.stringify(o))}catch(e){}};
 const mineL=()=>ownList('p');
 const avgMor=()=>{const l=mineL();return l.length?l.reduce((a,w)=>a+w.mor,0)/l.length:100};
-/* v168: Gold Rush scales with the number of titles (7 of 10 before the WWE belts arrived, 10 of 14 now) */
-const goldT=()=>typeof S!=='undefined'&&S&&S.titles?Object.keys(S.titles).length:TITLES.length,goldN=()=>Math.ceil(goldT()*.7);
-const heldN=()=>Object.values(S.titles).filter(t=>t.holders.length&&t.holders.every(h=>S.w[h]&&S.w[h].own==='p')).length;
+/* v368: Gold Rush retired — belts never leave their show, so holding most of the titles can't be done. A save that was
+   playing it carries on as a normal game (CH() finds nothing, so the Home card and checks stay quiet). */
 const C=()=>S&&S.chal;
 const W=id=>id&&S.w[id];
 const pct=(a,b)=>Math.max(0,Math.min(100,Math.round(a/b*100)));
@@ -44,11 +43,6 @@ const CHALS=[
  goal:'Beat the rival head to head on 6 straight weeks of TV before All In. PPV weeks don\'t break the streak.',
  prog(){const c=C();return {txt:`Current streak ${c.run||0} · best ${c.best||0} / 6`,pct:pct(c.run||0,6)}},
  won(){return (C().run||0)>=6}},
-{id:'gold',i:'🏆',t:'Gold Rush',diff:'normal',by:32,
- d:'Seven belts each to start. The rival won\'t give theirs up easily.',
- get goal(){return `Hold ${goldN()} of the ${goldT()} championships at once by week 32. Take them on PPV with title challenges.`},
- prog(){const n=heldN();return {txt:`You hold ${n} of ${goldT()} titles`,pct:pct(n,goldN())}},
- won(){return heldN()>=goldN()}},
 {id:'five',i:'✨',t:'Five-Star Factory',diff:'normal',by:ALLIN_WEEK,
  d:'Fans will forgive a lot for a match they\'ll talk about for years.',
  goal:'Put on 12 matches rated 5★ or better (your own wrestlers only) before All In.',
@@ -126,7 +120,7 @@ function card(){const c=C();if(!c||ON())return '';const sc=CH(c.id);if(!sc)retur
  const p=sc.prog(),left=sc.by-S.week+1;
  return `<div class="card"><div class="row sb"><b>${sc.i} ${esc(sc.t)}</b><span class="tg ${left<=3?'bad':''}">${left>0?`${left} week${left>1?'s':''} left`:'Final week'}</span></div><div class="muted" style="margin:4px 0 8px">${sc.goal}</div>
   <div style="height:8px;border-radius:4px;background:var(--line,#333);overflow:hidden"><div style="height:100%;width:${p.pct}%;background:var(--gold2,#e8c35a)"></div></div><div class="tiny" style="margin-top:6px">${p.txt}</div></div>`}
-window.chalResult=function(){const c=C();if(!c)return;const sc=CH(c.id);c.seen=1;save();
+window.chalResult=function(){const c=C();if(!c)return;const sc=CH(c.id);c.seen=1;save();if(!sc)return;
  openModal(`<div class="h mhd">${c.st==='won'?'🎉 Challenge complete':'Challenge over'}</div><p style="font-size:1.1em"><b>${sc.i} ${esc(sc.t)}</b></p>
  <p class="muted">${c.st==='won'?`You did it in week ${c.at}. It's saved to your challenge record on this device.`:esc(c.why||'')}</p>
  <p class="muted tiny">This save keeps going as a normal game. Start another challenge from the setup screen.</p><button class="btn" onclick="closeModal()">Keep playing</button>`)};

@@ -73,7 +73,6 @@ Tap **🎯 Challenge scenarios** on the new-game screen for a solo season with o
 | ⭐ Make a Star | Pick a wrestler at 50 popularity or lower after the draft and get them to 75 | All In |
 | 🚢 Sinking Ship | Start $500K in the red with the rival 150K fans ahead; reach $1.5M in the bank and more total fans | All In |
 | 📺 Ratings War | Win 6 straight weeks of TV head to head (PPV weeks don't break the streak) | All In |
-| 🏆 Gold Rush | Hold 10 of the 14 titles at once | Week 32 |
 | ✨ Five-Star Factory | 12 matches at 5★ or better, your own wrestlers only | All In |
 | 🪨 David vs. Goliath | On Hard, with the rival 150K fans and $1.5M ahead, finish the year with more total fans | Survivor Series |
 | 🌱 Homegrown | A wrestler you scouted or created holds a singles title | Week 32 |
