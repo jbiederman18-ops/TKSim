@@ -21,7 +21,7 @@ let FG_SHARE=.35;const FG_MIN=3,FG_SIZE=5,FG_LONER=.12,FG_STAR=75,FG_VIS=2,FG_PE
 const fgHum=b=>!!b&&(typeof MOR_HUM!=='function'||MOR_HUM(b));
 const fgPair=(a,b)=>a<b?a+'|'+b:b+'|'+a;
 let FG_REVEAL_P=.3,FG_REVEAL_N=3,FG_REVEAL_M=0,FG_SPLIT=.025,FG_SPLIT_HEAT=.3;const FG_ALONE=[5,9];
-/* v369: a visit waits outside the office up to FG_WAIT weeks (the line holds DESK_MAX a week). A split that never gets its
+/* v369: a visit waits outside the office up to FG_WAIT weeks (the line holds DESK_MAX a week, 4 since v370). A split that never gets its
    visit (it waited too long, or another split came first) still makes the news, so a known friendship never ends silently. */
 const FG_WAIT=4;
 function fgDriftNews(b){const v=S.fgd&&S.fgd[b];if(!v)return;delete S.fgd[b];const A=S.w[v.a],Y=S.w[v.y];if(A&&Y&&b==='p')fgNews(`💔 ${A.name} and ${Y.name} aren't friends anymore.`)}

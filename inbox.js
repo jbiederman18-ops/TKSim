@@ -73,7 +73,7 @@ function inboxList(){if(!allowed())return [];const out=[];
    show, the trainer). Everyone else waits for a later week — they're still there, in the same order. */
 /* v369: the network exec and friends (a friend's visit, someone who fell out with their group) come right after the
    front-office business and before contract talks that can still wait, and they keep waiting outside until there's room. */
-const DESK_MAX=3;window.DESK_MAX=DESK_MAX;
+const DESK_MAX=4;/* v370: 3 → 4, so the network and friends' visits make it in too */window.DESK_MAX=DESK_MAX;
 function dKey(x){if(x.k==='crisis'||x.k==='pitch'||x.k==='net'||x.k==='fg'||x.k==='fgd')return x.k;if(x.k==='agent')return 'ag:'+x.w.id;if(x.k==='ask')return 'ask:'+x.a.id;
  const q=(x.row||'').match(/\('([^']+)'/);if(q)return x.k+':'+q[1];const b=(x.row||'').match(/<b>([^<]+)<\/b>/);return x.k+':'+(b?b[1]:(x.row||'').length)}
 const dUrgent=x=>x.k==='crisis'||x.k==='pitch'||x.k==='med'||(x.k==='agent'&&x.w.con<=1);
