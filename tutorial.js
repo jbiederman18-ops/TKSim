@@ -37,8 +37,10 @@ const tvRival=()=>tv('rival name',()=>ON()?'the other GMs':esc(S.rival),'the riv
 #tut .tut-bar{height:3px;background:var(--line);margin:7px 0 2px}#tut .tut-bar i{display:block;height:100%;background:var(--gold);transition:width .25s}
 #tut .tut-t{font-family:'BC','Barlow Condensed',sans-serif;font-weight:800;font-style:italic;text-transform:uppercase;font-size:23px;line-height:1.1;margin:8px 0 6px;letter-spacing:.02em}
 #tut .tut-b{font-size:15px;line-height:1.45;color:var(--text)}#tut .tut-b b{color:var(--gold2)}
-#tut .tut-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px}
+#tut .tut-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px}/* v372: on a long stop the buttons stay pinned to the bottom of the card while the text scrolls */
 #tut .tut-row.col{flex-direction:column;align-items:stretch}
+#tut .tut-card>.tut-row{position:sticky;bottom:-12px;margin:12px -16px -12px;padding:10px 16px 12px;background:var(--st2);box-shadow:0 -16px 14px -6px var(--st2)}
+html.lk-hy #tut .tut-card>.tut-row{background:#1a1a1e;box-shadow:0 -16px 14px -6px #1a1a1e}
 #tut .tut-nav{display:flex;gap:8px;align-items:center}
 #tut .tut-go{border:0;background:var(--gold);color:#120d02;font-family:'BC','Barlow Condensed',sans-serif;font-weight:800;font-style:italic;text-transform:uppercase;letter-spacing:.06em;font-size:16px;padding:9px 18px 8px;clip-path:var(--slant);cursor:pointer}
 #tut .tut-row.col .tut-go{font-size:18px;padding:12px}

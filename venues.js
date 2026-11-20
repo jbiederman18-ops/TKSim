@@ -49,10 +49,10 @@ function venueCard(){const s=venSt('p'),V=venOf('p'),i=venIdx('p'),up=BLDG[i+1],
  const lr=lrPull('p');
  return `<div class="card"><div class="row sb"><div class="h small" style="margin:0">Your building</div>${V.rent?`<span class="muted tiny">${money(V.rent)}/wk rent</span>`:''}</div>
  <div style="margin-top:6px"><b>${V.i} ${esc(V.n)}</b></div><div class="muted tiny">${esc(V.d)} Box office tops out around ${ceil(V)} a TV show.</div>
- ${V.pull?`<div class="tiny" style="margin-top:6px">Filling it lately: <b class="${pullWord(est,V.pull)[1]}">${pullWord(est,V.pull)[0]}</b> <span class="muted">· from your last 3 shows${lr?`, and the locker room ${lr>0?'talking it up':'dragging it down'}`:''}. Tonight's card decides it (Book screen).</span></div>`:''}
+ ${V.pull?`<div class="tiny" style="margin-top:6px">Crowds lately: <b class="${pullWord(est,V.pull)[1]}">${pullWord(est,V.pull)[0]}</b> <span class="muted">· from your last 3 shows${lr?`, and the locker room ${lr>0?'talking it up':'dragging it down'}`:''}. Tonight's card decides it (Book screen).</span></div>`:''}
  ${nxt?`<div class="card warn mt" style="padding:8px">${nxt.i} Moving to the <b>${esc(nxt.n)}</b> ${left<=1?'next week':`in ${left} weeks`}.</div>`:''}
  ${up&&!nxt?`<div class="mt" style="border-top:1px solid var(--line);padding-top:8px"><div><b>${up.i} ${esc(up.n)}</b> <span class="muted tiny">· ${money(up.move)} to move in, ${money(up.rent)}/wk</span></div>
-  <div class="muted tiny">${esc(up.d)} Tickets ×${up.tix}, box office up to ${ceil(up)} a show, +${Math.round(up.fans*100)}% fans from good shows. Right now you'd ${(()=>{const w=pullWord(est,up.pull);return `<b class="${w[1]}">${w[0].toLowerCase().replace("you won't",'not')}</b>`})()} it.</div>
+  <div class="muted tiny">${esc(up.d)} Tickets ×${up.tix}, box office up to ${ceil(up)} a show, +${Math.round(up.fans*100)}% fans from good shows. Right now: ${(()=>{const w=pullWord(est,up.pull);return `<b class="${w[1]}">${w[0]}</b>`})()}.</div>
   <button class="mini mt" onclick="venUp()" ${S.money.p<up.move||stay?'disabled':''}>Sign the lease · ${money(up.move)}</button>${stay?` <span class="muted tiny">You can move again in ${stay} week${stay>1?'s':''}.</span>`:S.money.p<up.move?` <span class="muted tiny">Not enough in the bank yet.</span>`:''}</div>`:''}
  ${dn&&!nxt?`<div class="mt"><button class="mini" onclick="venDown()">Move back to the ${esc(dn.n)}</button></div>`:''}</div>`}
 window.venueCard=venueCard;

@@ -69,10 +69,13 @@ const st=document.createElement('style');st.id='fxcss';st.textContent=css;docume
 
 /* ---------------- overlays (one at a time, queued) ---------------- */
 const Q=[];let ON_=false,MUTE=false;
-function overlay(html,cls,ms,extra){if(MUTE)return;Q.push({html,cls,ms,extra});if(!ON_)next()}
-function next(){const o=Q.shift();if(!o){ON_=false;return}ON_=true;let el=document.getElementById('fxo');if(el)el.remove();el=document.createElement('div');el.id='fxo';el.className=o.cls||'';el.innerHTML=o.html+'<div class="tap">Tap to continue</div>';document.body.appendChild(el);
+function overlay(html,cls,ms,extra,rv){if(MUTE)return;Q.push({html,cls,ms,extra,rv});if(!ON_)next()}
+function next(){let o=Q.shift();/* v372: title moments queued by the star reveal are dropped once you've left it, so they don't play over the office line */
+ while(o&&o.rv&&!(typeof srOn==='function'&&srOn()))o=Q.shift();if(!o){ON_=false;return}ON_=true;let el=document.getElementById('fxo');if(el)el.remove();el=document.createElement('div');el.id='fxo';el.className=o.cls||'';el.innerHTML=o.html+'<div class="tap">Tap to continue</div>';document.body.appendChild(el);
  if(o.extra&&!RM())try{o.extra(el)}catch(e){}
- let done=false;const close=()=>{if(done)return;done=true;el.classList.add('out');setTimeout(()=>{el.remove();next()},330)};el.onclick=e=>{e.stopPropagation();close()};setTimeout(close,RM()?1800:o.ms||3600)}
+ let done=false;const close=()=>{if(done)return;done=true;clearInterval(wt);el.classList.add('out');setTimeout(()=>{el.remove();next()},330)};el.onclick=e=>{e.stopPropagation();close()};setTimeout(close,RM()?1800:o.ms||3600)
+ /* v372: a reveal title moment bows out as soon as the reveal closes */
+ const wt=o.rv?setInterval(()=>{if(!(typeof srOn==='function'&&srOn()))close()},250):0}
 window.fxOverlay=overlay;
 function sparks(el,n,hot){for(let i=0;i<n;i++){const s=document.createElement('i');s.className='fxspark';s.style.left=(10+Math.random()*80)+'%';s.style.setProperty('--dx',(Math.random()*160-80)+'px');s.style.setProperty('--dy',-(200+Math.random()*420)+'px');s.style.animationDelay=(Math.random()*1.4)+'s';if(hot)s.style.background='#ff8a3b';el.appendChild(s)}}
 /* fireworks: rockets rise from the bottom and burst into gold, red and white sparks (one canvas, ~3.5s) */
@@ -97,10 +100,10 @@ window.fxConfetti=confetti;
 
 /* ---------------- 1. title changes ---------------- */
 const TRX=/(NEW|INAUGURAL) (.+?) CHAMPIONS?: (.+?)(?: make| makes| —|!|$)/;
-function titleFx(note){const m=TRX.exec(note||'');if(!m)return;const first=m[1]==='INAUGURAL';const title=m[2].replace(/\b\w+/g,w=>w.charAt(0)+w.slice(1).toLowerCase());const who=m[3].trim();
- overlay(`<div class="fl"></div><div class="kk">${first?'The first ever':'And new'}</div>${(()=>{const id=window.beltIdByName&&beltIdByName(title);const b=id&&window.beltImg&&beltImg(id);return b?`<img class="fxbi" src="${b}" alt="">`:`<div class="fxplate">${esc(title)}</div>`})()}<div class="nmx">${esc(who)}</div><div class="sub">${esc(title)} Champion${/&/.test(who)?'s':''}</div>`,'',4200,el=>sparks(el,26))}
+function titleFx(note,rv){const m=TRX.exec(note||'');if(!m)return;const first=m[1]==='INAUGURAL';const title=m[2].replace(/\b\w+/g,w=>w.charAt(0)+w.slice(1).toLowerCase());const who=m[3].trim();
+ overlay(`<div class="fl"></div><div class="kk">${first?'The first ever':'And new'}</div>${(()=>{const id=window.beltIdByName&&beltIdByName(title);const b=id&&window.beltImg&&beltImg(id);return b?`<img class="fxbi" src="${b}" alt="">`:`<div class="fxplate">${esc(title)}</div>`})()}<div class="nmx">${esc(who)}</div><div class="sub">${esc(title)} Champion${/&/.test(who)?'s':''}</div>`,'',4200,el=>sparks(el,26),rv)}
 window.fxTitle=titleFx;
-function segTitles(notes){(notes||[]).forEach(n=>{if(TRX.test(n))titleFx(n)})}
+function segTitles(notes){(notes||[]).forEach(n=>{if(TRX.test(n))titleFx(n,true)})}
 /* solo reveal: when a segment's stars land */
 if(typeof srDone==='function'){const d0=srDone;srDone=function(it){const was=it&&it.ok;const out=d0.apply(this,arguments);try{if(it&&!was&&!MUTE){hit(it);segTitles(it.s&&it.s.notes)}}catch(e){}return out}}
 if(typeof srFinal==='function'){const f0=srFinal;srFinal=function(instant){if(instant)MUTE=true;let out;try{out=f0.apply(this,arguments)}finally{MUTE=false}

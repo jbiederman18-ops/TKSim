@@ -76,7 +76,7 @@ function hofTab(){const l=(S.hof2||[]).slice().reverse();const me=typeof canonKe
 window.openHistory=function(t){if(t)HT=t;if(!S||!S.w)return;
  const tabs=[['titles','🏆 Titles'],['records','📊 Records'],['awards','🎖️ Awards'],['hof','🏛️ Hall of Fame']];
  openModal(`<div class="h mhd">📖 History book</div><div class="chips">${tabs.map(([k,n])=>`<button class="chip ${HT===k?'on':''}" onclick="openHistory('${k}')">${n}</button>`).join('')}</div><div class="mt">${HT==='titles'?titlesTab():HT==='records'?recordsTab():HT==='awards'?awardsTab():hofTab()}</div>
- <p class="muted tiny center">History is recorded from v157 on.</p><button class="btn ghost" onclick="closeModal()">Close</button>`,true)};
+ <button class="btn ghost" onclick="closeModal()">Close</button>`,true)};
 window.HT_SET=k=>{HT=k};
 
 /* ---------------- career + head to head on the wrestler card ---------------- */
