@@ -89,14 +89,17 @@ function fgChurn(b){if(!fgHum(b)||!S.fg||!S.fgm||!S.fgm[b])return;const wk=AW();
   for(let i=0;i<m.length&&!hot;i++)for(let j=i+1;j<m.length;j++)if(typeof beefOf==='function'&&beefOf(m[i].id,m[j].id)>=(typeof BEEF_MIN!=='undefined'?BEEF_MIN:40)){hot=[m[i],m[j]];break}
   if(Math.random()>=(hot?FG_SPLIT_HEAT:FG_SPLIT))return;
   const top=m.slice().sort((a,c)=>c.pop-a.pop)[0];const pool=hot?hot.filter(w=>w!==top):m.filter(w=>w!==top);const L=pool.length?pick(pool):null;if(!L)return;
-  const known=m.filter(o=>o!==L&&fgIsKnown(L.id,o.id));known.forEach(o=>{delete S.fgk[fgPair(L.id,o.id)]});m.forEach(o=>{if(S.fgc)delete S.fgc[fgPair(L.id,o.id)]});
+  const known=m.filter(o=>o!==L&&fgIsKnown(L.id,o.id));m.forEach(o=>{if(S.fgc)delete S.fgc[fgPair(L.id,o.id)]});
   S.fg[L.id]='l'+(++S.fgN);S.fgx[L.id]={old:g,back:wk+RI(FG_ALONE[0],FG_ALONE[1])};
-  if(b==='p'&&known.length)fgNews(`💔 ${L.name} has drifted apart from ${known.map(o=>o.name).join(' and ')} backstage${hot?' after their falling-out':''}.`)});
+  /* v364: they come and tell you themselves (inbox.js) — about the friend they were closest to, or the one they fell out with */
+  const Y=hot?hot.find(w=>w!==L):(known.length?known:m.filter(o=>o!==L)).slice().sort((a,c)=>c.pop-a.pop)[0];
+  if(Y){S.fgd=S.fgd||{};S.fgd[b]={a:L.id,y:Y.id,known:fgIsKnown(L.id,Y.id)||known.includes(Y),hot:!!hot,w:wk}}
+  known.forEach(o=>{delete S.fgk[fgPair(L.id,o.id)]})});
  /* after some time alone, they find a different group */
  r.forEach(w=>{const x=S.fgx[w.id];if(!x||wk<x.back)return;const open=Object.entries(groups).filter(([g,m])=>g!==x.old&&m.length<FG_SIZE&&!m.includes(w));
   delete S.fgx[w.id];if(!open.length)return;const ws=open.map(([g,m])=>fgFit(w,m));let t=Math.random()*ws.reduce((a,v)=>a+v,0);let g=open[open.length-1][0];
   for(let i=0;i<open.length;i++){t-=ws[i];if(t<=0){g=open[i][0];break}}S.fg[w.id]=g;groups[g].push(w)})}
-if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(){fgSyncAll();try{brands().forEach(fgChurn)}catch(e){console.warn('friends churn',e)}if(S.fgv)Object.keys(S.fgv).forEach(b=>{const v=S.fgv[b];if(v&&v.w<AW()-1)delete S.fgv[b]});return e0.apply(this,arguments)}}
+if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(){fgSyncAll();try{brands().forEach(fgChurn)}catch(e){console.warn('friends churn',e)}if(S.fgv)Object.keys(S.fgv).forEach(b=>{const v=S.fgv[b];if(v&&v.w<AW()-1)delete S.fgv[b]});if(S.fgd)Object.keys(S.fgd).forEach(b=>{const v=S.fgd[b];if(v&&v.w<AW()-1)delete S.fgd[b]});return e0.apply(this,arguments)}}
 /* the office visit (inbox.js shows it): a top star, about a friend */
 function fgVisit(){const v=S.fgv&&S.fgv.p;if(!v)return null;const F=S.w[v.f],A=S.w[v.a];if(!F||!A||F.own!=='p'||F.inj)return null;return {v,F,A}}
 function fgCost(F,A){return Math.max(15,Math.round((sal(F)+sal(A))*1.5))}
@@ -106,6 +109,13 @@ function fgAnswer(i){const x=fgVisit();if(!x)return '';const {v,F,A}=x;delete S.
  else{if(i===0){S.money.p-=15;mlog(F,2,'Dinner with the boss');mlog(A,2,'Dinner with the boss');t=`A long dinner, a few stories you can't repeat. ${F.name} and ${A.name} are buzzing.`}
   else t=`"Just wanted you to know." ${F.name} heads back to the locker room in a good mood.`}
  fgNews(`🤝 ${F.name} came to the office about ${A.name}.`);save();return t}
+/* v364: someone who fell out with their group tells you about it */
+function fgDrift(){const v=S.fgd&&S.fgd.p;if(!v)return null;const A=S.w[v.a],Y=S.w[v.y];if(!A||!Y||A.own!=='p'||A.inj)return null;return {v,A,Y}}
+function fgDriftAnswer(){const x=fgDrift();if(!x)return '';const {v,A,Y}=x;delete S.fgd.p;let t;
+ if(v.known){mlog(A,2,'You listened');t=`${A.name} shrugs. "Thanks. It is what it is." They seem a little lighter on the way out.`}
+ else t=`${A.name} blinks. "Since forever. Doesn't matter now." And they're gone.`;
+ fgNews(`💔 ${A.name} and ${Y.name} aren't friends anymore.`);save();return t}
+window.fgDrift=fgDrift;window.fgDriftAnswer=fgDriftAnswer;
 window.fgVisit=fgVisit;window.fgCost=fgCost;window.fgAnswer=fgAnswer;
 /* Backstage friends on the profile, under Mood */
 if(typeof showW==='function'){const s0=showW;showW=function(id){const out=s0.apply(this,arguments);try{const w=S.w[id];if(w&&w.own==='p'&&(S.phase==='season'||S.phase==='over')){const k=fgKnown(w);if(k.length){

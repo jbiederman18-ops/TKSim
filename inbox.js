@@ -53,13 +53,14 @@ function voiceFor(k,row){
  return null}
 const KIND={callup:['📣','Ready for the call-up'],tamp:['🕵️','A word about another offer'],med:['🚑','The trainer, with an update'],trade:['🔁','The rival on the line'],cd:['⏳','The countdown debut, at your door'],oc:['📝','Your open challenger is back'],tape:['📼','A tape on your desk']};
 /* who's standing in line for each one */
-function whoOf(x){if(x.k==='ask')return x.a.who;if(x.k==='agent')return x.w.id;if(x.k==='crisis')return S.crisis&&S.crisis.a;if(x.k==='pitch')return S.pitch&&S.pitch.a;if(x.k==='tape')return '📼';if(x.k==='net')return NET_WHO;if(x.k==='fg'){const f=fgVisit();return f?f.F.id:'?'}if(x.k==='trade')return '📞';const v=voiceFor(x.k,x.row);return v?v[0]:'?'}
+function whoOf(x){if(x.k==='ask')return x.a.who;if(x.k==='agent')return x.w.id;if(x.k==='crisis')return S.crisis&&S.crisis.a;if(x.k==='pitch')return S.pitch&&S.pitch.a;if(x.k==='tape')return '📼';if(x.k==='net')return NET_WHO;if(x.k==='fg'){const f=fgVisit();return f?f.F.id:'?'}if(x.k==='fgd'){const f=fgDrift();return f?f.A.id:'?'}if(x.k==='trade')return '📞';const v=voiceFor(x.k,x.row);return v?v[0]:'?'}
 /* ---- what's waiting ---- */
 function inboxList(){if(!allowed())return [];const out=[];
  if(S.crisis&&S.w[S.crisis.a]&&S.w[S.crisis.a].own==='p'&&typeof CRISES!=='undefined'&&CRISES[S.crisis.k])out.push({k:'crisis',open:()=>_oc()});
  if(S.pitch&&typeof PITCHES!=='undefined'&&PITCHES[S.pitch.k]&&S.w[S.pitch.a]&&S.w[S.pitch.a].own==='p')out.push({k:'pitch',open:()=>_op()});
  try{if(netDue())out.push({k:'net',open:openNet})}catch(e){console.warn('inbox net',e)}
  try{if(typeof fgVisit==='function'&&fgVisit())out.push({k:'fg',open:openFg})}catch(e){console.warn('inbox friends',e)}
+ try{if(typeof fgDrift==='function'&&fgDrift())out.push({k:'fgd',open:openFgd})}catch(e){console.warn('inbox drift',e)}
  try{agentList().forEach(w=>out.push({k:'agent',w,open:()=>openAgent(w.id)}))}catch(e){console.warn('inbox agents',e)}
  try{askList().forEach(a=>out.push({k:'ask',a,open:()=>openAsk(a.id)}))}catch(e){console.warn('inbox asks',e)}
  let secs=[];try{secs=B0?B0():[]}catch(e){console.warn('inbox',e)}
@@ -71,10 +72,10 @@ function inboxList(){if(!allowed())return [];const out=[];
    week's line first forms. What can't wait always gets in (a front-office situation, a pitch, a contract on its last
    show, the trainer). Everyone else waits for a later week — they're still there, in the same order. */
 const DESK_MAX=3;window.DESK_MAX=DESK_MAX;
-function dKey(x){if(x.k==='crisis'||x.k==='pitch'||x.k==='net'||x.k==='fg')return x.k;if(x.k==='agent')return 'ag:'+x.w.id;if(x.k==='ask')return 'ask:'+x.a.id;
+function dKey(x){if(x.k==='crisis'||x.k==='pitch'||x.k==='net'||x.k==='fg'||x.k==='fgd')return x.k;if(x.k==='agent')return 'ag:'+x.w.id;if(x.k==='ask')return 'ask:'+x.a.id;
  const q=(x.row||'').match(/\('([^']+)'/);if(q)return x.k+':'+q[1];const b=(x.row||'').match(/<b>([^<]+)<\/b>/);return x.k+':'+(b?b[1]:(x.row||'').length)}
 const dUrgent=x=>x.k==='crisis'||x.k==='pitch'||x.k==='med'||(x.k==='agent'&&x.w.con<=1);
-const D_RANK=x=>x.k==='crisis'?0:x.k==='pitch'?1:x.k==='agent'&&x.w.con<=1?2:x.k==='med'?3:x.k==='tamp'?4:x.k==='agent'?5:x.k==='net'?5.5:x.k==='fg'?5.7:x.k==='ask'&&x.a.due?6:
+const D_RANK=x=>x.k==='crisis'?0:x.k==='pitch'?1:x.k==='agent'&&x.w.con<=1?2:x.k==='med'?3:x.k==='tamp'?4:x.k==='agent'?5:x.k==='net'?5.5:x.k==='fg'?5.7:x.k==='fgd'?5.8:x.k==='ask'&&x.a.due?6:
  ({trade:7,cd:8,oc:8,ask:9,callup:10,tape:11})[x.k]||14;
 function lineup(out){const wk=AW();
  if(!S.deskWk||S.deskWk.w!==wk){const pick=out.map((x,i)=>({x,i})).sort((a,b)=>D_RANK(a.x)-D_RANK(b.x)||a.i-b.i).map(o=>o.x);const keys=[];
@@ -159,6 +160,16 @@ function openFg(){const f=fgVisit();if(!f)return closeModal();const {v,F,A}=f;co
  <button class="choice" onclick="fgPick(1)"><span class="key"><span>B</span></span><div>🙂 "Glad to hear it"</div><div class="muted tiny">Free.</div></button>`}`)}
 window.fgPick=function(i){if(typeof mpLocked==='function'&&mpLocked())return;const t=fgAnswer(i);if(!t)return closeModal();try{render()}catch(e){}const left=inboxList().length;
  openModal(`<div class="h mhd">🤝 Backstage</div><div class="outcome ok">${esc(t)}</div>
+ <button class="btn" onclick="closeModal()">${ON_?(left?`Call in the next one (${left} waiting) ▸`:'Line\'s clear — back to work ▸'):'Back to work'}</button>`)};
+/* ---- v364: a friendship ends, and they come tell you. If you knew they were friends, you offer condolences; if you
+   didn't, well: "Wait, you were friends?" */
+function openFgd(){const f=fgDrift();if(!f)return closeModal();const {v,A,Y}=f,y=firstName(Y),seed=A.id+Y.id;
+ const line=v.hot?pickL([`Me and ${y}? Done. After what happened, I'm not pretending anymore.`,`I'm not riding with ${y} anymore. You probably heard why.`,`${y} and I had it out. We're not friends now. Just so you know.`],seed)
+  :pickL([`Me and ${y} don't really hang out anymore. Nothing happened. We just… drifted.`,`Weird thing to say to your boss, but ${y} and I aren't friends anymore. Felt like you should know.`,`${y} and I used to be tight. Not anymore. I'm finding my own people.`],seed);
+ openModal(`<div class="h mhd mt">💔 ${esc(A.name)}, about ${esc(Y.name)}</div><div class="scene brief ibx">${voiceH(A.id,line)}</div>
+ <button class="choice" onclick="fgdPick()"><span class="key"><span>A</span></span><div>${v.known?`😔 "I'm sorry to hear that. I know you two were close."`:`🤨 "Wait, you were friends?"`}</div></button>`)}
+window.fgdPick=function(){if(typeof mpLocked==='function'&&mpLocked())return;const t=fgDriftAnswer();if(!t)return closeModal();try{render()}catch(e){}const left=inboxList().length;
+ openModal(`<div class="h mhd">💔 Backstage</div><div class="outcome ok">${esc(t)}</div>
  <button class="btn" onclick="closeModal()">${ON_?(left?`Call in the next one (${left} waiting) ▸`:'Line\'s clear — back to work ▸'):'Back to work'}</button>`)};
 /* ---- v322: requests. The briefing has wrestlers asking for things in their own words — a title shot they're owed, a
    contract clause, a win they were promised for doing the job, a feud that needs its ending — but they only ever said it

@@ -126,6 +126,11 @@ window.SIM = async function (opt) {
       if (S.view && S.view.p && S.view.p.due && S.view.p.amt > 0) { S.money.p += S.view.p.amt; S.view.p = { amt: 0, wks: 0 } }
       // v361: a top star at the door about a friend — the attentive bot pays to make a broken promise right, the others brush it off
       if (typeof fgVisit === 'function' && fgVisit()) { const f = fgVisit(); try { fgAnswer(f.v.d < 0 && opt.checklist && !(opt.skip || []).length ? 0 : 1) } catch (e) { errs.push('friends ' + e.message) } }
+      if (typeof fgDrift === 'function' && fgDrift()) { try { fgDriftAnswer() } catch (e) { errs.push('drift ' + e.message) } }
+      // v364: the venue — move up when the bank can carry the move and a few months' rent and recent buzz would fill it (opt.venue false: never)
+      if (typeof venueMove === 'function' && opt.venue !== false) { try { const st = S.venue && S.venue.p, i = BLDG.indexOf(venOf('p')), up = BLDG[i + 1];
+        if (S.money.p < 0 && i > 0 && !(st && st.next)) venueMove('p', -1);
+        else if (up && S.phase === 'season' && S.money.p >= up.move * 1.5 + up.rent * 8 && crowdPull('p', buzzOf('p')) >= up.pull + .05) { if (venueMove('p', 1) === 'ok') cur.venue = up.k } } catch (e) { errs.push('venue ' + e.message) } }
       // contracts: same rule the offline rival uses
       owned('p').forEach(w => { if (w.con <= 1) { const c = resignCost(w); if (S.money.p >= c && w.mor > 25) { S.money.p -= c; resigned += c; w.sal = askSal(w); w.con += 26 } } });
       // free agency: top up a thin roster from the market
