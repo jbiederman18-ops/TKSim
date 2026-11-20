@@ -11,6 +11,11 @@
    Grievances are private to each GM in an online league, like every front-office situation. The offline rival's
    locker room keeps the old, simpler morale. Loaded after the main script; hooks in by wrapping globals. */
 'use strict';
+/* v366: star egos. A star (EGO_POP+ popularity) who isn't champion and hasn't been featured (main event, a 3½★+ match or
+   promo, a PPV win) for EGO_AFTER weeks or more loses EGO_K morale a week, scaled by how crowded the top of your card is:
+   your number of stars / EGO_ROOM. A roster stacked with stars has more egos than spotlights, so keeping them all happy
+   takes rotation; a lighter roster is easier to keep happy. Human GMs only. */
+let EGO_POP=80,EGO_ROOM=10,EGO_K=1,EGO_AFTER=2,EGO_BASE=0,EGO_X=0;
 (function(){
 const HUM=b=>b==='p'||(ON()&&!!b);
 window.MOR_HUM=HUM;
@@ -39,8 +44,12 @@ function weekMorale(){const wk=AW();
    if(w.pop>=78&&w.lme!=null&&wk-w.lme>=6&&seen.has(w.id))mlog(w,-1,'No main events lately');
    if(w.fat>=75)mlog(w,-2,'Worn down');
    if(w.sal!=null&&sal(w)<mkt(w)*.8&&w.pop>=45)mlog(w,-1,'Underpaid');
-   /* nobody stays on cloud nine forever */
-   if(w.mor>85)w.mor=Math.max(85,w.mor-1.5)})})}
+   /* nobody stays on cloud nine forever (v366 star egos run after this loop) */
+   if(w.mor>85)w.mor=Math.max(85,w.mor-1.5)});
+  /* v366: star egos — more stars than spotlights and the ones left out start to grumble */
+  try{if(EGO_K){const stars=ownList(b).filter(w=>!w.inj&&w.pop>=EGO_POP);const over=Math.max(0,stars.length-EGO_ROOM),crowd=EGO_X?EGO_BASE+over*EGO_X:stars.length/EGO_ROOM;
+   stars.forEach(w=>{const champ=typeof isChamp==='function'&&isChamp(w.id);if(champ||w.feat===wk){w.ego=0;return}w.ego=(w.ego||0)+1;
+    if(w.ego>=EGO_AFTER){const d=-Math.round(EGO_K*crowd*10)/10;if(d)mlog(w,d,(EGO_X?over>0:crowd>1)?'Lost in a crowded locker room':'Wants the spotlight')}})}}catch(e){console.warn('egos',e)}})}
 if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){try{weekMorale()}catch(e){console.warn('morale',e)}return e0.apply(this,arguments)}}
 
 /* ---------------- wins, losses and main events ---------------- */
