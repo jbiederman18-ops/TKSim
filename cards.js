@@ -473,7 +473,7 @@ window.tcAct=function(i,stay){const sl=card()[i];if(!sl)return;if(!editOk(sl)){i
 /* put the slot in the middle of the space between the header and the hand */
 function center(i){const w=(TC.entAt||0)+360-Date.now();if(TC.open&&w>0){setTimeout(()=>center0(i,'smooth'),w);return}center0(i)}
 function center0(i,bh){requestAnimationFrame(()=>requestAnimationFrame(()=>{const el=document.querySelector(`.tcs[data-tcs="${i}"]`);if(!el)return;
- const hd=document.querySelector('header.top');const dk=document.getElementById('tcdock');const top=hd?hd.getBoundingClientRect().bottom:0;const bot=dk?(dk.classList.contains('tcsheet')?innerHeight-(TC.big?dk.offsetHeight:Math.min(dk.offsetHeight,innerHeight*.66,600)):dk.getBoundingClientRect().top):innerHeight;
+ const hd=document.querySelector('header.top');const dk=document.getElementById('tcdock');const top=hd?hd.getBoundingClientRect().bottom:0;const bot=dk?(dk.classList.contains('tcsheet')?(typeof tcSide==='function'&&tcSide())?innerHeight:innerHeight-(TC.big?dk.offsetHeight:Math.min(dk.offsetHeight,innerHeight*.66,600)):dk.getBoundingClientRect().top):innerHeight;
  const r=el.getBoundingClientRect();const room=bot-top;const d=r.height>room-16?r.top-(top+8):r.top+r.height/2-(top+room/2);if(Math.abs(d)>4)window.scrollBy({top:d,behavior:bh||(TC.open?'auto':'smooth')})}))}
 /* v327: every way into booking from outside the Book screen (Needs your attention, feud and title-shot buttons, Blood & Guts)
    lands on the card table with the sheet open, instead of the classic match/promo editors. ids are placed in order; the

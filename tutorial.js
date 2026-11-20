@@ -31,6 +31,7 @@ const tvRival=()=>tv('rival name',()=>ON()?'the other GMs':esc(S.rival),'the riv
 #tut .tut-hole{position:fixed;display:none;border-radius:4px;box-shadow:0 0 0 2px var(--gold),0 0 22px 2px rgba(216,180,73,.45),0 0 0 200vmax rgba(0,0,0,.72);transition:top .28s ease,left .28s ease,width .28s ease,height .28s ease;pointer-events:none}
 #tut .tut-card{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));width:min(440px,calc(100vw - 24px));max-height:46vh;overflow:auto;background:linear-gradient(180deg,var(--st1),var(--st2));box-shadow:inset 0 0 0 1px var(--gold),0 18px 50px rgba(0,0,0,.7);clip-path:var(--cut);padding:14px 16px 12px;color:var(--text);animation:tutin .22s ease}
 #tut .tut-card.at-top{bottom:auto;top:calc(12px + env(safe-area-inset-top))}
+#tut .tut-card.at-side{bottom:auto;top:50%;transform:translateY(-50%);max-height:80vh}
 #tut .tut-card.at-mid{bottom:auto;top:50%;transform:translate(-50%,-50%);max-height:80vh}
 @keyframes tutin{from{opacity:0;margin-top:8px}to{opacity:1;margin-top:0}}
 #tut .tut-k{display:flex;justify-content:space-between;font-family:'BC','Barlow Condensed',sans-serif;font-weight:800;font-style:italic;text-transform:uppercase;letter-spacing:.08em;font-size:12.5px;color:var(--gold2)}
@@ -154,7 +155,12 @@ function tutPlace(el){const box=document.getElementById('tut');if(!box||!TUT)ret
   hole.style.cssText=`display:block;top:${t}px;left:${Math.max(r.left-p,6)}px;width:${Math.min(r.width+p*2,W-12)}px;height:${Math.max(b-t,24)}px`;
   top=(t+b)/2>H/2;box.classList.remove('nohole')}
  else{hole.style.cssText='display:none';box.classList.add('nohole')}
- card.classList.toggle('at-top',el?top:false);card.classList.toggle('at-mid',!el)}
+ card.classList.toggle('at-top',el?top:false);card.classList.toggle('at-mid',!el);
+ /* v374: on a computer screen the card sits beside what it points at when there's room, instead of on top of it */
+ let side=null;if(el&&W>=1100&&!(typeof TV!=='undefined'&&TV)){const r=el.getBoundingClientRect(),cw=Math.min(440,W-24)+32;if(W-r.right>=cw)side=Math.round(r.right+16);else if(r.left>=cw)side=Math.round(r.left-cw+16);
+  /* a tall target leaves no room above or below either: hug the window edge with more space so less of it is covered */
+  else if(r.height>H*.45)side=W-r.right>=r.left?Math.round(W-cw+16):16}
+ card.classList.toggle('at-side',side!=null);card.style.left=side!=null?side+'px':''}
 
 function tutEnd(done){if(!TUT)return;const T=TUT;TUT=null;tutHide();
  const st=T.steps[T.i];if(st&&st.after)try{st.after()}catch(e){}

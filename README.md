@@ -38,6 +38,11 @@ The tour reads its numbers straight from the game and is checked automatically o
 - **Survivor Series is the crossover show** (it took Forbidden Door's place): up to two dream matches against the rival's stars, and rival invasions in the TV weeks before it.
 - **Existing saves** keep their week: the WWE wrestlers arrive in free agency, WWE's titles start vacant (two for each brand), and the PPVs take their new names from here on.
 
+## Playing on a computer (v374)
+On a screen 1100px or wider (never on the party-night TV) the game lays itself out for a desktop: the tabs move up into the header, Home, the Office and Settings run in two columns, sheets open as centred windows, and the booking pick sheet docks down the right side so the card table stays in view — click another slot on the table to switch to it.
+- **Mouse:** everything clickable lights up on hover. Right-click a wrestler card for their details (the same as holding it on a phone). The scroll wheel scrolls sideways rows without Shift.
+- **Keyboard:** **1–5** switch tabs (Home, Book, Roster, Titles, Office) and **0** opens Settings. **A–E** answer a lettered choice (the office line, promo and match showdowns, live calls). **Space**, **Enter** or **→** advance showdowns and the star reveal. **Esc** closes the open sheet (never mid-showdown or mid-reveal) or the pick sheet. **Tab** reaches every clickable panel; **Enter** or **Space** presses it, and **I** on a wrestler card opens their details. In the tour, **←/→** step through and **Esc** skips.
+
 ## The calendar
 - **📅 Always know where you are.** The strip on the Home screen shows every week of the year (PPVs in gold, supershows brightest, this week outlined). Tap it, or **WK** in the header, for the full calendar: each PPV and what's special about it, TV specials, tournament rounds, crossover season, promised matches and the week each of your contracts runs out.
 
