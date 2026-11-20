@@ -28,6 +28,9 @@ v355 (draft money choice: START_BANK $350K, TV_BASE/TV_GROW + in-season viewersh
 18 games x 3 seasons: default bot show ~3.63/3.75/3.82, fans ~686K/478K/474K (same as v354), bank ~$0.95M/1.26M/2.05M
 (v354: 0.61/1.62/1.88), seasons won ~39/56/56% (close races; v354's 67/50/50% is within noise of it). For the draft itself and
 the early weeks use tools/draft-sweep.py (strategies stars / auto / cap .85 / .7 / .55, week-by-week bank and red %).
+v358 (no potential: shared growth curve, in-ring upkeep at 85+, offline rival stops climbing at 89+), Normal, 60 games x 3 seasons:
+  default bot show ~3.58/3.68/3.77 vs v357's 3.63/3.74/3.79 (rival ~3.86/3.92/3.99 vs 3.91/4.00/3.99, so the gap is the same),
+  seasons won ~48/58/47% vs 47/50/50%, promo stars ~0.1 lower from season 2. Easy/hard within noise.
 --diff normal runs one difficulty; a variant's 'pre' script runs before the bot (handy for testing a constant).
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time

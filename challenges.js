@@ -112,7 +112,7 @@ if(typeof leave==='function'){const l0=leave;leave=function(w,msg){const c=C();
 
 /* ---------------- Make a Star: choose the project ---------------- */
 window.chalPick=function(){const c=C();if(!c)return;let l=mineL().filter(w=>w.pop<=50&&!w.inj);if(!l.length)l=mineL().slice().sort((a,b)=>a.pop-b.pop).slice(0,3);
- l.sort((a,b)=>(b.pot||0)-(a.pot||0));
+ l.sort((a,b)=>a.pop-b.pop||b.ring-a.ring);
  openModal(`<div class="h mhd">⭐ Choose your project</div><p class="muted" style="margin-top:0">Get them from where they are now to 75 popularity by All In. Tag them with top stars, give them wins over big names and keep them on TV.</p>
  ${l.map(w=>`<div class="prow">${face(w)}<div class="wl"><div class="wn">${esc(w.name)}</div><div class="muted tiny">Popularity ${Math.round(w.pop)} · Ring ${Math.round(w.ring)} · Mic ${Math.round(w.mic)} · ${STYLE_N[w.st]}</div></div><button class="mini" onclick="chalPicked('${w.id}')">Pick</button></div>`).join('')}
  <button class="btn ghost" onclick="closeModal()">Later</button>`)};

@@ -35,8 +35,8 @@ function bout(A,B,title){const fa=f=>{for(const b in (S.farm||{})){const x=S.far
  const st=clamp(Math.round((1+((A.ring+B.ring)/2-42)/11+(Math.random()-.4)*1.2+(title?.4:0))*4)/4,1,5);
  [[W,1],[Lo,0]].forEach(([w,won])=>{if(won){w.rw=(w.rw||0)+1;w.rs=Math.max(0,w.rs||0)+1}else{w.rl=(w.rl||0)+1;w.rs=Math.min(0,w.rs||0)-1}
   if(!w.house){/* buzz fades 12% a week (rohWeek), so only a real run keeps it hot */let b=w.buzz||0;b+=won?1.1:-.9;if(st>=4.25)b+=.6;if(won&&w.rs>=3)b+=.5;if(title&&won)b+=2.5;w.buzz=clamp(Math.round(b*10)/10,0,15);
-   const gap=w.pot-w.ring;if(gap>0)w.ring=Math.min(w.pot,w.ring+gap*.02*(.5+st/4));if(won&&w.pop<ROH_POP_CAP+5)w.pop=Math.min(ROH_POP_CAP+5,w.pop+.4+(title?2:0))}
-  else{const gap=w.pot-w.ring;if(gap>0)w.ring=Math.min(w.pot,w.ring+gap*.01)}});
+   addR(w,room(w.ring)*.02*(.5+st/4));if(won&&w.pop<ROH_POP_CAP+5)w.pop=Math.min(ROH_POP_CAP+5,w.pop+.4+(title?2:0))}
+  else addR(w,room(w.ring)*.01)});
  return {a:A.id,b:B.id,an:A.name,bn:B.name,win:W.id,wn:W.name,st,title:title||null}}
 
 /* ---------------- the week on HonorClub ---------------- */
@@ -80,7 +80,7 @@ function tapeTick(notes){if(S.phase!=='season'||S.week<2)return;const a=AW();S.t
  /* the watchlist: updates every 3 weeks, and after a while someone else may sign them */
  S.follow=S.follow.filter(f=>{const w=f.w;if(w.real&&taken(w.id))return false;
   if(a-f.since>=4&&Math.random()<.07){const n=`📼 ${w.name}, who you were following, signed somewhere else.`;notes.push(n);news(n);return false}
-  if(a-f.last>=3){f.last=a;const g=RI(1,3);w.ring=Math.min(w.pot,w.ring+g);w.mic=Math.min(w.potM||w.pot,w.mic+RI(0,2));w.pop=Math.min(45,w.pop+1);w.fee=Math.round(w.fee*1.08);f.up=(f.up||0)+1;f.n=`New tape: in-ring up ${g} to ${Math.round(w.ring)}.`}return true});
+  if(a-f.last>=3){f.last=a;const g=RI(1,3);addR(w,g);addM(w,RI(0,2));w.pop=Math.min(45,w.pop+1);w.fee=Math.round(w.fee*1.08);f.up=(f.up||0)+1;f.n=`New tape: in-ring up ${g} to ${Math.round(w.ring)}.`}return true});
  if(S.tapes.length>=MAX_TAPES||Math.random()>.35)return;const w=tapeGen();if(!w)return;
  S.tapes.push({w,at:a,kind:w.real||Math.random()<.5?'email':'tape'})}
 function tapeLine(t){const w=t.w;const T=TIERS[w.tier]||TIERS.prospect;const org=w.org?esc(w.org):esc(w.from0||'the indies');
@@ -88,7 +88,7 @@ function tapeLine(t){const w=t.w;const T=TIERS[w.tier]||TIERS.prospect;const org
   :t.kind==='email'?pick([`"Been grinding in ${org} for a few years. Tape's attached — I just need a shot."`,`"Coach says I'm ready. ${org} has nothing left to teach me. Watch the tape?"`,`"I'll drive anywhere. I'll wrestle anyone. Here's my match from last weekend."`]):`A 6-minute tape from ${org}. ${w.ring>=60?'Crisp and ready.':'Raw, but you can see it.'}`;
  return v}
 function tapeRow(t,i){const w=t.w;const T=TIERS[w.tier]||TIERS.prospect;const c=signCostF(w);const full=farmL('p').length>=FARM_MAX;
- return `<div class="brow"><b>${t.kind==='email'?'✉️':'📼'} ${esc(w.name)}</b>${w.pwi?` <span class="tg">PWI 500 #${w.pwi}</span>`:''}<br><span class="muted tiny">${w.g==='M'?"Men's":"Women's"} · ${STYLE_N[w.st]} · ${w.al==='f'?'Face':'Heel'} · RNG ${Math.round(w.ring)} · MIC ${Math.round(w.mic)} · ${w.real?Math.round(w.pot):T.pot[0]+'–'+T.pot[1]} potential</span><br><span class="tiny">${tapeLine(t)}</span>
+ return `<div class="brow"><b>${t.kind==='email'?'✉️':'📼'} ${esc(w.name)}</b>${w.pwi?` <span class="tg">PWI 500 #${w.pwi}</span>`:''}<br><span class="muted tiny">${w.g==='M'?"Men's":"Women's"} · ${STYLE_N[w.st]} · ${w.al==='f'?'Face':'Heel'} · RNG ${Math.round(w.ring)} · MIC ${Math.round(w.mic)} · ${T.n}</span><br><span class="tiny">${tapeLine(t)}</span>
   <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="mini" onclick="tapeAct(${i},'no')">Pass</button><button class="mini" onclick="tapeAct(${i},'follow')">👀 Keep following</button><button class="mini" ${S.money.p<c||full?'disabled':''} onclick="tapeAct(${i},'roh')">🏟️ Sign to ROH · ${money(c)}${full?' (full)':''}</button></div></div>`}
 window.tapeAct=function(i,k){if(typeof mpLocked==='function'&&mpLocked())return;const t=(S.tapes||[])[i];if(!t)return;const w=t.w;
  if(k==='roh'){const c=signCostF(w);if(S.money.p<c)return toast('Not enough money.');if(farmL('p').length>=FARM_MAX)return toast(`Your ROH roster is full (${FARM_MAX}).`);if(w.real&&taken(w.id))return toast(`${w.name} already signed elsewhere.`);
@@ -130,7 +130,7 @@ function standCard(){const P=pool().concat(farmL('p').filter(w=>w.inj||w.exc));c
 function resCard(){const R=S.rohL;if(!R||!R.res||!R.res[0])return '';const ids=new Set(farmL('p').map(w=>w.id));return `<div class="card"><div class="h small">📺 Last week on HonorClub</div>${R.res[0].l.slice(0,10).map(r=>resRow(r,ids)).join('')}</div>`}
 function watchCard(){const l=S.follow||[];if(!l.length)return '';return `<div class="card"><div class="h small">👀 Watchlist · ${l.length}/${MAX_FOLLOW}</div>${l.map(followRow).join('')}</div>`}
 if(typeof window.farmView==='function'){const v0=window.farmView;window.farmView=function(){let h=v0.apply(this,arguments);try{L();
- h=h.replace(/Everyone here works ROH TV each week and grows toward their potential[^<]*/,'ROH books itself every week: everyone here works a match, builds an ROH record and grows toward their potential. Wins, good matches and ROH titles build <b>call-up buzz</b> — the hotter it is, the bigger their AEW debut. ')
+ h=h.replace(/Everyone here works ROH TV each week and keeps growing[^<]*/,'ROH books itself every week: everyone here works a match, builds an ROH record and keeps growing. Wins, good matches and ROH titles build <b>call-up buzz</b> — the hotter it is, the bigger their AEW debut. ')
  const ins=champsCard()+resCard()+standCard()+watchCard();const sd=h.indexOf('<div class="card"><div class="h small">Send down');
  if(sd>0)h=h.slice(0,sd)+ins+h.slice(sd);else h+=ins}catch(e){console.warn(e)}return h}}
 /* buzz + record on each ROH card */

@@ -1,7 +1,7 @@
 /* Tony Khan Simulator — ROH & the farm system (v150).
    Each GM gets a Ring of Honor developmental roster (S.farm[brand]) that lives outside the AEW roster: ROH wrestlers
    don't take roster spots, can't be booked on Dynamite/Collision, and are paid half salary. They work ROH TV every week
-   and grow toward their potential; one can be featured (faster growth and popularity), and any can be sent on a
+   and grow; one can be featured (faster growth and popularity), and any can be sent on a
    10-week excursion to NJPW, CMLL or RevPro. Call them up whenever they're ready; send rookies or low-card names down.
    Scouting covers three territories: the Indies (the existing prospect board), ROH (real ROH-level names plus polished
    regulars) and Overseas (raw but skilled talent from Japan, Mexico and the UK).
@@ -10,7 +10,7 @@
 'use strict';
 (function(){
 const FARM_MAX=8,EXC_WK=10,ROH_POP_CAP=45;
-/* real ROH-level talent on today's AEW/ROH roster who aren't in the main game: name|g|style|align|ring|mic|pop|pot */
+/* real ROH-level talent on today's AEW/ROH roster who aren't in the main game: name|g|style|align|ring|mic|pop|pot (pot ignored since v358) */
 const ROH_REAL=`Dalton Castle|M|sh|f|72|78|42|74
 QT Marshall|M|sh|h|66|76|40|68
 Adam Priest|M|br|h|68|58|30|78
@@ -27,7 +27,7 @@ Christyan XO|F|br|h|58|55|24|76
 Trish Adora|F|br|f|66|60|32|78
 Isla Dawn|F|sh|h|70|66|38|80`;
 /* v154: known names from outside AEW/ROH/WWE — men from the 2026 PWI 500 (rank in the last field), women from the
-   independent and joshi scenes (the 2026 Women's 250 isn't out yet). name|g|style|align|ring|mic|pop|pot|board|from|org|pwi */
+   independent and joshi scenes (the 2026 Women's 250 isn't out yet). name|g|style|align|ring|mic|pop|pot(ignored)|board|from|org|pwi */
 const KNOWN_RAW=`Leon Slater|M|fl|f|84|62|50|94|indie||TNA|29
 Nic Nemeth|M|te|f|84|82|62|86|indie||TNA|40
 Frankie Kazarian|M|te|h|80|80|50|82|indie||TNA|44
@@ -98,7 +98,7 @@ function reprice(){if(!S||S.px221)return;S.px221=1;const s=S.scout||{};
 function knownList(){return KNOWN_RAW.trim().split('\n').map(l=>{const f=l.split('|');const w=mkW(f.slice(0,8).join('|'));w.reg=f[8];if(f[9])w.from=f[9];w.org=f[10];if(f[11])w.pwi=+f[11];return w})}
 function onBoards(){const s=S.scout||{};return new Set([].concat(s.l||[],s.roh||[],s.intl||[]).map(w=>w.id))}
 function known(reg,n,ex){const used=onBoards();(ex||[]).forEach(id=>used.add(id));const l=shuffle(knownList().filter(w=>w.reg===reg&&!taken(w.id)&&!used.has(w.id))).slice(0,n);
- l.forEach(w=>{w.real=1;w.tier=w.pot>=90?'gen':w.pot>=84?'bluechip':'prospect';w.fee=realFee(w);w.con=0;w.mor=80;w.tr=autoTraits(w)});return l}
+ l.forEach(w=>{w.real=1;w.tier=w.ring>=82?'gen':w.ring>=77?'bluechip':'prospect';w.fee=realFee(w);w.con=0;w.mor=80;w.tr=autoTraits(w)});return l}
 window.KNOWN_RAW=KNOWN_RAW;window.knownList=knownList;
 /* fictional international names */
 const INTL={
@@ -108,8 +108,8 @@ const INTL={
 const EXC={jp:{n:'NJPW',f:'🇯🇵',d:'Strong-style dojo: the biggest in-ring jump and a tougher body.',ring:2.2,mic:1,pop:3,dur:4},
  mx:{n:'CMLL',f:'🇲🇽',d:'Arena México crowds: solid in-ring growth and they come back a bigger draw.',ring:1.8,mic:1,pop:7,dur:0},
  uk:{n:'RevPro',f:'🇬🇧',d:'British technical scene: good in-ring growth and real mic reps.',ring:1.6,mic:2.5,pop:4,dur:0}};
-const REG={indie:{n:'Indies',i:'🌱',d:'Raw prospects and wild gimmick acts from the US independents. Cheapest, most potential, most risk.'},
- roh:{n:'ROH',i:'🏟️',d:'Ring of Honor regulars and real ROH-level talent. Polished and ready sooner, with less upside.'},
+const REG={indie:{n:'Indies',i:'🌱',d:'Raw prospects and wild gimmick acts from the US independents. Cheapest, rawest, longest build.'},
+ roh:{n:'ROH',i:'🏟️',d:'Ring of Honor regulars and real ROH-level talent. Polished and ready sooner.'},
  intl:{n:'Overseas',i:'🌏',d:'Skilled imports from Japan, Mexico and the UK. Great in the ring, still learning English promos.'}};
 window.FARM_MAX=FARM_MAX;
 let SREG='indie',FSEL=null;
@@ -123,9 +123,9 @@ window.farmList=farmL;
 function toFarm(w,b){w.own=null;delete w.sal;w.fsal=fsal(w);w.mor=Math.max(w.mor||0,80);w.fat=0;if(!w.con||w.con<20)w.con=40;F(b).r[w.id]=w}
 
 /* ---------------- scouting boards ---------------- */
-function polish(w,ring,mic){w.ring=Math.min(w.pot-2,w.ring+ring);w.mic=Math.min(w.potM||w.pot,w.mic+mic);return w}
+function polish(w,ring,mic){w.ring=clamp(w.ring+ring,20,99);w.mic=clamp(w.mic+mic,5,99);return w}
 function rohReal(ex){const used=new Set(ex);const l=(ROH_REAL.trim()+(typeof ROH_RAW==='string'?'\n'+ROH_RAW.trim():'')).split('\n').map(x=>mkW(x.trim())).filter(w=>!taken(w.id)&&!used.has(w.id));
- const w=l.length?pick(l):null;if(!w)return null;w.reg='roh';w.real=1;w.tier=w.pot>=78?'bluechip':'prospect';w.fee=realFee(w);w.con=0;w.mor=80;w.tr=autoTraits(w);return w}
+ const w=l.length?pick(l):null;if(!w)return null;w.reg='roh';w.real=1;w.tier=w.ring>=66?'bluechip':'prospect';w.fee=realFee(w);w.con=0;w.mor=80;w.tr=autoTraits(w);return w}
 function rohGen(){const g=Math.random()<.5?'M':'F';const tier=Math.random()<.3?'bluechip':'prospect';const nm=()=>pick(g==='M'?FIRST_M:FIRST_F)+' '+pick(LAST);let n=nm();for(let i=0;i<8&&Object.values(S.w).some(w=>w.name===n);i++)n=nm();
  const w=polish(makeRookie(n,g,pick(['te','te','br','fl','pw']),pick(['f','h']),tier),RI(14,22),RI(8,16));w.tier=tier;w.reg='roh';w.fee=Math.round(TIERS[tier].cost*ROH_X);w.pop=RI(14,24);w.pop0=w.pop;w.tr=autoTraits(w);return w}
 function intlGen(){const k=pick(['jp','mx','uk']),R=INTL[k];const g=Math.random()<.6?'M':'F';const r=Math.random();const tier=r<.15?'gen':r<.6?'bluechip':'prospect';
@@ -175,7 +175,7 @@ window.farmRelease=function(id){const f=F('p'),w=f.r[id];if(!w)return;if(!confir
 window.farmExc=function(id,k){const f=F('p'),w=f.r[id];if(!w||!EXC[k])return;if(w.exc)return;if(w.done)return toast(`${w.name} has already been on excursion.`);
  w.exc={k,until:AW()+EXC_WK};if(f.feat===id)f.feat=null;news(`✈️ ${w.name} is off on a ${EXC_WK}-week excursion to ${EXC[k].n}.`);save();closeModal();render()};
 window.farmExcPick=function(id){const w=F('p').r[id];if(!w)return;
- openModal(`<div class="h mhd">✈️ Excursion</div><p class="muted" style="margin-top:0">${esc(w.name)} leaves for ${EXC_WK} weeks, develops much faster than on ROH TV, and comes back with a bigger potential and a fresh look. Once per career. They can't be called up while they're away.</p>
+ openModal(`<div class="h mhd">✈️ Excursion</div><p class="muted" style="margin-top:0">${esc(w.name)} leaves for ${EXC_WK} weeks, develops much faster than on ROH TV, and comes back sharper (a little more in-ring and mic on top) with a fresh look. Once per career. They can't be called up while they're away.</p>
  ${Object.entries(EXC).map(([k,x])=>`<div class="card"><b>${x.f} ${x.n}</b><div class="muted" style="margin:4px 0 8px">${x.d}</div><button class="btn" onclick="farmExc('${id}','${k}')">Send to ${x.n}</button></div>`).join('')}
  <button class="btn ghost" onclick="closeModal()">Not yet</button>`)};
 
@@ -184,11 +184,11 @@ function farmWeek(notes){if(!S.farm)return;const a=AW();
  for(const b in S.farm){const f=S.farm[b];if(!f||!f.r)continue;const mine=b==='p'||ON();const ws=Object.values(f.r);if(!ws.length)continue;
   if(S.money[b]!=null)S.money[b]-=ws.reduce((x,w)=>x+(w.fsal||fsal(w)),0);
   ws.forEach(w=>{w.con=(w.con||0)-1;
-   if(w.exc){const X=EXC[w.exc.k]||EXC.jp;w.ring=Math.min(w.pot,w.ring+Math.max(.4,(w.pot-w.ring)*.04*X.ring));w.mic=Math.min(w.potM||w.pot,w.mic+Math.max(.2,((w.potM||w.pot)-w.mic)*.03*X.mic));
-    if(a>=w.exc.until){w.pot=Math.min(99,w.pot+2);w.potM=Math.min(99,(w.potM||w.pot)+1);if(X.dur)w.dur=Math.min(95,(w.dur||60)+X.dur);w.back=X.pop;w.done=1;delete w.exc;w.mor=clamp(w.mor+10,0,100);
+   if(w.exc){const X=EXC[w.exc.k]||EXC.jp;addR(w,Math.max(.4,room(w.ring)*.04*X.ring));addM(w,Math.max(.2,room(w.mic)*.03*X.mic));
+    if(a>=w.exc.until){w.ring=Math.min(99,w.ring+2);w.mic=Math.min(99,w.mic+1);if(X.dur)w.dur=Math.min(95,(w.dur||60)+X.dur);w.back=X.pop;w.done=1;delete w.exc;w.mor=clamp(w.mor+10,0,100);
      if(mine){const n=`✈️ ${w.name} is back from ${X.n} — and looks like a different wrestler. Call them up while the buzz is fresh.`;news(n);notes.push(n)}}}
    else if(w.inj>0){w.inj--}
-   else{const ft=f.feat===w.id;/* v155: most growth now comes from working the ROH show (rohleague.js); this is the coaching on top */w.ring=Math.min(Math.max(w.ring,w.pot),w.ring+Math.max(.2,(w.pot-w.ring)*(ft?.035:.025)));w.mic=Math.min(Math.max(w.mic,w.potM||w.pot),w.mic+Math.max(.15,((w.potM||w.pot)-w.mic)*(ft?.035:.02)));
+   else{const ft=f.feat===w.id;/* v155: most growth now comes from working the ROH show (rohleague.js); this is the coaching on top */addR(w,Math.max(.2*Math.min(1,room(w.ring)/8),room(w.ring)*(ft?.035:.025)));addM(w,Math.max(.15*Math.min(1,room(w.mic)/8),room(w.mic)*(ft?.035:.02)));
     if(ft&&w.pop<ROH_POP_CAP)w.pop=Math.min(ROH_POP_CAP,w.pop+.3);
     if(Math.random()<.015){w.inj=RI(1,3);if(mine){const n=`🩹 ${w.name} got banged up on ROH TV — out ${w.inj} week${w.inj>1?'s':''}.`;notes.push(n)}}}
    if(w.con<=0&&!w.exc){delete f.r[w.id];if(f.feat===w.id)f.feat=null;if(mine){const n=`📝 ${w.name}'s ROH deal ran out and they left.`;news(n);notes.push(n)}}
@@ -202,7 +202,7 @@ window.SREG_SET=k=>{SREG=k;render();setTimeout(()=>{const e=document.getElementB
 function prospectCard(w,i){const T=TIERS[w.tier]||TIERS.prospect;const c=signCostF(w);const full=farmL('p').length>=FARM_MAX;const poor=S.money.p<c;
  const from=w.org?`${w.from&&INTL[w.from]?INTL[w.from].f+' ':''}${esc(w.org)} · `:w.reg==='intl'&&INTL[w.from]?`${INTL[w.from].f} ${INTL[w.from].n} · `:w.real?'🏟️ ROH roster · ':'';
  return `<div class="card scout${w.gim?' gimc':''}"><div class="row sb"><span class="frow">${face(w)}<span><b>${alSpan(w)}</b><br><span class="muted tiny">${from}${w.g==='M'?"Men's":"Women's"} · ${STYLE_N[w.st]} · ${w.al==='f'?'Face':'Heel'}</span></span></span><span class="tg ${w.tier==='gen'?'good':w.tier==='bluechip'?'warnt':''}">${w.pwi?`PWI 500 #${w.pwi}`:w.real?'Known name':T.n}</span></div>
-  <div class="pln"><span><b>${w.real?`${Math.round(w.pot)}`:`${T.pot[0]}–${T.pot[1]}`}</b> potential</span><span>RNG ${Math.round(w.ring)} · MIC ${Math.round(w.mic)} · POP ${Math.round(w.pop)}</span></div>
+  <div class="pln"><span><b>${growWord(w.ring)}</b></span><span>RNG ${Math.round(w.ring)} · MIC ${Math.round(w.mic)} · POP ${Math.round(w.pop)}</span></div>
   ${(w.tr||[]).length?`<div class="tags" style="margin-top:4px">${w.tr.map(t=>TRAITS[t]?`<span class="tg">${TRAITS[t].i} ${esc(TRAITS[t].n)}</span>`:'').join('')}</div>`:''}
   <div class="row" style="gap:8px;margin-top:8px;align-items:center"><button class="mini on" ${poor?'disabled':''} onclick="farmSign('${SREG}',${i},'aew')">Sign to AEW</button><button class="mini" ${poor||full?'disabled':''} onclick="farmSign('${SREG}',${i},'roh')">To ROH${full?' (full)':''}</button><span class="muted tiny" style="margin-left:auto;text-align:right">${money(c)}<br>${money(w.fee)} fee + 4 wks</span></div></div>`}
 function scoutHub(){scoutFresh();const s=S.scout;if(!s)return '';boards();const n=scoutLeft();const l=board(SREG);
@@ -214,12 +214,12 @@ if(typeof faProspects==='function'){faProspects=function(){try{return scoutHub()
 function farmCard(w){const f=F('p');const ft=f.feat===w.id;const X=w.exc&&EXC[w.exc.k];const ready=(w.buzz||0)>=9;
  const st=X?`<span class="tg">✈️ ${X.n} · back in ${Math.max(0,w.exc.until-AW())} wk</span>`:w.inj?`<span class="tg bad">🩹 Out ${w.inj} wk</span>`:w.back?'<span class="tg good">✈️ Back from excursion</span>':ready?'<span class="tg good">🔥 Ready for AEW</span>':'';
  return `<div class="card${ft?' good':''}"><div class="row sb"><span class="frow">${face(w)}<span><b>${esc(w.name)}</b>${ft?' <span class="tg warnt">⭐ Featured</span>':''}<br><span class="muted tiny">${w.g==='M'?"Men's":"Women's"} · ${STYLE_N[w.st]} · ${w.al==='f'?'Face':'Heel'} · ${money(w.fsal||fsal(w))}/wk · ${w.con} wk left</span></span></span>${st}</div>
-  <div class="grid2" style="margin-top:8px"><div><span class="muted tiny">In-ring</span><br><b>${Math.round(w.ring)}</b> <span class="muted tiny">/ ${Math.round(w.pot)} potential</span></div><div><span class="muted tiny">Mic · Popularity</span><br><b>${Math.round(w.mic)}</b> · <b>${Math.round(w.pop)}</b></div></div>
+  <div class="grid2" style="margin-top:8px"><div><span class="muted tiny">In-ring</span><br><b>${Math.round(w.ring)}</b> <span class="muted tiny">· ${growWord(w.ring)}</span></div><div><span class="muted tiny">Mic · Popularity</span><br><b>${Math.round(w.mic)}</b> · <b>${Math.round(w.pop)}</b></div></div>
   <div class="row" style="gap:6px;margin-top:10px;flex-wrap:wrap">${X?'':`<button class="mini" onclick="callUp('${w.id}')">📣 Call up</button>`}${X||w.inj?'':`<button class="mini" onclick="farmFeature('${w.id}')">${ft?'Unfeature':'⭐ Feature'}</button>`}${X||w.done?'':`<button class="mini" onclick="farmExcPick('${w.id}')">✈️ Excursion</button>`}${w.con<=8?`<button class="mini" onclick="farmExtend('${w.id}')">✍️ Extend ${money(fsal(w)*4)}</button>`:''}<button class="mini" onclick="farmRelease('${w.id}')">Release</button></div></div>`}
 function farmView(){const l=farmL('p').sort((a,b)=>b.ring-a.ring);const pay=l.reduce((x,w)=>x+(w.fsal||fsal(w)),0);
  const cand=ownList('p').filter(downOk);
  return `${pageHead('Ring of Honor','ROH',`<b>${money(pay)}</b><small>ROH payroll / wk</small>`,{sub:`${l.length}/${FARM_MAX} wrestlers · develop on ROH TV every week`})}${chips('rf',[['mine','Mine'],['rival','Rival'],['fa','Free agents'],['roh','🏟️ ROH'],['all','All']],rf)}
- <div class="card mt"><div class="muted">Everyone here works ROH TV each week and grows toward their potential — slower than the Performance Center, but there's room for ${FARM_MAX} and they don't take AEW roster spots. <b>⭐ Feature</b> one to grow faster and build popularity (up to ${ROH_POP_CAP}). <b>✈️ Excursion</b> sends someone abroad for ${EXC_WK} weeks to come back better. Call anyone up whenever you need them.</div>
+ <div class="card mt"><div class="muted">Everyone here works ROH TV each week and keeps growing — slower than the Performance Center, but there's room for ${FARM_MAX} and they don't take AEW roster spots. <b>⭐ Feature</b> one to grow faster and build popularity (up to ${ROH_POP_CAP}). <b>✈️ Excursion</b> sends someone abroad for ${EXC_WK} weeks to come back better. Call anyone up whenever you need them.</div>
  <button class="btn sec" style="margin-top:10px" onclick="rf='fa';SREG_SET('roh')">🔎 Scout new talent</button></div>
  ${l.length?l.map(farmCard).join(''):'<p class="muted center">Nobody on ROH yet. Sign prospects to ROH from Scouting, or send a rookie down.</p>'}
  ${cand.length?`<div class="card"><div class="h small">Send down</div><div class="muted" style="margin-bottom:8px">Rookies and anyone at 45 popularity or lower can go to ROH to develop. Champions can't.</div>${cand.slice(0,12).map(w=>`<div class="prow">${face(w)}<div class="wl"><div class="wn">${esc(w.name)}</div><div class="muted tiny">Popularity ${Math.round(w.pop)} · Ring ${Math.round(w.ring)}${w.rookie?' · ROOKIE':''}</div></div><button class="mini" onclick="sendDown('${w.id}')">🏟️ Send down</button></div>`).join('')}</div>`:''}`}

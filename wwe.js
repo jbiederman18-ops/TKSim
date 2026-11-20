@@ -12,7 +12,7 @@
 'use strict';
 
 /* ===================== THE WWE ROSTER (Raw + SmackDown, as of Money in the Bank, Oct 10, 2026) =====================
-   name|gender|style|align|ring|mic|pop|potential(optional) — same scale as the AEW roster. WWE's top names are the most
+   name|gender|style|align|ring|mic|pop|(old potential column, ignored since v358) — same scale as the AEW roster. WWE's top names are the most
    popular wrestlers in the world, so the very top of the popularity scale belongs to them. */
 const WWE_RAW=`Roman Reigns|M|pw|f|86|88|97
 Jey Uso|M|br|f|80|80|87

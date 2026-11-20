@@ -349,7 +349,7 @@ function offseasonPlan(){const ret=[],dec=[],call=[];
  return {ret,dec,call}}
 function offseasonApply(notes){const o=S.offs||{ret:[],dec:[],call:[]};const A=S.awards;
  if(A){A.list.forEach(x=>{const w=S.w[x.id];if(w){w.pop=clamp(w.pop+2,1,100);w.mor=clamp(w.mor+10,0,100)}});(S.hof=S.hof||[]).push({s:A.s,l:A.list.map(x=>({t:x.t,n:S.w[x.id]?S.w[x.id].name:'?'}))})}
- o.dec.forEach(x=>{const w=S.w[x.id];if(!w)return;w.ring=Math.max(40,w.ring-x.d);w.pot=Math.min(w.pot,Math.max(w.ring,w.pot-x.d))});
+ o.dec.forEach(x=>{const w=S.w[x.id];if(!w)return;w.ring=Math.max(40,w.ring-x.d)});
  o.call.forEach(id=>{const w=S.w[id];if(!w||!w.own)return;w.rookie=false;w.pop=clamp(w.pop+6,1,100);w.mor=clamp(w.mor+10,0,100);w.deb=AW();news(`📣 ${w.name} has been called up from developmental — expect a big debut.`)});
  o.ret.forEach(id=>{const w=S.w[id];if(!w)return;const n=`🎖️ ${w.name} has retired. Thank you for the memories.`;news(n);(S.retired=S.retired||[]).push({n:w.name,s:S.season});purgeW(id)});
  S.offs=null;S.awards=null}

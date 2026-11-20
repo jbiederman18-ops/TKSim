@@ -55,13 +55,13 @@ chant:{t:'They won\'t stop chanting',i:'📣',good:true,who:r=>{const a=shuf(r.f
  {t:'Have {A} turn on the fans',d:'A bold heel turn — huge if it works.',fx:c=>{if(c.A.al==='h'){popx(c.A,3);return `${c.A.name} was already a heel — now they're one the fans love to hate (+3 popularity).`}if(Math.random()<.5){c.A.al='h';popx(c.A,4);const n=`🔄 ${c.A.name} has turned HEEL!`;news(n);return `The betrayal stuns everyone. ${n}`}popx(c.A,-3);return `The fans refuse to boo. The turn fizzles (-3 popularity).`}}]},
 
 promo:{t:'The promo idea',i:'🗣️',good:true,text:'{A} came to your office with a promo they swear will "set the building on fire." They\'ve been rehearsing it in the hotel mirror all week.',ch:[
- {t:'Hand them the open mic',d:'Mic-skill check. High ceiling, real risk.',fx:c=>{if(Math.random()<.3+c.A.mic/130){popx(c.A,5);c.A.mic=Math.min(Math.max(c.A.mic,c.A.potM),c.A.mic+1);return `It's a career promo. The clip is everywhere by morning (+5 popularity).`}popx(c.A,-2);mor(c.A,-4);return `It runs long and the crowd checks out (-2 popularity).`}},
+ {t:'Hand them the open mic',d:'Mic-skill check. High ceiling, real risk.',fx:c=>{if(Math.random()<.3+c.A.mic/130){popx(c.A,5);addM(c.A,1);return `It's a career promo. The clip is everywhere by morning (+5 popularity).`}popx(c.A,-2);mor(c.A,-4);return `It runs long and the crowd checks out (-2 popularity).`}},
  {t:'Polish it with the writers first',d:'Safer, smaller.',fx:c=>{popx(c.A,2);mor(c.A,3);return `A tight, solid segment (+2 popularity).`}},
  {t:'Pass',d:'{A} won\'t love that.',fx:c=>{mor(c.A,-7);return `${c.A.name} folds up the notes and leaves without a word.`}}]},
 
 school:{t:'The training school',i:'🏫',good:true,who:r=>{const a=shuf(r.filter(w=>w.ring>=80))[0];return a?[a]:null},
  text:'{A} wants to open a wrestling school near their home town and is asking if the company will back it.',ch:[
- {t:'Fund it ($40K)',d:'{A} is grateful, and the whole roster sharpens up a little.',fx:c=>{S.money.p-=40;mor(c.A,14);c.A.con+=4;ownList('p').forEach(w=>{if(w.ring<w.pot)w.ring=Math.min(w.pot,w.ring+.3)});return `The school opens its doors. ${c.A.name} adds a few weeks to their contract out of loyalty.`}},
+ {t:'Fund it ($40K)',d:'{A} is grateful, and the whole roster sharpens up a little.',fx:c=>{S.money.p-=40;mor(c.A,14);c.A.con+=4;ownList('p').forEach(w=>addR(w,.3));return `The school opens its doors. ${c.A.name} adds a few weeks to their contract out of loyalty.`}},
  {t:'Lend the company name, not money',d:'Free, and it helps a bit.',fx:c=>{mor(c.A,5);popx(c.A,1);return `"An official partner school." ${c.A.name} is pleased enough.`}},
  {t:'Ask them to wait until their contract is up',d:'{A} feels brushed off.',fx:c=>{mor(c.A,-8);return `${c.A.name} nods, but they're clearly frustrated.`}}]},
 
@@ -96,10 +96,10 @@ prank:{t:'Prank gone wrong',i:'🧴',need:2,who:r=>pair(r),
  {t:'Make {A} buy {B} new boots',d:'Fair. Both stay reasonably happy.',fx:c=>{mor(c.B,6);mor(c.A,-2);chemx(c.A,c.B,1);return `New boots and a handshake. They're laughing about it by the weekend.`}},
  {t:'Laugh it off — locker rooms need fun',d:'Everyone else loves it. {B} doesn\'t.',fx:c=>{ownList('p').forEach(w=>{if(w!==c.B)mor(w,2)});mor(c.B,-10);addBeef(c.A.id,c.B.id,12);return `The locker room is cracking up. ${c.B.name} is quietly plotting revenge.`}}]},
 
-critic:{t:'Old school vs new school',i:'🧓',need:2,who:r=>{const v=shuf(r.filter(w=>w.ring>=86))[0];if(!v)return null;const y=shuf(r.filter(w=>w!==v&&w.ring<w.pot-3&&!inTeam(w.id,v.id)))[0];return y?[y,v]:null},
+critic:{t:'Old school vs new school',i:'🧓',need:2,who:r=>{const v=shuf(r.filter(w=>w.ring>=86))[0];if(!v)return null;const y=shuf(r.filter(w=>w!==v&&w.ring<80&&!inTeam(w.id,v.id)))[0];return y?[y,v]:null},
  text:'{B} told an interviewer that {A}\'s style is "all flips and no psychology." {A} shot back online. The comment sections are a war zone.',ch:[
  {t:'Book it: settle it in the ring',d:'Feud heat and a chance for {A} to prove it.',fx:c=>{const n=[];bumpHeat(c.A.id,c.B.id,18,n,'old school vs new school');popx(c.A,2);return `The debate becomes a storyline. Fans pick sides. ${n.join(' ')}`}},
- {t:'Make {B} mentor {A}',d:'{A} grows as a wrestler — if their pride allows.',fx:c=>{if(Math.random()<.6){c.A.ring=Math.min(c.A.pot,c.A.ring+2);chemx(c.A,c.B,2);mor(c.A,4);return `It's awkward at first, then it clicks. ${c.A.name} is visibly improving.`}mor(c.A,-8);mor(c.B,-4);return `Two sessions in, ${c.A.name} walks out. That didn't work.`}},
+ {t:'Make {B} mentor {A}',d:'{A} grows as a wrestler — if their pride allows.',fx:c=>{if(Math.random()<.6){addR(c.A,2);chemx(c.A,c.B,2);mor(c.A,4);return `It's awkward at first, then it clicks. ${c.A.name} is visibly improving.`}mor(c.A,-8);mor(c.B,-4);return `Two sessions in, ${c.A.name} walks out. That didn't work.`}},
  {t:'Tell them both to stay off the internet',d:'Calms things down. Nobody is happy.',fx:c=>{mor(c.A,-4);mor(c.B,-4);return `The posts stop. The tension doesn't.`}}]},
 
 tagspat:{t:'Trouble in the team',i:'💔',need:2,who:r=>{const ids=new Set(r.map(w=>w.id));const t=shuf(S.teams.filter(t=>t.type==='team'&&t.m.length===2&&t.m.every(id=>ids.has(id))))[0];return t?[S.w[t.m[0]],S.w[t.m[1]]]:null},
