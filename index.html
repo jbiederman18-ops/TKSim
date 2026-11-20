@@ -1503,7 +1503,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v370';
+const APP_VERSION='v371';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -3887,7 +3887,7 @@ function endWeek(notes){
  S.touched=[];
  if(!S.debt)S.debt={};
  if(!S.tvdeal&&S.phase==='season'&&S.week>1)news('💼 Front office update: TV deals are now signed for a season at a time, and arena & crew costs and PPV venue bills grow with your fanbase. See the Office.');S.tvdeal=S.tvdeal||{};brands().forEach(b=>{if(S.tvdeal[b]==null)S.tvdeal[b]=tvIncome(S.fans[b]);/* v356: a human GM's viewership bonus isn't wired with the deal — it builds up, and the network's executive brings it to your office after each PPV */
-  const hum=typeof MOR_HUM!=='function'||MOR_HUM(b),vb=tvBonus(b);if(hum&&vb>0){S.view=S.view||{};const v=S.view[b]=S.view[b]||{amt:0,wks:0};v.amt+=vb;v.wks++;if(PPVS[S.week])v.due=1}
+  const hum=typeof MOR_HUM!=='function'||MOR_HUM(b),vb=tvBonus(b);if(hum&&vb>0){S.view=S.view||{};const v=S.view[b]=S.view[b]||{amt:0,wks:0};v.amt+=vb;v.wks++}/* v371: due after every PPV, even one where the audience dipped */if(hum&&PPVS[S.week]&&S.view&&S.view[b]&&S.view[b].amt>0)S.view[b].due=1;
   const inc=tvSigned(b)+(hum?0:vb),pay=payroll(b),ops=opsCost(b),med=medBill(b),ven=typeof venueRent==='function'?venueRent(b):0;S.money[b]+=inc-pay-ops-med-ven;if(!S.fin)S.fin={};S.fin[b]={tv:inc,pay,ops,med,ven};
   if(S.money[b]>=0){S.debt[b]=0;return}
   /* in the red: morale sinks, and after a few weeks unpaid wrestlers start walking out */

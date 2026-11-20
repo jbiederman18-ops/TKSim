@@ -21,10 +21,12 @@ let FG_SHARE=.35;const FG_MIN=3,FG_SIZE=5,FG_LONER=.12,FG_STAR=75,FG_VIS=2,FG_PE
 const fgHum=b=>!!b&&(typeof MOR_HUM!=='function'||MOR_HUM(b));
 const fgPair=(a,b)=>a<b?a+'|'+b:b+'|'+a;
 let FG_REVEAL_P=.3,FG_REVEAL_N=3,FG_REVEAL_M=0,FG_SPLIT=.025,FG_SPLIT_HEAT=.3;const FG_ALONE=[5,9];
-/* v369: a visit waits outside the office up to FG_WAIT weeks (the line holds DESK_MAX a week, 4 since v370). A split that never gets its
+/* v369: a visit waits outside the office up to FG_WAIT weeks (the line holds DESK_MAX a week, 4 since v370; since v371 these visits always get in, like a pitch). A split that never gets its
    visit (it waited too long, or another split came first) still makes the news, so a known friendship never ends silently. */
 const FG_WAIT=4;
-function fgDriftNews(b){const v=S.fgd&&S.fgd[b];if(!v)return;delete S.fgd[b];const A=S.w[v.a],Y=S.w[v.y];if(A&&Y&&b==='p')fgNews(`💔 ${A.name} and ${Y.name} aren't friends anymore.`)}
+function fgDriftNews(b){const v=S.fgd&&S.fgd[b];if(!v)return;const A=S.w[v.a],Y=S.w[v.y];if(A&&Y&&b==='p')fgNews(`💔 ${A.name} and ${Y.name} aren't friends anymore.`);fgdNext(b)}
+/* v371: splits queue up (one visit a week each) instead of replacing each other */
+function fgdNext(b){const q=S.fgdq&&S.fgdq[b];const n=q&&q.shift();if(n){n.w=AW();S.fgd[b]=n}else if(S.fgd)delete S.fgd[b]}
 /* league news is shared by every GM, so friendships go to the private feed there */
 function fgNews(t){if(typeof ON==='function'&&ON()){S.pitchNews=(S.pitchNews||[]).concat([{w:AW(),t}]).slice(-12)}else news(t)}
 const fgIsKnown=(a,b)=>!!(S.fgk&&S.fgk[fgPair(a,b)]);
@@ -69,7 +71,7 @@ function fgSpread(A,d,kind){if(!A||!A.own||!fgHum(A.own)||Math.abs(d)<FG_MIN)ret
   if(Math.abs(s)>=1&&!kn&&(kind!=='match'||FG_REVEAL_M)){S.fgc=S.fgc||{};const k=fgPair(A.id,F.id);S.fgc[k]=(S.fgc[k]||0)+1;
    if(S.fgc[k]>=FG_REVEAL_N||Math.random()<FG_REVEAL_P)fgReveal(A,F,s>0?`${F.name.split(' ')[0]} is thrilled for them`:`${F.name.split(' ')[0]} took it personally`)}
   if(F.pop>=FG_STAR&&Math.abs(s)>=FG_VIS&&(kind==='promise'||kind==='title'&&s>0)&&!F.inj){S.fgv=S.fgv||{};const v=S.fgv[b];
-   if(!v||v.w<AW()-1||Math.abs(s)>Math.abs(v.d)&&v.w===AW())S.fgv[b]={f:F.id,a:A.id,d:s,k:kind,w:AW()}}})}
+   if(!v||v.w<AW()-1||Math.abs(s)>Math.abs(v.d)&&v.w===AW()){if(v&&S.w[v.a]&&S.w[v.f]&&(v.a!==A.id||v.f!==F.id))fgReveal(S.w[v.a],S.w[v.f],'');S.fgv[b]={f:F.id,a:A.id,d:s,k:kind,w:AW()}}}})}
 window.fgSpread=fgSpread;window.fgFriends=fgFriends;window.fgKnown=fgKnown;window.fgSyncAll=fgSyncAll;
 /* catch every big swing a function makes: snapshot morale, run it, spread whatever moved FG_MIN or more */
 let FG_IN=0;
@@ -97,15 +99,15 @@ function fgChurn(b){if(!fgHum(b)||!S.fg||!S.fgm||!S.fgm[b])return;const wk=AW();
   S.fg[L.id]='l'+(++S.fgN);S.fgx[L.id]={old:g,back:wk+RI(FG_ALONE[0],FG_ALONE[1])};
   /* v364: they come and tell you themselves (inbox.js) — about the friend they were closest to, or the one they fell out with */
   const Y=hot?hot.find(w=>w!==L):(known.length?known:m.filter(o=>o!==L)).slice().sort((a,c)=>c.pop-a.pop)[0];
-  if(Y){S.fgd=S.fgd||{};if(S.fgd[b])fgDriftNews(b);S.fgd[b]={a:L.id,y:Y.id,known:fgIsKnown(L.id,Y.id)||known.includes(Y),hot:!!hot,w:wk}}
+  if(Y){S.fgd=S.fgd||{};const nv={a:L.id,y:Y.id,known:fgIsKnown(L.id,Y.id)||known.includes(Y),hot:!!hot,w:wk};if(S.fgd[b]){S.fgdq=S.fgdq||{};S.fgdq[b]=(S.fgdq[b]||[]).concat([nv])}else S.fgd[b]=nv}
   known.forEach(o=>{delete S.fgk[fgPair(L.id,o.id)]})});
  /* after some time alone, they find a different group */
  r.forEach(w=>{const x=S.fgx[w.id];if(!x||wk<x.back)return;const open=Object.entries(groups).filter(([g,m])=>g!==x.old&&m.length<FG_SIZE&&!m.includes(w));
   delete S.fgx[w.id];if(!open.length)return;const ws=open.map(([g,m])=>fgFit(w,m));let t=Math.random()*ws.reduce((a,v)=>a+v,0);let g=open[open.length-1][0];
   for(let i=0;i<open.length;i++){t-=ws[i];if(t<=0){g=open[i][0];break}}S.fg[w.id]=g;groups[g].push(w)})}
-if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(){fgSyncAll();try{brands().forEach(fgChurn)}catch(e){console.warn('friends churn',e)}if(S.fgv)Object.keys(S.fgv).forEach(b=>{const v=S.fgv[b];if(v&&v.w<AW()-FG_WAIT)delete S.fgv[b]});if(S.fgd)Object.keys(S.fgd).forEach(b=>{const v=S.fgd[b];if(v&&v.w<AW()-FG_WAIT)fgDriftNews(b)});return e0.apply(this,arguments)}}
+if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(){fgSyncAll();try{brands().forEach(fgChurn)}catch(e){console.warn('friends churn',e)}if(S.fgv)Object.keys(S.fgv).forEach(b=>{const v=S.fgv[b];if(v&&(v.w<AW()-FG_WAIT||!S.w[v.f]||S.w[v.f].own!==b)){if(S.w[v.a]&&S.w[v.f])fgReveal(S.w[v.a],S.w[v.f],'');delete S.fgv[b]}});if(S.fgd)Object.keys(S.fgd).forEach(b=>{const v=S.fgd[b];if(v&&(v.w<AW()-FG_WAIT||!S.w[v.a]||S.w[v.a].own!==b))fgDriftNews(b)});return e0.apply(this,arguments)}}
 /* the office visit (inbox.js shows it): a top star, about a friend */
-function fgVisit(){const v=S.fgv&&S.fgv.p;if(!v)return null;const F=S.w[v.f],A=S.w[v.a];if(!F||!A||F.own!=='p'||F.inj)return null;return {v,F,A}}
+function fgVisit(){const v=S.fgv&&S.fgv.p;if(!v)return null;const F=S.w[v.f],A=S.w[v.a];if(!F||!A||F.own!=='p')return null;return {v,F,A}}
 function fgCost(F,A){return Math.max(15,Math.round((sal(F)+sal(A))*1.5))}
 function fgAnswer(i){const x=fgVisit();if(!x)return '';const {v,F,A}=x;delete S.fgv.p;fgReveal(A,F,'quiet');let t;
  if(v.d<0){if(i===0){const c=fgCost(F,A);S.money.p-=c;mlog(F,Math.round(-v.d*.6*10)/10,`You made it right with ${A.name}`);mlog(A,3,'A bonus to smooth things over');t=`${F.name} nods. "Alright. That's how you fix it." ${A.name} gets ${money(c)} and a handshake.`}
@@ -114,8 +116,8 @@ function fgAnswer(i){const x=fgVisit();if(!x)return '';const {v,F,A}=x;delete S.
   else t=`"Just wanted you to know." ${F.name} heads back to the locker room in a good mood.`}
  fgNews(`🤝 ${F.name} came to the office about ${A.name}.`);save();return t}
 /* v364: someone who fell out with their group tells you about it */
-function fgDrift(){const v=S.fgd&&S.fgd.p;if(!v)return null;const A=S.w[v.a],Y=S.w[v.y];if(!A||!Y||A.own!=='p'||A.inj)return null;return {v,A,Y}}
-function fgDriftAnswer(){const x=fgDrift();if(!x)return '';const {v,A,Y}=x;delete S.fgd.p;let t;
+function fgDrift(){const v=S.fgd&&S.fgd.p;if(!v)return null;const A=S.w[v.a],Y=S.w[v.y];if(!A||!Y||A.own!=='p')return null;return {v,A,Y}}
+function fgDriftAnswer(){const x=fgDrift();if(!x)return '';const {v,A,Y}=x;fgdNext('p');let t;
  if(v.known){mlog(A,2,'You listened');t=`${A.name} shrugs. "Thanks. It is what it is." They seem a little lighter on the way out.`}
  else t=`${A.name} blinks. "Since forever. Doesn't matter now." And they're gone.`;
  fgNews(`💔 ${A.name} and ${Y.name} aren't friends anymore.`);save();return t}

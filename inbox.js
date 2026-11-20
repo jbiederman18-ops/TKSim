@@ -76,7 +76,8 @@ function inboxList(){if(!allowed())return [];const out=[];
 const DESK_MAX=4;/* v370: 3 → 4, so the network and friends' visits make it in too */window.DESK_MAX=DESK_MAX;
 function dKey(x){if(x.k==='crisis'||x.k==='pitch'||x.k==='net'||x.k==='fg'||x.k==='fgd')return x.k;if(x.k==='agent')return 'ag:'+x.w.id;if(x.k==='ask')return 'ask:'+x.a.id;
  const q=(x.row||'').match(/\('([^']+)'/);if(q)return x.k+':'+q[1];const b=(x.row||'').match(/<b>([^<]+)<\/b>/);return x.k+':'+(b?b[1]:(x.row||'').length)}
-const dUrgent=x=>x.k==='crisis'||x.k==='pitch'||x.k==='med'||(x.k==='agent'&&x.w.con<=1);
+/* v371: the network exec and friends' visits are information you can't get anywhere else, so they always get in too */
+const dUrgent=x=>x.k==='crisis'||x.k==='pitch'||x.k==='med'||x.k==='net'||x.k==='fg'||x.k==='fgd'||(x.k==='agent'&&x.w.con<=1);
 const D_RANK=x=>x.k==='crisis'?0:x.k==='pitch'?1:x.k==='agent'&&x.w.con<=1?2:x.k==='med'?3:x.k==='tamp'?4:x.k==='net'?4.2:x.k==='fgd'?4.4:x.k==='fg'?4.6:x.k==='agent'?5:x.k==='ask'&&x.a.due?6:
  ({trade:7,cd:8,oc:8,ask:9,callup:10,tape:11})[x.k]||14;
 function lineup(out){const wk=AW();
