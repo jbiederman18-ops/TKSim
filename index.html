@@ -1512,7 +1512,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v372';
+const APP_VERSION='v373';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -5082,6 +5082,8 @@ function srExtras(o,br){const b=o.blocks.find(x=>x.brand===br);if(!b||!b.segs.le
 /* the round's result: running scores, the rope, the winner's panel. Visible only for the round on screen. */
 function srLand(rd,vis){if(rd.landed)return;rd.landed=true;[rd.p,rd.ai,rd.x].forEach(srDone);
  if(rd.p&&rd.ai){const d=rd.p.s.stars-rd.ai.s.stars;srRope(srScore('p')-srScore('ai'),null,vis&&Math.abs(d)>.01)}
+ /* v373: a one-sided round (one show has an extra segment, e.g. the bonus promo) still moves that show's average, so the rope follows it quietly — no jolt, no head-to-head winner */
+ else if(SRV.two&&(rd.p||rd.ai))srRope(srScore('p')-srScore('ai'),null,false)
  if(vis){document.querySelectorAll('#tw-pair .twh').forEach(h=>h.classList.add('nt'));srMark(rd);srKick(document.querySelector('#tw-pair .twh.won'),'slamw');if(!rd.main)srKick(document.getElementById('srv'),'nudge')}}
 /* v265: the stage's markup on its own, so the party-night TV can play it too (nm = the two shows' GM names, tv = no tapping) */
 function srStageHtml(o,nm,tv){const G=nm?nm.p:S.gm,Rv=nm?nm.ai:S.rival;const all=srRounds(o);const rounds=all.filter(r=>!r.x&&!r.main).concat(all.filter(r=>r.x),all.filter(r=>r.main));
