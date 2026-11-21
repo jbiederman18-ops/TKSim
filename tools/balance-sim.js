@@ -1,7 +1,7 @@
 /* Injected into the game page. Plays whole seasons with an automated GM and returns per-season stats.
 
    The bot plays like an attentive player who still lets the assistant do the creative booking:
-   • the office line: front-office situations get a random answer; wrestler pitches get a trial about half the time
+   • the office line: front-office situations get a random answer; wrestler pitches get a yes about half the time (a trial where the build offers one, else Go for it)
      (otherwise a gentle no); expiring contracts are re-signed by the offline rival's rule
    • the checklist (v352, opt.checklist): before tapping Suggest the rest it books what the Needs your attention list
      asks for — promised and contracted matches, contract clauses, pitch trials, the most overdue title defense, the
@@ -93,7 +93,10 @@ window.SIM = async function (opt) {
   /* the office line: a wrestler's pitch gets a trial when one's on offer, otherwise a gentle no */
   const answerPitch = () => {
     if (!S.pitch || typeof PITCHES === 'undefined' || !PITCHES[S.pitch.k]) { S.pitch = null; return }
-    const P = PITCHES[S.pitch.k]; try { const want = opt.pitch || (opt.checklist && Math.random() < .5 ? 'try' : 'no'); pitchChoose(want !== 'no' && P[want] ? want : 'no'); cur.pitch = cur.pitch || {}; cur.pitch[S.pitchK && S.pitchK.slice(-1)[0] || '?'] = 1 } catch (e) { errs.push('pitch ' + e.message) }
+    const P = PITCHES[S.pitch.k]; try { /* v382: players only see the answers pitchChoices offers (Go for it / Sorry, not right now since v382; older builds also had a trial) */
+      const offer = (typeof pitchChoices === 'function' ? pitchChoices(S.pitch) : [{k:'try'},{k:'go'},{k:'no'}]).filter(c => c.k === 'no' || !c.cost || S.money.p >= c.cost).map(c => c.k);
+      const yes = offer.includes('try') ? 'try' : 'go';
+      const want = opt.pitch || (opt.checklist && Math.random() < .5 ? yes : 'no'); pitchChoose(want !== 'no' && P[want] && (opt.pitch || offer.includes(want)) ? want : 'no'); cur.pitch = cur.pitch || {}; cur.pitch[S.pitchK && S.pitchK.slice(-1)[0] || '?'] = 1 } catch (e) { errs.push('pitch ' + e.message) }
     S.pitch = null; try { closeModal() } catch (e) { }
   };
 

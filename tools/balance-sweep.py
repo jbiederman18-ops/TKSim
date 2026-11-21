@@ -44,6 +44,9 @@ v364 (venue ladder: Piddly-Ass Auditorium / Good Building / Actual Arena; the bo
   it), Normal, 32 games x 3 seasons, seasons won: default 59/66/56%, skip-every-step 38/44/22%, --lazy 31/47/16%. Bank gap
   (ignore minus attentive) at season 3 shrank from ~$1.35M to ~$0.3M; the rival moves up too (show ~4.0 in season 3).
   draft-sweep --invest 0: cap .85 seasons won 58/54% vs drafting to the cap 67/54% (banking is close; with FA investing it isn't).
+v382 (pitches lose "Give it a try": the bot now says Go for it where it used to take a trial, when it can afford it), Normal,
+  24 games x 3 seasons vs v381: show 3.62/3.79/3.91 vs 3.56/3.63/3.79 (promo stars +0.1-0.24: no more trial promos forced
+  onto the card), rival 3.87/3.98/4.08 vs 3.83/3.95/4.00, seasons won 67/62/62% vs 67/50/58%, morale and injuries unchanged.
 --diff normal runs one difficulty; a variant's 'pre' script runs before the bot (handy for testing a constant).
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
