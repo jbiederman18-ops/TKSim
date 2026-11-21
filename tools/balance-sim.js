@@ -180,7 +180,7 @@ window.SIM = async function (opt) {
     const cnt = (b, t) => pops(b).filter(p => p >= t).length;
     const allOwned = Object.values(S.w).filter(w => w.own);
     return {
-      fansGained: { p: S.fans.p - cur.fans0.p, ai: S.fans.ai - cur.fans0.ai }, fans: { p: S.fans.p, ai: S.fans.ai }, fbd: cur.fbd || null, fb: S.fb && S.fb.p ? { p: Object.assign({}, S.fb.p), ai: Object.assign({}, S.fb.ai || {}) } : null,
+      fansGained: { p: S.fans.p - cur.fans0.p, ai: S.fans.ai - cur.fans0.ai }, fans: { p: S.fans.p, ai: S.fans.ai }, fbd: cur.fbd || null, war: typeof fanWar === 'function' ? 'total' : 'gain', buzz: typeof buzzOf === 'function' ? { p: buzzOf('p'), ai: buzzOf('ai') } : null, venue: S.venue && S.venue.p ? (S.venue.p.k || '') : '', fb: S.fb && S.fb.p ? { p: Object.assign({}, S.fb.p), ai: Object.assign({}, S.fb.ai || {}) } : null,
       money: { p: S.money.p, ai: S.money.ai }, payroll: { p: payroll('p'), ai: payroll('ai') },
       roster: { p: owned('p').length, ai: owned('ai').length },
       pop90: cnt('p', 90) + cnt('ai', 90), pop85: cnt('p', 85) + cnt('ai', 85), pop80: cnt('p', 80) + cnt('ai', 80),

@@ -457,7 +457,7 @@ function fbApply(b,segs,show,o){const r=fbCalc(b,segs,show,o);const f=S.fb[b],X=
  const flat=Math.round(o.flat||0);if(flat){if(flat>0)f.cas+=Math.round(flat*(flat>0?grow:1));else f.cas=Math.max(0,f.cas+flat)}
  FB_HC.forEach(g=>{H[g]=[r.E[g]].concat(H[g]||[]).slice(0,3);if(r.avg[g]!=null)X[g]+=FB_XK*(r.avg[g]-X[g])});if(r.avg.cas!=null)X.cas+=FB_XKC*(r.avg.cas-X.cas);
  FB_G.forEach(g=>X[g]=clamp(X[g],2.5,4.6));
- let T=fbSum(b);if(T<50000){f.cas+=50000-T;T=50000}S.fans[b]=T;FB_G.forEach(g=>out.after[g]=f[g]);out.conv=conv;return out}
+ let T=fbSum(b);if(T<50000){f.cas+=50000-T;T=50000}S.fans[b]=T;FB_G.forEach(g=>out.after[g]=f[g]);out.conv=conv;try{fbMoodAdd(b,{pct:r.pct,before})}catch(e){}return out}
 
 /* ---- v400: fans switch shows. After a night with two or more shows, each group drifts toward the show that served it best.
    Casuals switch on any clear gap. Hardcore fans only walk out on a show that let them down tonight (their group went backwards)
@@ -481,6 +481,21 @@ function fbHit(b,ws,n){if(!S.fans||S.fans[b]==null)return;fbSync(b);const f=S.fb
  ws.filter(Boolean).forEach(w=>{const g=fgOf(w).filter(x=>FB_HC.includes(x));(g.length?g:['cas']).forEach(x=>gs.push(x))});if(!gs.length)gs.push('cas');
  const per=n/gs.length;gs.forEach(g=>{f[g]=Math.max(0,f[g]+Math.round(per))});let T=fbSum(b);if(T<50000){f.cas+=50000-T;T=50000}S.fans[b]=T}
 Object.assign(window,{fbDefect,fbHit});
+
+/* ---- v401: money follows the groups. Each kind of money sees its own audience, scaled so that at the typical starting split
+   (FB_C0 casuals) every one of them equals your total — so a casual-heavy company earns more from TV and ads, and a hardcore-heavy
+   one more from tickets, merch and PPV buys. Buzz (tickets, filling the building) is the fans' mood: how well your crowds were
+   served lately (S.fbm, a running average of tonight's fan-weighted reaction). ---- */
+const FB_C0=.71,FB_AUD={tv:.4,live:2,ppv:1.33};  /* tv: hardcore count .4 of a casual; live: hardcore count 2x a casual; ppv: 1.33x */
+const FB_MOOD_K=.4,FB_BUZZ0=2.9,FB_BUZZK=.22;
+function fbAud(b,k){if(!S||!S.fans||S.fans[b]==null)return 0;if(!fbHas(b))return S.fans[b];fbSync(b);const f=S.fb[b];const hc=FB_HC.reduce((a,g)=>a+f[g],0);const w=FB_AUD[k]||1;
+ return Math.round((f.cas+w*hc)/(FB_C0+w*(1-FB_C0)))}
+function fbMood(b){return S&&S.fbm&&S.fbm[b]!=null?S.fbm[b]:null}
+function fbBuzz(b){const m=fbMood(b);return m==null?null:clamp(FB_BUZZ0+m*FB_BUZZK,1.5,5)}
+function fbMerchF(b){if(!fbHas(b)||!S.fans[b])return 1;return clamp(Math.sqrt(fbAud(b,'live')/S.fans[b]),.8,1.25)}
+function fbMoodAdd(b,r){if(!r||!r.pct)return;const f=S.fb[b];const T=fbSum(b)||1;let m=0;FB_G.forEach(g=>m+=(r.before[g]||f[g])*clamp(r.pct[g],-8,8));m/=T;
+ S.fbm=S.fbm||{};S.fbm[b]=S.fbm[b]==null?m:S.fbm[b]+FB_MOOD_K*(m-S.fbm[b])}
+Object.assign(window,{fbAud,fbBuzz,fbMerchF,fbMood});
 /* ---- the Crowd read on the Book screen (replaces the Show flow graph): one word per group and what they expect ---- */
 const FB_WORD=[[3,'Eating well tonight','good'],[1,'Happy','good'],[-.5,'Lukewarm',''],[-2,'Only a taste — drifting','warn'],[-99,'Starving — they’re leaving','bad']];
 const FB_CWORD=[[1.5,'Hooked','good'],[.3,'Tuned in','good'],[-1,'Restless',''],[-99,'Changing the channel','bad']];

@@ -65,6 +65,11 @@ v400 (fans switch shows: fbDefect moves each group toward the show that served i
   100/94/62%, normal 75/50/44%, hard 75/31/25%; --lazy ~0% everywhere. Known: the player's seasons won fall season over season —
   casual drift and switching are proportional to your own base, and the attentive player's base grows faster (promises, goals),
   so a big base is harder to grow. Watch this when money and the rival change (v401/v402).
+v401 (fan war = total audience, fanWar; money by group: TV/ads from fbAud 'tv', tickets 'live', PPV 'ppv', merch fbMerchF;
+  buzz = fans' mood S.fbm, FB_BUZZ0 2.9), Normal 24 games x 3 seasons: default seasons won 71/58/50% (v400 under the same total-audience
+  rule: 79/54/21%), engaged 96/88/75%, lazy 0%; bank $0.76/1.23/1.63M (v400 0.51/1.35/2.02M); buzz ~3.85 (v400 ratings buzz 3.8-4.0).
+  draft-sweep (12 games): early-week banks, red weeks (0%) and the stars-vs-cap trade-off match v400. 'seasons won' uses the build's
+  own rule (row 'war' from balance-sim: total audience when fanWar exists, otherwise fans gained).
 --diff normal runs one difficulty; a variant's 'pre' script runs before the bot (handy for testing a constant).
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
@@ -125,7 +130,7 @@ def table(results):
                          'show★ you': m([st.mean(s['rp']) for s in S]), 'show★ rival': m([st.mean(s['rai']) for s in S]),
                          'weeks won': m([s['wins'] / s['weeks'] for s in S]),
                          'fans gained K you': m([e['fansGained']['p'] / 1000 for e in E]), 'fans gained K rival': m([e['fansGained']['ai'] / 1000 for e in E]),
-                         'seasons won': m([1 if e['fansGained']['p'] > e['fansGained']['ai'] else 0 for e in E]),
+                         'seasons won': m([1 if (e['fans']['p'] > e['fans']['ai'] if e.get('war') == 'total' else e['fansGained']['p'] > e['fansGained']['ai']) else 0 for e in E]),
                          'bank $K you': m([e['money']['p'] for e in E]), 'bank $K rival': m([e['money']['ai'] for e in E]),
                          'pop 90+': m([e['pop90'] for e in E]), 'pop 85+': m([e['pop85'] for e in E]), 'pop 80+': m([e['pop80'] for e in E]),
                          'median pop': m([e['medPop'] for e in E]), 'morale': m([e['mor']['p'] for e in E]),
@@ -133,6 +138,7 @@ def table(results):
                          'match★': m([st.mean(s['matchStars']) for s in S if s['matchStars']]), 'title changes': m([s['titleChanges'] for s in S]),
                          **({('fans ' + g + ' K'): m([e['fb']['p'][g] / 1000 for e in E if e.get('fb')]) for g in ('cas', 'tech', 'blood', 'flip', 'chaos')} if any(e.get('fb') for e in E) else {}),
                          **({('show gain ' + k): m([e['fbd'].get(k, 0) / 1000 for e in E if e.get('fbd')]) for k in ('p.cas', 'p.tech', 'p.blood', 'p.flip', 'p.chaos', 'ai.cas', 'ai.tech', 'ai.blood', 'ai.flip', 'ai.chaos')} if any(e.get('fbd') for e in E) else {}),
+                         'buzz you': m([e['buzz']['p'] for e in E if e.get('buzz')]), 'buzz rival': m([e['buzz']['ai'] for e in E if e.get('buzz')]),
                          'errors': errs})
     if not rows: print('no complete seasons'); return
     keys = list(dict.fromkeys(k for r in rows for k in r))
