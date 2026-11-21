@@ -45,6 +45,7 @@
 | File | System |
 |---|---|
 | `cards.js` | Card table: tap-to-pick booking sheet, wrestler cards (v273+). The only Book screen since v338 — it draws over `bookView`'s slots, so the classic slot markup is still the base |
+| `fanbase.js` | Fan groups (v397+): `FG_RAW` group per wrestler id, `fgOf`/`fgWord`/`fgTag`, style fallback `FG_STYLE`. The fanbase engine lands here in v398 |
 | `attention.js` | Needs your attention checklist + the This week news panel on Home (v324) |
 | `inbox.js` | The line outside your office (Monday decisions; max `DESK_MAX` a week since v341) |
 | `season.js` | Season systems, calendar flow |
