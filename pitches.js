@@ -1,13 +1,13 @@
 /* Tony Khan Simulator — wrestler pitches (v97).
    Every couple of weeks someone on your roster knocks on the office door with an idea: a new character, a feud they
-   want, a partner they click with, or a problem they need you to fix. You can give it a try (a short trial with a clear
-   goal — hit it and it sticks), go for it (full commitment now: bigger upside, real risk), or let them down gently
+   want, a partner they click with, or a problem they need you to fix. Since v382 there are two answers: go for it
+   (full commitment now: bigger upside, real risk) or sorry, not right now
    (costs some morale — less if they're happy, more if they're not). An unanswered pitch expires after a week.
    Pitches and trials are private to each GM in an online league. Loaded before the main script; everything here is
    only called once the game is running. */
 'use strict';
 const PITCH_LEN=3; /* weeks a trial runs */
-const PCH={try:{i:'🧪',n:'Give it a try'},go:{i:'🚀',n:'Go for it'},no:{i:'🤝',n:'Let them down gently'}};
+const PCH={try:{i:'🧪',n:'Give it a try'},go:{i:'🚀',n:'Go for it'},no:{i:'🤝',n:'Sorry, not right now'}};
 const PSTAR=v=>`${v}★`;
 /* ---- small helpers ---- */
 function pOwn(id){const w=S.w[id];return w&&w.own==='p'?w:null}
@@ -216,14 +216,14 @@ function pitchGen(){const r=pPool();if(r.length<4)return;const keys=Object.keys(
   S.pitch=Object.assign({k,w:AW()},c);S.pitchLast=AW();S.pitchBy=S.pitchBy||{};S.pitchBy[c.a]=AW();S.pitchK=(S.pitchK||[]).concat([k]).slice(-4);return}}
 /* ---- answering ---- */
 function pitchChoices(p){const P=PITCHES[p.k],x=pCtx(p);const A=x.A;const cut=pMorCut(A,P.no*3);
- return [{k:'try',d:P.try.d(x)},{k:'go',d:P.go.d(x),cost:P.go.cost?P.go.cost():0},{k:'no',d:`${A.name} loses ${cut} morale${A.mor>=75?' (they\'re happy enough to shrug it off)':A.mor<40?' (they\'re already unhappy, so it stings)':''}.`}]}
+ return [{k:'go',d:P.go.d(x),cost:P.go.cost?P.go.cost():0},{k:'no',d:`${A.name} loses ${cut} morale${A.mor>=75?' (they\'re happy enough to shrug it off)':A.mor<40?' (they\'re already unhappy, so it stings)':''}.`}]}
 function pitchStart(p,spec){const len=spec.len||PITCH_LEN;const t=Object.assign({k:p.k,a:p.a,b:p.b||null,start:AW(),end:AW()+len-1,have:0,al:S.w[p.a].al},spec);S.trials=(S.trials||[]).concat([t]);if(t.goal==='title'&&typeof tpSync==='function')tpSync([]);return t}
 function pitchChoose(k){if(typeof mpLocked==='function'&&mpLocked())return;const p=S.pitch;if(!p||!PITCHES[p.k])return closeModal();const P=PITCHES[p.k];const x=pCtx(p);if(!x.A||x.A.own!=='p'){S.pitch=null;save();return closeModal()}
  let txt='';x.prevT=x.A.turnW;
  if(k==='try'){const sp=P.try.start(x);sp.prevT=x.prevT;const t=pitchStart(p,sp);mor(x.A,4);txt=`${PCH.try.i} Trial on: ${x.A.name} has ${t.end-t.start+1} week${t.end>t.start?'s':''} — the goal is ${t.txt}. Track it on the Book screen's checklist.`}
  else if(k==='go'){if(P.go.cost&&S.money.p<P.go.cost()){toast('Not enough money for that.');return}
   if(P.go.start){const sp=P.go.start(x);const t=pitchStart(p,sp);mor(x.A,10);txt=`${PCH.go.i} Promise made: ${t.txt}. ${x.A.name} is fired up — don't let them down.`}else txt=`${PCH.go.i} ${P.go.fx(x)}`}
- else{const cut=pMorCut(x.A,P.no*3);mor(x.A,-cut);txt=`${PCH.no.i} You let ${x.A.name} down gently. They understand — mostly (−${cut} morale).`}
+ else{const cut=pMorCut(x.A,P.no*3);mor(x.A,-cut);txt=`${PCH.no.i} You tell ${x.A.name} not right now. They understand — mostly (−${cut} morale).`}
  S.pitch=null;S.pitchNews=(S.pitchNews||[]).concat([{w:AW(),t:txt}]).slice(-12);save();render();
  openModal(`<div class="h mhd">📨 ${esc(P.head(x))}</div><div class="duo" style="align-items:center">${face(x.A)}${x.B?face(x.B):''}</div><div class="outcome ok">${esc(txt)}</div><button class="btn" onclick="openBrief()">Back to work</button>`)}
 function openPitch(){const p=S.pitch;if(!p||!PITCHES[p.k])return;const P=PITCHES[p.k],x=pCtx(p);if(!x.A||x.A.own!=='p'||(p.b&&!x.B)){S.pitch=null;save();return}

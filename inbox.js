@@ -156,7 +156,7 @@ function fgLine(f){const {v,F,A}=f,a=firstName(A),seed=F.id+A.id;
   `Did you see ${a} last night? I've known them since we were nobodies. Whatever you're doing, keep doing it.`,
   `${a} called me in tears, the good kind. I owe you one.`],seed)}
 function openFg(){const f=fgVisit();if(!f)return closeModal();const {v,F,A}=f;const c=fgCost(F,A);
- openModal(`<div class="h mhd mt">🤝 ${esc(F.name)}, about a friend</div><div class="scene brief ibx">${voiceH(F.id,fgLine(f))}<div class="brow"><span class="muted tiny">${esc(F.name)} and ${esc(A.name)} are close backstage. What happens to one, the other feels.</span></div></div>
+ openModal(`<div class="h mhd mt">${v.d<0?'😠':'🤝'} ${esc(F.name)} is looking ${v.d<0?'upset':'grateful'}</div><div class="scene brief ibx">${voiceH(F.id,fgLine(f))}<div class="brow"><span class="muted tiny">${esc(F.name)} and ${esc(A.name)} are close backstage. What happens to one, the other feels.</span></div></div>
  ${v.d<0?`<button class="choice" onclick="fgPick(0)"><span class="key"><span>A</span></span><div>💵 "Let me make it right" · −${esc(money(c))}</div><div class="muted tiny">A bonus for ${esc(A.name)}. Takes most of the sting out for both.</div></button>
  <button class="choice" onclick="fgPick(1)"><span class="key"><span>B</span></span><div>🤷 "It's business"</div><div class="muted tiny">Free. ${esc(F.name)} won't forget it.</div></button>`
  :`<button class="choice" onclick="fgPick(0)"><span class="key"><span>A</span></span><div>🍽️ "Dinner's on me, bring ${esc(firstName(A))}" · −${esc(money(15))}</div><div class="muted tiny">A little more goodwill for both.</div></button>
@@ -169,7 +169,7 @@ window.fgPick=function(i){if(typeof mpLocked==='function'&&mpLocked())return;con
 function openFgd(){const f=fgDrift();if(!f)return closeModal();const {v,A,Y}=f,y=firstName(Y),seed=A.id+Y.id;
  const line=v.hot?pickL([`Me and ${y}? Done. After what happened, I'm not pretending anymore.`,`I'm not riding with ${y} anymore. You probably heard why.`,`${y} and I had it out. We're not friends now. Just so you know.`],seed)
   :pickL([`Me and ${y} don't really hang out anymore. Nothing happened. We just… drifted.`,`Weird thing to say to your boss, but ${y} and I aren't friends anymore. Felt like you should know.`,`${y} and I used to be tight. Not anymore. I'm finding my own people.`],seed);
- openModal(`<div class="h mhd mt">💔 ${esc(A.name)}, about ${esc(Y.name)}</div><div class="scene brief ibx">${voiceH(A.id,line)}</div>
+ openModal(`<div class="h mhd mt">💔 ${esc(A.name)} is looking ${v.hot?'heated':'wistful'}</div><div class="scene brief ibx">${voiceH(A.id,line)}</div>
  <button class="choice" onclick="fgdPick()"><span class="key"><span>A</span></span><div>${v.known?`😔 "I'm sorry to hear that. I know you two were close."`:`🤨 "Wait, you were friends?"`}</div></button>`)}
 window.fgdPick=function(){if(typeof mpLocked==='function'&&mpLocked())return;const t=fgDriftAnswer();if(!t)return closeModal();try{render()}catch(e){}const left=inboxList().length;
  openModal(`<div class="h mhd">💔 Backstage</div><div class="outcome ok">${esc(t)}</div>
