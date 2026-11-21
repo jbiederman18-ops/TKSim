@@ -383,10 +383,14 @@ const chemP=c=>c>=10?5:c>=6?4:c>=3?3:c>=0?2:1;
 const L=w=>w.name.split(' ').slice(-1)[0];
 /* the four ingredients of a match */
 function mdOf(m,sh){const r=rateMatch(m,{ppv:sh.ppv,allin:sh.ppv&&SUPER(S.week),preview:true});if(!r.bd||isSq(m))return {r,sq:true};
- const P=r.bd.parts;const v=i=>(P[i]&&P[i][1])||0;
+ /* v392: parts are found by name — they used to be read by position, which drifted as parts were added (morale,
+    locker room, prove them wrong), so the story and extras pips were reading the wrong rows */
+ const P=r.bd.parts;const FIX={chem:0,spark:1,heat:2,stip:3,title:4,chaos:5,role:6,traits:7};const NM={mom:'Momentum',occ:'The occasion',ri:'Run-in',boil:'Boiling over',promise:'Promise payoff',hype:'Hyped on the mic tonight'};
+ const ix=k=>FIX[k]!=null?FIX[k]:k==='fin'?P.findIndex(p=>p[0]===FINS[finOf(m)].n):P.findIndex(p=>p[0]===NM[k]);
+ const v=k=>{const i=ix(k);return (i>=0&&P[i]&&P[i][1])||0};
  const ws=m.sides.flat().map(id=>S.w[id]).filter(Boolean);
- const story=v(2)+v(4)+v(13)+v(14)+Math.max(0,v(9));
- const pos=[[3,'stip'],[5,'chaos'],[6,'role'],[7,'traits'],[10,'fin'],[11,'occ'],[12,'ri']].map(([i,k])=>[k,v(i),P[i]&&P[i][0]]);
+ const story=v('heat')+v('title')+v('boil')+v('promise')+v('hype')+Math.max(0,v('mom'));
+ const pos=['stip','chaos','role','traits','fin','occ','ri'].map(k=>{const i=ix(k);return [k,v(k),i>=0&&P[i]?P[i][0]:'']});
  const extras=pos.reduce((a,x)=>a+Math.max(0,x[1]),0);
  const p={talent:clamp(Math.round((r.bd.base-44)/4),1,5),chem:chemP(r.chem),story:story<=.5?0:clamp(Math.ceil(story/2.2),1,5),extras:clamp(Math.round(extras/1.5),0,5)};
  const back=[];
@@ -403,7 +407,7 @@ function mdOf(m,sh){const r=rateMatch(m,{ppv:sh.ppv,allin:sh.ppv&&SUPER(S.week),
  const talentW=p.talent>=5?(big?`${top.slice(0,2).map(w=>w.name).join(' and ')} carry it`:'Two of your best workers and biggest names'):p.talent>=4?'Strong workers the crowd knows':p.talent>=3?'Good hands, mid-card names':'Still building in the ring and with the fans';
  const h=Math.round(r.heat);const fi=(()=>{let b=null;for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const c of m.sides[j]){const f=feudInfo(a,c);if(f&&(!b||f.h>b.h))b=f}return b})();
  const fh=fi?Math.round(fi.h):0;const storyW=[fi?(fi.h>=35?`Hot feud (heat ${fh}) — ready to pay off`:fi.h>=8?`${fi.t>=0?FTIER[fi.t][1].replace(/^[🔥 ]+/,''):'A feud is starting'} (heat ${fh}). A promo builds it`:`Seeds planted (heat ${fh})`):'No feud between them yet',
-  m.title&&S.titles[m.title]?`${S.titles[m.title].n} title on the line`:'',v(14)?'Delivers a promised match':'',v(13)?'Boiling over after weeks of talk':'',v(9)>.3?'On a hot streak':''].filter(Boolean).join(' · ');
+  m.title&&S.titles[m.title]?`${S.titles[m.title].n} title on the line`:'',v('promise')?'Delivers a promised match':'',v('boil')?'Boiling over after weeks of talk':'',v('hype')?'Built up on the mic earlier tonight':'',v('mom')>.3?'On a hot streak':''].filter(Boolean).join(' · ');
  const sk=stipKey(m);const ex=pos.filter(x=>x[1]>.2).map(x=>x[0]==='stip'?`${STIPS[sk].n} suits them`:x[0]==='occ'?(sh.ppv?'The big-show crowd':'A special occasion'):x[0]==='fin'?`${x[2]} adds drama`:x[2]);
  let extrasW=ex.length?ex.join(' · '):'Standard match, clean finish';
  if(sk==='std'&&!m.tour&&!isSp(m)&&m.type!=='gauntlet'){const best=Object.entries(STIPS).filter(([k,s])=>k!=='std'&&stipOk(k,m.type,sh.ppv)).map(([k,s])=>[k,ws.reduce((a,w)=>a+(s.b[w.st]||0),0)/ws.length]).sort((a,b)=>b[1]-a[1])[0];if(best&&best[1]>=3)extrasW+=` · ${STIPS[best[0]].n} would suit them`}

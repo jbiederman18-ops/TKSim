@@ -111,6 +111,7 @@ function why(w,anchor,i,am,tg){const sl=card()[i],promo=sl.k==='promo';
   if(!promo&&defenseDue(w.id))return ['Defense due','must',75];
   const f=hotFeud(w);if(f&&f.h>=20&&f.o&&f.o.own==='p'&&!f.o.inj)return [`${heatLbl(f.h)} · ${ln(f.o)}`,'feud',40+f.h/4];
   if(promo&&w.mic>=85)return ['Great talker','hot',30];
+  if(promo&&laterMatch(i,w.id))return ['Wrestles later','',10];
   if(isChamp(w.id))return ['Champion','gold',18];
   if(w.pop>=85&&sta(w)>=100-FAT_OK)return ['Top star','',12];
   return null}
@@ -122,13 +123,19 @@ function why(w,anchor,i,am,tg){const sl=card()[i],promo=sl.k==='promo';
  if(met&&c>=6)return [chemWord(c),'hot',30+c];
  if(!met&&c>=10)return ['Electric?','hot',20+c];
  if(promo&&w.mic>=85)return ['Great talker','hot',24];
+ if(promo&&laterMatch(i,w.id,anchor))return ['Hypes their match','hot',45];
  if(A.pop-w.pop>=15&&w.pop>=45&&tg!=='partner')return ['Rub','rub',14];
  if(am.has(w.id))return [askTxt(am,w.id),'must',26];
  if(A.al!==w.al&&tg!=='partner')return [met?'Face v heel':'Never met','',8];
  return [met?'':'Never met','',0]}
+/* v392: booked means booked in the same kind of segment — a promo slot only skips people already cutting a promo
+   tonight, a match slot only people already in a match. Talking and wrestling on one show is free (and hypes the match). */
+function bookedFor(i){const c=card();const sl=c[i];if(sl&&sl.k==='promo'){const s=new Set();c.forEach((o,j)=>{if(j!==i&&o.k==='promo'&&o.d){if(o.d.a)s.add(o.d.a);if(o.d.b)s.add(o.d.b)}});return s}return usedIn('p',i)}
+/* a later match on the card that this wrestler (and, with a partner picked, someone across the ring from them) is in */
+function laterMatch(i,id,partner){return card().some((o,j)=>j>i&&o.k==='match'&&o.d&&o.d.sides&&(partner?hypes({a:partner,b:id},o.d):o.d.sides.flat().includes(id)))}
 function hand(i,o){o=o||{};const sl=card()[i];if(!sl)return [];const m=cur(i);const here=idsOf(i,m);const promo=sl.k==='promo';
  const anchor=o.anchor!==undefined?o.anchor:here.length?here[here.length-1]:null;const tg=o.tg!==undefined?o.tg:defTarget(i,m);const am=askMap();
- const full=promo?new Set():fullIn('p',i);const used=usedIn('p',i);
+ const full=promo?new Set():fullIn('p',i);const used=bookedFor(i);
  let pool=ownList('p').filter(w=>!w.inj&&!here.includes(w.id)&&!full.has(w.id));const g0=spG(sl);if(g0)pool=pool.filter(w=>w.g===g0);
  if(promo&&anchor)pool=pool.filter(w=>!promoPairBooked(anchor,w.id,i));
  /* v384: rivals count against everyone across the ring, not just the last pick — in a tag, trios or multi-way match
@@ -420,15 +427,15 @@ function xoCards(i,m,tg){const side=(tg&&tg.t)||'a';const A=W_(m.a);
   return ownList('ai').filter(w=>!w.inj&&!taken.has(w.id)&&(TC.f==='all'||TC.f==='fit'||(TC.f==='ch'?isChamp(w.id):w.al===TC.f))).map(w=>{const c=A?chemOpp(A,w):0;return {w,v:c*2+w.pop,r:A?[chemWord(c),c>=6?'hot':'',0]:null}}).sort((a,b)=>b.v-a.v)}
  const used=usedIn('p',i);return ownList('p').filter(w=>!w.inj&&!used.has(w.id)&&(TC.f==='all'||TC.f==='fit'||(TC.f==='ch'?isChamp(w.id):w.al===TC.f))).sort((a,b)=>b.pop-a.pop).map(w=>({w,r:isChamp(w.id)?['Champion','gold',0]:w.pop>=85?['Top star','',0]:null}))}
 function sheetCards(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';if(sl.k==='xo')return xoCards(i,m,tg);const anchor=sheetAnchor(i,m,tg);const tt=tg&&tg.t;
- /* v314: wrestlers already in a match tonight drop out of the list into an "Already booked" dropdown
-    v320: anyone already on tonight's card in any segment (a match or another promo) counts as booked */
+ /* v314: wrestlers already booked tonight drop out of the list into an "Already booked" dropdown
+    v392: only the same kind of segment counts — a match for a match slot, another promo for a promo slot (bookedFor) */
   /* v384: the whole roster, best fit first — Champions / Faces / Heels narrow it but keep the same order */
- const used=usedIn('p',i);card().forEach((o,j)=>{if(j!==i&&o.k==='promo'&&o.d){if(o.d.a)used.add(o.d.a);if(o.d.b)used.add(o.d.b)}});const h=hand(i,{anchor,tg:tg||null,n:1e4});
+ const used=bookedFor(i);const h=hand(i,{anchor,tg:tg||null,n:1e4});
  return h.filter(x=>TC.f==='fit'||TC.f==='all'||(TC.f==='ch'?isChamp(x.w.id):x.w.al===TC.f)).map(x=>{/* v326: booked means booked — a contract or request no longer keeps someone already on the card up top */x.bk=used.has(x.w.id);return x})}
 function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown=false;return ''}const ent=!TC.shown;TC.shown=true;if(ent){TC.big=false;TC.entAt=Date.now()}warmSoon();const m=cur(i);const promo=sl.k==='promo';
  const xo=sl.k==='xo',sp=roV(sl),tr=sp&&!!sl.d.tour,fl=sp&&!tr;
  const tl=targets(i,m);let tg=TC.rep?null:(TC.tg||defTarget(i,m)||(promo||xo?tl[0]:null)||null);if(xo&&!tg)tg={t:TC.rep&&TC.rep===m.a?'a':'b'};
- const [k,t]=sheetTitle(i,m,tg);const used=usedIn('p',i);
+ const [k,t]=sheetTitle(i,m,tg);const used=bookedFor(i);
  const hasX=promo?!!m.a:!!sl.d;
  const lit=promo?'m':xo?'':'r';const pc=(x,n)=>tcCard(x.w,{lit,tab:x.r&&x.r[0]?x.r[0]:'',tabc:x.r?x.r[1]:'',used:used.has(x.w.id),cls:TC.dealt&&n<9?'deal':'',attr:`data-tcpick="${x.w.id}" style="animation-delay:${Math.min(n,8)*30}ms"`});
  let body='';
@@ -459,7 +466,7 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
  const tabs=tabL?tabL.map(([v,n])=>`<button class="tctab ${TC.mode===v?'on':''}" onclick="tcMode('${v}')">${n}</button>`).join(''):'';
  const pA=promo&&m.a?W_(m.a):null;const shc=xo?`<div class="tcshc tcshp">${[['a','Yours',m.a],['b',nameOf('ai')+'’s',m.b]].map(([k,n,id])=>`<button class="chip ${tg&&tg.t===k?'on':''}" onclick="tcXo('${k}')">${esc(n)}${id&&W_(id)?' · '+esc(ln(W_(id))):''}</button>`).join('')}</div>`:sp?'':promo&&!TC.rep?`<div class="tcshc tcshp">${Object.entries(PT).filter(([k,t])=>!t.champ||!pA||isChamp(pA.id)).map(([k,t])=>`<button class="chip ${m.type===k?'on':''}" onclick="tcPType('${k}')">${esc(t.n)}</button>`).join('')}</div>`:!promo&&!TC.rep?`<div class="tcshc tcshp">${SHAPES.map(([k,n])=>`<button class="chip ${shapeOf(i,m)===k?'on':''}" onclick="tcShape('${k}')">${n}</button>`).join('')}</div>`:'';
  const tch=false&&!TC.rep&&TC.mode==='w'&&tl.length>1&&!defTarget(i,m)?`<div class="tcshc">${tl.map((x,j)=>`<button class="chip ${tg&&x.t===tg.t&&x.i===tg.i?'on':''}" onclick="tcTg(${j})">${x.t==='partner'?`+ Partner · ${esc(ln(W_(m.sides[x.i][0])))}`:x.t==='third'?'+ Third corner':x.t==='side'?(x.i?'Right side':'Left side'):'Second'}</button>`).join('')}</div>`:'';
- const cf=TC.confirm&&W_(TC.confirm.id)?`<div class="tccf"><span>${esc(W_(TC.confirm.id).name)} is already on the card tonight. A second match costs ${DD_FAT}× the stamina.</span><button class="mini" onclick="tcNo()">No</button><button class="mini on" onclick="tcYes()">Book twice</button></div>`:'';
+ const cf=TC.confirm&&W_(TC.confirm.id)?`<div class="tccf"><span>${esc(W_(TC.confirm.id).name)} is already in a match tonight. A second match costs ${DD_FAT}× the stamina.</span><button class="mini" onclick="tcNo()">No</button><button class="mini on" onclick="tcYes()">Book twice</button></div>`:'';
  const foot=TC.rep&&W_(TC.rep)?`<div class="tcsf">${fl?`<button class="btn sec" onclick="tcRepX()">Keep ${esc(ln(W_(TC.rep)))}</button>`:`<button class="btn sec" onclick="tcBack()">Send back</button>`}<button class="btn sec" onclick="showW('${TC.rep}')">Details</button></div>`:xo&&sl.d?`<div class="tcsf"><button class="btn sec" onclick="tcXoClear()">Call it off</button></div>`:'';
  const showF=!tr&&!(fl&&!TC.rep);
  TC.dealt=0;
