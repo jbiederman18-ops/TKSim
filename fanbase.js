@@ -370,11 +370,14 @@ function fgOf(w){if(!w)return [];const g=fgMap()[w.id];if(g)return g;return [FG_
 function fgUnd(w){return fgOf(w)[0]==='und'}
 /* the words on a card or profile: "Bloodhounds", "Flippy · Technical", "Undiscovered" */
 function fgWord(w){return fgOf(w).map(g=>FG_N[g]).join(' · ')}
-function fgTag(w,cls){const g=fgOf(w);return `<span class="fgw ${cls||''}">${g.map(k=>`<i class="fg-${k}">${FG_N[k]}</i>`).join('<b>·</b>')}</span>`}
+const FG_C={cas:'#efe9dc',tech:'#7fa7d6',blood:'#e5484d',flip:'#3fc8b4',chaos:'#b77ee8',und:'#9a958c'};
+/* v398: on cards each group is a solid slanted chip (colored text on photos was hard to read); a second group gets its own chip */
+function fgTag(w,cls){const g=fgOf(w);return `<span class="fgw ${cls||''}">${g.map(k=>`<i class="fg-${k}" style="--fgbg:${FG_C[k]}">${FG_N[k]}</i>`).join('<b>·</b>')}</span>`}
 window.fgOf=fgOf;window.fgUnd=fgUnd;window.fgWord=fgWord;window.fgTag=fgTag;
 (function(){const s=document.createElement('style');s.textContent=`
 .fgw{font:800 italic 1em/1 'BC',sans-serif;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}.fgw b{margin:0 .3em;color:#8a8580;font-weight:700}
 .fg-cas{color:#efe9dc}.fg-tech{color:#7fa7d6}.fg-blood{color:#e5484d}.fg-flip{color:#3fc8b4}.fg-chaos{color:#b77ee8}.fg-und{color:#9a958c}
-.tkc .tcfg{display:block;margin-bottom:calc(var(--w)*.025);font-size:calc(var(--w)*.085);overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 0 #000,0 0 6px rgba(0,0,0,.9)}
+.tkc .tcfg{display:flex;flex-wrap:wrap;gap:2px 3px;margin-bottom:calc(var(--w)*.035);font-size:calc(var(--w)*.088);text-shadow:none}.tkc .tcfg b{display:none}
+.tkc .tcfg i{padding:1px 7px 1px 4px;color:#111;background:var(--fgbg);clip-path:polygon(0 0,100% 0,calc(100% - 4px) 100%,0 100%)}
 .tcs .tcmat.many .tkc .tcfg,.tlrow .tkc .tcfg,.twcd .tkc .tcfg{display:none}
 `;document.head.appendChild(s)})();
