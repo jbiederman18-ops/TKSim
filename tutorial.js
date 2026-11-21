@@ -12,7 +12,7 @@
    • Keep each stop under TUT_WORDS words — it's a card on a phone. The full detail belongs in HOWTO (the ⚙️ rulebook).
    • Run `python3 tools/check-tutorial.py` — it plays every stop and tip in a headless browser and fails on any
      missing target, stale value or stop over the word limit. */
-const TUT_REV=69;
+const TUT_REV=70;
 const TUT_KEY='tksim_tut';
 const TUT_WORDS=190;  /* longest a stop may be (checked by tools/check-tutorial.py) */
 const TUT_MISS=[];
@@ -100,8 +100,8 @@ const TUT_STEPS=[
  b:()=>`The titles are split evenly between the shows, and yours start vacant — put one on the line in a match to crown a champion. Defenses build a champion's credibility and the belt's prestige. Swap a title too fast and it loses prestige. Men's and women's belts stay in their division: intergender matches are non-title. A champion who leaves your show (traded, poached, released) vacates the title.`},
 {id:'t.money',track:'tip',opt:true,since:64,sel:()=>tutCard(/finances/i),sys:['money','production','wages','stipulations','venues'],t:'The money',
  b:()=>`Money comes from your TV deal, tickets, merch and ads — and hot shows earn more of all four. Money's tight early: as your audience grows, the network owes you a <b>viewership bonus</b>, and its executive brings the check to your office after each PPV. Payroll goes out every week, injured wrestlers run up rehab bills, and a broken contract term pays out to their agent. In the red, morale slips. Growing costs too: a bigger company pays bigger wages${tv('wage',()=>wageF('p')>1.01?` (yours: +${Math.round((wageF('p')-1)*100)}% right now)`:'',' ')}, and one show can only take in so much in your building.<br><br><b>Your building:</b> you start in the ${tv('BLDG',()=>BLDG[0].n,'Piddly-Ass Auditorium')}. Move up (Front office) for a move-in fee and weekly rent: tickets sell for more, the box office goes further and good shows bring more fans. But you have to fill it: recent buzz, tonight's card and a happy locker room pull the crowd; fall short and the seats sit empty. Money in the bank doesn't win the fan war.`},
-{id:'t.editor',track:'tip',since:69,sel:'#modal .det',sys:['ratings','chemistry','risk','stipulations'],t:'Match details',
- b:()=>`Each ingredient of the segment gets up to five pips, with the reason beside it. Tap <b>?</b> next to Chemistry to see which styles click. <b>Change it</b> takes you back to the sheet. Exact numbers stay hidden until after the show.<br><br><b>Stipulations</b> lift whoever they suit, and the weaker wrestler most, so give the match type to the one who needs carrying. Some wrestlers secretly shine in one that doesn't fit their style (🎯); you find out the first time they work it.`},
+{id:'t.editor',track:'tip',since:70,sel:'#modal .det',sys:['ratings','chemistry','risk','stipulations'],t:'Match details',
+ b:()=>`Each ingredient of the segment gets up to five pips, with the reason beside it. Tap <b>?</b> next to Chemistry to see which styles click. <b>Change it</b> takes you back to the sheet. Exact numbers stay hidden until after the show.<br><br><b>Stipulations</b> lift whoever they suit, and the weaker wrestler most, so give the match type to the one who needs carrying. Every wrestler secretly shines in one that doesn't fit their style (🎯); you find out the first time they work it.`},
 {id:'t.results',track:'tip',since:1,opt:true,sel:'#modal .whyd',sys:['ratings'],t:'Why that rating?',
  b:()=>`Open this under any of your matches to see what each part was worth — chemistry, stamina, the finish, the luck of the night. It's the fastest way to learn what works.`},
 {id:'t.ppv',track:'tip',since:1,sel:'main .card.showcard',sys:['ppv','feuds','titles','hype'],t:"It's PPV week",
