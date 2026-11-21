@@ -2,7 +2,7 @@
    The phone half of the v374 desktop review: things mobile management games all do that the phone layout didn't.
    Under 1100px wide and never on the party-night TV (desk.js owns 1100px+), so the computer layout is untouched.
      1. Go live never scrolls away — on Book the real Go live dock ("3 to book · 1 to fix" and the button) is pinned just
-        above the tab bar. It steps aside while the pick sheet is open (that sheet has the bottom).
+        above the tab bar (fixed since v379, so the iOS overscroll bounce can't drag it). It steps aside while the pick sheet is open (that sheet has the bottom).
      2. Swipe a sheet down by its handle to close it — the same as tapping the dimmed area above it. Sheets that can't be
         dismissed (showdowns, a visitor at the office door) don't show the handle at all.
      3. The phone's back button (or back swipe) closes the open sheet, then the pick sheet, then goes back to the screen
@@ -21,8 +21,12 @@ const phone=()=>window.matchMedia(MQ).matches&&!isTV();
 const css=`
 @media ${MQ}{
  /* 1. the Go live dock rides above the tab bar */
- body:not(.tv) main.t-book>.lvdock{position:sticky;bottom:var(--navh,72px);z-index:4;margin:14px -16px 0;padding:14px 16px 10px;background:linear-gradient(180deg,rgba(9,9,10,0),#09090a 14px)}
+ /* v379: fixed, not sticky — a sticky dock rode iOS's rubber-band bounce down behind the tabs and jerked back up.
+    It tucks 2px under the tab bar so no rounded-off sliver of the card shows through the seam. */
+ body:not(.tv) main.t-book>.lvdock{position:fixed;left:max(0px,calc(50% - 320px));right:max(0px,calc(50% - 320px));bottom:calc(var(--navh,72px) - 2px);z-index:4;margin:0;padding:14px 16px 12px;background:linear-gradient(180deg,rgba(9,9,10,0),#09090a 14px)}
+ body:not(.tv) main.t-book:has(>.lvdock){padding-bottom:calc(var(--navh,72px) + 84px)}
  body:not(.tv):has(#tcdock.tcsheet) main.t-book>.lvdock{position:static;background:none;margin:14px 0 0;padding:0}
+ body:not(.tv):has(#tcdock.tcsheet) main.t-book:has(>.lvdock){padding-bottom:110px}
  body:not(.tv):not(.tcbody):has(main.t-book>.lvdock) #toast{bottom:calc(var(--navh,72px) + 84px)}
  /* 2. no handle on sheets that can't be swiped away */
  html body:not(.tv) #modal.pnsw:not(.lobbyM)>.sheet.sheet:not(.tv-live-sheet):before{display:none}
