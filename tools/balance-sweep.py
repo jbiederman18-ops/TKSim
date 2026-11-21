@@ -50,6 +50,14 @@ v382 (pitches lose "Give it a try": the bot now says Go for it where it used to 
 v395 (stipulation bonus added to each wrestler's own Ring, STIP_RING 2, so it runs through the singles weakest link; hidden
   specialties FAV_P .25 / FAV_B 6), Normal, 40 games x 3 seasons vs v394: show 3.66/3.78/3.91 vs 3.67/3.78/3.91, match stars
   3.82/3.83/3.91 vs 3.84/3.85/3.90, seasons won 85/57/70% vs 85/65/70% (noise). --engaged 3.83/3.98/4.08. Balance-neutral.
+v399 (the fan engine: fans come from five fan groups in fanbase.js, not the show rating; Show flow retired so running order no
+  longer moves the rating; offline rival gets AIQ.fan flat fans per show for the promises/goals/chants it doesn't play), 3 seasons:
+  Normal 24 games vs v398: default fans 835/655/612K (v398 747/537/604), seasons won 83/38/33% (67/54/79%), bank ~$0.7/1.3/1.9M (same);
+  --engaged 1023/895/808K, seasons 100/100/96% (100/92/83%), Chaos fiends grow most (run-ins); --lazy 382/312/249K, seasons 0/4/0%.
+  16 games per difficulty, seasons won: easy 100/94/88%, normal 81/69/56%, hard 75/19/6%. Rival show stars ~0.15 lower (it lost the
+  flow bonus it used to earn). Group sizes at season 3 (default bot): casuals ~1.75M, Technical ~200K, Bloodhounds ~160K, Flippy
+  ~105K, Chaos ~120K. Tuning knobs: FB_GKC/FB_GKH (pool pull), FB_DRIFT, FB_HOLD/FB_STARVE, FB_FED, AIQ.fan. Rows 'fans <group> K'
+  and 'show gain <brand>.<group>' come from S.fb and S.last.fb.
 --diff normal runs one difficulty; a variant's 'pre' script runs before the bot (handy for testing a constant).
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
@@ -116,10 +124,12 @@ def table(results):
                          'median pop': m([e['medPop'] for e in E]), 'morale': m([e['mor']['p'] for e in E]),
                          'injured/wk': m([s['injP'] / s['weeks'] for s in S]), 'checklist/wk': m([s.get('checklist', 0) / s['weeks'] for s in S]), 'promo★': m([st.mean(s['promoStars']) for s in S if s['promoStars']]),
                          'match★': m([st.mean(s['matchStars']) for s in S if s['matchStars']]), 'title changes': m([s['titleChanges'] for s in S]),
+                         **({('fans ' + g + ' K'): m([e['fb']['p'][g] / 1000 for e in E if e.get('fb')]) for g in ('cas', 'tech', 'blood', 'flip', 'chaos')} if any(e.get('fb') for e in E) else {}),
+                         **({('show gain ' + k): m([e['fbd'].get(k, 0) / 1000 for e in E if e.get('fbd')]) for k in ('p.cas', 'p.tech', 'p.blood', 'p.flip', 'p.chaos', 'ai.cas', 'ai.tech', 'ai.blood', 'ai.flip', 'ai.chaos')} if any(e.get('fbd') for e in E) else {}),
                          'errors': errs})
     if not rows: print('no complete seasons'); return
-    keys = list(rows[0])
-    for k in keys: print(f'{k:>20} ' + ' '.join(f'{str(r[k]):>16}' for r in rows))
+    keys = list(dict.fromkeys(k for r in rows for k in r))
+    for k in keys: print(f'{k:>20} ' + ' '.join(f'{str(r.get(k, "-")):>16}' for r in rows))
     bad = [e for G in results.values() for g in G for e in g['errs'] + g['perr']]
     print('\nerrors:', len(bad)); [print('  ' + e) for e in bad[:10]]
 

@@ -366,18 +366,166 @@ Dalys|cas`;
 let FG=null;
 function fgMap(){if(FG)return FG;FG={};FG_RAW.trim().split('\n').forEach(l=>{const [n,g]=l.split('|');FG[slug(n.trim())]=g.split(',')});return FG}
 /* groups for a wrestler: ['blood'], ['flip','tech'] or ['und'] */
-function fgOf(w){if(!w)return [];const g=fgMap()[w.id];if(g)return g;return [FG_STYLE[w.st]||'cas']}
+function fgOf(w){if(!w)return [];const x=typeof S!=='undefined'&&S&&S.fgx&&S.fgx[w.id];if(x&&x.g)return [x.g];const g=fgMap()[w.id];if(g)return g;return [FG_STYLE[w.st]||'cas']}
 function fgUnd(w){return fgOf(w)[0]==='und'}
 /* the words on a card or profile: "Bloodhounds", "Flippy · Technical", "Undiscovered" */
 function fgWord(w){return fgOf(w).map(g=>FG_N[g]).join(' · ')}
 const FG_C={cas:'#efe9dc',tech:'#7fa7d6',blood:'#e5484d',flip:'#3fc8b4',chaos:'#b77ee8',und:'#9a958c'};
 /* v398: on cards each group is a solid slanted chip (colored text on photos was hard to read); a second group gets its own chip */
-function fgTag(w,cls){const g=fgOf(w);return `<span class="fgw ${cls||''}">${g.map(k=>`<i class="fg-${k}" style="--fgbg:${FG_C[k]}">${FG_N[k]}</i>`).join('<b>·</b>')}</span>`}
+function fgTag(w,cls){const g=fgOf(w);const ln=g[0]==='und'&&cls!=='tcfg'&&typeof fgLean==='function'?fgLean(w.id):null;return `<span class="fgw ${cls||''}">${g.map(k=>`<i class="fg-${k}" style="--fgbg:${FG_C[k]}">${FG_N[k]}</i>`).join('<b>·</b>')}${ln?`<b>·</b><i class="fg-${ln}">leaning ${FG_N[ln]}</i>`:''}</span>`}
 window.fgOf=fgOf;window.fgUnd=fgUnd;window.fgWord=fgWord;window.fgTag=fgTag;
+/* ===================== v399: THE FAN ENGINE =====================
+   Your audience is five groups (S.fb[b]); S.fans[b] stays their sum, so everything that reads the total still works.
+   Fan changes made anywhere else in the game (promises, sell-outs, debuts, goals…) land on S.fans and fbSync files them:
+   gains go to casuals (story and business reach casuals), losses come out of every group in proportion.
+   Each show, every group reacts to the segments aimed at it (fbCalc): exposure from its wrestlers, the stipulation, run-ins
+   and the match type; a group needs about one real match of its own to hold steady, extra matches for the same group count
+   less, and each group's expectations rise toward what it has been getting. Gains come out of the big shared pool (so a small
+   group can grow fast); losses come out of your own group. Numbers are tuned with tools/balance-sweep.py (see its docstring). */
+const FB_G=['cas','tech','blood','flip','chaos'];const FB_HC=['tech','blood','flip','chaos'];
+const FB_POOL=10e6,FB_SHARE={cas:.55,tech:.08,blood:.12,flip:.12,chaos:.13};
+const FB_X0=3.5,FB_XK=.3,FB_XKC=.2;          /* starting expectation and how fast it moves (casuals slower) */
+const FB_PER=5,FB_ME=1.3,FB_W=[1,.55,.3,.2],FB_CAP=1.25; /* % per star of exposure, main event, diminishing returns, cap per match */
+const FB_HOLD=2.5,FB_STARVE=4.5;             /* % lost per show without a real match of their own (more when it keeps happening) */
+const FB_GKC=.024,FB_GKH=.065;                  /* share of the pool a +1% show pulls in (gains come from the pool): casuals, hardcore */
+const FB_FED=.25;                            /* a group that gets its own match at about what it expects still grows a little */
+const FB_DRIFT=2;                          /* casuals tune out by this % each show unless something hooks them */
+const FB_CONV=.004;                          /* casuals who convert on a 4★+ match that beats a group's expectations */
+const FB_RI_TECH=3,FB_SCREW_TECH=1;          /* Technical fans hate run-ins and screwy finishes */
+/* which group each stipulation and match type speaks to */
+const FB_STIP={sub:'tech',twoof3:'tech',iron:'tech',street:'blood',iquit:'blood',lms:'blood',texas:'blood',barbed:'blood',cage:'blood',dog:'blood',bng:'blood',lights:'blood',
+ ladder:'flip',tornado:'flip',tables:'flip',nodq:'chaos',falls:'chaos',anarchy:'chaos',stampede:'chaos',coffin:'cas'};
+const FB_MULTI={triple:1,four:1,gauntlet:1,rumble:1,mitb:1};
+const fbN=g=>FG_N[g];
+function fbHas(b){return !!(S.fb&&S.fb[b])}
+/* first time a brand is seen (new game after the draft, or an old save): split its fans — mostly casuals, the rest random per
+   game, nudged a little toward the groups its roster draws */
+function fbInit(b){S.fb=S.fb||{};S.fbx=S.fbx||{};S.fbh=S.fbh||{};const tot=Math.max(0,S.fans[b]||0);const r=seeded((S.seed||0)+'|fb|'+b);
+ const cas=.66+r()*.1;const ros=Object.values(S.w).filter(w=>w.own===b);const cnt={};FB_HC.forEach(g=>cnt[g]=0);let n=0;
+ ros.forEach(w=>{const gs=fgOf(w);gs.forEach((g,i)=>{if(cnt[g]!=null){cnt[g]+=gs.length>1?(i?.4:.6):1;n++}})});
+ const wt={};let ws=0;FB_HC.forEach(g=>{const share=n?cnt[g]/Math.max(1,ros.length):.2;wt[g]=FB_SHARE[g]*(.7+r()*.6)*(1+.5*(share-.2));ws+=wt[g]});
+ const f={cas:Math.round(tot*cas)};FB_HC.forEach(g=>f[g]=Math.round(tot*(1-cas)*wt[g]/ws));f.cas+=tot-FB_G.reduce((a,g)=>a+f[g],0);
+ S.fb[b]=f;S.fbx[b]={};FB_G.forEach(g=>S.fbx[b][g]=FB_X0);S.fbh[b]={}}
+function fbSum(b){const f=S.fb[b];return FB_G.reduce((a,g)=>a+(f[g]||0),0)}
+function fbSync(b){if(!S||!S.fans||S.fans[b]==null)return null;if(!fbHas(b))fbInit(b);const f=S.fb[b];const sum=fbSum(b),T=S.fans[b];const d=Math.round(T-sum);
+ if(d>0)f.cas+=d;else if(d<0&&sum>0){const k=T/sum;FB_G.forEach(g=>f[g]=Math.round(f[g]*k));f.cas+=Math.round(T-fbSum(b))}
+ return f}
+function fbSyncAll(){if(S&&S.fans)Object.keys(S.fans).forEach(fbSync)}
+/* one aired (or projected) segment, as the fans see it */
+function fbSeg(m,st,me){return {k:'match',ids:m.sides.flat(),n:m.sides.flat().length,stip:stipKey(m),type:m.type,ri:!!(typeof riOn==='function'&&riOn(m)),fin:typeof finOf==='function'?finOf(m):'clean',st,me:!!me,title:!!m.title,txt:typeof matchText==='function'?matchText(m):''}}
+function fbPromo(p,st){return {k:'promo',ids:[p.a,p.b].filter(id=>id&&S.w[id]),st,txt:(S.w[p.a]?S.w[p.a].name:'')+(p.b&&S.w[p.b]?' & '+S.w[p.b].name:'')}}
+/* how much a match speaks to each group: each wrestler gives their share to their group (two groups .6/.4; undiscovered and
+   casual draws reach only casuals), the stipulation and multi-person chaos add their group, a run-in feeds Chaos fiends, and a
+   match where everyone shares one group is purer (x1.4). Capped per match. */
+function fbExpo(sg){const e={};const add=(g,v)=>{if(g&&g!=='cas'&&g!=='und')e[g]=(e[g]||0)+v};
+ if(sg.k==='promo'){sg.ids.forEach(id=>{const w=S.w[id];if(w&&fgOf(w).includes('chaos'))add('chaos',.4)});return e}
+ const ws=sg.ids.map(id=>S.w[id]).filter(Boolean);const n=ws.length||1;const tags=[];
+ ws.forEach(w=>{const gs=fgOf(w);tags.push(gs);gs.forEach((g,i)=>add(g,(gs.length>1?(i?.4:.6):1)/n))});
+ add(FB_STIP[sg.stip],.5);if(FB_MULTI[sg.type])add('flip',.5);if(sg.ri)add('chaos',.5);
+ const hc=tags.map(gs=>gs.filter(g=>FB_HC.includes(g)));if(hc.length>1&&hc.every(x=>x.length)){FB_HC.forEach(g=>{if(hc.every(x=>x.includes(g))&&e[g])e[g]*=1.4})}
+ for(const g in e)e[g]=Math.min(FB_CAP,e[g]);return e}
+/* the show's effect on each group (in %), with the reason. dry = a preview (nothing changes) */
+function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X=S.fbx[b],H=S.fbh[b];const res={pct:{},why:{},E:{},avg:{},conv:{},best:{}};
+ const ppvK=show&&show.ppv?(o.allin?2:1.5):show&&show.special?1.5:1;
+ const per={};FB_HC.forEach(g=>per[g]=[]);
+ segs.forEach(sg=>{const e=fbExpo(sg);for(const g in e)per[g].push({e:e[g],sg})});
+ FB_HC.forEach(g=>{const l=per[g].sort((a,b)=>b.e-a.e);let E=0,sw=0,ss=0,sx=0;
+  l.forEach((x,i)=>{const w=FB_W[Math.min(i,FB_W.length-1)];if(i>=FB_W.length)return;const ee=x.e*w;E+=ee;sw+=ee*(x.sg.st-X[g]+FB_FED)*FB_PER*(x.sg.me?FB_ME:1);ss+=x.sg.st*x.e;sx+=x.e});
+  const hist=H[g]||[];const run=1+(hist[0]>=1.6?1+(hist[1]>=1.6?1:0):0);const burn=E>=1.6?(run>=3?.6:run>=2?.8:1):1;
+  if(sw>0)sw*=burn*ppvK;let hold=0;if(E<1)hold=-(1-E)*((hist[0]!=null&&hist[0]<1)?FB_STARVE:FB_HOLD);
+  let pen=0;if(g==='tech'){const ri=segs.filter(s=>s.k==='match'&&s.ri).length;const sc=segs.filter(s=>s.k==='match'&&['cheat','dq','co'].includes(s.fin)&&fbExpo(s).tech).length;pen=-(ri*FB_RI_TECH+sc*FB_SCREW_TECH)}
+  res.pct[g]=sw+hold+pen;res.E[g]=E;res.avg[g]=sx?ss/sx:null;res.best[g]=l[0]?l[0].sg:null;
+  res.why[g]=l.length?(sw>0?`Loved ${l[0].sg.txt||'their match'}`:`${l[0].sg.txt||'Their match'} didn't live up to it`)+(E<1?' · but only a taste of what they want':burn<1?' · getting a bit much of the same':''):'Nothing for them tonight';
+  if(pen<0)res.why[g]+=` · hated the ${segs.some(s=>s.k==='match'&&s.ri)?'run-in':'screwy finish'}`;
+  /* the best matches turn casuals into fans of that group */
+  let cv=0;l.forEach(x=>{if(x.sg.st>=4&&x.sg.st>X[g])cv+=f.cas*FB_CONV*x.e*(x.sg.st-3.75)/1.25});res.conv[g]=Math.round(cv)});
+ /* casuals: tune out unless star power, titles, spectacle and a good show hook them */
+ const ids=[...new Set(segs.flatMap(s=>s.ids))];const pops=ids.map(id=>S.w[id]?S.w[id].pop:0).sort((a,b)=>b-a).slice(0,4);const tp=pops.length?pops.reduce((a,x)=>a+x,0)/pops.length:0;
+ const draws=Math.min(1.8,segs.filter(s=>s.k==='match').reduce((a,s)=>a+s.ids.filter(id=>S.w[id]&&fgOf(S.w[id]).includes('cas')).length*.6,0));
+ const tl=Math.min(1.2,segs.filter(s=>s.title).length*.6)+(o.newch?.6:0);const spec=Math.min(.8,segs.filter(s=>s.k==='match'&&(s.stip!=='std'||FB_MULTI[s.type])).length*.4);
+ let cs=0,cw=0;segs.forEach((s,i)=>{const w=s.me?1.6:1;cs+=s.st*w;cw+=w});const cav=cw?cs/cw:0;
+ let up=(tp-70)*.12+draws+tl+spec+(cav-X.cas)*3;if(!segs.length)up=0;if(up>0)up*=ppvK;
+ res.pct.cas=-FB_DRIFT+up;res.avg.cas=cw?cav:null;res.E.cas=1;
+ res.why.cas=!segs.length?'Nothing on TV for them':up>=FB_DRIFT+1?(tp>=80?'Big stars and a show worth watching':'A show worth watching'):up>=FB_DRIFT?'Just enough to keep them':tp<70?'Not enough star power to hold them':'Drifting off — they want stars, titles and spectacle';
+ return res}
+/* apply a show's result: returns what each group did, for the results screen */
+function fbApply(b,segs,show,o){const r=fbCalc(b,segs,show,o);const f=S.fb[b],X=S.fbx[b],H=S.fbh[b];const before=Object.assign({},f);
+ const grow=1;/* gains come from the pool and casuals tune out in proportion, so growth levels off by itself (no fanGrowF) */let conv=0;const out={before,after:{},pct:r.pct,why:r.why,conv:0,flat:0};
+ FB_G.forEach(g=>{const p=r.pct[g];let d=p>0?FB_POOL*FB_SHARE[g]*p/100*(g==='cas'?FB_GKC:FB_GKH)*grow:f[g]*p/100;f[g]=Math.max(0,f[g]+Math.round(d))});
+ FB_HC.forEach(g=>{const c=Math.min(r.conv[g],f.cas*.05);if(c>0){f[g]+=Math.round(c);f.cas-=Math.round(c);conv+=Math.round(c)}});
+ /* everything else that moves fans on the night (head-to-head, main event war, debuts, chants, 5★ overflow) reaches casuals */
+ const flat=Math.round(o.flat||0);if(flat){if(flat>0)f.cas+=Math.round(flat*(flat>0?grow:1));else f.cas=Math.max(0,f.cas+flat)}
+ FB_HC.forEach(g=>{H[g]=[r.E[g]].concat(H[g]||[]).slice(0,3);if(r.avg[g]!=null)X[g]+=FB_XK*(r.avg[g]-X[g])});if(r.avg.cas!=null)X.cas+=FB_XKC*(r.avg.cas-X.cas);
+ FB_G.forEach(g=>X[g]=clamp(X[g],2.5,4.6));
+ let T=fbSum(b);if(T<50000){f.cas+=50000-T;T=50000}S.fans[b]=T;FB_G.forEach(g=>out.after[g]=f[g]);out.conv=conv;return out}
+/* ---- the Crowd read on the Book screen (replaces the Show flow graph): one word per group and what they expect ---- */
+const FB_WORD=[[3,'Eating well tonight','good'],[1,'Happy','good'],[-.5,'Lukewarm',''],[-2,'Only a taste — drifting','warn'],[-99,'Starving — they’re leaving','bad']];
+const FB_CWORD=[[1.5,'Hooked','good'],[.3,'Tuned in','good'],[-1,'Restless',''],[-99,'Changing the channel','bad']];
+function fbXWord(x){return x<3.45?'easy to please':x<3.75?'want a good match':x<4.05?'expect a great match':'expect a classic'}
+function fbWord(g,p){const t=g==='cas'?FB_CWORD:FB_WORD;return t.find(x=>p>=x[0])}
+function fbCrowdCard(sh){const b='p';if(!S.fans||S.fans[b]==null)return '';fbSync(b);let P=null;try{P=cardProj()}catch(e){}const segs=(P&&P.fs)||[];
+ const r=fbCalc(b,segs,sh,{allin:sh.ppv&&typeof SUPER==='function'&&SUPER(S.week)});
+ const rows=FB_G.map(g=>{const w=fbWord(g,r.pct[g]);return `<div class="crw"><span class="fgw"><i class="fg-${g}">${fbN(g)}</i></span><b class="${w[2]}">${segs.length?w[1]:'—'}</b><small>${fbXWord(S.fbx[b][g])}</small></div>`}).join('');
+ return `<div class="card flowc crowdc"><div class="row sb"><div class="h small" style="margin:0">Crowd read</div><span class="muted tiny">${segs.length?'Updates as you book':'Book a few segments'}</span></div>${rows}</div>`}
+/* ---- after the show: The fans, then X Redditino (Head of PR) ---- */
+const FB_HANDLE={cas:['@JustHereForTheBelts','@MyDadWatchesThis','@CasualTuesdayKev'],tech:['@ChainWrestlingCarl','@HeadlockHistorian','@SnapSuplexSue'],
+ blood:['@CrimsonMaskMike','@BarbedWireBetty','@BladeJobBrandon'],flip:['@SpotMonkeyKai','@ShootingStarSam','@450Splashley'],chaos:['@RunInRhonda','@NoDQNate','@SwerveSzn']};
+const FB_WANT={cas:'bigger stars and title matches',tech:'a straight-up technical match — two technicians, clean finish, no run-ins',blood:'a street fight, a cage, something with blood in it',flip:'high-flyers, a ladder match or a multi-person spotfest',chaos:'run-ins, a No DQ brawl, a Chaos wrestler with a live mic'};
+function fbPick(a,k){let h=0;const s=String(k)+'|'+AW();for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return a[Math.abs(h)%a.length]}
+function fbPosts(r){const ch=g=>r.after[g]-r.before[g];const best=FB_G.slice().sort((a,b)=>r.pct[b]-r.pct[a])[0],worst=FB_G.slice().sort((a,b)=>r.pct[a]-r.pct[b])[0];
+ const tot=FB_G.reduce((a,g)=>a+ch(g),0);
+ const open=tot>=15000?fbPick(['Boss, the mentions are on fire tonight.','Phones are lighting up. In the good way.','Trending. Top five. I screenshotted it.'],tot):tot>=0?fbPick(['Mixed bag online tonight, but we held the room.','Solid night. Some of them want more, though.','Decent buzz. A couple of groups are restless.'],tot):fbPick(['Not a great night in the replies, boss.','I’ve muted three hashtags. You should know why.','We lost people tonight. Here’s who.'],tot);
+ const posts=[];const say=(g,good)=>{const h=fbPick(FB_HANDLE[g],g+good);const w=(r.why[g]||'').replace(/ · .*/,'');
+  posts.push({g,h,t:good?fbPick([`${w}. THIS is why I watch.`,`${w}. Give me that every week.`,`${w}. Instant favorite.`],g):g==='cas'?fbPick(['Flipped over to the game halfway through tbh.','Who even was half the card?','Wake me up when the big names are on.'],g):fbPick([`Where was ours tonight? ${FB_WANT[g].replace(/^./,c=>c.toUpperCase())}. That's all we ask.`,`Another week, nothing for us. Starting to think they forgot we exist.`,`${w}. We deserve better.`],g)})};
+ if(r.pct[best]>0)say(best,true);if(worst!==best&&r.pct[worst]<0)say(worst,false);
+ const hungry=FB_HC.slice().sort((a,b)=>r.pct[a]-r.pct[b]).find(g=>r.pct[g]<-1);
+ return {open,posts,ask:hungry?`The ${fbN(hungry)} keep asking for ${FB_WANT[hungry]}.`:''}}
+const fbK=n=>Math.abs(n)<10000?(Math.abs(n)<100?'0':(n/1000).toFixed(1).replace(/\.0$/,'')+'K'):fmtFans(n);
+function fbResultsCard(o){const r=o&&o.fb&&o.fb.p;if(!r||!r.before)return '';const tb=FB_G.reduce((a,g)=>a+r.before[g],0),ta=FB_G.reduce((a,g)=>a+r.after[g],0);
+ const rows=FB_G.map(g=>{const d=r.after[g]-r.before[g];return `<div class="fbr"><span class="fgw"><i class="fg-${g}">${fbN(g)}</i></span><span class="fbn">${fmtFans(r.before[g])} → <b>${fmtFans(r.after[g])}</b> <b class="${d>=0?'good':'bad'}">${d>=0?'▲':'▼'}${fbK(Math.abs(d))}</b></span><small>${esc(r.why[g]||'')}</small></div>`}).join('');
+ const P=fbPosts(r);
+ return `<div class="card fbres"><div class="row sb"><div class="h small" style="margin:0">The fans</div><span class="tiny">${fmtFans(tb)} → <b>${fmtFans(ta)}</b></span></div>${rows}${r.conv>=500?`<div class="muted tiny" style="margin-top:6px">${fmtFans(r.conv)} casual fans became hardcore fans tonight.</div>`:''}</div>
+ <div class="card xred"><div class="xrh"><b>X Redditino</b><span>Head of PR</span></div><div class="xro">“${esc(P.open)}”</div>${P.posts.map(p=>`<div class="xrp"><span class="fgw"><i class="fg-${p.g}">${fbN(p.g)}</i></span> <b>${esc(p.h)}</b><div>${esc(p.t)}</div></div>`).join('')}${P.ask?`<div class="xra">${esc(P.ask)}</div>`:''}</div>`}
+/* ---- undiscovered wrestlers find their crowd through who they work with ---- */
+const FB_LINE=45,FB_BREAK=50,FB_FIND=4,FB_LEAD=1.5;
+function fgLean(id){const x=S.fgx&&S.fgx[id];if(!x||!x.l)return null;const e=Object.entries(x.l).sort((a,b)=>b[1]-a[1]);return e.length&&e[0][1]>0?e[0][0]:null}
+function fgLock(w,g,why,notes){S.fgx=S.fgx||{};const x=S.fgx[w.id]=S.fgx[w.id]||{l:{},n:0};x.g=g;x.at=AW();
+ if(w.own==='p'||(typeof ON==='function'&&ON()&&w.own)){const n=`🔎 ${w.name} has found their crowd: ${fbN(g)}${why?' — '+why:''}.`;news(n);if(notes)notes.push(n)}}
+function fgAfterShow(segs,notes){S.fgx=S.fgx||{};segs.filter(s=>s.k==='match').forEach(s=>{const ws=s.ids.map(id=>S.w[id]).filter(Boolean);
+ ws.forEach(w=>{if(!fgUnd(w))return;const x=S.fgx[w.id]=S.fgx[w.id]||{l:{},n:0};const others=ws.filter(o=>o!==w&&!fgUnd(o));
+  others.forEach(o=>{const gs=fgOf(o).filter(g=>FB_HC.includes(g));gs.forEach((g,i)=>x.l[g]=(x.l[g]||0)+(gs.length>1?(i?.4:.6):1)/Math.max(1,others.length))});
+  const sg=FB_STIP[s.stip];if(sg&&sg!=='cas')x.l[sg]=(x.l[sg]||0)+.5;if(FB_MULTI[s.type])x.l.flip=(x.l.flip||0)+.5;if(s.ri)x.l.chaos=(x.l.chaos||0)+.5;x.n++;
+  const e=Object.entries(x.l).sort((a,b)=>b[1]-a[1]);if(x.n>=FB_FIND&&e[0]&&e[0][1]>=2&&e[0][1]>=(e[1]?e[1][1]:0)*FB_LEAD)fgLock(w,e[0][0],'',notes)})})}
+/* a popularity breakout locks the current lean; warn first, while there's still time to steer them */
+function fgWeek(notes){Object.values(S.w).forEach(w=>{if(!fgUnd(w))return;S.fgx=S.fgx||{};const x=S.fgx[w.id]=S.fgx[w.id]||{l:{},n:0};const ln=fgLean(w.id);
+ if(w.pop>=FB_BREAK){fgLock(w,ln||FG_STYLE[w.st]||'blood','their breakout locked it in',notes);return}
+ if(w.pop>=FB_LINE&&!x.warn&&w.own==='p'){x.warn=AW();const n=`📈 ${w.name} is about to break out${ln?` — still leaning ${fbN(ln)}`:' and hasn’t leaned any way yet'}. Book them with the crowd you want them to land with before it locks in.`;news(n);if(notes)notes.push(n)}})}
+/* reinvention: a wrestler who's been left off TV for weeks or is miserable asks to try a different crowd */
+const FB_REIN_WK=6,FB_REIN_MOR=35;
+function fgReinWant(w){if(!w||w.own!=='p'||w.inj||fgUnd(w))return false;const x=S.fgx&&S.fgx[w.id];if(x&&x.ask&&AW()-x.ask<20)return false;if(x&&x.g&&x.at&&AW()-x.at<10)return false;
+ return (S.week-(w.last||0))>=FB_REIN_WK&&S.week>FB_REIN_WK||w.mor<FB_REIN_MOR}
+function fgReinvent(id,g){const w=S.w[id];if(!w)return;S.fgx=S.fgx||{};const x=S.fgx[id]=S.fgx[id]||{l:{},n:0};x.ask=AW();
+ if(g&&g!=='no'){x.g=g;w.mor=clamp(w.mor+8,0,100);news(`🎭 ${w.name} is reinventing themselves for the ${fbN(g)}.`)}else{w.mor=clamp(w.mor-4,0,100);news(`🎭 You told ${w.name} to stay the course.`)}
+ try{save()}catch(e){}try{if(typeof closeModal==='function')closeModal()}catch(e){}try{render()}catch(e){}}
+function fgReinBrief(){if(!S||S.phase!=='season')return [];const ask=Object.values(S.w).filter(fgReinWant).sort((a,b)=>a.mor-b.mor).slice(0,1);
+ return ask.map(w=>{const cur=fgOf(w)[0];const opts=FB_G.filter(g=>g!==cur);
+  return {i:'🎭',t:`${w.name} wants a reinvention`,u:false,rows:[`<div class="brow">${esc(w.name)} <span class="fgw"><i class="fg-${cur}">${fbN(cur)}</i></span><br><span class="muted tiny">${w.mor<FB_REIN_MOR?'Miserable':'Off TV for weeks'} and wants to chase a different crowd. Pick one, or tell them to stay the course.</span><div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px">${opts.map(g=>`<button class="mini" onclick="fgReinvent('${w.id}','${g}')">${fbN(g)}</button>`).join('')}<button class="mini ghost" onclick="fgReinvent('${w.id}','no')">Stay the course</button></div></div>`]}})}
+if(typeof briefItems==='function'){const b0=briefItems;briefItems=window.briefItems=function(){const s=b0.apply(this,arguments);try{return fgReinBrief().concat(s)}catch(e){console.warn('rein',e);return s}}}
+if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){try{fgWeek(notes)}catch(e){console.warn('fg week',e)}return e0.apply(this,arguments)}}
+Object.assign(window,{fbSync,fbSyncAll,fbSeg,fbPromo,fbCalc,fbApply,fbCrowdCard,fbResultsCard,fgAfterShow,fgReinvent,fgLean,FB_STIP});
+
 (function(){const s=document.createElement('style');s.textContent=`
 .fgw{font:800 italic 1em/1 'BC',sans-serif;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}.fgw b{margin:0 .3em;color:#8a8580;font-weight:700}
 .fg-cas{color:#efe9dc}.fg-tech{color:#7fa7d6}.fg-blood{color:#e5484d}.fg-flip{color:#3fc8b4}.fg-chaos{color:#b77ee8}.fg-und{color:#9a958c}
 .tkc .tcfg{display:flex;flex-wrap:wrap;gap:2px 3px;margin-bottom:calc(var(--w)*.035);font-size:calc(var(--w)*.088);text-shadow:none}.tkc .tcfg b{display:none}
 .tkc .tcfg i{padding:1px 7px 1px 4px;color:#111;background:var(--fgbg);clip-path:polygon(0 0,100% 0,calc(100% - 4px) 100%,0 100%)}
+.crowdc .crw,.fbres .fbr{display:grid;grid-template-columns:7.2em 1fr;gap:0 10px;align-items:baseline;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)}
+.crowdc .crw:first-of-type,.fbres .fbr:first-of-type{border-top:0}.crowdc .crw .fgw,.fbres .fbr .fgw{font-size:13px}
+.crowdc .crw b{font:800 italic 15px/1.1 'BC',sans-serif;letter-spacing:.02em;text-transform:uppercase}.crowdc .crw b.warn{color:var(--gold)}
+.crowdc .crw small,.fbres .fbr small{grid-column:2;color:var(--muted,#9a958c);font-size:12.5px}
+.fbres .fbn{font-size:14px}.fbres .fbn b{font-weight:700}
+.xred{border-left:3px solid var(--gold)}.xred .xrh{display:flex;gap:8px;align-items:baseline}.xred .xrh b{font:900 italic 17px/1 'BC',sans-serif;text-transform:uppercase}.xred .xrh span{color:var(--gold);font:700 12px 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase}
+.xred .xro{margin:8px 0 6px;font-size:15px}.xred .xrp{margin-top:8px;padding:8px 10px;background:#0f0f12;clip-path:polygon(0 0,100% 0,calc(100% - 8px) 100%,0 100%);font-size:14px}.xred .xrp .fgw{font-size:11px}.xred .xrp b{font-size:13px;color:#ddd}
+.xred .xra{margin-top:8px;color:var(--gold);font-size:13.5px}
 .tcs .tcmat.many .tkc .tcfg,.tlrow .tkc .tcfg,.twcd .tkc .tcfg{display:none}
 `;document.head.appendChild(s)})();

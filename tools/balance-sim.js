@@ -164,6 +164,7 @@ window.SIM = async function (opt) {
       const out = airShow();
       const o = S.last || out;
       Object.values(S.titles).forEach(t => { if (before[t.id] && t.holders.join('|') !== before[t.id]) cur.titleChanges++ });
+      if (o && o.fb) { cur.fbd = cur.fbd || {}; for (const b of ['p', 'ai']) { const r = o.fb[b]; if (!r || !r.before) continue; for (const g in r.after) { const k = b + '.' + g; cur.fbd[k] = (cur.fbd[k] || 0) + r.after[g] - r.before[g] } } }
       if (o && o.ratings) { if (o.ratings.p != null) cur.rp.push(o.ratings.p); if (o.ratings.ai != null) cur.rai.push(o.ratings.ai); if (o.hourWin === 'p') cur.wins++ }
       if (o && o.blocks) { const PN = new Set(Object.values(PT).map(x => x.n)); o.blocks.filter(b => b.brand === 'p').forEach(b => b.segs.forEach(s => (PN.has(s.sub) ? cur.promoStars : cur.matchStars).push(s.stars))) }
       cur.injP += owned('p').filter(w => w.inj > 0).length; cur.injAI += owned('ai').filter(w => w.inj > 0).length;
@@ -179,7 +180,7 @@ window.SIM = async function (opt) {
     const cnt = (b, t) => pops(b).filter(p => p >= t).length;
     const allOwned = Object.values(S.w).filter(w => w.own);
     return {
-      fansGained: { p: S.fans.p - cur.fans0.p, ai: S.fans.ai - cur.fans0.ai }, fans: { p: S.fans.p, ai: S.fans.ai },
+      fansGained: { p: S.fans.p - cur.fans0.p, ai: S.fans.ai - cur.fans0.ai }, fans: { p: S.fans.p, ai: S.fans.ai }, fbd: cur.fbd || null, fb: S.fb && S.fb.p ? { p: Object.assign({}, S.fb.p), ai: Object.assign({}, S.fb.ai || {}) } : null,
       money: { p: S.money.p, ai: S.money.ai }, payroll: { p: payroll('p'), ai: payroll('ai') },
       roster: { p: owned('p').length, ai: owned('ai').length },
       pop90: cnt('p', 90) + cnt('ai', 90), pop85: cnt('p', 85) + cnt('ai', 85), pop80: cnt('p', 80) + cnt('ai', 80),
