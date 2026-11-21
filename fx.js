@@ -1,6 +1,6 @@
 /* Tony Khan Simulator — broadcast effects (v161).
    Eight visual upgrades for the Classic look, all in one place and all respecting the phone's reduce-motion setting:
-     1. Title changes — a full-screen "AND NEW" moment with the belt plate sliding in (solo reveal and the party-night TV)
+     1. Title changes — an "AND NEW" moment with the belt plate sliding in (v391: inside that match's box in the reveal, not full screen)
      2. Debuts & call-ups — a titantron entrance with a name slam and light sweeps; hotter ROH buzz = bigger pop
      3. Results that hit — 5★ segments shake with a star burst, flat ones go grey, "You win the night" sets off fireworks
      4. Live numbers — fans and money in the header count up or down with a floating +/- chip; hype bars fill
@@ -65,6 +65,18 @@ nav.tabs.fxn button.on:before{opacity:0}
 .roh-x .h.small{color:#ff8a8a}
 .roh-x .tg.good{background:rgba(179,22,29,.25);color:#ff9a9a}
 @media (prefers-reduced-motion: reduce){#fxo *,#fxo,.fx5,.fxl3 .b,`;
+const css2=`
+.fxhost{overflow:hidden}
+.fxbox{position:absolute;inset:0;z-index:6;container-type:size;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:4%;background:radial-gradient(ellipse at center,#281e08,#050505 75%);pointer-events:none;overflow:hidden;animation:fxIn .25s ease-out both}
+.fxbox.out{animation:fxOut .35s ease-in both}
+.fxbox .fl{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,rgba(255,236,170,.9),transparent 60%);opacity:0;animation:fxFlash .9s ease-out .15s both}
+.fxbox .kk{font:900 italic min(9cqh,6cqw,28px)/1 'BC',Impact,sans-serif;letter-spacing:.28em;text-transform:uppercase;color:var(--red,#e2332b);text-shadow:0 0 14px rgba(226,51,43,.6);animation:fxDrop .5s cubic-bezier(.2,1.4,.4,1) .2s both}
+.fxbox .fxbi{max-width:80cqw;max-height:30cqh;margin:3cqh auto 0}
+.fxbox .fxplate{margin:3cqh auto 0;padding:1.5cqh 4cqw;font-size:min(8cqh,5cqw,26px)}
+.fxbox .nmx{font:900 italic min(20cqh,10cqw,80px)/.95 'BC',Impact,sans-serif;text-transform:uppercase;color:var(--gold2,#f6dd8e);text-shadow:0 3px 0 #6b5212,0 0 30px rgba(246,221,142,.55);margin:3cqh 0;max-width:96cqw;overflow-wrap:anywhere;animation:fxSlam .55s cubic-bezier(.2,1.5,.3,1) .9s both}
+.fxbox .sub{font:800 min(7cqh,4.4cqw,20px)/1.2 'BC',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#e9dcc0;animation:fxDrop .5s ease-out 1.25s both}
+@media (prefers-reduced-motion: reduce){.fxbox,.fxbox *{animation:none!important}.fxbox .fl{display:none}}`;
+const st2=document.createElement('style');st2.id='fxcss2';st2.textContent=css2;document.head.appendChild(st2);
 const st=document.createElement('style');st.id='fxcss';st.textContent=css;document.head.appendChild(st);
 
 /* ---------------- overlays (one at a time, queued) ---------------- */
@@ -100,16 +112,28 @@ window.fxConfetti=confetti;
 
 /* ---------------- 1. title changes ---------------- */
 const TRX=/(NEW|INAUGURAL) (.+?) CHAMPIONS?: (.+?)(?: make| makes| —|!|$)/;
-function titleFx(note,rv){const m=TRX.exec(note||'');if(!m)return;const first=m[1]==='INAUGURAL';const title=m[2].replace(/\b\w+/g,w=>w.charAt(0)+w.slice(1).toLowerCase());const who=m[3].trim();
- overlay(`<div class="fl"></div><div class="kk">${first?'The first ever':'And new'}</div>${(()=>{const id=window.beltIdByName&&beltIdByName(title);const b=id&&window.beltImg&&beltImg(id);return b?`<img class="fxbi" src="${b}" alt="">`:`<div class="fxplate">${esc(title)}</div>`})()}<div class="nmx">${esc(who)}</div><div class="sub">${esc(title)} Champion${/&/.test(who)?'s':''}</div>`,'',4200,el=>sparks(el,26),rv)}
+/* v391: in a reveal, the "And new" moment plays inside that match's own box (host) instead of taking over the whole screen.
+   Taps pass straight through to the reveal; the moment clears itself after a few seconds, or goes with the box when the
+   next round is drawn. Two belts changing hands in one match play one after the other in the same box. */
+function titleParts(note){const m=TRX.exec(note||'');if(!m)return null;const first=m[1]==='INAUGURAL';const title=m[2].replace(/\b\w+/g,w=>w.charAt(0)+w.slice(1).toLowerCase());const who=m[3].trim();
+ const id=window.beltIdByName&&beltIdByName(title);const b=id&&window.beltImg&&beltImg(id);
+ return {first,title,who,html:`<div class="fl"></div><div class="kk">${first?'The first ever':'And new'}</div>${b?`<img class="fxbi" src="${b}" alt="">`:`<div class="fxplate">${esc(title)}</div>`}<div class="nmx">${esc(who)}</div><div class="sub">${esc(title)} Champion${/&/.test(who)?'s':''}</div>`}}
+function boxTitle(host,html){if(MUTE||!host||!host.isConnected)return;const q=host._fxq||(host._fxq=[]);q.push(html);if(q.length===1)boxNext(host)}
+function boxNext(host){const q=host._fxq;if(!q||!q.length||!host.isConnected){if(host)host._fxq=null;return}
+ const pos=getComputedStyle(host).position;if(pos==='static')host.style.position='relative';host.classList.add('fxhost');
+ const el=document.createElement('div');el.className='fxbox';el.innerHTML=q[0];host.appendChild(el);if(!RM())try{sparks(el,14)}catch(e){}
+ setTimeout(()=>{el.classList.add('out');setTimeout(()=>{el.remove();q.shift();if(!q.length){host.classList.remove('fxhost');host._fxq=null}else boxNext(host)},330)},RM()?1800:4000)}
+function titleFx(note,rv,host){const t=titleParts(note);if(!t)return;
+ if(host!==undefined)return boxTitle(host,t.html);
+ overlay(t.html,'',4200,el=>sparks(el,26),rv)}
 window.fxTitle=titleFx;
-function segTitles(notes){(notes||[]).forEach(n=>{if(TRX.test(n))titleFx(n,true)})}
+function segTitles(notes,host){(notes||[]).forEach(n=>{if(TRX.test(n))titleFx(n,true,host||null)})}
 /* solo reveal: when a segment's stars land */
-if(typeof srDone==='function'){const d0=srDone;srDone=function(it){const was=it&&it.ok;const out=d0.apply(this,arguments);try{if(it&&!was&&!MUTE){hit(it);segTitles(it.s&&it.s.notes)}}catch(e){}return out}}
+if(typeof srDone==='function'){const d0=srDone;srDone=function(it){const was=it&&it.ok;const out=d0.apply(this,arguments);try{if(it&&!was&&!MUTE){hit(it);segTitles(it.s&&it.s.notes,typeof srHalfEl==='function'?srHalfEl(it):null)}}catch(e){}return out}}
 if(typeof srFinal==='function'){const f0=srFinal;srFinal=function(instant){if(instant)MUTE=true;let out;try{out=f0.apply(this,arguments)}finally{MUTE=false}
  try{const o=SRV&&SRV.o;if(o&&o.hourWin==='p')setTimeout(()=>fireworks(6),instant?100:900)}catch(e){}return out}}
 /* party-night TV reveal */
-if(typeof tvRevealShow==='function'){const t0=tvRevealShow;tvRevealShow=function(stp,instant){const out=t0.apply(this,arguments);try{if(!instant){const el=document.getElementById(stp.id);if(el){const v=+el.dataset.st;if(v>=5)burst(el);else if(v&&v<2)el.classList.add('fxflat');[...el.querySelectorAll('.note')].forEach(n=>{if(TRX.test(n.textContent))titleFx(n.textContent)})}
+if(typeof tvRevealShow==='function'){const t0=tvRevealShow;tvRevealShow=function(stp,instant){const out=t0.apply(this,arguments);try{if(!instant){const el=document.getElementById(stp.id);if(el){const v=+el.dataset.st;if(v>=5)burst(el);else if(v&&v<2)el.classList.add('fxflat');[...el.querySelectorAll('.note')].forEach(n=>{if(TRX.test(n.textContent))titleFx(n.textContent,false,el)})}
  if(stp.final&&document.querySelector('#rv .rv-score.win'))setTimeout(()=>fireworks(7),600)}}catch(e){}return out}}
 
 /* ---------------- 3. results that hit ---------------- */
