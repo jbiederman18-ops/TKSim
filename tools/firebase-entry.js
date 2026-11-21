@@ -1,4 +1,4 @@
 export { initializeApp } from 'firebase/app';
-export { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+export { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
 export { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, getDocFromServer, setDoc, updateDoc, onSnapshot, serverTimestamp, deleteField, runTransaction } from 'firebase/firestore';
 export { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';

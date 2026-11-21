@@ -1,5 +1,5 @@
 // Tony Khan Simulator — online leagues (Firebase). The game works without this file; it only adds sync + turn alerts.
-import { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+import { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
   doc, getDocFromServer, setDoc, updateDoc, onSnapshot, serverTimestamp, deleteField, runTransaction, getMessaging, getToken, onMessage, isSupported } from './firebase-sdk.js';
 
 const cfg = window.TK_FIREBASE || {};
@@ -23,6 +23,27 @@ if (!cfg.apiKey || !cfg.projectId) {
     else signInAnonymously(auth).catch(e => console.warn('sign-in failed', e));
   });
   window.addEventListener('online', () => { if (!auth.currentUser) signInAnonymously(auth).catch(() => {}); });
+
+  // ---- Google account (v383): a login that remembers your sync code, so a new device just signs in. ----
+  // It runs on its own Firebase app, so the anonymous sign-in that leagues and cloud saves use is never touched:
+  // signing in or out can't cost you a league seat. The account only stores one thing: users/{uid}.code.
+  const acctApp = initializeApp(cfg, 'acct');
+  const acctAuth = getAuth(acctApp);
+  const acctDb = initializeFirestore(acctApp, {});
+  const ACCT_PEND = 'tksim_acct_pend';
+  TKO.acct = null;
+  const acctInfo = u => (u && !u.isAnonymous ? { uid: u.uid, email: u.email || '', name: u.displayName || '' } : null);
+  onAuthStateChanged(acctAuth, u => {
+    TKO.acct = acctInfo(u);
+    // back from a sign-in redirect: finish linking this device
+    let pend = false; try { pend = !!localStorage.getItem(ACCT_PEND); } catch (e) { }
+    if (TKO.acct && pend) { try { localStorage.removeItem(ACCT_PEND); } catch (e) { } window.dispatchEvent(new Event('tko-acct-signin')); }
+    window.dispatchEvent(new Event('tko-acct'));
+  });
+  getRedirectResult(acctAuth).catch(e => {
+    try { localStorage.removeItem(ACCT_PEND); } catch (x) { }
+    window.dispatchEvent(new CustomEvent('tko-acct-error', { detail: String(e && e.code || e) }));
+  });
   // Creating/joining needs a connection; don't leave the button spinning forever.
   const timed = (p, ms = 15000) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
 
@@ -100,6 +121,40 @@ if (!cfg.apiKey || !cfg.projectId) {
         if (r && r.fields) tx.update(ref, { ...r.fields, updated: serverTimestamp() });
         return r;
       }), 20000);
+    },
+
+    // ---- Google account ----
+    // Resolves with the account once signed in, or 'redirect' when the browser had to leave the page to sign in.
+    async acctSignIn() {
+      const prov = new GoogleAuthProvider();
+      prov.setCustomParameters({ prompt: 'select_account' });
+      try { return acctInfo((await signInWithPopup(acctAuth, prov)).user); }
+      catch (e) {
+        const c = String(e && e.code || '');
+        // installed apps and strict browsers often can't open a pop-up: sign in by leaving the page instead
+        if (c.includes('popup-blocked') || c.includes('operation-not-supported') || c.includes('web-storage-unsupported')) {
+          try { localStorage.setItem(ACCT_PEND, '1'); } catch (x) { }
+          await signInWithRedirect(acctAuth, prov);
+          return 'redirect';
+        }
+        throw e;
+      }
+    },
+    acctSignOut() { return signOut(acctAuth); },
+    // The sync code on your account. If the account has none yet and `code` is given, `code` becomes it.
+    // Runs as a transaction, so two devices signing in at once can't each store their own code.
+    acctClaim(code) {
+      const u = acctAuth.currentUser;
+      if (!u || u.isAnonymous) return Promise.reject(new Error('signedout'));
+      return timed(runTransaction(acctDb, async tx => {
+        const ref = doc(acctDb, 'users', u.uid);
+        const cur = await tx.get(ref);
+        const have = cur.exists() && cur.data().code;
+        if (have) return have;
+        if (!code) return null;
+        tx.set(ref, { code, email: u.email || '', updated: serverTimestamp() });
+        return code;
+      }), 15000);
     },
 
     // ---- cloud saves (solo game + your list of leagues), keyed by a private 12-character sync code ----

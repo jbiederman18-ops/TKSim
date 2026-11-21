@@ -1512,7 +1512,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v382';
+const APP_VERSION='v383';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -5256,7 +5256,7 @@ const HOWTO=`<p><b>📱 On a phone:</b> Go live stays pinned above the tabs on B
 <p><b>🔊 Sound effects:</b> the ring bell, the crowd, near falls counted out loud, stars landing and your calls hitting. Switch them off or set the volume in the ⚙️ Game menu.</p>
 <p>Top AEW and WWE wrestlers have their own wording for challenges, replies and solo callouts. In the ring, signature moves can appear on pinfall, submission and tag-team calls. An awkward escape on a near fall still leads to the finish you call.</p>
 <p><b>🌙 After Dark</b> in the ⚙️ Game menu adds up to two optional beats to eligible live face-offs and singles matches with any wrestler. Choose <b>Grudge</b> for sharper threats and rougher action, <b>Tension</b> for mutual flirtation, or <b>Auto</b> to use Grudge for heated rivalries and Tension for other pairings. The extra lines have no effect on ratings.</p>
-<p><b>Cloud save &amp; backups:</b> turn on cloud save in the ⚙️ Game menu and every solo game you play backs up automatically and syncs both ways with your other devices — enter your sync code on another device and all your games show up in ⇄ Your games there, kept in step whichever one you play. Everything still saves on the device first, so offline play just works and syncs later. If the same game was played on two devices before they synced, you're asked which save to keep and the other is kept as a backup. Deleting a game removes it from your other devices too, but its cloud copy stays under Backups → Deleted games. The game also keeps automatic backups of your last few weeks (⚙️ Game menu → Saves &amp; backups).</p>
+<p><b>Cloud save &amp; backups:</b> tap <b>Sign in with Google</b> in ⚙️ Game menu → Saves &amp; backups and every solo game you play backs up automatically and syncs both ways with your other devices — sign in on another device (or enter your sync code there) and all your games show up in ⇄ Your games there, kept in step whichever one you play. Everything still saves on the device first, so offline play just works and syncs later. If the same game was played on two devices before they synced, you're asked which save to keep and the other is kept as a backup. Deleting a game removes it from your other devices too, but its cloud copy stays under Backups → Deleted games. The game also keeps automatic backups of your last few weeks (⚙️ Game menu → Saves &amp; backups).</p>
 <p><b>Show structure</b> counts toward the show rating, the way AEW's quarter-hour numbers reward it: open hot with a strong segment, keep the middle moving (back-to-back promos and dead spots cost you), build through the second half, and make the main event the best thing on the show. Every show needs something for the women's division if you have one. The Show flow graph on the booking screen previews it: each bar is a segment, the dashed line is the shape the rating rewards, and a red bar is one the show is being docked for (tap a bar to see why).</p>
 <p><b>Debuts:</b> anyone you sign during the season arrives with debut buzz. Their first appearance on your show — match or promo — pops the crowd: the bigger the star, the bigger the bump in stars and fans (a PPV debut is bigger still). Wait more than a few weeks and the buzz wears off.</p>
 
@@ -5881,20 +5881,62 @@ function busy(){return !!(PS||ME||LQ||ED||PE||CE||PK||CF||QP)||!$('#modal').clas
 /* ---- turning it on / linking another device ---- */
 async function cloudEnable(){if(!mpAvail())return mpNeedSetup();const id=newCode(12);cloudSet({id,v:2,lrev:0});LS.del('tksim_lgsent');CL_STATUS='syncing';render();
  await cloudPush();if(cloudPendingAny()){toast('Cloud save is on — it will upload when you’re back online.');render()}else cloudShowCode(true)}
-function cloudShowCode(first){const c=cloudCfg();if(!c)return;openModal(`<div class="h mhd">${first?'Cloud save is on ☁️':'Your sync code'}</div><p>Every solo game you play now backs up automatically and stays in step on every device. To play on another phone, tablet or computer, open the game there, go to <b>Cloud save</b> and enter this code:</p><div class="mpcode" style="font-size:24px;letter-spacing:3px">${fmtCode(c.id)}</div><p class="muted">Keep it somewhere safe — it's the key to your saves. Anyone with it can load and change them.</p><button class="btn" onclick="cloudCopy()">Copy code</button><button class="btn ghost" onclick="closeModal()">Done</button>`)}
+function cloudShowCode(first){const c=cloudCfg();if(!c)return;
+ if(acctOn())return openModal(`<div class="h mhd">Play on another device</div><p>Open the game on your other phone, tablet or computer, go to <b>⚙️ Game menu → Saves &amp; backups</b> and tap <b>Sign in with Google</b> as ${esc(acctWho())}. All your games show up there.</p><p class="muted">No Google account on that device? Use this sync code instead:</p><div class="mpcode" style="font-size:20px;letter-spacing:3px">${fmtCode(c.id)}</div><button class="btn" onclick="closeModal()">Done</button><button class="btn ghost" onclick="cloudCopy()">Copy code</button>`);
+ openModal(`<div class="h mhd">${first?'Cloud save is on ☁️':'Your sync code'}</div><p>Every solo game you play now backs up automatically and stays in step on every device. To play on another phone, tablet or computer, open the game there, go to <b>Cloud save</b> and enter this code:</p><div class="mpcode" style="font-size:24px;letter-spacing:3px">${fmtCode(c.id)}</div><p class="muted">Keep it somewhere safe — it's the key to your saves. Anyone with it can load and change them.</p><button class="btn" onclick="cloudCopy()">Copy code</button><button class="btn ghost" onclick="closeModal()">Done</button>`)}
 async function cloudCopy(){const c=cloudCfg();try{await navigator.clipboard.writeText(fmtCode(c.id));toast('Code copied.')}catch(e){toast(fmtCode(c.id))}}
 function cloudLinkForm(){if(!mpAvail())return mpNeedSetup();openModal(`<div class="h mhd">Load a cloud save</div><p class="muted">Enter the sync code from your other device. Its games are added to ⇄ Your games${soloState()?', and the games on this device are added to the cloud too':''} — nothing here is replaced.</p>
  <label>Sync code</label><input id="clCode" maxlength="20" autocapitalize="characters" placeholder="ABCD-EFGH-JKLM" style="text-transform:uppercase;letter-spacing:2px">
  <button class="btn mt" id="clGo" onclick="cloudLink()">Load my save</button><button class="btn ghost" onclick="closeModal()">Cancel</button>`)}
 async function cloudLink(){const id=($('#clCode').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(id.length!==12)return toast('Sync codes have 12 letters and numbers.');const b=$('#clGo');b.disabled=true;b.textContent='Loading…';
- try{const d=await TKO.cloudGet(id);let idx={};try{idx=await TKO.cloudGameList(id)}catch(e){}if(!d&&!Object.keys(idx).length)throw new Error('nosave');
+ try{await cloudLinkId(id)}
+ catch(e){console.warn(e);b.disabled=false;b.textContent='Load my save';toast(String(e.message).includes('nosave')?'No cloud save with that code.':navigator.onLine?"Couldn't load it — check the code.":'You need a connection to load a cloud save.')}}
+/* link this device to a sync code: its games come here and this device's games go up too — nothing is replaced */
+async function cloudLinkId(id){
+ {const d=await TKO.cloudGet(id);let idx={};try{idx=await TKO.cloudGameList(id)}catch(e){}if(!d&&!Object.keys(idx).length)throw new Error('nosave');
   const before=localGames().length;cloudSet({id,v:2,lrev:0,game:d&&d.game||''});LS.del('tksim_lgsent');if(d)mergeLeagues(d.leagues);closeModal();
   await cloudCheck(true);
   /* nothing being played here: open the most recent game from the cloud */
   if(!activeSid()&&!ON()){const l=shelfList().slice().sort((a,b)=>(b.at||0)-(a.at||0));if(l[0])await openSolo(l[0].id)}
-  const n=localGames().length-before;toast(n>0?`☁️ Linked — ${n} game${n>1?'s':''} added from the cloud. This device now syncs too.`:'☁️ Linked. This device now syncs too.');render()}
- catch(e){console.warn(e);b.disabled=false;b.textContent='Load my save';toast(String(e.message).includes('nosave')?'No cloud save with that code.':navigator.onLine?"Couldn't load it — check the code.":'You need a connection to load a cloud save.')}}
-function cloudOff(){if(!confirm('Stop syncing this device? Your games stay on this device and in the cloud, and you can reconnect any time with your sync code.'))return;cloudSet(null);render();toast('Cloud save is off on this device.')}
+  const n=localGames().length-before;toast(n>0?`☁️ Linked — ${n} game${n>1?'s':''} added from the cloud. This device now syncs too.`:'☁️ Linked. This device now syncs too.');render()}}
+function cloudOff(){if(!confirm(`Stop syncing this device? Your games stay on this device and in the cloud, and you can reconnect any time ${acctOn()?'by tapping Sync my games':'with your sync code'}.`))return;cloudSet(null);render();toast('Cloud save is off on this device.')}
+
+/* ---- Google account (v383) ----
+ Signing in just remembers your sync code on your account, so a new device signs in instead of typing a code.
+ The sync engine above is unchanged, and sync codes still work. The account runs separately from the anonymous
+ sign-in leagues use, so signing in or out never touches a league seat. */
+let ACCT_BUSY=false;
+function acctOn(){return !!(window.TKO&&TKO.acct)}
+function acctWho(){const a=window.TKO&&TKO.acct;return a?(a.email||a.name||'your Google account'):''}
+function acctErr(e){const c=String(e&&(e.code||e.message)||e);console.warn('account',e);
+ if(c.includes('popup-closed')||c.includes('cancelled-popup'))return;
+ toast(c.includes('unauthorized-domain')?'Sign-in isn’t set up for this site yet: Firebase → Authentication → Settings → Authorized domains → add '+location.hostname+'.'
+  :c.includes('operation-not-allowed')?'Google sign-in is switched off: Firebase → Authentication → Sign-in method → Google → Enable.'
+  :c.includes('permission-denied')?'The account couldn’t save your code: publish the latest firebase/firestore.rules.'
+  :c.includes('timeout')||!navigator.onLine?'You need a connection to sign in.':'Couldn’t sign in. Your games are safe on this device.')}
+async function acctSignIn(){if(!mpAvail())return mpNeedSetup();if(ACCT_BUSY)return;ACCT_BUSY=true;render();
+ try{const r=await TKO.acctSignIn();if(r==='redirect')return;await acctSync(true)}catch(e){acctErr(e)}finally{ACCT_BUSY=false;render()}}
+/* put this device and the account on the same sync code */
+async function acctSync(manual){if(!acctOn()||!TKO.acctClaim)return;const c=cloudCfg();
+ let code=await TKO.acctClaim(c?c.id:null);
+ if(!code){/* new account, no cloud save here yet: turn it on and make it the account's */
+  const id=newCode(12);cloudSet({id,v:2,lrev:0});LS.del('tksim_lgsent');CL_STATUS='syncing';render();await cloudPush();
+  code=await TKO.acctClaim(id);if(code===id){render();return toast(`☁️ Signed in. Your games now follow ${acctWho()} to any device.`)}}
+ const c2=cloudCfg();
+ if(c2&&c2.id===code){render();if(manual)toast(`☁️ Signed in as ${acctWho()}. This device's games follow your account.`);return}
+ if(c2&&!confirm('This device was syncing with a different sync code. Move it onto your account?\n\nThe games on this device are added to your account and kept here too. Nothing is replaced.'))return;
+ if(c2&&cloudPendingAny())await cloudPush();
+ try{await cloudLinkId(code)}
+ catch(e){if(!String(e&&e.message).includes('nosave'))throw e;
+  /* the account's code has nothing uploaded yet (its first upload never finished): use it and upload from here */
+  cloudSet({id:code,v:2,lrev:0});LS.del('tksim_lgsent');CL_STATUS='syncing';render();await cloudPush();render();toast(`☁️ Signed in. Your games now follow ${acctWho()} to any device.`)}}
+async function acctSignOut(){if(!confirm(`Sign out of ${acctWho()}? This device keeps syncing your games with its sync code. Sign back in any time.`))return;
+ try{await TKO.acctSignOut();toast('Signed out.')}catch(e){toast('Couldn’t sign out — try again.')}render()}
+function cloudCodeForm(){openModal(`<div class="h mhd">Use a sync code</div><p class="muted">No Google account needed. Your saves live under a private 12-character code you enter on each device.</p>
+ <button class="btn" onclick="closeModal();cloudEnable()">Turn on with a new code</button><button class="btn sec" onclick="closeModal();cloudLinkForm()">I have a sync code</button><button class="btn ghost" onclick="closeModal()">Cancel</button>`)}
+if(typeof window!=='undefined'){window.addEventListener('tko-acct',()=>{if(S)clRender()});
+ window.addEventListener('tko-acct-signin',()=>{acctSync(true).catch(acctErr)});
+ window.addEventListener('tko-acct-error',e=>acctErr(e.detail))}
 
 /* ---- backups ---- */
 async function openBackups(){const loc=localBackups();let cl=[],gone=null;const c=cloudCfg();
@@ -5928,14 +5970,19 @@ async function fbTest(){
  try{show(await TKO.diagnose())}catch(e){show([{ok:false,name:'Check',detail:String(e&&e.message||e)}])}}
 /* ---- Office card ---- */
 function cloudCard(){const c=cloudCfg();
- if(!c)return `<div class="card mt"><div class="h small">Cloud save</div><p class="muted" style="margin-top:0">Back up every solo game automatically and pick up on any device — phone, tablet or computer. You can still play offline; it syncs when you're back online.</p><button class="btn" onclick="cloudEnable()">☁️ Turn on cloud save</button><button class="btn sec" onclick="cloudLinkForm()">I have a sync code</button><button class="btn ghost" onclick="openBackups()">Backups on this device</button><button class="btn ghost" onclick="fbTest()">🔌 Test connection</button></div>`;
+ const ac=acctOn(),busy=ACCT_BUSY?' disabled':'';
+ if(!c)return `<div class="card mt"><div class="h small">Cloud save</div><p class="muted" style="margin-top:0">Back up every solo game automatically and pick up on any device — phone, tablet or computer. You can still play offline; it syncs when you're back online.</p>
+ ${ac?`<div class="muted tiny" style="margin-bottom:6px">Signed in as ${esc(acctWho())}</div><button class="btn"${busy} onclick="acctSync(true).catch(acctErr)">☁️ Sync my games</button><button class="btn ghost" onclick="acctSignOut()">Sign out</button>`
+  :`<button class="btn"${busy} onclick="acctSignIn()">${ACCT_BUSY?'Signing in…':'Sign in with Google'}</button><button class="btn sec" onclick="cloudCodeForm()">Use a sync code instead</button>`}
+ <button class="btn ghost" onclick="openBackups()">Backups on this device</button><button class="btn ghost" onclick="fbTest()">🔌 Test connection</button></div>`;
  const n=localGames().length;const pend=cloudPendingAny();
  const st=CL_STATUS==='syncing'?'Syncing…':pend||CL_STATUS==='offline'?'⏳ Waiting to sync — saved on this device':`✓ Synced ${whenTxt2(c.synced)}`;
  return `<div class="card mt"><div class="h small">Cloud save ☁️</div><div class="row sb" style="margin-bottom:6px"><span class="muted">${st}</span><button class="mini" onclick="cloudCheck(true)">Sync now</button></div>
  ${CL_BIG?`<div class="bad tiny" style="margin-bottom:4px">${esc(CL_BIG)} is too big to upload. It's safe on this device — use 💾 Back up all in ⇄ Your games to keep a copy.</div>`:''}
- <div class="muted tiny">${n>1?`All ${n} solo games on this device sync both ways`:n?'Your solo game syncs both ways — new ones join automatically':'Your solo games sync both ways'} · Sync code ${fmtCode(c.id)}</div>
+ <div class="muted tiny">${n>1?`All ${n} solo games on this device sync both ways`:n?'Your solo game syncs both ways — new ones join automatically':'Your solo games sync both ways'} · ${ac?`Signed in as ${esc(acctWho())}`:`Sync code ${fmtCode(c.id)}`}</div>
  <div class="row"><button class="btn sec" onclick="cloudShowCode()">Use on another device</button><button class="btn sec" onclick="openBackups()">Backups</button></div>
- <button class="btn ghost" onclick="fbTest()">🔌 Test connection</button><button class="btn ghost" onclick="cloudOff()">Stop syncing this device</button></div>`}
+ ${ac?'':`<button class="btn sec"${busy} onclick="acctSignIn()">${ACCT_BUSY?'Signing in…':'Sign in with Google'}</button>`}
+ <button class="btn ghost" onclick="fbTest()">🔌 Test connection</button>${ac?'<button class="btn ghost" onclick="acctSignOut()">Sign out</button>':''}<button class="btn ghost" onclick="cloudOff()">Stop syncing this device</button></div>`}
 
 if(typeof document!=='undefined'&&document.getElementById('app')){
  dgInit();

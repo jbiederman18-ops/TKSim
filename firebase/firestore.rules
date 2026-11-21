@@ -20,6 +20,14 @@ service cloud.firestore {
       }
     }
 
+    // Google account (v383): remembers which sync code is yours. Only you can read or change your own.
+    match /users/{uid} {
+      function mine() { return request.auth != null && request.auth.uid == uid
+        && request.auth.token.firebase.sign_in_provider != 'anonymous'; }
+      allow get: if mine();
+      allow create, update: if mine() && request.resource.data.code is string && request.resource.data.code.size() == 12;
+    }
+
     match /games/{code} {
       function uidsBefore() { return resource.data.uids; }
       function uidsAfter() { return request.resource.data.uids; }

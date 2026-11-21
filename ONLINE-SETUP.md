@@ -20,6 +20,7 @@ Firebase holds the shared league. It's free at this size. Setup takes about 15 m
 After that, **Host a league**, **Join a league** and **Cloud save** all work in the game (on the start screen, or in the **⚙️ Game menu**).
 
 > Already published the rules from an earlier version? Paste the latest `firebase/firestore.rules` again. Cloud saves need the new `saves` section.
+> v383: **Sign in with Google** for cloud saves. In **Authentication → Sign-in method → Add new provider**, choose **Google**, switch it on, pick a support email and click **Save**. Make sure `jbiederman18-ops.github.io` is under **Authentication → Settings → Authorized domains**. Then paste the latest `firebase/firestore.rules` again (it adds the `users` section, which remembers each account's sync code). Anonymous sign-in must stay on: leagues and cloud saves still use it.
 > v262: party night's TV feed has its own `live` section in the rules. Paste the latest rules again so phones stop re-downloading the whole league on every live tap (it still works without it, just heavier).
 
 ## Part 2: Turn notifications (about 5 minutes)
