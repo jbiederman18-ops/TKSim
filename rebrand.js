@@ -25,7 +25,7 @@ let RB=null;   /* {w, go:fn, verb, n, al, ideas} */
 const clean=v=>String(v||'').replace(/[<>"`]/g,'').replace(/\s+/g,' ').trim().slice(0,28);
 function sheet(){const r=RB;if(!r)return;const w=r.w;const nm=clean(r.n)||w.name;const ch=nm!==w.name||r.al!==w.al;
  openModal(`<div class="h mhd mt">${r.i} ${esc(r.head)}</div><div class="rbc">${card(w,nm,r.al)}</div>
- <p class="muted tiny" style="margin:6px 0 10px">A new start is the best time for a new look. Change the name or the character, or keep them as they are.</p>
+ <p class="muted tiny" style="margin:6px 0 10px">Change the name or the character, or keep them as they are.</p>
  <label>Ring name</label><input id="rbName" maxlength="28" value="${esc(nm)}" oninput="rbType(this.value)">
  <div class="chips" style="margin-top:6px;flex-wrap:wrap"><button type="button" class="chip ${nm===w.name?'on':''}" onclick="rbPick(-1)">${esc(w.name)}</button>${r.ideas.map((n,i)=>`<button type="button" class="chip ${nm===n?'on':''}" onclick="rbPick(${i})">${esc(n)}</button>`).join('')}<button type="button" class="chip" onclick="rbMore()">↻ More</button></div>
  <label style="margin-top:12px;display:block">Character</label><div class="chips"><button type="button" class="chip ${r.al==='f'?'on':''}" onclick="rbAl('f')">Face</button><button type="button" class="chip ${r.al==='h'?'on':''}" onclick="rbAl('h')">Heel</button></div>

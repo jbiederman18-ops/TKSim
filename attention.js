@@ -336,7 +336,7 @@ function wkRows(secs){const l=attnItems();
  /* whatever's left of the office's own sections once the line has taken the decisions (followed prospects and the like) */
  secs.filter(x=>['🕵️','⏳','📝','📼','🤝','👀','📣'].includes(x.i)||x.i==='🚑'&&/^Medical/.test(x.t||'')).forEach(x=>(x.rows||[]).forEach((r,j)=>{const t=strip(r);if(t.replace(/<[^>]+>/g,'').trim())add('Front office',x.i+j,x.i,t)}));
  return out}
-window.wkTradeX=function(id){openModal(`<div class="h mhd">🔁 Withdraw this trade offer?</div><p class="muted">They haven't answered yet. Pull it back and it's as if you never sent it.</p><button class="btn" onclick="tradeWithdraw('${id}');closeModal();render()">Withdraw it</button><button class="btn sec" onclick="closeModal()">Keep it on the table</button>`)};
+window.wkTradeX=function(id){openModal(`<div class="h mhd">🔁 Withdraw this trade offer?</div><p class="muted">No answer yet — pulling it back costs nothing.</p><button class="btn" onclick="tradeWithdraw('${id}');closeModal();render()">Withdraw it</button><button class="btn sec" onclick="closeModal()">Keep it on the table</button>`)};
 window.wkFold=function(){S.wkOpen=!S.wkOpen;save();render()};
 window.weekPanel=function(){if(!S||S.phase!=='season'||typeof mpLockedQuiet==='function'&&mpLockedQuiet())return '';let rows=[],l=[];
  let secs=[];try{secs=briefItems()}catch(e){console.warn(e)}
