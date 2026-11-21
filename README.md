@@ -38,6 +38,12 @@ The tour reads its numbers straight from the game and is checked automatically o
 - **Survivor Series is the crossover show** (it took Forbidden Door's place): up to two dream matches against the rival's stars, and rival invasions in the TV weeks before it.
 - **Existing saves** keep their week: the WWE wrestlers arrive in free agency, WWE's titles start vacant (two for each brand), and the PPVs take their new names from here on.
 
+## Playing on a phone (v377)
+- **Go live** stays pinned just above the tabs on Book, with what's left to book and fix beside it — no scrolling to the bottom to air the show. It steps aside while the pick sheet is open.
+- **Swipe a sheet down** by its handle to close it (the same as tapping the dimmed area above it). Sheets you have to answer — a visitor at your office door, a showdown — have no handle.
+- **The back button** (or back swipe) closes the open sheet, then the pick sheet, then takes you back to the screen you were on, then Home. On Home with nothing open, back leaves the app as usual. It does nothing mid-show, mid-showdown or with someone at your office door.
+- Small buttons (the week chip, ⚙️, Details, finish and run-in tags, names in This week and on Titles) have bigger touch areas, and the smallest card text (stamina, R/M/P) has a minimum size.
+
 ## Playing on a computer (v374)
 On a screen 1100px or wider (never on the party-night TV) the game lays itself out for a desktop: the tabs move up into the header, Home, the Office and Settings run in two columns, sheets open as centred windows, and the booking pick sheet docks down the right side so the card table stays in view — click another slot on the table to switch to it.
 - **Mouse:** everything clickable lights up on hover. Right-click a wrestler card for their details (the same as holding it on a phone). The scroll wheel scrolls sideways rows without Shift.

@@ -75,6 +75,8 @@
 | `belts.js`, `cut.js` | Belt photos, photo background removal |
 | `tutorial.js` | Rookie GM orientation (see below) |
 | `sw.js`, `manifest.webmanifest` | Offline/PWA |
+| `desk.js` | Desktop layout, mouse and keyboard at 1100px+ (v374–v375) |
+| `phone.js` | Phone conventions under 1100px, never on the TV (v377): Go live pinned above the tabs on Book, swipe-down to close sheets, back button closes sheets / goes back a tab, bigger touch areas, minimum card text sizes |
 
 ## Keep the tutorial current (required for every gameplay change)
 The Rookie GM orientation lives in `tutorial.js`. When you change, add or remove a game system:
