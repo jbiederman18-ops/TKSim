@@ -58,6 +58,13 @@ v399 (the fan engine: fans come from five fan groups in fanbase.js, not the show
   flow bonus it used to earn). Group sizes at season 3 (default bot): casuals ~1.75M, Technical ~200K, Bloodhounds ~160K, Flippy
   ~105K, Chaos ~120K. Tuning knobs: FB_GKC/FB_GKH (pool pull), FB_DRIFT, FB_HOLD/FB_STARVE, FB_FED, AIQ.fan. Rows 'fans <group> K'
   and 'show gain <brand>.<group>' come from S.fb and S.last.fb.
+v400 (fans switch shows: fbDefect moves each group toward the show that served it better — casuals FB_SW .02 on a 1.5+ gap,
+  hardcore only off a show that let them down; flat head-to-head +4K and main event war +3K removed; promise fans go to the
+  wrestlers' crowds via fbHit; FB_DRIFT 2 -> 1.2, FB_GKC .024 -> .018), 3 seasons: Normal 24 games: default fans 706/517/477K vs
+  rival 585/526/521K, seasons won 83/58/38%; --engaged 831/682/580K, 100/79/58%. 16 games per difficulty, seasons won: easy
+  100/94/62%, normal 75/50/44%, hard 75/31/25%; --lazy ~0% everywhere. Known: the player's seasons won fall season over season —
+  casual drift and switching are proportional to your own base, and the attentive player's base grows faster (promises, goals),
+  so a big base is harder to grow. Watch this when money and the rival change (v401/v402).
 --diff normal runs one difficulty; a variant's 'pre' script runs before the bot (handy for testing a constant).
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time

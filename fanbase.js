@@ -387,9 +387,9 @@ const FB_POOL=10e6,FB_SHARE={cas:.55,tech:.08,blood:.12,flip:.12,chaos:.13};
 const FB_X0=3.5,FB_XK=.3,FB_XKC=.2;          /* starting expectation and how fast it moves (casuals slower) */
 const FB_PER=5,FB_ME=1.3,FB_W=[1,.55,.3,.2],FB_CAP=1.25; /* % per star of exposure, main event, diminishing returns, cap per match */
 const FB_HOLD=2.5,FB_STARVE=4.5;             /* % lost per show without a real match of their own (more when it keeps happening) */
-const FB_GKC=.024,FB_GKH=.065;                  /* share of the pool a +1% show pulls in (gains come from the pool): casuals, hardcore */
+const FB_GKC=.018,FB_GKH=.065;                  /* share of the pool a +1% show pulls in (gains come from the pool): casuals, hardcore */
 const FB_FED=.25;                            /* a group that gets its own match at about what it expects still grows a little */
-const FB_DRIFT=2;                          /* casuals tune out by this % each show unless something hooks them */
+const FB_DRIFT=1.2;                          /* casuals tune out by this % each show unless something hooks them */
 const FB_CONV=.004;                          /* casuals who convert on a 4★+ match that beats a group's expectations */
 const FB_RI_TECH=3,FB_SCREW_TECH=1;          /* Technical fans hate run-ins and screwy finishes */
 /* which group each stipulation and match type speaks to */
@@ -458,6 +458,29 @@ function fbApply(b,segs,show,o){const r=fbCalc(b,segs,show,o);const f=S.fb[b],X=
  FB_HC.forEach(g=>{H[g]=[r.E[g]].concat(H[g]||[]).slice(0,3);if(r.avg[g]!=null)X[g]+=FB_XK*(r.avg[g]-X[g])});if(r.avg.cas!=null)X.cas+=FB_XKC*(r.avg.cas-X.cas);
  FB_G.forEach(g=>X[g]=clamp(X[g],2.5,4.6));
  let T=fbSum(b);if(T<50000){f.cas+=50000-T;T=50000}S.fans[b]=T;FB_G.forEach(g=>out.after[g]=f[g]);out.conv=conv;return out}
+
+/* ---- v400: fans switch shows. After a night with two or more shows, each group drifts toward the show that served it best.
+   Casuals switch on any clear gap. Hardcore fans only walk out on a show that let them down tonight (their group went backwards)
+   and only toward a show that fed them; Technical fans are the stickiest. Fans keep their group — a Bloodhound stays a Bloodhound,
+   they just watch the other show. Capped per night. This replaced the flat head-to-head (+4K) and main event war (+3K) bonuses. ---- */
+const FB_SW={cas:.02,tech:.025,blood:.05,flip:.05,chaos:.06},FB_SWGAP={cas:1.5,hc:1.5},FB_SWFULL={cas:8,hc:8};
+function fbDefect(order,out){if(order.length<2||!out.fb)return;const mv={};order.forEach(b=>mv[b]={});
+ FB_G.forEach(g=>{const r=order.filter(b=>out.fb[b]&&out.fb[b].pct&&out.fb[b].pct[g]!=null);if(r.length<2)return;
+  const W=r.slice().sort((a,b)=>out.fb[b].pct[g]-out.fb[a].pct[g])[0];const pw=out.fb[W].pct[g];
+  r.forEach(L=>{if(L===W)return;const pl=out.fb[L].pct[g],gap=pw-pl;const hc=g!=='cas';
+   if(gap<(hc?FB_SWGAP.hc:FB_SWGAP.cas))return;if(hc&&(pl>=0||pw<=0))return;
+   const n=Math.round(S.fb[L][g]*FB_SW[g]*Math.min(gap,hc?FB_SWFULL.hc:FB_SWFULL.cas)/(hc?FB_SWFULL.hc:FB_SWFULL.cas));if(n<100)return;
+   S.fb[L][g]-=n;S.fb[W][g]+=n;mv[L][g]=(mv[L][g]||0)-n;mv[W][g]=(mv[W][g]||0)+n})});
+ order.forEach(b=>{let T=fbSum(b);if(T<50000){S.fb[b].cas+=50000-T;T=50000}const d=T-S.fans[b];S.fans[b]=T;out.fans[b]=(out.fans[b]||0)+d;const r=out.fb[b];r.sw=mv[b];FB_G.forEach(g=>r.after[g]=S.fb[b][g])});
+ const me=order.includes('p')?'p':null;if(!me)return;const won=FB_G.filter(g=>(mv.p[g]||0)>=500),lost=FB_G.filter(g=>(mv.p[g]||0)<=-500);
+ const who=g=>{const o=order.filter(b=>b!=='p'&&(mv[b][g]||0)*(mv.p[g]||0)<0);return o.length?o.map(nameOf).join(' and '):'the other shows'};
+ if(won.length)out.notes.push(`🔀 Switched over to you tonight: ${won.map(g=>`${fmtFans(mv.p[g])} ${fbN(g)} from ${who(g)}`).join(', ')}.`);
+ if(lost.length)out.notes.push(`🔀 Switched away tonight: ${lost.map(g=>`${fmtFans(-mv.p[g])} ${fbN(g)} to ${who(g)}`).join(', ')}.`)}
+/* fans from (or lost by) a story beat go to the crowds of the wrestlers in it — a kept Moxley promise grows the Bloodhounds */
+function fbHit(b,ws,n){if(!S.fans||S.fans[b]==null)return;fbSync(b);const f=S.fb[b];const gs=[];
+ ws.filter(Boolean).forEach(w=>{const g=fgOf(w).filter(x=>FB_HC.includes(x));(g.length?g:['cas']).forEach(x=>gs.push(x))});if(!gs.length)gs.push('cas');
+ const per=n/gs.length;gs.forEach(g=>{f[g]=Math.max(0,f[g]+Math.round(per))});let T=fbSum(b);if(T<50000){f.cas+=50000-T;T=50000}S.fans[b]=T}
+Object.assign(window,{fbDefect,fbHit});
 /* ---- the Crowd read on the Book screen (replaces the Show flow graph): one word per group and what they expect ---- */
 const FB_WORD=[[3,'Eating well tonight','good'],[1,'Happy','good'],[-.5,'Lukewarm',''],[-2,'Only a taste — drifting','warn'],[-99,'Starving — they’re leaving','bad']];
 const FB_CWORD=[[1.5,'Hooked','good'],[.3,'Tuned in','good'],[-1,'Restless',''],[-99,'Changing the channel','bad']];
@@ -479,10 +502,12 @@ function fbPosts(r){const ch=g=>r.after[g]-r.before[g];const best=FB_G.slice().s
   posts.push({g,h,t:good?fbPick([`${w}. THIS is why I watch.`,`${w}. Give me that every week.`,`${w}. Instant favorite.`],g):g==='cas'?fbPick(['Flipped over to the game halfway through tbh.','Who even was half the card?','Wake me up when the big names are on.'],g):fbPick([`Where was ours tonight? ${FB_WANT[g].replace(/^./,c=>c.toUpperCase())}. That's all we ask.`,`Another week, nothing for us. Starting to think they forgot we exist.`,`${w}. We deserve better.`],g)})};
  if(r.pct[best]>0)say(best,true);if(worst!==best&&r.pct[worst]<0)say(worst,false);
  const hungry=FB_HC.slice().sort((a,b)=>r.pct[a]-r.pct[b]).find(g=>r.pct[g]<-1);
+ const lostG=FB_G.slice().sort((a,b)=>((r.sw||{})[a]||0)-((r.sw||{})[b]||0))[0];const lostN=-((r.sw||{})[lostG]||0);
+ if(lostN>=1000)posts.push({g:lostG,h:fbPick(FB_HANDLE[lostG],lostG+'sw'),t:fbPick([`Switched over to the other show halfway through. They actually gave us something.`,`Sorry, the other channel had what we wanted tonight.`,`Watched the other show. Not even sorry.`],lostG)});
  return {open,posts,ask:hungry?`The ${fbN(hungry)} keep asking for ${FB_WANT[hungry]}.`:''}}
 const fbK=n=>Math.abs(n)<10000?(Math.abs(n)<100?'0':(n/1000).toFixed(1).replace(/\.0$/,'')+'K'):fmtFans(n);
 function fbResultsCard(o){const r=o&&o.fb&&o.fb.p;if(!r||!r.before)return '';const tb=FB_G.reduce((a,g)=>a+r.before[g],0),ta=FB_G.reduce((a,g)=>a+r.after[g],0);
- const rows=FB_G.map(g=>{const d=r.after[g]-r.before[g];return `<div class="fbr"><span class="fgw"><i class="fg-${g}">${fbN(g)}</i></span><span class="fbn">${fmtFans(r.before[g])} → <b>${fmtFans(r.after[g])}</b> <b class="${d>=0?'good':'bad'}">${d>=0?'▲':'▼'}${fbK(Math.abs(d))}</b></span><small>${esc(r.why[g]||'')}</small></div>`}).join('');
+ const rows=FB_G.map(g=>{const d=r.after[g]-r.before[g];const sw=r.sw&&r.sw[g]||0;const why=(r.why[g]||'')+(Math.abs(sw)>=500?` · ${fmtFans(Math.abs(sw))} ${sw>0?'switched over from':'switched to'} the other show`:'');return `<div class="fbr"><span class="fgw"><i class="fg-${g}">${fbN(g)}</i></span><span class="fbn">${fmtFans(r.before[g])} → <b>${fmtFans(r.after[g])}</b> <b class="${d>=0?'good':'bad'}">${d>=0?'▲':'▼'}${fbK(Math.abs(d))}</b></span><small>${esc(why)}</small></div>`}).join('');
  const P=fbPosts(r);
  return `<div class="card fbres"><div class="row sb"><div class="h small" style="margin:0">The fans</div><span class="tiny">${fmtFans(tb)} → <b>${fmtFans(ta)}</b></span></div>${rows}${r.conv>=500?`<div class="muted tiny" style="margin-top:6px">${fmtFans(r.conv)} casual fans became hardcore fans tonight.</div>`:''}</div>
  <div class="card xred"><div class="xrh"><b>X Redditino</b><span>Head of PR</span></div><div class="xro">“${esc(P.open)}”</div>${P.posts.map(p=>`<div class="xrp"><span class="fgw"><i class="fg-${p.g}">${fbN(p.g)}</i></span> <b>${esc(p.h)}</b><div>${esc(p.t)}</div></div>`).join('')}${P.ask?`<div class="xra">${esc(P.ask)}</div>`:''}</div>`}
