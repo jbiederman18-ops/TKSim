@@ -167,7 +167,7 @@ function adCard(){
  const o=on(), selected=preference();
  const modes=Object.entries(MODES).map(([mode,label])=>`<button class="chip ${mode===selected?'on':''}" aria-pressed="${mode===selected}" onclick="adSetMode('${mode}')">${label}</button>`).join('');
  return `<div class="card"><div class="row sb"><div class="h small" style="margin:0">🌙 After Dark</div><div class="chips" style="margin:0"><button class="chip ${o?'on':''}" onclick="adSet(true)">On</button><button class="chip ${o?'':'on'}" onclick="adSet(false)">Off</button></div></div>
- <p class="muted tiny" style="margin:8px 0 0">Extra dialogue for any roster pairing in eligible live face-offs and singles matches. <b>Grudge</b> brings threats and rougher action. <b>Tension</b> brings mutual flirtation. <b>Auto</b> chooses Grudge for heated rivalries and Tension for the rest. Ratings work the same.</p>
+ <p class="muted tiny" style="margin:8px 0 0">Extra dialogue in live face-offs and singles matches. <b>Grudge</b>: threats and rougher action. <b>Tension</b>: flirtation. <b>Auto</b> picks by rivalry. Ratings unchanged.</p>
  ${o?`<div class="chips" role="group" aria-label="After Dark tone" style="margin:8px 0 0">${modes}</div>`:''}</div>`;
 }
 Object.assign(window,{adPromo,adMatch,adBadge,adSet,adSetMode,adCard});

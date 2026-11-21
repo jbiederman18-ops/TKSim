@@ -156,7 +156,7 @@ function hotList(){return ownList('p').filter(w=>!w.inj).map(w=>Object.assign({w
 window.hotList=hotList;
 if(typeof briefItems==='function'){const b0=briefItems;window.briefItems=briefItems=function(){const sec=b0.apply(this,arguments);try{const l=hotList();if(l.length){
  const why=x=>{const r=[];if((x.w.strk||0)>=3)r.push(`${x.w.strk}-match win streak`);if(x.gain>=1)r.push(`+${Math.round(x.gain)} popularity in ${Math.min(4,(x.w.ph4||[]).length-1)} weeks`);if((x.w.mom||0)>=3)r.push('strong momentum');if(x.w.lme!=null&&AW()-x.w.lme<=1)r.push('fresh off a main event');return r.join(' · ')||'on a roll'};
- const row=`<div class="brow"><span class="muted tiny">Ride the wave: feature them, put them next to someone you want to build, or give them a big win.</span></div>`;
+ const row=`<div class="brow"><span class="muted tiny">Ride the wave — feature them or put them next to someone you're building.</span></div>`;
  const at=sec.findIndex(x=>x.i==='🗓️');const item={i:'🔥',t:'Hottest on your roster',rows:l.map((x,i)=>`<div class="brow"><b>${i+1}. <a href="#" onclick="closeModal();showW('${x.w.id}');return false">${esc(x.w.name)}</a></b> <span class="muted tiny">· POP ${Math.round(x.w.pop)}</span><br><span class="tiny">${why(x)}</span></div>`).concat([row])};
  if(at<0)sec.push(item);else sec.splice(at,0,item)}}catch(e){console.warn(e)}return sec}}
 

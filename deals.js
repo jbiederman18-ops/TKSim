@@ -111,7 +111,7 @@ function ccRow(i,m,w,gate){const d=ccDeal(m,w.id);const tried=(m.ccTried&&m.ccTr
  const opts=Object.keys(CC_OFF).map(k=>{const why=ccWhy(m,w,k);const no=tried.includes(k);const [c,word]=ccWord(ccOdds(w,m,k));
   if(why||no)return `<div class="choice" style="opacity:.55"><span class="key"><span>${no?'✕':CC_OFF[k].i}</span></span><div><b>${CC_OFF[k].n}</b><div class="muted tiny">${no?'They turned this down':esc(why)}</div></div></div>`;
   return `<button class="choice" onclick="ccTry(${i},'${w.id}','${k}',${gate?1:0})"><span class="key"><span>${CC_OFF[k].i}</span></span><div><b>${CC_OFF[k].n}</b> <span class="tg ${c}">${word}</span><div class="muted tiny">${esc(ccDesc(m,w,k))}</div></div></button>`}).join('');
- return `<div class="card warn"><b>${esc(w.name)}</b> is booked to lose${o?' to '+esc(o.name):''}, but has creative control.<div class="muted tiny" style="margin:2px 0 6px">Morale ${Math.round(w.mor)}${w.trust?` · ${w.trust} broken promise${w.trust>1?'s':''}`:''} · offer them something to do the job — or go live and they fight the finish (half the time they go over, −¼★; otherwise morale −18).</div>${opts}</div>`}
+ return `<div class="card warn"><b>${esc(w.name)}</b> is booked to lose${o?' to '+esc(o.name):''}, but has creative control.<div class="muted tiny" style="margin:2px 0 6px">Morale ${Math.round(w.mor)}${w.trust?` · ${w.trust} broken promise${w.trust>1?'s':''}`:''} · offer them something to do the job, or they'll fight the finish live.</div>${opts}</div>`}
 function ccNegHtml(gate,only){const c=S.card.p||[];const l=[];c.forEach((sl,i)=>{if(!sl||sl.k!=='match'||!sl.d||sl.d.nc)return;const m=sl.d;
   const ids=m.sides.flat().length>=3&&typeof pinOf==='function'?[pinOf(m)].filter(Boolean):m.sides.flatMap((s,j)=>j===m.winner?[]:s);
   ids.map(id=>S.w[id]).filter(w=>w&&w.own==='p'&&ccOn(w)&&!w.inj&&(!only||w.id===only)).forEach(w=>l.push(ccRow(i,m,w,gate)))});
@@ -174,7 +174,7 @@ function dealQuick(id){if(mpLocked())return;const w=S.w[id];if(!w||w.own)return;
  news(counter?`📨 ${S.gm} sent a counter-offer for ${w.name}.`:`📨 ${S.gm} made an offer to free agent ${w.name}.`);
  save();closeModal();render();toast(`📨 Offer sent. ${w.name} decides when week ${wkOf(off.due)} airs.`)}
 function dealQuickHtml(w){const id=w.id,mine=myBid(id),ofr=offerOf(id),others=ofr?Object.keys(ofr.by||{}).filter(k=>k!=='p').length:0;
- const note=`<div class="muted center tiny">${mine?`Your offer is in. ${esc(w.name)} decides when the week airs`:'Another GM is still booking, so this is a sealed offer'}${others?` — <b class="gold">${others} other offer${others>1?'s are':' is'} in</b>`:''}. If more than one GM wants ${esc(w.name)}, they usually pick the hotter show.</div>`;
+ const note=`<div class="muted center tiny">${mine?`Your offer is in. ${esc(w.name)} decides when the week airs`:'Another GM is still booking, so this is a sealed offer'}${others?` — <b class="gold">${others} other offer${others>1?'s are':' is'} in</b>`:''}.</div>`;
  return mine?`<button class="btn sec" onclick="dealWithdraw('${id}')">Withdraw my offer</button>${note}`:`<button class="btn" onclick="dealQuick('${id}')">📨 ${others?'Send a counter-offer':'Make an offer'} · ${money(signCost(w))}</button>${note}`}
 function myBid(id){const o=offerOf(id);return o&&o.by&&o.by.p||null}
 function dealOffer(id){if(mpLocked())return;const w=S.w[id];if(!w||w.own)return;if(!onMarket(w)&&!offerOf(id))return toast(`${w.name} isn't on the market right now.`);
@@ -190,7 +190,7 @@ function dlChips(arr,cur,key,base,unit,max){return `<div class="chips" style="fl
 function renderDeal(){if(!DL)return;const w=S.w[DL.id];if(!w)return closeModal();if(DL.mode==='neg')return renderNeg();
  const o=dlOffer(),u=dealU(w,o,'p'),[cls,word]=dealWord(u);const W=dealWants(w);const mine=myBid(DL.id),ofr=offerOf(DL.id);
  const others=ofr?Object.keys(ofr.by||{}).filter(k=>k!=='p'):[];const due=ofr?wkOf(ofr.due):dealDue();
- const lg=ON()?`<p class="muted tiny">Sealed bids: every other GM can send one counter before week ${due} airs. Nobody sees the numbers — ${esc(w.name)} picks when the week airs.${others.length?` <b class="gold">${others.length} other offer${others.length>1?'s are':' is'} in.</b>`:''}</p>`:`<p class="muted tiny">Sealed bid: ${esc(S.rival)} may make an offer too. ${esc(w.name)} picks the best package — money isn't everything.</p>`;
+ const lg=ON()?`<p class="muted tiny">Sealed bid — other GMs get one counter, and ${esc(w.name)} picks when week ${due} airs.${others.length?` <b class="gold">${others.length} other offer${others.length>1?'s are':' is'} in.</b>`:''}</p>`:`<p class="muted tiny">Sealed bid: ${esc(S.rival)} may make an offer too. ${esc(w.name)} picks the best package — money isn't everything.</p>`;
  openModal(`<div class="h mhd">📝 Offer to ${esc(w.name)}</div><div class="muted">POP ${Math.round(w.pop)} · asking ${money(signCost(w))} up front and ${money(mkt(w))}/wk</div>
  <div class="tags" style="margin:8px 0">${dealHints(w).map(h=>`<span class="tg">${h}</span>`).join(' ')}</div>
  <div class="h small mt">Signing bonus</div>${dlChips(DL_BONUS,DL.bi,'bi',signCost(w),'')}
@@ -225,7 +225,7 @@ function dealSolo(w,o){const ai=dealAiBid(w);const bids=[{b:'p',o,u:dealU(w,o,'p
  const card=x=>`<div class="card ${ok&&x===top?'mine':''}"><div class="row sb"><b>${x.b==='p'?esc(S.gm):esc(S.rival)}</b>${ok&&x===top?'<span class="tg good">Signed</span>':''}</div><div class="muted tiny">${dealSum(x.o)}</div></div>`;
  openModal(`<div class="h mhd">${ai?'🤝 The sealed offers are in':'📝 '+esc(w.name)+' has an answer'}</div>${bids.map(card).join('')}
  <p>${ok?(top.b==='p'?`<b class="gold">${esc(w.name)} signs with you!</b>${ai?` They went with ${dealWhy(w,top,bids[1])}.`:''} Put them on a show in the next few weeks for a debut pop.`:`<b>${esc(w.name)} signs with ${esc(S.rival)}</b> — they went with ${dealWhy(w,top,bids[1])}.`):`${esc(w.name)} turned it down. They won't take your calls again until next week.`}</p>
- ${ok&&top.b==='p'&&o.perks.length?`<p class="muted tiny">Now in their contract: ${o.perks.map(k=>PERKS[k].i+' '+PERKS[k].n).join(', ')}. Keep your word — you'll see what's owed on the Book screen.</p>`:''}<button class="btn" onclick="closeModal()">OK</button>`)}
+ ${ok&&top.b==='p'&&o.perks.length?`<p class="muted tiny">Now in their contract: ${o.perks.map(k=>PERKS[k].i+' '+PERKS[k].n).join(', ')}. You'll see what's owed on the Book screen.</p>`:''}<button class="btn" onclick="closeModal()">OK</button>`)}
 
 /* league: offers that are due get decided when the week airs (runs inside the airing, so every phone agrees) */
 function dealResolveAll(notes){DEAL_OUT=[];if(!S.offers||!ON())return;const now=AW();

@@ -249,16 +249,6 @@ function cashOpts(m,b){const out=[];if(!S||!S.mitb||!m||!m.sides||isSp(m))return
  for(const id in S.mitb){const A=S.w[id];if(!A||A.own!==b||A.inj)continue;
   WORLD_T[A.g].forEach(tid=>{const t=S.titles[tid];if(!t||t.holders.length!==1)return;const c=t.holders[0];const C=S.w[c];if(!C||C.own!==b||c===id||!ids.includes(c))return;out.push({a:id,t:tid,c})})}
  return out}
-/* the match editor's cash-in row */
-function cashRow(m,ok){if(!ok)return '';const l=cashOpts(m,'p');if(!l.length){if(m.cash)delete m.cash;return ''}
- if(m.cash&&!l.some(o=>o.a===m.cash.a&&o.t===m.cash.t))delete m.cash;
- const cur=m.cash;const nm=id=>esc(S.w[id].name);const opts=[{t:'No cash-in',sub:'Keep the briefcase for another night',on:!cur,pick:()=>{delete ED.m.cash;renderMatchEd(true)}}];
- l.forEach(o=>{const T=S.titles[o.t];const bell=m.type==='singles'&&m.title===o.t&&m.sides.flat().includes(o.a);
-  if(bell)opts.push({group:'Announced',t:`💼 This match is ${nm(o.a)}'s cash-in`,sub:`Uses the briefcase — the ${esc(T.n)} title is on the line, and the finish you picked decides it (+¼★)`,on:!!(cur&&cur.a===o.a&&cur.t===o.t&&cur.bell),pick:()=>{ED.m.cash={a:o.a,t:o.t,bell:1};renderMatchEd(true)}});
-  else{opts.push({group:'Right after the match',t:`💼 ${nm(o.a)} cashes in on ${nm(o.c)} — and wins`,sub:`The ${esc(T.n)} title changes hands on a worn-out champion (+½★ to this match)`,on:!!(cur&&cur.a===o.a&&cur.t===o.t&&!cur.bell&&cur.w),pick:()=>{ED.m.cash={a:o.a,t:o.t,w:1};renderMatchEd(true)}},
-   {t:`💼 ${nm(o.a)} cashes in on ${nm(o.c)} — ${nm(o.c)} survives`,sub:'The briefcase is gone, but the champion pulls it out (+¼★)',on:!!(cur&&cur.a===o.a&&cur.t===o.t&&!cur.bell&&!cur.w),pick:()=>{ED.m.cash={a:o.a,t:o.t,w:0};renderMatchEd(true)}})}});
- const A=cur&&S.w[cur.a];const t=cur?(cur.bell?`💼 ${esc(A.name)}'s cash-in`:`💼 ${esc(A.name)} cashes in afterwards`):'No cash-in';
- return `<label>Money in the Bank</label>${dd('cash',{title:t,sub:cur?(cur.bell?'Announced — the briefcase is used':cur.w?`${esc(S.w[S.titles[cur.t].holders[0]].name)} loses the ${esc(S.titles[cur.t].n)} title`:`${esc(S.w[S.titles[cur.t].holders[0]].name)} survives`):`${l.length>1?'Cash-ins available':'A cash-in is available'} — the champion is in this match`,rerender:()=>renderMatchEd(true),opts})}`}
 /* during the show: the cash-in happens straight after the match it's attached to */
 function cashAfter(b,m,res,notes,ctx){const c=m.cash;if(!c)return;const A=S.w[c.a],t=S.titles[c.t];const mine=b==='p'||ON();if(!A||!t||!mitbOf(c.a))return;
  const bump=v=>{res.u=(res.u!=null?res.u:res.stars)+v;res.stars=clamp(res.u,.25,5);(res.bdx=res.bdx||[]).push(['Money in the Bank cash-in',v])};

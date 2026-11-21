@@ -286,7 +286,7 @@ window.attnGate=function(){if(OK_WK===AW())return false;let l;try{l=attnItems()}
  <button class="btn" onclick="closeModal()">Fix it first</button><button class="btn sec" onclick="attnGoAnyway()">Go live anyway</button>`);return true};
 window.attnGoAnyway=function(){OK_WK=AW();closeModal();goLive()};
 window.attnBookMatch=function(i,id){closeModal();if(typeof openMatchWith==='function')openMatchWith(i,id)};
-window.attnBookPromo=function(i,id){closeModal();if(typeof tcGo==='function'&&tcGo(i,[id]))return;if(typeof openPromo!=='function')return;openPromo(i);if(typeof PE!=='undefined'&&PE){PE.a=id;if(PE.b===id)PE.b='';renderPromoEd(true)}};
+window.attnBookPromo=function(i,id){closeModal();if(typeof tcGo==='function'&&tcGo(i,[id]))return;if(typeof openPromo==='function')openPromo(i)};
 window.attnNeg=function(id){closeModal();dealNegotiate(id)};
 window.attnResign=function(id){resign(id);render()};
 
@@ -414,19 +414,18 @@ const chipRow=(lab,l,g)=>l.length?`<div class="drow2"><span class="k ${g?'g':''}
 /* chips for a segment that isn't saved yet: try it on the card for a moment */
 function chipsWith(i,seg){const c=S.card&&S.card.p;if(!c||i==null||!c[i])return [];const sv=c[i];let out=[];c[i]=Object.assign({},sv,{d:seg});
  try{(attnItems()||[]).forEach(x=>{if(!x.chip)return;try{const r=x.chip(i);if(r)out.push(r)}catch(e){}})}catch(e){}finally{c[i]=sv}return out}
-/* the details block in the match editor */
-window.matchDetails=function(m,sh,notes){const d=mdOf(m,sh);const r=d.r;
- if(d.sq)return `<div class="det"><div class="dh">Match details</div><div class="muted tiny" style="padding:8px 0">A squash is short: the winner's star power decides it.</div><div class="row sb" style="padding-top:8px;border-top:1px solid var(--line)"><span class="muted">Crowd buzz</span>${tellHtml(r,true)}</div>${notes||''}</div>`;
+/* v388: the read-only breakdown behind a booked slot's Details button (the old editors are gone) */
+window.matchDetails=function(m,sh,i){const d=mdOf(m,sh);const r=d.r;
+ if(d.sq)return `<div class="det"><div class="dh">Match details</div><div class="muted tiny" style="padding:8px 0">A squash is short: the winner's star power decides it.</div><div class="row sb" style="padding-top:8px;border-top:1px solid var(--line)"><span class="muted">Crowd buzz</span>${tellHtml(r,true)}</div></div>`;
  const ws=m.sides.map(s=>s.map(id=>S.w[id]).filter(Boolean));let chem='';
  if(ws.length>=2&&ws[0][0]&&ws[1][0]){const a=ws[0][0],b=ws[1][0];chem=partsHtml(chemParts(a,b))+(metPair(a.id,b.id)?'':NEWPAIR)}
- const req=chipsWith(ED&&ED.i,m);
+ const req=chipsWith(i,m);
  return `<div class="det"><div class="dh">Match details</div>
  ${row('Talent',d.p.talent,esc(d.talentW))}
- ${row('Chemistry',d.p.chem,chem||esc(chemWord(r.chem)),'styChart()')}
+ ${row('Chemistry',d.p.chem,chem||esc(chemWord(r.chem)),ws[0][0]?`styChart('${ws[0][0].id}','segDetails(${i})')`:null)}
  ${row('Story',d.p.story,esc(d.storyW))}
  ${row('Extras',d.p.extras,esc(d.extrasW))}
  ${chipRow('Requests',req,1)}${chipRow('Holding back',d.back)}
- ${notes||''}
  <div class="row sb" style="padding-top:10px;margin-top:4px;border-top:1px solid var(--line)"><span class="muted">Crowd buzz</span><span class="tellrow" style="margin:0">${tellHtml(r,true)}</span></div>
   <details class="whyd" style="margin-top:8px"><summary>Full chemistry breakdown</summary>${whyMatch(m,sh)}</details></div>`};
 /* the small pip strip on a booked slot */
@@ -451,27 +450,23 @@ function pdOf(p){const A=S.w[p.a],B=p.b&&S.w[p.b];if(!A)return null;const mm=w=>
   storyW:!B?'Solo segment — no rivalry to build':h>=35?`Hot feud (heat ${Math.round(h)})`:h>=1?`Feud heat ${Math.round(h)}`:'No feud between them yet',back}}
 window.pdOf=pdOf;
 const tellSpan=st=>{const t=tellOf(st,1);return `<span class="tell ${t[3]} big">${t[1]} ${t[2]}</span>`};
-window.promoDetails=function(p){const d=pdOf(p);if(!d)return '';const req=chipsWith(typeof PE!=='undefined'&&PE?PE.i:null,{type:p.type,a:p.a,b:p.b||''});
+window.promoDetails=function(p,i){const d=pdOf(p);if(!d)return '';const req=chipsWith(i,{type:p.type,a:p.a,b:p.b||''});
  return `<div class="det"><div class="dh">Promo details</div>
- ${row('Talent',d.p.talent,esc(d.talentW))}${row('Fit',d.p.fit,esc(d.fitW))}${row('Story',d.p.story,esc(d.storyW))}${row('Your calls',0,'Decided live: the choices you make when it airs swing the rating up or down',null,1)}
+ ${row('Talent',d.p.talent,esc(d.talentW))}${row('Fit',d.p.fit,esc(d.fitW))}${row('Story',d.p.story,esc(d.storyW))}${row('Your calls',0,'Decided live, if it gets a showdown',null,1)}
  ${chipRow('Requests',req,1)}${chipRow('Holding back',d.back)}
  <div class="row sb" style="padding-top:10px;margin-top:4px;border-top:1px solid var(--line)"><span class="muted">Crowd buzz</span>${tellSpan(promoEst(p))}</div></div>`};
+window.segDetails=function(i){const sl=S.card&&S.card.p[i];if(!sl||!sl.d)return;const sh=curShow();
+ const body=sl.k==='promo'?promoDetails(sl.d,i):matchDetails(sl.d,sh,i);
+ openModal(`<div class="row sb"><div class="h mhd" style="margin:0">${sl.k==='promo'?'Promo':(()=>{try{const l=mLab(S.card.p,i);return l.main?'Main event':l.lab}catch(e){return 'Match'}})()}</div><button class="mini" onclick="closeModal()">Close</button></div>${body}
+ <button class="btn sec mt" onclick="closeModal();tcGo(${i})">Change it</button>`)};
 window.promoPips=function(p,i){const d=pdOf(p);if(!d)return '';const ch=attnChips(i);
  return `<div class="mpip"><div>Talent${segH(d.p.talent)}</div><div>Fit${segH(d.p.fit)}</div><div>Story${segH(d.p.story)}</div><div>Your calls${pipH(0,1).replace('? ? ? ? ?','? ? ?')}</div></div>${ch||d.back.length?`<div class="tags">${ch}${d.back.slice(0,2).map(([k,t])=>`<span class="tg ${k==='b'?'bad':'warnt'}">${esc(t)}</span>`).join('')}</div>`:''}<div class="tellrow">${tellSpan(promoEst(p))}</div>`};
 
-/* the strip under each wrestler in an editor: ability pips, morale, stamina, and what they're asking for */
-window.edInfo=function(w,promo,gain,extra){if(!w)return '';const m=attnMood(w.mor);const mc=w.mor>=65?'good':w.mor>=50?'':w.mor>=35?'warnt':'bad';
- const sw=v=>v>=80?['Fresh','good']:v>=100-FAT_OK?['Worn','']:v>=100-FAT_RISK?['Tired','warnt']:['Exhausted','bad'];const s=sw(sta(w));const after=gain?sw(sta(w)-gain):null;
- const ask=typeof attnAsk==='function'?attnAsk(w.id):null;
- return `<div class="edi a${w.al}">${promo?`<span>Mic</span>${pipH(statP(w.mic))}`:`<span>Ring</span>${pipH(statP(w.ring))}`}<span>Star</span>${pipH(statP(w.pop))}<span>Morale</span><span class="${mc}">${m}</span><span>Stamina</span><span class="${s[1]} stv">${s[0]}${after&&after[0]!==s[0]?`<span class="muted"> → </span><span class="${after[1]}">${after[0]}</span>`:''}</span>${extra||''}${ask?`<span class="ask">🎤 ${esc(ask.t)}</span>`:''}</div>`};
-
-/* the style chart behind Chemistry's "?" */
-window.styChart=function(){const m=ED&&ED.m;const ws=m?m.sides.map(s=>s.map(id=>S.w[id]).filter(Boolean)):[];const a=ws[0]&&ws[0][0],b=ws[1]&&ws[1][0];const ks=Object.keys(STYLE_N);
- const word=v=>v>=6?['Clicks','c6']:v>=4?['Good','c4']:v>=2?['Okay','']:['Flat','c0'];
- openModal(`<div class="row sb"><div class="h mhd" style="margin:0">How chemistry works</div><button class="mini" onclick="renderMatchEd(true)">Back</button></div>
- <p class="muted tiny">Chemistry adds up a few things: styles that complement each other, a face against a heel, a good history from past matches, and traits like monster vs underdog. Pairs who have never shared a ring are judged on paper — their real chemistry shows after the first match.</p>
- <div style="overflow-x:auto"><table class="stygrid"><tr><th></th>${ks.map(k=>`<th>${STYLE_N[k]}</th>`).join('')}</tr>${ks.map(x=>`<tr><th>${STYLE_N[x]}</th>${ks.map(y=>{const w=word(STY[x][y]);return `<td class="${w[1]}${a&&b&&x===a.st&&y===b.st?' hi':''}">${w[0]}</td>`}).join('')}</tr>`).join('')}</table></div>
- ${a&&b?`<p class="tiny muted">Outlined: ${esc(a.name)} (${STYLE_N[a.st]}) against ${esc(b.name)} (${STYLE_N[b.st]}).</p>`:''}
- <p class="tiny muted">Face vs heel adds chemistry and builds heat faster. Two elite workers on the same side get a dream-match bonus instead.</p>
- <button class="btn" onclick="renderMatchEd(true)">Back to the match</button>`)};
+/* the style chart — opened from a wrestler's page (v388: was behind the old match editor's Chemistry "?") */
+window.styChart=function(id,back){const w=id&&S.w[id];const ks=Object.keys(STYLE_N);
+ const word=v=>v>=6?['Clicks','c6']:v>=4?['Good','c4']:v>=2?['Okay','']:['Flat','c0'];back=back||(w?`showW('${id}')`:'closeModal()');
+ openModal(`<div class="row sb"><div class="h mhd" style="margin:0">How chemistry works</div><button class="mini" onclick="${back}">Back</button></div>
+ <p class="muted tiny">Styles that click, face vs heel, past matches and traits all add up. First-time pairs are judged on paper until they share a ring.</p>
+ <div style="overflow-x:auto"><table class="stygrid"><tr><th></th>${ks.map(k=>`<th>${STYLE_N[k]}</th>`).join('')}</tr>${ks.map(x=>`<tr${w&&x===w.st?' class="hr"':''}><th>${STYLE_N[x]}</th>${ks.map(y=>{const c=word(STY[x][y]);return `<td class="${c[1]}">${c[0]}</td>`}).join('')}</tr>`).join('')}</table></div>
+ ${w?`<p class="tiny muted">Highlighted: ${esc(w.name)}'s row (${STYLE_N[w.st]}).</p>`:''}`)};
 })();

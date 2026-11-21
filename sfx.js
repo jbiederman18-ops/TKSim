@@ -159,7 +159,7 @@ window.SFX={play:safe(play),stars:safe(starRun),blip:safe(blip),stamp:safe(stamp
 /* the Game menu card */
 window.sfxCard=function(){const p=prefs();return `<div class="card"><div class="row sb"><div class="h small" style="margin:0">🔊 Sound effects</div><div class="chips" style="margin:0"><button class="chip ${p.on?'on':''}" onclick="SFX.set(true);SFX.play('confirm');render()">On</button><button class="chip ${p.on?'':'on'}" onclick="SFX.set(false);render()">Off</button></div></div>
  ${p.on?`<label class="muted tiny" for="sfxVol" style="display:block;margin-top:10px">Volume</label><input id="sfxVol" type="range" min="0" max="100" value="${Math.round(p.vol*100)}" style="width:100%;accent-color:var(--gold)" oninput="SFX.set(null,this.value/100)" onchange="SFX.play('bell2')">`:''}
- <p class="muted tiny" style="margin:8px 0 0">The ring bell, the crowd, star reveals and your calls landing. On party night your phone stays quiet and the TV plays them for the room.</p></div>`};
+ <p class="muted tiny" style="margin:8px 0 0">On party night the TV plays the sound and phones stay quiet.</p></div>`};
 
 /* ===================== hooks ===================== */
 const wrap=(name,fn)=>{const f0=window[name];if(typeof f0!=='function')return;const w=function(){return fn(f0,this,arguments)};window[name]=w};

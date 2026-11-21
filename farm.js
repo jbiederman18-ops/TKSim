@@ -175,7 +175,7 @@ window.farmRelease=function(id){const f=F('p'),w=f.r[id];if(!w)return;if(!confir
 window.farmExc=function(id,k){const f=F('p'),w=f.r[id];if(!w||!EXC[k])return;if(w.exc)return;if(w.done)return toast(`${w.name} has already been on excursion.`);
  w.exc={k,until:AW()+EXC_WK};if(f.feat===id)f.feat=null;news(`✈️ ${w.name} is off on a ${EXC_WK}-week excursion to ${EXC[k].n}.`);save();closeModal();render()};
 window.farmExcPick=function(id){const w=F('p').r[id];if(!w)return;
- openModal(`<div class="h mhd">✈️ Excursion</div><p class="muted" style="margin-top:0">${esc(w.name)} leaves for ${EXC_WK} weeks, develops much faster than on ROH TV, and comes back sharper (a little more in-ring and mic on top) with a fresh look. Once per career. They can't be called up while they're away.</p>
+ openModal(`<div class="h mhd">✈️ Excursion</div><p class="muted" style="margin-top:0">${esc(w.name)} leaves for ${EXC_WK} weeks and comes back better, with a fresh look. Once per career.</p>
  ${Object.entries(EXC).map(([k,x])=>`<div class="card"><b>${x.f} ${x.n}</b><div class="muted" style="margin:4px 0 8px">${x.d}</div><button class="btn" onclick="farmExc('${id}','${k}')">Send to ${x.n}</button></div>`).join('')}
  <button class="btn ghost" onclick="closeModal()">Not yet</button>`)};
 
@@ -207,7 +207,7 @@ function prospectCard(w,i){const T=TIERS[w.tier]||TIERS.prospect;const c=signCos
   <div class="row" style="gap:8px;margin-top:8px;align-items:center"><button class="mini on" ${poor?'disabled':''} onclick="farmSign('${SREG}',${i},'aew')">Sign to AEW</button><button class="mini" ${poor||full?'disabled':''} onclick="farmSign('${SREG}',${i},'roh')">To ROH${full?' (full)':''}</button><span class="muted tiny" style="margin-left:auto;text-align:right">${money(c)}<br>${money(w.fee)} fee + 4 wks</span></div></div>`}
 function scoutHub(){scoutFresh();const s=S.scout;if(!s)return '';boards();const n=scoutLeft();const l=board(SREG);
  return `<div class="card mt" id="faPros" style="scroll-margin-top:70px"><div class="row sb"><div class="h small" style="margin:0">🔎 Scouting</div><span class="muted tiny">New boards in ${n} wk${n>1?'s':''}</span></div>
-  <div class="muted tiny" style="margin:4px 0 8px">ROH roster ${farmL('p').length}/${FARM_MAX} · <details class="ohow" style="display:inline"><summary>AEW or ROH?</summary><span class="muted tiny">${REG[SREG].d} Sign to <b>AEW</b> (uses a roster spot, bookable now) or to <b>ROH</b> (half salary, develops on ROH TV, call up any time).</span></details></div>${regionChips()}</div>
+  <div class="muted tiny" style="margin:4px 0 8px">ROH roster ${farmL('p').length}/${FARM_MAX} · <details class="ohow" style="display:inline"><summary>AEW or ROH?</summary><span class="muted tiny">${REG[SREG].d} <b>AEW</b>: bookable now. <b>ROH</b>: half salary, develops, call up any time.</span></details></div>${regionChips()}</div>
   ${l.length?l.map(prospectCard).join(''):'<p class="muted center">You signed everyone on this board. New names arrive soon.</p>'}<button class="btn sec" onclick="openCreate()">✏️ Design your own prospect</button>`}
 if(typeof faProspects==='function'){faProspects=function(){try{return scoutHub()}catch(e){console.warn(e);return ''}}}
 
@@ -219,7 +219,7 @@ function farmCard(w){const f=F('p');const ft=f.feat===w.id;const X=w.exc&&EXC[w.
 function farmView(){const l=farmL('p').sort((a,b)=>b.ring-a.ring);const pay=l.reduce((x,w)=>x+(w.fsal||fsal(w)),0);
  const cand=ownList('p').filter(downOk);
  return `${pageHead('Ring of Honor','ROH',`<b>${money(pay)}</b><small>ROH payroll / wk</small>`,{sub:`${l.length}/${FARM_MAX} wrestlers · develop on ROH TV every week`})}${chips('rf',[['mine','Mine'],['rival','Rival'],['fa','Free agents'],['roh','🏟️ ROH'],['all','All']],rf)}
- <div class="card mt"><div class="muted">Everyone here works ROH TV each week and keeps growing — slower than the Performance Center, but there's room for ${FARM_MAX} and they don't take AEW roster spots. <b>⭐ Feature</b> one to grow faster and build popularity (up to ${ROH_POP_CAP}). <b>✈️ Excursion</b> sends someone abroad for ${EXC_WK} weeks to come back better. Call anyone up whenever you need them.</div>
+ <div class="card mt"><div class="muted">Room for ${FARM_MAX}, growing weekly on ROH TV without using AEW spots. <b>⭐ Feature</b> to grow faster (popularity up to ${ROH_POP_CAP}) · <b>✈️ Excursion</b> for a bigger jump.</div>
  <button class="btn sec" style="margin-top:10px" onclick="rf='fa';SREG_SET('roh')">🔎 Scout new talent</button></div>
  ${l.length?l.map(farmCard).join(''):'<p class="muted center">Nobody on ROH yet. Sign prospects to ROH from Scouting, or send a rookie down.</p>'}
  ${cand.length?`<div class="card"><div class="h small">Send down</div><div class="muted" style="margin-bottom:8px">Rookies and anyone at 45 popularity or lower can go to ROH to develop. Champions can't.</div>${cand.slice(0,12).map(w=>`<div class="prow">${face(w)}<div class="wl"><div class="wn">${esc(w.name)}</div><div class="muted tiny">Popularity ${Math.round(w.pop)} · Ring ${Math.round(w.ring)}${w.rookie?' · ROOKIE':''}</div></div><button class="mini" onclick="sendDown('${w.id}')">🏟️ Send down</button></div>`).join('')}</div>`:''}`}

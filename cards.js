@@ -382,7 +382,7 @@ function slotHtml(i){const c=card(),sl=c[i];if(xoV(sl))return xoHtml(i);let act=
  const tl=tellFor(i);
  return `<div class="tcs ${act?'act':''} ${main?'me':''} ${opt?'opt':''}" data-tcs="${i}" data-dp="slot:${i}">
  <div class="tcnum" data-dg="slot:${i}" title="Hold and drag to move it">${i+1}</div>
- <div class="tcin"><div class="tchd"><span class="tclb">${esc(slotLab(i))}${tr&&TOURS[d.tour.k]?` · ${TOURS[d.tour.k].i} ${esc(TOURS[d.tour.k].n)} ${esc(d.tour.lab)}`:fl&&d.sp&&SPK[d.sp]?` · ${SPK[d.sp].i} ${esc(SPK[d.sp].n)}`:fl&&d.type==='gauntlet'?' · 🎰 Casino Gauntlet':op?' · 🎤 Open challenge':''}${d&&d.stip==='bng'?' · Blood &amp; Guts':''}</span>${tl?`<span class="tctl">${tl}</span>`:empty&&!live?`<span class="tcbk">${opt?'Add':'Book it'}</span>`:''}${!empty?`<button class="tcdet" onclick="event.stopPropagation();${promo?'openPromo':'openMatch'}(${i})">Details</button>`:''}</div>
+ <div class="tcin"><div class="tchd"><span class="tclb">${esc(slotLab(i))}${tr&&TOURS[d.tour.k]?` · ${TOURS[d.tour.k].i} ${esc(TOURS[d.tour.k].n)} ${esc(d.tour.lab)}`:fl&&d.sp&&SPK[d.sp]?` · ${SPK[d.sp].i} ${esc(SPK[d.sp].n)}`:fl&&d.type==='gauntlet'?' · 🎰 Casino Gauntlet':op?' · 🎤 Open challenge':''}${d&&d.stip==='bng'?' · Blood &amp; Guts':''}</span>${tl?`<span class="tctl">${tl}</span>`:empty&&!live?`<span class="tcbk">${opt?'Add':'Book it'}</span>`:''}${!empty?`<button class="tcdet" onclick="event.stopPropagation();segDetails(${i})">Details</button>`:''}</div>
  ${sum}${mat?`<div class="tcmat${many?' many':''}${fld?' fld':''}">${mat}</div>`:''}${mods?`<div class="tcmods">${mods}</div>`:''}</div></div>`}
 /* the pick sheet (v280): tap a space on the table and the best cards for it slide up; tap one to place it */
 function sheetTitle(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';const L=slotLab(i);
@@ -437,7 +437,7 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
  else if(TC.mode==='x'||TC.mode==='t'){const xs=extras(i,TC.mode);body=xs.length?`<div class="tcgx">${xs.map(x=>`<div class="tx ${x.fit?'fit':''} ${x.on?'on':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span></div>`).join('')}</div>`:`<div class="tcempty">${promo?'Pick who’s on the mic first.':TC.mode==='t'&&sl.d?'No championship fits this match — a belt needs its champion in there (or, if it’s vacant, the right kind of match), and everyone in it from the belt’s division. Intergender matches are non-title.':'Fill both sides first.'}</div>`}
  else if(!tg&&!TC.rep&&m.type==='squash')body=`<div class="tcempty">${esc(sideName(m.sides[0]))} squashes ${esc(sideName(m.sides[1]))}. Tap someone on the card to swap them, or:</div><div class="tcsf"><button class="btn sec" data-tcx="l:1">🧑‍🔧 ${m.loc?'Different local talent':'Use local enhancement talent'}</button></div>`;
  else if(!tg&&!TC.rep&&m.type==='open'){const h=m.open&&m.open.hope&&W_(m.open.hope);body=`<div class="tcempty">🎤 ${esc(sideName(m.sides[0]))} throws the door open. Someone answers live — from your roster or the free agents, usually at the challenger's level.${h?` The crowd is hoping for <b>${esc(h.name)}</b>: give them that (or someone bigger) and the place erupts.`:''}</div>`}
- else if(!tg&&!TC.rep)body=`<div class="tcempty">Every space is filled. Pick a bigger match above to add more, or tap someone on the table to swap them out.</div>`;
+ else if(!tg&&!TC.rep)body=`<div class="tcempty">Card's full — pick a bigger match or tap someone to swap.</div>`;
  else{const l=sheetCards(i,m,tg);
   const lt=m.type==='squash'&&tg&&tg.t==='side'&&tg.i===1&&!TC.rep?`<div class="tcsf"><button class="btn sec" data-tcx="l:1">🧑‍🔧 Use local enhancement talent — costs nothing</button></div>`:'';
   if(!l.length)body=lt+`<div class="tcempty">Nobody fits that filter tonight.</div>`;
@@ -776,7 +776,6 @@ const r0=render;render=window.render=function(){const o=r0.apply(this,arguments)
 if(typeof suggestFill==='function'){const sf=suggestFill;suggestFill=window.suggestFill=function(){TC.dr={};return sf.apply(this,arguments)}}
 if(typeof clearCard==='function'){const cc=clearCard;clearCard=window.clearCard=function(){TC.dr={};return cc.apply(this,arguments)}}
 /* the full editors hand the slot back to the table when they close */
-['saveMatch','savePromo','clearSlot'].forEach(fn=>{const f=window[fn];if(typeof f!=='function')return;window[fn]=function(){const i=fn==='savePromo'?(PE&&PE.i):(ED&&ED.i);const r=f.apply(this,arguments);if(i!=null)delete TC.dr[i];return r}});
 
 /* ---------------- the office line: a stack of cards ---------------- */
 function lineDeck(){if(!on())return;const m=document.querySelector('#modal .sbody');if(!m||!m.querySelector('.ibx-k')||m.dataset.tcl)return;m.dataset.tcl='1';
@@ -800,7 +799,7 @@ function lineDeck(){if(!on())return;const m=document.querySelector('#modal .sbod
  const btns=[...m.querySelectorAll('.scene button, .brow button, .choice')].filter(b=>!b.disabled&&b.offsetParent!==null&&!/later|back|close/i.test(b.textContent));
  if(btns.length!==2)return;const [yes,no]=btns;
  box.insertAdjacentHTML('beforeend',`<div class="tcstamp y">${esc(yes.textContent.trim().slice(0,24))}</div><div class="tcstamp n">${esc(no.textContent.trim().slice(0,24))}</div>`);
- if(hintN()<15)m.insertAdjacentHTML('beforeend','<p class="muted tiny center tcswh">Swipe the card right or left to answer, or tap a button.</p>');
+ if(hintN()<3)m.insertAdjacentHTML('beforeend','<p class="muted tiny center tcswh">Swipe the card right or left to answer, or tap a button.</p>');
  let x0=null,y0=0,dx=0,pid=null,go=false;
  box.addEventListener('pointerdown',e=>{if(e.target.closest('button,a,input,details,summary,select'))return;x0=e.clientX;y0=e.clientY;dx=0;pid=e.pointerId;go=false});
  box.addEventListener('pointermove',e=>{if(x0===null||e.pointerId!==pid)return;dx=e.clientX-x0;const dy=e.clientY-y0;if(!go){if(Math.abs(dx)>14&&Math.abs(dx)>Math.abs(dy)*1.3)go=true;else{if(Math.abs(dy)>14)x0=null;return}}

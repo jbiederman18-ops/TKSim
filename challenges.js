@@ -114,7 +114,7 @@ window.chalPicked=function(id){const c=C(),w=S.w[id];if(!c||!w)return;c.a=id;c.p
 
 /* ---------------- Home card + result ---------------- */
 function card(){const c=C();if(!c||ON())return '';const sc=CH(c.id);if(!sc)return '';
- if(c.st==='won')return `<div class="card good" onclick="chalResult()" style="cursor:pointer"><b>${sc.i} Challenge complete: ${esc(sc.t)}</b><div class="muted">Beaten in week ${c.at}. The season carries on as a normal game.</div></div>`;
+ if(c.st==='won')return `<div class="card good" onclick="chalResult()" style="cursor:pointer"><b>${sc.i} Challenge complete: ${esc(sc.t)}</b><div class="muted">Beaten in week ${c.at}.</div></div>`;
  if(c.st==='lost')return `<div class="card warn" onclick="chalResult()" style="cursor:pointer"><b>${sc.i} Challenge failed: ${esc(sc.t)}</b><div class="muted">${esc(c.why||'')} Try again from ⇄ Your games → Solo game → 🎯 Challenge scenarios.</div></div>`;
  if(c.need==='pick')return `<div class="card warn"><b>${sc.i} ${esc(sc.t)}</b><div class="muted">${sc.goal}</div><button class="btn" style="margin-top:8px" onclick="chalPick()">Choose your project</button></div>`;
  const p=sc.prog(),left=sc.by-S.week+1;
@@ -122,8 +122,7 @@ function card(){const c=C();if(!c||ON())return '';const sc=CH(c.id);if(!sc)retur
   <div style="height:8px;border-radius:4px;background:var(--line,#333);overflow:hidden"><div style="height:100%;width:${p.pct}%;background:var(--gold2,#e8c35a)"></div></div><div class="tiny" style="margin-top:6px">${p.txt}</div></div>`}
 window.chalResult=function(){const c=C();if(!c)return;const sc=CH(c.id);c.seen=1;save();if(!sc)return;
  openModal(`<div class="h mhd">${c.st==='won'?'🎉 Challenge complete':'Challenge over'}</div><p style="font-size:1.1em"><b>${sc.i} ${esc(sc.t)}</b></p>
- <p class="muted">${c.st==='won'?`You did it in week ${c.at}. It's saved to your challenge record on this device.`:esc(c.why||'')}</p>
- <p class="muted tiny">This save keeps going as a normal game. Start another challenge from the setup screen.</p><button class="btn" onclick="closeModal()">Keep playing</button>`)};
+ <p class="muted">${c.st==='won'?`You did it in week ${c.at}. It's saved to your challenge record on this device.`:esc(c.why||'')}</p><button class="btn" onclick="closeModal()">Keep playing</button>`)};
 if(typeof homeView==='function'){const h0=homeView;homeView=function(){const out=h0.apply(this,arguments);let k='';try{k=card();const c=C();if(c&&c.st!=='on'&&!c.seen)setTimeout(()=>{try{chalResult()}catch(e){}},400)}catch(e){}
  if(!k)return out;const i=out.indexOf('<div class="tiles">');return i<0?k+out:out.slice(0,i)+k+out.slice(i)}}
 if(typeof setupView==='function'){const s0=setupView;setupView=function(){const out=s0.apply(this,arguments);

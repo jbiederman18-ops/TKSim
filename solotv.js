@@ -45,7 +45,7 @@ function stvStop(){clearTimeout(STV_T);STV=null;stvKeep();if(typeof closeModal==
 function stvShow(){if(!STV)return;openModal(`<i class="mp-ok" hidden></i><div class="h mhd">📺 Your game is on the TV</div>
  <p>On the TV (or a laptop hooked up to it): open the game, tap <b>Show a league on this screen</b> and enter</p>
  <div style="font:900 italic 40px/1 'BC',sans-serif;letter-spacing:8px;text-align:center;margin:10px 0 14px" class="gold">${esc(STV.code)}</div>
- <p class="muted">It works just like party night with you as the only GM: the TV shows your booking night and office answers, mirrors your live show while you make the calls here, then plays the results. Your phone stays quiet — the TV has the sound. The computer GM's show counts as locked in.</p>
+ <p class="muted">Party night with you as the only GM: the TV shows the show and has the sound, your phone makes the calls.</p>
  <p class="muted tiny">Use a different device (or a different browser) for the TV — a browser that's showing a TV opens as the TV until you tap Exit TV.</p>
  <button class="btn" onclick="closeModal()">Got it</button><button class="btn ghost danger" onclick="stvStop()">Take it off the TV</button>`)}
 /* ⚙️ Game menu → solo game */

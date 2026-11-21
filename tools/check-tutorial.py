@@ -82,12 +82,12 @@ async def main(shots):
             if await expect_offer('first-week'):
                 await walk('first-week')
 
-            # coach tips: the match editor, the PPV card and the results
+            # coach tips: match details, the PPV card and the results
             await pg.evaluate("go('book')"); await pg.evaluate('suggestFill()'); await pg.wait_for_timeout(300)
-            await pg.evaluate("openMatch(S.card.p.map(s=>s.k).lastIndexOf('match'))")
+            await pg.evaluate("segDetails(S.card.p.map(s=>s.k+(s.d?'1':'')).lastIndexOf('match1'))")
             await pg.wait_for_timeout(900)
             if await pg.evaluate("!(TUT&&TUT.steps[0].id==='t.editor')"):
-                problems.append('t.editor: coach tip did not appear in the match editor')
+                problems.append('t.editor: coach tip did not appear in match details')
             else:
                 visited.append('t.editor'); await shot('t.editor'); await pg.evaluate('tutNext()')
             await pg.evaluate('closeModal()')

@@ -139,7 +139,7 @@ function netLine(v){const g=S.fans0&&S.fans0.p?S.fans.p/S.fans0.p:1,bz=typeof bu
   `It's a start. More people watched than the deal was built on, so the network owes you a little.`,
   `Small check this time. Grow the audience and I'll bring a bigger one.`],seed)}
 function openNet(){const v=S.view&&S.view.p;if(!v||!v.amt)return closeModal();
- openModal(`<div class="h mhd mt">📺 The network, with a check</div><div class="scene brief ibx">${voiceH(NET_WHO,netLine(v))}<div class="brow"><span class="muted tiny">Your viewership bonus from the last ${v.wks} week${v.wks===1?'':'s'}: ${esc(money(v.amt))}. It builds up as your audience grows past what your TV deal was signed for, and arrives after each PPV.</span></div></div>
+ openModal(`<div class="h mhd mt">📺 The network, with a check</div><div class="scene brief ibx">${voiceH(NET_WHO,netLine(v))}<div class="brow"><span class="muted tiny">Your audience has outgrown your TV deal — ${esc(money(v.amt))} for the last ${v.wks} week${v.wks===1?'':'s'}.</span></div></div>
  <button class="choice" onclick="netTake()"><span class="key"><span>A</span></span><div>🤝 "Pleasure doing business" · +${esc(money(v.amt))}</div><div class="muted tiny">It goes straight into the bank.</div></button>`)}
 window.netTake=function(){if(typeof mpLocked==='function'&&mpLocked())return;const v=S.view&&S.view.p;if(!v||!v.amt)return closeModal();const amt=v.amt;
  S.money.p+=amt;S.view.p={amt:0,wks:0};news(`📺 The network paid ${S.gm||'you'} a ${money(amt)} viewership bonus.`);save();try{render()}catch(e){}const left=inboxList().length;
@@ -220,7 +220,7 @@ function openAsk(id){const a=askList().find(x=>x.id===id);if(!a)return closeModa
  <div class="scene brief ibx">${voiceH(a.who,a.line)}<div class="brow"><span class="muted tiny">${esc(a.d)}</span></div></div>
  <div class="muted tiny" style="margin:8px 0">${esc(w.name)} · ${typeof attnMood==='function'?esc(attnMood(w.mor)):'morale '+Math.round(w.mor)} · POP ${Math.round(w.pop)} · ${w.al==='f'?'Face':'Heel'}</div>
  <button class="choice" onclick="askAnswer('${id}',1)"><span class="key"><span>A</span></span><div>✓ "${esc(K.y)}"</div><div class="muted tiny">${esc(yD)}</div></button>
- ${P?`<button class="choice" onclick="askAnswer('${id}',2)"><span class="key"><span>B</span></span><div>🎟️ "You get your shot at ${esc(P.n)}"</div><div class="muted tiny">${esc(`${w.name} vs ${P.h.name} for the ${P.t.n} title goes on your ${P.n} card (${P.in===1?'next week':P.in+' weeks away'}) and counts for the contract${a.due?' — they\'ll wait for it':''}. Build the feud before then; leave it off that night and it's a broken contract.`)}</div></button>`:''}
+ ${P?`<button class="choice" onclick="askAnswer('${id}',2)"><span class="key"><span>B</span></span><div>🎟️ "You get your shot at ${esc(P.n)}"</div><div class="muted tiny">${esc(`${w.name} vs ${P.h.name} for the ${P.t.n} title goes on your ${P.n} card (${P.in===1?'next week':P.in+' weeks away'}) and counts for the contract${a.due?' — they\'ll wait for it':''}. Leave it off that night and it's a broken contract.`)}</div></button>`:''}
  <button class="choice" onclick="askAnswer('${id}',0)"><span class="key"><span>${P?'C':'B'}</span></span><div>✋ ${a.due?'"Not tonight"':'"Not this week"'}</div><div class="muted tiny">${esc(nD)}</div></button>`)}
 window.askAnswer=function(id,yes){if(typeof mpLocked==='function'&&mpLocked())return;const a=askList().find(x=>x.id===id);if(!a)return closeModal();const w=S.w[a.who];
  const P=yes===2?askPPV(a):null;if(yes===2&&!P)return closeModal();
