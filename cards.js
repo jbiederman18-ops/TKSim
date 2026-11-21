@@ -89,12 +89,15 @@ if(typeof wcard==='function'){const wc0=wcard;
  wcard=window.wcard=function(w,o){o=o||{};if(!on()||!w)return wc0.apply(this,arguments);
   const fdv=o.feud&&o.feud.h>=1?o.feud:null;
   let tab='',tabc='';if(o.bk){tab=o.bk;tabc='must'}else if(o.ask){tab=o.ask.length>26?o.ask.slice(0,24).replace(/\s+\S*$/,'')+'…':o.ask;tabc='must'}else if(o.why){tab=o.why;tabc=/rival|feud/i.test(o.why)?'feud':/asked|promis|due/i.test(o.why)?'must':''}
-  else if(o.fl&&o.fl.length&&o.fl[0].o){tab=`Feud · ${ln(o.fl[0].o)}`;tabc='feud'}else if(fdv&&fdv.o){tab=`Feud · ${ln(fdv.o)}`;tabc='feud'}
+  else if(o.fl&&o.fl.length&&o.fl[0].o){tab=`${heatLbl(heatOf(w.id,o.fl[0].o.id))} · ${ln(o.fl[0].o)}`;tabc='feud'}else if(fdv&&fdv.o){tab=`${heatLbl(fdv.h)} · ${ln(fdv.o)}`;tabc='feud'}
   let cond=txt(o.info);if(o.gain&&w.own){const v=sta(w),a=Math.max(0,v-o.gain);cond=`Stamina ${v}→${a}`}
   const tags=(w.cw&&!w.own?'<span class="tcnew">New</span>':w.deb&&w.own?'<span class="tcnew">Debut</span>':'');
   const click=o.dis?'':o.on!=null?o.on:`showW('${w.id}')`;
   return tcCard(w,{tab,tabc,cond:cond||undefined,noWear:!w.own,cls:`${o.sel?'sel':''} ${o.dis?'dis':''} tcwc`,attr:`${o.attr||''} ${click?`onclick="${click}"`:''} ${o.dis?'aria-disabled="true"':''}`,mark:tags})}}
 
+/* v385: card tags name the heat with the same tiers as the feud meter (FTIER) — Heat → 🔥 Rivalry → 🔥🔥 Feud → 🔥🔥🔥 Blood feud */
+const HEAT_TAG=['🔥 Rivalry','🔥🔥 Feud','🔥🔥🔥 Blood feud'];function heatLbl(h){let t='Heat';FTIER.forEach(([v],k)=>{if(h>=v)t=HEAT_TAG[k]||t});return t}
+window.heatLbl=heatLbl;
 /* ---------------- dealing a hand ---------------- */
 function defenseDue(id){return Object.values(S.titles||{}).some(t=>t.holders.includes(id)&&t.last!=null&&S.week-t.last>=4&&!card().some(sl=>sl&&sl.k==='match'&&sl.d&&sl.d.title===t.id))}
 function promisedWith(id){let l=[];try{l=unmetPromises(card())}catch(e){}return l.filter(pr=>pr.a===id||pr.b===id).map(pr=>pr.a===id?pr.b:pr.a)}
@@ -106,14 +109,14 @@ function why(w,anchor,i,am,tg){const sl=card()[i],promo=sl.k==='promo';
   if(!promo&&promisedWith(w.id).length)return ['Promised','must',90];
   if(am.has(w.id))return [askTxt(am,w.id),'must',80];
   if(!promo&&defenseDue(w.id))return ['Defense due','must',75];
-  const f=hotFeud(w);if(f&&f.h>=20&&f.o&&f.o.own==='p'&&!f.o.inj)return [`Feud · ${ln(f.o)}`,'feud',40+f.h/4];
+  const f=hotFeud(w);if(f&&f.h>=20&&f.o&&f.o.own==='p'&&!f.o.inj)return [`${heatLbl(f.h)} · ${ln(f.o)}`,'feud',40+f.h/4];
   if(promo&&w.mic>=85)return ['Great talker','hot',30];
   if(isChamp(w.id))return ['Champion','gold',18];
   if(w.pop>=85&&sta(w)>=100-FAT_OK)return ['Top star','',12];
   return null}
  const A=W_(anchor);if(!A)return null;
  if(!promo&&promisedWith(anchor).includes(w.id))return ['Promised','must',95];
- const h=heatOf(anchor,w.id);if(h>=20)return ['Rivals','feud',55+h/4];if(h>=5)return ['Feud','feud',38+h/3];
+ const h=heatOf(anchor,w.id);if(h>=20)return [heatLbl(h),'feud',55+h/4];if(h>=5)return [heatLbl(h),'feud',38+h/3];
  if(tg==='partner'){const t=inTeam(anchor,w.id);if(t)return ['Team','hot',50+t]}
  const met=metPair(anchor,w.id);const c=chemOpp(A,w);
  if(met&&c>=6)return [chemWord(c),'hot',30+c];
@@ -133,7 +136,7 @@ function hand(i,o){o=o||{};const sl=card()[i];if(!sl)return [];const m=cur(i);co
  const tt=tg&&tg.t;const opps=promo?(anchor?[anchor]:[]):oppsOf(m,tg,anchor);
  const sc=pool.map(w=>{let r=why(w,anchor,i,am,tt);let rv=null;
   if(!(r&&r[1]==='must')){let bh=0,bo=null;for(const o of opps){const h=heatOf(o,w.id);if(h>bh){bh=h;bo=o}}
-   if(bh>=5){const nm=opps.length>1&&bo!==anchor&&W_(bo)?' · '+ln(W_(bo)):'';rv=bh>=20?['Rivals'+nm,'feud',55+bh/4]:['Feud'+nm,'feud',38+bh/3];if(!(r&&r[1]==='feud'&&r[2]>=rv[2]&&bo===anchor&&tt!=='partner'))r=rv}}
+   if(bh>=5){const nm=opps.length>1&&bo!==anchor&&W_(bo)?' · '+ln(W_(bo)):'';rv=[heatLbl(bh)+nm,'feud',bh>=20?55+bh/4:38+bh/3];if(!(r&&r[1]==='feud'&&r[2]>=rv[2]&&bo===anchor&&tt!=='partner'))r=rv}}
   let v=(r?r[2]:0);
   v+=promo?(w.mic-70)/3:(ovr(w)-75)/3;if(anchor&&!promo)v+=Math.max(-6,Math.min(10,chemOpp(W_(anchor),w)));
   if(promo&&anchor)v+=Math.min(12,heatOf(anchor,w.id)/4);
