@@ -37,7 +37,8 @@ window.photoHasAlpha=hasAlpha;
    3. The edge is choked a touch, so there's no halo of the old background around the head.
    4. Edge pixels are re-coloured from the subject just inside them ("decontamination"), which removes the light
       fringe a bright background leaves around hair and skin.
-   The work is done on a larger crop (480×640) and the finished card is scaled down to 240×320. */
+   The work is done on a 480×640 crop and the finished card is kept at that size (v378 — it was scaled down to 240×320,
+   which looked soft on a 3× phone screen and the TV). */
 async function probFor(src){const S0=320;const s=await session();const c=canvas(S0,S0);const x=c.getContext('2d');x.drawImage(src,0,0,S0,S0);const d=x.getImageData(0,0,S0,S0).data;
  const n=S0*S0,inp=new Float32Array(3*n),M=[.485,.456,.406],SD=[.229,.224,.225];
  for(let i=0;i<n;i++)for(let k=0;k<3;k++)inp[k*n+i]=(d[i*4+k]/255-M[k])/SD[k];
@@ -95,20 +96,23 @@ function backdrop(x,W,H,w){if(BG){const iw=BG.naturalWidth,ih=BG.naturalHeight,s
  const c=(typeof SCOL!=='undefined'&&w&&SCOL[w.st])||['#6a5a3a','#140f08'];
  const g=x.createRadialGradient(W*.5,H*.3,0,W*.5,H*.3,Math.hypot(W,H)*.8);g.addColorStop(0,c[0]);g.addColorStop(1,c[1]);x.fillStyle=g;x.fillRect(0,0,W,H)}
 /* subject (a canvas with transparency) → finished card photo */
-const PW=240,PH=320;
+/* v378: card photos are saved at 480×640 with light compression (were 240×320 at 0.7), so they stay sharp on a 3× phone
+   screen and the TV. A photo that's already smaller (saved before v378) keeps its size — scaling it up adds no detail. */
+const PW=480,PH=640,PQ=.88;
+window.PHOTO_Q=PQ;
 function compose(sub,w){const W=sub.width,H=sub.height;const c=canvas(W,H);const x=c.getContext('2d');backdrop(x,W,H,w);
  x.save();x.shadowColor='rgba(0,0,0,.55)';x.shadowBlur=Math.round(W/16);x.shadowOffsetY=Math.round(W/90);x.drawImage(sub,0,0);x.restore();
- if(W===PW&&H===PH)return c.toDataURL('image/jpeg',.72);
- const o=canvas(PW,PH);const ox=o.getContext('2d');ox.imageSmoothingQuality='high';ox.drawImage(c,0,0,PW,PH);return o.toDataURL('image/jpeg',.72)}
+ if(W<=PW)return c.toDataURL('image/jpeg',PQ);
+ const o=canvas(PW,PH);const ox=o.getContext('2d');ox.imageSmoothingQuality='high';ox.drawImage(c,0,0,PW,PH);return o.toDataURL('image/jpeg',PQ)}
 /* cut out one card photo (a data URL from fileToPhoto — 480×640 for new photos, 240×320 for ones already saved).
-   Returns the finished 240×320 card photo as a data URL. */
+   Returns the finished card photo (480×640, or the old photo's own size) as a data URL. */
 async function cutPhoto(url,id,opt){const w=S&&S.w&&S.w[id];const im=await imgOf(url);const W=im.naturalWidth||im.width,H=im.naturalHeight||im.height;
  const sub=canvas(W,H);const sx=sub.getContext('2d');sx.drawImage(im,0,0,W,H);
  if(!hasAlpha(sub))await cutOut(sub,opt);
  await bgReady();return compose(sub,w)}
 /* a big intake photo that couldn't be cut out still gets saved at the usual card size */
-async function small(url){const im=await imgOf(url);if((im.naturalWidth||im.width)<=PW)return url;const c=canvas(PW,PH);const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(im,0,0,PW,PH);return c.toDataURL(url.startsWith('data:image/png')?'image/png':'image/jpeg',.7)}
-window.cutWork=()=>cutOn()?[480,640]:[240,320];
+async function small(url){const im=await imgOf(url);if((im.naturalWidth||im.width)<=PW)return url;const c=canvas(PW,PH);const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(im,0,0,PW,PH);return c.toDataURL(url.startsWith('data:image/png')?'image/png':'image/jpeg',PQ)}
+window.cutWork=()=>[PW,PH];
 window.cutPhoto=cutPhoto;
 /* the hook every photo goes through on its way in: cut it out if the setting is on. Never loses the photo — if the
    cut-out can't run (no connection the first time, an old browser), the photo is kept as it was. */
