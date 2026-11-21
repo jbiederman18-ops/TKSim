@@ -410,7 +410,7 @@ function mdOf(m,sh){const r=rateMatch(m,{ppv:sh.ppv,allin:sh.ppv&&SUPER(S.week),
   m.title&&S.titles[m.title]?`${S.titles[m.title].n} title on the line`:'',v('promise')?'Delivers a promised match':'',v('boil')?'Boiling over after weeks of talk':'',v('hype')?'Built up on the mic earlier tonight':'',v('mom')>.3?'On a hot streak':''].filter(Boolean).join(' · ');
  const sk=stipKey(m);const ex=pos.filter(x=>x[1]>.2).map(x=>x[0]==='stip'?`${STIPS[sk].n} suits them`:x[0]==='occ'?(sh.ppv?'The big-show crowd':'A special occasion'):x[0]==='fin'?`${x[2]} adds drama`:x[2]);
  let extrasW=ex.length?ex.join(' · '):'Standard match, clean finish';
- if(sk==='std'&&!m.tour&&!isSp(m)&&m.type!=='gauntlet'){const best=Object.entries(STIPS).filter(([k,s])=>k!=='std'&&stipOk(k,m.type,sh.ppv)).map(([k,s])=>[k,ws.reduce((a,w)=>a+(s.b[w.st]||0),0)/ws.length]).sort((a,b)=>b[1]-a[1])[0];if(best&&best[1]>=3)extrasW+=` · ${STIPS[best[0]].n} would suit them`}
+ if(sk==='std'&&!m.tour&&!isSp(m)&&m.type!=='gauntlet'){const best=Object.entries(STIPS).filter(([k,s])=>k!=='std'&&stipOk(k,m.type,sh.ppv)).map(([k,s])=>[k,ws.reduce((a,w)=>a+stipBon(w,k,false),0)/ws.length]).sort((a,b)=>b[1]-a[1])[0];if(best&&best[1]>=3)extrasW+=` · ${STIPS[best[0]].n} would suit them`}
  return {r,p,back,talentW,storyW,extrasW}}
 window.mdOf=mdOf;
 const row=(k,pp,why,help,q)=>`<div class="drow"><span class="k">${k}${help?` <button class="qm" onclick="${help}" aria-label="How ${k.toLowerCase()} works">?</button>`:''}</span>${segH(pp,q)}<span class="w">${why}</span></div>`;

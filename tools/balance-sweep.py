@@ -47,6 +47,9 @@ v364 (venue ladder: Piddly-Ass Auditorium / Good Building / Actual Arena; the bo
 v382 (pitches lose "Give it a try": the bot now says Go for it where it used to take a trial, when it can afford it), Normal,
   24 games x 3 seasons vs v381: show 3.62/3.79/3.91 vs 3.56/3.63/3.79 (promo stars +0.1-0.24: no more trial promos forced
   onto the card), rival 3.87/3.98/4.08 vs 3.83/3.95/4.00, seasons won 67/62/62% vs 67/50/58%, morale and injuries unchanged.
+v395 (stipulation bonus added to each wrestler's own Ring, STIP_RING 2, so it runs through the singles weakest link; hidden
+  specialties FAV_P .25 / FAV_B 6), Normal, 40 games x 3 seasons vs v394: show 3.66/3.78/3.91 vs 3.67/3.78/3.91, match stars
+  3.82/3.83/3.91 vs 3.84/3.85/3.90, seasons won 85/57/70% vs 85/65/70% (noise). --engaged 3.83/3.98/4.08. Balance-neutral.
 --diff normal runs one difficulty; a variant's 'pre' script runs before the bot (handy for testing a constant).
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
