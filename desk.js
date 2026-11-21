@@ -238,9 +238,16 @@ const RSK=['ring','mic','pop','mor','sta','dur'];
 window.dkRT=v=>{RT=!!v;try{localStorage.setItem('dk_rtab',RT?'1':'0')}catch(e){}render()};
 window.dkRS=k=>{if(RSK.includes(k)){TS=null;if(rs!==k){rs=k}else return}else TS={k,d:TS&&TS.k===k?-TS.d:(k==='name'?1:-1)};render()};
 const tone=v=>v>=85?'hi':v<40?'lo':v<60?'mid':'';
-function rosterTable(m){if(!m.classList.contains('t-roster'))return;const g=m.querySelector(':scope>.tcrg');const sr=m.querySelector(':scope>.mt');if(!g||!sr)return;
+let lastRS=null;
+document.addEventListener('click',e=>{const c=e.target.closest&&e.target.closest('main.t-roster>.mt .chip');if(c)TS=null},true);
+function rosterTable(m){if(!m.classList.contains('t-roster'))return;
+ /* picking one of the game's sort buttons drops a table-only sort (Wrestler, Contract, Salary) */
+ if(typeof rs!=='undefined'){if(lastRS!==null&&rs!==lastRS)TS=null;lastRS=rs}const g=m.querySelector(':scope>.tcrg');const sr=m.querySelector(':scope>.mt');if(!g||!sr)return;
  if(!sr.querySelector('.dkvw'))sr.insertAdjacentHTML('beforeend',`<div class="dkvw" role="group" aria-label="View"><button class="${RT?'':'on'}" onclick="dkRT(0)">Cards</button><button class="${RT?'on':''}" onclick="dkRT(1)">Table</button></div>`);
- m.classList.toggle('dkrtab',RT);const old=m.querySelector(':scope>.dkrt');if(!RT){if(old)old.remove();return}if(old)return;
+ m.classList.toggle('dkrtab',RT);
+ /* a table-only sort isn't one of the buttons, so none of them is lit */
+ sr.querySelectorAll(':scope>.chips>.chip').forEach(c=>{const k=(c.getAttribute('onclick')||'').match(/rs='(\w+)'/);if(k)c.classList.toggle('on',!(RT&&TS)&&k[1]===rs)});
+ const old=m.querySelector(':scope>.dkrt');if(!RT){if(old)old.remove();return}if(old)return;
  let l=[...g.querySelectorAll(':scope>[data-tcw]')].map(c=>S.w[c.dataset.tcw]).filter(Boolean);
  const val={name:w=>w.name.toLowerCase(),con:w=>w.own?w.con:-1,sal:w=>sal(w)};
  if(TS&&val[TS.k])l=l.slice().sort((a,b)=>{const x=val[TS.k](a),y=val[TS.k](b);return (x<y?-1:x>y?1:0)*TS.d});
