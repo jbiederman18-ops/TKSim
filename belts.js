@@ -68,9 +68,9 @@ try{localStorage.removeItem('tksim_beltcard')}catch(e){}
 {const st=document.createElement('style');st.textContent=`.wc .nm .inf.btlb{display:flex;align-items:center;gap:6px;margin:5px -7px -7px -10px;padding:4px 8px 4px 10px;font:800 italic 11px/1 'BC',sans-serif;letter-spacing:.04em;text-transform:uppercase;color:#2b1f05;background:linear-gradient(90deg,rgba(232,196,96,.95),rgba(150,112,30,.35))}
 .wc .nm .inf.btlb img{height:15px;max-width:36px;object-fit:contain;flex:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}.wc .nm .inf.btlb i{font-style:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wc .ic,.wc .cwb{z-index:4}`;document.head.appendChild(st)}
-const SHORT={world:'AEW World',wworld:"Women's World",intl:'International',cont:'Continental',tag:'Tag Team',wtag:"Women's Tag",trios:'Trios'};
+const SHORT={world:'AEW World',wworld:"Women's World",intl:'International',cont:'Continental',tag:'Tag Team',wtag:"Women's Tag",trios:'Trios',wus:"Women's US",wwetag:'WWE Tag Team',wwewtag:"WWE Women's Tag"};
 /* v188: the shortest names, for narrow cards (tag and trios in the match editor) */
-const TIGHT={world:'AEW World',wworld:"Women's",intl:'Intl',cont:'Continental',tnt:'TNT',tbs:'TBS',nat:'National',tag:'Tag',wtag:"Women's Tag",trios:'Trios',wwe:'Undisputed',whc:'World Hvy',wwew:"WWE Women's",wwewc:"WWE Women's"};
+const TIGHT={world:'AEW World',wworld:"Women's",intl:'Intl',cont:'Continental',tnt:'TNT',tbs:'TBS',wus:"Women's US",wwetag:'WWE Tag',wwewtag:"WWE Women's Tag",tag:'Tag',wtag:"Women's Tag",trios:'Trios',wwe:'Undisputed',whc:'World Hvy',wwew:"WWE Women's",wwewc:"WWE Women's"};
 if(typeof wcard==='function'){const w0=wcard;wcard=function(w,o){let h=w0.apply(this,arguments);try{if(!w)return h;const t=titlesOf(w.id)[0];if(!t)return h;const b=beltImg(t.id);
  const strip=`<span class="inf btlb" title="${esc(t.n)} champion">${b?`<img src="${b}" alt="">`:'🏆'}<i>${o&&o.tight?esc(TIGHT[t.id]||SHORT[t.id]||t.n):esc(SHORT[t.id]||t.n)+' champ'}</i></span>`;
  if(/<span class="inf">[^<]*<\/span>/.test(h))h=h.replace(/<span class="inf">[^<]*<\/span>/,strip);else{const i=h.lastIndexOf('</div></button>');if(i>0)h=h.slice(0,i)+strip+h.slice(i)}}catch(e){}return h}}

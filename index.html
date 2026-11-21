@@ -1512,7 +1512,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v386';
+const APP_VERSION='v387';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -1636,7 +1636,22 @@ function dataUpdate(st){if(!st||!st.w||(st.dataV||1)>=DATA_V)return;let n=0;
   and hasn't wrestled a match in this save is healed */
  if((st.dataV||1)<8)Object.values(st.w).forEach(w=>{if(w.inj>0&&OUT[w.id]&&!w.w&&!w.l&&!w.lm)w.inj=0});
  if((st.dataV||1)<7)try{wweData(st,n)}catch(e){console.warn(e)}
+ if((st.dataV||1)<10)try{titlesV387(st)}catch(e){console.warn(e)}
  st.dataV=DATA_V;if(n)st.news.push({w:st.week,t:`🆕 Roster update (${DATA_AS_OF}): ${n} new arrivals joined free agency.`})}
+/* v387: older saves get the three new belts (vacant) on whichever show is missing that kind, and a vacant National title is
+   retired. A National title someone still holds stays — nobody loses a belt to an update. */
+function titlesV387(st){const T=st.titles;if(!T)return;const brs=[...new Set(Object.values(T).map(t=>t.br).filter(Boolean))];
+ const score=b=>Object.values(T).filter(t=>t.br===b).reduce((a,t)=>a+(t.prestige||0),0);const add=[];
+ if(T.nat&&!T.nat.holders.length){delete T.nat;(st.promises||[]).forEach(p=>{if(p.title==='nat')p.title=''});
+  if(st.card)['p','ai'].forEach(b=>(st.card[b]||[]).forEach(sl=>{if(sl&&sl.d&&sl.d.title==='nat')sl.d.title=''}))}
+ [['wwetag','tag'],['wwewtag','wtag'],['wus','tbs']].forEach(([id,pair])=>{if(T[id])return;const d=TITLES.find(x=>x[0]===id);if(!d)return;const [,n,kind,g,,pr]=d;
+  const t=T[id]={id,n,kind,g,holders:[],prestige:pr,since:0,last:0,inaug:1};
+  if(brs.length===2)t.br=T[pair]&&T[pair].br?brs.find(b=>b!==T[pair].br):brs.slice().sort((x,y)=>score(x)-score(y))[0];else if(brs.length)t.br=brs.slice().sort((x,y)=>score(x)-score(y))[0];add.push(t)});
+ /* even the count back up: a vacant men's midcard belt moves over if one show ended up two belts ahead */
+ if(brs.length===2){const cnt=b=>Object.values(T).filter(t=>t.br===b).length;const [hi,lo]=cnt(brs[0])>cnt(brs[1])?brs:[brs[1],brs[0]];
+  const WM=(typeof WORLD_T!=='undefined'&&WORLD_T.M)||['world','wwe','whc'];const mid=b=>Object.values(T).filter(t=>t.br===b&&t.g==='M'&&t.kind==='singles'&&!WM.includes(t.id));
+  if(cnt(hi)-cnt(lo)>=2&&mid(hi).length>=2){const mv=['tnt','cont','intl'].map(id=>T[id]).find(t=>t&&t.br===hi&&!t.holders.length);if(mv)mv.br=lo}}
+ if(add.length){st.news=st.news||[];st.news.push({w:st.week,t:`🏆 New titles: ${add.map(t=>t.n).join(', ')} — vacant, so every show now has a men's and a women's tag title and midcard title. Crown your first champions on TV.${T.nat?'':' The National title has been retired.'}`})}}
 function ensureTraits(st){if(!st||!st.w)return;Object.values(st.w).forEach(w=>{if(!Array.isArray(w.tr))w.tr=autoTraits(w);if(w.dur==null||(!w.cw&&!w.rookie&&(st.durV||0)<1))w.dur=durFor(w)});st.durV=1}
 // name|gender|style|align|ring|mic|pop|(old potential column, ignored since v358)
 const RAW=`Will Ospreay|M|fl|f|97|80|92|99
@@ -1826,10 +1841,13 @@ const TITLES=[
 ['cont','Continental','singles','M',['jon-moxley'],72],
 ['tnt','TNT','singles','M',['darby-allin'],70],
 ['tbs','TBS','singles','F',['persephone'],62],
-['nat','National','singles','M',['andrade-el-idolo'],55],
+['wus',"Women's United States",'singles','F',[],60],
 ['tag','World Tag Team','tag','M',['matt-jackson','nick-jackson'],75],
 ['wtag',"Women's Tag Team",'tag','F',['jamie-hayter','alex-windsor'],60],
 ['trios','World Trios','trios','M',['swerve-strickland','kofi-kingston','austin-creed'],60],
+/* v387: a second men's and women's tag title so each show has both */
+['wwetag','WWE Tag Team','tag','M',[],72],
+['wwewtag',"WWE Women's Tag Team",'tag','F',[],58],
 /* v168: WWE's world titles */
 ['wwe','Undisputed WWE','singles','M',['sami-zayn'],92],
 ['whc','World Heavyweight','singles','M',['roman-reigns'],88],
@@ -1876,7 +1894,7 @@ const TEAMS=[
 const FEUDS=[['mercedes-mone','thekla',75],['swerve-strickland','hangman-adam-page',55],['matt-jackson','dax-harwood',50],['nick-jackson','cash-wheeler',50],['matt-jackson','christian-cage',45],['nick-jackson','adam-copeland',40],['kevin-knight','steven-borden',50],['darby-allin','kyle-fletcher',55],['kyle-fletcher','matt-jackson',30],['kazuchika-okada','tommaso-ciampa',40],['samoa-joe','jack-perry',50],['jamie-hayter','megan-bayne',45],['alex-windsor','lena-kross',45],['jay-white','jon-moxley',35],['juice-robinson','david-finlay',35],['mike-bailey','gabe-kidd',30],['will-ospreay','claudio-castagnoli',30],['will-ospreay','jon-moxley',20],['willow-nightingale','thekla',30],['persephone','dani-luna',25],['persephone','hyan',25],['kris-statlander','julia-hart',30],['queen-aminata','skye-blue',30],['ricochet','swerve-strickland',30],['jon-moxley','mark-davis',55],['will-ospreay','samoa-joe',35],['will-ospreay','kazuchika-okada',40],['chris-jericho','nick-wayne',40],['kofi-kingston','bandido',40],['mercedes-mone','queen-aminata',35],['jon-moxley','jake-doyle',30]];
 const OUT=Object.assign({'toni-storm':14,'adam-cole':12,'mark-briscoe':8,'steven-borden':6,'kota-ibushi':10,'hologram':6,'anna-jay':6,'penelope-ford':6,'maya-world':4,'riho':4,'serena-deeb':4,'harley-cameron':2,'wardlow':2,'jay-white':8},WWE_OUT);
 const REMOVED=['big-bill','powerhouse-hobbs','tay-melo'];
-const DATA_V=9,DATA_AS_OF='AEW WrestleDream, Oct 2026';
+const DATA_V=10,DATA_AS_OF='AEW WrestleDream, Oct 2026';
 /* Durability (1–99): how well a body holds up. Based on each wrestler's real injury history, current to All Out 2026. High = less stamina lost per match and fewer injuries; low = the opposite. name|durability|note */
 const DUR_RAW=`Darby Allin|95|Takes insane bumps and stunts, and almost never misses time
 Jon Moxley|92|Works hurt and keeps showing up — one of the most reliable bodies in wrestling
@@ -3103,8 +3121,10 @@ function kindOk(kind,type){return kind==='singles'?['singles','triple','four'].i
 /* v140: titles are split evenly between the shows when a game starts, instead of first come, first served.
  v197: every title now stays on its home show for good — there are no cross-show title challenges and a belt never changes brands.
  A champion who leaves the show (trade, tampering, free agency) vacates the title. */
-/* v168: seven each — WWE's four world titles split two and two, so every brand has two world titles for each division's top stars to chase */
-const TITLE_SPLIT=[['world','cont','nat','tbs','tag','whc','wwew'],['intl','tnt','wworld','wtag','trios','wwe','wwewc']];
+/* v168: WWE's four world titles split two and two, so every brand has world titles for each division's top stars to chase.
+ v387: eight each, and every show has a men's and a women's world title, midcard title and tag title (National retired;
+ WWE Tag Team, WWE Women's Tag Team and Women's United States added). One show's extra is a second men's midcard belt, the other's the trios. */
+const TITLE_SPLIT=[['world','whc','wwew','cont','tnt','tbs','tag','wwewtag'],['wwe','wworld','wwewc','intl','wus','wwetag','wtag','trios']];
 function titleSplit(st,bs){const ts=st.titles;bs=bs.slice();
  if(bs.length===2&&TITLE_SPLIT.flat().every(id=>ts[id])){const f=Math.random()<.5?bs:bs.reverse();TITLE_SPLIT.forEach((l,i)=>l.forEach(id=>ts[id].br=f[i]))}
  else{const l=Object.values(ts).sort((a,b)=>b.prestige-a.prestige);let i=0,d=1;l.forEach(t=>{t.br=bs[i];if(i+d<0||i+d>=bs.length)d=-d;else i+=d})}
@@ -5266,7 +5286,7 @@ const HOWTO=`<p><b>📱 On a phone:</b> Go live stays pinned above the tabs on B
 <p><b>Fans:</b> each week you book all of Dynamite while the rival books Collision. Your show earns or loses fans based on its rating (the main event counts most), with a bonus for beating the rival's show. PPVs swing far more fans, and WrestleMania and All In count double. <b>Each season is won by the fans you gain that season</b> — your all-time fanbase carries over (it still drives TV money, tickets and PPV buys), but next season's fan war starts level.</p>
 <p><b>Finishes:</b> pick how every match ends, not just who wins. ✅ <b>Clean</b> is the only way to truly settle a feud on PPV (a clean blow-off rates higher). 😈 <b>Heel shenanigans</b> (heel winners only) builds 35% more heat and protects the loser, but a cold feud's crowd doesn't buy it, and a dirty finish on a PPV blow-off leaves the feud unsettled. ⚡ <b>Upset roll-up</b> (the winner must be the clear underdog) gives the winner a big boost. 🟥 <b>DQ</b> and 🚪 <b>count-out</b> build the most heat but feel cheap unless the feud is hot, and titles never change hands on them — a classic way for a champion to escape. Any finish that isn't clean protects the loser's momentum.</p>
 <p><b>Who wins matters:</b> beating someone more popular than you gives you <b>the rub</b> (an upset even more so) — beating someone far below you does little. Winning streaks build momentum, and a hot streak gets the crowd invested in a wrestler's matches. Lose four in a row clean and fans stop believing in a star (enhancement talent under 45 popularity is fine). Trading clean wins back and forth within a month is 50/50 booking and cools the feud off.</p>
-<p><b>Divisions:</b> every belt belongs to the men's or women's division, and only wrestlers from that division can compete for it. Intergender matches are welcome, just non-title. (A champion from outside the division in an older save can still defend the belt until it goes back.)</p><p><b>Title reigns:</b> every successful defense adds to a champion's credibility and the title's prestige, and the wrestler who ends a long reign gets a bigger boost. Swap a belt again within 3 weeks and it's a hot potato: the title loses 8 prestige and the new champ gets little out of it.</p>
+<p><b>Divisions:</b> each show has eight titles: a men's and a women's world title, midcard title and tag title, plus a third world title and either a second men's midcard belt or the trios belts. Every belt belongs to the men's or women's division, and only wrestlers from that division can compete for it. Intergender matches are welcome, just non-title. (A champion from outside the division in an older save can still defend the belt until it goes back.)</p><p><b>Title reigns:</b> every successful defense adds to a champion's credibility and the title's prestige, and the wrestler who ends a long reign gets a bigger boost. Swap a belt again within 3 weeks and it's a hot potato: the title loses 8 prestige and the new champ gets little out of it.</p>
 <p><b>Card position:</b> main-eventing boosts morale (and popularity after a great match). Stars who want the spotlight pitch you for it — a main event slot or a shot at a belt — and the unhappier they are, the more often they knock on your door. Leave a star (80+) out of the spotlight for 2 weeks and their morale starts slipping too (see 🌟 Star egos).</p>
 <p><b>The calendar:</b> each season is a ${SEASON}-week year with a PPV every 4 weeks, alternating the biggest AEW and WWE shows — ${Object.entries(PPVS).map(([w,n])=>+w===ALLIN_WEEK?`<b>${n}</b> (AEW's supershow, week ${ALLIN_WEEK})`:+w===WM_WEEK?`<b>${n}</b> (WWE's supershow, week ${WM_WEEK})`:n).join(', ')}, which closes the year. Both brands run every PPV head to head. Then the awards and offseason, and the calendar rolls on into a new year. Plus 📺 <b>TV specials</b> (${Object.values(SPECIALS).join(', ')}) with hotter crowds, 50% bigger fan swings and better gates. <b>${PPVS[FD_WEEK]}</b> is the crossover PPV: alongside your card you can sign up to two dream matches between one of your stars and one of the rival's, and in the TV weeks before it rival stars may invade your shows. Neither GM controls both sides of a dream match, so the winner is decided in the ring, and the winner's brand earns extra fans (4K; a 4★+ dream match pays the losing brand 2K too).</p>
 <p><b>WWE:</b> WWE's Raw and SmackDown stars are in the same talent pool as AEW's — draft them, sign them in free agency, put them in a ring with anyone. WWE's four world titles (Undisputed WWE, World Heavyweight, WWE Women's and WWE Women's World) sit alongside the AEW belts. Photos for WWE wrestlers search wwe.com.</p>
