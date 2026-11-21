@@ -1512,7 +1512,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v379';
+const APP_VERSION='v380';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4165,7 +4165,7 @@ function typingNow(){const a=document.activeElement;if(!a||a===document.body)ret
 function pinNav(){const n=document.querySelector('nav.tabs');if(!n)return;if(n.style.transform)n.style.transform='';n.classList.toggle('kb',typingNow());navH()}
 /* v202: how much of the screen the tab bar covers (it varies with the phone's home-indicator area), so things pinned above it sit flush */
 let NAVH_LAST=0;
-function navH(){const n=document.querySelector('nav.tabs');if(!n)return;const top=n.getBoundingClientRect().top;if(top<window.innerHeight/2){if(NAVH_LAST!==-1){NAVH_LAST=-1;document.documentElement.style.setProperty('--navh','0px')}return}/* v374: on a computer the tabs sit in the header */const h=Math.max(0,Math.round(window.innerHeight-top));if(h&&h<200&&NAVH_LAST!==h){NAVH_LAST=h;document.documentElement.style.setProperty('--navh',h+'px')}}
+function navH(){const n=document.querySelector('nav.tabs');if(!n)return;const top=n.getBoundingClientRect().top;if(top<window.innerHeight/2){if(NAVH_LAST!==-1){NAVH_LAST=-1;document.documentElement.style.setProperty('--navh','0px')}return}/* v374: on a computer the tabs sit in the header *//* v380: from the bar's own size, not its on-screen spot — iOS reports a shifted spot mid-bounce, which lifted Go live */const h=Math.max(0,Math.round(n.offsetHeight+(parseFloat(getComputedStyle(n).bottom)||0)));if(h&&h<200&&NAVH_LAST!==h){NAVH_LAST=h;document.documentElement.style.setProperty('--navh',h+'px')}}
 window.addEventListener('resize',()=>{try{navH()}catch(e){}});
 if(typeof window!=='undefined'){const vv=window.visualViewport;if(vv){vv.addEventListener('resize',pinNav);vv.addEventListener('scroll',pinNav)}window.addEventListener('scroll',pinNav,{passive:true});window.addEventListener('orientationchange',()=>setTimeout(pinNav,300));document.addEventListener('focusin',pinNav);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(pinNav,60)});
  document.addEventListener('focusout',e=>{if(!/^(INPUT|TEXTAREA|SELECT)$/.test(e.target&&e.target.tagName||''))return;setTimeout(()=>{if(/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||''))return;window.scrollTo(window.scrollX,window.scrollY);pinNav()},120);setTimeout(pinNav,500)})}
