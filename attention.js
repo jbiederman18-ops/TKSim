@@ -270,7 +270,7 @@ function attnPanel(){if(!S||S.phase!=='season'||typeof mpLockedQuiet==='function
  return `<div class="card attn"><div class="row sb"><div class="h small" style="margin:0">Needs your attention</div>${top.length?`<span class="tg bad">${top.length} to fix</span>`:'<span class="tg good">Ready</span>'}</div>
  ${top.length?`<div class="atl attop">${top.map(rowHtml).join('')}</div>`:'<div class="muted tiny" style="margin-top:6px">✓ Nothing is blocking tonight\'s show.</div>'}
  ${rest.length?`<details class="atmore" ${OPEN.more?'open':''} ontoggle="attnOpen('more',this.open)"><summary><span>Everything else</span><span class="tiny muted">${cnt}</span></summary>${secs}</details>`:''}
- <div class="tiny muted" style="margin-top:8px"><a href="#" onclick="openBrief();return false" style="color:var(--gold2)">📰 This week's news is on Home</a></div></div>`}
+ <div class="tiny muted" style="margin-top:8px"><a href="#" onclick="openBrief();return false" style="color:var(--gold2)">📰 Read this week's news ›</a></div></div>`}
 window.attnPanel=attnPanel;
 window.attnOpen=(g,o)=>{if(OPEN)OPEN[g]=o};
 /* chips on each segment of the running order: promises it keeps or breaks, heat, creative control */
