@@ -34,7 +34,9 @@ let DC_KEY=null, DC_SEEN=0, DC_Q=[], DC_CUR=null, DC_T=null;
 function dcEl(){let e=document.getElementById('dcall');if(!e){e=document.createElement('div');e.id='dcall';e.setAttribute('role','status');e.setAttribute('aria-live','polite');e.onclick=dcSkip;document.body.appendChild(e)}return e}
 function dcOff(){return typeof TV!=='undefined'&&TV}
 /* v418: same hold as the rival's clock — the opening, the draft tour (up or still to come) and any open sheet */
-function dcBusy(){return typeof draftHold==='function'?draftHold():(typeof TUT!=='undefined'&&!!TUT)||(typeof XR_INTRO!=='undefined'&&XR_INTRO)}
+/* v420: and for the first moment after launch, when Your games may be about to open over the game that loaded */
+const DC_BOOT=Date.now(),DC_BOOT_WAIT=700;
+function dcBusy(){if(Date.now()-DC_BOOT<DC_BOOT_WAIT)return true;return typeof draftHold==='function'?draftHold():(typeof TUT!=='undefined'&&!!TUT)||(typeof XR_INTRO!=='undefined'&&XR_INTRO)}
 
 /* look for picks we haven't announced yet */
 function dcScan(){
@@ -43,7 +45,9 @@ function dcScan(){
  if(key!==DC_KEY||ids.length<DC_SEEN){
   /* first look at this draft: only what came in since your own last pick */
   DC_KEY=key;let from=0;for(let i=ids.length-1;i>=0;i--){const w=S.w[ids[i]];if(w&&w.own==='p'){from=i+1;break}}
-  DC_SEEN=Math.max(from,ids.length-DC_MAX)}
+  DC_SEEN=Math.max(from,ids.length-DC_MAX);
+  /* v420: a solo rival only picks while you watch, so reopening a solo draft has nothing to catch you up on */
+  if(!(typeof ON==='function'&&ON()))DC_SEEN=ids.length}
  if(DC_CUR&&dcBusy())dcPause();
  if(ids.length<=DC_SEEN)return;
  const fresh=ids.slice(DC_SEEN).map((id,k)=>({id,n:DC_SEEN+k+1}));DC_SEEN=ids.length;
