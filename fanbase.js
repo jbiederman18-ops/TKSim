@@ -370,7 +370,7 @@ function fgOf(w){if(!w)return [];const x=typeof S!=='undefined'&&S&&S.fgx&&S.fgx
 function fgUnd(w){return fgOf(w)[0]==='und'}
 /* the words on a card or profile: "Bloodhounds", "Flippy · Technical", "Undiscovered" */
 function fgWord(w){return fgOf(w).map(g=>FG_N[g]).join(' · ')}
-const FG_C={cas:'#efe9dc',tech:'#7fa7d6',blood:'#e5484d',flip:'#3fc8b4',chaos:'#b77ee8',und:'#9a958c'};
+const FG_C={cas:'#efe9dc',tech:'#7fa7d6',blood:'#f07a2a',flip:'#3fc8b4',chaos:'#b77ee8',und:'#9a958c'};
 /* v398: on cards each group is a solid slanted chip (colored text on photos was hard to read); a second group gets its own chip */
 function fgTag(w,cls){const g=fgOf(w);const ln=g[0]==='und'&&cls!=='tcfg'&&typeof fgLean==='function'?fgLean(w.id):null;return `<span class="fgw ${cls||''}">${g.map(k=>`<i class="fg-${k}" style="--fgbg:${FG_C[k]}">${FG_N[k]}</i>`).join('<b>·</b>')}${ln?`<b>·</b><i class="fg-${ln}">leaning ${FG_N[ln]}</i>`:''}</span>`}
 window.fgOf=fgOf;window.fgUnd=fgUnd;window.fgWord=fgWord;window.fgTag=fgTag;
@@ -397,6 +397,8 @@ const FB_STIP={sub:'tech',twoof3:'tech',iron:'tech',street:'blood',iquit:'blood'
  ladder:'flip',tornado:'flip',tables:'flip',nodq:'chaos',falls:'chaos',anarchy:'chaos',stampede:'chaos',coffin:'cas'};
 const FB_MULTI={triple:1,four:1,gauntlet:1,rumble:1,mitb:1};
 const fbN=g=>FG_N[g];
+/* the crowd a wrestler's found hidden specialty reaches in this stipulation (null if none, not found yet, or a casuals gimmick) */
+function fbSpecGroup(w,stip){if(!w||!stip||stip==='std'||typeof favOf!=='function'||!favKnown(w)||favOf(w)!==stip)return null;const g=FB_STIP[stip];return g&&g!=='cas'?g:null}
 function fbHas(b){return !!(S.fb&&S.fb[b])}
 /* first time a brand is seen (new game after the draft, or an old save): split its fans — mostly casuals, the rest random per
    game, nudged a little toward the groups its roster draws */
@@ -420,7 +422,10 @@ function fbPromo(p,st){return {k:'promo',ids:[p.a,p.b].filter(id=>id&&S.w[id]),s
 function fbExpo(sg){const e={};const add=(g,v)=>{if(g&&g!=='cas'&&g!=='und')e[g]=(e[g]||0)+v};
  if(sg.k==='promo'){sg.ids.forEach(id=>{const w=S.w[id];if(w&&fgOf(w).includes('chaos'))add('chaos',.4)});return e}
  const ws=sg.ids.map(id=>S.w[id]).filter(Boolean);const n=ws.length||1;const tags=[];
- ws.forEach(w=>{const gs=fgOf(w);tags.push(gs);gs.forEach((g,i)=>add(g,(gs.length>1?(i?.4:.6):1)/n))});
+ ws.forEach(w=>{const gs=fgOf(w);const t=gs.slice();gs.forEach((g,i)=>add(g,(gs.length>1?(i?.4:.6):1)/n));
+  /* v403: a found hidden specialty opens a second crowd — in their specialty match a wrestler also reaches the crowd that
+     stipulation speaks to (a flyer who's a natural in a cage brings in Bloodhounds), and counts as theirs for a pure match */
+  const sp=fbSpecGroup(w,sg.stip);if(sp&&!gs.includes(sp)){add(sp,1/n);t.push(sp)}tags.push(t)});
  add(FB_STIP[sg.stip],.5);if(FB_MULTI[sg.type])add('flip',.5);if(sg.ri)add('chaos',.5);
  const hc=tags.map(gs=>gs.filter(g=>FB_HC.includes(g)));if(hc.length>1&&hc.every(x=>x.length)){FB_HC.forEach(g=>{if(hc.every(x=>x.includes(g))&&e[g])e[g]*=1.4})}
  for(const g in e)e[g]=Math.min(FB_CAP,e[g]);return e}
@@ -585,7 +590,7 @@ Object.assign(window,{fbSync,fbSyncAll,fbSeg,fbPromo,fbCalc,fbApply,fbCrowdCard,
 
 (function(){const s=document.createElement('style');s.textContent=`
 .fgw{font:800 italic 1em/1 'BC',sans-serif;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}.fgw b{margin:0 .3em;color:#8a8580;font-weight:700}
-.fg-cas{color:#efe9dc}.fg-tech{color:#7fa7d6}.fg-blood{color:#e5484d}.fg-flip{color:#3fc8b4}.fg-chaos{color:#b77ee8}.fg-und{color:#9a958c}
+.fg-cas{color:#efe9dc}.fg-tech{color:#7fa7d6}.fg-blood{color:#f07a2a}.fg-flip{color:#3fc8b4}.fg-chaos{color:#b77ee8}.fg-und{color:#9a958c}
 .tkc .tcfg{display:flex;flex-wrap:wrap;gap:2px 3px;margin-bottom:calc(var(--w)*.035);font-size:calc(var(--w)*.088);text-shadow:none}.tkc .tcfg b{display:none}
 .tkc .tcfg i{padding:1px 7px 1px 4px;color:#111;background:var(--fgbg);clip-path:polygon(0 0,100% 0,calc(100% - 4px) 100%,0 100%)}
 .crowdc .crw,.fbres .fbr{display:grid;grid-template-columns:7.2em 1fr;gap:0 10px;align-items:baseline;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)}

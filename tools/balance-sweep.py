@@ -73,6 +73,9 @@ v401 (fan war = total audience, fanWar; money by group: TV/ads from fbAud 'tv', 
 v402 (offline rival books for its crowds: fbAiTune swaps up to 1/2/3 stipulations a show on easy/normal/hard for its hungriest
   crowd; AIQ.fan removed), 3 seasons: Normal 40 games: default seasons won 82/62/45%, fans 681/461/387K vs rival 530/493/582K;
   --engaged 97/93/80%; --lazy 10/0/0%. 24 games per difficulty: easy 96/88/75%, normal 79/62/33%, hard 79/50/25%. 0 errors.
+v403 (found hidden specialties open the stipulation's crowd, fbSpecGroup; Bloodhounds orange), Normal 40 games vs v402 in the
+  same run: seasons won 80/68/53% vs 95/78/62% (v402's own 40-game run earlier: 82/62/45% — within noise), fans gained ~same,
+  rival +50K in season 1 (it reveals specialties too). 0 errors.
 --diff normal runs one difficulty; a variant's 'pre' script runs before the bot (handy for testing a constant).
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
