@@ -83,6 +83,10 @@ v405 (feuds feed the crowds: a stipulation's crowd pull is FB_STIP0 .1 + up to F
   Normal: default 19/38/12%, feud-builder 62/44/25%, crowd-tuner 69/81/50%, both 100/94/75%. Hard: default 19/12/0%, feud 31/31/6%,
   crowd 62/19/6%, both 75/38/19%. v403 Normal: default 81/81%, crowd-tuner 100/94%; Hard crowd-tuner 100/100%. Feud heat per match
   ~.08 -> ~.4 stars for a feud-builder (11% of its matches at 45+ heat). The feud and crowd bots were local to that sweep.
+v410 (stipulations: steady pull FB_STIP0 .35 with no feud needed, STIP_TOLL stamina x1.5 / injury x1.3 on rough+big, prices x3,
+  FB_REP .5 for a repeat of last show's stip, rival skips repeats, FB_XDIFF normal .12 / hard .3), 16 games x 3 seasons, seasons won:
+  Normal: default 56/44/25%, feud 88/56/25%, crowd 75/62/31%, both 100/88/75%. Hard: default 31/25/6%, feud 62/44/12%, crowd
+  50/25/12%, both 88/31/19%. Crowd bots bank ~$0.8M vs ~$1.8M by S3 and get ~50% more injuries.
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
 

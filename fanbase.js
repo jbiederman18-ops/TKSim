@@ -411,13 +411,15 @@ const FB_RI_TECH=3,FB_SCREW_TECH=1;          /* Technical fans hate run-ins and 
 const FB_STIP={sub:'tech',twoof3:'tech',iron:'tech',street:'blood',iquit:'blood',lms:'blood',texas:'blood',barbed:'blood',cage:'blood',dog:'blood',bng:'blood',lights:'blood',
  ladder:'flip',tornado:'flip',tables:'flip',nodq:'chaos',falls:'chaos',anarchy:'chaos',stampede:'chaos',coffin:'cas'};
 const FB_MULTI={triple:1,four:1,gauntlet:1,rumble:1,mitb:1};
-/* v405: a gimmick match needs a reason. A stipulation's pull on its crowd is FB_STIP0 on its own, rising by up to FB_STIP1 as the
-   feud between the people in it heats up to FB_STIPH (it was a flat .5 for any stipulation, story or not) */
-const FB_STIP0=.1,FB_STIP1=.6,FB_STIPH=45;
+/* v410: a stipulation gives its crowd a steady pull (FB_STIP0) with or without a feud — v405 made it depend on feud heat
+   (FB_STIP1, now 0). What stops you running one everywhere is its toll (STIP_TOLL in index.html: stamina, injury risk, price).
+   The same stipulation two shows running pulls its crowd at FB_REP: they've just seen one. */
+const FB_STIP0=.35,FB_STIP1=0,FB_STIPH=45;
+const FB_REP=.5;
 /* v405: casuals follow a story — the card's hottest feuds (heat over FB_STORY0) hook them, the top one most (x1.5 on a PPV) */
 const FB_STORY0=10,FB_STORYH=35,FB_STORYW=[1,.5,.3],FB_STORYCAP=1.5;
 /* v405: tougher crowds by difficulty — on a solo game, your crowds expect this much more (in stars) than they'd otherwise ask for */
-const FB_XDIFF={easy:-.15,normal:.05,hard:.25};
+const FB_XDIFF={easy:-.15,normal:.12,hard:.3};  /* v410: was normal .05 / hard .25 */
 function fbXOff(b){if(b!=='p'||!S||(typeof ON==='function'&&ON()))return 0;return FB_XDIFF[S.diff||'normal']||0}
 /* the hottest feud across the sides of a match */
 function fbHeat(m){let x=0;if(!m||!m.sides||typeof heatOf!=='function')return 0;for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j])x=Math.max(x,heatOf(a,b));return x}
@@ -451,7 +453,7 @@ function fbExpo(sg){const e={};const add=(g,v)=>{if(g&&g!=='cas'&&g!=='und')e[g]
   /* v403: a found hidden specialty opens a second crowd — in their specialty match a wrestler also reaches the crowd that
      stipulation speaks to (a flyer who's a natural in a cage brings in Bloodhounds), and counts as theirs for a pure match */
   const sp=fbSpecGroup(w,sg.stip);if(sp&&!gs.includes(sp)){add(sp,1/n);t.push(sp)}tags.push(t)});
- add(FB_STIP[sg.stip],FB_STIP0+FB_STIP1*Math.min(1,(sg.h||0)/FB_STIPH));if(FB_MULTI[sg.type])add('flip',.5);if(sg.ri)add('chaos',.5);
+ add(FB_STIP[sg.stip],(FB_STIP0+FB_STIP1*Math.min(1,(sg.h||0)/FB_STIPH))*(sg.rep?FB_REP:1));if(FB_MULTI[sg.type])add('flip',.5);if(sg.ri)add('chaos',.5);
  const hc=tags.map(gs=>gs.filter(g=>FB_HC.includes(g)));if(hc.length>1&&hc.every(x=>x.length)){FB_HC.forEach(g=>{if(hc.every(x=>x.includes(g))&&e[g])e[g]*=1.4})}
  for(const g in e)e[g]=Math.min(FB_CAP,e[g]);return e}
 /* the show's effect on each group (in %), with the reason. dry = a preview (nothing changes) */
@@ -459,6 +461,7 @@ function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X0=S.fbx[b],H=S.f
  const xo=fbXOff(b);const X={};FB_G.forEach(g=>X[g]=(X0[g]||FB_X0)+xo);
  const ppvK=show&&show.ppv?(o.allin?2:1.5):show&&show.special?1.5:1;
  const per={};FB_HC.forEach(g=>per[g]=[]);
+ const last=(S.fbls&&S.fbls[b])||[];segs.forEach(sg=>{if(sg.k==='match')sg.rep=!!(sg.stip&&sg.stip!=='std'&&last.includes(sg.stip))});
  segs.forEach(sg=>{const e=fbExpo(sg);for(const g in e)per[g].push({e:e[g],sg})});
  FB_HC.forEach(g=>{const l=per[g].sort((a,b)=>b.e-a.e);let E=0,sw=0,ss=0,sx=0;
   l.forEach((x,i)=>{const w=FB_W[Math.min(i,FB_W.length-1)];if(i>=FB_W.length)return;const ee=x.e*w;E+=ee;sw+=ee*(x.sg.st-X[g]+FB_FED)*FB_PER*(x.sg.me?FB_ME:1);ss+=x.sg.st*x.e;sx+=x.e});
@@ -490,6 +493,7 @@ function fbApply(b,segs,show,o){const r=fbCalc(b,segs,show,o);const f=S.fb[b],X=
  const flat=Math.round(o.flat||0);if(flat){if(flat>0)f.cas+=Math.round(flat*(flat>0?grow:1));else f.cas=Math.max(0,f.cas+flat)}
  FB_HC.forEach(g=>{H[g]=[r.E[g]].concat(H[g]||[]).slice(0,3);if(r.avg[g]!=null)X[g]+=FB_XK*(r.avg[g]-X[g])});if(r.avg.cas!=null)X.cas+=FB_XKC*(r.avg.cas-X.cas);
  FB_G.forEach(g=>X[g]=clamp(X[g],2.5,4.6));
+ S.fbls=S.fbls||{};S.fbls[b]=segs.filter(sg=>sg.k==='match'&&sg.stip&&sg.stip!=='std').map(sg=>sg.stip);
  let T=fbSum(b);if(T<50000){f.cas+=50000-T;T=50000}S.fans[b]=T;FB_G.forEach(g=>out.after[g]=f[g]);out.conv=conv;try{fbMoodAdd(b,{pct:r.pct,before})}catch(e){}return out}
 
 /* ---- v400: fans switch shows. After a night with two or more shows, each group drifts toward the show that served it best.
@@ -542,7 +546,8 @@ function fbAiTune(b,card,show){if(!card||!S.fb||!S.fb[b])return card;const T=FB_
   const g=FB_HC.filter(g=>(fed[g]||0)<1).sort((x,y)=>score(y)-score(x))[0];if(!g)break;
   const opts=Object.keys(FB_STIP).filter(k=>FB_STIP[k]===g);const cash=S.money[b]||0;let best=null;
   ms.forEach(sl=>{const m=sl.d;if(m.stip&&m.stip!=='std')return;const ws=m.sides.flat().map(id=>S.w[id]).filter(Boolean);if(!ws.length)return;
-   opts.forEach(k=>{if(!stipOk(k,m.type,!!show.ppv)||STIPS[k].once||stipPrice(k,b)*8>cash)return;const bon=ws.reduce((a,w)=>a+stipBon(w,k,false),0)/ws.length;if(bon<-.25)return;
+   /* v410: the rival doesn't repeat last show's stipulations (they'd only pull half) */const last=(S.fbls&&S.fbls[b])||[];
+   opts.forEach(k=>{if(!stipOk(k,m.type,!!show.ppv)||STIPS[k].once||stipPrice(k,b)*8>cash||last.includes(k))return;const bon=ws.reduce((a,w)=>a+stipBon(w,k,false),0)/ws.length;if(bon<-.25)return;
     const v=bon+ws.filter(w=>fgOf(w).includes(g)).length/ws.length+Math.random()*.3;if(!best||v>best.v)best={v,m,k}})});
   if(!best)break;best.m.stip=best.k}
  return card}
