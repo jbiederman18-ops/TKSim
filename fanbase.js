@@ -396,6 +396,16 @@ const FB_RI_TECH=3,FB_SCREW_TECH=1;          /* Technical fans hate run-ins and 
 const FB_STIP={sub:'tech',twoof3:'tech',iron:'tech',street:'blood',iquit:'blood',lms:'blood',texas:'blood',barbed:'blood',cage:'blood',dog:'blood',bng:'blood',lights:'blood',
  ladder:'flip',tornado:'flip',tables:'flip',nodq:'chaos',falls:'chaos',anarchy:'chaos',stampede:'chaos',coffin:'cas'};
 const FB_MULTI={triple:1,four:1,gauntlet:1,rumble:1,mitb:1};
+/* v405: a gimmick match needs a reason. A stipulation's pull on its crowd is FB_STIP0 on its own, rising by up to FB_STIP1 as the
+   feud between the people in it heats up to FB_STIPH (it was a flat .5 for any stipulation, story or not) */
+const FB_STIP0=.1,FB_STIP1=.6,FB_STIPH=45;
+/* v405: casuals follow a story — the card's hottest feuds (heat over FB_STORY0) hook them, the top one most (x1.5 on a PPV) */
+const FB_STORY0=10,FB_STORYH=35,FB_STORYW=[1,.5,.3],FB_STORYCAP=1.5;
+/* v405: tougher crowds by difficulty — on a solo game, your crowds expect this much more (in stars) than they'd otherwise ask for */
+const FB_XDIFF={easy:-.15,normal:.05,hard:.25};
+function fbXOff(b){if(b!=='p'||!S||(typeof ON==='function'&&ON()))return 0;return FB_XDIFF[S.diff||'normal']||0}
+/* the hottest feud across the sides of a match */
+function fbHeat(m){let x=0;if(!m||!m.sides||typeof heatOf!=='function')return 0;for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j])x=Math.max(x,heatOf(a,b));return x}
 const fbN=g=>FG_N[g];
 /* the crowd a wrestler's found hidden specialty reaches in this stipulation (null if none, not found yet, or a casuals gimmick) */
 function fbSpecGroup(w,stip){if(!w||!stip||stip==='std'||typeof favOf!=='function'||!favKnown(w)||favOf(w)!==stip)return null;const g=FB_STIP[stip];return g&&g!=='cas'?g:null}
@@ -414,7 +424,7 @@ function fbSync(b){if(!S||!S.fans||S.fans[b]==null)return null;if(!fbHas(b))fbIn
  return f}
 function fbSyncAll(){if(S&&S.fans)Object.keys(S.fans).forEach(fbSync)}
 /* one aired (or projected) segment, as the fans see it */
-function fbSeg(m,st,me){return {k:'match',ids:m.sides.flat(),n:m.sides.flat().length,stip:stipKey(m),type:m.type,ri:!!(typeof riOn==='function'&&riOn(m)),fin:typeof finOf==='function'?finOf(m):'clean',st,me:!!me,title:!!m.title,txt:typeof matchText==='function'?matchText(m):''}}
+function fbSeg(m,st,me){return {k:'match',ids:m.sides.flat(),n:m.sides.flat().length,stip:stipKey(m),type:m.type,ri:!!(typeof riOn==='function'&&riOn(m)),fin:typeof finOf==='function'?finOf(m):'clean',st,me:!!me,title:!!m.title,txt:typeof matchText==='function'?matchText(m):'',h:fbHeat(m)}}
 function fbPromo(p,st){return {k:'promo',ids:[p.a,p.b].filter(id=>id&&S.w[id]),st,txt:(S.w[p.a]?S.w[p.a].name:'')+(p.b&&S.w[p.b]?' & '+S.w[p.b].name:'')}}
 /* how much a match speaks to each group: each wrestler gives their share to their group (two groups .6/.4; undiscovered and
    casual draws reach only casuals), the stipulation and multi-person chaos add their group, a run-in feeds Chaos fiends, and a
@@ -426,11 +436,12 @@ function fbExpo(sg){const e={};const add=(g,v)=>{if(g&&g!=='cas'&&g!=='und')e[g]
   /* v403: a found hidden specialty opens a second crowd — in their specialty match a wrestler also reaches the crowd that
      stipulation speaks to (a flyer who's a natural in a cage brings in Bloodhounds), and counts as theirs for a pure match */
   const sp=fbSpecGroup(w,sg.stip);if(sp&&!gs.includes(sp)){add(sp,1/n);t.push(sp)}tags.push(t)});
- add(FB_STIP[sg.stip],.5);if(FB_MULTI[sg.type])add('flip',.5);if(sg.ri)add('chaos',.5);
+ add(FB_STIP[sg.stip],FB_STIP0+FB_STIP1*Math.min(1,(sg.h||0)/FB_STIPH));if(FB_MULTI[sg.type])add('flip',.5);if(sg.ri)add('chaos',.5);
  const hc=tags.map(gs=>gs.filter(g=>FB_HC.includes(g)));if(hc.length>1&&hc.every(x=>x.length)){FB_HC.forEach(g=>{if(hc.every(x=>x.includes(g))&&e[g])e[g]*=1.4})}
  for(const g in e)e[g]=Math.min(FB_CAP,e[g]);return e}
 /* the show's effect on each group (in %), with the reason. dry = a preview (nothing changes) */
-function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X=S.fbx[b],H=S.fbh[b];const res={pct:{},why:{},E:{},avg:{},conv:{},best:{}};
+function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X0=S.fbx[b],H=S.fbh[b];const res={pct:{},why:{},E:{},avg:{},conv:{},best:{}};
+ const xo=fbXOff(b);const X={};FB_G.forEach(g=>X[g]=(X0[g]||FB_X0)+xo);
  const ppvK=show&&show.ppv?(o.allin?2:1.5):show&&show.special?1.5:1;
  const per={};FB_HC.forEach(g=>per[g]=[]);
  segs.forEach(sg=>{const e=fbExpo(sg);for(const g in e)per[g].push({e:e[g],sg})});
@@ -449,9 +460,11 @@ function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X=S.fbx[b],H=S.fb
  const draws=Math.min(1.8,segs.filter(s=>s.k==='match').reduce((a,s)=>a+s.ids.filter(id=>S.w[id]&&fgOf(S.w[id]).includes('cas')).length*.6,0));
  const tl=Math.min(1.2,segs.filter(s=>s.title).length*.6)+(o.newch?.6:0);const spec=Math.min(.8,segs.filter(s=>s.k==='match'&&(s.stip!=='std'||FB_MULTI[s.type])).length*.4);
  let cs=0,cw=0;segs.forEach((s,i)=>{const w=s.me?1.6:1;cs+=s.st*w;cw+=w});const cav=cw?cs/cw:0;
+ const hs=segs.filter(s=>s.k==='match').map(s=>s.h||0).sort((x,y)=>y-x);let story=0;hs.slice(0,FB_STORYW.length).forEach((h,i)=>story+=Math.max(0,h-FB_STORY0)/FB_STORYH*FB_STORYW[i]);
+ story=Math.min(FB_STORYCAP,story)*(show&&show.ppv?1.5:1);res.story=story;
  let up=(tp-70)*.12+draws+tl+spec+(cav-X.cas)*3;if(!segs.length)up=0;if(up>0)up*=ppvK;
- res.pct.cas=-FB_DRIFT+up;res.avg.cas=cw?cav:null;res.E.cas=1;
- res.why.cas=!segs.length?'Nothing on TV for them':up>=FB_DRIFT+1?(tp>=80?'Big stars and a show worth watching':'A show worth watching'):up>=FB_DRIFT?'Just enough to keep them':tp<70?'Not enough star power to hold them':'Drifting off — they want stars, titles and spectacle';
+ res.pct.cas=-FB_DRIFT+up+(segs.length?story:0);res.avg.cas=cw?cav:null;res.E.cas=1;
+ const uu=up+story;res.why.cas=!segs.length?'Nothing on TV for them':uu>=FB_DRIFT+1?(story>=1&&story>=up*.5?'Hooked on the feuds — they want to see how it ends':tp>=80?'Big stars and a show worth watching':'A show worth watching'):uu>=FB_DRIFT?'Just enough to keep them':tp<70?'Not enough star power to hold them':'Drifting off — they want stars, titles, spectacle and a story';
  return res}
 /* apply a show's result: returns what each group did, for the results screen */
 function fbApply(b,segs,show,o){const r=fbCalc(b,segs,show,o);const f=S.fb[b],X=S.fbx[b],H=S.fbh[b];const before=Object.assign({},f);
@@ -506,7 +519,7 @@ Object.assign(window,{fbAud,fbBuzz,fbMerchF,fbMood});
    card, it may swap one standard match's stipulation for one its hungriest crowd loves — the crowd that's biggest and got the
    least last week, skipping any the card already feeds — if the wrestlers in that match suit it and it can afford it.
    How often it bothers grows with difficulty (FB_AI_TUNE). Suggest the rest (autoBook for you) never does this. ---- */
-const FB_AI_TUNE={easy:[.4,1],normal:[.8,2],hard:[.95,3]};  /* [chance per crowd, how many crowds a show] */
+const FB_AI_TUNE={easy:[.5,1],normal:[1,3],hard:[1,4]};  /* v405: was easy [.4,1] / normal [.8,2] / hard [.95,3] */  /* [chance per crowd, how many crowds a show] */
 function fbAiTune(b,card,show){if(!card||!S.fb||!S.fb[b])return card;const T=FB_AI_TUNE[S.diff||'normal']||FB_AI_TUNE.normal;
  const ms=card.filter(sl=>sl&&sl.k==='match'&&sl.d&&sl.d.sides&&!sl.d.tour);const H=S.fbh[b]||{};const score=g=>S.fb[b][g]*(H[g]&&H[g][0]!=null&&H[g][0]<1?1.5:1);
  for(let n=0;n<T[1];n++){if(Math.random()>T[0])continue;

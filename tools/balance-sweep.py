@@ -77,6 +77,12 @@ v403 (found hidden specialties open the stipulation's crowd, fbSpecGroup; Bloodh
   same run: seasons won 80/68/53% vs 95/78/62% (v402's own 40-game run earlier: 82/62/45% — within noise), fans gained ~same,
   rival +50K in season 1 (it reveals specialties too). 0 errors.
 --diff normal runs one difficulty; a variant's 'pre' script runs before the bot (handy for testing a constant).
+v405 (feuds feed the crowds: a stipulation's crowd pull is FB_STIP0 .1 + up to FB_STIP1 .6 with feud heat toward FB_STIPH 45, was a
+  flat .5; casuals follow the card's hottest feuds (FB_STORY*); HEAT_TV/PPV .15/.25 -> .22/.35, HEAT_GAIN 1.35; FB_AI_TUNE easy [.5,1]
+  normal [1,3] hard [1,4]; your crowds expect FB_XDIFF more on easy/normal/hard -.15/.05/.25), 16 games x 3 seasons, seasons won:
+  Normal: default 19/38/12%, feud-builder 62/44/25%, crowd-tuner 69/81/50%, both 100/94/75%. Hard: default 19/12/0%, feud 31/31/6%,
+  crowd 62/19/6%, both 75/38/19%. v403 Normal: default 81/81%, crowd-tuner 100/94%; Hard crowd-tuner 100/100%. Feud heat per match
+  ~.08 -> ~.4 stars for a feud-builder (11% of its matches at 45+ heat). The feud and crowd bots were local to that sweep.
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
 
