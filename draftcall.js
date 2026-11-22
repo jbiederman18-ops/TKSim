@@ -33,12 +33,13 @@ let DC_KEY=null, DC_SEEN=0, DC_Q=[], DC_CUR=null, DC_T=null;
 
 function dcEl(){let e=document.getElementById('dcall');if(!e){e=document.createElement('div');e.id='dcall';e.setAttribute('role','status');e.setAttribute('aria-live','polite');e.onclick=dcSkip;document.body.appendChild(e)}return e}
 function dcOff(){return typeof TV!=='undefined'&&TV}
-function dcBusy(){return (typeof TUT!=='undefined'&&!!TUT)||(typeof XR_INTRO!=='undefined'&&XR_INTRO)}
+/* v418: same hold as the rival's clock — the opening, the draft tour (up or still to come) and any open sheet */
+function dcBusy(){return typeof draftHold==='function'?draftHold():(typeof TUT!=='undefined'&&!!TUT)||(typeof XR_INTRO!=='undefined'&&XR_INTRO)}
 
 /* look for picks we haven't announced yet */
 function dcScan(){
  if(!S||S.phase!=='draft'||!S.draft||dcOff()){if(DC_KEY!==null){DC_KEY=null;DC_Q=[];dcHide()}return}
- const d=S.draft,ids=d.ids||[],key=`${S.gm}|${S.season||1}|${d.supp?'s':'d'}`;
+ const d=S.draft,ids=d.ids||[],key=`${S.seed}|${S.season||1}|${d.supp?'s':'d'}`/* v418: by game, not GM name — a new game under the same name started from the old one's count */;
  if(key!==DC_KEY||ids.length<DC_SEEN){
   /* first look at this draft: only what came in since your own last pick */
   DC_KEY=key;let from=0;for(let i=ids.length-1;i>=0;i--){const w=S.w[ids[i]];if(w&&w.own==='p'){from=i+1;break}}

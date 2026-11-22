@@ -1512,7 +1512,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v417';
+const APP_VERSION='v418';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4226,8 +4226,14 @@ function render(){const app=$('#app');
  const keepY=!ANIM&&R_TAB===tab&&LOCK_Y===null?window.scrollY:null;R_TAB=tab;
  app.innerHTML=hdr()+`<main class="${ANIM?'enter':''} t-${S.phase==='season'||S.phase==='over'?tab:S.phase}">${mpBanner()}${body}</main>`+(S.phase==='season'||S.phase==='over'?navView():'');ANIM=false;
  if(keepY!=null&&Math.abs(window.scrollY-keepY)>1)window.scrollTo(0,keepY);pinNav();try{briefAuto()}catch(e){}
- /* v412: the rival waits while the draft tour is up, and takes a beat on the clock so its pick reads as a moment */
- if(!ON()&&S.phase==='draft'&&onClock()==='ai'&&!aiT&&!(typeof TUT!=='undefined'&&TUT)&&!(typeof XR_INTRO!=='undefined'&&XR_INTRO))aiT=setTimeout(()=>{aiT=null;if(S&&S.phase==='draft'&&onClock()==='ai'&&!(typeof TUT!=='undefined'&&TUT)&&!(typeof XR_INTRO!=='undefined'&&XR_INTRO)){const c=draftChoice('ai');if(c)draftPick(c.id,'ai')}render()},800)}
+ /* v412: the rival takes a beat on the clock so its pick reads as a moment. v418: and it waits (draftHold, tutorial.js) while the opening
+    or the draft tour is up or still to come, or a sheet is open — it used to pick in the gap before they started */
+ if(!ON()&&S.phase==='draft'&&onClock()==='ai'&&!aiT){let held=false;const hold=()=>typeof draftHold==='function'&&draftHold();
+  const tick=()=>{if(!S||ON()||S.phase!=='draft'||onClock()!=='ai'){aiT=null;return}
+   if(hold()){held=true;aiT=setTimeout(tick,400);return}
+   if(held){held=false;aiT=setTimeout(tick,800);return}/* the hold just lifted: still take the beat */
+   aiT=null;const c=draftChoice('ai');if(c)draftPick(c.id,'ai');render()};
+  aiT=setTimeout(tick,800)}}
 
 function setupView(){return `<div class="hero"><div class="kicker"><i></i>Tony Khan Simulator · A wrestling GM sim</div><div class="hero-t">Road to<br>Mania &amp; All In</div><div class="lfl hero-l"></div><p class="muted">Draft a roster against a rival GM, book Dynamite head-to-head against their Collision, build feuds, develop rookies into stars, and win the fan war over a ${SEASON}-week year from the Royal Rumble to Survivor Series.</p></div>
 <div class="card"><label>Your GM name</label><input id="gmName" maxlength="24" placeholder="Your name">

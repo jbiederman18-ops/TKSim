@@ -245,28 +245,71 @@ function xrIntroLine(){const ss=tv('show names',()=>showNames(),{});
   `The network’s counting on you, and I’m counting on you. I can’t go back to doing the Wendy’s tweets, man. I can’t.`]}
 function xrIntro(){if(XR_INTRO||typeof openModal!=='function')return;
  const lines=xrIntroLine();XR_INTRO={lines,i:0};xrIntroPage()}
-/* one paragraph at a time, tap to continue, and the last button sends you straight into the draft tour.
-   The sheet opens once; each tap fades the next paragraph in place so nothing jumps. */
-function xrBtn(last){return `<span class="key"><span>${last?'A':'▸'}</span></span><div>${last?`✨ "Let's go make some magic."`:'Tap to continue'}</div>`}
-function xrIntroPage(){const X=XR_INTRO;if(!X)return;const last=X.i>=X.lines.length-1;
- openModal(`<div class="h mhd mt">📱 X Redditino · Head of PR</div><div class="scene brief ibx xri-box"><div class="scs"><span class="scav x">XR</span><div class="scq"><b>X Redditino</b><q id="xriQ">${esc(X.lines[X.i])}</q></div></div></div>
- <button class="choice" id="xriGo" onclick="xrIntroTap()">${xrBtn(last)}</button>`);
- const m=document.getElementById('modal');if(m)m.dataset.xri='1'}
-window.xrIntroTap=function(){const X=XR_INTRO;if(!X||X.busy)return;if(X.i>=X.lines.length-1)return xrIntroDone();
- const q=document.getElementById('xriQ'),b=document.getElementById('xriGo');if(!q||!b){X.i++;return xrIntroPage()}
- X.busy=true;X.i++;const last=X.i>=X.lines.length-1;q.classList.add('xri-out');
- setTimeout(()=>{if(XR_INTRO!==X)return;q.textContent=X.lines[X.i];b.innerHTML=xrBtn(last);q.classList.remove('xri-out');
-  try{MODAL_AT=Date.now()}catch(e){}/* a double tap can't skip a paragraph */X.busy=false},170)};
+/* v418: it plays like a highlight reel — the live stage with X Redditino on camera, his name tab on the dialogue box, each
+   paragraph typed out with the dialogue blips, a BOSS! shout to wake you, and a LET'S GO! as you head into the draft.
+   Tap the box (or the button on the last page) to keep it moving; a tap mid-line finishes the line. */
+const xrRM=()=>!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+function xrBtn(){return `<span class="key"><span>A</span></span><div>✨ "Let's go make some magic."</div>`}
+function xrStage(){return `<div class="sd solo xr-sd" id="sd" onclick="xrIntroTap()"><div class="sdpan" id="sdpan"><div class="sdc ca xr-c">
+ <div class="sdph xr-ph" id="xrPh"><div class="xr-mono"><b>XR</b><i>📱</i></div></div>
+ <div class="sdpl"><b>X Redditino</b><span>Head of PR</span></div></div></div>
+ <div class="sdflash" id="sdflash"></div><div class="sdfx" id="sdfx"></div></div>`}
+function xrBox(){return `<div class="sdbox k-q" id="sdbox" onclick="xrIntroTap()"><div class="sdtab other">X Redditino</div><div class="sdsay" id="sdsay"></div><span class="sdnx" id="sdnx">▼</span></div>`}
+function xrLow(last){return last?`<button class="choice xr-go" id="xriGo" onclick="xrIntroTap()">${xrBtn()}</button>`:`<div class="sdhint" id="xriGo">Tap to continue</div>`}
+function xrIntroPage(){const X=XR_INTRO;if(!X)return;
+ openModal(`<div class="sdw xr-w">${typeof liveHd==='function'?liveHd('','Draft day','Wake up, boss',[],'📱 Incoming'):''}${xrStage()}${xrBox()}<div id="xriLow">${xrLow(false)}</div></div>`);
+ const m=document.getElementById('modal');if(m)m.dataset.xri='1';
+ xrShout('Boss!','',()=>xrType())}
+/* a shout across the stage, with the flash and the shake */
+function xrShout(t,kind,then){const fx=document.getElementById('sdfx'),sd=document.getElementById('sd'),fl=document.getElementById('sdflash');
+ if(!fx||xrRM()){if(then)then();return}
+ fx.innerHTML=`<div class="sdshout ${kind}"><span>${esc(t)}</span></div>`;
+ if(fl){fl.classList.remove('on');void fl.offsetWidth;fl.classList.add('on')}
+ if(sd){sd.classList.remove('shake');void sd.offsetWidth;sd.classList.add('shake')}
+ try{if(window.SFX)SFX.play(kind==='gold'?'pop':'door')}catch(e){}
+ const X=XR_INTRO;if(X)X.busy=true;
+ setTimeout(()=>{if(XR_INTRO!==X)return;fx.innerHTML='';if(X)X.busy=false;if(then)then()},kind==='gold'?750:820)}
+/* type the current paragraph; the whole line is laid out first so the box never grows while it types */
+function xrType(){const X=XR_INTRO;if(!X)return;const el=document.getElementById('sdsay'),nx=document.getElementById('sdnx'),ph=document.getElementById('xrPh');
+ const t=X.lines[X.i],last=X.i>=X.lines.length-1;if(!el)return;if(nx)nx.classList.remove('on');
+ const low=document.getElementById('xriLow');if(low)low.innerHTML=xrLow(false);
+ if(ph){ph.classList.remove('talk');void ph.offsetWidth;ph.classList.add('talk')}
+ const fin=()=>{clearInterval(X.iv);X.iv=null;X.typing=null;el.textContent=t;if(nx)nx.classList.add('on');
+  if(last&&low){low.innerHTML=xrLow(true);try{MODAL_AT=Date.now()}catch(e){}/* the tap that finished the line can't also fire the button */}};
+ if(xrRM()){fin();return}
+ const A=document.createTextNode(''),H=document.createElement('span');H.className='sdtw';H.textContent=t;el.textContent='';el.append(A,H);
+ let i=0;X.typing=fin;X.iv=setInterval(()=>{i+=2;A.data=t.slice(0,i);if(H.firstChild)H.firstChild.data=t.slice(i);try{if(window.SFX)SFX.blip()}catch(e){}if(i>=t.length)fin()},20)}
+window.xrIntroTap=function(){const X=XR_INTRO;if(!X||X.busy)return;
+ if(X.typing)return X.typing();
+ if(X.i>=X.lines.length-1){X.busy=true;return xrShout("Let's go!",'gold',()=>xrIntroDone())}
+ X.i++;xrType()};
 window.xrIntroNext=window.xrIntroTap;
 /* however the sheet closes (the button, swipe-down, back, tapping outside), the opening counts as played and the draft
    tour starts right away, even on a device that has seen it before */
 function xrIntroEnd(){if(!XR_INTRO)return;XR_INTRO=false;const md=document.getElementById('modal');if(md)delete md.dataset.xri;const l=tutStore().xri;const seen=Array.isArray(l)?l.slice(-30):[];if(S&&!seen.includes(S.seed))seen.push(S.seed);tutPut({xri:seen});
  if(S&&S.phase==='draft'&&S.draft&&!S.draft.supp&&!TUT){try{tutStart('draft')}catch(e){}}
  if(!TUT)setTimeout(()=>{try{tutAuto()}catch(e){}},250)}
-window.xrIntroDone=function(){if(typeof closeModal==='function')closeModal();xrIntroEnd()};
-(function(){const c=document.createElement('style');c.textContent=`.xri-box{min-height:270px}
-#xriQ{transition:opacity .17s ease,transform .17s ease}#xriQ.xri-out{opacity:0;transform:translateY(6px)}
-#xriGo>div{transition:opacity .17s ease}`;document.head.appendChild(c)})();
+window.xrIntroDone=function(){const X=XR_INTRO;if(X&&X.iv)clearInterval(X.iv);if(typeof closeModal==='function')closeModal();xrIntroEnd()};
+(function(){const c=document.createElement('style');c.textContent=`
+.xr-sd .sdpan{width:100%}
+.xr-ph{display:grid;place-items:center;background:radial-gradient(80% 60% at 50% 35%,#2a2214,#0c0c0e 75%)}
+.xr-mono{display:grid;justify-items:center;gap:6px}
+.xr-mono b{font:900 italic clamp(84px,26vw,140px)/.85 'BC','Barlow Condensed',sans-serif;letter-spacing:-.02em;background:linear-gradient(180deg,#fff6d6,var(--gold2) 40%,var(--gold) 70%,var(--gold3));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 rgba(0,0,0,.6))}
+.xr-mono i{font-style:normal;font-size:34px;animation:xrbuzz 1.1s ease-in-out infinite}
+@keyframes xrbuzz{0%,60%,100%{transform:none}65%{transform:rotate(-12deg)}72%{transform:rotate(10deg)}79%{transform:rotate(-8deg)}86%{transform:rotate(6deg)}}
+.xr-w .sdbox{min-height:150px}
+.xr-go{margin-top:12px;animation:sdin .3s ease-out}
+@media (prefers-reduced-motion:reduce){.xr-mono i{animation:none}}`;document.head.appendChild(c)})();
+
+/* v418: the draft holds still — the rival stays off the clock and "The pick is in" waits — while the opening or the draft tour
+   is up, while either is still due to start (the gap of a render or two before tutAuto opens them), and while any sheet is open.
+   Matches tutAuto's own rules for when the opening and the tour start, so the hold always lifts. Never on the TV. */
+function draftHold(){if(!S||S.phase!=='draft'||(typeof TV!=='undefined'&&TV))return false;
+ if(TUT||TUT_OFFER||XR_INTRO)return true;
+ const m=document.getElementById('modal');if(m&&!m.classList.contains('hidden'))return true;
+ if(xrIntroDue())return true;
+ return !(tutStore().draft>0)&&!!S.draft&&!S.draft.supp&&!(typeof draftRoster==='function'&&draftRoster('p').length)}
+window.draftHold=draftHold;
 
 /* v350: a tip counts as seen only if it was seen after its text last changed (its `since`), so a reworded tip comes up again once */
 function tipSeen(seen,id){const v=seen[id];if(!v)return false;const s=TUT_STEPS.find(x=>x.id===id);return !(typeof v==='number'&&s&&s.since>v)}

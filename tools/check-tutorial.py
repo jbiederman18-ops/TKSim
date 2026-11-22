@@ -84,20 +84,33 @@ async def main(shots):
             try:
                 await pg.wait_for_function("XR_INTRO&&!!document.querySelector('#modal[data-xri]')", timeout=4000)
                 pages = await pg.evaluate('XR_INTRO.lines.length')
+                # it plays on the highlight-reel stage: a shout, then each paragraph types out in the dialogue box.
+                # A tap on the box finishes the line, the next tap moves on; the last page ends on a button.
+                await pg.wait_for_function("!!document.querySelector('#modal #sd') && !!document.querySelector('#modal #sdbox')", timeout=4000)
                 for k in range(pages):
+                    await pg.wait_for_function("XR_INTRO && !XR_INTRO.busy", timeout=4000)
+                    if await pg.evaluate('!!XR_INTRO.typing'):
+                        await pg.click('#modal #sdbox')
+                    await pg.wait_for_timeout(300)
+                    said = await pg.inner_text('#modal #sdsay')
+                    if said.strip() != (await pg.evaluate(f'XR_INTRO.lines[{k}]')).strip():
+                        problems.append(f"X Redditino's paragraph {k+1} didn't show in full")
                     await shot(f'xr-intro-{k+1}')
                     if k < pages - 1:
-                        await pg.click('#modal button.choice')
-                        await pg.wait_for_timeout(600)  # taps in a sheet's first 260ms are ignored
+                        await pg.click('#modal #sdbox')
                 if 'make some magic' not in await pg.inner_text('#modal button.choice'):
                     problems.append("X Redditino's last page should end on Let's go make some magic")
-                await pg.wait_for_timeout(600)
+                if await pg.evaluate("S.draft.ids && S.draft.ids.length > 0"):
+                    problems.append('the rival drafted while X Redditino was still talking')
+                await pg.wait_for_timeout(400)
                 await pg.click('#modal button.choice')
             except Exception:
                 problems.append("X Redditino's opening did not play at the start of a new game")
             # the draft tour starts on its own for a new player
             try:
                 await pg.wait_for_function("!!(TUT&&TUT.track==='draft')", timeout=4000)
+                if await pg.evaluate("(S.draft.ids||[]).length > 0 || (document.getElementById('dcall')||{}).className === 'in'"):
+                    problems.append('the rival drafted (or its pick banner showed) before the draft tour started')
                 await walk('draft')
             except Exception:
                 problems.append('the draft tour did not start on its own for a new player')
