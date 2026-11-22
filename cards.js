@@ -424,14 +424,21 @@ function sheetAnchor(i,m,tg){const sl=card()[i];
  const ids=idsOf(i,m);return ids.length?ids[ids.length-1]:null}
 function xoCards(i,m,tg){const side=(tg&&tg.t)||'a';const A=W_(m.a);
  if(side==='b'){const taken=new Set(card().filter((x,j)=>j!==i&&x.k==='xo'&&x.d).map(x=>x.d.b));
-  return ownList('ai').filter(w=>!w.inj&&!taken.has(w.id)&&(TC.f==='all'||TC.f==='fit'||(TC.f==='ch'?isChamp(w.id):w.al===TC.f))).map(w=>{const c=A?chemOpp(A,w):0;return {w,v:c*2+w.pop,r:A?[chemWord(c),c>=6?'hot':'',0]:null}}).sort((a,b)=>b.v-a.v)}
- const used=usedIn('p',i);return ownList('p').filter(w=>!w.inj&&!used.has(w.id)&&(TC.f==='all'||TC.f==='fit'||(TC.f==='ch'?isChamp(w.id):w.al===TC.f))).sort((a,b)=>b.pop-a.pop).map(w=>({w,r:isChamp(w.id)?['Champion','gold',0]:w.pop>=85?['Top star','',0]:null}))}
+  return ownList('ai').filter(w=>!w.inj&&!taken.has(w.id)&&(TC.f==='all'||TC.f==='fit'||(TC.f==='ch'?isChamp(w.id):w.al===TC.f))&&tcFgOk(w)).map(w=>{const c=A?chemOpp(A,w):0;return {w,v:c*2+w.pop,r:A?[chemWord(c),c>=6?'hot':'',0]:null}}).sort((a,b)=>b.v-a.v)}
+ const used=usedIn('p',i);return ownList('p').filter(w=>!w.inj&&!used.has(w.id)&&(TC.f==='all'||TC.f==='fit'||(TC.f==='ch'?isChamp(w.id):w.al===TC.f))&&tcFgOk(w)).sort((a,b)=>b.pop-a.pop).map(w=>({w,r:isChamp(w.id)?['Champion','gold',0]:w.pop>=85?['Top star','',0]:null}))}
+/* v407: filter the sheet by crowd — one symbol chip per fan group (plus ? for undiscovered). Works alongside Champions /
+   Faces / Heels, and only for the slot it was set on: open another slot and everyone's back. */
+const TC_FG=['cas','tech','blood','flip','chaos','und'];
+function tcFgOn(){return TC.fg&&TC.fgAt===TC.act?TC.fg:null}
+function tcFgOk(w){const g=tcFgOn();return !g||typeof fgOf!=='function'||fgOf(w).includes(g)}
+function tcFgRow(){if(typeof fgIc!=='function')return '';const g0=tcFgOn();return `<div class="tcsc tcfgr">${TC_FG.map(g=>`<button class="chip fgc ${g0===g?'on':''}" onclick="tcFg('${g}')" title="${FG_N[g]}" aria-label="${FG_N[g]} only" aria-pressed="${g0===g?'true':'false'}"><span class="fg-${g}">${fgIc(g)}</span></button>`).join('')}</div>`}
+window.tcFg=function(g){TC.fg=tcFgOn()===g?null:g;TC.fgAt=TC.act;TC.mode='w';TC.dealt=1;paint();const b=document.getElementById('tcsb');if(b)b.scrollTop=0};
 function sheetCards(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';if(sl.k==='xo')return xoCards(i,m,tg);const anchor=sheetAnchor(i,m,tg);const tt=tg&&tg.t;
  /* v314: wrestlers already booked tonight drop out of the list into an "Already booked" dropdown
     v392: only the same kind of segment counts — a match for a match slot, another promo for a promo slot (bookedFor) */
   /* v384: the whole roster, best fit first — Champions / Faces / Heels narrow it but keep the same order */
  const used=bookedFor(i);const h=hand(i,{anchor,tg:tg||null,n:1e4});
- return h.filter(x=>TC.f==='fit'||TC.f==='all'||(TC.f==='ch'?isChamp(x.w.id):x.w.al===TC.f)).map(x=>{/* v326: booked means booked — a contract or request no longer keeps someone already on the card up top */x.bk=used.has(x.w.id);return x})}
+ return h.filter(x=>(TC.f==='fit'||TC.f==='all'||(TC.f==='ch'?isChamp(x.w.id):x.w.al===TC.f))&&tcFgOk(x.w)).map(x=>{/* v326: booked means booked — a contract or request no longer keeps someone already on the card up top */x.bk=used.has(x.w.id);return x})}
 function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown=false;return ''}const ent=!TC.shown;TC.shown=true;if(ent){TC.big=false;TC.entAt=Date.now()}warmSoon();const m=cur(i);const promo=sl.k==='promo';
  const xo=sl.k==='xo',sp=roV(sl),tr=sp&&!!sl.d.tour,fl=sp&&!tr;
  const tl=targets(i,m);let tg=TC.rep?null:(TC.tg||defTarget(i,m)||(promo||xo?tl[0]:null)||null);if(xo&&!tg)tg={t:TC.rep&&TC.rep===m.a?'a':'b'};
@@ -455,8 +462,8 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
   const lt=m.type==='squash'&&tg&&tg.t==='side'&&tg.i===1&&!TC.rep?`<div class="tcsf"><button class="btn sec" data-tcx="l:1">🧑‍🔧 Use local enhancement talent — costs nothing</button></div>`:'';
   if(!l.length)body=lt+`<div class="tcempty">Nobody fits that filter tonight.</div>`;
   else if(!xo){const mu=l.filter(x=>!x.bk&&x.r&&x.r[1]==='must'),rest=l.filter(x=>!x.bk&&!(x.r&&x.r[1]==='must')),bk=l.filter(x=>x.bk);let n=0;
-   const RL={fit:'Your roster',ch:'Champions',f:'Faces',h:'Heels'}[TC.f]||'Your roster';
-   body=lt+`<div class="tcgrid">${mu.length?`<div class="tcwhy">Needs you tonight</div>${mu.map(x=>pc(x,n++)).join('')}`:''}${rest.length?`<div class="tcwhy">${RL} · best fit first</div>${rest.map(x=>pc(x,n++)).join('')}`:''}${bk.length?`<button class="tcwhy tcab ${TC.ab?'on':''}" onclick="tcAb()" aria-expanded="${TC.ab?'true':'false'}">Already booked tonight · ${bk.length} ${TC.ab?'▴':'▾'}</button>${TC.ab?bk.map(x=>pc(x,n++)).join(''):''}`:''}</div>`}
+   const RL={fit:'Your roster',ch:'Champions',f:'Faces',h:'Heels'}[TC.f]||'Your roster';const fgL=tcFgOn()?' · '+FG_N[tcFgOn()]:'';
+   body=lt+`<div class="tcgrid">${mu.length?`<div class="tcwhy">Needs you tonight</div>${mu.map(x=>pc(x,n++)).join('')}`:''}${rest.length?`<div class="tcwhy">${RL}${fgL} · best fit first</div>${rest.map(x=>pc(x,n++)).join('')}`:''}${bk.length?`<button class="tcwhy tcab ${TC.ab?'on':''}" onclick="tcAb()" aria-expanded="${TC.ab?'true':'false'}">Already booked tonight · ${bk.length} ${TC.ab?'▴':'▾'}</button>${TC.ab?bk.map(x=>pc(x,n++)).join(''):''}`:''}</div>`}
   else{let n=0;body=lt+`<div class="tcgrid">${l.map(x=>pc(x,n++)).join('')}</div>`}}
  const fc=xo?[['fit','Best fit'],['ch','Champions'],['f','Faces'],['h','Heels'],['all','All']]:[['fit','Everyone'],['ch','Champions'],['f','Faces'],['h','Heels']];
  const chips=`${hasX&&!TC.rep?`<button class="chip ${TC.mode==='x'?'on':''}" onclick="tcMode('${TC.mode==='x'?'w':'x'}')">${promo?'Segment':'Stipulation'}</button>`:''}${fc.map(([v,n])=>`<button class="chip ${TC.mode==='w'&&TC.f===v?'on':''}" onclick="tcF('${v}')">${n}</button>`).join('')}`;
@@ -472,7 +479,7 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
  TC.dealt=0;
  return `<div class="tcscrim ${ent?'enter':''}" onclick="tcScrim()"></div><div class="tcdock tcsheet ${ent?'enter':''} ${TC.big?'big tall':''}" id="tcdock" role="dialog" aria-label="${esc(t)}"><button class="tcpull open" onclick="tcBig(!TC.big)" aria-label="${TC.big?'Shrink the sheet':'Fill the screen'}" aria-expanded="${TC.big?'true':'false'}"><span class="tcgrip"></span></button>
  <div class="tcsh"><div class="tcst"><span class="tcsk">${esc(k)}</span><b>${esc(t)}</b></div><button class="tcsx" onclick="tcShut()" aria-label="Close">✕</button></div>
- ${cf}${tabs?`<div class="tcsc tctabs">${tabs}</div>`:''}${tabs&&TC.mode!=='w'?'':shc}${(tabs&&TC.mode!=='w')||!showF?'':`<div class="tcsc">${tabs||xo?fcs:chips}</div>`}${tch}<div class="tcsb" id="tcsb">${body}</div>${foot}</div>`}
+ ${cf}${tabs?`<div class="tcsc tctabs">${tabs}</div>`:''}${tabs&&TC.mode!=='w'?'':shc}${(tabs&&TC.mode!=='w')||!showF?'':`<div class="tcsc">${tabs||xo?fcs:chips}</div>`+(TC.mode==='w'?tcFgRow():'')}${tch}<div class="tcsb" id="tcsb">${body}</div>${foot}</div>`}
 function pickAct(){const c=card();if(TC.act!=null&&c[TC.act]&&editOk(c[TC.act]))return;
  const ok=c.map((sl,i)=>tableOk(sl)?i:-1).filter(i=>i>=0);if(!ok.length){TC.act=null;return}
  const empty=ok.filter(i=>!c[i].opt&&!c[i].d&&!TC.dr[i]);let mi=-1;try{mi=mainMi(c)}catch(e){}
@@ -1093,6 +1100,7 @@ html.tcards .tv-last .tkc{--w:180px;width:var(--w)}
 .tcst b{font:900 italic 21px/1.02 'BC',sans-serif;text-transform:uppercase;text-wrap:balance}
 .tcsx{flex:none;width:40px;height:36px;border:0;background:#1d1e23;color:var(--mut);clip-path:var(--slant);font:900 17px/1 'BC',sans-serif;cursor:pointer}
 .tcdrop.ghost{opacity:.5;pointer-events:none}.tcshp{padding-bottom:8px}html.tcards #tcdock .tcshp .chip.on{background:var(--text);color:var(--ink);box-shadow:none}
+.tcfgr .chip.fgc{min-width:40px;padding-left:9px;padding-right:9px;display:flex;align-items:center;justify-content:center}.chip.fgc .fgi{margin:0;width:18px;height:18px}.chip.fgc.on span{color:#140f02}
 .tcsc,.tcshc{flex:none;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:0 16px 10px}.tcsc::-webkit-scrollbar,.tcshc::-webkit-scrollbar{display:none}.tcsc .chip,.tcshc .chip{flex:none;margin:0}
 .tcsb{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;border-top:1px solid var(--line);touch-action:pan-y}
 .tcgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 8px;justify-items:center;padding:14px 12px 20px;container-type:inline-size}

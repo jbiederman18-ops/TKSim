@@ -640,7 +640,7 @@ Object.assign(window,{fbSync,fbSyncAll,fbSeg,fbPromo,fbCalc,fbApply,fbResultsCar
 .fbtv{align-items:baseline;gap:12px}.fbtv>span{display:flex;flex-wrap:wrap;gap:4px 14px;justify-content:flex-end}.fbtv .fbd i{font:800 italic 1em 'BC',sans-serif;text-transform:uppercase;font-style:italic}
 .xred .xra{margin-top:8px;color:var(--gold);font-size:13.5px}
 .txc{display:block;margin-top:5px;padding-left:5px;border-left:3px solid var(--fgc);color:var(--fgc);font:800 italic 10.5px/1.15 'BC',sans-serif;letter-spacing:.04em;text-transform:uppercase}
-.txc .fgi{width:1.25em;height:1.25em;margin-right:.3em;vertical-align:-.28em}.txc.no .fgi{color:var(--fgc)}.fgk{margin-right:.4em}
+.txc .fgi{width:1.25em;height:1.25em;margin-right:.3em;vertical-align:-.28em}.txc.no .fgi{color:var(--fgc)}.fgk{margin-right:.4em}.flfg .chip.fgc{display:inline-flex;align-items:center;gap:4px;min-width:40px;justify-content:center}.flfg .chip.fgc .fgi{margin:0;width:17px;height:17px}.flfg .chip.fgc.on span{color:#140f02}
 .txc.no{color:#9a958c}.txc.no::before{content:"✕ ";color:#e0574f}.txc+.txc{margin-top:3px}.tx.on .txc{color:#3a2e0a}
 .srcrowd{margin:8px auto 4px;width:100%;max-width:420px;padding:8px 12px 6px;background:#0f0f12;border-top:2px solid var(--gold);text-align:left}
 .srch{font:800 italic 11px/1 'BC',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
