@@ -201,6 +201,7 @@ function tutAuto(){/* v238: a draft-tour offer left unanswered (say, on auto-dra
  /* v412: the draft tour starts on its own (no offer to wave off), so every new GM drafts knowing what to look for.
     Skip tour is still there, and finishing or skipping it marks it done on this device. Not in the WWE supplemental draft,
     and not for someone who has already started picking. */
+ if(xrIntroDue())return xrIntro();
  if(S.phase==='draft'&&!(st.draft>0)&&S.draft&&!S.draft.supp&&!(typeof draftRoster==='function'&&draftRoster('p').length))return tutStart('draft');
  if(S.phase!=='season'||typeof tab==='undefined')return;
  /* brand-new games only: the first two weeks of the first year */
@@ -223,6 +224,35 @@ function tutAuto(){/* v238: a draft-tour offer left unanswered (say, on auto-dra
  if(tab==='book'&&S.week>=3)want.push('t.flow');
  const id=want.find(x=>!tipSeen(seen,x));if(id){tutPut({tipW:AW()});tutTip(id)}}
 
+/* ---------- v413: the cold open. A brand-new game opens with X Redditino, your Head of PR, waking you up for the draft.
+   Plays once per game (remembered on this device by the game's seed), before the draft tour, and holds the draft until
+   you're up. Not in the WWE supplemental draft, not on the TV, not once you've made a pick. */
+let XR_INTRO=false;
+function xrIntroSeen(){const l=tutStore().xri;return Array.isArray(l)&&l.includes(S.seed)}
+function xrIntroDue(){return !!(S&&S.phase==='draft'&&S.draft&&!S.draft.supp&&S.season===1&&!(typeof TV!=='undefined'&&TV)
+ &&!(typeof draftRoster==='function'&&draftRoster('p').length)&&!xrIntroSeen())}
+function xrIntroLine(){const ss=tv('show names',()=>showNames(),{});
+ const rk=ON()?tv('league seats',()=>localSeats().find(k=>k!=='p'),'ai'):'ai';
+ const rn=tv('rival name',()=>nameOf(rk),''),rs=ss[rk]||'',mine=ss.p||'your show';
+ const known=rn&&!/^(open seat|waiting for a gm|bye week)$/i.test(rn);
+ const who=known?`${rn}’s show${rs?' '+rs:''}`:rs?`The competition over at ${rs}`:'The competition';
+ const cap=tvCap();const bank=cap?`${tvMoney(cap)} a week`:tvMoney(tv('START_BANK',()=>START_BANK,350));
+ return [`Boss! You’re finally awake! Good Lord, I don’t know how you fell asleep at a time like this! ${who} is snatching up wrestlers left and right, and all the socials are saying you’ve lost your touch and they’re losing the feeling!`,
+  `Show them you’re wrong, boss. I know you can be the greatest wrestling booker to have ever lived. You’ve got ${bank} to build your perfect roster, and ${mine} goes live this week.`,
+  `The network’s counting on you, and I’m counting on you. I can’t go back to doing the Wendy’s tweets, man. I can’t.`]}
+function xrIntro(){if(XR_INTRO||typeof openModal!=='function')return;
+ const lines=xrIntroLine();XR_INTRO={lines,i:0};xrIntroPage()}
+/* one paragraph at a time, tap to continue, and the last button sends you to the draft */
+function xrIntroPage(){const X=XR_INTRO;if(!X)return;const n=X.lines.length,last=X.i>=n-1;
+ openModal(`<div class="h mhd mt">📱 X Redditino · Head of PR</div><div class="scene brief ibx" style="min-height:270px"><div class="scs"><span class="scav x">XR</span><div class="scq"><b>X Redditino</b><q>${esc(X.lines[X.i])}</q></div></div></div>
+ <button class="choice" onclick="${last?'xrIntroDone()':'xrIntroNext()'}"><span class="key"><span>${last?'A':'▸'}</span></span><div>${last?`✨ "Let's go make some magic."`:'Tap to continue'}</div></button>`);
+ const m=document.getElementById('modal');if(m)m.dataset.xri='1'}
+window.xrIntroNext=function(){if(!XR_INTRO)return;XR_INTRO.i=Math.min(XR_INTRO.i+1,XR_INTRO.lines.length-1);xrIntroPage()};
+/* however the sheet closes (the button, swipe-down, back, tapping outside), the opening counts as played and the draft carries on */
+function xrIntroEnd(){if(!XR_INTRO)return;XR_INTRO=false;const md=document.getElementById('modal');if(md)delete md.dataset.xri;const l=tutStore().xri;const seen=Array.isArray(l)?l.slice(-30):[];if(S&&!seen.includes(S.seed))seen.push(S.seed);tutPut({xri:seen});
+ setTimeout(()=>{try{tutAuto()}catch(e){}try{if(typeof render==='function'&&S&&S.phase==='draft')render()}catch(e){}},250)}
+window.xrIntroDone=function(){if(typeof closeModal==='function')closeModal();xrIntroEnd()};
+
 /* v350: a tip counts as seen only if it was seen after its text last changed (its `since`), so a reworded tip comes up again once */
 function tipSeen(seen,id){const v=seen[id];if(!v)return false;const s=TUT_STEPS.find(x=>x.id===id);return !(typeof v==='number'&&s&&s.since>v)}
 /* a one-time coach tip, shown the first time it applies */
@@ -243,6 +273,7 @@ function tutMenuCard(){if(!S)return '';const dr=S.phase==='draft',on=tutTipsOn()
  if(typeof render==='function'){const r0=render;render=function(){const out=r0.apply(this,arguments);
   if(TUT){const st=TUT.steps[TUT.i];setTimeout(()=>{if(TUT&&TUT.steps[TUT.i]===st)tutPlace(tutFind(st))},40)}
   else setTimeout(()=>{try{tutAuto()}catch(e){}},420);return out}}
+ if(typeof closeModal==='function'){const c0=closeModal;closeModal=window.closeModal=function(){const out=c0.apply(this,arguments);try{xrIntroEnd()}catch(e){}return out}}
  if(typeof segDetails==='function'){const d0=segDetails;segDetails=window.segDetails=function(){const out=d0.apply(this,arguments);try{tutTip('t.editor')}catch(e){}return out}}
  if(typeof showResults==='function'){const s0=showResults;showResults=function(rv){const out=s0.apply(this,arguments);/* the solo reveal shows this tip itself once it finishes */if(rv!==true)try{tutTip('t.results')}catch(e){}return out}}
  let raf=0;const re=()=>{if(!TUT||raf)return;raf=requestAnimationFrame(()=>{raf=0;if(TUT)tutPlace(tutFind(TUT.steps[TUT.i]))})};

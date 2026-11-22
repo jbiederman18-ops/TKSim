@@ -33,7 +33,7 @@ let DC_KEY=null, DC_SEEN=0, DC_Q=[], DC_CUR=null, DC_T=null;
 
 function dcEl(){let e=document.getElementById('dcall');if(!e){e=document.createElement('div');e.id='dcall';e.setAttribute('role','status');e.setAttribute('aria-live','polite');e.onclick=dcSkip;document.body.appendChild(e)}return e}
 function dcOff(){return typeof TV!=='undefined'&&TV}
-function dcBusy(){return typeof TUT!=='undefined'&&!!TUT}
+function dcBusy(){return (typeof TUT!=='undefined'&&!!TUT)||(typeof XR_INTRO!=='undefined'&&XR_INTRO)}
 
 /* look for picks we haven't announced yet */
 function dcScan(){
