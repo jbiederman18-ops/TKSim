@@ -115,8 +115,8 @@ function moodHtml(w){const [ic,wd]=moodWord(w.mor);const l=moodTop(w,4);
 window.moodHtml=moodHtml;
 /* what will cost them morale next if nothing changes (the profile's Condition panel) */
 function moodWatch(w){const l=[];if(!w||w.own!=='p'||w.inj)return l;const star=w.pop>=70;const lim=star?IDLE_STAR:IDLE_MID;
- if(w.pop>=35&&(w.idle||0)>=lim-1)l.push(`📺 Off TV ${w.idle} week${w.idle===1?'':'s'} — ${w.idle>=lim?'losing morale every week off':'another week off costs morale'}`);
- if(w.pop>=EGO_POP&&!isChamp(w.id)&&(w.ego||0)>=EGO_AFTER-1)l.push(`🌟 Wants the spotlight — a main event, a 3½★ segment or a PPV win${(w.ego||0)>=EGO_AFTER?' stops the slide':' keeps them happy'}`);
+ if(w.pop>=35&&(w.idle||0)>=lim-1)l.push(w.idle>=lim?`Off TV ${w.idle} weeks — losing morale`:'Needs TV this week');
+ if(w.pop>=EGO_POP&&!isChamp(w.id)&&(w.ego||0)>=EGO_AFTER-1)l.push((w.ego||0)>=EGO_AFTER?'Wants the spotlight — losing morale':'Wants the spotlight soon');
  return l}
 window.moodWatch=moodWatch;
 })();

@@ -41,14 +41,12 @@ The tour reads its numbers straight from the game and is checked automatically o
 - **Existing saves** keep their week: the WWE wrestlers arrive in free agency, WWE's titles start vacant (two for each brand), and the PPVs take their new names from here on.
 
 ## A wrestler's profile
-Tap any wrestler (hold a card on a phone, right-click it on a computer) to open their profile. It's in the order you use it:
-- **Anything owed or urgent** sits on top: a contract in its last weeks (with the button to negotiate), main events, title shots and promised matches they're owed, a walkout threat, a debut waiting.
-- **Condition** — stamina (Ready, Tired or Running on empty), morale and what's moved it over the last four weeks, what will cost them morale next (too long off TV, a star who wants the spotlight), a chip on their shoulder, the friends who feel their wins and broken promises, and durability.
-- **Crowd they draw** — their fan group and what that crowd wants from a match, plus the stipulation they're a natural in once you've found it.
-- **Feuds** — every rivalry with its tier (Heat, Rivalry, Feud, Blood feud); tap one for its story.
-- **Matchups** — the best opponents and tag partners on your roster ("on paper" until they've shared a ring) and anyone to keep apart.
-- **Ring · Mic · Pop** — where each is headed, and Performance Center training. Ring rates their matches, Mic their promos.
-- Then traits, contract and record, and their career and head-to-head.
+Tap any wrestler (hold a card on a phone, right-click it on a computer) to open their profile. Their Ring, Mic and Pop are the three big numbers up top, the best one in white. Below that, in plain lists:
+- **Needs you** (only when something does): a walkout threat, a debut, main events, title shots and promised matches they're owed, and a **New deal** button in a contract's last weeks.
+- **Right now** — stamina, morale and what's moving it (including "Needs TV this week" or "Wants the spotlight" before it costs you), a chip on their shoulder, backstage friends, durability and Performance Center training.
+- **Their crowd** — the fan group they draw and what it wants, plus the stipulation they're a natural in once you've found it.
+- **Feuds** by tier (Heat, Rivalry, Feud, Blood feud); tap one for its story.
+- **Best matchups** and tag partners on your roster (tap a name to see why), then traits, contract and record, and a folded-up career.
 
 Someone else's wrestler leads with what you'd do about them: draft, sign, make an offer or trade.
 
@@ -193,6 +191,7 @@ A card on Home shows your progress and the weeks left. Win or lose, the save kee
 - **No pick banner over Your games (v419).** With more than one game saved, Your games opens on launch over whatever game loaded; a draft in progress behind it now waits, and "The pick is in" steps aside whenever a sheet opens and finishes once you're back on the board.
 - **A tighter rookie tour (v421).** Every draft-tour stop, first-week stop and coach tip rewritten to teach only what that moment needs, each pointing at the exact control it's about: the draft tour ends on Make the pick, the first week crowns your vacant champions, and season and backstage side notes moved out of the draft.
 - **Wrestler profiles rebuilt (v422).** The profile is laid out around using the wrestler this week: what's owed on top, then Condition (with what will cost morale next), the crowd they draw and what it wants, feuds by tier, matchups, Ring · Mic · Pop, traits, contract and career. The big overall number is gone (cards use Ring / Mic / Pop), style moved under Matchups where it explains chemistry, and momentum shows only as a hot or cold streak.
+- **Cleaner profiles (v423).** The profile takes the page-hero look: a big name with Ring / Mic / Pop as three big numbers, then plain lists under gold heads — words instead of meters, one line per fact, matchup reasons behind a tap, actions as small links at the bottom.
 - **No replayed picks on launch (v420).** Reopening a solo draft no longer replays the rival's last pick (you saw it when it happened); leagues still catch you up on picks made while you were away, once the launch has settled and Your games is out of the way.
 - **Undiscovered wrestlers (v399)** find their crowd through who they work with: each match leans them toward their opponents' and partners' crowds and the stipulation's (the profile shows the lean), and a clear lean after a few matches locks in. Breaking out past 50 popularity locks the current lean, with a warning first. A wrestler who's been off TV for weeks or is miserable may ask at your office to reinvent themselves for a different crowd.
 - **Money stays meaningful.** A bigger company pays bigger wages when wrestlers sign or re-sign (about +20% at 1M fans), production and stipulations cost more in bigger venues, and past a big night's box office the extra comes in at half — so a hit promotion's bank levels off instead of piling up millions. The offline rival doesn't pay the wage premium (it runs a bigger roster); in online leagues every GM does. Selling out scales the same way: sponsor money grows with the company and so does the fan cost, so it's about the same trade at any size.
