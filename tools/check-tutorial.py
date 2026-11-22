@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Plays the whole Rookie GM orientation in a headless browser and fails if any stop is broken.
 
-Checks: the draft and first-week tours are offered to a new player, every stop finds what it points at,
+Checks: the draft tour starts on its own and the first-week tour is offered to a new player, every stop finds what it points at,
 every live number in the text still resolves (TUT_MISS is empty), each coach tip fires (the results tip after a real
 show), no stop is longer than TUT_WORDS, returning players get a "What's new" replay of the stops changed since their
 version, a reworded tip comes back once, and nothing throws.
@@ -80,8 +80,12 @@ async def main(shots):
             await pg.fill('#gmName', 'Tester')
             await pg.evaluate('startGame()')
             await pg.wait_for_timeout(500)
-            if await expect_offer('draft'):
+            # the draft tour starts on its own for a new player
+            try:
+                await pg.wait_for_function("!!(TUT&&TUT.track==='draft')", timeout=4000)
                 await walk('draft')
+            except Exception:
+                problems.append('the draft tour did not start on its own for a new player')
 
             await pg.evaluate('simDraft()')
             await pg.wait_for_timeout(800)

@@ -23,7 +23,7 @@
      Appending is how stops drift into patch notes.
    • tools/check-tutorial.py fails on history/design phrasing (TUT_BANNED). If it flags a line, rewrite it, don't
      dodge the pattern. */
-const TUT_REV=75;
+const TUT_REV=76;
 const TUT_KEY='tksim_tut';
 const TUT_WORDS=190;  /* longest a stop may be (checked by tools/check-tutorial.py) */
 const TUT_MISS=[];
@@ -70,11 +70,11 @@ const TUT_STEPS=[
 {id:'d.cap',track:'draft',since:1,sys:['draft','cap','money'],sel:'main .card.dhead',t:'The salary cap',
  b:()=>`You have ${tvCap()?tvMoney(tvCap())+' a week':'a weekly cap'} to fill ${tv('draft rounds',()=>S.draft.rounds||24,24)} spots, and stars cost far more than the midcard. Prices are weekly salaries: ▲ means above your budget per remaining pick, 🚫 means they won't fit.<br><br>You start with ${tvMoney(tv('START_BANK',()=>START_BANK,350))} in the bank. Draft to the cap for a stronger roster now, or leave room: whatever you don't spend goes into your bank (×4) for free agents, a bigger building and production later. Don't hoard stars — with more than ${tv('EGO_ROOM',()=>EGO_ROOM,10)}, the ones left out of the spotlight get restless.`},
 {id:'d.tape',track:'draft',since:1,sys:['ratings','popularity','alignment','fan groups'],sel:'main .card.ttape',t:'Reading a wrestler',
- b:()=>`<b>Ring</b> makes matches good. <b>Mic</b> makes promos good. <b>Pop</b> (popularity) draws the crowd and moves fans the most. The symbol shows which of your five crowds they draw — you'll want all of them covered.<br><br>Mix <span class="face">faces</span> and <span class="heel">heels</span>: face vs heel is how feuds catch fire. Each wrestler's profile shows their best opponents and partners once they've worked together.`},
+ b:()=>`<b>Ring</b> makes matches good. <b>Mic</b> makes promos good. <b>Pop</b> (popularity) draws the crowd and moves fans the most. The symbol shows which of your five crowds they draw — you'll want all of them covered, and the crowd chips above the list filter the board to one.<br><br>Mix <span class="face">faces</span> and <span class="heel">heels</span>: face vs heel is how feuds catch fire. Each wrestler's profile shows their best opponents and partners once they've worked together.`},
 {id:'d.div',track:'draft',since:1,opt:true,sys:['divisions','titles'],sel:()=>[...document.querySelectorAll('main .chips')].find(e=>/women/i.test(e.textContent)),t:'Fill every division',
  b:()=>`Every show has a men's and a women's world title, midcard title and tag title (one show also has the trios belts). Draft enough women to fill a division and tag partners who click.<br><br>Draft depth, not just headliners — tired stars have bad nights.`},
 {id:'d.auto',track:'draft',since:1,opt:true,sys:['draft'],sel:'main [onclick^="simDraft"], main [onclick^="autoPick"]',t:'In a hurry?',
- b:()=>`<b>Auto-pick</b> takes the best fit for one pick. <b>Sim rest</b> drafts the rest of your roster for you.<br><br>When the draft ends, the tour picks up with your first week.`},
+ b:()=>`<b>Auto-pick</b> takes the best fit for one pick. <b>Sim rest</b> drafts the rest of your roster for you.<br><br>When ${tvRival()} pick${ON()?'':'s'}, their pick flashes up at the top of the screen. When the draft ends, the tour picks up with your first week.`},
 
 /* ---- the first week: the essentials only — everything else is a coach tip the first time it comes up ---- */
 {id:'s.show',track:'season',since:75,tab:'home',sel:'main .card.showcard',sys:['shows','calendar','goal','fans','fan groups'],t:'Your show',
@@ -198,7 +198,10 @@ function tutAuto(){/* v238: a draft-tour offer left unanswered (say, on auto-dra
  if(!S||TUT||TUT_OFFER||(typeof TV!=='undefined'&&TV))return;
  if(typeof LIVE!=='undefined'&&LIVE)return;const m=document.getElementById('modal');if(m&&!m.classList.contains('hidden'))return;
  const st=tutStore();
- if(S.phase==='draft'&&st.draft===undefined&&!(S.draft&&S.draft.log&&S.draft.log.length>4))return tutOffer('draft');
+ /* v412: the draft tour starts on its own (no offer to wave off), so every new GM drafts knowing what to look for.
+    Skip tour is still there, and finishing or skipping it marks it done on this device. Not in the WWE supplemental draft,
+    and not for someone who has already started picking. */
+ if(S.phase==='draft'&&!(st.draft>0)&&S.draft&&!S.draft.supp&&!(typeof draftRoster==='function'&&draftRoster('p').length))return tutStart('draft');
  if(S.phase!=='season'||typeof tab==='undefined')return;
  /* brand-new games only: the first two weeks of the first year */
  if(st.season===undefined&&S.week<=2&&!(S.season>1)&&tab==='home')return tutOffer('season');

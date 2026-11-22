@@ -1512,7 +1512,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v411';
+const APP_VERSION='v412';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -3010,7 +3010,7 @@ function draftChoice(brand){
  const cand=needF?pool.filter(w=>w.g==='F'):pool;const list=cand.length?cand:pool;
  let best=null,bv=-1;list.forEach(w=>{const v=w.pop*.5+w.ring*.35+w.mic*.15+room(w.ring)*UPS_K+(isChamp(w.id)?8:0)+(mine.some(o=>inTeam(o.id,w.id))?6:0)+R(0,aiq(brand).noise)-Math.max(0,mkt(w)-allow)*.9;if(v>bv){bv=v;best=w}});return best}
 function draftPick(id,brand){const d=S.draft,w=S.w[id];if(!w||w.own)return;w.sal=mkt(w);w.own=brand;w.con=RI(DRAFT_CON[0],DRAFT_CON[1]);w.fee=0;
- d.log.unshift(`R${d.round} · ${nameOf(brand)}: ${w.name}`);d.last=id;d.pk=(d.pk||0)+1;w.dr=d.pk;w.drr=d.round;d.pick++;if(d.pick>=(d.order||[1,1]).length){d.pick=0;d.round++}
+ d.log.unshift(`R${d.round} · ${nameOf(brand)}: ${w.name}`);d.last=id;(d.ids||(d.ids=[])).push(id);/* v412: every pick in order, for the pick-is-in banner (draftcall.js) */d.pk=(d.pk||0)+1;w.dr=d.pk;w.drr=d.round;d.pick++;if(d.pick>=(d.order||[1,1]).length){d.pick=0;d.round++}
  if(d.round>d.rounds)finishDraft();save()}
 function finishDraft(){if(S.draft&&S.draft.supp)return finishSupp();S.phase='season';bothSides(()=>scoutTick(true));
  if(S.draft&&S.draft.cap)brands().forEach(b=>{const left=S.draft.cap-payroll(b);if(left>0){const bonus=Math.round(left*4);S.money[b]+=bonus;news(`💼 ${nameOf(b)} came in ${money(left)}/wk under the cap — ${money(bonus)} goes into the bank.`)}});
@@ -4223,7 +4223,8 @@ function render(){const app=$('#app');
  const keepY=!ANIM&&R_TAB===tab&&LOCK_Y===null?window.scrollY:null;R_TAB=tab;
  app.innerHTML=hdr()+`<main class="${ANIM?'enter':''} t-${S.phase==='season'||S.phase==='over'?tab:S.phase}">${mpBanner()}${body}</main>`+(S.phase==='season'||S.phase==='over'?navView():'');ANIM=false;
  if(keepY!=null&&Math.abs(window.scrollY-keepY)>1)window.scrollTo(0,keepY);pinNav();try{briefAuto()}catch(e){}
- if(!ON()&&S.phase==='draft'&&onClock()==='ai'&&!aiT)aiT=setTimeout(()=>{aiT=null;if(S&&S.phase==='draft'&&onClock()==='ai'){const c=draftChoice('ai');if(c)draftPick(c.id,'ai')}render()},450)}
+ /* v412: the rival waits while the draft tour is up, and takes a beat on the clock so its pick reads as a moment */
+ if(!ON()&&S.phase==='draft'&&onClock()==='ai'&&!aiT&&!(typeof TUT!=='undefined'&&TUT))aiT=setTimeout(()=>{aiT=null;if(S&&S.phase==='draft'&&onClock()==='ai'&&!(typeof TUT!=='undefined'&&TUT)){const c=draftChoice('ai');if(c)draftPick(c.id,'ai')}render()},800)}
 
 function setupView(){return `<div class="hero"><div class="kicker"><i></i>Tony Khan Simulator · A wrestling GM sim</div><div class="hero-t">Road to<br>Mania &amp; All In</div><div class="lfl hero-l"></div><p class="muted">Draft a roster against a rival GM, book Dynamite head-to-head against their Collision, build feuds, develop rookies into stars, and win the fan war over a ${SEASON}-week year from the Royal Rumble to Survivor Series.</p></div>
 <div class="card"><label>Your GM name</label><input id="gmName" maxlength="24" placeholder="Your name">
@@ -6029,6 +6030,7 @@ function hyTidy(root){if(!skinOn()||!root)return;root.querySelectorAll('.small,.
 <script src="rebrand.js"></script>
 <script src="desk.js"></script>
 <script src="phone.js"></script>
+<script src="draftcall.js"></script>
 <script type="module" src="online.js"></script>
 </body>
 </html>
