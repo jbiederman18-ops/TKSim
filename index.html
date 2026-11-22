@@ -1512,7 +1512,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v407';
+const APP_VERSION='v408';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4062,9 +4062,9 @@ function crisisChoose(i){if(mpLocked())return;const c=S.crisis;if(!c||!CRISES[c.
 function saveKey(){return ON()&&LMP?'tksim_game_'+LMP.code:KEY}
 let SAVE_WARNED=0;
 function saveLocal(){if(TV||MP_TX||RESTORING)return true;const k=saveKey(),v=JSON.stringify(S);
- for(let i=0;i<8;i++){try{localStorage.setItem(k,v);return true}catch(e){
-  /* storage full: make room by dropping the oldest backup, then try again */
-  const l=localBackups();if(!l.length)break;l.pop();try{if(l.length)localStorage.setItem('tksim_bk',JSON.stringify(l));else localStorage.removeItem('tksim_bk')}catch(e2){}}}
+ try{lsPut(k,v);return true}catch(e){}
+ /* still full with no backups left in localStorage (IndexedDB unavailable): drop the oldest backup and try again */
+ for(let i=0;i<8;i++){const l=bkLsRead();if(!l.length)break;l.pop();try{if(l.length)localStorage.setItem('tksim_bk',JSON.stringify(l));else localStorage.removeItem('tksim_bk')}catch(e2){}if(BKC)BKC=l;try{localStorage.setItem(k,v);return true}catch(e){}}
  if(Date.now()-SAVE_WARNED>60000){SAVE_WARNED=Date.now();toast('⚠️ Device storage is full — progress isn\'t saving. Export your save from the ⚙️ menu.')}return false}
 function save(){if(TV||MP_TX)return;saveLocal();if(!ON()){touchSolo();cloudSoon();if(typeof stvSoon==='function')stvSoon()}else if(S.online.turn==='p'||partyOn()||simOn())mpSoon()}
 function load(){try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){return null}}
@@ -5212,7 +5212,7 @@ function overView(){if(ON()&&nSeats()>2)return mpOverView();const win=fanWar('p'
 function nextSeason(){if(mpLocked())return;S.awb=awBase()+S.week-1;S.season++;S.week=1;S.showIdx=0;S.phase='season';for(const k in S.hourWins)S.hourWins[k]=0;S.best=null;S.promises=[];if(S.priv)for(const k in S.priv)if(S.priv[k])S.priv[k].promises=[];if(ON()){relocal();S.online.booked={};S.online.order=bookingOrder()}S.fa={};marketTick(undefined,true);{const n=[];offseasonApply(n)}seasonStart();freshCards();mandTick();news(`🎉 Season ${S.season} begins — a new year on the road to All In. First stop: ${PPVS[4]}.`);save();go('home')}
 
 /* ===================== ONLINE LEAGUE: turns, sync, invites ===================== */
-const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{lsPut(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 function mpGames(){try{return JSON.parse(LS.get('tksim_games')||'[]')}catch(e){return []}}
 function mpLabel(){if(!S||!ON())return '';const others=localSeats().filter(k=>k!=='p').map(k=>S.names&&S.names[k]).filter(Boolean);return nSeats()===2?`${S.gm} vs ${others[0]||'open seat'}`:`${S.gm}'s ${nSeats()}-GM league`}
 function mpRemember(){if(!LMP)return;{const g=mpGone();if(g.includes(LMP.code))LS.set('tksim_gone',JSON.stringify(g.filter(c=>c!==LMP.code)))}const l=mpGames().filter(g=>g.code!==LMP.code);const was=LS.get('tksim_games');l.unshift({code:LMP.code,me:LMP.me,key:LMP.key,label:mpLabel()});LS.set('tksim_games',JSON.stringify(l.slice(0,12)));if(LS.get('tksim_games')!==was)cloudSoon()}
@@ -5406,7 +5406,7 @@ function touchSolo(){const m=soloMeta();m.at=Date.now();LS.set('tksim_meta',JSON
 const SHELF='tksim_shelf';
 function shelfList(){try{return JSON.parse(LS.get(SHELF)||'[]')}catch(e){return []}}
 /* throws if the list can't be written, so callers never drop a save that the list doesn't point to */
-function shelfSet(l){localStorage.setItem(SHELF,JSON.stringify(l))}
+function shelfSet(l){lsPut(SHELF,JSON.stringify(l))}
 let SDB=null,BOOT_Q=false;
 function sdb(){if(SDB)return SDB;SDB=new Promise((res,rej)=>{if(typeof indexedDB==='undefined')return rej('no idb');const r=indexedDB.open('tksim_saves',1);r.onupgradeneeded=()=>r.result.createObjectStore('s');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});SDB.catch(()=>{});return SDB}
 function sdbOp(mode,fn){return sdb().then(db=>new Promise((res,rej)=>{const t=db.transaction('s',mode);const q=fn(t.objectStore('s'));t.oncomplete=()=>res(q&&q.result);t.onerror=t.onabort=()=>rej(t.error)}))}
@@ -5429,7 +5429,7 @@ async function openSolo(id){if(TV)return toast('Exit TV mode first (top right).'
  const data=await shelfGet(id);if(!data)return toast("Couldn't find that game on this device.");const ent=shelfList().find(x=>x.id===id)||{};
  try{await shelveSolo()}catch(e){console.warn(e);return toast("Couldn't switch games — your device may be out of storage.")}
  leaveLeagueView();
- try{localStorage.setItem(KEY,data)}catch(e){console.warn(e);afterSoloLoad();return toast("Couldn't switch games — your device may be out of storage. Both games are safe in ⇄ Your games.")}
+ try{lsPut(KEY,data)}catch(e){console.warn(e);afterSoloLoad();return toast("Couldn't switch games — your device may be out of storage. Both games are safe in ⇄ Your games.")}
  LS.set('tksim_meta',JSON.stringify(Object.assign({},ent.meta||{},{sid:id,at:ent.at||0})));
  try{shelfSet(shelfList().filter(x=>x.id!==id));await shelfDel(id)}catch(e){}afterSoloLoad()}
 function openActiveSolo(){if(TV)return toast('Exit TV mode first (top right).');if(ON())return mpSolo();closeModal()}
@@ -5474,7 +5474,7 @@ async function restoreAll2(d){openModal(`<div class="h mhd">Restoring…</div><p
   else{try{await shelveSolo()}catch(e){closeModal();return toast("This device is out of storage — couldn't make room to restore.")}}}
  if(ON())leaveLeagueView();
  RESTORING=true;
- const put=(k,v)=>{try{localStorage.setItem(k,v);return true}catch(e){fail++;return false}};
+ const put=(k,v)=>{try{lsPut(k,v);return true}catch(e){fail++;return false}};
  /* shelved solo games */
  const have=new Set(shelfList().map(x=>x.id));const curSid=takeSolo?bMeta.sid:soloMeta().sid;
  const bList=(()=>{try{return JSON.parse(ls[SHELF]||'[]')}catch(e){return []}})();
@@ -5546,7 +5546,7 @@ async function rcvGo(){if(TV)return toast('Exit TV mode first (top right).');con
  const id=raw.replace(/[^A-Z0-9]/g,'');if(id.length!==12)return toast('Move codes have 12 letters and numbers.');if(!mpAvail()||!TKO.ready)return mpNeedSetup();
  const b=$('#rcvGo');b.disabled=true;b.textContent='Receiving…';
  try{const d=await TKO.cloudGet(id);if(!d||!d.state)throw new Error('nogame');const st=JSON.parse(d.state);if(!st.w||!st.phase)throw new Error('bad');
-  await shelveSolo();leaveLeagueView();try{localStorage.setItem(KEY,d.state)}catch(e){afterSoloLoad();return toast("Couldn't receive that game — your device may be out of storage.")}
+  await shelveSolo();leaveLeagueView();try{lsPut(KEY,d.state)}catch(e){afterSoloLoad();return toast("Couldn't receive that game — your device may be out of storage.")}
   LS.set('tksim_meta',JSON.stringify({at:Date.now(),sid:newCode(8)}));afterSoloLoad();toast(`📲 ${soloTitle(st)} is on this device now.`)}
  catch(e){console.warn(e);b.disabled=false;b.textContent='Receive';const m=String(e&&e.message||e);toast(m.includes('nogame')?'No game found for that code.':navigator.onLine?"Couldn't receive that game — check the code.":'You need a connection to receive a game.')}}
 async function delGame(k,id,cur){const g=gamesList().find(x=>x.k===k&&x.id===id);if(!g)return;
@@ -5560,12 +5560,39 @@ async function delGame(k,id,cur){const g=gamesList().find(x=>x.k===k&&x.id===id)
  openGames()}
 
 
-/* ---- automatic local backups (last 5 weeks + a snapshot before anything replaces your save) ---- */
-function localBackups(){try{return JSON.parse(LS.get('tksim_bk')||'[]')}catch(e){return []}}
-function localBackup(why,st,sid){st=st||soloState();if(!st||!st.w)return;if(!sid&&st===soloState())sid=soloMeta().sid;const l=localBackups();const tag=`${st.season}-${st.week}`;
- const rest=l.filter(b=>!(b.tag===tag&&(b.sid||'')===(sid||'')&&!b.why&&!why));rest.unshift({tag,why:why||'',at:Date.now(),label:saveLabel(st),t:soloTitle(st),sid:sid||'',data:JSON.stringify(st)});
- const keep=[];let auto=0,manual=0;for(const b of rest){if(b.why?manual++<3:auto++<CLOUD_BK)keep.push(b)}
- for(let n=keep.length;n>0;n--){try{LS.set('tksim_bk',JSON.stringify(keep.slice(0,n)));return}catch(e){}}}
+/* ---- automatic backups (last 5 weeks + up to 3 snapshots before anything replaces a save, per game) ----
+ v408: backups live in IndexedDB (the phone's big storage), not localStorage. localStorage is capped at ~5MB per
+ site, and full copies of big saves used to fill it until switching games failed with "out of storage".
+ BKC is the in-memory list (newest first); every change is written to IndexedDB, falling back to localStorage
+ only if IndexedDB can't be used at all. Old localStorage backups are moved over at boot. */
+let BKPEND=[],BKC=null,BKDB=null,BK_LS=false,BKREADY=null;
+function bkdb(){if(BKDB)return BKDB;BKDB=new Promise((res,rej)=>{if(typeof indexedDB==='undefined')return rej('no idb');const r=indexedDB.open('tksim_backups',1);r.onupgradeneeded=()=>r.result.createObjectStore('b');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});BKDB.catch(()=>{});return BKDB}
+function bkOp(mode,fn){return bkdb().then(db=>new Promise((res,rej)=>{const t=db.transaction('b',mode);const q=fn(t.objectStore('b'));t.oncomplete=()=>res(q&&q.result);t.onerror=t.onabort=()=>rej(t.error)}))}
+function bkLsRead(){try{return JSON.parse(localStorage.getItem('tksim_bk')||'[]')||[]}catch(e){return []}}
+/* keep what's worth keeping, per game: no two copies of the same save, one weekly backup per week, the last
+ CLOUD_BK weeks and the last 3 snapshots of each game (so one game's backups never push out another's) */
+function bkTidy(l){l=l.filter(b=>b&&b.data).sort((a,b)=>(b.at||0)-(a.at||0));const same=new Set(),cnt={},out=[];
+ for(const b of l){const g=b.sid||'';
+  if(same.has(g+'|'+b.data))continue;same.add(g+'|'+b.data);           /* an identical copy of a newer backup of this game */
+  if(!b.why){if(same.has(g+'|w|'+b.tag))continue;same.add(g+'|w|'+b.tag)} /* an older weekly backup of the same week */
+  const c=cnt[g]||(cnt[g]={a:0,m:0});if(b.why?c.m++<3:c.a++<CLOUD_BK)out.push(b)}
+ return out.slice(0,60)}
+function bkLsWrite(l){for(let n=l.length;n>0;n--){try{localStorage.setItem('tksim_bk',JSON.stringify(l.slice(0,n)));return}catch(e){}}try{localStorage.removeItem('tksim_bk')}catch(e){}}
+let BK_Q=Promise.resolve();
+function bkFlush(){const l=BKC||[];BK_Q=BK_Q.then(()=>bkOp('readwrite',st=>{st.put(l,'list')})).then(()=>{if(!BK_LS)try{localStorage.removeItem('tksim_bk')}catch(e){}})
+ .catch(()=>{BK_LS=true;bkLsWrite(l)});return BK_Q}
+function bkBoot(){if(BKREADY)return BKREADY;BKREADY=(async()=>{let db=[];try{db=await bkOp('readonly',st=>st.get('list'))||[]}catch(e){BK_LS=true}
+ const old=bkLsRead(),pend=BKPEND;BKPEND=[];BKC=bkTidy(db.concat(old,pend));if(BK_LS){bkLsWrite(BKC);return}if(old.length||pend.length||db.length!==BKC.length)await bkFlush()})();BKREADY.catch(()=>{});return BKREADY}
+/* localStorage full: move backups still sitting there out of the way (into memory, then IndexedDB) — returns true if that freed anything */
+function lsRoom(){if(BK_LS)return false;const old=bkLsRead();if(!old.length)return false;BKPEND=BKPEND.concat(old);try{localStorage.removeItem('tksim_bk')}catch(e){}
+ if(BKC){BKC=bkTidy(BKC.concat(BKPEND));BKPEND=[];bkFlush()}else bkBoot();return true}
+/* localStorage.setItem that makes room first if it has to (throws if there's still no room) */
+function lsPut(k,v){try{localStorage.setItem(k,v);return}catch(e){if(!lsRoom())throw e}localStorage.setItem(k,v)}
+function localBackups(){return BKC||BKPEND.concat(bkLsRead())}
+function localBackup(why,st,sid){st=st||soloState();if(!st||!st.w)return;if(!sid&&st===soloState())sid=soloMeta().sid;const tag=`${st.season}-${st.week}`;
+ const b={tag,why:why||'',at:Date.now(),label:saveLabel(st),t:soloTitle(st),sid:sid||'',data:JSON.stringify(st)};
+ const add=()=>{BKC=bkTidy([b].concat(localBackups()));if(BK_LS)bkLsWrite(BKC);else bkFlush()};
+ if(BKC)add();else bkBoot().then(add,add)}
 
 /* ===================== CLOUD SYNC (v196): every solo game, both ways =====================
  Your sync code holds every solo game you play, each in its own slot (saves/{code}/games/{id}), and every device on
@@ -5843,7 +5870,7 @@ if(typeof document!=='undefined'&&document.getElementById('app')){
   if(q)history.replaceState(null,'',location.pathname);
   try{const a=JSON.parse(LS.get('tksim_active')||'null');const g=a&&LS.get('tksim_game_'+a.code);if(g){LMP={code:a.code,me:a.me,key:a.key};S=JSON.parse(g)}}catch(e){LMP=null}}
  if(!LMP)S=load();if(S&&(!S.w||!S.phase))S=null;dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);seasonMigrate(S);starMigrate(S);calMigrate(S);titleMigrate(S);if(!ON())showMigrate();else cardMigrate();if(S)saveLocal();
- tvBoot();loadImg();
+ tvBoot();loadImg();bkBoot();
  window.addEventListener('tko-ready',()=>{mpConnect();tvConnect();cloudCheck();render()});if(window.TKO)setTimeout(()=>{mpConnect();tvConnect();cloudCheck()},0);
  let lastCk=Date.now(),hidAt=0;document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&TV)partyWake();
   /* v262: a phone that was locked or switched away (even briefly) often comes back with a stalled live connection — reconnect and check the league right away */
