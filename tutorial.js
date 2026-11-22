@@ -23,7 +23,7 @@
      Appending is how stops drift into patch notes.
    • tools/check-tutorial.py fails on history/design phrasing (TUT_BANNED). If it flags a line, rewrite it, don't
      dodge the pattern. */
-const TUT_REV=76;
+const TUT_REV=77;
 const TUT_KEY='tksim_tut';
 const TUT_WORDS=190;  /* longest a stop may be (checked by tools/check-tutorial.py) */
 const TUT_MISS=[];
@@ -65,12 +65,15 @@ function tutCard(re){return [...document.querySelectorAll('main .card')].find(c=
 /* ---------- the stops ---------- */
 const TUT_STEPS=[
 /* ---- the draft ---- */
-{id:'d.hello',track:'draft',since:1,sys:['goal','calendar'],t:'Welcome to the front office',
- b:()=>`You run a wrestling brand. First you draft a roster against ${tvRival()} from AEW and WWE's combined talent pool. Then every week you book your show ${tv('league size',()=>typeof allIn==='function'&&allIn()?'against all of theirs (each night is ranked 1st to last)':'head-to-head against theirs','head-to-head against theirs')}, with a PPV every 4 weeks — ${tv('SEASON',()=>SEASON,40)} weeks from ${tvPPVs()[0]||'Royal Rumble'} to ${tvPPVs().slice(-1)[0]||'Survivor Series'}.<br><br><b>You win the season with the bigger audience.</b> Great shows earn fans; bad ones lose them.`},
+{id:'d.hello',track:'draft',since:77,sys:['goal','calendar'],t:'Welcome to the front office',
+ b:()=>`You run a wrestling brand. First you draft a roster against ${tvRival()} from AEW and WWE's combined talent pool. Then every week you book your show ${tv('league size',()=>typeof allIn==='function'&&allIn()?'against all of theirs (each night is ranked 1st to last)':'head-to-head against theirs','head-to-head against theirs')}, with a PPV every 4 weeks — ${tv('SEASON',()=>SEASON,40)} weeks from ${tvPPVs()[0]||'Royal Rumble'} to ${tvPPVs().slice(-1)[0]||'Survivor Series'}.<br><br><b>You win the season with the bigger audience</b> — five crowds, each wanting something different. Draft wrestlers who can give every one of them a show.`},
 {id:'d.cap',track:'draft',since:1,sys:['draft','cap','money'],sel:'main .card.dhead',t:'The salary cap',
  b:()=>`You have ${tvCap()?tvMoney(tvCap())+' a week':'a weekly cap'} to fill ${tv('draft rounds',()=>S.draft.rounds||24,24)} spots, and stars cost far more than the midcard. Prices are weekly salaries: ▲ means above your budget per remaining pick, 🚫 means they won't fit.<br><br>You start with ${tvMoney(tv('START_BANK',()=>START_BANK,350))} in the bank. Draft to the cap for a stronger roster now, or leave room: whatever you don't spend goes into your bank (×4) for free agents, a bigger building and production later. Don't hoard stars — with more than ${tv('EGO_ROOM',()=>EGO_ROOM,10)}, the ones left out of the spotlight get restless.`},
 {id:'d.tape',track:'draft',since:1,sys:['ratings','popularity','alignment','fan groups'],sel:'main .card.ttape',t:'Reading a wrestler',
- b:()=>`<b>Ring</b> makes matches good. <b>Mic</b> makes promos good. <b>Pop</b> (popularity) draws the crowd and moves fans the most. The symbol shows which of your five crowds they draw — you'll want all of them covered, and the crowd chips above the list filter the board to one.<br><br>Mix <span class="face">faces</span> and <span class="heel">heels</span>: face vs heel is how feuds catch fire. Each wrestler's profile shows their best opponents and partners once they've worked together.`},
+ b:()=>`<b>Ring</b> makes matches good. <b>Mic</b> makes promos good. <b>Pop</b> (popularity) draws the crowd and moves fans the most. The symbol on their card is the crowd they draw.<br><br>Mix <span class="face">faces</span> and <span class="heel">heels</span>: face vs heel is how feuds catch fire. Each wrestler's profile shows their best opponents and partners once they've worked together.`},
+{id:'d.crowds',track:'draft',since:77,sys:['fan groups','fans','draft'],sel:'main .chips.flfg',t:'Draft for your crowds',
+ b:()=>{const L=g=>tv('fgLbl',()=>fgLbl(g),({cas:'Casuals',tech:'Technical',blood:'Bloodhounds',flip:'Flippy',chaos:'Chaos fiends'})[g]);
+  return `Your audience is five crowds, and each wrestler draws one (shown by the symbol on their card):<br><br>${L('cas')} — by far the biggest. They come for big stars and hot feuds, and drive your TV deal.<br>${L('tech')} — want great wrestlers against great wrestlers, and submission matches.<br>${L('blood')} — want violence: cages and blood.<br>${L('flip')} — want high flyers and ladders.<br>${L('chaos')} — want run-ins, No DQ and madness.<br><br>The four smaller crowds buy the tickets and merch. Each needs a real match of its own every week, or it drifts away — so draft at least a pair for every crowd. <b>Tap a symbol here</b> to see only that crowd's wrestlers; ? means a wrestler hasn't found theirs yet.`}},
 {id:'d.div',track:'draft',since:1,opt:true,sys:['divisions','titles'],sel:()=>[...document.querySelectorAll('main .chips')].find(e=>/women/i.test(e.textContent)),t:'Fill every division',
  b:()=>`Every show has a men's and a women's world title, midcard title and tag title (one show also has the trios belts). Draft enough women to fill a division and tag partners who click.<br><br>Draft depth, not just headliners — tired stars have bad nights.`},
 {id:'d.auto',track:'draft',since:1,opt:true,sys:['draft'],sel:'main [onclick^="simDraft"], main [onclick^="autoPick"]',t:'In a hurry?',
