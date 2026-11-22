@@ -417,9 +417,9 @@ const FB_MULTI={triple:1,four:1,gauntlet:1,rumble:1,mitb:1};
 const FB_STIP0=.35,FB_STIP1=0,FB_STIPH=45;
 const FB_REP=.5;
 /* v405: casuals follow a story — the card's hottest feuds (heat over FB_STORY0) hook them, the top one most (x1.5 on a PPV) */
-const FB_STORY0=10,FB_STORYH=35,FB_STORYW=[1,.5,.3],FB_STORYCAP=1.5;
+const FB_STORY0=10,FB_STORYH=35,FB_STORYW=[1,.5,.3],FB_STORYCAP=1;  /* v416: was 1.5 — a feud-heavy GM was pulling casuals far past the rival */
 /* v405: tougher crowds by difficulty — on a solo game, your crowds expect this much more (in stars) than they'd otherwise ask for */
-const FB_XDIFF={easy:-.15,normal:.18,hard:.36};  /* v411: was normal .12 / hard .3 (v410), .05 / .25 (v405) */
+const FB_XDIFF={easy:-.15,normal:.26,hard:.42};  /* v416: was .18 / .36 (v413), .12 / .3 (v410), .05 / .25 (v405) */
 function fbXOff(b){if(b!=='p'||!S||(typeof ON==='function'&&ON()))return 0;return FB_XDIFF[S.diff||'normal']||0}
 /* the hottest feud across the sides of a match */
 function fbHeat(m){let x=0;if(!m||!m.sides||typeof heatOf!=='function')return 0;for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j])x=Math.max(x,heatOf(a,b));return x}

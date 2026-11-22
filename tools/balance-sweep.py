@@ -90,6 +90,11 @@ v410 (stipulations: steady pull FB_STIP0 .35 with no feud needed, STIP_TOLL stam
 v413 (the rival books a stipulation at 4x its price in the bank, was 8x — v410's 3x prices had starved its Bloodhounds;
   FB_XDIFF normal .18 / hard .36), 24 games x 2 seasons, seasons won: Normal default 42/33%, feud 75/58%, crowd 62/38%, both 83/62%.
   Hard default 17/4%, feud 38/29%, crowd 25/12%, both 50/33%. (v410 at 24 games: Normal default 71/62% — too easy.)
+v416 (5-star inflation: STAR_TOP2 4.5 / STAR_TOPK2 .25 on top of v121's knee, HEAT_PPV .35 -> .28, FB_STORYCAP 1.5 -> 1, FB_XDIFF
+  normal .26 / hard .42), 16 games x 2 seasons, seasons won S1/S2: Normal default 50/19%, --engaged 88/69%, feuds+crowds 81/44%;
+  Hard default 0/0%, --engaged 56/38%, feuds+crowds 81/31%. 5-star segments a season: engaged ~20 (was 41-49), rival ~6 (was 20-28),
+  default ~2; engaged PPVs 14% 5-star (was 37%), TV show ~3.8, PPV ~4.2. At v414 --engaged won 100/100% on Normal. Raising the rival's
+  Normal smart .5 -> .85 didn't close that gap (it already books like the engaged bot on Hard); the engaged edge was casuals.
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
 

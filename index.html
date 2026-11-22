@@ -1512,7 +1512,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v415';
+const APP_VERSION='v416';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -3218,7 +3218,7 @@ function favReveal(m,notes){const k=stipKey(m);if(k==='std'||!m.sides)return;m.s
    match points (STAR_PER to a star). Only human GMs' rosters: the offline rival keeps the old, simpler morale (morale.js). */
 /* how much feud heat lifts a match, per point of heat (TV / PPV) */
 /* v405: feuds carry a match — heat is worth more (was .15/.25) and builds faster (HEAT_GAIN, gains only; the weekly fade is unchanged) */
-let HEAT_TV=.22,HEAT_PPV=.35;
+let HEAT_TV=.22,HEAT_PPV=.28;  /* v416: PPV was .35 (v405), .25 before */
 let MOR_SLUMP=50,MOR_SLUMP_K=.08,MOR_FIRE=75,MOR_FIRE_K=.05;
 /* v354: delivering what someone was owed shows in the work — a wrestler finally getting the match they were promised,
    pitched for or have in their contract goes out there hungry. OWE_K raw points per owed wrestler (two at most), human
@@ -3317,6 +3317,9 @@ const STAR_BASE=43,STAR_PER=9.5;
 /* v121: the top of the scale is steeper. Past 4★ each extra star takes more (×1/0.6), because a PPV main event between two
  top-of-the-card stars was landing at 5★ almost every time once their popularity topped out. 4★ and under is unchanged. */
 const STAR_TOP=4,STAR_TOPK=.6;
+/* v416: and steeper again past 4½★ (×1/0.25 on top of that): an engaged GM was landing ~1 segment a show at 5★ (37% of PPV segments)
+   once feuds got hotter in v405. 4½★ and under is unchanged. */
+const STAR_TOP2=4.5,STAR_TOPK2=.25;
 /* v392: a promo hypes the match — a promo earlier on the same show with wrestlers from two different sides of a match
    (face to face, building it for later in the night) lifts that match a little, once per match. Promos cost no stamina. */
 const HYPE_RAW=2.4;
@@ -3326,7 +3329,7 @@ function hypeLift(m){if(!S||!S.card||!m||!m.sides||isSq(m))return 0;
  for(const b in S.card){const c=S.card[b];if(!Array.isArray(c))continue;const mi=c.findIndex(sl=>sl&&sl.d===m);if(mi<0)continue;
   return c.some((sl,j)=>j<mi&&sl&&sl.k==='promo'&&hypes(sl.d,m))?HYPE_RAW:0}
  return 0}
-const uRaw=raw=>{const u=(raw-STAR_BASE)/STAR_PER;return u>STAR_TOP?STAR_TOP+(u-STAR_TOP)*STAR_TOPK:u};
+const uRaw=raw=>{const u=(raw-STAR_BASE)/STAR_PER;const v=u>STAR_TOP?STAR_TOP+(u-STAR_TOP)*STAR_TOPK:u;return v>STAR_TOP2?STAR_TOP2+(v-STAR_TOP2)*STAR_TOPK2:v};
 const uStars=raw=>Math.round(uRaw(raw)*4)/4;
 /* v121: prestige gains taper off near the top (a title at 95 barely moves; one at 60 moves freely), so every belt doesn't pin at 100 */
 function prestUp(t,g){if(g>0)g*=clamp((105-t.prestige)/40,.1,1);t.prestige=clamp(t.prestige+g,10,100);return g}
