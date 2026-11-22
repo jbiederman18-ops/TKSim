@@ -370,10 +370,25 @@ function fgOf(w){if(!w)return [];const x=typeof S!=='undefined'&&S&&S.fgx&&S.fgx
 function fgUnd(w){return fgOf(w)[0]==='und'}
 /* the words on a card or profile: "Bloodhounds", "Flippy · Technical", "Undiscovered" */
 function fgWord(w){return fgOf(w).map(g=>FG_N[g]).join(' · ')}
-const FG_C={cas:'#efe9dc',tech:'#7fa7d6',blood:'#f07a2a',flip:'#3fc8b4',chaos:'#b77ee8',und:'#9a958c'};
+const FG_C={cas:'#efe9dc',tech:'#7fa7d6',blood:'#e5463b',flip:'#3fc8b4',chaos:'#b77ee8',und:'#9a958c'};
+/* v406: every crowd has a symbol (Josh's picks, Nov 22 2026): a drop of blood, a gear, a feather, a bomb, a crowd; undiscovered is a "?".
+   Cards show the symbol alone; everywhere else the symbol sits in front of the crowd's name. Tabler outline icons (MIT), drawn in currentColor. */
+const FG_IC={blood:'<path d="M7.502 19.423c2.602 2.105 6.395 2.105 8.996 0c2.602 -2.105 3.262 -5.708 1.566 -8.546l-4.89 -7.26c-.42 -.625 -1.287 -.803 -1.936 -.397a1.376 1.376 0 0 0 -.41 .397l-4.893 7.26c-1.695 2.838 -1.035 6.441 1.567 8.546"/>',
+ tech:'<path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/>',
+ flip:'<path d="M4 20l10 -10m0 -5v5h5m-9 -1v5h5m-9 -1v5h5m-5 -5l4 -4l4 -4"/><path d="M19 10c.638 -.636 1 -1.515 1 -2.486a3.515 3.515 0 0 0 -3.517 -3.514c-.97 0 -1.847 .367 -2.483 1m-3 13l4 -4l4 -4"/>',
+ chaos:'<path d="M15.349 5.349l3.301 3.301a1.2 1.2 0 0 1 0 1.698l-.972 .972a7.5 7.5 0 1 1 -5 -5l.972 -.972a1.2 1.2 0 0 1 1.698 0l.001 .001"/><path d="M17 7l1.293 -1.293a2.414 2.414 0 0 0 .707 -1.707a1 1 0 0 1 1 -1h1"/><path d="M7 13a3 3 0 0 1 3 -3"/>',
+ cas:'<path d="M10 13a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M8 21v-1a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v1"/><path d="M15 5a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M17 10h2a2 2 0 0 1 2 2v1"/><path d="M5 5a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M3 13v-1a2 2 0 0 1 2 -2h2"/>',
+ und:'<path d="M8 8a3.5 3 0 0 1 3.5 -3h1a3.5 3 0 0 1 3.5 3a3 3 0 0 1 -2 3a3 4 0 0 0 -2 4"/><path d="M12 19l0 .01"/>'};
+function fgIc(g){return FG_IC[g]?`<svg class="fgi" viewBox="0 0 24 24" aria-hidden="true">${FG_IC[g]}</svg>`:''}
+/* symbol + name, in the crowd's color: the standard label for a crowd anywhere outside a card */
+function fgLbl(g,t){return `<i class="fg-${g}">${fgIc(g)}${t==null?FG_N[g]:t}</i>`}
+/* the key: all five crowds in a row */
+function fgKey(){return ['cas','tech','blood','flip','chaos'].map(g=>`<span class="fgw fgk">${fgLbl(g)}</span>`).join(' ')}
 /* v398: on cards each group is a solid slanted chip (colored text on photos was hard to read); a second group gets its own chip */
-function fgTag(w,cls){const g=fgOf(w);const ln=g[0]==='und'&&cls!=='tcfg'&&typeof fgLean==='function'?fgLean(w.id):null;return `<span class="fgw ${cls||''}">${g.map(k=>`<i class="fg-${k}" style="--fgbg:${FG_C[k]}">${FG_N[k]}</i>`).join('<b>·</b>')}${ln?`<b>·</b><i class="fg-${ln}">leaning ${FG_N[ln]}</i>`:''}</span>`}
-window.fgOf=fgOf;window.fgUnd=fgUnd;window.fgWord=fgWord;window.fgTag=fgTag;
+function fgTag(w,cls){const g=fgOf(w);const card=cls==='tcfg';const ln=g[0]==='und'&&!card&&typeof fgLean==='function'?fgLean(w.id):null;
+ if(card)return `<span class="fgw tcfg">${g.map(k=>`<i class="fg-${k}" title="${FG_N[k]}">${fgIc(k)}</i>`).join('')}</span>`;
+ return `<span class="fgw ${cls||''}">${g.map(k=>fgLbl(k)).join('<b>·</b>')}${ln?`<b>·</b>${fgLbl(ln,'leaning '+FG_N[ln])}`:''}</span>`}
+window.fgOf=fgOf;window.fgIc=fgIc;window.fgLbl=fgLbl;window.fgKey=fgKey;window.fgUnd=fgUnd;window.fgWord=fgWord;window.fgTag=fgTag;
 /* ===================== v399: THE FAN ENGINE =====================
    Your audience is five groups (S.fb[b]); S.fans[b] stays their sum, so everything that reads the total still works.
    Fan changes made anywhere else in the game (promises, sell-outs, debuts, goals…) land on S.fans and fbSync files them:
@@ -536,11 +551,11 @@ if(typeof autoBook==='function'){const a0=autoBook;autoBook=window.autoBook=func
 /* ---- v402: a brand's audience as one bar of its five crowds (league standings, Home, party TV) and last week's crowds on the TV ---- */
 function fbBar(b){if(!S||!S.fans||S.fans[b]==null)return '';const f=fbSync(b);const T=fbSum(b)||1;
  return `<div class="fbbar" title="${FB_G.map(g=>fbN(g)+' '+fmtFans(f[g])).join(' · ')}">${FB_G.map(g=>`<i style="width:${(f[g]/T*100).toFixed(1)}%;background:${FG_C[g]}"></i>`).join('')}</div>`}
-function fbLegend(){return `<div class="fbleg">${FB_G.map(g=>`<span><i style="background:${FG_C[g]}"></i>${fbN(g)}</span>`).join('')}</div>`}
+function fbLegend(){return `<div class="fbleg">${FB_G.map(g=>`<span>${fgLbl(g)}</span>`).join('')}</div>`}
 function fbTvCard(){const L=S&&S.last;if(!L||!L.fb)return '';const ks=Object.keys(L.fb).filter(k=>L.fb[k]&&L.fb[k].before);if(!ks.length)return '';
- const rows=ks.sort((a,b)=>S.fans[b]-S.fans[a]).map(k=>{const r=L.fb[k];return `<div class="tv-row fbtv"><b>${esc(nameOf(k))}</b><span>${FB_G.map(g=>{const d=r.after[g]-r.before[g];return Math.abs(d)<500?'':`<span class="fbd"><i class="fg-${g}">${fbN(g)}</i> <b class="${d>0?'good':'bad'}">${d>0?'▲':'▼'}${fbK(Math.abs(d))}</b></span>`}).join('')}</span></div>`}).join('');
+ const rows=ks.sort((a,b)=>S.fans[b]-S.fans[a]).map(k=>{const r=L.fb[k];return `<div class="tv-row fbtv"><b>${esc(nameOf(k))}</b><span>${FB_G.map(g=>{const d=r.after[g]-r.before[g];return Math.abs(d)<500?'':`<span class="fbd">${fgLbl(g)} <b class="${d>0?'good':'bad'}">${d>0?'▲':'▼'}${fbK(Math.abs(d))}</b></span>`}).join('')}</span></div>`}).join('');
  let best=null,worst=null;ks.forEach(k=>FB_G.forEach(g=>{const d=L.fb[k].after[g]-L.fb[k].before[g];if(!best||d>best.d)best={k,g,d};if(!worst||d<worst.d)worst={k,g,d}}));
- const post=(x,good)=>x&&Math.abs(x.d)>=1000?`<div class="xrp"><span class="fgw"><i class="fg-${x.g}">${fbN(x.g)}</i></span> <b>${esc(fbPick(FB_HANDLE[x.g],x.k+x.g))}</b><div>${esc(good?`${nameOf(x.k)} gets us. Best show on TV tonight.`:`${nameOf(x.k)} forgot we exist. Changing the channel.`)}</div></div>`:'';
+ const post=(x,good)=>x&&Math.abs(x.d)>=1000?`<div class="xrp"><span class="fgw">${fgLbl(x.g)}</span> <b>${esc(fbPick(FB_HANDLE[x.g],x.k+x.g))}</b><div>${esc(good?`${nameOf(x.k)} gets us. Best show on TV tonight.`:`${nameOf(x.k)} forgot we exist. Changing the channel.`)}</div></div>`:'';
  return `<div class="card xred"><div class="xrh"><b>Last week's crowds</b><span>X Redditino · Head of PR</span></div>${rows}${post(best,true)}${post(worst,false)}</div>`}
 Object.assign(window,{fbBar,fbLegend,fbTvCard});
 /* ---- v404: the Crowd read is gone from the Book screen (watching it became the game). Instead the crowds' night closes the
@@ -549,7 +564,7 @@ const FB_WORD=[[3,'Eating well tonight','good'],[1,'Happy','good'],[-.5,'Lukewar
 const FB_CWORD=[[1.5,'Hooked','good'],[.3,'Tuned in','good'],[-1,'Restless',''],[-99,'Changing the channel','bad']];
 function fbWord(g,p){const t=g==='cas'?FB_CWORD:FB_WORD;return t.find(x=>p>=x[0])}
 const FB_THIRST={tech:'Technical fans savor this',blood:'Bloodhounds thirst for this',flip:'Flippy fans live for this',chaos:'Chaos fiends eat this up',cas:'Casuals love the spectacle'};
-function fbTag(g,t,bad){return g&&FG_C[g]?`<span class="txc${bad?' no':''}" style="--fgc:${FG_C[g]}">${t}</span>`:''}
+function fbTag(g,t,bad){return g&&FG_C[g]?`<span class="txc${bad?' no':''}" style="--fgc:${FG_C[g]}">${fgIc(g)}${t}</span>`:''}
 function fbStipTag(k){const g=FB_STIP[k];return g?fbTag(g,FB_THIRST[g]):''}
 /* a screwy finish only costs you with Technical fans when the match is one of theirs */
 function fbFinTag(k,d){if(!['cheat','dq','co'].includes(k))return '';try{if(d&&!fbExpo(fbSeg(d,0,false)).tech)return ''}catch(e){}return fbTag('tech','Technical fans hate it',1)}
@@ -557,7 +572,7 @@ function fbRiTag(){return fbTag('chaos',FB_THIRST.chaos)+fbTag('tech','Technical
 /* the end of the reveal: one line per crowd — how they took it and how many came or went */
 function fbRevealHtml(o,instant){const r=o&&o.fb&&o.fb.p;if(!r||!r.before||!r.after||!r.pct)return '';
  const rows=FB_G.map((g,n)=>{const w=fbWord(g,r.pct[g]||0)||['','',''];const d=Math.round(r.after[g]-r.before[g]);
-  return `<div class="srcr"${instant?'':` style="animation-delay:${n*110}ms"`}><span class="fgw"><i class="fg-${g}">${fbN(g)}</i></span><b class="${w[2]}">${w[1]}</b>${Math.abs(d)<100?'<em class="muted">steady</em>':`<em class="${d>0?'good':'bad'}">${d>0?'▲':'▼'}${fbK(Math.abs(d))}</em>`}</div>`}).join('');
+  return `<div class="srcr"${instant?'':` style="animation-delay:${n*110}ms"`}><span class="fgw">${fgLbl(g)}</span><b class="${w[2]}">${w[1]}</b>${Math.abs(d)<100?'<em class="muted">steady</em>':`<em class="${d>0?'good':'bad'}">${d>0?'▲':'▼'}${fbK(Math.abs(d))}</em>`}</div>`}).join('');
  return `<div class="srcrowd${instant?'':' in'}"><div class="srch">How the crowds took it</div>${rows}</div>`}
 /* ---- after the show: The fans, then X Redditino (Head of PR) ---- */
 const FB_HANDLE={cas:['@JustHereForTheBelts','@MyDadWatchesThis','@CasualTuesdayKev'],tech:['@ChainWrestlingCarl','@HeadlockHistorian','@SnapSuplexSue'],
@@ -576,10 +591,10 @@ function fbPosts(r){const ch=g=>r.after[g]-r.before[g];const best=FB_G.slice().s
  return {open,posts,ask:hungry?`The ${fbN(hungry)} keep asking for ${FB_WANT[hungry]}.`:''}}
 const fbK=n=>Math.abs(n)<10000?(Math.abs(n)<100?'0':(n/1000).toFixed(1).replace(/\.0$/,'')+'K'):fmtFans(n);
 function fbResultsCard(o){const r=o&&o.fb&&o.fb.p;if(!r||!r.before)return '';const tb=FB_G.reduce((a,g)=>a+r.before[g],0),ta=FB_G.reduce((a,g)=>a+r.after[g],0);
- const rows=FB_G.map(g=>{const d=r.after[g]-r.before[g];const sw=r.sw&&r.sw[g]||0;const why=(r.why[g]||'')+(Math.abs(sw)>=500?` · ${fmtFans(Math.abs(sw))} ${sw>0?'switched over from':'switched to'} the other show`:'');return `<div class="fbr"><span class="fgw"><i class="fg-${g}">${fbN(g)}</i></span><span class="fbn">${fmtFans(r.before[g])} → <b>${fmtFans(r.after[g])}</b> <b class="${d>=0?'good':'bad'}">${d>=0?'▲':'▼'}${fbK(Math.abs(d))}</b></span><small>${esc(why)}</small></div>`}).join('');
+ const rows=FB_G.map(g=>{const d=r.after[g]-r.before[g];const sw=r.sw&&r.sw[g]||0;const why=(r.why[g]||'')+(Math.abs(sw)>=500?` · ${fmtFans(Math.abs(sw))} ${sw>0?'switched over from':'switched to'} the other show`:'');return `<div class="fbr"><span class="fgw">${fgLbl(g)}</span><span class="fbn">${fmtFans(r.before[g])} → <b>${fmtFans(r.after[g])}</b> <b class="${d>=0?'good':'bad'}">${d>=0?'▲':'▼'}${fbK(Math.abs(d))}</b></span><small>${esc(why)}</small></div>`}).join('');
  const P=fbPosts(r);
  return `<div class="card fbres"><div class="row sb"><div class="h small" style="margin:0">The fans</div><span class="tiny">${fmtFans(tb)} → <b>${fmtFans(ta)}</b></span></div>${rows}${r.conv>=500?`<div class="muted tiny" style="margin-top:6px">${fmtFans(r.conv)} casual fans became hardcore fans tonight.</div>`:''}</div>
- <div class="card xred"><div class="xrh"><b>X Redditino</b><span>Head of PR</span></div><div class="xro">“${esc(P.open)}”</div>${P.posts.map(p=>`<div class="xrp"><span class="fgw"><i class="fg-${p.g}">${fbN(p.g)}</i></span> <b>${esc(p.h)}</b><div>${esc(p.t)}</div></div>`).join('')}${P.ask?`<div class="xra">${esc(P.ask)}</div>`:''}</div>`}
+ <div class="card xred"><div class="xrh"><b>X Redditino</b><span>Head of PR</span></div><div class="xro">“${esc(P.open)}”</div>${P.posts.map(p=>`<div class="xrp"><span class="fgw">${fgLbl(p.g)}</span> <b>${esc(p.h)}</b><div>${esc(p.t)}</div></div>`).join('')}${P.ask?`<div class="xra">${esc(P.ask)}</div>`:''}</div>`}
 /* ---- undiscovered wrestlers find their crowd through who they work with ---- */
 const FB_LINE=45,FB_BREAK=50,FB_FIND=4,FB_LEAD=1.5;
 function fgLean(id){const x=S.fgx&&S.fgx[id];if(!x||!x.l)return null;const e=Object.entries(x.l).sort((a,b)=>b[1]-a[1]);return e.length&&e[0][1]>0?e[0][0]:null}
@@ -603,16 +618,17 @@ function fgReinvent(id,g){const w=S.w[id];if(!w)return;S.fgx=S.fgx||{};const x=S
  try{save()}catch(e){}try{if(typeof closeModal==='function')closeModal()}catch(e){}try{render()}catch(e){}}
 function fgReinBrief(){if(!S||S.phase!=='season')return [];const ask=Object.values(S.w).filter(fgReinWant).sort((a,b)=>a.mor-b.mor).slice(0,1);
  return ask.map(w=>{const cur=fgOf(w)[0];const opts=FB_G.filter(g=>g!==cur);
-  return {i:'🎭',t:`${w.name} wants a reinvention`,u:false,rows:[`<div class="brow">${esc(w.name)} <span class="fgw"><i class="fg-${cur}">${fbN(cur)}</i></span><br><span class="muted tiny">${w.mor<FB_REIN_MOR?'Miserable':'Off TV for weeks'} and wants to chase a different crowd. Pick one, or tell them to stay the course.</span><div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px">${opts.map(g=>`<button class="mini" onclick="fgReinvent('${w.id}','${g}')">${fbN(g)}</button>`).join('')}<button class="mini ghost" onclick="fgReinvent('${w.id}','no')">Stay the course</button></div></div>`]}})}
+  return {i:'🎭',t:`${w.name} wants a reinvention`,u:false,rows:[`<div class="brow">${esc(w.name)} <span class="fgw">${fgLbl(cur)}</span><br><span class="muted tiny">${w.mor<FB_REIN_MOR?'Miserable':'Off TV for weeks'} and wants to chase a different crowd. Pick one, or tell them to stay the course.</span><div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px">${opts.map(g=>`<button class="mini" onclick="fgReinvent('${w.id}','${g}')">${fbN(g)}</button>`).join('')}<button class="mini ghost" onclick="fgReinvent('${w.id}','no')">Stay the course</button></div></div>`]}})}
 if(typeof briefItems==='function'){const b0=briefItems;briefItems=window.briefItems=function(){const s=b0.apply(this,arguments);try{return fgReinBrief().concat(s)}catch(e){console.warn('rein',e);return s}}}
 if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){try{fgWeek(notes)}catch(e){console.warn('fg week',e)}return e0.apply(this,arguments)}}
 Object.assign(window,{fbSync,fbSyncAll,fbSeg,fbPromo,fbCalc,fbApply,fbResultsCard,fbRevealHtml,fbTag,fbStipTag,fbFinTag,fbRiTag,fgAfterShow,fgReinvent,fgLean,FB_STIP});
 
 (function(){const s=document.createElement('style');s.textContent=`
 .fgw{font:800 italic 1em/1 'BC',sans-serif;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}.fgw b{margin:0 .3em;color:#8a8580;font-weight:700}
-.fg-cas{color:#efe9dc}.fg-tech{color:#7fa7d6}.fg-blood{color:#f07a2a}.fg-flip{color:#3fc8b4}.fg-chaos{color:#b77ee8}.fg-und{color:#9a958c}
+.fgi{display:inline-block;width:1.2em;height:1.2em;margin-right:.25em;vertical-align:-.24em;fill:none;stroke:currentColor;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.fg-cas{color:#efe9dc}.fg-tech{color:#7fa7d6}.fg-blood{color:#e5463b}.fg-flip{color:#3fc8b4}.fg-chaos{color:#b77ee8}.fg-und{color:#9a958c}
 .tkc .tcfg{display:flex;flex-wrap:wrap;gap:2px 3px;margin-bottom:calc(var(--w)*.035);font-size:calc(var(--w)*.088);text-shadow:none}.tkc .tcfg b{display:none}
-.tkc .tcfg i{padding:1px 7px 1px 4px;color:#111;background:var(--fgbg);clip-path:polygon(0 0,100% 0,calc(100% - 4px) 100%,0 100%)}
+.tkc .tcfg i{display:flex;align-items:center;justify-content:center;width:calc(var(--w)*.2);height:calc(var(--w)*.2);min-width:13px;min-height:13px;background:#000;box-shadow:inset 0 0 0 1px #4a4128}.tkc .tcfg .fgi{width:72%;height:72%;margin:0;stroke-width:2.5}
 .fbres .fbr{display:grid;grid-template-columns:7.2em 1fr;gap:0 10px;align-items:baseline;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)}
 .fbres .fbr:first-of-type{border-top:0}.fbres .fbr .fgw{font-size:13px}
 .fbres .fbr small{grid-column:2;color:var(--muted,#9a958c);font-size:12.5px}
@@ -620,10 +636,11 @@ Object.assign(window,{fbSync,fbSyncAll,fbSeg,fbPromo,fbCalc,fbApply,fbResultsCar
 .xred{border-left:3px solid var(--gold)}.xred .xrh{display:flex;gap:8px;align-items:baseline}.xred .xrh b{font:900 italic 17px/1 'BC',sans-serif;text-transform:uppercase}.xred .xrh span{color:var(--gold);font:700 12px 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase}
 .xred .xro{margin:8px 0 6px;font-size:15px}.xred .xrp{margin-top:8px;padding:8px 10px;background:#0f0f12;clip-path:polygon(0 0,100% 0,calc(100% - 8px) 100%,0 100%);font-size:14px}.xred .xrp .fgw{font-size:11px}.xred .xrp b{font-size:13px;color:#ddd}
 .fbbar{display:flex;height:6px;margin-top:4px;background:#222;overflow:hidden}.fbbar i{display:block;height:100%}
-.fbleg{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;font-size:12px;color:var(--muted,#9a958c)}.fbleg i{display:inline-block;width:10px;height:10px;margin-right:4px;vertical-align:-1px}
+.fbleg{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;font-size:12px;color:var(--muted,#9a958c)}.fbleg .fgi{width:13px;height:13px;margin-right:3px;vertical-align:-2px}
 .fbtv{align-items:baseline;gap:12px}.fbtv>span{display:flex;flex-wrap:wrap;gap:4px 14px;justify-content:flex-end}.fbtv .fbd i{font:800 italic 1em 'BC',sans-serif;text-transform:uppercase;font-style:italic}
 .xred .xra{margin-top:8px;color:var(--gold);font-size:13.5px}
 .txc{display:block;margin-top:5px;padding-left:5px;border-left:3px solid var(--fgc);color:var(--fgc);font:800 italic 10.5px/1.15 'BC',sans-serif;letter-spacing:.04em;text-transform:uppercase}
+.txc .fgi{width:1.25em;height:1.25em;margin-right:.3em;vertical-align:-.28em}.txc.no .fgi{color:var(--fgc)}.fgk{margin-right:.4em}
 .txc.no{color:#9a958c}.txc.no::before{content:"✕ ";color:#e0574f}.txc+.txc{margin-top:3px}.tx.on .txc{color:#3a2e0a}
 .srcrowd{margin:8px auto 4px;width:100%;max-width:420px;padding:8px 12px 6px;background:#0f0f12;border-top:2px solid var(--gold);text-align:left}
 .srch{font:800 italic 11px/1 'BC',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}

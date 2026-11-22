@@ -12,7 +12,7 @@
    • Keep each stop under TUT_WORDS words — it's a card on a phone. The full detail belongs in HOWTO (the ⚙️ rulebook).
    • Run `python3 tools/check-tutorial.py` — it plays every stop and tip in a headless browser and fails on any
      missing target, stale value or stop over the word limit. */
-const TUT_REV=74;
+const TUT_REV=75;
 const TUT_KEY='tksim_tut';
 const TUT_WORDS=190;  /* longest a stop may be (checked by tools/check-tutorial.py) */
 const TUT_MISS=[];
@@ -66,8 +66,8 @@ const TUT_STEPS=[
  b:()=>`<b>Auto-pick</b> takes the best fit for one pick. <b>Sim rest</b> drafts the rest of your roster for you.<br><br>When the draft ends, the tour picks up with your first week.`},
 
 /* ---- the first week (v186: the essentials only — everything else is a coach tip the first time it comes up) ---- */
-{id:'s.show',track:'season',since:72,tab:'home',sel:'main .card.showcard',sys:['shows','calendar','goal','fans'],t:'Your show',
- b:()=>`Each week you book ${tv('show name',()=>esc(curShow().mine),'your show')} while ${tvRival()} books ${ON()?'theirs':tv('rival show',()=>esc(curShow().theirs),'theirs')}. The better show wins the night.<br><br><b>You win the season with the bigger audience.</b> Your fans are five crowds — Casuals, Technical, Bloodhounds, Flippy and Chaos fiends — and each wrestler's card shows which one they draw. Give each crowd a real match of its own and beat what it expects; a crowd you ignore drifts away. PPVs swing far more. ${tv('next PPV',()=>{const n=nextPPV();return n?`Next up: <b>${esc(n.n)}</b> in ${n.in} week${n.in===1?'':'s'}.`:''},'')}`},
+{id:'s.show',track:'season',since:75,tab:'home',sel:'main .card.showcard',sys:['shows','calendar','goal','fans'],t:'Your show',
+ b:()=>`Each week you book ${tv('show name',()=>esc(curShow().mine),'your show')} while ${tvRival()} books ${ON()?'theirs':tv('rival show',()=>esc(curShow().theirs),'theirs')}. The better show wins the night.<br><br><b>You win the season with the bigger audience.</b> Your fans are five crowds — ${typeof fgKey==='function'?fgKey():'Casuals, Technical, Bloodhounds, Flippy and Chaos fiends'} — and the symbol on each wrestler's card shows which one they draw (a ? means they haven't found their crowd yet). Give each crowd a real match of its own and beat what it expects; a crowd you ignore drifts away. PPVs swing far more. ${tv('next PPV',()=>{const n=nextPPV();return n?`Next up: <b>${esc(n.n)}</b> in ${n.in} week${n.in===1?'':'s'}.`:''},'')}`},
 {id:'s.attn',track:'season',since:57,tab:'book',sel:'main .card.attn',sys:['weekly goals','chants','promises','pitches','contracts','titles','morale','backstage heat','briefing','mandates','inbox'],t:'Needs your attention',
  b:()=>`Your to-do list for tonight, checked live as you book. What still blocks the show sits on top — empty slots, a promised match, a wrestler waiting on an answer. Chances for bonus fans, tired wrestlers and contracts coming up wait underneath. Each item turns ✓ when it's handled, and most have a button that takes you straight to the fix — including <b>Talk to them</b> when someone with creative control is booked to lose.<br><br>Decisions come first: at the start of the week, anyone who needs an answer — a pitch, a demand, an owed title shot, a contract on its last shows, an injury call, a trade or a prospect's tape — lines up <b>🚪 outside your office</b>. Only ${tv('DESK_MAX',()=>DESK_MAX,3)} get in each week, the most urgent first. Say yes and it joins this list. Keep your word and it pays: they go out hungry that night and the story brings in fans. Break it and the whole locker room hears about it.<br><br>The rest of the week's news is the <b>📰 This week</b> panel on Home. Nothing in it needs an answer.`},
 {id:'s.suggest',track:'season',since:56,tab:'book',opt:true,sel:'main [onclick="suggestFill()"]',sys:['booking'],t:'Need a starting point?',
