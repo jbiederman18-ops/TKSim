@@ -530,15 +530,22 @@ function fbTvCard(){const L=S&&S.last;if(!L||!L.fb)return '';const ks=Object.key
  const post=(x,good)=>x&&Math.abs(x.d)>=1000?`<div class="xrp"><span class="fgw"><i class="fg-${x.g}">${fbN(x.g)}</i></span> <b>${esc(fbPick(FB_HANDLE[x.g],x.k+x.g))}</b><div>${esc(good?`${nameOf(x.k)} gets us. Best show on TV tonight.`:`${nameOf(x.k)} forgot we exist. Changing the channel.`)}</div></div>`:'';
  return `<div class="card xred"><div class="xrh"><b>Last week's crowds</b><span>X Redditino · Head of PR</span></div>${rows}${post(best,true)}${post(worst,false)}</div>`}
 Object.assign(window,{fbBar,fbLegend,fbTvCard});
-/* ---- the Crowd read on the Book screen (replaces the Show flow graph): one word per group and what they expect ---- */
+/* ---- v404: the Crowd read is gone from the Book screen (watching it became the game). Instead the crowds' night closes the
+   reveal, and the booking sheet tags what each crowd craves (fbTag on stipulation, finish and run-in tiles). ---- */
 const FB_WORD=[[3,'Eating well tonight','good'],[1,'Happy','good'],[-.5,'Lukewarm',''],[-2,'Only a taste — drifting','warn'],[-99,'Starving — they’re leaving','bad']];
 const FB_CWORD=[[1.5,'Hooked','good'],[.3,'Tuned in','good'],[-1,'Restless',''],[-99,'Changing the channel','bad']];
-function fbXWord(x){return x<3.45?'easy to please':x<3.75?'want a good match':x<4.05?'expect a great match':'expect a classic'}
 function fbWord(g,p){const t=g==='cas'?FB_CWORD:FB_WORD;return t.find(x=>p>=x[0])}
-function fbCrowdCard(sh){const b='p';if(!S.fans||S.fans[b]==null)return '';fbSync(b);let P=null;try{P=cardProj()}catch(e){}const segs=(P&&P.fs)||[];
- const r=fbCalc(b,segs,sh,{allin:sh.ppv&&typeof SUPER==='function'&&SUPER(S.week)});
- const rows=FB_G.map(g=>{const w=fbWord(g,r.pct[g]);return `<div class="crw"><span class="fgw"><i class="fg-${g}">${fbN(g)}</i></span><b class="${w[2]}">${segs.length?w[1]:'—'}</b><small>${fbXWord(S.fbx[b][g])}</small></div>`}).join('');
- return `<div class="card flowc crowdc"><div class="row sb"><div class="h small" style="margin:0">Crowd read</div><span class="muted tiny">${segs.length?'Updates as you book':'Book a few segments'}</span></div>${rows}</div>`}
+const FB_THIRST={tech:'Technical fans savor this',blood:'Bloodhounds thirst for this',flip:'Flippy fans live for this',chaos:'Chaos fiends eat this up',cas:'Casuals love the spectacle'};
+function fbTag(g,t,bad){return g&&FG_C[g]?`<span class="txc${bad?' no':''}" style="--fgc:${FG_C[g]}">${t}</span>`:''}
+function fbStipTag(k){const g=FB_STIP[k];return g?fbTag(g,FB_THIRST[g]):''}
+/* a screwy finish only costs you with Technical fans when the match is one of theirs */
+function fbFinTag(k,d){if(!['cheat','dq','co'].includes(k))return '';try{if(d&&!fbExpo(fbSeg(d,0,false)).tech)return ''}catch(e){}return fbTag('tech','Technical fans hate it',1)}
+function fbRiTag(){return fbTag('chaos',FB_THIRST.chaos)+fbTag('tech','Technical fans hate it',1)}
+/* the end of the reveal: one line per crowd — how they took it and how many came or went */
+function fbRevealHtml(o,instant){const r=o&&o.fb&&o.fb.p;if(!r||!r.before||!r.after||!r.pct)return '';
+ const rows=FB_G.map((g,n)=>{const w=fbWord(g,r.pct[g]||0)||['','',''];const d=Math.round(r.after[g]-r.before[g]);
+  return `<div class="srcr"${instant?'':` style="animation-delay:${n*110}ms"`}><span class="fgw"><i class="fg-${g}">${fbN(g)}</i></span><b class="${w[2]}">${w[1]}</b>${Math.abs(d)<100?'<em class="muted">steady</em>':`<em class="${d>0?'good':'bad'}">${d>0?'▲':'▼'}${fbK(Math.abs(d))}</em>`}</div>`}).join('');
+ return `<div class="srcrowd${instant?'':' in'}"><div class="srch">How the crowds took it</div>${rows}</div>`}
 /* ---- after the show: The fans, then X Redditino (Head of PR) ---- */
 const FB_HANDLE={cas:['@JustHereForTheBelts','@MyDadWatchesThis','@CasualTuesdayKev'],tech:['@ChainWrestlingCarl','@HeadlockHistorian','@SnapSuplexSue'],
  blood:['@CrimsonMaskMike','@BarbedWireBetty','@BladeJobBrandon'],flip:['@SpotMonkeyKai','@ShootingStarSam','@450Splashley'],chaos:['@RunInRhonda','@NoDQNate','@SwerveSzn']};
@@ -586,17 +593,16 @@ function fgReinBrief(){if(!S||S.phase!=='season')return [];const ask=Object.valu
   return {i:'🎭',t:`${w.name} wants a reinvention`,u:false,rows:[`<div class="brow">${esc(w.name)} <span class="fgw"><i class="fg-${cur}">${fbN(cur)}</i></span><br><span class="muted tiny">${w.mor<FB_REIN_MOR?'Miserable':'Off TV for weeks'} and wants to chase a different crowd. Pick one, or tell them to stay the course.</span><div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px">${opts.map(g=>`<button class="mini" onclick="fgReinvent('${w.id}','${g}')">${fbN(g)}</button>`).join('')}<button class="mini ghost" onclick="fgReinvent('${w.id}','no')">Stay the course</button></div></div>`]}})}
 if(typeof briefItems==='function'){const b0=briefItems;briefItems=window.briefItems=function(){const s=b0.apply(this,arguments);try{return fgReinBrief().concat(s)}catch(e){console.warn('rein',e);return s}}}
 if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){try{fgWeek(notes)}catch(e){console.warn('fg week',e)}return e0.apply(this,arguments)}}
-Object.assign(window,{fbSync,fbSyncAll,fbSeg,fbPromo,fbCalc,fbApply,fbCrowdCard,fbResultsCard,fgAfterShow,fgReinvent,fgLean,FB_STIP});
+Object.assign(window,{fbSync,fbSyncAll,fbSeg,fbPromo,fbCalc,fbApply,fbResultsCard,fbRevealHtml,fbTag,fbStipTag,fbFinTag,fbRiTag,fgAfterShow,fgReinvent,fgLean,FB_STIP});
 
 (function(){const s=document.createElement('style');s.textContent=`
 .fgw{font:800 italic 1em/1 'BC',sans-serif;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}.fgw b{margin:0 .3em;color:#8a8580;font-weight:700}
 .fg-cas{color:#efe9dc}.fg-tech{color:#7fa7d6}.fg-blood{color:#f07a2a}.fg-flip{color:#3fc8b4}.fg-chaos{color:#b77ee8}.fg-und{color:#9a958c}
 .tkc .tcfg{display:flex;flex-wrap:wrap;gap:2px 3px;margin-bottom:calc(var(--w)*.035);font-size:calc(var(--w)*.088);text-shadow:none}.tkc .tcfg b{display:none}
 .tkc .tcfg i{padding:1px 7px 1px 4px;color:#111;background:var(--fgbg);clip-path:polygon(0 0,100% 0,calc(100% - 4px) 100%,0 100%)}
-.crowdc .crw,.fbres .fbr{display:grid;grid-template-columns:7.2em 1fr;gap:0 10px;align-items:baseline;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)}
-.crowdc .crw:first-of-type,.fbres .fbr:first-of-type{border-top:0}.crowdc .crw .fgw,.fbres .fbr .fgw{font-size:13px}
-.crowdc .crw b{font:800 italic 15px/1.1 'BC',sans-serif;letter-spacing:.02em;text-transform:uppercase}.crowdc .crw b.warn{color:var(--gold)}
-.crowdc .crw small,.fbres .fbr small{grid-column:2;color:var(--muted,#9a958c);font-size:12.5px}
+.fbres .fbr{display:grid;grid-template-columns:7.2em 1fr;gap:0 10px;align-items:baseline;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)}
+.fbres .fbr:first-of-type{border-top:0}.fbres .fbr .fgw{font-size:13px}
+.fbres .fbr small{grid-column:2;color:var(--muted,#9a958c);font-size:12.5px}
 .fbres .fbn{font-size:14px}.fbres .fbn b{font-weight:700}
 .xred{border-left:3px solid var(--gold)}.xred .xrh{display:flex;gap:8px;align-items:baseline}.xred .xrh b{font:900 italic 17px/1 'BC',sans-serif;text-transform:uppercase}.xred .xrh span{color:var(--gold);font:700 12px 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase}
 .xred .xro{margin:8px 0 6px;font-size:15px}.xred .xrp{margin-top:8px;padding:8px 10px;background:#0f0f12;clip-path:polygon(0 0,100% 0,calc(100% - 8px) 100%,0 100%);font-size:14px}.xred .xrp .fgw{font-size:11px}.xred .xrp b{font-size:13px;color:#ddd}
@@ -604,5 +610,14 @@ Object.assign(window,{fbSync,fbSyncAll,fbSeg,fbPromo,fbCalc,fbApply,fbCrowdCard,
 .fbleg{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;font-size:12px;color:var(--muted,#9a958c)}.fbleg i{display:inline-block;width:10px;height:10px;margin-right:4px;vertical-align:-1px}
 .fbtv{align-items:baseline;gap:12px}.fbtv>span{display:flex;flex-wrap:wrap;gap:4px 14px;justify-content:flex-end}.fbtv .fbd i{font:800 italic 1em 'BC',sans-serif;text-transform:uppercase;font-style:italic}
 .xred .xra{margin-top:8px;color:var(--gold);font-size:13.5px}
+.txc{display:block;margin-top:5px;padding-left:5px;border-left:3px solid var(--fgc);color:var(--fgc);font:800 italic 10.5px/1.15 'BC',sans-serif;letter-spacing:.04em;text-transform:uppercase}
+.txc.no{color:#9a958c}.txc.no::before{content:"✕ ";color:#e0574f}.txc+.txc{margin-top:3px}.tx.on .txc{color:#3a2e0a}
+.srcrowd{margin:8px auto 4px;width:100%;max-width:420px;padding:8px 12px 6px;background:#0f0f12;border-top:2px solid var(--gold);text-align:left}
+.srch{font:800 italic 11px/1 'BC',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+.srcr{display:grid;grid-template-columns:7.4em 1fr auto;gap:8px;align-items:baseline;padding:4px 0;border-top:1px solid rgba(255,255,255,.06)}
+.srcr:first-of-type{border-top:0}.srcr .fgw{font-size:12.5px}.srcr b{font:800 italic 14px/1.1 'BC',sans-serif;text-transform:uppercase}.srcr b.warn{color:var(--gold)}
+.srcr em{font:700 13px 'BC',sans-serif;font-style:normal;white-space:nowrap}
+.srcrowd.in .srcr{opacity:0;animation:srcrIn .3s ease-out forwards}@keyframes srcrIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+body.tv .srcrowd{display:none}
 .tcs .tcmat.many .tkc .tcfg,.tlrow .tkc .tcfg,.twcd .tkc .tcfg{display:none}
 `;document.head.appendChild(s)})();

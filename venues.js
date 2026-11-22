@@ -56,8 +56,8 @@ function venueCard(){const s=venSt('p'),V=venOf('p'),i=venIdx('p'),up=BLDG[i+1],
   <button class="mini mt" onclick="venUp()" ${S.money.p<up.move||stay?'disabled':''}>Sign the lease · ${money(up.move)}</button>${stay?` <span class="muted tiny">You can move again in ${stay} week${stay>1?'s':''}.</span>`:S.money.p<up.move?` <span class="muted tiny">Not enough in the bank yet.</span>`:''}</div>`:''}
  ${dn&&!nxt?`<div class="mt"><button class="mini" onclick="venDown()">Move back to the ${esc(dn.n)}</button></div>`:''}</div>`}
 window.venueCard=venueCard;
-/* the Book screen: will tonight's card fill the building? (under the Show flow graph) */
+/* the Book screen: will tonight's card fill the building? (v404: its own slim card now the Crowd read is gone) */
 if(typeof flowCard==='function'){const f0=flowCard;flowCard=function(sh){let h=f0.apply(this,arguments);try{const V=venOf('p');if(!sh.ppv&&V.pull){const P=cardProj();const r=P&&P.show?P.show.mid:buzzOf('p');const w=pullWord(crowdPull('p',r),V.pull);
-  h=h.replace(/<\/div>\s*$/,`<div class="tiny" style="margin-top:6px">${V.i} ${esc(V.n)}: <b class="${w[1]}">${w[0]}</b>${w[1]==='good'?'':' <span class="muted">· a hotter card fills more seats</span>'}</div></div>`)}}catch(e){console.warn('venue',e)}return h}}
+  const vl=`<div class="tiny"${h?' style="margin-top:6px"':''}>${V.i} ${esc(V.n)}: <b class="${w[1]}">${w[0]}</b>${w[1]==='good'?'':' <span class="muted">· a hotter card fills more seats</span>'}</div>`;h=h?h.replace(/<\/div>\s*$/,vl+'</div>'):`<div class="card flowc venpull">${vl}</div>`}}catch(e){console.warn('venue',e)}return h}}
 window.venOf=venOf;window.venueRent=venueRent;window.venueNight=venueNight;window.venueFans=venueFans;window.venueWeek=venueWeek;window.venueMove=venueMove;window.crowdPull=crowdPull;
 if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){try{venueWeek(notes)}catch(e){console.warn('venue week',e)}return e0.apply(this,arguments)}}
