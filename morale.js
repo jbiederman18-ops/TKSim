@@ -113,7 +113,12 @@ if(typeof crisisGen==='function'){const c0=crisisGen;crisisGen=function(){if(!S.
 function moodHtml(w){const [ic,wd]=moodWord(w.mor);const l=moodTop(w,4);
  return `<div class="card" style="margin:10px 0 0;padding:10px 12px"><div class="row sb"><b>${ic} ${wd}</b><span class="muted tiny">Morale ${Math.round(w.mor)}</span></div>${l.length?`<div class="tiny" style="margin-top:6px">${l.map(([t,d])=>`<div class="row sb"><span>${esc(t)}</span><b class="${d>0?'good':'bad'}">${d>0?'+':''}${Math.round(d)}</b></div>`).join('')}</div><div class="muted tiny" style="margin-top:4px">Last 4 weeks</div>`:'<div class="muted tiny" style="margin-top:4px">Nothing much on their mind lately.</div>'}${w.walkRisk?'<div class="bad tiny" style="margin-top:4px">⚠️ Might walk out</div>':''}</div>`}
 window.moodHtml=moodHtml;
-if(typeof showW==='function'){const s0=showW;showW=function(id){const out=s0.apply(this,arguments);try{const w=S.w[id];if(w&&w.own==='p'&&(S.phase==='season'||S.phase==='over')){const t=document.querySelector('#modal .wstats')||document.querySelector('#modal .wd-top');if(t)t.insertAdjacentHTML('afterend',moodHtml(w))}}catch(e){console.warn(e)}return out}}
+/* what will cost them morale next if nothing changes (the profile's Condition panel) */
+function moodWatch(w){const l=[];if(!w||w.own!=='p'||w.inj)return l;const star=w.pop>=70;const lim=star?IDLE_STAR:IDLE_MID;
+ if(w.pop>=35&&(w.idle||0)>=lim-1)l.push(`📺 Off TV ${w.idle} week${w.idle===1?'':'s'} — ${w.idle>=lim?'losing morale every week off':'another week off costs morale'}`);
+ if(w.pop>=EGO_POP&&!isChamp(w.id)&&(w.ego||0)>=EGO_AFTER-1)l.push(`🌟 Wants the spotlight — a main event, a 3½★ segment or a PPV win${(w.ego||0)>=EGO_AFTER?' stops the slide':' keeps them happy'}`);
+ return l}
+window.moodWatch=moodWatch;
 })();
 
 /* v195: creative-control deals — a promised win is kept when it happens and broken when the deadline passes (deals.js) */

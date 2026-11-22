@@ -84,7 +84,7 @@ function careerHtml(w){const c=w.cr;const r=reigns(w.id);const hh=Object.entries
  if(!c&&!r.n&&!hh.length)return '';
  return `<div class="card" style="margin:10px 0 0;padding:10px 12px"><div class="h small" style="margin:0 0 6px">📖 Career</div>${c?`<div class="tiny">${c.w}–${c.l} · ${c.me} main event${c.me===1?'':'s'} · ${c.ppvW} PPV win${c.ppvW===1?'':'s'} · ${c.five} five-star match${c.five===1?'':'es'} · ${r.n} title reign${r.n===1?'':'s'}</div>${c.best?`<div class="muted tiny" style="margin-top:2px">Best: ${esc(c.best.t)} ${stars(Math.min(5,c.best.st))}</div>`:''}`:''}
  ${hh.length?`<div class="tiny" style="margin-top:6px">${hh.map(([k,v])=>{const o=k.split('|').find(x=>x!==w.id);return `<div class="row sb"><span>vs ${esc(nm(o))}</span><b>${v[w.id]||0}–${v[o]||0}</b></div>`}).join('')}</div>`:''}</div>`}
-if(typeof showW==='function'){const s0=showW;showW=function(id){const out=s0.apply(this,arguments);try{const w=S.w[id];if(w&&(S.phase==='season'||S.phase==='over')){const h=careerHtml(w);if(h){const g=document.querySelector('#modal .wgrid');if(g)g.insertAdjacentHTML('afterend',h);else{const m=document.querySelector('#modal .wd-top');if(m){const after=m.nextElementSibling&&/Morale \d/.test(m.nextElementSibling.textContent)?m.nextElementSibling:m;after.insertAdjacentHTML('afterend',h)}}}}}catch(e){console.warn(e)}return out}}
+window.careerHtml=careerHtml;
 
 /* ---------------- entry points: Titles screen and the Office ---------------- */
 /* v201: the Titles screen has its own History book chip */

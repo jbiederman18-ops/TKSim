@@ -123,7 +123,4 @@ function fgDriftAnswer(){const x=fgDrift();if(!x)return '';const {v,A,Y}=x;fgdNe
  fgNews(`💔 ${A.name} and ${Y.name} aren't friends anymore.`);save();return t}
 window.fgDrift=fgDrift;window.fgDriftAnswer=fgDriftAnswer;
 window.fgVisit=fgVisit;window.fgCost=fgCost;window.fgAnswer=fgAnswer;
-/* Backstage friends on the profile, under Mood */
-if(typeof showW==='function'){const s0=showW;showW=function(id){const out=s0.apply(this,arguments);try{const w=S.w[id];if(w&&w.own==='p'&&(S.phase==='season'||S.phase==='over')){const k=fgKnown(w);if(k.length){
- const t=document.querySelector('#modal .wstats')||document.querySelector('#modal .wd-top');const mood=t&&t.nextElementSibling;
- const h=`<div class="tiny" style="margin-top:8px"><span class="muted">🤝 Backstage friends:</span> ${k.map(o=>esc(o.name)).join(', ')}</div>`;if(mood&&mood.classList.contains('card'))mood.insertAdjacentHTML('beforeend',h);else if(t)t.insertAdjacentHTML('afterend',h)}}}catch(e){console.warn(e)}return out}}
+
