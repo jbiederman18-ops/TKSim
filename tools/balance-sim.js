@@ -128,6 +128,8 @@ window.SIM = async function (opt) {
       // v356: the network exec's visit — the viewership bonus is collected at the office after each PPV
       if (S.view && S.view.p && S.view.p.due && S.view.p.amt > 0) { S.money.p += S.view.p.amt; S.view.p = { amt: 0, wks: 0 } }
       // v361: a top star at the door about a friend — the attentive bot pays to make a broken promise right, the others brush it off
+      /* v425: a trait slot opened on your roster: take the option from their own group (the first one) */
+      if (typeof trVisit === 'function') { let g = 0; while (trVisit() && g++ < 12) { try { trAnswer(opt.trPick || 0) } catch (e) { errs.push('traits ' + e.message); break } } }
       if (typeof fgVisit === 'function' && fgVisit()) { const f = fgVisit(); try { fgAnswer(f.v.d < 0 && opt.checklist && !(opt.skip || []).length ? 0 : 1) } catch (e) { errs.push('friends ' + e.message) } }
       if (typeof fgDrift === 'function' && fgDrift()) { try { fgDriftAnswer() } catch (e) { errs.push('drift ' + e.message) } }
       // v424: buildings unlock once and are booked show by show — unlock the next one when the bank can carry it and buzz would fill it,

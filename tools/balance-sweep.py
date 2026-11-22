@@ -102,6 +102,13 @@ v424 (tiredness bites: FAT_MT singles 16 -> 18 etc., REC_WORK 10 -> 7, REC_REST 
   (was 0.3), injuries 6-8 a season (was ~5), lazy 12-14 (was ~9-10). Segment stars default 3.7 (same), sharp 3.7 (was 3.8), sharp 5-star
   6% (was 8%). Top-5 popularity ~92 (was ~95); hands-on bookers' 88+ stars +1 to +3 over 3 seasons, Suggest-only -2. Default bot books
   the Good Building ~40% of S3 TV shows, the Arena almost never; its stars grumble ~11-16% of S3 shows. Lazy GM still banks the most.
+v425 (styles retired: fan-group matchups GRP_M with clashes at -4, trait bridges, "in their element" +.5; one fixed starting
+  trait, slots at 70/85 popularity picked at the office door (the bot takes option 0), stipulation fit = group base + traits x.6,
+  7 new traits), vs v424 in the same runs. Normal 40 games x 3 seasons: default fans gained 527/288/197K (v424 518/298/204),
+  seasons won 65/30/5% (53/20/15); engaged 656/456/327K (639-647/423-425/350-364), 95/82/50% (90/68-72/33-47), match stars
+  3.96/4.05/4.12 (3.96/4.02/4.09); lazy show ~+0.1 star, still 0%. Rival show 3.68/3.75/3.81 (3.68/3.74/3.78). Hard 32 games:
+  engaged 550/365/247K (560/356/277K), seasons 62/47/9% (72/41/16%). Easy within noise. 0 errors. Smart trait picks (best
+  chemistry vs own roster) = own-group picks for the bot, within noise.
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
 

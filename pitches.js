@@ -49,8 +49,9 @@ const PITCHES={
   ok:t=>{const A=pOwn(t.a);popx(A,4);mor(A,10);return `🔄 The turn clicked: ${A.name} is a ${A.al==='f'?'face':'heel'} for good (+4 popularity).`},
   fail:t=>{const A=pOwn(t.a);if(A.al===t.al){A.al=A.al==='f'?'h':'f';A.turnW=t.prevT}mor(A,-4);return `🔄 The turn didn't get a real chance — ${A.name} quietly goes back to being a ${A.al==='f'?'face':'heel'}.`},
   no:3},
- trait:{cat:'🎭 New direction',w:2,
-  pick:r=>{const opts=[];r.forEach(w=>{const have=w.tr||[];if(have.length>=4)return;
+ /* v425: never offered now — traits open with popularity and get picked at the office door (traits.js); kept so a trial already running still settles */
+ trait:{cat:'🎭 New direction',w:0,
+  pick:r=>null,_old:r=>{const opts=[];r.forEach(w=>{const have=w.tr||[];if(have.length>=4)return;
     [['mouth',w.mic>=62],['crowd',w.al==='f'&&w.pop<80],['bigm',w.pop>=68],['heatm',w.al==='h'],['story',w.ring>=78],['dare',w.st==='fl'||w.st==='sh'],['work',true],['tag',S.teams.some(t=>t.m.includes(w.id))]]
      .forEach(([k,ok])=>{if(ok&&TRAITS[k]&&!have.includes(k))opts.push({a:w.id,tr:k})})});return opts.length?pick(opts):null},
   text:x=>[{mouth:`"I've been working with a promo coach on the side. Put a mic in my hand and I'll show you something new."`,crowd:`"The kids at the signings go crazy for me. Let me lean into that — high fives, the whole thing."`,bigm:`"The bigger the stage, the better I get. I want to prove it."`,heatm:`"Nobody gets under people's skin like me. Let me show you."`,story:`"I've been studying tape every night. I know how to tell a story in there now."`,dare:`"I've got a few new spots in my back pocket. They're insane. You're going to love them."`,work:`"I've completely changed my training. I can go twice as hard now — try me."`,tag:`"I've been studying the great tag teams. I know how to be the perfect partner now."`}[x.tr]],

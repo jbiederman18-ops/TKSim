@@ -466,11 +466,5 @@ window.segDetails=function(i){const sl=S.card&&S.card.p[i];if(!sl||!sl.d)return;
 window.promoPips=function(p,i){const d=pdOf(p);if(!d)return '';const ch=attnChips(i);
  return `<div class="mpip"><div>Talent${segH(d.p.talent)}</div><div>Fit${segH(d.p.fit)}</div><div>Story${segH(d.p.story)}</div><div>Your calls${pipH(0,1).replace('? ? ? ? ?','? ? ?')}</div></div>${ch||d.back.length?`<div class="tags">${ch}${d.back.slice(0,2).map(([k,t])=>`<span class="tg ${k==='b'?'bad':'warnt'}">${esc(t)}</span>`).join('')}</div>`:''}<div class="tellrow">${tellSpan(promoEst(p))}</div>`};
 
-/* the style chart — opened from a wrestler's page (v388: was behind the old match editor's Chemistry "?") */
-window.styChart=function(id,back){const w=id&&S.w[id];const ks=Object.keys(STYLE_N);
- const word=v=>v>=6?['Clicks','c6']:v>=4?['Good','c4']:v>=2?['Okay','']:['Flat','c0'];back=back||(w?`showW('${id}')`:'closeModal()');
- openModal(`<div class="row sb"><div class="h mhd" style="margin:0">How chemistry works</div><button class="mini" onclick="${back}">Back</button></div>
- <p class="muted tiny">Styles that click, face vs heel, past matches and traits all add up. First-time pairs are judged on paper until they share a ring.</p>
- <div style="overflow-x:auto"><table class="stygrid"><tr><th></th>${ks.map(k=>`<th>${STYLE_N[k]}</th>`).join('')}</tr>${ks.map(x=>`<tr${w&&x===w.st?' class="hr"':''}><th>${STYLE_N[x]}</th>${ks.map(y=>{const c=word(STY[x][y]);return `<td class="${c[1]}">${c[0]}</td>`}).join('')}</tr>`).join('')}</table></div>
- ${w?`<p class="tiny muted">Highlighted: ${esc(w.name)}'s row (${STYLE_N[w.st]}).</p>`:''}`)};
+/* the matchup chart lives in traits.js (v425) */
 })();

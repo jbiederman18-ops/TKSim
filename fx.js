@@ -144,7 +144,7 @@ function hit(it){const v=it.s&&it.s.stars;if(v==null)return;const id=it.b.brand=
 
 /* ---------------- 2. debuts & call-ups ---------------- */
 function entrance(w,kind,buzz){if(!w)return;const hot=(buzz||0)>=9;const big=hot||kind==='star';
- overlay(`<div class="bm a"></div><div class="bm b"></div><div class="fl"></div><div class="kk">${kind==='callup'?'Called up from ROH':kind==='star'?'All Elite':'Debuting'}</div><div class="nmx">${esc(w.name)}</div><div class="sub">${w.g==='M'?"Men's":"Women's"} division · ${STYLE_N[w.st]} · ${w.al==='f'?'Face':'Heel'}${hot?' · 🔥 Hot buzz':''}</div>`,hot?'hot':'',big?4200:3400,el=>sparks(el,big?44:18,hot))}
+ overlay(`<div class="bm a"></div><div class="bm b"></div><div class="fl"></div><div class="kk">${kind==='callup'?'Called up from ROH':kind==='star'?'All Elite':'Debuting'}</div><div class="nmx">${esc(w.name)}</div><div class="sub">${w.g==='M'?"Men's":"Women's"} division · ${fgWord(w)} · ${w.al==='f'?'Face':'Heel'}${hot?' · 🔥 Hot buzz':''}</div>`,hot?'hot':'',big?4200:3400,el=>sparks(el,big?44:18,hot))}
 window.fxEntrance=entrance;
 const wrapG=(name,fn)=>{const f0=window[name];if(typeof f0!=='function')return;const w=function(){return fn(f0,this,arguments)};window[name]=w;try{if(name==='sign')sign=w}catch(e){}};
 wrapG('callUp',(f0,t,a)=>{const id=a[0];let buzz=0;try{const r=(S.farm&&S.farm.p&&S.farm.p.r)||{};buzz=r[id]?r[id].buzz||0:0}catch(e){}const out=f0.apply(t,a);try{const w=S.w[id];if(w&&w.own==='p')entrance(w,'callup',buzz)}catch(e){}return out});

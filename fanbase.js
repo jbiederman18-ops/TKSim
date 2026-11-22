@@ -366,7 +366,7 @@ Dalys|cas`;
 let FG=null;
 function fgMap(){if(FG)return FG;FG={};FG_RAW.trim().split('\n').forEach(l=>{const [n,g]=l.split('|');FG[slug(n.trim())]=g.split(',')});return FG}
 /* groups for a wrestler: ['blood'], ['flip','tech'] or ['und'] */
-function fgOf(w){if(!w)return [];const x=typeof S!=='undefined'&&S&&S.fgx&&S.fgx[w.id];if(x&&x.g)return [x.g];const g=fgMap()[w.id];if(g)return g;return [FG_STYLE[w.st]||'cas']}
+function fgOf(w){if(!w)return [];const x=typeof S!=='undefined'&&S&&S.fgx&&S.fgx[w.id];if(x&&x.g)return [x.g];if(w.fgc)return [w.fgc];const g=fgMap()[w.id];if(g)return g;return [FG_STYLE[w.st]||'cas']}
 function fgUnd(w){return fgOf(w)[0]==='und'}
 /* the words on a card or profile: "Bloodhounds", "Flippy · Technical", "Undiscovered" */
 function fgWord(w){return fgOf(w).map(g=>FG_N[g]).join(' · ')}

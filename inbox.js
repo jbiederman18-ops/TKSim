@@ -57,7 +57,7 @@ function voiceFor(k,row){
  return null}
 const KIND={callup:['📣','Ready for the call-up'],rein:['🎭','Wants a reinvention'],tamp:['🕵️','A word about another offer'],med:['🚑','The trainer, with an update'],trade:['🔁','The rival on the line'],cd:['⏳','The countdown debut, at your door'],oc:['📝','Your open challenger is back'],tape:['📼','A tape on your desk']};
 /* who's standing in line for each one */
-function whoOf(x){if(x.k==='ask')return x.a.who;if(x.k==='agent')return x.w.id;if(x.k==='crisis')return S.crisis&&S.crisis.a;if(x.k==='pitch')return S.pitch&&S.pitch.a;if(x.k==='tape')return '📼';if(x.k==='net')return NET_WHO;if(x.k==='fg'){const f=fgVisit();return f?f.F.id:'?'}if(x.k==='fgd'){const f=fgDrift();return f?f.A.id:'?'}if(x.k==='trade')return '📞';const v=voiceFor(x.k,x.row);return v?v[0]:'?'}
+function whoOf(x){if(x.k==='ask')return x.a.who;if(x.k==='agent')return x.w.id;if(x.k==='crisis')return S.crisis&&S.crisis.a;if(x.k==='pitch')return S.pitch&&S.pitch.a;if(x.k==='tape')return '📼';if(x.k==='net')return NET_WHO;if(x.k==='fg'){const f=fgVisit();return f?f.F.id:'?'}if(x.k==='fgd'){const f=fgDrift();return f?f.A.id:'?'}if(x.k==='tr'){const w=trVisit();return w?w.id:'?'}if(x.k==='trade')return '📞';const v=voiceFor(x.k,x.row);return v?v[0]:'?'}
 /* ---- what's waiting ---- */
 function inboxList(){if(!allowed())return [];const out=[];
  if(S.crisis&&S.w[S.crisis.a]&&S.w[S.crisis.a].own==='p'&&typeof CRISES!=='undefined'&&CRISES[S.crisis.k])out.push({k:'crisis',open:()=>_oc()});
@@ -65,6 +65,7 @@ function inboxList(){if(!allowed())return [];const out=[];
  try{if(netDue())out.push({k:'net',open:openNet})}catch(e){console.warn('inbox net',e)}
  try{if(typeof fgVisit==='function'&&fgVisit())out.push({k:'fg',open:openFg})}catch(e){console.warn('inbox friends',e)}
  try{if(typeof fgDrift==='function'&&fgDrift())out.push({k:'fgd',open:openFgd})}catch(e){console.warn('inbox drift',e)}
+ try{if(typeof trVisit==='function'&&trVisit())out.push({k:'tr',open:openTr})}catch(e){console.warn('inbox traits',e)}
  try{agentList().forEach(w=>out.push({k:'agent',w,open:()=>openAgent(w.id)}))}catch(e){console.warn('inbox agents',e)}
  try{askList().forEach(a=>out.push({k:'ask',a,open:()=>openAsk(a.id)}))}catch(e){console.warn('inbox asks',e)}
  let secs=[];try{secs=B0?B0():[]}catch(e){console.warn('inbox',e)}
@@ -78,11 +79,12 @@ function inboxList(){if(!allowed())return [];const out=[];
 /* v369: the network exec and friends (a friend's visit, someone who fell out with their group) come right after the
    front-office business and before contract talks that can still wait, and they keep waiting outside until there's room. */
 const DESK_MAX=4;/* v370: 3 → 4, so the network and friends' visits make it in too */window.DESK_MAX=DESK_MAX;
-function dKey(x){if(x.k==='crisis'||x.k==='pitch'||x.k==='net'||x.k==='fg'||x.k==='fgd')return x.k;if(x.k==='agent')return 'ag:'+x.w.id;if(x.k==='ask')return 'ask:'+x.a.id;
+function dKey(x){if(x.k==='crisis'||x.k==='pitch'||x.k==='net'||x.k==='fg'||x.k==='fgd'||x.k==='tr')return x.k;if(x.k==='agent')return 'ag:'+x.w.id;if(x.k==='ask')return 'ask:'+x.a.id;
  const q=(x.row||'').match(/\('([^']+)'/);if(q)return x.k+':'+q[1];const b=(x.row||'').match(/<b>([^<]+)<\/b>/);return x.k+':'+(b?b[1]:(x.row||'').length)}
 /* v371: the network exec and friends' visits are information you can't get anywhere else, so they always get in too */
-const dUrgent=x=>x.k==='crisis'||x.k==='pitch'||x.k==='med'||x.k==='net'||x.k==='fg'||x.k==='fgd'||(x.k==='agent'&&x.w.con<=1);
-const D_RANK=x=>x.k==='crisis'?0:x.k==='pitch'?1:x.k==='agent'&&x.w.con<=1?2:x.k==='med'?3:x.k==='tamp'?4:x.k==='net'?4.2:x.k==='fgd'?4.4:x.k==='fg'?4.6:x.k==='agent'?5:x.k==='ask'&&x.a.due?6:
+/* v425: a trait slot that opened (one wrestler a week) always gets in */
+const dUrgent=x=>x.k==='tr'||x.k==='crisis'||x.k==='pitch'||x.k==='med'||x.k==='net'||x.k==='fg'||x.k==='fgd'||(x.k==='agent'&&x.w.con<=1);
+const D_RANK=x=>x.k==='crisis'?0:x.k==='pitch'?1:x.k==='agent'&&x.w.con<=1?2:x.k==='med'?3:x.k==='tamp'?4:x.k==='net'?4.2:x.k==='fgd'?4.4:x.k==='fg'?4.6:x.k==='tr'?4.8:x.k==='agent'?5:x.k==='ask'&&x.a.due?6:
  ({trade:7,cd:8,oc:8,ask:9,callup:10,tape:11})[x.k]||14;
 function lineup(out){const wk=AW();
  if(!S.deskWk||S.deskWk.w!==wk){const pick=out.map((x,i)=>({x,i})).sort((a,b)=>D_RANK(a.x)-D_RANK(b.x)||a.i-b.i).map(o=>o.x);const keys=[];

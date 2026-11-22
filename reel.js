@@ -8,7 +8,9 @@
    Loaded after the main script; everything here is only called once the game is running. */
 'use strict';
 const HR_CAP=1,HR_CAP_PPV=2;
-const HR_DARE={fl:.95,sh:.8,br:.8,te:.55,pw:.5};
+/* v425: by fan group; a Highlight Machine pulls reels toward them */
+const HR_DARE={flip:.95,chaos:.8,blood:.8,cas:.7,tech:.55},HR_HILITE=.35;
+const hrDare=w=>(HR_DARE[typeof trLean==='function'?trLean(w):'']||.6)+(hasT(w,'hilite')?HR_HILITE:0);
 /* ---- the crowd: 0–100, starts from the show's buzz and the size of the night ---- */
 let HRC=50;/* the crowd for whoever is airing right now (live show, the rival, the sim) */
 function hrStart(b,sh){const bz=typeof buzzOf==='function'?buzzOf(b):3;return clamp(Math.round(42+(bz-3)*12+(sh&&sh.ppv?10:0)+(sh&&sh.special?6:0)),20,78)}
@@ -33,7 +35,7 @@ function hrWhy(m,main,ppv){if(!m||!m.sides||!validMatch(m)||m.type==='squash'||(
  if(m.title)return 'title';if(wild)return 'stip';if(ppv&&main)return 'main';if(HRC>=75)return 'crowd';return ''}
 function hrMatchOdds(m,main,ppv){const why=hrWhy(m,main,ppv);if(!why)return 0;
  const all=m.sides.flat().map(id=>S.w[id]).filter(Boolean);const h=hrHeat(m);
- const st=STIPS[typeof stipKey==='function'?stipKey(m):m.stip]||STIPS.std;const dare=all.reduce((s,w)=>s+(HR_DARE[w.st]||.6),0)/all.length;
+ const st=STIPS[typeof stipKey==='function'?stipKey(m):m.stip]||STIPS.std;const dare=all.reduce((s,w)=>s+hrDare(w),0)/all.length;
  /* v300: match showdowns are rarer still (they swing harder now — MS_K/MS_CAP in matchshow.js) */
  const p=.04+(h-HR_WARM)/200+(HRC-50)/350+(m.title?.05:0)+((st.inj||1)>=1.25||st.g==='big'?.04:0)+(dare-.65)*.15+(ppv?.07:0)+(main?.16:0);
  return clamp(p,.03,.6)}

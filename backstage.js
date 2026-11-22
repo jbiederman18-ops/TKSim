@@ -103,7 +103,7 @@ function wsRoll(m){if(!S||S.phase!=='season'||!m||!wsMatchOk(m)||(typeof mpLocke
  x.ws={id:W.id,k:sp.k,ok:null};try{save()}catch(e){}}
 function wsRisk(sp){return sp.inj>=.25?'a real injury risk if it goes wrong':sp.inj>0?'some injury risk if it goes wrong':sp.stNo>=.5?'it hurts the match if it goes wrong':'a small cost if it goes wrong'}
 function wsOpen(){const c=wsMatch();if(!c)return;const {m,W,sp,ws}=c;const al=W.al==='h'?'heel':'face';
- openModal(`<div class="h mhd">💬 Locker room whisper</div><div class="gorp">${face(W)}<div><b class="${al}">${esc(W.name)}</b> <span class="muted tiny">· ${W.al==='h'?'😈 Heel':'😇 Face'} · ${STYLE_N[W.st]||''} · POP ${Math.round(W.pop)}</span><p class="scene" style="margin:6px 0 0">"${esc(sp.q)}"</p></div></div>
+ openModal(`<div class="h mhd">💬 Locker room whisper</div><div class="gorp">${face(W)}<div><b class="${al}">${esc(W.name)}</b> <span class="muted tiny">· ${W.al==='h'?'😈 Heel':'😇 Face'} · ${fgWord(W)} · POP ${Math.round(W.pop)}</span><p class="scene" style="margin:6px 0 0">"${esc(sp.q)}"</p></div></div>
  <div class="muted tiny center" style="margin:4px 0 10px">For ${esc(vsLine(m))}</div>
  <button class="choice" onclick="wsAnswer(1)"><span class="key"><span>✓</span></span><div>Go for it</div><div class="muted tiny">Their match is guaranteed a call in gorilla, with this as an extra option · ${STAT_ICON[sp.s]} · big payoff, ${esc(wsRisk(sp))}</div></button>
  <button class="choice" onclick="wsAnswer(0)"><span class="key"><span>✕</span></span><div>Stick to the layout</div><div class="muted tiny">${esc(W.name)} is a little let down (morale −3)</div></button>

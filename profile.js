@@ -74,10 +74,9 @@ function matchups(w){if(!S||S.phase==='rookies'||S.phase==='draft')return '';con
  const sc=f=>mineL.map(o=>{const p=f(w,o);return [o,p,p.reduce((a,x)=>a+x.v,0)]}).sort((a,b)=>b[2]-a[2]);
  const opp=sc(chemParts);const part=w.own&&w.own!=='p'?[]:sc(teamParts).slice(0,2);const bad=opp.length>6?opp.slice(-1).filter(x=>x[2]<0):[];
  return sec(w.own==='p'?'Best matchups':'Against your roster',`${opp.slice(0,3).map(([o,p])=>line(o,p)).join('')}${part.length?`<div class="pf-sub">Tag partners</div>${part.map(([o,p])=>line(o,p)).join('')}`:''}${bad.length?`<div class="pf-sub">Keep apart</div>${bad.map(([o,p])=>line(o,p)).join('')}`:''}`,
-  `<button class="pf-x" onclick="styChart('${w.id}')">${STYLE_N[w.st]} · How chemistry works</button>`)}
+  `<button class="pf-x" onclick="styChart('${w.id}')">${fgWord(w)} · How chemistry works</button>`)}
 
-function traits(w){const l=(w.tr||[]).filter(t=>TRAITS[t]);if(!l.length)return '';
- return sec('Traits',l.map(t=>`<div class="pf-row pf-tr"><span class="pf-l">${TRAITS[t].i} <b>${TRAITS[t].n}</b></span><div class="pf-s">${TRAITS[t].d}</div></div>`).join(''))}
+function traits(w){if(!Array.isArray(w.tr))return '';return sec('Traits',typeof trSlotsHtml==='function'?trSlotsHtml(w):w.tr.filter(t=>TRAITS[t]).map(t=>`<div class="pf-row pf-tr"><span class="pf-l">${TRAITS[t].i} <b>${TRAITS[t].n}</b></span><div class="pf-s">${TRAITS[t].d}</div></div>`).join(''))}
 
 function contract(w,id){const teams=S.teams.filter(t=>t.m.includes(id)).map(t=>t.n);const m=w.mom||0;
  const rec=`${w.w}–${w.l}${m>=2?' <small class="good">on a roll</small>':m<=-2?' <small class="bad">cold</small>':''}`;
@@ -118,7 +117,7 @@ const st=document.createElement('style');st.textContent=`
 .pf-row.tap{cursor:pointer}.pf-l{min-width:0}.pf-l small,.pf-v small{color:var(--mut);font-size:12px;font-weight:600}
 .pf-v{text-align:right;font-weight:700;margin-left:auto}.pf-v i{font-style:normal;color:var(--gold);margin-left:4px}
 .pf-s{flex-basis:100%;font-size:12.5px;color:var(--mut);line-height:1.4}.pf-s b{font-weight:700}.pf-s b.warnt{color:var(--ember)}
-.pf-cr .pf-s{margin-top:2px}.pf-tr .pf-l b{font-weight:700}
+.pf-cr .pf-s{margin-top:2px}.pf-tr .pf-l b{font-weight:700}.pf-lock{opacity:.7}.pf-lock .chip{margin-left:6px}
 .pf-t0{color:var(--mut)}.pf-t1{color:var(--gold2)}.pf-t2{color:var(--ember)}.pf-t3{color:var(--bad)}
 .pf-sub{font:800 12px/1 'BC','Barlow Condensed',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin:12px 0 0}
 .pf-mu>summary{list-style:none}.pf-mu>summary::-webkit-details-marker{display:none}.pf-mu[open]>summary{border-bottom:0}.pf-why{padding:0 0 9px;border-bottom:1px solid var(--line)}
