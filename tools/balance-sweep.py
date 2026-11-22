@@ -70,6 +70,9 @@ v401 (fan war = total audience, fanWar; money by group: TV/ads from fbAud 'tv', 
   rule: 79/54/21%), engaged 96/88/75%, lazy 0%; bank $0.76/1.23/1.63M (v400 0.51/1.35/2.02M); buzz ~3.85 (v400 ratings buzz 3.8-4.0).
   draft-sweep (12 games): early-week banks, red weeks (0%) and the stars-vs-cap trade-off match v400. 'seasons won' uses the build's
   own rule (row 'war' from balance-sim: total audience when fanWar exists, otherwise fans gained).
+v402 (offline rival books for its crowds: fbAiTune swaps up to 1/2/3 stipulations a show on easy/normal/hard for its hungriest
+  crowd; AIQ.fan removed), 3 seasons: Normal 40 games: default seasons won 82/62/45%, fans 681/461/387K vs rival 530/493/582K;
+  --engaged 97/93/80%; --lazy 10/0/0%. 24 games per difficulty: easy 96/88/75%, normal 79/62/33%, hard 79/50/25%. 0 errors.
 --diff normal runs one difficulty; a variant's 'pre' script runs before the bot (handy for testing a constant).
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time

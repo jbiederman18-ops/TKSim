@@ -496,6 +496,35 @@ function fbMerchF(b){if(!fbHas(b)||!S.fans[b])return 1;return clamp(Math.sqrt(fb
 function fbMoodAdd(b,r){if(!r||!r.pct)return;const f=S.fb[b];const T=fbSum(b)||1;let m=0;FB_G.forEach(g=>m+=(r.before[g]||f[g])*clamp(r.pct[g],-8,8));m/=T;
  S.fbm=S.fbm||{};S.fbm[b]=S.fbm[b]==null?m:S.fbm[b]+FB_MOOD_K*(m-S.fbm[b])}
 Object.assign(window,{fbAud,fbBuzz,fbMerchF,fbMood});
+
+/* ---- v402: the offline rival books a little for its own audience (Josh: "a little, not perfect play"). After its usual
+   card, it may swap one standard match's stipulation for one its hungriest crowd loves — the crowd that's biggest and got the
+   least last week, skipping any the card already feeds — if the wrestlers in that match suit it and it can afford it.
+   How often it bothers grows with difficulty (FB_AI_TUNE). Suggest the rest (autoBook for you) never does this. ---- */
+const FB_AI_TUNE={easy:[.4,1],normal:[.8,2],hard:[.95,3]};  /* [chance per crowd, how many crowds a show] */
+function fbAiTune(b,card,show){if(!card||!S.fb||!S.fb[b])return card;const T=FB_AI_TUNE[S.diff||'normal']||FB_AI_TUNE.normal;
+ const ms=card.filter(sl=>sl&&sl.k==='match'&&sl.d&&sl.d.sides&&!sl.d.tour);const H=S.fbh[b]||{};const score=g=>S.fb[b][g]*(H[g]&&H[g][0]!=null&&H[g][0]<1?1.5:1);
+ for(let n=0;n<T[1];n++){if(Math.random()>T[0])continue;
+  const fed={};ms.forEach(sl=>{const e=fbExpo(fbSeg(sl.d,3.5,false));for(const g in e)fed[g]=(fed[g]||0)+e[g]});
+  const g=FB_HC.filter(g=>(fed[g]||0)<1).sort((x,y)=>score(y)-score(x))[0];if(!g)break;
+  const opts=Object.keys(FB_STIP).filter(k=>FB_STIP[k]===g);const cash=S.money[b]||0;let best=null;
+  ms.forEach(sl=>{const m=sl.d;if(m.stip&&m.stip!=='std')return;const ws=m.sides.flat().map(id=>S.w[id]).filter(Boolean);if(!ws.length)return;
+   opts.forEach(k=>{if(!stipOk(k,m.type,!!show.ppv)||STIPS[k].once||stipPrice(k,b)*8>cash)return;const bon=ws.reduce((a,w)=>a+stipBon(w,k,false),0)/ws.length;if(bon<-.25)return;
+    const v=bon+ws.filter(w=>fgOf(w).includes(g)).length/ws.length+Math.random()*.3;if(!best||v>best.v)best={v,m,k}})});
+  if(!best)break;best.m.stip=best.k}
+ return card}
+if(typeof autoBook==='function'){const a0=autoBook;autoBook=window.autoBook=function(brand,show,extUsed,opt){const c=a0.apply(this,arguments);try{if(brand==='ai'&&!(typeof ON==='function'&&ON())&&show)fbAiTune(brand,c,show)}catch(e){console.warn('ai tune',e)}return c}}
+
+/* ---- v402: a brand's audience as one bar of its five crowds (league standings, Home, party TV) and last week's crowds on the TV ---- */
+function fbBar(b){if(!S||!S.fans||S.fans[b]==null)return '';const f=fbSync(b);const T=fbSum(b)||1;
+ return `<div class="fbbar" title="${FB_G.map(g=>fbN(g)+' '+fmtFans(f[g])).join(' · ')}">${FB_G.map(g=>`<i style="width:${(f[g]/T*100).toFixed(1)}%;background:${FG_C[g]}"></i>`).join('')}</div>`}
+function fbLegend(){return `<div class="fbleg">${FB_G.map(g=>`<span><i style="background:${FG_C[g]}"></i>${fbN(g)}</span>`).join('')}</div>`}
+function fbTvCard(){const L=S&&S.last;if(!L||!L.fb)return '';const ks=Object.keys(L.fb).filter(k=>L.fb[k]&&L.fb[k].before);if(!ks.length)return '';
+ const rows=ks.sort((a,b)=>S.fans[b]-S.fans[a]).map(k=>{const r=L.fb[k];return `<div class="tv-row fbtv"><b>${esc(nameOf(k))}</b><span>${FB_G.map(g=>{const d=r.after[g]-r.before[g];return Math.abs(d)<500?'':`<span class="fbd"><i class="fg-${g}">${fbN(g)}</i> <b class="${d>0?'good':'bad'}">${d>0?'▲':'▼'}${fbK(Math.abs(d))}</b></span>`}).join('')}</span></div>`}).join('');
+ let best=null,worst=null;ks.forEach(k=>FB_G.forEach(g=>{const d=L.fb[k].after[g]-L.fb[k].before[g];if(!best||d>best.d)best={k,g,d};if(!worst||d<worst.d)worst={k,g,d}}));
+ const post=(x,good)=>x&&Math.abs(x.d)>=1000?`<div class="xrp"><span class="fgw"><i class="fg-${x.g}">${fbN(x.g)}</i></span> <b>${esc(fbPick(FB_HANDLE[x.g],x.k+x.g))}</b><div>${esc(good?`${nameOf(x.k)} gets us. Best show on TV tonight.`:`${nameOf(x.k)} forgot we exist. Changing the channel.`)}</div></div>`:'';
+ return `<div class="card xred"><div class="xrh"><b>Last week's crowds</b><span>X Redditino · Head of PR</span></div>${rows}${post(best,true)}${post(worst,false)}</div>`}
+Object.assign(window,{fbBar,fbLegend,fbTvCard});
 /* ---- the Crowd read on the Book screen (replaces the Show flow graph): one word per group and what they expect ---- */
 const FB_WORD=[[3,'Eating well tonight','good'],[1,'Happy','good'],[-.5,'Lukewarm',''],[-2,'Only a taste — drifting','warn'],[-99,'Starving — they’re leaving','bad']];
 const FB_CWORD=[[1.5,'Hooked','good'],[.3,'Tuned in','good'],[-1,'Restless',''],[-99,'Changing the channel','bad']];
@@ -566,6 +595,9 @@ Object.assign(window,{fbSync,fbSyncAll,fbSeg,fbPromo,fbCalc,fbApply,fbCrowdCard,
 .fbres .fbn{font-size:14px}.fbres .fbn b{font-weight:700}
 .xred{border-left:3px solid var(--gold)}.xred .xrh{display:flex;gap:8px;align-items:baseline}.xred .xrh b{font:900 italic 17px/1 'BC',sans-serif;text-transform:uppercase}.xred .xrh span{color:var(--gold);font:700 12px 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase}
 .xred .xro{margin:8px 0 6px;font-size:15px}.xred .xrp{margin-top:8px;padding:8px 10px;background:#0f0f12;clip-path:polygon(0 0,100% 0,calc(100% - 8px) 100%,0 100%);font-size:14px}.xred .xrp .fgw{font-size:11px}.xred .xrp b{font-size:13px;color:#ddd}
+.fbbar{display:flex;height:6px;margin-top:4px;background:#222;overflow:hidden}.fbbar i{display:block;height:100%}
+.fbleg{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;font-size:12px;color:var(--muted,#9a958c)}.fbleg i{display:inline-block;width:10px;height:10px;margin-right:4px;vertical-align:-1px}
+.fbtv{align-items:baseline;gap:12px}.fbtv>span{display:flex;flex-wrap:wrap;gap:4px 14px;justify-content:flex-end}.fbtv .fbd i{font:800 italic 1em 'BC',sans-serif;text-transform:uppercase;font-style:italic}
 .xred .xra{margin-top:8px;color:var(--gold);font-size:13.5px}
 .tcs .tcmat.many .tkc .tcfg,.tlrow .tkc .tcfg,.twcd .tkc .tcfg{display:none}
 `;document.head.appendChild(s)})();
