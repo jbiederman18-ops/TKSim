@@ -87,6 +87,9 @@ v410 (stipulations: steady pull FB_STIP0 .35 with no feud needed, STIP_TOLL stam
   FB_REP .5 for a repeat of last show's stip, rival skips repeats, FB_XDIFF normal .12 / hard .3), 16 games x 3 seasons, seasons won:
   Normal: default 56/44/25%, feud 88/56/25%, crowd 75/62/31%, both 100/88/75%. Hard: default 31/25/6%, feud 62/44/12%, crowd
   50/25/12%, both 88/31/19%. Crowd bots bank ~$0.8M vs ~$1.8M by S3 and get ~50% more injuries.
+v413 (the rival books a stipulation at 4x its price in the bank, was 8x — v410's 3x prices had starved its Bloodhounds;
+  FB_XDIFF normal .18 / hard .36), 24 games x 2 seasons, seasons won: Normal default 42/33%, feud 75/58%, crowd 62/38%, both 83/62%.
+  Hard default 17/4%, feud 38/29%, crowd 25/12%, both 50/33%. (v410 at 24 games: Normal default 71/62% — too easy.)
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
 

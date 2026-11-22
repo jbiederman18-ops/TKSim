@@ -419,7 +419,7 @@ const FB_REP=.5;
 /* v405: casuals follow a story — the card's hottest feuds (heat over FB_STORY0) hook them, the top one most (x1.5 on a PPV) */
 const FB_STORY0=10,FB_STORYH=35,FB_STORYW=[1,.5,.3],FB_STORYCAP=1.5;
 /* v405: tougher crowds by difficulty — on a solo game, your crowds expect this much more (in stars) than they'd otherwise ask for */
-const FB_XDIFF={easy:-.15,normal:.12,hard:.3};  /* v410: was normal .05 / hard .25 */
+const FB_XDIFF={easy:-.15,normal:.18,hard:.36};  /* v411: was normal .12 / hard .3 (v410), .05 / .25 (v405) */
 function fbXOff(b){if(b!=='p'||!S||(typeof ON==='function'&&ON()))return 0;return FB_XDIFF[S.diff||'normal']||0}
 /* the hottest feud across the sides of a match */
 function fbHeat(m){let x=0;if(!m||!m.sides||typeof heatOf!=='function')return 0;for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j])x=Math.max(x,heatOf(a,b));return x}
@@ -547,7 +547,7 @@ function fbAiTune(b,card,show){if(!card||!S.fb||!S.fb[b])return card;const T=FB_
   const opts=Object.keys(FB_STIP).filter(k=>FB_STIP[k]===g);const cash=S.money[b]||0;let best=null;
   ms.forEach(sl=>{const m=sl.d;if(m.stip&&m.stip!=='std')return;const ws=m.sides.flat().map(id=>S.w[id]).filter(Boolean);if(!ws.length)return;
    /* v410: the rival doesn't repeat last show's stipulations (they'd only pull half) */const last=(S.fbls&&S.fbls[b])||[];
-   opts.forEach(k=>{if(!stipOk(k,m.type,!!show.ppv)||STIPS[k].once||stipPrice(k,b)*8>cash||last.includes(k))return;const bon=ws.reduce((a,w)=>a+stipBon(w,k,false),0)/ws.length;if(bon<-.25)return;
+   opts.forEach(k=>{if(!stipOk(k,m.type,!!show.ppv)||STIPS[k].once||stipPrice(k,b)*4>cash||last.includes(k))return;const bon=ws.reduce((a,w)=>a+stipBon(w,k,false),0)/ws.length;if(bon<-.25)return;
     const v=bon+ws.filter(w=>fgOf(w).includes(g)).length/ws.length+Math.random()*.3;if(!best||v>best.v)best={v,m,k}})});
   if(!best)break;best.m.stip=best.k}
  return card}
