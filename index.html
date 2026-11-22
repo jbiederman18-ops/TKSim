@@ -1512,7 +1512,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v408';
+const APP_VERSION='v409';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -5606,7 +5606,7 @@ function localBackup(why,st,sid){st=st||soloState();if(!st||!st.w)return;if(!sid
    • Uploads and checks run one at a time, so two of them never race on the same game.
  Saves from older versions of the app (one game in the main save document) are brought over once, and a device still
  on an older version keeps working: its uploads are picked up and passed on. */
-let CL_T=null,CL_BUSY=false,CL_STATUS='',CL_DEFER=false,CL_PEND=null,CL_BIG='';
+let CL_HERE=false,CL_T=null,CL_BUSY=false,CL_STATUS='',CL_DEFER=false,CL_PEND=null,CL_BIG='';
 const SYNC='tksim_sync';
 /* per-game sync records for this sync code: rev = the cloud version we last saw, at = the local save time that
    version matches (newer local saves are unsynced), try = the save time of an upload whose answer we never got */
@@ -5654,7 +5654,7 @@ function applyCloud(d,sid,why){if(TV)return false;if(!ON()&&(PS||ME||LQ||ED||PE|
  const st=JSON.parse(d.state);const cur=soloState();if(cur&&cur.w)localBackup(why||'Replaced by cloud save',cur,sid);
  try{localStorage.setItem(KEY,d.state)}catch(e){console.warn(e);return false}
  LS.set('tksim_meta',JSON.stringify({at:d.at||Date.now(),sid}));
- if(!ON()){S=st;dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);showMigrate();closeModal();tab='home';ANIM=true;render();loadRepoPhotos()}return true}
+ if(!ON()){S=st;dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);showMigrate();closeModal();if(!S.phase||S.phase!=='season'||!['home','book','roster','office','titles'].includes(tab))tab='home';ANIM=true;render();loadRepoPhotos();CL_HERE=true}return true}
 /* put a cloud version of a game on this device: the game you're playing, or one in ⇄ Your games */
 async function putLocal(sid,d,o){o=o||{};const st=JSON.parse(d.state);if(!st||!st.w||!st.phase)throw new Error('bad');const at=o.at!=null?o.at:(d.at||Date.now());
  if(activeSid()===sid){if(!applyCloud(Object.assign({},d,{at}),sid,o.why))return false}
@@ -5665,7 +5665,7 @@ async function dropLocal(sid){if(activeSid()===sid)return false;await shelfDel(s
 
 /* ---- checking the cloud: on open, coming back to the app, and Sync now ---- */
 function cloudCheck(manual){return syncQ(()=>cloudCheck0(manual))}
-async function cloudCheck0(manual){const c=cloudCfg();if(!c||!cloudOn())return;
+async function cloudCheck0(manual){const c=cloudCfg();if(!c||!cloudOn())return;CL_HERE=false;
  /* a question is waiting on you; if its sheet was closed without an answer, ask again below */
  if(CL_PEND){if(/two different saves/i.test($('#modal').textContent||''))return;CL_PEND=null}CL_BUSY=true;CL_STATUS='syncing';const note={got:0,add:0,drop:0};
  try{const [d,idx]=await Promise.all([TKO.cloudGet(c.id),TKO.cloudGameList(c.id)]);
@@ -5700,7 +5700,7 @@ async function cloudCheck0(manual){const c=cloudCfg();if(!c||!cloudOn())return;
    const doc=await TKO.cloudGameGet(c.id,sid);if(doc&&doc.state){try{if(await putLocal(sid,doc))note.add++}catch(e){console.warn('cloud game',e)}}}
   await pushLeagues();
   const c2=cloudCfg();if(c2&&CL_STATUS!=='offline'){c2.synced=Date.now();cloudSet(c2);CL_STATUS=''}
-  const msg=[note.got?`${note.got} game${note.got>1?'s':''} updated`:'',note.add?`${note.add} added to ⇄ Your games`:'',note.drop?`${note.drop} deleted on another device (kept under Backups)`:''].filter(Boolean);
+  const here=CL_HERE;CL_HERE=false;if(here)note.got--;const msg=[here?`Picked up where you left off on your other device — ${stageTxt(S)}`:'',note.got>0?`${note.got} game${note.got>1?'s':''} updated`:'',note.add?`${note.add} added to ⇄ Your games`:'',note.drop?`${note.drop} deleted on another device (kept under Backups)`:''].filter(Boolean);
   if(msg.length)toast('☁️ '+msg.join(' · ')+'.');else if(manual&&CL_STATUS!=='offline')toast('☁️ Everything is synced.')}
  catch(e){console.warn('cloud check',e);CL_STATUS='offline';if(manual)toast('You’re offline — your games are safe on this device and will sync later.')}
  finally{CL_BUSY=false;clRender()}}
@@ -5875,7 +5875,7 @@ if(typeof document!=='undefined'&&document.getElementById('app')){
  let lastCk=Date.now(),hidAt=0;document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&TV)partyWake();
   /* v262: a phone that was locked or switched away (even briefly) often comes back with a stalled live connection — reconnect and check the league right away */
   if(document.visibilityState==='visible'&&hidAt&&Date.now()-hidAt>4000){if(ON())mpConnect();if(TV)tvConnect();setTimeout(syncCheck,800)}
-  if(document.visibilityState==='visible'&&Date.now()-lastCk>20000){lastCk=Date.now();cloudCheck()}else if(document.visibilityState==='hidden'){hidAt=Date.now();flush()}});
+  if(document.visibilityState==='visible'&&(Date.now()-lastCk>20000||hidAt&&Date.now()-hidAt>3000)){lastCk=Date.now();cloudCheck()}else if(document.visibilityState==='hidden'){hidAt=Date.now();flush()}});
  /* v262: safety net for live updates that never arrive (a stalled connection on a phone or the TV doesn't always report an error).
     On party night and booking-at-the-same-time weeks, every 15 seconds ask the server for the league; if it's moved on and
     nothing here is in the middle of saving, catch up — instead of everyone refreshing to see whose turn it is. */
@@ -5891,6 +5891,13 @@ if(typeof document!=='undefined'&&document.getElementById('app')){
  window.addEventListener('online',()=>{if(cloudCfg()&&cloudPendingAny())cloudPush();if(ON()&&(MP_PENDING||mpHasUnsent()))mpPush(S.online&&S.online.msg)});
  /* leaving the app: send anything still waiting on its timer right away */
  const flush=()=>{if(mpT&&ON())mpPush();if(CL_T)cloudPush()};window.addEventListener('pagehide',flush);
+ /* v409 pick up and play: the save you're playing follows you between desktop and phone (never on a TV, solo TV or mid-show).
+    A desktop window often stays "visible" while you walk away to your phone, so also check when the window gets focus
+    back and every so often while it sits open, and send your changes up the moment the window loses focus. */
+ const pupOk=()=>!TV&&!(typeof stvOn==='function'&&stvOn())&&!(typeof LIVE!=='undefined'&&LIVE)&&!!cloudCfg()&&navigator.onLine;
+ const pupCheck=gap=>{if(!pupOk()||CL_BUSY||Date.now()-lastCk<gap)return;lastCk=Date.now();cloudCheck()};
+ window.addEventListener('focus',()=>pupCheck(8000));window.addEventListener('blur',flush);
+ setInterval(()=>{if(document.visibilityState==='visible'&&!busy())pupCheck(45000)},15000);
  /* a new version finished installing in the background: offer a one-tap reload instead of making people close the app */
  if('serviceWorker' in navigator&&navigator.serviceWorker.controller){let shown=false;window.updNow=()=>{flush();setTimeout(()=>location.reload(),400)};
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(shown)return;shown=true;
