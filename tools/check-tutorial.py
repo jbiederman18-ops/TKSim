@@ -9,7 +9,16 @@ version, a reworded tip comes back once, and nothing throws.
     pip install playwright && python3 -m playwright install chromium
     python3 tools/check-tutorial.py            # add --shots DIR to save a screenshot of every stop
 """
-import asyncio, os, subprocess, sys, time, socket, argparse
+import asyncio, os, re, subprocess, sys, time, socket, argparse
+
+# phrases that only make sense to someone who watched the game being built
+TUT_BANNED = [
+    r"\bno longer\b", r"\bused to\b", r"\banymore\b", r"\bany more\b", r"\bthese days\b", r"\bnow (?:you|it|they|the|your|every)\b",
+    r"\bthere(?:'|’)?s no\b", r"\bthere (?:is|are) no\b", r"\bno (?:forecast|preview|longer)\b", r"\binstead of\b",
+    r"\bdoesn(?:'|’)?t win\b", r"\bnot (?:a|an) (?:bug|mistake)\b", r"\bon purpose\b", r"\bby design\b",
+    r"\bmoney(?:'|’)?s tight\b", r"\bv\d{2,3}\b", r"\b(?:old|new|classic) (?:editor|book screen|version)\b",
+    r"\bretired\b", r"\bremoved\b", r"\bdropped\b", r"\breplaced\b", r"\brenamed\b",
+]
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -126,6 +135,15 @@ async def main(shots):
                     return [s.id,d.textContent.split(/\\s+/).filter(Boolean).length,TUT_WORDS]})"""):
                 if words > cap:
                     problems.append(f'{sid}: {words} words — keep stops under {cap} (put the detail in HOWTO)')
+
+            # stops teach a first-time player how to win, not the game's history or design: no "no longer", "there's no
+            # forecast", "used to", version numbers or rationale lines. See "Writing a stop" in tutorial.js.
+            for sid, txt in await pg.evaluate("""TUT_STEPS.map(s=>{const d=document.createElement('div');d.innerHTML=s.b();
+                    return [s.id,(typeof s.t==='function'?s.t():s.t)+' '+d.textContent]})"""):
+                for pat in TUT_BANNED:
+                    m = re.search(pat, txt, re.I)
+                    if m:
+                        problems.append(f'{sid}: "{m.group(0)}" reads like design notes or history, not a lesson for a new player')
 
             # a returning player who took an older tour is offered just the stops changed since
             want = await pg.evaluate("TUT_STEPS.filter(s=>s.track==='season'&&s.since===TUT_REV).map(s=>s.id)")

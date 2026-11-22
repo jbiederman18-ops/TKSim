@@ -81,12 +81,13 @@
 
 ## Keep the tutorial current (required for every gameplay change)
 The Rookie GM orientation lives in `tutorial.js`. When you change, add or remove a game system:
-1. Find the stops whose `sys` tags cover that system and update their text (and `sel` if the screen changed). Add a new stop if a new system is essential to winning.
+The tour is written for someone who has never seen the game, its history or its design — read "WRITING A STOP" at the top of `tutorial.js` first. In short: teach only what the player does to win and why it pays; describe the game as it is, never what it lacks, used to do or was changed from; no design rationale or reassurance lines.
+1. Find the stops whose `sys` tags cover that system and **rewrite** them from scratch for a first-time player (and `sel` if the screen changed) — never append the change to the old text. Add a new stop only if a new system is essential to winning.
 2. Pull numbers from the game with `tv()` (e.g. `cardMatches`, `SEASON`, `PPVS`, `FAT_OK`, `UPKEEP_AT`, `FTIER`) instead of typing them.
 3. If returning players should see the change, bump `TUT_REV` and set that stop's `since` to the new value — they get a short "What's new" replay of just those stops.
-4. Update the matching paragraph in `HOWTO` (index.html) and the README.
+4. Update the matching paragraph in `HOWTO` (index.html) and the README's player guide, by the same rules: describe the game as it is, with no version tags, "no longer", "there's no…" or design rationale. Version history belongs only in the README's changelog entries.
 5. Keep every stop under `TUT_WORDS` words (it's a card on a phone) — the full detail goes in `HOWTO`.
-6. Run `python3 tools/check-tutorial.py` (needs `pip install playwright`; set `CHROME_PATH` if Playwright's own Chromium isn't installed). It plays every stop and tip headlessly, checks word counts, the "What's new" replay for stops at the current `TUT_REV` and the results tip after a real show, and must pass. GitHub runs it on every push too.
+6. Run `python3 tools/check-tutorial.py` (needs `pip install playwright`; set `CHROME_PATH` if Playwright's own Chromium isn't installed). It plays every stop and tip headlessly, checks word counts, flags patch-note/design-note phrasing (`TUT_BANNED`), the "What's new" replay for stops at the current `TUT_REV` and the results tip after a real show, and must pass. GitHub runs it on every push too.
 
 ## Balance sweeps
 `python3 tools/balance-sweep.py --compare <older-commit>` plays full seasons headlessly and prints show ratings, nights and seasons won, fans, money, popularity spread, morale, injuries and errors side by side (~1 min; older commits are fetched automatically). Run it after any change to ratings, fans, money, popularity, stamina, the card or Suggest the rest. Only print the summary lines you need.
