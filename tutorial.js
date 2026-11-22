@@ -242,16 +242,28 @@ function xrIntroLine(){const ss=tv('show names',()=>showNames(),{});
   `The network’s counting on you, and I’m counting on you. I can’t go back to doing the Wendy’s tweets, man. I can’t.`]}
 function xrIntro(){if(XR_INTRO||typeof openModal!=='function')return;
  const lines=xrIntroLine();XR_INTRO={lines,i:0};xrIntroPage()}
-/* one paragraph at a time, tap to continue, and the last button sends you to the draft */
-function xrIntroPage(){const X=XR_INTRO;if(!X)return;const n=X.lines.length,last=X.i>=n-1;
- openModal(`<div class="h mhd mt">📱 X Redditino · Head of PR</div><div class="scene brief ibx" style="min-height:270px"><div class="scs"><span class="scav x">XR</span><div class="scq"><b>X Redditino</b><q>${esc(X.lines[X.i])}</q></div></div></div>
- <button class="choice" onclick="${last?'xrIntroDone()':'xrIntroNext()'}"><span class="key"><span>${last?'A':'▸'}</span></span><div>${last?`✨ "Let's go make some magic."`:'Tap to continue'}</div></button>`);
+/* one paragraph at a time, tap to continue, and the last button sends you straight into the draft tour.
+   The sheet opens once; each tap fades the next paragraph in place so nothing jumps. */
+function xrBtn(last){return `<span class="key"><span>${last?'A':'▸'}</span></span><div>${last?`✨ "Let's go make some magic."`:'Tap to continue'}</div>`}
+function xrIntroPage(){const X=XR_INTRO;if(!X)return;const last=X.i>=X.lines.length-1;
+ openModal(`<div class="h mhd mt">📱 X Redditino · Head of PR</div><div class="scene brief ibx xri-box"><div class="scs"><span class="scav x">XR</span><div class="scq"><b>X Redditino</b><q id="xriQ">${esc(X.lines[X.i])}</q></div></div></div>
+ <button class="choice" id="xriGo" onclick="xrIntroTap()">${xrBtn(last)}</button>`);
  const m=document.getElementById('modal');if(m)m.dataset.xri='1'}
-window.xrIntroNext=function(){if(!XR_INTRO)return;XR_INTRO.i=Math.min(XR_INTRO.i+1,XR_INTRO.lines.length-1);xrIntroPage()};
-/* however the sheet closes (the button, swipe-down, back, tapping outside), the opening counts as played and the draft carries on */
+window.xrIntroTap=function(){const X=XR_INTRO;if(!X||X.busy)return;if(X.i>=X.lines.length-1)return xrIntroDone();
+ const q=document.getElementById('xriQ'),b=document.getElementById('xriGo');if(!q||!b){X.i++;return xrIntroPage()}
+ X.busy=true;X.i++;const last=X.i>=X.lines.length-1;q.classList.add('xri-out');
+ setTimeout(()=>{if(XR_INTRO!==X)return;q.textContent=X.lines[X.i];b.innerHTML=xrBtn(last);q.classList.remove('xri-out');
+  try{MODAL_AT=Date.now()}catch(e){}/* a double tap can't skip a paragraph */X.busy=false},170)};
+window.xrIntroNext=window.xrIntroTap;
+/* however the sheet closes (the button, swipe-down, back, tapping outside), the opening counts as played and the draft
+   tour starts right away, even on a device that has seen it before */
 function xrIntroEnd(){if(!XR_INTRO)return;XR_INTRO=false;const md=document.getElementById('modal');if(md)delete md.dataset.xri;const l=tutStore().xri;const seen=Array.isArray(l)?l.slice(-30):[];if(S&&!seen.includes(S.seed))seen.push(S.seed);tutPut({xri:seen});
- setTimeout(()=>{try{tutAuto()}catch(e){}try{if(typeof render==='function'&&S&&S.phase==='draft')render()}catch(e){}},250)}
+ if(S&&S.phase==='draft'&&S.draft&&!S.draft.supp&&!TUT){try{tutStart('draft')}catch(e){}}
+ if(!TUT)setTimeout(()=>{try{tutAuto()}catch(e){}},250)}
 window.xrIntroDone=function(){if(typeof closeModal==='function')closeModal();xrIntroEnd()};
+(function(){const c=document.createElement('style');c.textContent=`.xri-box{min-height:270px}
+#xriQ{transition:opacity .17s ease,transform .17s ease}#xriQ.xri-out{opacity:0;transform:translateY(6px)}
+#xriGo>div{transition:opacity .17s ease}`;document.head.appendChild(c)})();
 
 /* v350: a tip counts as seen only if it was seen after its text last changed (its `since`), so a reworded tip comes up again once */
 function tipSeen(seen,id){const v=seen[id];if(!v)return false;const s=TUT_STEPS.find(x=>x.id===id);return !(typeof v==='number'&&s&&s.since>v)}

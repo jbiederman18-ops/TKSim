@@ -88,10 +88,10 @@ async def main(shots):
                     await shot(f'xr-intro-{k+1}')
                     if k < pages - 1:
                         await pg.click('#modal button.choice')
-                        await pg.wait_for_timeout(400)  # taps in a sheet's first 260ms are ignored
+                        await pg.wait_for_timeout(600)  # taps in a sheet's first 260ms are ignored
                 if 'make some magic' not in await pg.inner_text('#modal button.choice'):
                     problems.append("X Redditino's last page should end on Let's go make some magic")
-                await pg.wait_for_timeout(400)
+                await pg.wait_for_timeout(600)
                 await pg.click('#modal button.choice')
             except Exception:
                 problems.append("X Redditino's opening did not play at the start of a new game")
