@@ -23,6 +23,7 @@ const DESK=[            /* briefing sections that are really decisions: one noti
  {k:'oc',test:s=>s.i==='📝'},
  {k:'tape',test:s=>s.i==='📼'},
  {k:'callup',test:s=>s.i==='📣'},
+ {k:'venue',test:s=>s.i==='🪑'},     /* v424: a top star who wants a bigger room (venues.js) */
  {k:'rein',test:s=>s.i==='🎭'}           /* v399: a wrestler asking to chase a different crowd (fanbase.js) */            /* a hot ROH prospect asking to be called up (back at the door in v343) */
  /* v342: watchlist updates and suggested teams left the door: nothing happens if you don't answer (you keep following,
     the pair stays unnamed) and the action is always there — the ROH screen's watchlist, the Front office. They're rows
@@ -46,6 +47,7 @@ function voiceFor(k,row){
    `It's not great, boss. ${w.inj} week${w.inj===1?'':'s'} the safe way. Your call on how hard we push it.`,
    `${firstName(w)} wants to be back tomorrow. They always do. Here are the real options.`],id)]}
  if(k==='trade')return [S.rival,pickL(['I put something on your desk. Have a look before I change my mind.','Fair deal for both of us. You know it is.','I think this helps us both. Let me know by the end of the week.'],row.length)];
+ if(k==='venue'){const w=typeof venAsker==='function'&&venAsker('p');if(!w)return null;return [w.w.id,pickL([`Boss, we've got ${fmtFans(S.fans.p)} people watching and I'm still wrestling in the ${venOf('p').n}. Get us a real building.`,`My family asked why the crowd looks so small on TV. I didn't have an answer. Book a bigger room.`,`We're the hottest thing on TV and we're working the ${venOf('p').n}. That's not where stars wrestle.`],w.w.id)]}
  if(k==='rein'){const m=row.match(/fgReinvent\('([^']+)'/);const w=m&&S.w[m[1]];if(!w)return null;return [w.id,pickL([`Nobody's buying what I'm selling. Let me try something different — I know who I could be.`,`I've been sitting in catering for weeks. Give me a new direction and I'll make it work.`,`The crowd doesn't know who I am anymore. Maybe they never did. Let me reinvent myself.`],w.id)]}
  if(k==='callup'){const m=row.match(/callUp\('([^']+)'\)/);const w=m&&(S.w[m[1]]||(typeof farmList==='function'&&farmList('p').find(x=>x.id===m[1])));return [w?(S.w[w.id]?w.id:w.name):'ROH',w?pickL([`I'm ready. Every week in ROH is a week I'm not on your show.`,`They're chanting my name in ROH. Bring me up and I'll make them chant it on TV.`],w.id):'One of your ROH prospects is ready.']}
  if(k==='cd'){const c=typeof cdOfferLive==='function'&&cdOfferLive();const w=c&&S.w[c.x];if(!w)return null;

@@ -95,6 +95,13 @@ v416 (5-star inflation: STAR_TOP2 4.5 / STAR_TOPK2 .25 on top of v121's knee, HE
   Hard default 0/0%, --engaged 56/38%, feuds+crowds 81/31%. 5-star segments a season: engaged ~20 (was 41-49), rival ~6 (was 20-28),
   default ~2; engaged PPVs 14% 5-star (was 37%), TV show ~3.8, PPV ~4.2. At v414 --engaged won 100/100% on Normal. Raising the rival's
   Normal smart .5 -> .85 didn't close that gap (it already books like the engaged bot on Hard); the engaged edge was casuals.
+v424 (tiredness bites: FAT_MT singles 16 -> 18 etc., REC_WORK 10 -> 7, REC_REST 25 -> 22, FAT_PPV 6; 90+ popularity held only by a
+  main event, PPV win or UPKEEP_TOP_ST 4-star match; buildings unlocked once and booked per TV show, top stars grumble in a small room),
+  local runner, 12-14 games x 3 seasons vs v423 (S3 fans, Normal / Hard): default 1.31M / 1.06M (v423 1.18M / 1.17M), sharp booker
+  1.59M / 1.46M (1.65M / 1.55M), lazy 506K / 379K (562K / 408K). Attentive roster stamina ~87 (was ~93), 1 wrestler a week under 45
+  (was 0.3), injuries 6-8 a season (was ~5), lazy 12-14 (was ~9-10). Segment stars default 3.7 (same), sharp 3.7 (was 3.8), sharp 5-star
+  6% (was 8%). Top-5 popularity ~92 (was ~95); hands-on bookers' 88+ stars +1 to +3 over 3 seasons, Suggest-only -2. Default bot books
+  the Good Building ~40% of S3 TV shows, the Arena almost never; its stars grumble ~11-16% of S3 shows. Lazy GM still banks the most.
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
 

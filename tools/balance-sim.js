@@ -130,8 +130,14 @@ window.SIM = async function (opt) {
       // v361: a top star at the door about a friend — the attentive bot pays to make a broken promise right, the others brush it off
       if (typeof fgVisit === 'function' && fgVisit()) { const f = fgVisit(); try { fgAnswer(f.v.d < 0 && opt.checklist && !(opt.skip || []).length ? 0 : 1) } catch (e) { errs.push('friends ' + e.message) } }
       if (typeof fgDrift === 'function' && fgDrift()) { try { fgDriftAnswer() } catch (e) { errs.push('drift ' + e.message) } }
-      // v364: the venue — move up when the bank can carry the move and a few months' rent and recent buzz would fill it (opt.venue false: never)
-      if (typeof venueMove === 'function' && opt.venue !== false) { try { const st = S.venue && S.venue.p, i = BLDG.indexOf(venOf('p')), up = BLDG[i + 1];
+      // v424: buildings unlock once and are booked show by show — unlock the next one when the bank can carry it and buzz would fill it,
+      // then book the biggest one tonight's buzz should fill and the bank can pay for; a top star asking for a bigger room gets a yes when affordable
+      if (typeof venuePick === 'function' && opt.venue !== false) { try { const st = venSt('p'), nx = BLDG.find(v => !st.own.includes(v.k)), bz = crowdPull('p', buzzOf('p'));
+        if (nx && S.phase === 'season' && S.money.p >= nx.unlock * 1.5 + nx.rent * 8 && bz >= nx.pull + .05 && venueBuy('p', nx.k) === 'ok') cur.venue = nx.k;
+        if (typeof venAsker === 'function' && venAsker('p')) { const a = venAsker('p'); venAnswer(opt.checklist && S.money.p >= a.W.rent * 4 + (venOwns('p', a.W.k) ? 0 : a.W.unlock)); if (S.venue.p.prom && !venOwns('p', S.venue.p.prom.k)) venueBuy('p', S.venue.p.prom.k) }
+        const pr = S.venue.p.prom; const pick = (pr && venOwns('p', pr.k) && S.money.p >= BLDG.find(v => v.k === pr.k).rent) ? BLDG.find(v => v.k === pr.k) : BLDG.slice().reverse().find(v => st.own.includes(v.k) && (!v.pull || bz >= v.pull + .05) && S.money.p >= v.rent * 3) || BLDG[0];
+        venuePick('p', pick.k); cur.vk = cur.vk || {}; if (!curShow().ppv) cur.vk[pick.k] = (cur.vk[pick.k] || 0) + 1 } catch (e) { errs.push('venue ' + e.message) } }
+      else if (typeof venueMove === 'function' && opt.venue !== false) { try { const st = S.venue && S.venue.p, i = BLDG.indexOf(venOf('p')), up = BLDG[i + 1];
         if (S.money.p < 0 && i > 0 && !(st && st.next)) venueMove('p', -1);
         else if (up && S.phase === 'season' && S.money.p >= up.move * 1.5 + up.rent * 8 && crowdPull('p', buzzOf('p')) >= up.pull + .05) { if (venueMove('p', 1) === 'ok') cur.venue = up.k } } catch (e) { errs.push('venue ' + e.message) } }
       // contracts: same rule the offline rival uses
