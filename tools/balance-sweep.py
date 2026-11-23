@@ -129,6 +129,8 @@ v429 (storylines dealt per run, Copycat / Transformation / Faction War, Retireme
 v430 (hands: each wrestler holds 3 arcs dealt from their crowd, alignment and the calendar's story size; no milestone unlocks,
   stage gates only; arcs set up their own stories; the player casts partners and rivals; milestone redeals). Normal 24 x 3:
   default + arcs 46/38/4%, no arcs 21/4/0%, engaged + arcs 79/75/54%, engaged no arcs 88/58/38%, lazy 0%. 0 errors.
+v431 (Groundswell, Breaking Free, The Corporate Offer, Absolute Power, Earn the Fight; 17 more storylines, storyline stipulations
+  and cast conditions). Normal 20 x 2: default + arcs 45/25%, no arcs 25/15%, engaged + arcs 95/70%, engaged no arcs 85/65%. 0 errors.
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
 
