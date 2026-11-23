@@ -346,7 +346,7 @@ function applyX(i,x){if(locked())return;const sl=card()[i];const [k,v]=[x.slice(
 
 /* ---------------- drawing the table ---------------- */
 function tellFor(i){const sl=card()[i];const sh=curShow();if(sl.k==='match'&&sl.d&&typeof ocPending==='function'&&ocPending(sl.d))return `<span class="tell muted">🎤 Revealed live</span>`;
- if(sl.k==='promo'){const m=cur(i);if(!m.a)return '';if(!promoOk(m))return `<span class="tell muted">Needs a second wrestler</span>`;return ''}
+ if(sl.k==='promo'){const m=cur(i);if(!m.a)return '';if(!promoOk(m))return `<span class="tell muted">Needs a second wrestler</span>`;return typeof fbPromoGroupsHtml==='function'?fbPromoGroupsHtml(m):''}
  if(!sl.d){const m=cur(i);return idsOf(i,m).length?`<span class="tell muted">${needTxt(m)}</span>`:''}
  /* v455: no crowd-buzz forecast — the crowds this match reaches, plus the wild-card flag */
  /* v455: the one swing worth seeing at a glance — two people who've never shared a ring (the full swing is in Details) */

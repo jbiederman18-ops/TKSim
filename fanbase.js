@@ -475,18 +475,26 @@ window.fbCasHook=fbCasHook;
    the show turns out never enters). Lit at FB_CAS_LIT% or more, half-lit from 0 (holding steady), dim below (losing them).
    For the hardcore crowds that's fbCalc's own sums: exposure × the fed bonus (main event counts extra), the hold/starve loss for
    less than a real match, and Technical fans' run-in and screwy-finish penalty. */
-function fbHcHook(c,b){b=b||'p';const f=fbSync(b);if(!f)return null;const H=S.fbh[b]||{};const ms=[];let mi=-1;(c||[]).forEach((sl,i)=>{if(sl&&sl.k==='match'&&sl.d&&!sl.opt)mi=i});
- (c||[]).forEach((sl,i)=>{if(!sl||sl.k!=='match'||!sl.d||!Array.isArray(sl.d.sides)||!sl.d.sides.flat().filter(Boolean).length)return;try{ms.push(fbSeg(sl.d,3,i===mi))}catch(e){}});
- const out={};FB_HC.forEach(g=>{const l=ms.map(sg=>({e:fbExpo(sg)[g]||0,sg})).filter(x=>x.e>0).sort((x,y)=>y.e-x.e);let E=0,sw=0;
+/* v457: the lights now read the card exactly as the show will — promos count (a Chaos fiend on the mic feeds Chaos fiends),
+   a stipulation repeated from last week pulls less, and a PPV's boost and a stacked crowd's burnout apply too. */
+function fbHcHook(c,b){b=b||'p';const f=fbSync(b);if(!f)return null;const H=S.fbh[b]||{};const segs=[];let mi=-1;(c||[]).forEach((sl,i)=>{if(sl&&sl.k==='match'&&sl.d&&!sl.opt)mi=i});
+ (c||[]).forEach((sl,i)=>{if(!sl||!sl.d)return;try{if(sl.k==='match'&&Array.isArray(sl.d.sides)&&sl.d.sides.flat().filter(Boolean).length)segs.push(fbSeg(sl.d,3,i===mi));else if(sl.k==='promo'&&sl.d.a&&!sl.d.cut)segs.push(fbPromo(sl.d,3))}catch(e){}});
+ const last=(S.fbls&&S.fbls[b])||[];segs.forEach(sg=>{if(sg.k==='match')sg.rep=!!(sg.stip&&sg.stip!=='std'&&last.includes(sg.stip))});
+ const sh=typeof curShow==='function'?curShow():{};const ppvK=sh&&sh.ppv?1.5:sh&&sh.special?1.5:1;const ms=segs.filter(s=>s.k==='match');
+ const out={};FB_HC.forEach(g=>{const l=segs.map(sg=>({e:fbExpo(sg)[g]||0,sg})).filter(x=>x.e>0).sort((x,y)=>y.e-x.e);let E=0,sw=0;
   l.forEach((x,i)=>{if(i>=FB_W.length)return;const ee=x.e*FB_W[i];E+=ee;sw+=ee*FB_FED*FB_PER*(x.sg.me?FB_ME:1)});
-  const hist=H[g]||[];const hold=E<1?-(1-E)*((hist[0]!=null&&hist[0]<1)?FB_STARVE:FB_HOLD):0;
+  const hist=H[g]||[];const run=1+(hist[0]>=1.6?1+(hist[1]>=1.6?1:0):0);const burn=E>=1.6?(run>=3?.6:run>=2?.8:1):1;if(sw>0)sw*=burn*ppvK;
+  const hold=E<1?-(1-E)*((hist[0]!=null&&hist[0]<1)?FB_STARVE:FB_HOLD):0;
   let pen=0;if(g==='tech'){const ri=ms.filter(s=>s.ri).length;const sc=ms.filter(s=>['cheat','dq','co'].includes(s.fin)&&fbExpo(s).tech).length;pen=-(ri*FB_RI_TECH+sc*FB_SCREW_TECH)}
   out[g]=sw+hold+pen});return out}
+/* v457: a promo's crowds, for the tag under it — Chaos fiends when one's on the mic */
+function fbPromoGroups(p){try{if(!p||!p.a||!S.w[p.a])return [];const e=fbExpo(fbPromo(p,3));return FB_HC.filter(g=>(e[g]||0)>0)}catch(e){return []}}
+function fbPromoGroupsHtml(p){const l=fbPromoGroups(p);return l.length?`<span class="crseg">${l.map(g=>`<i class="fg-${g}" title="${FG_N[g]}">${fgIc(g)}</i>`).join('')}</span>`:''}
 function fbCover(c){const lv=v=>v==null?0:v>=FB_CAS_LIT?2:v>=0?1:0;const hc=fbHcHook(c)||{};const out={cas:lv(fbCasHook(c))};FB_HC.forEach(g=>out[g]=lv(hc[g]));return out}
 function fbCoverHtml(c){const v=fbCover(c);const W=['losing them: no real match of their own yet','holding steady','growing: a real match of their own'],WC=['not enough to hold them','just enough to hold them','hooked: stars, titles, spectacle or a story'];const wd=g=>(g==='cas'?WC:W)[v[g]];
  return `<div class="crcov"><span class="crcl">Crowds served</span>${FB_G.map(g=>`<span class="crc l${v[g]} fg-${g}" title="${FG_N[g]}: ${wd(g)}" aria-label="${FG_N[g]}: ${wd(g)}">${fgIc(g)}</span>`).join('')}</div>`}
 function fbGroupsHtml(m){const l=fbMatchGroups(m);return l.length?`<span class="crseg">${l.map(g=>`<i class="fg-${g}" title="${FG_N[g]}">${fgIc(g)}</i>`).join('')}</span>`:''}
-Object.assign(window,{fbCover,fbCoverHtml,fbGroupsHtml,fbMatchGroups});
+Object.assign(window,{fbCover,fbCoverHtml,fbGroupsHtml,fbMatchGroups,fbPromoGroupsHtml});
 /* the show's effect on each group (in %), with the reason. dry = a preview (nothing changes) */
 function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X0=S.fbx[b],H=S.fbh[b];const res={pct:{},why:{},E:{},avg:{},conv:{},best:{}};
  const xo=fbXOff(b);const X={};FB_G.forEach(g=>X[g]=(X0[g]||FB_X0)+xo);
