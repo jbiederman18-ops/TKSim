@@ -806,8 +806,11 @@ function arcOpenK(k){return arcGateOk(k)}
 window.arcOpenK=arcOpenK;
 function arcLockTxt(k){return ARC_GATE_TXT[ARC_GATE[k]]||''}
 function arcBoard(){return {}}
-function arcRan(k){return ((S.arcUsed||{})[S.season]||[]).includes(k)}
-const arcRunningK=k=>arcList().some(a=>a.k===k&&!a.done&&aMine(a.a));
+/* v452: arcs anyone who qualifies can run, each wrestler once a season (Pride of the Town: every wrestler can claim a hometown) */
+const ARC_MANY={townhero:1};
+const arcRanW=(k,id)=>(((S.arcUsedW||{})[S.season]||{})[id]||[]).includes(k);
+function arcRan(k){return !ARC_MANY[k]&&((S.arcUsed||{})[S.season]||[]).includes(k)}
+const arcRunningK=k=>!ARC_MANY[k]&&arcList().some(a=>a.k===k&&!a.done&&aMine(a.a));
 /* story size: small arcs early and right after the big shows, big ones on the road to the season's climaxes */
 const ARC_SIZE={heelturn:'s',faceturn:'s',voice:'s',mentor:'s',team:'s',under:'s',trial:'s',school:'s',mouth:'s',ironman:'s',comeback:'s',reunion:'s',hometown:'s',redemption:'s',
  gauntlet:'m',betrayal:'m',breakup:'m',stakes:'m',cult:'m',cross:'m',proveit:'m',tap:'m',streak:'m',techshow:'m',shoot:'m',faction:'m',join:'m',rebrand:'m',transform:'m',flyer:'m',hardcore:'m',fightchamp:'m',champvoice:'m',torch:'m',
@@ -853,7 +856,7 @@ window.ARC_CAST=ARC_CAST;
 function arcCastList(A,k,role,ex){const R=(ARC_CAST[k]||{})[role];if(!R)return [];return aRoster([A.id].concat(ex||[])).filter(w=>!arcIn(w.id)&&R.f(A,w)&&(role!=='b'||!!arcStoryPick(k,A.id,null,w.id))).sort((x,y)=>R.r(A,y)-R.r(A,x)).slice(0,6)}
 window.arcCastList=arcCastList;
 /* one card: the arc as it would run for them, or null when it can't */
-function arcCard(A,k){if(!arcOpenK(k)||arcRan(k)||arcRunningK(k))return null;const D=ARCS[k];let p=null;try{p=D.pick(A)}catch(e){p=null}if(!p)return null;
+function arcCard(A,k){if(!arcOpenK(k)||arcRan(k)||arcRunningK(k)||ARC_MANY[k]&&arcRanW(k,A.id))return null;const D=ARCS[k];let p=null;try{p=D.pick(A)}catch(e){p=null}if(!p)return null;
  const C=ARC_CAST[k];if(C){for(const r of ['b','c']){if(!C[r])continue;const l=arcCastList(A,k,r,r==='c'&&p.b?[p.b]:[]);if(!p[r]||!l.some(w=>w.id===p[r])){if(!l.length)return null;p[r]=l[0].id}}}
  if(p.b&&p.c&&p.b===p.c)return null;if(D.recast)try{p=D.recast(A,p)||p}catch(e){}
  /* every arc runs with a storyline that fits them (and their partner or rival); none fits, no arc */
@@ -894,7 +897,7 @@ function arcStart(id,i,cast){if(typeof mpLocked==='function'&&mpLocked())return;
  if(cast){const A0=aW(id);o=Object.assign({},o);['b','c'].forEach(r=>{if(cast[r]&&arcCastList(A0,o.k,r,r==='c'?[cast.b||o.b]:[]).some(w=>w.id===cast[r]))o[r]=cast[r]});if(o.b&&o.c&&o.b===o.c)return toast('Pick two different people.');if(D.recast)try{o=D.recast(A0,o)||o}catch(e){}}
  const c=aCost(o.k,id,o);if(S.money.p<c)return toast(`This arc costs ${money(c)} up front.`);S.money.p-=c;const A=aW(id);A.arcN=(A.arcN||0)+1;
  const sl0=arcStoryPick(o.k,id,aVarOf(o.k),o.b);const SL0=sl0&&(ARC_STORY[o.k]||[]).find(x=>x.id===sl0);const DR=SL0&&SL0.road?aDK(o.k,null,sl0):D;const need=DR.need2?DR.need2({a:id,g:o.g}):DR.need;const a=Object.assign({rd:SL0&&SL0.road?1:0,id:'a'+Date.now().toString(36)+Math.floor(Math.random()*999),a:id,start:AW(),end:AW()+need+ARC_SLACK,have:0,need,st:[],stage:'build',star:aStar(A)?1:0,cost:c,v:aVarOf(o.k),al0:A.al,fit:arcFitOf(A)===o.k?1:0},o);
- a.sl=arcStoryPick(o.k,id,a.v,a.b);if(!a.sl){S.money.p+=c;A.arcN--;return toast('No storyline fits that pairing.')}try{if(D.setup)D.setup(a,A)}catch(e){console.warn('arc setup',e)}arcList().push(a);if(S.arcHand)delete S.arcHand[id];S.arcUsed=S.arcUsed||{};(S.arcUsed[S.season]=S.arcUsed[S.season]||[]).push(o.k);news(`📖 ${arcHead(a)||arcLine(a,'start')} (${D.n})`);save();render();arcOpen(id)}
+ a.sl=arcStoryPick(o.k,id,a.v,a.b);if(!a.sl){S.money.p+=c;A.arcN--;return toast('No storyline fits that pairing.')}try{if(D.setup)D.setup(a,A)}catch(e){console.warn('arc setup',e)}arcList().push(a);if(S.arcHand)delete S.arcHand[id];S.arcUsed=S.arcUsed||{};(S.arcUsed[S.season]=S.arcUsed[S.season]||[]).push(o.k);S.arcUsedW=S.arcUsedW||{};{const u=S.arcUsedW[S.season]=S.arcUsedW[S.season]||{};(u[id]=u[id]||[]).push(o.k)}news(`📖 ${arcHead(a)||arcLine(a,'start')} (${D.n})`);save();render();arcOpen(id)}
 window.arcStart=arcStart;
 function arcDrop(id){const a=arcOf(id);if(!a)return;if(!confirm(`Drop ${aW(id).name}'s ${aD(a).n} arc? ${aPr(aW(id),"They'll")} be let down.`))return;arcFail(a,[]);S.arcs=arcList().filter(x=>x!==a);save();render();arcOpen(id)}
 window.arcDrop=arcDrop;
@@ -1325,4 +1328,137 @@ const ARC_GEN={bastard:'{A} is revealed to be the illegitimate child of a vetera
  haircut:"{A} changes {A:their} hair and everyone is convinced {A:they}'s an entirely new member of the roster, except one rival, who goes mad trying to get everyone to admit it's just {A} with a haircut",
  souffle:"{A} suddenly starts giving presents to children in the crowd, hugging {A:their} opponents lovingly and baking apology soufflés for everyone {A:they}'s wronged. Many are getting on board, but one rival is still suspicious something is amiss"};
 for(const k in ARC_STORY)(ARC_STORY[k]||[]).forEach(x=>{const g=ARC_GEN[k+'/'+x.id]||ARC_GEN[x.id];if(g&&!x.gen)x.gen=g});
+/* ---- v451: arcs from Josh's fifth round of storylines (the friend's ideas, with Josh's edits). Each lays out its own stops. ---- */
+{const ARC_PAIN_FAT=12,ARC_LIKE_X=[.25,.4],ARC_LIKE_WK=8,ARC_OIL_WK=[30,35];window.ARC_LIKE_WK=ARC_LIKE_WK;
+ const vig=(s,a)=>s.kind==='promo'&&s.type==='vignette'&&s.a===a.a;vig.vig=1;const pVig=a=>[{kind:'promo',type:'vignette',a:a.a}];
+ const tog=(s,a)=>sTog(s,a.a,a.b);const pTog=(t,bFirst)=>a=>[{kind:'promo',type:t,a:bFirst?a.b:a.a,b:bFirst?a.a:a.b}];
+ const withB=(s,a)=>s.kind==='match'&&s.ids.includes(a.a)&&s.ids.includes(a.b);
+ const hard=s=>!!(STIPS[s.stip]&&(STIPS[s.stip].g==='hard'||STIPS[s.stip].g==='big'));
+ const fac=A=>aTeams(A.id).find(t=>(t.type==='faction'||t.type==='trios')&&t.m.filter(id=>id!==A.id&&aMine(id)).length>=2);
+ const chemUp=(m,v)=>{for(let i=0;i<m.length;i++)for(let j=i+1;j<m.length;j++){const k=key(m[i],m[j]);S.chem[k]=clamp((S.chem[k]||0)+v,-5,6)}};
+ const peace=(x,y,how)=>{const k=key(x,y);if(S.heat&&S.heat[k]>0&&typeof endFeud==='function')endFeud(k,how,'🤝')};
+ /* a rival: anyone they have a rivalry or more with (the feud meter's first tier) */
+ const RIV=()=>typeof FTIER!=='undefined'?FTIER[0][0]:20;
+ const rivals=A=>Object.keys(S.heat||{}).filter(k=>S.heat[k]>=RIV()&&k.split('|').includes(A.id));
+ /* chat's stipulations: TV-legal singles stipulations, dealt by the game and the wrestler */
+ const chatStips=(A,n)=>{const pool=Object.keys(STIPS).filter(k=>k!=='std'&&!STIPS[k].ppv&&!STIPS[k].once&&(!STIPS[k].mt||STIPS[k].mt.includes('singles')));const r=seeded((S.seed||'')+'|chat|'+A.id+'|'+S.season+'|'+(A.arcN||0));
+  const l=pool.slice();for(let i=l.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[l[i],l[j]]=[l[j],l[i]]}return l.slice(0,n)};
+ Object.assign(ARCS,{
+ townhero:{lane:'trait',i:'🏙️',n:'Pride of the Town',bstep:0,gets:'A big jump in popularity, and casual fans',
+  d:'{A} decides {B}\'s hometown is {A:their} hometown now. {A:They} claims it on the mic, shows up there like {A:they} grew up on its streets, then takes it from {B} in the main event.',
+  payoff:'A singles win over {B} in the main event or on a PPV: the town is {A:theirs}',
+  pick:A=>A.pop<ARC_STAR?{}:null,
+  stops:[{n:'Staking a claim',b:'A promo with {B}: {A} says {B:their} hometown is {A:their} hometown now',s:tog,p:pTog('callout')},
+   {n:'Moving in',b:'A Backstage Vignette: {A:they} tours {B}\'s old high school like it was {A:their} own',s:vig,p:pVig},
+   {n:'Turf war',b:'A match with {B} (either result)',s:withB,p:a=>[{kind:'match',type:'singles',vs:[a.a,a.b]}]}],
+  pay:(s,a)=>sSingles(s)&&sWon(s,a.a)&&sOpps(s,a.a).includes(a.b)&&sBig(s),pplan:a=>[{kind:'match',type:'singles',vs:[a.a,a.b],win:0,main:1}],
+  also:(a,s,n)=>{const A=aW(a.a),B=aW(a.b);if(B&&B.own==='p')mor(B,-4);n.push(`🏙️ ${A.name} stole ${B?B.name+'\'s':'the'} hometown. The town's hero is ${A.name} now, and ${B?B.name:'the rival'} has to find somewhere else to be from.`)},
+  win:(a,w,q)=>({pop:q==='great'?5:3,fans:1.5})},
+ war:{lane:'mic',i:'🏴',n:'Flags of War',bstep:0,gets:'Mic and popularity, and either peace with {B} or a blood feud',
+  d:'{A} and {B} each take up the flag of a nation at war with the other. The anthems, the speeches, the first strike, then a war in the ring. Right before the end, you decide how it ends.',
+  payoff:'A Street Fight or bigger against {B}: ceasefire, or total war',
+  pick:A=>({}),
+  stops:[{n:'Raising the flag',b:'A Backstage Vignette: {A:they} unveils a flag and an anthem',s:vig,p:pVig},
+   {n:'The other side',b:'A promo with {B}, who answers with the enemy\'s flag',s:tog,p:pTog('callout',1)},
+   {n:'The first strike',b:'A Sneak Attack on {B}',s:(s,a)=>s.kind==='promo'&&s.type==='attack'&&tog(s,a),p:pTog('attack')}],
+  pay:(s,a)=>sVs(s,a.a,a.b)&&hard(s),pplan:a=>[{kind:'match',type:'singles',vs:[a.a,a.b],stip:'street'}],
+  choice:[{k:'peace',n:'🕊️ Ceasefire',d:'{A} and {B} lower their flags and shake hands: the feud ends, both gain popularity and they work well together from now on.'},
+   {k:'war',n:'💥 Total war',d:'Nobody backs down: {A} and {B} are in a blood feud.'}],
+  also:(a,s,n)=>{const A=aW(a.a),B=aW(a.b);if(!a.choice)a.choice=seeded((S.seed||'')+'|war|'+a.id)()<.5?'peace':'war';
+   if(a.choice==='peace'){peace(a.a,a.b,'A ceasefire');chemUp([a.a,a.b],a.q==='great'?3:2);if(B)popx(B,a.q==='great'?3:2);n.push(`🕊️ Ceasefire. ${A.name} and ${B.name} lower their flags and shake hands in the middle of the ring.`)}
+   else{bumpHeat(a.a,a.b,a.q==='great'?80:60,[],'Total war');n.push(`💥 Total war. ${A.name} and ${B.name} won't stop until one of them surrenders.`)}},
+  win:(a,w,q)=>({mic:1,pop:q==='great'?2.5:1.5})},
+ likeness:{lane:'trait',i:'👕',n:'Likeness Rights',bstep:0,gets:'Popularity, and {F} sells {B}\'s merch for 8 weeks',
+  d:'{A} wants {B}\'s face on {F}\'s shirts. A challenge, a bootleg shirt, a contract, then a match for the rights to {B:their} likeness.',
+  payoff:'A singles win over {B}: {F} owns {B:their} likeness',
+  recast:(A,o)=>{const F=fac(A);return F?Object.assign({},o,{f:F.id,fn:F.n}):o},
+  pick:A=>{const F=fac(A);return F?{f:F.id,fn:F.n}:null},
+  stops:[{n:'The challenge',b:'A promo with {B}: "Your face. Our shirts."',s:tog,p:pTog('callout')},
+   {n:'The bootleg',b:'A Backstage Vignette: {F}\'s merch table, already selling {B}\'s face',s:vig,p:pVig},
+   {n:'The contract',b:'A Contract Signing with {B}: the rights go on the line',s:(s,a)=>s.kind==='promo'&&s.type==='contract'&&tog(s,a),p:pTog('contract')}],
+  pay:(s,a)=>sSingles(s)&&sWon(s,a.a)&&sOpps(s,a.a).includes(a.b),pplan:a=>[{kind:'match',type:'singles',vs:[a.a,a.b],win:0}],
+  also:(a,s,n)=>{const A=aW(a.a),B=aW(a.b);const t=(S.teams||[]).find(t=>t.id===a.f);const x=a.q==='great'?ARC_LIKE_X[1]:ARC_LIKE_X[0];
+   S.likeW={f:a.f,w:a.b,to:AW()+ARC_LIKE_WK,x};if(t)t.m.forEach(id=>{if(id!==a.a&&aW(id)&&aW(id).own==='p')mor(aW(id),3)});if(B&&B.own==='p')mor(B,-6);
+   n.push(`👕 ${t?t.n:A.name} owns ${B.name}'s likeness now: your merch is up ${Math.round(x*100)}% for the next ${ARC_LIKE_WK} weeks.`)},
+  win:(a,w,q)=>({pop:q==='great'?3:1.5})},
+ pain:{lane:'ring',i:'🩹',n:'Through the Pain',bstep:0,gets:'In-ring and popularity, on a great payoff Iron Body, then a week to heal',
+  d:'{A} wants a classic nobody forgets: the night {A:they} kept going through pain nobody should wrestle through. So {A:they} takes the worst of every match, on purpose, and saves it all for one big night.',
+  payoff:'The main event or a PPV match: {A:they} wrestles through it',
+  pick:A=>!A.inj&&!isChampW(A)?{}:null,
+  stops:[{n:'The worst of it',b:'A hardcore or big stipulation match: {A:they} takes the worst of it. Costs extra stamina',s:(s,a)=>s.kind==='match'&&s.ids.includes(a.a)&&hard(s),p:a=>[{kind:'match',type:'singles',side:[a.a],n:1,stip:'street'}]},
+   {n:'No doctors',b:'A Backstage Vignette: {A:they} turns away the doctor and tapes {A:their} own ribs',s:vig,p:pVig},
+   {n:'Worse',b:'Another hardcore or big stipulation match, worse than the last. Costs extra stamina',s:(s,a)=>s.kind==='match'&&s.ids.includes(a.a)&&hard(s),p:a=>[{kind:'match',type:'singles',side:[a.a],n:1,stip:'nodq'}]}],
+  pay:(s,a)=>s.kind==='match'&&s.ids.includes(a.a)&&sBig(s),pplan:a=>[{kind:'match',type:'singles',side:[a.a],n:1,main:1}],
+  also:(a,s,n)=>{const A=aW(a.a);A.inj=Math.max(A.inj||0,1);n.push(a.q==='great'?`🩹 ${A.name} wrestles through all of it. People will be talking about this one for years. Now ${aPr(A,'they')} needs a week to heal.`:`🩹 ${A.name} gets through it, somehow, and needs a week to heal.`)},
+  win:(a,w,q)=>{if(q==='great'&&Array.isArray(w.tr)&&w.tr.length<TR_SLOTS&&!w.tr.includes('iron')&&TRAITS.iron){trAdd(w,'iron');return {ring:1,pop:3,trait:'iron'}}return {ring:1,pop:q==='great'?3:1.5}}},
+ oil:{lane:'mic',i:'🕎',n:'Festival of Lights',bstep:0,gets:'Mic, popularity and chemistry with {B}',
+  d:'{B} knows a thing or two about the Torah, and teaches {A} the true meaning of Hanukkah: the story, the fight of the few against the many, and the miracle of the lights.',
+  payoff:'A tag win with {B}: the miracle',
+  pick:A=>S.week>=ARC_OIL_WK[0]&&S.week<=ARC_OIL_WK[1]?{}:null,
+  stops:[{n:'The story',b:'A Sit-Down Interview with {B}: the story of the Maccabees',s:(s,a)=>s.kind==='promo'&&s.type==='interview'&&tog(s,a),p:pTog('interview',1)},
+   {n:'The few against the many',b:'A tag match with {B}',s:(s,a)=>sSame(s,a.a,a.b),p:a=>[{kind:'match',type:'tag',side:[a.a,a.b],n:2}]},
+   {n:'The lights',b:'A Backstage Vignette: {A:they} lights the menorah',s:vig,p:pVig}],
+  pay:(s,a)=>sSame(s,a.a,a.b)&&sWon(s,a.a),pplan:a=>[{kind:'match',type:'tag',side:[a.a,a.b],n:2,win:0}],
+  also:(a,s,n)=>{const A=aW(a.a),B=aW(a.b);if(B&&B.own==='p')mor(B,5);n.push(`🕎 ${A.name} gets it now, and ${B.name} couldn't be prouder. Happy Hanukkah.`)},
+  win:(a,w,q)=>({mic:1,pop:q==='great'?2:1,chem:2})},
+ peace:{lane:'mic',i:'🌲',n:'Off the Grid',bstep:0,gets:'Mic and popularity, and {A:they} comes back rested and happy',
+  d:'{A} walks away from it all to find something {A:they} has been missing. No rivals, no matches: {A:they} has to stay away until {A:they} finds it, then come back a new person.',
+  payoff:'A win in {A:their} return match',
+  pick:A=>!rivals(A).length&&!isChampW(A)?{}:null,
+  stops:[{n:'Walking away',b:'A Backstage Vignette: {A:they} leaves it all behind. Keep {A:them} out of matches and away from rivals',s:vig,p:pVig},
+   {n:'Away',b:'A Backstage Vignette, still out of matches and away from rivals',s:vig,p:pVig},
+   {n:'Found it',b:'A Backstage Vignette, still out of matches and away from rivals',s:vig,p:pVig}],
+  pay:(s,a)=>s.kind==='match'&&sWon(s,a.a),pplan:a=>[{kind:'match',type:'singles',side:[a.a],n:1,win:0}],
+  also:(a,s,n)=>{const A=aW(a.a);A.fat=0;mor(A,6);n.push(`🌲 ${A.name} is back, and ${aPr(A,"they're")} a different person: rested, calm and happier than ${aPr(A,"they've")} been in years.`)},
+  win:(a,w,q)=>({mic:.8,pop:q==='great'?3:1.5})},
+ twitch:{lane:'trait',i:'🎮',n:'Chat Plays',bstep:0,gets:'Popularity, and chat picks {A:them} a new trait (or a bit of In-ring and Mic if {A:their} slots are full)',
+  d:'{A} hands {A:their} career to the internet. Chat picks the stipulation every week, then chat picks who {A:they} becomes.',
+  payoff:'A match under chat\'s last pick',
+  pick:A=>{const l=chatStips(A,4);return l.length>=4?{stip:l[0]}:null},
+  setup:(a,A)=>{const s0=a.stip||chatStips(A,1)[0];a.stips=[s0].concat(chatStips(A,6).filter(k=>k!==s0)).slice(0,4);a.stip=s0},
+  stops:[{n:'Going live',b:'A Backstage Vignette: {A:they} hands chat the controls',s:vig,p:pVig},
+   {n:'Chat picks',b:'A match in chat\'s pick: {S}',s:(s,a)=>s.kind==='match'&&s.ids.includes(a.a)&&s.stip===a.stip,p:a=>[{kind:'match',type:'singles',side:[a.a],n:1,stip:a.stip}]},
+   {n:'Chat picks again',b:'A match in chat\'s next pick: {S}',s:(s,a)=>s.kind==='match'&&s.ids.includes(a.a)&&s.stip===a.stip,p:a=>[{kind:'match',type:'singles',side:[a.a],n:1,stip:a.stip}]}],
+  pay:(s,a)=>s.kind==='match'&&s.ids.includes(a.a)&&s.stip===a.stip,pplan:a=>[{kind:'match',type:'singles',side:[a.a],n:1,stip:a.stip}],
+  win:(a,w,q)=>{const own=w.tr||[];const l=Object.keys(TRAITS).filter(t=>!own.includes(t));if(Array.isArray(w.tr)&&w.tr.length<TR_SLOTS&&l.length){const t=l[Math.floor(seeded((S.seed||'')+'|chatpick|'+a.id)()*l.length)];trAdd(w,t);return {pop:q==='great'?3:1.5,trait:t}}
+   return {ring:.6,mic:.6,pop:q==='great'?3:1.5}}}});
+ function aStopArc(D){const st=D.stops;const at=a=>st[Math.min((a&&a.have)||0,st.length-1)];D.need=st.length;D.builds=st.map(x=>x.b);D.mins=st.map(x=>x.min!=null?x.min:x.s&&x.s.vig?ARC_VIGMIN:ARC_MIN);D.build=st[0].b;
+  if(!D.tell)D.tell=st.map(x=>x.n||'');D.step=(s,a)=>at(a).s(s,a);D.plan=(a,stg)=>stg==='build'?(at(a).p?at(a).p(a):null):D.pplan(a)}
+ ['townhero','war','likeness','pain','oil','peace','twitch'].forEach(k=>aStopArc(ARCS[k]));
+ /* Off the Grid: a stop only counts the week they stay out of matches and have no rivals; a match while building costs them that week's stop */
+ {const st=ARCS.peace.step;ARCS.peace.step=(s,a)=>a.brk!==AW()&&!rivals(aW(a.a)).length&&st(s,a)}
+ /* the arc hooks that need to know what just aired */
+ const _post=window.arcPost;window.arcPost=function(ap,stars,notes){const s=ap&&ap.seg;const was={};
+  try{if(s)arcList().forEach(a=>{if(a.done||!aMine(a.a))return;was[a.id]=a.have;
+   if(a.k==='peace'&&a.stage==='build'&&s.kind==='match'&&s.ids.includes(a.a)){a.brk=AW();if(a.lastStep===AW()&&a.have>0){a.have--;a.st.pop();a.lastStep=0}
+    if(notes)notes.push(`🌲 ${aW(a.a).name} was pulled back into the ring: no peace this week (Off the Grid).`)}})}catch(e){console.warn('arcs',e)}
+  const r=_post.apply(this,arguments);
+  try{arcList().forEach(a=>{if(!(a.id in was)||a.have===was[a.id])return;const A=aW(a.a);
+   if(a.k==='pain'&&s&&s.kind==='match'&&A)A.fat=Math.min(90,(A.fat||0)+ARC_PAIN_FAT);
+   if(a.k==='twitch'&&Array.isArray(a.stips)){a.stip=a.stips[Math.min(Math.max(0,a.have-1),a.stips.length-1)];if(a.have>1&&notes&&STIPS[a.stip])notes.push(`🎮 Chat has spoken: ${A.name}'s next match is ${STIPS[a.stip].n}.`)}})}catch(e){console.warn('arcs',e)}
+  return r};
+ /* Likeness Rights: the faction sells the likeness on top of its own merch for a few weeks */
+ if(typeof merchRev==='function'){const _mr=merchRev;merchRev=function(b){const v=_mr.apply(this,arguments);try{const L=S&&S.likeW;if(b==='p'&&L&&AW()<=L.to&&(S.teams||[]).some(t=>t.id===L.f))return Math.round(v*(1+L.x))}catch(e){}return v}}
+ window.__arcRivals=rivals}
+/* ---- v451 storylines, crowds, sizes and casting for the new arcs ---- */
+Object.assign(ARC_STORY,{
+ townhero:[{id:'town',hook:'Hometown thief',head:'{A} steals {B}\'s hometown, and wrestles {B:them} to become its hero',gen:'{A} steals a rival\'s hometown, and wrestles the rival to become its hero',txt:{}}],
+ war:[{id:'flags',hook:'Proxy war',head:'{A} and {B} take up the flags of two nations at war, and carry the war into the ring',gen:'{A} and a rival take up the flags of two nations at war, and carry the war into the ring',txt:{}}],
+ likeness:[{id:'rights',hook:'Likeness rights',head:'{A} wrestles {B} for the rights to {B:their} likeness, so {F} can sell {B:their} face on its shirts',gen:'{A} wrestles a rival for the rights to the rival\'s likeness, so {A:their} faction can sell it on its shirts',txt:{}}],
+ pain:[{id:'pain',hook:'Iconic pain',head:'{A} keeps taking the worst of it on purpose, match after match, to build to one iconic night of wrestling through impossible pain',txt:{}}],
+ oil:[{id:'torah',hook:'Hanukkah lessons',head:'{A} learns the true meaning of Hanukkah from {B}, who knows a thing or two about the Torah',gen:'{A} learns the true meaning of Hanukkah from a wrestler who knows a thing or two about the Torah',txt:{}}],
+ peace:[{id:'wood',hook:'Woodworking',head:'{A} walks away from wrestling to a cabin and a lathe, and won\'t come back until {A:they}\'s made something with {A:their} own hands',road:{tell:['The cabin','Sawdust','The first chair']},txt:{}},
+  {id:'nature',hook:'Into the woods',head:'{A} walks away from wrestling and into the wilderness, and won\'t come back until the forest has taught {A:them} something',road:{tell:['The trailhead','Living off the land','The clearing']},txt:{}},
+  {id:'nuns',hook:'Life with the nuns',head:'{A} walks away from wrestling to live with an order of nuns, and won\'t come back until {A:they}\'s learned what they have to teach',road:{tell:['The convent gates','Morning prayers','Sister\'s blessing']},txt:{}},
+  {id:'zen',hook:'Inner peace',head:'{A} walks away from wrestling in search of inner peace, and won\'t come back until {A:they} finds it',road:{tell:['Letting go','Stillness','Inner peace']},txt:{}}],
+ twitch:[{id:'twitch',hook:'Twitch plays',head:'Twitch Plays {A}: {A:they} hands {A:their} career to chat, who pick {A:their} matches and then who {A:they} becomes',road:{tell:['Going live','Chat picks','Chat picks again']},txt:{}},
+  {id:'fcw',hook:'Fan controlled',head:'Fan Controlled {A}: the fans vote on every match {A:they} wrestles, and then on who {A:they} becomes',road:{tell:['Polls are open','The fans have voted','The fans vote again']},txt:{}}]});
+Object.assign(ARC_SIZE,{townhero:'m',war:'m',likeness:'m',pain:'m',oil:'s',peace:'s',twitch:'m'});
+Object.assign(ARC_LEAN,{townhero:'cas',war:'chaos',likeness:'cas',pain:'blood',twitch:'chaos'});
+Object.assign(ARC_CAST,{
+ townhero:{b:{lab:'Whose hometown {A:they} steals',f:(A,w)=>true,r:(A,w)=>aHeat(A.id,w.id)*2+w.pop}},
+ war:{b:{lab:'Who carries the other flag',f:(A,w)=>true,r:(A,w)=>aHeat(A.id,w.id)*2+w.pop+(w.al!==A.al?20:0)}},
+ likeness:{b:{lab:'Whose likeness {A:they}\'s after',f:(A,w)=>!aTeams(A.id).some(t=>(t.type==='faction'||t.type==='trios')&&t.m.includes(w.id)),r:(A,w)=>w.pop}},
+ oil:{b:{lab:'Who knows a thing or two about the Torah',f:(A,w)=>true,r:(A,w)=>aMate(A,w)*3+w.pop/5}}});
+['townhero','war','likeness','pain','oil','peace','twitch'].forEach(k=>{ARCS[k].k=k});
 })();
