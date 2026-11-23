@@ -23,7 +23,7 @@
      Appending is how stops drift into patch notes.
    • tools/check-tutorial.py fails on history/design phrasing (TUT_BANNED). If it flags a line, rewrite it, don't
      dodge the pattern. */
-const TUT_REV=85;
+const TUT_REV=86;
 const TUT_KEY='tksim_tut';
 const TUT_WORDS=190;  /* longest a stop may be (checked by tools/check-tutorial.py) */
 const TUT_MISS=[];
@@ -76,8 +76,8 @@ const TUT_STEPS=[
   return `Every wrestler draws one crowd, shown by the symbol on their card. <b>Draft at least a pair for every crowd</b>: each one needs a match of its own every week or it drifts away.<br><br>${L('cas')} are by far the biggest and follow big stars. ${L('tech')}, ${L('blood')}, ${L('flip')} and ${L('chaos')} are smaller but buy the tickets and merch.<br><br>Crowds decide who clicks in the ring: ${L('blood')} and ${L('chaos')} wrestlers tear the house down together, so do ${L('tech')} and ${L('flip')}, while ${L('cas')} vs ${L('blood')} and ${L('tech')} vs ${L('chaos')} clash. A wrestler's <b>traits</b> can bridge a bad pairing part of the way.<br><br><b>Tap a symbol</b> to see only that crowd's wrestlers.`}},
 {id:'d.div',track:'draft',since:77,sys:['divisions','titles','alignment','stamina'],sel:()=>[...document.querySelectorAll('main .chips')].find(e=>/women/i.test(e.textContent)),t:'Fill your divisions',
  b:()=>`Your show has men's and women's titles, including tag titles, so <b>draft enough women and tag partners</b> to fill both divisions.<br><br>Mix <span class="face">faces</span> and <span class="heel">heels</span>: face vs heel is how feuds catch fire.<br><br>Draft depth, not just headliners: tired stars have bad nights.`},
-{id:'d.pick',track:'draft',since:77,sys:['draft'],sel:'main .card.ttape [onclick^="pDraft"]',t:'Make your pick',
- b:()=>`<b>Make the pick</b> drafts the best available wrestler. To take someone else, tap their card and draft them from their profile.<br><br>In a hurry? <b>Auto-pick</b> takes the best fit for you, and <b>${tv('online',()=>ON()?'Auto-draft me':'Sim rest','Sim rest')}</b> finishes your draft.`},
+{id:'d.pick',track:'draft',since:86,sys:['draft'],sel:'main .card.ttape [onclick^="pDraft"]',t:'Make your pick',
+ b:()=>`<b>Make the pick</b> drafts the best available wrestler. To take someone else, tap their card and draft them from their profile.<br><br>The crowd symbols under the round count how many of each crowd you've drafted.<br><br>In a hurry? <b>Auto-pick</b> takes the best fit for the crowds you're short on, and <b>${tv('online',()=>ON()?'Auto-draft me':'Sim rest','Sim rest')}</b> finishes your draft.`},
 
 /* ---- the first week: the essentials only — everything else is a coach tip the first time it comes up ---- */
 {id:'s.show',track:'season',since:75,tab:'home',sel:'main .card.showcard',sys:['shows','calendar','goal','fans','fan groups'],t:'Your show',
