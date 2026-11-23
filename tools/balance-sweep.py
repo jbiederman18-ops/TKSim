@@ -117,6 +117,10 @@ v426 (arcs: two player-started arcs at a time replace the Performance Center; bu
   engaged 96/88% (651/471), engaged no arcs 83/54% (644/446), lazy 0/0%. Hard: v425 33/4%, default 33/17%, no arcs 25/12%, engaged
   58/42%, engaged no arcs 54/29%. Easy ~100% for all but lazy. About 7 arcs paid off and 4-5 failed a season. Before arcs fed the
   casuals' story pull, the same bots lost 50-75K fans a season by running arcs (forced pairings cost Suggest's best matches).
+v427 (the arc board: 39 arcs, each runs once a season across the roster; 10 open in season 1 plus 9 by milestone / Good Building,
+  10 more in season 2 plus 10 by season-2 milestones / Actual Arena, all open in season 3; the profile lists every arc that fits).
+  Normal 24 games x 3 seasons, seasons won S1/S2/S3: v425 default 67/50/12%, default + arcs 62/50/25%, default no arcs 42/17/0%,
+  engaged + arcs 83/75/38%, engaged no arcs 79/62/33%, lazy 0%. The bot starts ~13 arcs a season and never runs the board dry.
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
 

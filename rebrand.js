@@ -66,5 +66,6 @@ W0('tapeAct',f0=>function(i,k){const a=arguments,t=this;if(k!=='roh')return f0.a
 W0('followAct',f0=>function(i,k){const a=arguments,t=this;if(k!=='roh')return f0.apply(t,a);const x=(S.follow||[])[i];const w=x&&x.w;
  if(!w||farmFull())return f0.apply(t,a);
  if(!ask(w,{i:'🏟️',head:`Signing ${w.name} to ROH`,verb:'🏟️ Sign to ROH',where:'Starting fresh on ROH.',go:()=>{const j=(S.follow||[]).indexOf(x);if(j>=0)f0.call(t,j,'roh')},ok:()=>inFarm(w)}))return f0.apply(t,a)});
+window.rbAsk=(w,o)=>ask(w,o);
 (function(){const c=document.createElement('style');c.textContent=`#modal .rbc{display:flex;justify-content:center;margin:4px 0 2px}#modal .rbc .tkc{pointer-events:none}`;document.head.appendChild(c)})();
 })();
