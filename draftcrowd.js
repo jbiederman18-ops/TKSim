@@ -52,7 +52,7 @@ if(typeof draftChoice==='function'){const dc0=draftChoice;draftChoice=window.dra
   if(best)window.__dcWhy=bw;return best}catch(e){console.warn('draft crowds',e);return dc0.apply(this,arguments)}}}
 if(typeof autoPick==='function'){autoPick=window.autoPick=function(){if(mpLocked())return;if(onClock()!=='p')return;window.__dcWhy='';const c=draftChoice('p');if(!c)return;const why=window.__dcWhy;pDraft(c.id);
  if(c.own==='p')toast(why?`Auto-pick: ${c.name} — ${why}.`:`Auto-pick: ${c.name}.`)}}
-Object.assign(window,{dcCounts,dcNeed,dcTally,dcStrip});
+Object.assign(window,{DC_SHARE,dcCounts,dcNeed,dcTally,dcStrip});
 (function(){const s=document.createElement('style');s.textContent=`
 .dcrowd{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12.5px}
 .dcrowd .dct b{margin:0 .3em 0 0;color:#fff;font-weight:800}
