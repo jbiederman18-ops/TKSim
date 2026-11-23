@@ -456,6 +456,37 @@ function fbExpo(sg){const e={};const add=(g,v)=>{if(g&&g!=='cas'&&g!=='und')e[g]
  add(FB_STIP[sg.stip],(FB_STIP0+FB_STIP1*Math.min(1,(sg.h||0)/FB_STIPH))*(sg.rep?FB_REP:1));if(FB_MULTI[sg.type])add('flip',.5);if(sg.ri)add('chaos',.5);
  const hc=tags.map(gs=>gs.filter(g=>FB_HC.includes(g)));if(hc.length>1&&hc.every(x=>x.length)){FB_HC.forEach(g=>{if(hc.every(x=>x.includes(g))&&e[g])e[g]*=1.4})}
  for(const g in e)e[g]=Math.min(FB_CAP,e[g]);return e}
+/* v455: coverage while booking — which crowds tonight's card gives a match of its own. Coverage only, never a forecast:
+   a crowd is lit once a match reaches it fully, half-lit for a taste, dim with nothing. */
+function fbMatchExpo(m){try{if(!m||!Array.isArray(m.sides)||!m.sides.flat().filter(Boolean).length)return null;return fbExpo(fbSeg(m,3,false))}catch(e){return null}}
+function fbCasOf(m){try{return m.sides.flat().some(id=>S.w[id]&&fgOf(S.w[id]).includes('cas'))||!!m.title}catch(e){return false}}
+function fbMatchGroups(m){const e=fbMatchExpo(m);if(!e)return [];const l=FB_HC.filter(g=>(e[g]||0)>=.5).sort((x,y)=>e[y]-e[x]);if(fbCasOf(m))l.unshift('cas');return l}
+/* casuals tune in for the whole show: star power, their own draws, titles, spectacle and stories (fbCalc's hooks, minus how
+   good the show turns out — that part is never previewed). Lit once the card clears their drift by a real margin. */
+const FB_CAS_LIT=1;
+function fbCasHook(c){const sh=typeof curShow==='function'?curShow():{};const segs=[];(c||[]).forEach(sl=>{if(!sl||!sl.d)return;try{if(sl.k==='match'&&Array.isArray(sl.d.sides)&&sl.d.sides.flat().filter(Boolean).length)segs.push(fbSeg(sl.d,3,false));else if(sl.k==='promo'&&sl.d.a)segs.push(fbPromo(sl.d,3))}catch(e){}});
+ if(!segs.length)return null;const ids=[...new Set(segs.flatMap(s=>s.ids))];const pops=ids.map(id=>S.w[id]?S.w[id].pop:0).sort((a,b)=>b-a).slice(0,4);const tp=pops.length?pops.reduce((a,x)=>a+x,0)/pops.length:0;
+ const ms=segs.filter(s=>s.k==='match');const draws=Math.min(1.8,ms.reduce((a,s)=>a+s.ids.filter(id=>S.w[id]&&fgOf(S.w[id]).includes('cas')).length*.6,0));
+ const tl=Math.min(1.2,segs.filter(s=>s.title).length*.6);const spec=Math.min(.8,ms.filter(s=>s.stip!=='std'||FB_MULTI[s.type]).length*.4);
+ let story=0;ms.map(s=>s.h||0).sort((x,y)=>y-x).slice(0,FB_STORYW.length).forEach((h,i)=>story+=Math.max(0,h-FB_STORY0)/FB_STORYH*FB_STORYW[i]);story=Math.min(FB_STORYCAP,story)*(sh&&sh.ppv?1.5:1);
+ const ppvK=sh&&sh.ppv?1.5:sh&&sh.special?1.5:1;let up=(tp-70)*.12+draws+tl+spec;if(up>0)up*=ppvK;return up+story-FB_DRIFT}
+window.fbCasHook=fbCasHook;
+/* v455: every light on one scale — the % a crowd would move tonight if each match lands right at what it expects (so how good
+   the show turns out never enters). Lit at FB_CAS_LIT% or more, half-lit from 0 (holding steady), dim below (losing them).
+   For the hardcore crowds that's fbCalc's own sums: exposure × the fed bonus (main event counts extra), the hold/starve loss for
+   less than a real match, and Technical fans' run-in and screwy-finish penalty. */
+function fbHcHook(c,b){b=b||'p';const f=fbSync(b);if(!f)return null;const H=S.fbh[b]||{};const ms=[];let mi=-1;(c||[]).forEach((sl,i)=>{if(sl&&sl.k==='match'&&sl.d&&!sl.opt)mi=i});
+ (c||[]).forEach((sl,i)=>{if(!sl||sl.k!=='match'||!sl.d||!Array.isArray(sl.d.sides)||!sl.d.sides.flat().filter(Boolean).length)return;try{ms.push(fbSeg(sl.d,3,i===mi))}catch(e){}});
+ const out={};FB_HC.forEach(g=>{const l=ms.map(sg=>({e:fbExpo(sg)[g]||0,sg})).filter(x=>x.e>0).sort((x,y)=>y.e-x.e);let E=0,sw=0;
+  l.forEach((x,i)=>{if(i>=FB_W.length)return;const ee=x.e*FB_W[i];E+=ee;sw+=ee*FB_FED*FB_PER*(x.sg.me?FB_ME:1)});
+  const hist=H[g]||[];const hold=E<1?-(1-E)*((hist[0]!=null&&hist[0]<1)?FB_STARVE:FB_HOLD):0;
+  let pen=0;if(g==='tech'){const ri=ms.filter(s=>s.ri).length;const sc=ms.filter(s=>['cheat','dq','co'].includes(s.fin)&&fbExpo(s).tech).length;pen=-(ri*FB_RI_TECH+sc*FB_SCREW_TECH)}
+  out[g]=sw+hold+pen});return out}
+function fbCover(c){const lv=v=>v==null?0:v>=FB_CAS_LIT?2:v>=0?1:0;const hc=fbHcHook(c)||{};const out={cas:lv(fbCasHook(c))};FB_HC.forEach(g=>out[g]=lv(hc[g]));return out}
+function fbCoverHtml(c){const v=fbCover(c);const W=['losing them: no real match of their own yet','holding steady','growing: a real match of their own'],WC=['not enough to hold them','just enough to hold them','hooked: stars, titles, spectacle or a story'];const wd=g=>(g==='cas'?WC:W)[v[g]];
+ return `<div class="crcov"><span class="crcl">Crowds served</span>${FB_G.map(g=>`<span class="crc l${v[g]} fg-${g}" title="${FG_N[g]}: ${wd(g)}" aria-label="${FG_N[g]}: ${wd(g)}">${fgIc(g)}</span>`).join('')}</div>`}
+function fbGroupsHtml(m){const l=fbMatchGroups(m);return l.length?`<span class="crseg">${l.map(g=>`<i class="fg-${g}" title="${FG_N[g]}">${fgIc(g)}</i>`).join('')}</span>`:''}
+Object.assign(window,{fbCover,fbCoverHtml,fbGroupsHtml,fbMatchGroups});
 /* the show's effect on each group (in %), with the reason. dry = a preview (nothing changes) */
 function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X0=S.fbx[b],H=S.fbh[b];const res={pct:{},why:{},E:{},avg:{},conv:{},best:{}};
  const xo=fbXOff(b);const X={};FB_G.forEach(g=>X[g]=(X0[g]||FB_X0)+xo);
@@ -660,6 +691,11 @@ Object.assign(window,{fbSync,fbSyncAll,fbSeg,fbPromo,fbCalc,fbApply,fbResultsCar
 .srcr{display:grid;grid-template-columns:7.4em 1fr auto;gap:8px;align-items:baseline;padding:4px 0;border-top:1px solid rgba(255,255,255,.06)}
 .srcr:first-of-type{border-top:0}.srcr .fgw{font-size:12.5px}.srcr b{font:800 italic 14px/1.1 'BC',sans-serif;text-transform:uppercase}.srcr b.warn{color:var(--gold)}
 .srcr em{font:700 13px 'BC',sans-serif;font-style:normal;white-space:nowrap}
+.crcov{display:flex;align-items:center;gap:8px;margin:2px 0 8px;flex-wrap:wrap}.crcov .crcl{font:800 italic 11px/1 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-right:2px}
+.crcov .crc{display:inline-grid;place-items:center;width:30px;height:30px;background:#141418;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);transition:opacity .2s,box-shadow .2s}.crcov .crc .fgi{width:18px;height:18px}
+.crcov .crc.l0{opacity:.28;filter:grayscale(1)}.crcov .crc.l1{opacity:.75;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}.crcov .crc.l2{box-shadow:inset 0 0 0 2px currentColor}
+.tell.fmeet{color:var(--gold2);background:rgba(216,180,73,.12);box-shadow:inset 0 0 0 1px rgba(216,180,73,.45)}
+.crseg{display:inline-flex;gap:3px;vertical-align:middle;margin-right:4px}.crseg i{display:inline-grid;place-items:center}.crseg .fgi{width:15px;height:15px}
 .srcr2{display:grid;grid-template-columns:1fr 5.2em 5.2em;gap:8px;align-items:baseline;padding:5px 0;border-top:1px solid rgba(255,255,255,.06)}.srcr2 .fgw{font-size:12.5px;display:flex;flex-direction:column;gap:1px}.srcr2 .fgw b{font:800 italic 12px/1.1 'BC',sans-serif;text-transform:uppercase}.srcr2 .fgw b.warn{color:var(--gold)}
 .srcr2 em{font:700 13px 'BC',sans-serif;font-style:normal;white-space:nowrap;text-align:right}.srcr2.hd{border-top:0;padding-bottom:2px}.srcr2.hd span{font:800 italic 11px/1.1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--gold2);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .srcr2.tot{border-top:1px solid rgba(255,255,255,.2)}.srcr2.tot span{font:800 italic 13px 'BC',sans-serif;text-transform:uppercase}.srcr2.tot b{text-align:right;font:800 15px 'BC',sans-serif}

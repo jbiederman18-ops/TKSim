@@ -413,6 +413,13 @@ function mdOf(m,sh){const r=rateMatch(m,{ppv:sh.ppv,allin:sh.ppv&&SUPER(S.week),
  if(sk==='std'&&!m.tour&&!isSp(m)&&m.type!=='gauntlet'){const best=Object.entries(STIPS).filter(([k,s])=>k!=='std'&&stipOk(k,m.type,sh.ppv)).map(([k,s])=>[k,ws.reduce((a,w)=>a+stipBon(w,k,false),0)/ws.length]).sort((a,b)=>b[1]-a[1])[0];if(best&&best[1]>=3)extrasW+=` · ${STIPS[best[0]].n} would suit them`}
  return {r,p,back,talentW,storyW,extrasW}}
 window.mdOf=mdOf;
+/* v455: how far the result can land from what's on paper, in the same words as live calls, with what's causing it */
+window.firstMeet=function(m){try{if(!m||!Array.isArray(m.sides)||m.sides.length<2)return false;for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j])if(a&&b&&S.w[a]&&S.w[b]&&!metPair(a,b))return true}catch(e){}return false};
+function swingWhy(m){const l=[];try{const sk=stipKey(m);if(sk!=='std'&&STIPS[sk])l.push(STIPS[sk].n);const fn=finOf(m);if(fn!=='clean'&&FINS[fn])l.push(FINS[fn].n.toLowerCase()+' finish');if(riOn(m))l.push('a run-in');
+ const rk=m.sides.flat().filter(id=>S.w[id]&&S.w[id].rookie).length;if(rk)l.push(rk>1?`${rk} rookies`:'a rookie');if(firstMeet(m))l.push('first meeting');
+ else if(m.sides.some(sd=>sd.length>1&&sd.some((a,x)=>sd.some((b,y)=>y>x&&a&&b&&!metPair(a,b)))))l.push('a new team')}catch(e){}return l}
+function swingRow(m,r){const sw=r.sw||3;const k=sw<=4.5?['Safe','good']:sw<=7.5?['Risky','warnt']:['Playing with fire','bad'];const why=swingWhy(m);
+ return `<div class="row sb" style="padding-top:10px;margin-top:4px;border-top:1px solid var(--line)"><span class="muted">Swing</span><span><span class="tg ${k[1]}">${k[0]}</span>${why.length?` <span class="muted tiny">${esc(why.join(', '))}</span>`:` <span class="muted tiny">lands close to what's on paper</span>`}</span></div>`}
 const row=(k,pp,why,help,q)=>`<div class="drow"><span class="k">${k}${help?` <button class="qm" onclick="${help}" aria-label="How ${k.toLowerCase()} works">?</button>`:''}</span>${segH(pp,q)}<span class="w">${why}</span></div>`;
 const chipRow=(lab,l,g)=>l.length?`<div class="drow2"><span class="k ${g?'g':''}">${lab}</span><span>${l.map(([k,t])=>`<span class="tg ${k==='ok'?'good':k==='b'?'bad':'warnt'}" style="margin:2px 4px 2px 0">${k==='ok'?'✓ ':k==='b'?'✗ ':''}${esc(t)}</span>`).join('')}</span></div>`:'';
 /* chips for a segment that isn't saved yet: try it on the card for a moment */
@@ -420,7 +427,7 @@ function chipsWith(i,seg){const c=S.card&&S.card.p;if(!c||i==null||!c[i])return 
  try{(attnItems()||[]).forEach(x=>{if(!x.chip)return;try{const r=x.chip(i);if(r)out.push(r)}catch(e){}})}catch(e){}finally{c[i]=sv}return out}
 /* v388: the read-only breakdown behind a booked slot's Details button (the old editors are gone) */
 window.matchDetails=function(m,sh,i){const d=mdOf(m,sh);const r=d.r;
- if(d.sq)return `<div class="det"><div class="dh">Match details</div><div class="muted tiny" style="padding:8px 0">A squash is short: the winner's star power decides it.</div><div class="row sb" style="padding-top:8px;border-top:1px solid var(--line)"><span class="muted">Crowd buzz</span>${tellHtml(r,true)}</div></div>`;
+ if(d.sq)return `<div class="det"><div class="dh">Match details</div><div class="muted tiny" style="padding:8px 0">A squash is short: the winner's star power decides it.</div></div>`;
  const ws=m.sides.map(s=>s.map(id=>S.w[id]).filter(Boolean));let chem='';
  if(ws.length>=2&&ws[0][0]&&ws[1][0]){const a=ws[0][0],b=ws[1][0];chem=partsHtml(chemParts(a,b))+(metPair(a.id,b.id)?'':NEWPAIR)}
  const req=chipsWith(i,m);
@@ -430,7 +437,7 @@ window.matchDetails=function(m,sh,i){const d=mdOf(m,sh);const r=d.r;
  ${row('Story',d.p.story,esc(d.storyW))}
  ${row('Extras',d.p.extras,esc(d.extrasW))}
  ${chipRow('Requests',req,1)}${chipRow('Holding back',d.back)}
- <div class="row sb" style="padding-top:10px;margin-top:4px;border-top:1px solid var(--line)"><span class="muted">Crowd buzz</span><span class="tellrow" style="margin:0">${tellHtml(r,true)}</span></div>
+ ${swingRow(m,r)}
   <details class="whyd" style="margin-top:8px"><summary>Full chemistry breakdown</summary>${whyMatch(m,sh)}</details></div>`};
 /* the small pip strip on a booked slot */
 window.slotPips=function(m,sh,i){let d;try{d=mdOf(m,sh)}catch(e){return ''}const ch=attnChips(i);
@@ -457,8 +464,7 @@ const tellSpan=st=>{const t=tellOf(st,1);return `<span class="tell ${t[3]} big">
 window.promoDetails=function(p,i){const d=pdOf(p);if(!d)return '';const req=chipsWith(i,{type:p.type,a:p.a,b:p.b||''});
  return `<div class="det"><div class="dh">Promo details</div>
  ${row('Talent',d.p.talent,esc(d.talentW))}${row('Fit',d.p.fit,esc(d.fitW))}${row('Story',d.p.story,esc(d.storyW))}${row('Your calls',0,'Decided live, if it gets a showdown',null,1)}
- ${chipRow('Requests',req,1)}${chipRow('Holding back',d.back)}
- <div class="row sb" style="padding-top:10px;margin-top:4px;border-top:1px solid var(--line)"><span class="muted">Crowd buzz</span>${tellSpan(promoEst(p))}</div></div>`};
+ ${chipRow('Requests',req,1)}${chipRow('Holding back',d.back)}</div>`};
 window.segDetails=function(i){const sl=S.card&&S.card.p[i];if(!sl||!sl.d)return;const sh=curShow();
  const body=sl.k==='promo'?promoDetails(sl.d,i):matchDetails(sl.d,sh,i);
  openModal(`<div class="row sb"><div class="h mhd" style="margin:0">${sl.k==='promo'?'Promo':(()=>{try{const l=mLab(S.card.p,i);return l.main?'Main event':l.lab}catch(e){return 'Match'}})()}</div><button class="mini" onclick="closeModal()">Close</button></div>${body}

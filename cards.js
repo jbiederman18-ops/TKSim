@@ -355,11 +355,14 @@ function applyX(i,x){if(locked())return;const sl=card()[i];const [k,v]=[x.slice(
 
 /* ---------------- drawing the table ---------------- */
 function tellFor(i){const sl=card()[i];const sh=curShow();if(sl.k==='match'&&sl.d&&typeof ocPending==='function'&&ocPending(sl.d))return `<span class="tell muted">🎤 Revealed live</span>`;
- if(sl.k==='promo'){const m=cur(i);if(!m.a)return '';if(!promoOk(m))return `<span class="tell muted">Needs a second wrestler</span>`;try{const t=tellOf(promoEst({type:m.type,a:m.a,b:m.b||null}),true);return `<span class="tell ${t[3]}">${t[1]} ${t[2]}</span>`}catch(e){return ''}}
+ if(sl.k==='promo'){const m=cur(i);if(!m.a)return '';if(!promoOk(m))return `<span class="tell muted">Needs a second wrestler</span>`;return ''}
  if(!sl.d){const m=cur(i);return idsOf(i,m).length?`<span class="tell muted">${needTxt(m)}</span>`:''}
- try{const r=rateMatch(sl.d,{ppv:sh.ppv,allin:sh.ppv&&SUPER(S.week),preview:true});return tellHtml(r)}catch(e){return ''}}
+ /* v455: no crowd-buzz forecast — the crowds this match reaches, plus the wild-card flag */
+ /* v455: the one swing worth seeing at a glance — two people who've never shared a ring (the full swing is in Details) */
+ const fm=typeof firstMeet==='function'&&firstMeet(sl.d);
+ return (typeof fbGroupsHtml==='function'?fbGroupsHtml(sl.d):'')+(fm?'<span class="tell fmeet">❓ First meeting</span>':'')}
 function xoHtml(i){const sl=card()[i];const d=sl.d;const A=d&&W_(d.a),B=d&&W_(d.b);let tl='';
- if(A&&B)try{tl=tellHtml(rateMatch({type:'singles',stip:'std',sides:[[A.id],[B.id]],winner:0,title:'',xo:true},{ppv:true,preview:true}))}catch(e){}
+ 
  const lab=`Dream match · ⚔️ ${esc(PPVS[FD_WEEK]||'')}`;
  return `<div class="tcs opt ${i===TC.act&&TC.open&&!locked()?'act':''}" data-tcs="${i}" data-dp="slot:${i}">
  <div class="tcnum">${i+1}</div>
@@ -502,6 +505,7 @@ function decorate(){if(!bookOn())return;sync();const app=document.getElementById
  c.forEach((sl,i)=>{if(!shown(sl))return;const el=rord.querySelector(`[data-dp="slot:${i}"]`);if(!el)return;const t=document.createElement('template');t.innerHTML=slotHtml(i).trim();el.replaceWith(t.content.firstChild)});
  rord.classList.add('tcrord');if(lk)rord.classList.add('tclock');
  const hd=rord.previousElementSibling;if(hd&&/running order/i.test(hd.textContent))hd.innerHTML=`<div class="h small" style="margin:0">Tonight's card</div><span class="row" style="gap:6px"><button class="mini" onclick="reorderOpen()">Running order</button></span>`;
+ if(typeof fbCoverHtml==='function'){try{const old=rord.parentNode.querySelector(':scope>.crcov');const t=document.createElement('template');t.innerHTML=fbCoverHtml(c).trim();if(old)old.replaceWith(t.content.firstChild);else rord.before(t.content.firstChild)}catch(e){console.warn('crowd cover',e)}}
  if(!lk&&TC.act!=null){const main=app.querySelector('main');const old=main.querySelector('#tcdock');if(old)old.remove();main.querySelectorAll('.tcscrim').forEach(x=>x.remove());main.insertAdjacentHTML('beforeend',dockHtml());
   const pk=document.querySelector('.tcpk.on');if(pk&&pk.scrollIntoView)try{pk.scrollIntoView({inline:'nearest',block:'nearest'})}catch(e){}
   const h=document.getElementById('tchand');if(h){h.scrollLeft=TC.dealt?0:TC.sx;h.addEventListener('scroll',()=>{TC.sx=h.scrollLeft},{passive:true})}TC.dealt=0;
