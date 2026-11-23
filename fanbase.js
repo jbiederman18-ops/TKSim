@@ -621,14 +621,19 @@ function fbRevealHtml(o,instant){const r=o&&o.fb&&o.fb.p;if(!r||!r.before||!r.af
  const rows=FB_G.map((g,n)=>{const w=fbWord(g,r.pct[g]||0)||['','',''];const d=Math.round(r.after[g]-r.before[g]);
   return `<div class="srcr"${instant?'':` style="animation-delay:${n*110}ms"`}><span class="fgw">${fgLbl(g)}</span><b class="${w[2]}">${w[1]}</b>${Math.abs(d)<100?'<em class="muted">steady</em>':`<em class="${d>0?'good':'bad'}">${d>0?'▲':'▼'}${fbK(Math.abs(d))}</em>`}</div>`}).join('');
  return `<div class="srcrowd${instant?'':' in'}"><div class="srch">How the crowds took it</div>${rows}</div>`}
-/* v454: the crowd reveal for both shows, after both main events and before the winner — each crowd gained or lost on each side */
+/* v459: the crowd reveal for both shows, after both main events and before the winner. The crowd names come up first, then
+   your show's column fills in row by row with its total, then the rival's — one show's night, then the other's. */
+const FB_REV={row:90,cell:200,p0:550,gap:550};
+const FB_REV_MS=(()=>{const n=5,q0=FB_REV.p0+(n+1)*FB_REV.cell+FB_REV.gap;return q0+(n+1)*FB_REV.cell+250})();
 function fbRevealBoth(o,instant,nm){const P=o&&o.fb&&o.fb.p,Q=o&&o.fb&&o.fb.ai;if(!P||!P.before||!P.after||!Q||!Q.before||!Q.after)return fbRevealHtml(o,instant);
- const dl=(r,g)=>Math.round(r.after[g]-r.before[g]);const cell=(d,n)=>`<em class="${Math.abs(d)<100?'muted':d>0?'good':'bad'}"${instant?'':` style="animation-delay:${n}ms"`}>${Math.abs(d)<100?'steady':(d>0?'▲':'▼')+fbK(Math.abs(d))}</em>`;
+ const dl=(r,g)=>Math.round(r.after[g]-r.before[g]);const n=FB_G.length,q0=FB_REV.p0+(n+1)*FB_REV.cell+FB_REV.gap;
+ const at=t=>instant?'':` style="animation-delay:${t}ms"`;
+ const cell=(d,t)=>`<em class="srv2 ${Math.abs(d)<100?'muted':d>0?'good':'bad'}"${at(t)}>${Math.abs(d)<100?'steady':(d>0?'▲':'▼')+fbK(Math.abs(d))}</em>`;
  const tot=r=>FB_G.reduce((a,g)=>a+dl(r,g),0);
- const rows=FB_G.map((g,n)=>{const w=fbWord(g,P.pct[g]||0)||['','',''];return `<div class="srcr2"${instant?'':` style="animation-delay:${n*260}ms"`}><span class="fgw">${fgLbl(g)}<b class="${w[2]}">${w[1]}</b></span>${cell(dl(P,g),n*260+120)}${cell(dl(Q,g),n*260+220)}</div>`}).join('');
- const T=(d,n)=>`<b class="${d>=0?'good':'bad'}">${d>=0?'+':'−'}${fbK(Math.abs(d))}</b>`;
- return `<div class="srcrowd srboth${instant?'':' in'}"><div class="srch">How the crowds took it</div><div class="srcr2 hd"><span></span><span>${esc(nm.p)}</span><span>${esc(nm.ai)}</span></div>${rows}<div class="srcr2 tot"${instant?'':` style="animation-delay:${FB_G.length*260+200}ms"`}><span>All fans</span>${T(tot(P))}${T(tot(Q))}</div></div>`}
-window.fbRevealBoth=fbRevealBoth;
+ const rows=FB_G.map((g,k)=>{const w=fbWord(g,P.pct[g]||0)||['','',''];return `<div class="srcr2"${at(k*FB_REV.row)}><span class="fgw">${fgLbl(g)}<b class="srv2 ${w[2]}"${at(FB_REV.p0+k*FB_REV.cell)}>${w[1]}</b></span>${cell(dl(P,g),FB_REV.p0+k*FB_REV.cell)}${cell(dl(Q,g),q0+k*FB_REV.cell)}</div>`}).join('');
+ const T=(d,t)=>`<b class="srv2 ${d>=0?'good':'bad'}"${at(t)}>${d>=0?'+':'−'}${fbK(Math.abs(d))}</b>`;
+ return `<div class="srcrowd srboth${instant?'':' in'}"><div class="srch">How the crowds took it</div><div class="srcr2 hd"><span></span><span class="srcp"${at(FB_REV.p0-150)}>${esc(nm.p)}</span><span class="srcq"${at(q0-150)}>${esc(nm.ai)}</span></div>${rows}<div class="srcr2 tot"${at(n*FB_REV.row)}><span>All fans</span>${T(tot(P),FB_REV.p0+n*FB_REV.cell)}${T(tot(Q),q0+n*FB_REV.cell)}</div></div>`}
+window.fbRevealBoth=fbRevealBoth;window.FB_REV_MS=FB_REV_MS;
 /* ---- after the show: The fans, then X Redditino (Head of PR) ---- */
 const FB_HANDLE={cas:['@JustHereForTheBelts','@MyDadWatchesThis','@CasualTuesdayKev'],tech:['@ChainWrestlingCarl','@HeadlockHistorian','@SnapSuplexSue'],
  blood:['@CrimsonMaskMike','@BarbedWireBetty','@BladeJobBrandon'],flip:['@SpotMonkeyKai','@ShootingStarSam','@450Splashley'],chaos:['@RunInRhonda','@NoDQNate','@SwerveSzn']};
@@ -702,16 +707,24 @@ Object.assign(window,{fbSync,fbSyncAll,fbSeg,fbPromo,fbCalc,fbApply,fbResultsCar
 .srcr{display:grid;grid-template-columns:7.4em 1fr auto;gap:8px;align-items:baseline;padding:4px 0;border-top:1px solid rgba(255,255,255,.06)}
 .srcr:first-of-type{border-top:0}.srcr .fgw{font-size:12.5px}.srcr b{font:800 italic 14px/1.1 'BC',sans-serif;text-transform:uppercase}.srcr b.warn{color:var(--gold)}
 .srcr em{font:700 13px 'BC',sans-serif;font-style:normal;white-space:nowrap}
-.crcov{display:flex;align-items:center;gap:8px;margin:2px 0 8px;flex-wrap:wrap}.crcov .crcl{font:800 italic 11px/1 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-right:2px}
-.crcov .crc{display:inline-grid;place-items:center;width:30px;height:30px;background:#141418;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);transition:opacity .2s,box-shadow .2s}.crcov .crc .fgi{width:18px;height:18px}
-.crcov .crc.l0{opacity:.28;filter:grayscale(1)}.crcov .crc.l1{opacity:.75;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}.crcov .crc.l2{box-shadow:inset 0 0 0 2px currentColor}
+.crcov{display:grid;grid-template-columns:auto repeat(5,1fr);align-items:center;gap:6px;margin:2px 0 10px}.crcov .crcl{font:800 italic 11px/1.05 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-right:4px;max-width:5.5em}
+.crcov .crc{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:40px;background:#111114;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);transition:background .25s,box-shadow .25s,color .25s}
+.crcov .crc .fgi{display:block;width:18px;height:18px;margin:0;transition:filter .25s,opacity .25s}
+.crcov .crc::after{content:'';display:block;width:16px;height:3px;background:linear-gradient(90deg,var(--lt1,rgba(255,255,255,.14)) 0 7px,transparent 7px 9px,var(--lt2,rgba(255,255,255,.14)) 9px)}
+.crcov .crc.l0{color:rgba(255,255,255,.3)}.crcov .crc.l0 .fgi{opacity:.55}
+.crcov .crc.l1{background:color-mix(in srgb,currentColor 9%,#111114);box-shadow:inset 0 0 0 1px color-mix(in srgb,currentColor 45%,transparent);--lt1:currentColor}.crcov .crc.l1 .fgi{opacity:.85}
+.crcov .crc.l2{background:color-mix(in srgb,currentColor 24%,#111114);box-shadow:inset 0 0 0 2px currentColor,0 0 12px color-mix(in srgb,currentColor 45%,transparent);--lt1:currentColor;--lt2:currentColor}.crcov .crc.l2 .fgi{filter:drop-shadow(0 0 4px currentColor)}
 .tell.fmeet{color:var(--gold2);background:rgba(216,180,73,.12);box-shadow:inset 0 0 0 1px rgba(216,180,73,.45)}
 .crseg{display:inline-flex;gap:3px;vertical-align:middle;margin-right:4px}.crseg i{display:inline-grid;place-items:center}.crseg .fgi{width:15px;height:15px}
 .srcr2{display:grid;grid-template-columns:1fr 5.2em 5.2em;gap:8px;align-items:baseline;padding:5px 0;border-top:1px solid rgba(255,255,255,.06)}.srcr2 .fgw{font-size:12.5px;display:flex;flex-direction:column;gap:1px}.srcr2 .fgw b{font:800 italic 12px/1.1 'BC',sans-serif;text-transform:uppercase}.srcr2 .fgw b.warn{color:var(--gold)}
 .srcr2 em{font:700 13px 'BC',sans-serif;font-style:normal;white-space:nowrap;text-align:right}.srcr2.hd{border-top:0;padding-bottom:2px}.srcr2.hd span{font:800 italic 11px/1.1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--gold2);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .srcr2.tot{border-top:1px solid rgba(255,255,255,.2)}.srcr2.tot span{font:800 italic 13px 'BC',sans-serif;text-transform:uppercase}.srcr2.tot b{text-align:right;font:800 15px 'BC',sans-serif}
 .srcrowd.in .srcr2{opacity:0;animation:srcrIn .35s ease-out forwards}.srcrowd.in .srcr2.hd{opacity:1;animation:none}
-.srcrowd.in .srcr{opacity:0;animation:srcrIn .3s ease-out forwards}@keyframes srcrIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.srcrowd.in .srcr{opacity:0;animation:srcrIn .3s ease-out forwards}
+.srcrowd.in .srcr2 .srv2{opacity:0;animation:srcrPop .32s cubic-bezier(.2,1.4,.4,1) forwards}@keyframes srcrPop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+.srcrowd.in .srcr2.hd .srcp,.srcrowd.in .srcr2.hd .srcq{opacity:.35;animation:srcrHd .3s ease-out forwards}@keyframes srcrHd{to{opacity:1}}
+.srcrowd.now .srcr2,.srcrowd.now .srv2,.srcrowd.now .srcp,.srcrowd.now .srcq{animation:none!important;opacity:1!important;transform:none!important}
+.srcr2 em.srv2,.srcr2 b.srv2{display:block}@keyframes srcrIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 body.tv .srcrowd{display:none}
 .tcs .tcmat.many .tkc .tcfg,.tlrow .tkc .tcfg,.twcd .tkc .tcfg{display:none}
 `;document.head.appendChild(s)})();
