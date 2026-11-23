@@ -110,7 +110,7 @@ const ARCS={
   win:(a,w,q)=>({mic:1,pop:q==='great'?2:1})},
  voice:{lane:'mic',gets:'Mic',i:'🎙️',n:'Find Your Voice',need:3,
   d:'Promos against three different people, then call out someone bigger.',build:'A promo at 3★+ with someone new',payoff:'A promo with someone 10+ more popular',
-  pick:A=>A.mic<90?{}:null,
+  pick:A=>A.mic<90&&aRoster([A.id]).some(w=>w.pop>=A.pop+10)?{}:null,
   step:(s,a)=>{if(s.kind!=='promo'||!s.b||s.a!==a.a&&s.b!==a.a)return false;const o=s.a===a.a?s.b:s.a;a.opp=a.opp||[];if(a.opp.includes(o))return false;a.opp.push(o);return true},min:3,
   pay:(s,a)=>{if(s.kind!=='promo'||!s.ids.includes(a.a))return false;const o=s.a===a.a?s.b:s.a;return !!(o&&aW(o)&&aW(o).pop>=aW(a.a).pop+10)},
   plan:(a,st)=>{const A=aW(a.a);const o=st==='build'?aBest(aRoster([a.a]).filter(w=>!(a.opp||[]).includes(w.id)),w=>w.pop):aBest(aRoster([a.a]).filter(w=>w.pop>=A.pop+10),w=>-w.pop);return o?[{kind:'promo',type:'callout',a:a.a,b:o.id}]:null},
@@ -126,7 +126,7 @@ const ARCS={
   pick:A=>Object.values(S.titles||{}).some(t=>t.kind==='singles'&&t.g===A.g&&t.holders.length&&!t.holders.includes(A.id))?{}:null,
   step:(s,a)=>{if(!sSingles(s)||!s.ids.includes(a.a))return false;const o=aW(sOpps(s,a.a)[0]);if(!o)return false;const lp=a.lp!=null?a.lp:aW(a.a).pop-15;if(o.pop<=lp)return false;a.lp=o.pop;if(sWon(s,a.a))a.wins=(a.wins||0)+1;return true},ok:a=>(a.wins||0)>=1,
   pay:(s,a)=>s.kind==='match'&&!!s.title&&s.ids.includes(a.a),
-  plan:(a,st)=>{const A=aW(a.a);if(st==='build'){const lp=a.lp!=null?a.lp:A.pop-15;return [{kind:'match',type:'singles',side:[a.a],n:1,oppF:w=>w.pop>lp&&w.pop<=lp+20,win:(a.wins||0)?null:0},{kind:'match',type:'singles',side:[a.a],n:1,oppF:w=>w.pop>lp,win:(a.wins||0)?null:0}]}
+  plan:(a,st)=>{const A=aW(a.a);if(st==='build'){const lp=a.lp!=null?a.lp:A.pop-15;const left=(a.need||3)-(a.have||0);const room=w=>aRoster([a.a]).filter(x=>x.pop>w.pop).length>=left-1;return [{kind:'match',type:'singles',side:[a.a],n:1,oppF:w=>w.pop>lp&&w.pop<=lp+20&&room(w),win:(a.wins||0)?null:0},{kind:'match',type:'singles',side:[a.a],n:1,oppF:w=>w.pop>lp&&room(w),win:(a.wins||0)?null:0},{kind:'match',type:'singles',side:[a.a],n:1,oppF:w=>w.pop>lp,win:(a.wins||0)?null:0}]}
    const t=Object.values(S.titles).find(t=>t.kind==='singles'&&t.g===A.g&&t.holders.length===1&&aMine(t.holders[0])&&!aW(t.holders[0]).inj&&t.holders[0]!==a.a);return t?[{kind:'match',type:'singles',vs:[t.holders[0],a.a],title:t.id}]:null},
   win:(a,w,q)=>({ring:1.1,pop:q==='great'?2.5:1})},
  ironman:{lane:'ring',gets:'In-ring, and on a great payoff Iron Body or Workhorse',i:'🔩',n:'Iron Man Run',need:4,
@@ -249,7 +249,7 @@ const ARCS={
   pick:A=>A.mic>=65&&!aTeams(A.id).some(t=>t.type==='faction')?{}:null,
   step:(s,a)=>{if(s.kind!=='promo'||!s.b||!s.ids.includes(a.a))return false;const o=s.a===a.a?s.b:s.a;a.opp=a.opp||[];if(a.opp.includes(o))return false;a.opp.push(o);return true},
   pay:(s,a)=>s.kind==='promo'&&s.type==='rally'&&s.ids.includes(a.a)&&(a.opp||[]).some(id=>s.ids.includes(id)),
-  plan:(a,st)=>{if(st==='pay'){const f=(a.opp||[]).find(id=>aMine(id)&&!aW(id).inj);return f?[{kind:'promo',type:'rally',a:a.a,b:f}]:null}const A=aW(a.a);const o=aBest(aRoster([a.a]).filter(w=>!(a.opp||[]).includes(w.id)&&w.al===A.al&&w.pop<A.pop),w=>w.pop+aMate(A,w)*3);return o?[{kind:'promo',type:'rally',a:a.a,b:o.id}]:null},
+  plan:(a,st)=>{if(st==='pay'){const f=(a.opp||[]).find(id=>aMine(id)&&!aW(id).inj);return f?[{kind:'promo',type:'rally',a:a.a,b:f}]:null}const A=aW(a.a);const nw=aRoster([a.a]).filter(w=>!(a.opp||[]).includes(w.id));const o=aBest(nw.filter(w=>w.al===A.al&&w.pop<A.pop),w=>w.pop+aMate(A,w)*3)||aBest(nw,w=>-w.pop+aMate(A,w)*3);return o?[{kind:'promo',type:'rally',a:a.a,b:o.id}]:null},
   also:(a,s,n)=>{const m=[a.a].concat((a.opp||[]).filter(aMine).slice(0,2));if(m.length<3)return;const nm=`${aLast(aW(a.a))}'s following`;S.teams=S.teams||[];S.teams.push({id:'t'+(typeof partyNid==='function'?partyNid():S.nid++),n:nm,type:'faction',m});
    for(let i=0;i<m.length;i++)for(let j=i+1;j<m.length;j++){const k=key(m[i],m[j]);S.chem[k]=clamp((S.chem[k]||0)+(a.q==='great'?2:1),-5,6)}n.push(`🕯️ ${nm} is born.`)},
   win:(a,w,q)=>({mic:1})},
@@ -263,7 +263,7 @@ const ARCS={
   d:'Win and keep winning. One loss and the streak starts over.',build:'A win (a loss starts it over)',payoff:'A main event or PPV win over someone more popular',
   pick:A=>({}),
   step:(s,a)=>{if(sLost(s,a.a)){a.have=0;a.st=[];return false}return sWon(s,a.a)},pay:(s,a)=>sWon(s,a.a)&&sBig(s)&&sOpps(s,a.a).some(id=>aW(id)&&aW(id).pop>aW(a.a).pop),
-  plan:(a,st)=>{const A=aW(a.a);return [{kind:'match',type:'singles',side:[a.a],n:1,win:0,main:st==='pay'&&!curShow().ppv?1:0,oppF:st==='pay'?w=>w.pop>A.pop:w=>w.pop<=A.pop+5}]},
+  plan:(a,st)=>{const A=aW(a.a);return [{kind:'match',type:'singles',side:[a.a],n:1,win:0,main:st==='pay'&&!curShow().ppv?1:0,oppF:st==='pay'?w=>w.pop>A.pop:w=>w.pop<=A.pop+5}].concat(st==='pay'?[]:[{kind:'match',type:'singles',side:[a.a],n:1,win:0}])},
   win:(a,w,q)=>({ring:1,pop:q==='great'?4:2})},
  comeback:{lane:'ring',i:'🩹',n:'Comeback',need:2,min:3,gets:'In-ring, popularity and a big morale lift',
   d:'A storyline injury takes {A:them} off TV for two weeks. Then the comeback, better than ever.',build:'A 3★+ match',payoff:'A PPV win',
@@ -276,7 +276,10 @@ const ARCS={
   pick:A=>{const t=Object.values(S.titles||{}).find(t=>t.holders.includes(A.id));return t?{t2:t.id}:null},
   step:(s,a)=>{if(!(s.kind==='match'&&s.title===a.t2&&sWon(s,a.a)))return false;a.opp=a.opp||[];const o=sOpps(s,a.a).filter(id=>!a.opp.includes(id));if(!o.length)return false;a.opp.push(...o);return true},
   pay:(s,a)=>s.ppv&&s.title===a.t2&&s.ids.includes(a.a),
-  plan:(a,st)=>{const t=S.titles[a.t2];if(!t||!t.holders.includes(a.a))return null;return [{kind:'match',type:'singles',side:t.holders.slice(),n:t.holders.length,title:a.t2,win:0,ppv:st==='pay'?1:0,oppF:w=>!(a.opp||[]).includes(w.id)}]},
+  plan:(a,st)=>{const t=S.titles[a.t2];if(!t||!t.holders.includes(a.a))return null;const h=t.holders.slice(),n=h.length;const base={kind:'match',type:'singles',side:h,n,title:a.t2,win:0,ppv:st==='pay'?1:0};if(st==='pay')return [base];
+   const l=[Object.assign({},base,{oppF:w=>!(a.opp||[]).includes(w.id)})];
+   /* team champions in a thin division: one new challenger is enough, the partner can be anyone */
+   if(n>1){const pool=aRoster(h).filter(w=>w.g===t.g&&arcFit(w.id)&&!arcIn(w.id)).sort((x,y)=>y.pop-x.pop);const nw=pool.find(w=>!(a.opp||[]).includes(w.id));if(nw){const rest=pool.filter(w=>w.id!==nw.id).slice(0,n-1);if(rest.length===n-1)l.push({kind:'match',type:n===2?'tag':'trios',vs2:[h,[nw.id].concat(rest.map(w=>w.id))],title:a.t2,win:0})}}return l},
   also:(a)=>{const t=S.titles[a.t2];if(t)t.prestige=(t.prestige||0)+(a.q==='great'?5:3)},win:(a,w,q)=>({ring:1,pop:q==='great'?2:1})},
  techshow:{lane:'ring',i:'⚙️',n:'Technical Showcase',need:3,min:3,gets:'In-ring, and Technical fans',
   d:'Pure wrestling: clean finishes, no run-ins, against the best technicians.',build:'A clean 3★+ match against a Technical wrestler, no run-ins',payoff:'A 2 Out of 3 Falls or Iron Man match',
@@ -524,8 +527,8 @@ const ARC_VARS={
    step:(s,a)=>{if(s.kind!=='match'||!s.ids.includes(a.a)||s.sides.length<3)return false;if(sWon(s,a.a))a.wins=(a.wins||0)+1;return true},
    plan:(a,st)=>{if(st==='build')return [{kind:'match',type:'triple',side:[a.a],ffa:2,win:(a.wins||0)?null:0}];return ARCS.gauntlet.plan(a,st)}}],
  torch:[{vn:'Clean in the Middle'},
-  {vn:'The Endorsement',payoff:'A promo with {B} on a PPV: the handoff',pay:(s,a)=>s.ppv&&sTog(s,a.a,a.b),
-   plan:(a,st)=>st==='build'?[{kind:'match',type:'tag',side:[a.a,a.b],n:2}]:[{kind:'promo',type:'rally',a:a.a,b:a.b,ppv:1}]}],
+  {vn:'The Endorsement',payoff:'A promo with {B}: the handoff',pay:(s,a)=>sTog(s,a.a,a.b),
+   plan:(a,st)=>st==='build'?[{kind:'match',type:'tag',side:[a.a,a.b],n:2}]:[{kind:'promo',type:'rally',a:a.a,b:a.b}]}],
  dream:[{vn:'Face to Face'},
   {vn:'Dream Team',payoff:'A tag win together on a PPV',pay:(s,a)=>s.ppv&&sSame(s,a.a,a.b)&&sWon(s,a.a),
    plan:(a,st)=>st==='build'?[{kind:'promo',type:'rally',a:a.a,b:a.b}]:[{kind:'match',type:'tag',side:[a.a,a.b],n:2,win:0,ppv:1}]}],
@@ -542,8 +545,8 @@ const ARC_VARS={
     const t=(L.tr||[]).find(x=>TRAITS[x]&&!(W.tr||[]).includes(x)&&!(typeof trClash==='function'&&trClash(x,W.tr||[])));if(t){W.tr=(W.tr||[]).concat([t]);n.push(`🌀 ${W.name} absorbs ${L.name}'s aura: ${TRAITS[t].i} ${TRAITS[t].n}.`)}}}],
  reunion:[{vn:'Back Together'},
   {vn:'Back for Gold',payoff:'A tag title match together',pay:(s,a)=>sSame(s,a.a,a.b)&&!!s.title,
-   plan:(a,st)=>{if(st==='build')return ARCS.reunion.plan(a,st);const A=aW(a.a);const t=Object.values(S.titles||{}).find(t=>t.kind!=='singles'&&t.holders.length===2&&t.holders.every(id=>aMine(id)&&!aW(id).inj)&&!t.holders.includes(a.a)&&!t.holders.includes(a.b));
-    return t?[{kind:'match',type:'tag',vs2:[[a.a,a.b],t.holders.slice()],title:t.id}]:null}}]};
+   plan:(a,st)=>{if(st==='build')return ARCS.reunion.plan(a,st);const A=aW(a.a);const tl=Object.values(S.titles||{}).filter(t=>t.kind==='tag'&&t.g===A.g&&(!t.br||t.br==='p'));const t=tl.find(t=>t.holders.length===2&&t.holders.every(id=>aMine(id)&&!aW(id).inj)&&!t.holders.includes(a.a)&&!t.holders.includes(a.b));
+    if(t)return [{kind:'match',type:'tag',vs2:[[a.a,a.b],t.holders.slice()],title:t.id}];const own=tl.find(t=>t.holders.length===2&&t.holders.includes(a.a)&&t.holders.includes(a.b));if(own)return [{kind:'match',type:'tag',side:[a.a,a.b],n:2,title:own.id}];const v=tl.find(t=>!t.holders.length);return v?[{kind:'match',type:'tag',side:[a.a,a.b],n:2,title:v.id}]:null}}]};
 window.ARC_VARS=ARC_VARS;
 function aVarOf(k){const l=ARC_VARS[k];if(!l||l.length<2)return 0;S.arcVar=S.arcVar||{};if(S.arcVar[k]==null)S.arcVar[k]=Math.floor(seeded((S.seed||'')+'|arcv|'+k)()*l.length);return S.arcVar[k]}
 function aDK(k,v,sl){const D=ARCS[k];if(!D)return D;const V=(ARC_VARS[k]||[])[v!=null?v:aVarOf(k)];const X=V?Object.assign({},D,V):D;return sl?aRoadOf(X,(ARC_STORY[k]||[]).find(x=>x.id===sl)):X}
@@ -624,7 +627,8 @@ Object.assign(ARC_STORY,{
  torch:[{id:'movie',head:'{A} finally scored a starring role in next year\'s direct-to-streaming "All Things Through Christ", and hand-picks {B} to take {A:their} spot',txt:{}}],
  faction:[{id:'cult',head:'{A} starts a cult',txt:{}}],
  fightchamp:[{id:'nobody',head:'With no one left to conquer, {A} issues open challenges, until someone comes out {A:they} simply cannot contend with',
-  payPlan:a=>{const t=S.titles[a.t2];if(!t||!t.holders.includes(a.a))return null;const A=aW(a.a);return [{kind:'match',type:'singles',side:[a.a],n:1,title:a.t2,ppv:1,win:1,oppF:w=>w.pop>=A.pop}]},txt:{}}],
+  payPlan:a=>{const t=S.titles[a.t2];if(!t||!t.holders.includes(a.a))return null;const A=aW(a.a);const h=t.holders.slice(),n=h.length,ty=n===1?'singles':n===2?'tag':'trios';
+   return [{kind:'match',type:ty,side:h,n,title:a.t2,ppv:1,win:1,oppF:w=>w.pop>=A.pop},{kind:'match',type:ty,side:h,n,title:a.t2,ppv:1,win:1}]},txt:{}}],
  proveit:[{id:'beautiful',head:'Furious at the crowd\'s narrow-mindedness and quote-tweeting in all caps, {A} sets out to prove every style of wrestling is beautiful',txt:{}}],
  cross:[{id:'statusquo',head:'Furious at the idea that every style of wrestling is beautiful, {A} sets out to prove {A:their} style belongs only with the ones that suit it',txt:{}}],
  techshow:[{id:'mainstream',head:'{A} is going to make technical wrestling a mainstream thing even if it kills {A:them}',txt:{}}],
@@ -826,6 +830,9 @@ window.arcPhase=arcPhase;
 function arcWeight(k,A){const ph=arcPhase();let w=ph[ARC_SIZE[k]||'m'];const l=ARC_LEAN[k];if(l&&aGrpOf(A).includes(l))w*=ARC_LEAN_X;if((A.arcLast||[]).includes(k))w*=.3;return w}
 /* who can be cast: the people a player chooses between when starting the arc (the default is the best fit) */
 const aHeat=(x,y)=>typeof heatOf==='function'?heatOf(x,y):0;
+/* Back for Gold (the Reunion variant) ends in a tag title match: the pair must share a division, and neither may hold a belt of it with someone else */
+const aGoldRe=()=>((ARC_VARS.reunion||[])[aVarOf('reunion')]||{}).vn==='Back for Gold';
+const aGoldOk=(A,w)=>w.g===A.g&&!Object.values(S.titles||{}).some(t=>t.kind==='tag'&&t.g===A.g&&t.holders.some(h=>h===A.id||h===w.id)&&!(t.holders.includes(A.id)&&t.holders.includes(w.id)));
 const ARC_CAST={
  heelturn:{b:{lab:'The friend {A:they} turns on',f:(A,w)=>w.al==='f',r:(A,w)=>(aMates(A.id).includes(w.id)?100:0)+aMate(A,w)*3+w.pop/10}},
  faceturn:{b:{lab:'The face {A:they} stands with',f:(A,w)=>w.al==='f',r:(A,w)=>w.pop+aMate(A,w)*2}},
@@ -838,7 +845,7 @@ const ARC_CAST={
  stakes:{b:{lab:'The rival',f:(A,w)=>true,r:(A,w)=>aHeat(A.id,w.id)*2+w.pop}},
  tap:{b:{lab:'Who {A:they} makes tap',f:(A,w)=>w.g===A.g,r:(A,w)=>aHeat(A.id,w.id)*2+w.pop}},
  shoot:{b:{lab:'Who {A:they} aims it at',f:(A,w)=>true,r:(A,w)=>aHeat(A.id,w.id)*2+w.pop}},
- reunion:{b:{lab:'{A:Their} old partner',f:(A,w)=>!inTeam(A.id,w.id),r:(A,w)=>(Object.keys(S.tagW||{}).some(k=>k.split('|').includes(A.id)&&k.split('|').includes(w.id))?100:0)+aMate(A,w)*3+w.pop/10}},
+ reunion:{b:{lab:'{A:Their} old partner',f:(A,w)=>!inTeam(A.id,w.id)&&(!aGoldRe()||aGoldOk(A,w)),r:(A,w)=>(Object.keys(S.tagW||{}).some(k=>k.split('|').includes(A.id)&&k.split('|').includes(w.id))?100:0)+aMate(A,w)*3+w.pop/10}},
  copycat:{b:{lab:'Who {A:they} copies',f:(A,w)=>w.pop>=A.pop+10&&w.g===A.g,r:(A,w)=>w.pop}},
  torch:{b:{lab:'Who gets the torch',f:(A,w)=>w.pop<70&&w.pop>=40&&w.g===A.g,r:(A,w)=>w.ring+w.mic/2}},
  passtitle:{b:{lab:'The successor',f:(A,w)=>w.pop<70&&w.pop>=40&&w.g===A.g,r:(A,w)=>w.ring+w.mic/2}},
@@ -1001,10 +1008,11 @@ function arcFill(a,c,opt){opt=opt||{};let l=arcPlan(a);{const SL=arcStoryOf(a);i
   if(p.ri&&(used.has(p.ri.x)||!arcFit(p.ri.x)||core.includes(p.ri.x)))continue;
   if(p.vs2)sides=p.vs2.map(x=>x.slice());
   else if(p.vs)sides=[[p.vs[0]],[p.vs[1]]];
-  else if(p.ffa){const g=aW(core[0]).g;const ex=core.concat(p.ri?[p.ri.x]:[]);const pool=aRoster(ex).filter(w=>!used.has(w.id)&&arcFit(w.id)&&w.g===g&&!arcIn(w.id)&&!(c.some(sl=>sl&&sl.d&&sl.k==='match'&&sl.d.sides.flat().includes(w.id)))).sort((x,y)=>y.pop-x.pop);
-   const o=(p.oppF?pool.filter(p.oppF):pool).slice(0,p.ffa);if(o.length<p.ffa)continue;sides=[core].concat(o.map(w=>[w.id]))}
-  else{const n=p.n||1;const g=aW(core[0]).g;const pool=aRoster(core.concat(p.ri?[p.ri.x]:[])).filter(w=>!used.has(w.id)&&arcFit(w.id)&&!core.includes(w.id)&&w.g===g&&!arcIn(w.id)&&!(c.some(sl=>sl&&sl.d&&sl.k==='match'&&sl.d.sides.flat().includes(w.id)))).sort((x,y)=>y.pop-x.pop);
-   const opp=aPickOpp(core,(p.oppF?pool.filter(p.oppF):pool),n,p,sh);if(!opp)continue;sides=[core,opp]}
+  else if(p.ffa){const g=aW(core[0]).g;const ex=core.concat(p.ri?[p.ri.x]:[]);const pool0=aRoster(ex).filter(w=>!used.has(w.id)&&arcFit(w.id)&&!arcIn(w.id)&&!(c.some(sl=>sl&&sl.d&&sl.k==='match'&&sl.d.sides.flat().includes(w.id)))).sort((x,y)=>y.pop-x.pop);
+   const pick=l=>(p.oppF?l.filter(p.oppF):l).slice(0,p.ffa);let o=pick(pool0.filter(w=>w.g===g));if(o.length<p.ffa&&!p.title)o=pick(pool0);if(o.length<p.ffa)continue;sides=[core].concat(o.map(w=>[w.id]))}
+  else{const n=p.n||1;const g=aW(core[0]).g;const pool0=aRoster(core.concat(p.ri?[p.ri.x]:[])).filter(w=>!used.has(w.id)&&arcFit(w.id)&&!core.includes(w.id)&&!arcIn(w.id)&&!(c.some(sl=>sl&&sl.d&&sl.k==='match'&&sl.d.sides.flat().includes(w.id)))).sort((x,y)=>y.pop-x.pop);
+   const fl=l=>p.oppF?l.filter(p.oppF):l;let pool=fl(pool0.filter(w=>w.g===g));if(pool.length<n&&!p.title)pool=fl(pool0);
+   const opp=aPickOpp(core,pool,n,p,sh);if(!opp)continue;sides=[core,opp]}
   const type=sides.length===3?'triple':sides.length===4?'four':sides[0].length===1&&sides[1].length===1?'singles':sides[0].length===2?'tag':sides[0].length===3?'trios':p.type;
   let title=p.title||'';if(title&&!(typeof eligibleTitles!=='function'||eligibleTitles({type,sides}).includes(title)))title='';
   const win=p.win!=null?p.win:(()=>{let bi=0,bv=-1e9;sides.forEach((sd,k)=>{const v=sd.reduce((x,id)=>x+aW(id).pop,0)/sd.length;if(v>bv){bv=v;bi=k}});return bi})();
