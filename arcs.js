@@ -834,19 +834,34 @@ window.arcCast=function(id,k,sel){const A=aW(id);const card=arcOffer(id).find(x=
  ${aFull()?`<button class="btn" disabled>Both arc slots are busy</button>`:`<button class="btn" ${S.money.p<c?'disabled':''} onclick="window.__arcSel=null;arcStart('${id}','${k}',{b:'${sel.b||''}',c:'${sel.c||''}'})">Assign this arc · ${money(c)}</button>`}<button class="btn sec" onclick="window.__arcSel=null;arcOpen('${id}')">Back</button>`)};
 window.arcOpen=arcOpen;
 /* the Arcs tab */
+/* the Arcs tab: Active (what's running) and Potential (who has a story ready), each led by the wrestler's card */
+let ARC_TABV='act';window.arcTabV=function(v){ARC_TABV=v;render()};
+const aMini=(id,sm)=>{const w=aW(id);return w&&typeof tcCard==='function'?`<span class="acard${sm?' sm':''}">${tcCard(w,{noWear:true,nofg:!!sm})}${sm?`<i>${esc(w.name)}</i>`:''}</span>`:''};
+function arcActHtml(a){const D=aD(a);const A=aW(a.a);const pay=a.stage==='pay';const cast=[a.b,a.c].filter(id=>id&&aW(id));
+ return `<button class="aact" onclick="arcOpen('${a.a}')"><div class="acol">${aMini(a.a)}${cast.length?`<div class="awith${cast.length>1?' two':''}"><small>with</small>${cast.map(id=>aMini(id,1)).join('')}</div>`:''}</div>
+ <div class="abody">${aKick(D,a.k,a.v,`${ARC_LANES[a.star?'star':D.lane]}`)}<div class="ahd sm">${esc(arcHead(a)||D.d)}</div>${arcTrack(a.need,a.have,a.stage)}
+ <div class="anx"><span>${pay?'★ Payoff':`Stop ${a.have+1} of ${a.need}`}: ${esc(arcNow(a).replace(/^Payoff: /,'').replace(/Next: /,''))}</span></div><div class="aleft2 ${a.end-AW()<1?'bad':''}">${arcLeft(a).replace(/<[^>]+>/g,'')}</div></div></button>`}
 window.arcsView=function(){const l=arcList().filter(a=>aMine(a.a)&&!a.done);const ph=arcPhase();
  const head=typeof pageHead==='function'?pageHead('Storylines','Arcs',`<b>${l.length}/${ARC_SLOTS}</b><small>Running</small>`,{sub:`Stories lean ${ph.b>=2?'big and season-defining':ph.s>=2.5?'small, fresh starts':'mid-sized'} right now: ${esc(ph.t)}`}):'';
  if(S.phase!=='season')return head+`<div class="card"><div class="muted">Arcs start once the season is under way.</div></div>`;
  const open=ARC_SLOTS-l.length;
- const run=`<div class="card arcsrun"><div class="h small">Running${S.arcTok>0?` <span class="gold">· 🔀 ${S.arcTok} reshuffle${S.arcTok>1?'s':''} to spend</span>`:''}</div>${l.map(a=>arcRowHtml(a,1)).join('')}${open>0?Array(open).fill(`<div class="aslot">Open slot · pick a story below</div>`).join(''):''}</div>`;
  const busy=id=>arcList().some(a=>!a.done&&(a.a===id||a.b===id||a.c===id));
  const ready=ownList('p').filter(w=>!w.retd&&!busy(w.id)&&(!arcCanStart(w.id)||aFull())).map(w=>({w,o:arcOffer(w.id)})).filter(x=>x.o.length).sort((x,y)=>y.w.pop-x.w.pop);
- const avail=`<div class="card arcsav"><div class="h small">Ready to start</div>${open<=0?'<div class="muted tiny">Both slots are busy: land or drop an arc to start one of these.</div>':''}${ready.length?ready.map(({w,o})=>`<button class="arw" onclick="arcOpen('${w.id}')"><div class="arwn"><b>${esc(w.name)}</b><small>${Math.round(w.pop)} pop · ${w.al==='h'?'heel':'face'}</small></div><div class="arwl">${o.map(x=>{const D=aDK(x.k);return `<span>${D.i} ${esc(aHeadOf(w.id,x.k,x))}</span>`}).join('')}</div></button>`).join(''):'<div class="muted">No story fits anyone right now. Arcs reshuffle after the next PPV.</div>'}</div>`;
- const ks=Object.keys(ARCS);const used=ks.filter(k=>arcRan(k)&&!arcRunningK(k)),gate=ks.filter(k=>!arcOpenK(k));
- const li=(k,t)=>`<div class="arcb"><span>${ARCS[k].i} ${esc(ARCS[k].n)}</span>${t?`<small>${esc(t)}</small>`:''}</div>`;
+ const v=ARC_TABV==='pot'?'pot':'act';
+ const seg=`<div class="aseg"><button class="${v==='act'?'on':''}" onclick="arcTabV('act')">Active <b>${l.length}/${ARC_SLOTS}</b></button><button class="${v==='pot'?'on':''}" onclick="arcTabV('pot')">Potential <b>${ready.length}</b></button></div>`;
  const news_=(S.arcNews||[]).filter(n=>AW()-n.w<=1);
- const more=used.length||gate.length?`<div class="card"><details class="arcbd"><summary>${used.length} run this season · ${gate.length} waiting on a bigger stage</summary>${used.length?`<div class="arcbh">Run this season · back next season</div>${used.map(k=>li(k,'')).join('')}`:''}${gate.length?`<div class="arcbh">Waiting on a bigger stage</div>${gate.map(k=>li(k,arcLockTxt(k))).join('')}`:''}</details></div>`:'';
- return head+(news_.length?`<div class="card">${news_.map(n=>`<div class="muted tiny">${esc(n.t)}</div>`).join('')}</div>`:'')+run+avail+more};
+ let body;
+ if(v==='act'){
+  body=`<div class="card arcsrun">${l.map(arcActHtml).join('')}${open>0?Array(open).fill(`<button class="aslot" onclick="arcTabV('pot')">Open slot · <b>pick a potential arc</b></button>`).join(''):''}</div>`
+   +(news_.length?`<div class="card">${news_.map(n=>`<div class="muted tiny">${esc(n.t)}</div>`).join('')}</div>`:'');
+ }else{
+  const ks=Object.keys(ARCS);const used=ks.filter(k=>arcRan(k)&&!arcRunningK(k)),gate=ks.filter(k=>!arcOpenK(k));
+  const li=(k,t)=>`<div class="arcb"><span>${ARCS[k].i} ${esc(ARCS[k].n)}</span>${t?`<small>${esc(t)}</small>`:''}</div>`;
+  const more=used.length||gate.length?`<div class="card"><details class="arcbd"><summary>${used.length} run this season · ${gate.length} waiting on a bigger stage</summary>${used.length?`<div class="arcbh">Run this season · back next season</div>${used.map(k=>li(k,'')).join('')}`:''}${gate.length?`<div class="arcbh">Waiting on a bigger stage</div>${gate.map(k=>li(k,arcLockTxt(k))).join('')}`:''}</details></div>`:'';
+  body=`<div class="card arcsav">${open<=0?'<div class="abusy">Both slots are busy. Land or drop an arc to assign one of these.</div>':''}${S.arcTok>0?`<div class="muted tiny" style="margin-bottom:6px">🔀 ${S.arcTok} reshuffle${S.arcTok>1?'s':''} to spend</div>`:''}
+  ${ready.length?ready.map(({w,o})=>`<div class="apot">${aMini(w.id)}<div class="apl">${o.map(x=>{const D=aDK(x.k);return `<button class="apa" onclick="arcCast('${w.id}','${x.k}')"><span class="api">${D.i}</span><span class="apt"><small>${esc(aName(x.k))}</small>${esc(aHeadOf(w.id,x.k,x))}</span></button>`}).join('')}</div></div>`).join(''):'<div class="muted">No story fits anyone right now. Arcs reshuffle after the next PPV.</div>'}</div>`+more;
+ }
+ return head+seg+body};
 /* the Office keeps a pointer; the arcs live on their own tab */
 window.arcOfficeCard=function(){return ''};
 {const st=document.createElement('style');st.textContent=`
@@ -881,6 +896,22 @@ window.arcOfficeCard=function(){return ''};
 .arw{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid rgba(255,255,255,.08);padding:10px 0;color:inherit;cursor:pointer}.arw:first-of-type{border-top:0}
 .arwn{display:flex;justify-content:space-between;align-items:baseline}.arwn b{font-size:16px}.arwn small{color:rgba(255,255,255,.5)}
 .arwl{display:flex;flex-direction:column;gap:3px;margin-top:5px}.arwl span{font-size:13.5px;font-style:italic;color:rgba(255,255,255,.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.aseg{display:flex;margin:0 0 12px;border:1px solid rgba(207,171,85,.45)}.aseg button{flex:1;padding:10px 0;background:none;border:0;color:rgba(255,255,255,.6);font:800 italic 16px/1 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.06em;cursor:pointer}
+.aseg button b{margin-left:4px;color:rgba(255,255,255,.45)}.aseg button.on{background:var(--gold);color:#111}.aseg button.on b{color:#111}
+.aact,.apa,.aslot{font-family:inherit}.aact{display:flex;gap:12px;width:100%;text-align:left;background:none;border:0;border-top:1px solid rgba(255,255,255,.08);padding:12px 0;color:inherit;cursor:pointer}.aact:first-child{border-top:0;padding-top:2px}
+.acol{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px}.abody{flex:1;min-width:0}
+.acard{display:block;flex:none;pointer-events:none}.acard .tkc{--w:78px}.acard.sm{width:64px;text-align:center}.acard.sm .tkc{--w:52px;margin:0 auto}.acard.sm .tkc .tcb{display:none}.acard.sm i{display:block;margin-top:3px;font:700 11px/1.15 'Barlow',sans-serif;font-style:normal;color:rgba(255,255,255,.8)}
+.awith{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;width:84px}.awith small{width:100%;text-align:center}.awith.two .acard.sm{width:40px}.awith.two .acard.sm .tkc{--w:38px}.awith.two .acard.sm i{font-size:9.5px}.awith small{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45)}
+.aleft2{margin-top:4px;font-weight:800;font-size:13px;color:rgba(255,255,255,.8)}.aleft2.bad{color:#ff8a7a}
+.aslot{display:block;width:100%;background:none;cursor:pointer}.aslot b{color:var(--gold2)}
+.abusy{padding:8px 10px;margin-bottom:10px;border-left:3px solid var(--gold);background:rgba(207,171,85,.08);font-size:13px;color:rgba(255,255,255,.75)}
+.apot{display:flex;gap:12px;padding:12px 0;border-top:1px solid rgba(255,255,255,.08)}.apot:first-of-type{border-top:0}
+.apot .acard .tkc{--w:72px}.apl{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.apa{display:flex;gap:8px;align-items:flex-start;width:100%;text-align:left;background:rgba(255,255,255,.04);border:0;border-left:3px solid rgba(207,171,85,.7);padding:6px 8px;color:inherit;cursor:pointer}
+.apa:active{background:rgba(255,255,255,.09)}.api{flex:none;font-size:15px;line-height:1.3}
+.apt{min-width:0;font:700 italic 14px/1.2 'Barlow',sans-serif;color:#fff;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.apt small{display:block;font:800 italic 11px/1.2 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--gold2);margin-bottom:2px}
 `;document.head.appendChild(st)}
 
 /* ---- the Book screen checklist: each arc's next step ---- */
