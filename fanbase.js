@@ -417,7 +417,7 @@ const FB_MULTI={triple:1,four:1,gauntlet:1,rumble:1,mitb:1};
 const FB_STIP0=.35,FB_STIP1=0,FB_STIPH=45;
 const FB_REP=.5;
 /* v405: casuals follow a story — the card's hottest feuds (heat over FB_STORY0) hook them, the top one most (x1.5 on a PPV) */
-const FB_STORY0=10,FB_STORYH=35,FB_STORYW=[1,.5,.3],FB_STORYCAP=1;  /* v416: was 1.5 — a feud-heavy GM was pulling casuals far past the rival */
+let FB_STORY0=10,FB_STORYH=35,FB_STORYW=[1,.6,.4],FB_STORYCAP=1.4,FB_CAVK=2.5;  /* v438: stories hook casuals more (cap was 1, weights [1,.5,.3]); show quality over what they expect a little less (was 3) */  /* v416: was 1.5 — a feud-heavy GM was pulling casuals far past the rival */
 /* v405: tougher crowds by difficulty — on a solo game, your crowds expect this much more (in stars) than they'd otherwise ask for */
 const FB_XDIFF={easy:-.15,normal:.26,hard:.42};  /* v416: was .18 / .36 (v413), .12 / .3 (v410), .05 / .25 (v405) */
 function fbXOff(b){if(b!=='p'||!S||(typeof ON==='function'&&ON()))return 0;return FB_XDIFF[S.diff||'normal']||0}
@@ -480,7 +480,7 @@ function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X0=S.fbx[b],H=S.f
  let cs=0,cw=0;segs.forEach((s,i)=>{const w=s.me?1.6:1;cs+=s.st*w;cw+=w});const cav=cw?cs/cw:0;
  const hs=segs.filter(s=>s.k==='match').map(s=>s.h||0).sort((x,y)=>y-x);let story=0;hs.slice(0,FB_STORYW.length).forEach((h,i)=>story+=Math.max(0,h-FB_STORY0)/FB_STORYH*FB_STORYW[i]);
  story=Math.min(FB_STORYCAP,story)*(show&&show.ppv?1.5:1);res.story=story;
- let up=(tp-70)*.12+draws+tl+spec+(cav-X.cas)*3;if(!segs.length)up=0;if(up>0)up*=ppvK;
+ let up=(tp-70)*.12+draws+tl+spec+(cav-X.cas)*FB_CAVK;if(!segs.length)up=0;if(up>0)up*=ppvK;
  res.pct.cas=-FB_DRIFT+up+(segs.length?story:0);res.avg.cas=cw?cav:null;res.E.cas=1;
  const uu=up+story;res.why.cas=!segs.length?'Nothing on TV for them':uu>=FB_DRIFT+1?(story>=1&&story>=up*.5?'Hooked on the feuds — they want to see how it ends':tp>=80?'Big stars and a show worth watching':'A show worth watching'):uu>=FB_DRIFT?'Just enough to keep them':tp<70?'Not enough star power to hold them':'Drifting off — they want stars, titles, spectacle and a story';
  return res}

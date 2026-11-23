@@ -135,6 +135,11 @@ v437 (arcs build people up: price by the built wrestler's popularity, x.5 at 45 
   lift doubles at 45). Normal 24 x 2, seasons won S1/S2 (fans K): v436 62/42% (581/358), current 79/67% (627/411), --arclow
   (arcs to the least popular first, avg pop 55) 29/25% (554/347): pop gained by wrestlers under 75 ~72/46 a season vs ~23/14,
   one midcarder a season to 75+. Before the step/great ease and crowd lift, --arclow paid 3 and failed 6-7 arcs a season.
+v438 (stories carry matches: heat on a curve HEAT_KN [10,40,70,100] / HEAT_SL [.2,.5,.25,.1] TV raw per point (PPV x1.27), COLD_OFF 2
+  off every match's talent, face vs heel half (FVH_COLD) until the pair has heat, casual story pull FB_STORYCAP 1.4 / FB_STORYW
+  [1,.6,.4], FB_CAVK 3 -> 2.5). Normal 12 x 2, match stars S1/S2: default 3.85/3.84 -> 3.53/3.52, engaged ~3.93 -> 3.74/3.74,
+  lazy ~3.37 -> 2.71/2.79; seasons won default 75/33% -> 75/50%, engaged 92/75%, lazy 0%. Hard default 50/25 -> 42/17%. By heat
+  (6 games each): no heat 3.4 -> 3.0, 1-35 4.07 -> 3.85, 35-60 4.5 -> 4.7, 60+ 4.7 -> 4.8; engaged 5 stars 2% -> 5.5% of matches.
 v431 (Groundswell, Breaking Free, The Corporate Offer, Absolute Power, Earn the Fight; 17 more storylines, storyline stipulations
   and cast conditions). Normal 20 x 2: default + arcs 45/25%, no arcs 25/15%, engaged + arcs 95/70%, engaged no arcs 85/65%. 0 errors.
 v432 (every arc has a storyline; Mouthpiece and Champion's Voice dropped; storyline payoffs and live choices for Last Chase and
