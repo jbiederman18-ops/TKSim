@@ -129,6 +129,12 @@ v429 (storylines dealt per run, Copycat / Transformation / Faction War, Retireme
 v430 (hands: each wrestler holds 3 arcs dealt from their crowd, alignment and the calendar's story size; no milestone unlocks,
   stage gates only; arcs set up their own stories; the player casts partners and rivals; milestone redeals). Normal 24 x 3:
   default + arcs 46/38/4%, no arcs 21/4/0%, engaged + arcs 79/75/54%, engaged no arcs 88/58/38%, lazy 0%. 0 errors.
+v437 (arcs build people up: price by the built wrestler's popularity, x.5 at 45 to x1 at 80, superstars x1.5; payoff lift up to
+  +4 pop and x1.4 fans at 45 fading to 0 at 85, halved per earlier payoff that season; superstar in the payoff +2 rub; 70+ great
+  payoff in the main event / on a PPV +3; build steps and the great bar up to 1/2 star easier at 55 or under; the build-step crowd
+  lift doubles at 45). Normal 24 x 2, seasons won S1/S2 (fans K): v436 62/42% (581/358), current 79/67% (627/411), --arclow
+  (arcs to the least popular first, avg pop 55) 29/25% (554/347): pop gained by wrestlers under 75 ~72/46 a season vs ~23/14,
+  one midcarder a season to 75+. Before the step/great ease and crowd lift, --arclow paid 3 and failed 6-7 arcs a season.
 v431 (Groundswell, Breaking Free, The Corporate Offer, Absolute Power, Earn the Fight; 17 more storylines, storyline stipulations
   and cast conditions). Normal 20 x 2: default + arcs 45/25%, no arcs 25/15%, engaged + arcs 95/70%, engaged no arcs 85/65%. 0 errors.
 v432 (every arc has a storyline; Mouthpiece and Champion's Voice dropped; storyline payoffs and live choices for Last Chase and
@@ -201,6 +207,7 @@ def table(results):
                          **({('fans ' + g + ' K'): m([e['fb']['p'][g] / 1000 for e in E if e.get('fb')]) for g in ('cas', 'tech', 'blood', 'flip', 'chaos')} if any(e.get('fb') for e in E) else {}),
                          **({('show gain ' + k): m([e['fbd'].get(k, 0) / 1000 for e in E if e.get('fbd')]) for k in ('p.cas', 'p.tech', 'p.blood', 'p.flip', 'p.chaos', 'ai.cas', 'ai.tech', 'ai.blood', 'ai.flip', 'ai.chaos')} if any(e.get('fbd') for e in E) else {}),
                          **({'arcs started': m([e['arcs']['started'] for e in E]), 'arcs paid': m([e['arcs']['paid'] for e in E]), 'arcs great': m([e['arcs']['great'] for e in E]), 'arcs failed': m([e['arcs']['failed'] for e in E])} if any(e.get('arcs') for e in E) else {}),
+                         **({'arc wrestler pop': m([e['arcs'].get('pop', 0) for e in E]), 'arc spend $K': m([e['arcs'].get('cost', 0) for e in E]), 'midcard → 75+': m([e['rise']['up70'] for e in E if e.get('rise')]), 'new 85+ stars': m([e['rise']['star'] for e in E if e.get('rise')]), 'pop gain under 75': m([e['rise']['gain'] for e in E if e.get('rise')])} if any(e.get('arcs') for e in E) else {}),
                          'buzz you': m([e['buzz']['p'] for e in E if e.get('buzz')]), 'buzz rival': m([e['buzz']['ai'] for e in E if e.get('buzz')]),
                          'errors': errs})
     if not rows: print('no complete seasons'); return
@@ -219,11 +226,13 @@ def main():
     ap.add_argument('--engaged', action='store_true', help='also a hands-on booker (stips, finishes, run-ins, title challenges) to compare with Suggest the rest')
     ap.add_argument('--lazy', action='store_true', help='also a GM who only taps Suggest the rest and ignores the checklist')
     ap.add_argument('--noarcs', action='store_true', help='also the default bot without arcs (it keeps two running otherwise)')
+    ap.add_argument('--arclow', action='store_true', help='also the default bot giving arcs to its least popular wrestlers first (it picks upper-midcard first otherwise)')
     a = ap.parse_args()
     variants = {'current': {'dir': ROOT}}
     if a.engaged: variants['engaged'] = {'dir': ROOT, 'engaged': True}
     if a.lazy: variants['lazy'] = {'dir': ROOT, 'checklist': False}
     if a.noarcs: variants['noarcs'] = {'dir': ROOT, 'opt': {'arcs': False}}
+    if a.arclow: variants['arclow'] = {'dir': ROOT, 'opt': {'arcLow': True}}
     if a.engaged and a.noarcs: variants['engaged-noarcs'] = {'dir': ROOT, 'engaged': True, 'opt': {'arcs': False}}
     wt = None
     if a.compare:

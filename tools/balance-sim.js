@@ -126,7 +126,7 @@ window.SIM = async function (opt) {
 
   const seasons = [];
   let cur = null;
-  const startSeason = () => { cur = { arc0: [S.arcDone || 0, S.arcGreatN || 0, S.arcFailN || 0], season: S.season, weeks: 0, rp: [], rai: [], wins: 0, injP: 0, injAI: 0, promoStars: [], matchStars: [], fans0: { p: S.fans.p, ai: S.fans.ai }, crises: 0, errs: 0, titleChanges: 0, checklist: 0, cl: {}, rested: 0 } };
+  const startSeason = () => { cur = { arc0: [S.arcDone || 0, S.arcGreatN || 0, S.arcFailN || 0], season: S.season, weeks: 0, rp: [], rai: [], wins: 0, injP: 0, injAI: 0, promoStars: [], matchStars: [], fans0: { p: S.fans.p, ai: S.fans.ai }, pop0: Object.fromEntries(owned('p').map(w => [w.id, w.pop])), arcPop: [], arcCost: 0, crises: 0, errs: 0, titleChanges: 0, checklist: 0, cl: {}, rested: 0 } };
   startSeason();
 
   for (let wk = 0; wk < opt.weeks; wk++) {
@@ -157,9 +157,9 @@ window.SIM = async function (opt) {
       /* v426: arcs — keep both slots busy (opt.arcs false: never). Picks someone who isn't in one yet, mid-card first
          (opt.arcStars: superstars too), and takes a random one of the three on offer (opt.arcPick: always that option) */
       if (typeof arcOffer === 'function' && opt.checklist && opt.arcs !== false && S.phase === 'season') { try { let g = 0;
-        while ((S.arcs || []).filter(a => W0(a.a)).length < 2 && g++ < 6) { const l = owned('p').filter(w => !w.inj && !arcCanStart(w.id) && (opt.arcStars || w.pop < 85)).sort((a, b) => (b.pop < 85 ? b.pop : 0) - (a.pop < 85 ? a.pop : 0) + Math.random() * 20 - 10);
+        while ((S.arcs || []).filter(a => W0(a.a)).length < 2 && g++ < 6) { const l = owned('p').filter(w => !w.inj && !arcCanStart(w.id) && (opt.arcStars || w.pop < 85)).sort((a, b) => opt.arcLow ? a.pop - b.pop + Math.random() * 10 - 5 : (b.pop < 85 ? b.pop : 0) - (a.pop < 85 ? a.pop : 0) + Math.random() * 20 - 10);
           const w = l[0]; if (!w) break; const o = arcOffer(w.id); if (!o.length) { w.arcN = (w.arcN || 0) + 1; continue } const i = opt.arcPick != null ? Math.min(opt.arcPick, o.length - 1) : Math.floor(Math.random() * o.length);
-          const m0 = S.money.p; arcStart(w.id, i); try { closeModal() } catch (e) { } if (S.money.p < m0) { cur.arcS = (cur.arcS || 0) + 1; cur.arcK = cur.arcK || {}; cur.arcK[o[i].k] = (cur.arcK[o[i].k] || 0) + 1 } else break } } catch (e) { errs.push('arcs ' + e.message) } }
+          const m0 = S.money.p; arcStart(w.id, i); try { closeModal() } catch (e) { } if (S.money.p < m0) { cur.arcPop.push(w.pop); cur.arcCost += m0 - S.money.p; cur.arcS = (cur.arcS || 0) + 1; cur.arcK = cur.arcK || {}; cur.arcK[o[i].k] = (cur.arcK[o[i].k] || 0) + 1 } else break } } catch (e) { errs.push('arcs ' + e.message) } }
       // contracts: same rule the offline rival uses
       owned('p').forEach(w => { if (w.con <= 1) { const c = resignCost(w); if (S.money.p >= c && w.mor > 25) { S.money.p -= c; resigned += c; w.sal = askSal(w); w.con += 26 } } });
       // free agency: top up a thin roster from the market
@@ -207,7 +207,8 @@ window.SIM = async function (opt) {
     const allOwned = Object.values(S.w).filter(w => w.own);
     return {
       fansGained: { p: S.fans.p - cur.fans0.p, ai: S.fans.ai - cur.fans0.ai }, fans: { p: S.fans.p, ai: S.fans.ai }, fbd: cur.fbd || null, war: typeof fanWar === 'function' ? 'total' : 'gain', buzz: typeof buzzOf === 'function' ? { p: buzzOf('p'), ai: buzzOf('ai') } : null, venue: S.venue && S.venue.p ? (S.venue.p.k || '') : '', fb: S.fb && S.fb.p ? { p: Object.assign({}, S.fb.p), ai: Object.assign({}, S.fb.ai || {}) } : null,
-      arcs: { started: cur.arcS || 0, paid: (S.arcDone || 0) - cur.arc0[0], great: (S.arcGreatN || 0) - cur.arc0[1], failed: (S.arcFailN || 0) - cur.arc0[2], k: cur.arcK || {} },
+      arcs: { started: cur.arcS || 0, paid: (S.arcDone || 0) - cur.arc0[0], great: (S.arcGreatN || 0) - cur.arc0[1], failed: (S.arcFailN || 0) - cur.arc0[2], k: cur.arcK || {}, pop: cur.arcPop.length ? cur.arcPop.reduce((a, b) => a + b, 0) / cur.arcPop.length : 0, cost: cur.arcCost },
+      rise: (() => { const l = owned('p').filter(w => cur.pop0[w.id] != null); return { up70: l.filter(w => cur.pop0[w.id] < 70 && w.pop >= 75).length, star: l.filter(w => cur.pop0[w.id] < 85 && w.pop >= 85).length, gain: l.filter(w => cur.pop0[w.id] < 75).reduce((a, w) => a + w.pop - cur.pop0[w.id], 0) } })(),
       money: { p: S.money.p, ai: S.money.ai }, payroll: { p: payroll('p'), ai: payroll('ai') },
       roster: { p: owned('p').length, ai: owned('ai').length },
       pop90: cnt('p', 90) + cnt('ai', 90), pop85: cnt('p', 85) + cnt('ai', 85), pop80: cnt('p', 80) + cnt('ai', 80),
