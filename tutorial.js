@@ -77,7 +77,7 @@ const TUT_STEPS=[
 {id:'d.div',track:'draft',since:77,sys:['divisions','titles','alignment','stamina'],sel:()=>[...document.querySelectorAll('main .chips')].find(e=>/women/i.test(e.textContent)),t:'Fill your divisions',
  b:()=>`Your show has men's and women's titles, including tag titles, so <b>draft enough women and tag partners</b> to fill both divisions.<br><br>Mix <span class="face">faces</span> and <span class="heel">heels</span>: face vs heel is how feuds catch fire.<br><br>Draft depth, not just headliners: tired stars have bad nights.`},
 {id:'d.pick',track:'draft',since:86,sys:['draft'],sel:'main .card.ttape [onclick^="pDraft"]',t:'Make your pick',
- b:()=>`<b>Make the pick</b> drafts the best available wrestler. To take someone else, tap their card and draft them from their profile.<br><br>The crowd symbols under the round count how many of each crowd you've drafted.<br><br>In a hurry? <b>Auto-pick</b> takes the best fit for the crowds you're short on, and <b>${tv('online',()=>ON()?'Auto-draft me':'Sim rest','Sim rest')}</b> finishes your draft.`},
+ b:()=>`<b>Make the pick</b> drafts the best available wrestler. To take someone else, tap their card and draft them from their profile.<br><br>The tiles under the round count your men, women and each crowd; red ones are behind.<br><br>In a hurry? <b>Auto-pick</b> takes the best fit for the crowds you're short on, and <b>${tv('online',()=>ON()?'Auto-draft me':'Sim rest','Sim rest')}</b> finishes your draft.`},
 
 /* ---- the first week: the essentials only — everything else is a coach tip the first time it comes up ---- */
 {id:'s.show',track:'season',since:75,tab:'home',sel:'main .card.showcard',sys:['shows','calendar','goal','fans','fan groups'],t:'Your show',

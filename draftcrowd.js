@@ -30,6 +30,14 @@ function dcTally(b,cls){const c=dcCounts(b),t=dcTargets(b);
  const it=DC_G.map(g=>`<span class="fgw dct${c[g]?'':' z'}" title="${FG_N[g]}: ${c[g]} drafted">${fgLbl(g,`<b>${c[g]}</b>${FG_N[g]}`)}</span>`);
  if(c.und)it.push(`<span class="fgw dct" title="Undiscovered: ${c.und} drafted">${fgLbl('und',`<b>${c.und}</b>Undiscovered`)}</span>`);
  return `<div class="dcrowd ${cls||''}">${it.join('')}</div>`}
+/* v444: the compact roster strip — men, women and the five crowds as small tiles, numbers only; tiles you're behind on
+   for this point in the draft are lit. Used on the draft header (yours) and every team on the Draft board. */
+function dcShort(b){const own=ownList(b),n=own.length,fin=n+(typeof picksLeft==='function'?picksLeft(b):0),pr=fin?n/fin:0;
+ const c=dcCounts(b),t=dcTargets(b),o={};DC_G.forEach(g=>o[g]=c[g]<Math.floor(t[g]*pr+.5));
+ const wn=own.filter(w=>w.g==='F').length;o.F=n>=3&&wn/n<.3;return o}
+function dcStrip(b,cls){const own=ownList(b),c=dcCounts(b),sh=dcShort(b),m=own.filter(w=>w.g==='M').length,f=own.length-m;
+ const tile=(k,ic,n,ti)=>`<span class="dcs${sh[k]?' need':''}${n?'':' z'}" title="${ti}: ${n}${sh[k]?' — short':''}">${ic}<b>${n}</b></span>`;
+ return `<div class="dcstrip ${cls||''}">${tile('M','<i class="dcg">M</i>',m,'Men')}${tile('F','<i class="dcg">W</i>',f,'Women')}<span class="dcsep"></span>${DC_G.map(g=>tile(g,`<i class="fg-${g}">${fgIc(g)}</i>`,c[g],FG_N[g])).join('')}${c.und?tile('und',`<i class="fg-und">${fgIc('und')}</i>`,c.und,'Undiscovered'):''}</div>`}
 /* draftChoice + crowd needs for human GMs; Auto-pick says why */
 if(typeof draftChoice==='function'){const dc0=draftChoice;draftChoice=window.draftChoice=function(brand){
  if(!dcOn(brand)||!S.draft)return dc0.apply(this,arguments);
@@ -42,11 +50,24 @@ if(typeof draftChoice==='function'){const dc0=draftChoice;draftChoice=window.dra
   if(best)window.__dcWhy=bw;return best}catch(e){console.warn('draft crowds',e);return dc0.apply(this,arguments)}}}
 if(typeof autoPick==='function'){autoPick=window.autoPick=function(){if(mpLocked())return;if(onClock()!=='p')return;window.__dcWhy='';const c=draftChoice('p');if(!c)return;const why=window.__dcWhy;pDraft(c.id);
  if(c.own==='p')toast(why?`Auto-pick: ${c.name} — ${why}.`:`Auto-pick: ${c.name}.`)}}
-Object.assign(window,{dcCounts,dcNeed,dcTally});
+Object.assign(window,{dcCounts,dcNeed,dcTally,dcStrip});
 (function(){const s=document.createElement('style');s.textContent=`
 .dcrowd{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12.5px}
 .dcrowd .dct b{margin:0 .3em 0 0;color:#fff;font-weight:800}
 .dcrowd .dct.z{opacity:.45}
 .dteam .dcrowd{margin:6px 0 2px;font-size:11.5px}
 body.tv .dcrowd{font-size:18px}
+.dcstrip{display:flex;align-items:stretch;gap:4px;margin:10px 0 0;flex-wrap:nowrap}
+.dcstrip .dcs{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;gap:3px;padding:6px 0;background:rgba(0,0,0,.35);border-bottom:2px solid transparent;font:800 italic 16px/1 'BC',sans-serif}
+.dcstrip .dcs b{color:#fff}.dcstrip .dcs.z b{color:#6d6860}
+.dcstrip .dcs.need{background:rgba(229,70,59,.14);border-bottom-color:#e5463b}
+.dcstrip .dcs .fgi{width:17px;height:17px;margin:0;vertical-align:0}
+.dcstrip .dcg{font:800 italic 13px/1 'BC',sans-serif;color:#9a958c;font-style:italic}
+.dcstrip .dcsep{flex:0 0 4px}
+.dteam .dcstrip{margin:6px 0 4px}.dteam .dcstrip .dcs{font-size:14px;padding:4px 0}
+.dhead .dhd{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+.dhead .dround.dsm{font-size:38px;margin:2px 0 6px;white-space:nowrap}.dhead .dround.dsm small{font-size:.5em;margin-left:.25em;-webkit-text-fill-color:#8a8580;color:#8a8580}
+.dhead .capline{display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-size:14px}
+.dhead .capbox .bar{margin-top:6px}
+body.tv .dcstrip .dcs{font-size:24px}body.tv .dcstrip .dcs .fgi{width:26px;height:26px}
 `;document.head.appendChild(s)})();
