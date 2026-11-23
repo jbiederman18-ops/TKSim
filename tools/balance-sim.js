@@ -26,6 +26,7 @@ window.SIM = async function (opt) {
     return bad;
   };
   const owned = b => Object.values(S.w).filter(w => w.own === b);
+  const W0 = id => S.w[id] && S.w[id].own === 'p';
 
   /* the checklist: the must-dos a player books by hand before tapping Suggest the rest (Suggest's own pre-v265 logic) */
   const bookChecklist = () => {
@@ -63,6 +64,9 @@ window.SIM = async function (opt) {
       else if (t.goal === 'wins') { const i = slotFor(false); const l = pool(A.g, [t.a]).filter(w => w.pop <= A.pop + 5); const o = l[l.length > 3 ? 2 : 0] || oppFor(t.a); if (i >= 0 && o) put(i, 'singles', [[t.a], [o.id]], { win: 0 }) }
       else if (t.goal === 'title' && t.title && S.titles[t.title]) { const T = S.titles[t.title]; if (T.kind === 'singles' && T.holders.length === 1 && ok(T.holders[0])) { const i = slotFor(false); if (i >= 0) put(i, 'singles', [[T.holders[0]], [t.a]], { title: T.id }) } }
       else if (t.goal === 'team' && B && ok(t.b)) { const opp = pool(A.g, [t.a, t.b]).slice(0, 2); const i = slotFor(false); if (i >= 0 && opp.length === 2) put(i, 'tag', [[t.a, t.b], opp.map(w => w.id)]) } }));
+    /* 3½ · v426: each running arc's next step (or its payoff), the way the checklist's Book it does it */
+    step('arcs', () => { if (typeof arcFill !== 'function') return; (S.arcs || []).forEach(a => { if (a.done || !W(a.a) || W(a.a).own !== 'p') return; if (a.stage === 'pay' && AW() < (a.payFrom || 0)) return;
+      if (onCard(a.a)) return; const i = arcFill(a, c); if (i >= 0) { const sl = c[i]; if (sl.k === 'match') sl.d.sides.flat().forEach(id => used.add(id)); else { used.add(sl.d.a); if (sl.d.b) used.add(sl.d.b) } n++ } }) });
     /* 4 · titles: crown your vacant belts (every new game starts with them vacant), then the most overdue defense (up to 3 on a PPV) */
     step('defenses', () => { const mine = t => !t.br || t.br === 'p';
       const vac = Object.values(S.titles).filter(t => !t.holders.length && mine(t) && (t.kind === 'singles' || t.kind === 'tag'));
@@ -82,6 +86,14 @@ window.SIM = async function (opt) {
       if (g.k === 'women' && !has(m => m.sides.flat().every(id => W(id) && W(id).g === 'F'))) { const l = pool('F'); const i = slotFor(false); if (i >= 0 && l.length >= 2) { const o = oppFor(l[0].id, [], 'F'); if (o) put(i, 'singles', [[l[0].id], [o.id]]) } }
       if (g.k === 'title' && !has(m => m.title)) { const t = Object.values(S.titles).find(t => t.kind === 'singles' && t.holders.length === 1 && ok(t.holders[0])); const i = slotFor(false); if (t && i >= 0) { const o = oppFor(t.holders[0], [], t.g); if (o) put(i, 'singles', [[t.holders[0]], [o.id]], { title: t.id }) } }
       if (g.k === 'rookie' && !has(m => m.sides.flat().some(id => W(id) && W(id).rookie))) { const r = ownList('p').find(w => w.rookie && ok(w.id) && fit(w)); const i = slotFor(false); if (r && i >= 0) { const o = oppFor(r.id); if (o) put(i, 'singles', [[r.id], [o.id]]) } } });
+    /* 5½ · v426: a network mandate to turn someone, due tonight and no turn arc paying it off: a Heel / Face Turn promo */
+    /* the network mandate, the way an attentive player chases it in its last week or two (opt.mandates false: never) */
+    step('mandate', () => { const md = S.mand && S.mand.p; if (!md || md.done || opt.mandates === false || md.due - S.week > 1) return; const has = f => c.some(sl => sl.k === 'match' && sl.d && f(sl.d));
+      if (md.k === 'turn' && md.due === S.week && !(S.arcs || []).some(a => ['heelturn', 'faceturn'].includes(a.k) && a.stage === 'pay')) { const w = ownList('p').filter(x => ok(x.id) && x.pop < 80 && !onCard(x.id)).sort((a, b) => b.mic - a.mic)[0]; const sl = c.find(x => x.k === 'promo' && !x.d); if (w && sl) { sl.d = { type: 'turn', a: w.id, b: null, played: false }; used.add(w.id); n++ } }
+      if (md.k === 'women2') { for (let k = 0; k < 2; k++) { const cnt = c.filter(sl => sl.k === 'match' && sl.d && sl.d.sides.flat().every(id => W(id) && W(id).g === 'F')).length; if (cnt >= 2) break; const l = pool('F'); const i = slotFor(false); if (i < 0 || l.length < 2) break; const o = oppFor(l[0].id, [], 'F'); if (o) put(i, 'singles', [[l[0].id], [o.id]]); else break } }
+      if (md.k === 'newchamp' && !has(m => m.title)) { const t = Object.values(S.titles).filter(t => t.kind === 'singles' && t.holders.length === 1 && ok(t.holders[0]) && (!t.br || t.br === 'p')).sort((a, b) => (a.last || 0) - (b.last || 0))[0]; const i = slotFor(false); if (t && i >= 0) { const o = oppFor(t.holders[0], [], t.g); if (o) put(i, 'singles', [[t.holders[0]], [o.id]], { title: t.id, win: 1 }) } }
+      if (md.k === 'tagdef' && !has(m => m.title && S.titles[m.title] && S.titles[m.title].kind !== 'singles')) { const t = Object.values(S.titles).find(t => t.kind !== 'singles' && t.holders.length && t.holders.every(ok)); const i = slotFor(false); if (t && i >= 0) { const opp = pool(t.g, t.holders).slice(0, t.holders.length).map(w => w.id); if (opp.length === t.holders.length) put(i, t.holders.length === 2 ? 'tag' : 'trios', [t.holders.slice(), opp], { title: t.id, win: 0 }) } }
+      if (md.k === 'rookie' && !has(m => m.sides.flat().some(id => W(id) && W(id).rookie))) { const r = ownList('p').find(w => w.rookie && ok(w.id) && fit(w)); const i = slotFor(false); if (r && i >= 0) { const o = oppFor(r.id); if (o) put(i, 'singles', [[r.id], [o.id]]) } } });
     /* 6 · the crowd's chant: a spot in a match */
     step('chant', () => { const ch = S.chant && S.chant.p; if (ch && ch.w === AW() && !ch.hit && ok(ch.id) && !onCard(ch.id) && fit(W(ch.id))) { const i = slotFor(false); const o = oppFor(ch.id); if (i >= 0 && o) put(i, 'singles', [[ch.id], [o.id]]) } });
     /* 7 · promos a trial asks for */
@@ -114,7 +126,7 @@ window.SIM = async function (opt) {
 
   const seasons = [];
   let cur = null;
-  const startSeason = () => { cur = { season: S.season, weeks: 0, rp: [], rai: [], wins: 0, injP: 0, injAI: 0, promoStars: [], matchStars: [], fans0: { p: S.fans.p, ai: S.fans.ai }, crises: 0, errs: 0, titleChanges: 0, checklist: 0, cl: {}, rested: 0 } };
+  const startSeason = () => { cur = { arc0: [S.arcDone || 0, S.arcGreatN || 0, S.arcFailN || 0], season: S.season, weeks: 0, rp: [], rai: [], wins: 0, injP: 0, injAI: 0, promoStars: [], matchStars: [], fans0: { p: S.fans.p, ai: S.fans.ai }, crises: 0, errs: 0, titleChanges: 0, checklist: 0, cl: {}, rested: 0 } };
   startSeason();
 
   for (let wk = 0; wk < opt.weeks; wk++) {
@@ -142,6 +154,12 @@ window.SIM = async function (opt) {
       else if (typeof venueMove === 'function' && opt.venue !== false) { try { const st = S.venue && S.venue.p, i = BLDG.indexOf(venOf('p')), up = BLDG[i + 1];
         if (S.money.p < 0 && i > 0 && !(st && st.next)) venueMove('p', -1);
         else if (up && S.phase === 'season' && S.money.p >= up.move * 1.5 + up.rent * 8 && crowdPull('p', buzzOf('p')) >= up.pull + .05) { if (venueMove('p', 1) === 'ok') cur.venue = up.k } } catch (e) { errs.push('venue ' + e.message) } }
+      /* v426: arcs — keep both slots busy (opt.arcs false: never). Picks someone who isn't in one yet, mid-card first
+         (opt.arcStars: superstars too), and takes a random one of the three on offer (opt.arcPick: always that option) */
+      if (typeof arcOffer === 'function' && opt.checklist && opt.arcs !== false && S.phase === 'season') { try { let g = 0;
+        while ((S.arcs || []).filter(a => W0(a.a)).length < 2 && g++ < 6) { const l = owned('p').filter(w => !w.inj && !arcCanStart(w.id) && (opt.arcStars || w.pop < 85)).sort((a, b) => (b.pop < 85 ? b.pop : 0) - (a.pop < 85 ? a.pop : 0) + Math.random() * 20 - 10);
+          const w = l[0]; if (!w) break; const o = arcOffer(w.id); if (!o.length) { w.arcN = (w.arcN || 0) + 1; continue } const i = opt.arcPick != null ? Math.min(opt.arcPick, o.length - 1) : Math.floor(Math.random() * o.length);
+          const m0 = S.money.p; arcStart(w.id, i); try { closeModal() } catch (e) { } if (S.money.p < m0) { cur.arcS = (cur.arcS || 0) + 1; cur.arcK = cur.arcK || {}; cur.arcK[o[i].k] = (cur.arcK[o[i].k] || 0) + 1 } else break } } catch (e) { errs.push('arcs ' + e.message) } }
       // contracts: same rule the offline rival uses
       owned('p').forEach(w => { if (w.con <= 1) { const c = resignCost(w); if (S.money.p >= c && w.mor > 25) { S.money.p -= c; resigned += c; w.sal = askSal(w); w.con += 26 } } });
       // free agency: top up a thin roster from the market
@@ -189,6 +207,7 @@ window.SIM = async function (opt) {
     const allOwned = Object.values(S.w).filter(w => w.own);
     return {
       fansGained: { p: S.fans.p - cur.fans0.p, ai: S.fans.ai - cur.fans0.ai }, fans: { p: S.fans.p, ai: S.fans.ai }, fbd: cur.fbd || null, war: typeof fanWar === 'function' ? 'total' : 'gain', buzz: typeof buzzOf === 'function' ? { p: buzzOf('p'), ai: buzzOf('ai') } : null, venue: S.venue && S.venue.p ? (S.venue.p.k || '') : '', fb: S.fb && S.fb.p ? { p: Object.assign({}, S.fb.p), ai: Object.assign({}, S.fb.ai || {}) } : null,
+      arcs: { started: cur.arcS || 0, paid: (S.arcDone || 0) - cur.arc0[0], great: (S.arcGreatN || 0) - cur.arc0[1], failed: (S.arcFailN || 0) - cur.arc0[2], k: cur.arcK || {} },
       money: { p: S.money.p, ai: S.money.ai }, payroll: { p: payroll('p'), ai: payroll('ai') },
       roster: { p: owned('p').length, ai: owned('ai').length },
       pop90: cnt('p', 90) + cnt('ai', 90), pop85: cnt('p', 85) + cnt('ai', 85), pop80: cnt('p', 80) + cnt('ai', 80),

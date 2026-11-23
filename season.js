@@ -128,18 +128,26 @@ const MANDS={
  tagdef:{n:'Successfully defend a tag or trios title',i:'🤝',ok:b=>Object.values(S.titles).some(t=>t.kind!=='singles'&&t.holders.length&&S.w[t.holders[0]]&&S.w[t.holders[0]].own===b)},
  rookie:{n:'Give a developing prospect a 3★ match',i:'🌱',ok:b=>ownList(b).some(w=>w.rookie&&!w.inj)},
  nosell:{n:"No Sell Out options (sponsors, price hikes, merch blitzes) until the PPV",i:'🙅',ok:()=>true,end:1},
- win2:{n:'Win the ratings war two weeks in a row',i:'📈',ok:()=>!ON()||nSeats()===2||(typeof allIn==='function'&&allIn())}};
-const mandReward=()=>({cash:Math.round(econCap()*.3),fans:10000});
+ win2:{n:'Win the ratings war two weeks in a row',i:'📈',ok:()=>!ON()||nSeats()===2||(typeof allIn==='function'&&allIn())},
+ /* v426: story mandates — the network wants storytelling, and pays more for it */
+ arcpay:{n:"Pay off a wrestler's arc",i:'📖',story:1,ok:b=>(b==='p'||ON())&&typeof arcOffer==='function'},
+ turn:{n:'Turn someone heel or face',i:'🔄',story:1,ok:b=>b==='p'||ON()},
+ feud45:{n:'Build a feud to a full-blown feud (45 heat)',i:'🔥',story:1,ok:()=>true}};
+/* v426: mandates matter more — a bigger reward, a bigger miss, and story mandates come up more often and pay extra */
+const MAND_CASH=.4,MAND_FANS=14000,MAND_MISS=8000,MAND_STORY=1.3,MAND_STORY_W=2;
+const mandReward=k=>{const x=MANDS[k]&&MANDS[k].story?MAND_STORY:1;return {cash:Math.round(econCap()*MAND_CASH*x),fans:Math.round(MAND_FANS*x/1000)*1000}};
+function mandH45(b){return Object.keys(S.heat||{}).filter(k=>S.heat[k]>=45&&k.split('|').some(id=>S.w[id]&&S.w[id].own===b))}
 function mandNew(b,notes){const np=nextPPVAfter(S.week-1);if(!np)return;S.mand=S.mand||{};const last=S.mand[b]&&S.mand[b].k;
- const l=Object.keys(MANDS).filter(k=>k!==last&&MANDS[k].ok(b));if(!l.length)return;const k=pick(l);const rw=mandReward();
- S.mand[b]={k,due:np.w,ppv:np.n,cash:rw.cash,fans:rw.fans,st:0};if(b==='p'||ON()){const n=`📺 New network mandate: ${MANDS[k].n} by ${np.n} (+${money(rw.cash)}, +${fmtFans(rw.fans)} fans).`;news(n);if(notes)notes.push(n)}}
+ const l=Object.keys(MANDS).filter(k=>k!==last&&MANDS[k].ok(b));if(!l.length)return;const k=wpick(l,k=>MANDS[k].story?MAND_STORY_W:1);const rw=mandReward(k);
+ S.mand[b]={k,due:np.w,ppv:np.n,cash:rw.cash,fans:rw.fans,st:0};if(k==='feud45')S.mand[b].h45=mandH45(b);if(b==='p'||ON()){const n=`📺 New network mandate: ${MANDS[k].n} by ${np.n} (+${money(rw.cash)}, +${fmtFans(rw.fans)} fans).`;news(n);if(notes)notes.push(n)}}
 function mandPay(b,notes,ok){const md=S.mand&&S.mand[b];if(!md||md.done)return;md.done=ok?'ok':'fail';const mine=b==='p'||ON();const who=ON()?nameOf(b)+': ':'';
  if(ok){S.money[b]+=md.cash;S.fans[b]+=md.fans;if(mine)notes.push(`📺✅ ${who}Mandate delivered — ${MANDS[md.k].n}. The network is thrilled (+${money(md.cash)}, +${fmtFans(md.fans)} fans).`)}
- else{S.fans[b]=Math.max(50000,S.fans[b]-5000);if(mine)notes.push(`📺❌ ${who}Missed the network's mandate — ${MANDS[md.k].n}. They're disappointed (−5K fans).`)}}
+ else{S.fans[b]=Math.max(50000,S.fans[b]-MAND_MISS);if(typeof fbSync==='function')try{fbSync(b)}catch(e){}if(mine)notes.push(`📺❌ ${who}Missed the network's mandate — ${MANDS[md.k].n}. They're disappointed (−${fmtFans(MAND_MISS)} fans).`)}}
 /* inf: what happened on this brand's show tonight */
 function mandCheck(b,inf,rating,show,hourWin,notes){const md=S.mand&&S.mand[b];if(!md||md.done)return;const k=md.k;let ok=false;
  if(k==='me4')ok=!show.ppv&&inf.me>=4;else if(k==='show4')ok=rating>=4;else if(k==='women2')ok=inf.women>=2;else if(k==='newchamp')ok=inf.newch;else if(k==='debut')ok=inf.deb;
  else if(k==='tagdef')ok=inf.tagdef;else if(k==='rookie')ok=inf.rk;
+ else if(k==='arcpay')ok=!!inf.arc;else if(k==='turn')ok=ownList(b).some(w=>w.turnW===AW());else if(k==='feud45'){const h0=new Set(md.h45||[]);ok=mandH45(b).some(x=>!h0.has(x))}
  else if(k==='nosell'){if(inf.sold){mandPay(b,notes,false);return}}
  else if(k==='win2'&&!show.ppv&&hourWin!=null){md.st=hourWin===b?(md.st||0)+1:0;ok=md.st>=2}
  if(ok)mandPay(b,notes,true)}
@@ -148,7 +156,7 @@ function mandTick(notes){if(S.phase!=='season')return;weekTick();S.mand=S.mand||
   const cur=S.mand[b];if(!cur||(cur.done&&(S.week===1||PPVS[S.week-1]))||S.week>cur.due)mandNew(b,notes)})}
 function mandCard(){const md=S.mand&&S.mand.p;if(!md||!MANDS[md.k])return '';const left=md.due-S.week;
  return `<div class="card mand"><div class="row sb"><span class="h small" style="margin:0">📺 Network mandate</span>${md.done?`<b class="${md.done==='ok'?'good':'bad'}">${md.done==='ok'?'✅ Delivered':'❌ Missed'}</b>`:`<span class="muted tiny">${left<=0?'Due tonight':`${left} week${left>1?'s':''} left`}</span>`}</div>
- <div style="margin-top:6px">${MANDS[md.k].i} <b>${esc(MANDS[md.k].n)}</b>${md.done?'':` by ${esc(md.ppv)}`}</div>${md.done?'':liveLine(mandLive(md),'This card')}${md.done?'':`<div class="muted tiny">Reward: ${money(md.cash)} and ${fmtFans(md.fans)} fans. Miss it and you lose 5K fans.${md.k==='win2'&&md.st?` · Streak: ${md.st}`:''}</div>`}</div>`}
+ <div style="margin-top:6px">${MANDS[md.k].i} <b>${esc(MANDS[md.k].n)}</b>${md.done?'':` by ${esc(md.ppv)}`}</div>${md.done?'':liveLine(mandLive(md),'This card')}${md.done?'':`<div class="muted tiny">Reward: ${money(md.cash)} and ${fmtFans(md.fans)} fans. Miss it and you lose ${fmtFans(MAND_MISS)} fans.${md.k==='win2'&&md.st?` · Streak: ${md.st}`:''}</div>`}</div>`}
 
 /* ===================== WEEKLY MINI-GOALS & CROWD CHANTS (v89) =====================
  Every week each GM gets one small goal (a little cash and fans, no penalty for missing it), and the crowd starts
@@ -244,7 +252,11 @@ function mandLive(md){const P=cardProj();const sh=P.sh;if(!P.booked&&md.k!=='nos
   case 'tagdef':return P.tagdef?LV('y','Your tag champs retain'):LV('n','No tag/trios title defense booked');
   case 'rookie':return P.rk>=2?LV('y','Your prospect looks ready to deliver'):P.rk>=1?LV('m','Your prospect is on the edge'):LV('n',P.rk?"Your prospect's match doesn't look ready":'No prospect booked');
   case 'nosell':return sellOf('p',sh).length?LV('n',"You've sold out this week — it'll count against you"):LV('y','No sell-outs — keep it that way');
-  case 'win2':return sh.ppv?LV('x','No ratings war on PPV weeks'):LV('m',`Streak ${md.st||0}/2${P.show?` · your show: ${tellWord(P.show.mid)}`:''} — it comes down to the rival`)}
+  case 'win2':return sh.ppv?LV('x','No ratings war on PPV weeks'):LV('m',`Streak ${md.st||0}/2${P.show?` · your show: ${tellWord(P.show.mid)}`:''} — it comes down to the rival`);
+  case 'arcpay':{const l=(S.arcs||[]).filter(a=>a.stage==='pay'&&S.w[a.a]&&S.w[a.a].own==='p');if(!(S.arcs||[]).length)return LV('n','No arc running — start one from a wrestler\'s profile');if(!l.length)return LV('m','An arc is still building');
+   const on=l.some(a=>(S.card.p||[]).some(sl=>sl&&sl.d&&(sl.k==='match'?sl.d.sides.flat().includes(a.a):sl.d.a===a.a||sl.d.b===a.a)));return on?LV('m','An arc payoff could be on the card — it has to fit the payoff'):LV('n','An arc is ready for its payoff')}
+  case 'turn':return (S.arcs||[]).some(a=>['heelturn','faceturn'].includes(a.k)&&a.stage==='pay')?LV('m','A turn arc is ready for its payoff'):(S.card.p||[]).some(sl=>sl&&sl.k==='promo'&&sl.d&&sl.d.type==='turn')?LV('y','A Heel / Face Turn promo is booked'):LV('n','No turn booked (a turn arc, a turn promo or a run-in turn)');
+  case 'feud45':{const top=Object.keys(S.heat||{}).filter(k=>k.split('|').every(id=>S.w[id]&&S.w[id].own==='p')).map(k=>S.heat[k]).filter(h=>h<45).sort((a,b)=>b-a)[0];return LV(top>=35?'m':'n',top?`Hottest feud under 45: ${Math.round(top)}`:'No feud building yet')}}
  return LV('x','')}
 function liveLine(l,pre){if(!l||l.s==='x'&&!l.t)return '';const ic={y:'✅ On track',m:'🤞 Could happen',n:'⏳ Not yet',x:'➖ Not this week'}[l.s];
  return `<div class="glive ${l.s}"><b>${pre?esc(pre)+': ':''}${ic}</b>${l.t?` · ${esc(l.t)}`:''}</div>`}

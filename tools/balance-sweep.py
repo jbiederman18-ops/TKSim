@@ -109,6 +109,14 @@ v425 (styles retired: fan-group matchups GRP_M with clashes at -4, trait bridges
   3.96/4.05/4.12 (3.96/4.02/4.09); lazy show ~+0.1 star, still 0%. Rival show 3.68/3.75/3.81 (3.68/3.74/3.78). Hard 32 games:
   engaged 550/365/247K (560/356/277K), seasons 62/47/9% (72/41/16%). Easy within noise. 0 errors. Smart trait picks (best
   chemistry vs own roster) = own-group picks for the bot, within noise.
+v426 (arcs: two player-started arcs at a time replace the Performance Center; build steps +ARC_BUILD .25 a step, payoff +.6-1.0 star,
+  ARC_FANS 12K, arcs count as stories for casuals (ARC_CAS .5 a segment, cap 1); mandates cash .4 cap / 14K fans / miss -8K, story
+  mandates x1.3 and twice as likely). The default and engaged bots now keep two arcs running (a random one of the three on offer, Book
+  it each week; --noarcs adds bots that never start one) and chase the network mandate in its last two weeks. 24 games x 2 seasons,
+  seasons won S1/S2 (fans gained K): Normal v425 default 58/21% (530/303), default 54/38% (561/362), default no arcs 38/25% (503/278),
+  engaged 96/88% (651/471), engaged no arcs 83/54% (644/446), lazy 0/0%. Hard: v425 33/4%, default 33/17%, no arcs 25/12%, engaged
+  58/42%, engaged no arcs 54/29%. Easy ~100% for all but lazy. About 7 arcs paid off and 4-5 failed a season. Before arcs fed the
+  casuals' story pull, the same bots lost 50-75K fans a season by running arcs (forced pairings cost Suggest's best matches).
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
 
@@ -144,7 +152,7 @@ async def run(variants, games, weeks, spend=True, diffs=('easy', 'normal', 'hard
                         await pg.goto(f"http://127.0.0.1:{v['port']}/index.html"); await pg.wait_for_timeout(800)
                         if v.get('pre'): await pg.add_script_tag(content=v['pre'])
                         await pg.add_script_tag(content=SIM)
-                        r = await pg.evaluate(f"SIM({{diff:'{diff}',weeks:{weeks},spend:{str(spend).lower()},engaged:{str(v.get('engaged', False)).lower()},crude:{str(v.get('crude', False)).lower()},checklist:{str(v.get('checklist', True)).lower()},skip:{json.dumps(v.get('skip', []))},pitch:{json.dumps(v.get('pitch'))}}})")
+                        r = await pg.evaluate(f"SIM({{diff:'{diff}',weeks:{weeks},spend:{str(spend).lower()},engaged:{str(v.get('engaged', False)).lower()},crude:{str(v.get('crude', False)).lower()},checklist:{str(v.get('checklist', True)).lower()},skip:{json.dumps(v.get('skip', []))},pitch:{json.dumps(v.get('pitch'))},...{json.dumps(v.get('opt', {}))}}})")
                     except Exception as e:
                         r = {'seasons': [], 'errs': ['runner: ' + str(e)[:200]]}
                     r['perr'] = perr; results.setdefault(f'{name}|{diff}', []).append(r); await ctx.close()
@@ -176,6 +184,7 @@ def table(results):
                          'match★': m([st.mean(s['matchStars']) for s in S if s['matchStars']]), 'title changes': m([s['titleChanges'] for s in S]),
                          **({('fans ' + g + ' K'): m([e['fb']['p'][g] / 1000 for e in E if e.get('fb')]) for g in ('cas', 'tech', 'blood', 'flip', 'chaos')} if any(e.get('fb') for e in E) else {}),
                          **({('show gain ' + k): m([e['fbd'].get(k, 0) / 1000 for e in E if e.get('fbd')]) for k in ('p.cas', 'p.tech', 'p.blood', 'p.flip', 'p.chaos', 'ai.cas', 'ai.tech', 'ai.blood', 'ai.flip', 'ai.chaos')} if any(e.get('fbd') for e in E) else {}),
+                         **({'arcs started': m([e['arcs']['started'] for e in E]), 'arcs paid': m([e['arcs']['paid'] for e in E]), 'arcs great': m([e['arcs']['great'] for e in E]), 'arcs failed': m([e['arcs']['failed'] for e in E])} if any(e.get('arcs') for e in E) else {}),
                          'buzz you': m([e['buzz']['p'] for e in E if e.get('buzz')]), 'buzz rival': m([e['buzz']['ai'] for e in E if e.get('buzz')]),
                          'errors': errs})
     if not rows: print('no complete seasons'); return
@@ -193,10 +202,13 @@ def main():
     ap.add_argument('--frugal', action='store_true', help='the bot never buys production')
     ap.add_argument('--engaged', action='store_true', help='also a hands-on booker (stips, finishes, run-ins, title challenges) to compare with Suggest the rest')
     ap.add_argument('--lazy', action='store_true', help='also a GM who only taps Suggest the rest and ignores the checklist')
+    ap.add_argument('--noarcs', action='store_true', help='also the default bot without arcs (it keeps two running otherwise)')
     a = ap.parse_args()
     variants = {'current': {'dir': ROOT}}
     if a.engaged: variants['engaged'] = {'dir': ROOT, 'engaged': True}
     if a.lazy: variants['lazy'] = {'dir': ROOT, 'checklist': False}
+    if a.noarcs: variants['noarcs'] = {'dir': ROOT, 'opt': {'arcs': False}}
+    if a.engaged and a.noarcs: variants['engaged-noarcs'] = {'dir': ROOT, 'engaged': True, 'opt': {'arcs': False}}
     wt = None
     if a.compare:
         if subprocess.run(['git', '-C', ROOT, 'cat-file', '-e', a.compare + '^{commit}'], capture_output=True).returncode:

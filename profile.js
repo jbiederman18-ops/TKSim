@@ -57,7 +57,7 @@ function now(w,id){if(!mine(w))return '';const v=sta(w);const [sw,sc]=staWord(v)
   (ptw?row('😤 Chip on their shoulder',`Through week ${wkOf(w.ptw.until)}`,'good'):'')+
   (fr.length?row('🤝 Friends',fr.map(o=>esc(o.name.split(' ').slice(-1)[0])).join(', ')):'')+
   row('Durability',durWord(durOf(w)),durOf(w)<50?'warnt':'')+
-  row('Training',`${tb('ring')}${tb('mic')}`))}
+  (typeof arcProfile==='function'?arcProfile(w):''))}
 
 function crowd(w){if(typeof fgOf!=='function')return '';const g=fgOf(w);const want=typeof FB_WANT!=='undefined'?FB_WANT:{};
  const fav=favKnown(w)&&favOf(w)&&STIPS[favOf(w)];
