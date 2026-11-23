@@ -1114,34 +1114,67 @@ window.arcsView=function(){const l=arcList().filter(a=>aMine(a.a)&&!a.done);cons
   const ks=Object.keys(ARCS);const used=ks.filter(k=>arcRan(k)&&!arcRunningK(k)),gate=ks.filter(k=>!arcOpenK(k));
   const li=(k,t)=>`<div class="arcb"><span>${ARCS[k].i} ${esc(ARCS[k].n)}</span>${t?`<small>${esc(t)}</small>`:''}</div>`;
   const more=used.length||gate.length?`<div class="card"><details class="arcbd"><summary>${used.length} run this season · ${gate.length} waiting on a bigger stage</summary>${used.length?`<div class="arcbh">Run this season · back next season</div>${used.map(k=>li(k,'')).join('')}`:''}${gate.length?`<div class="arcbh">Waiting on a bigger stage</div>${gate.map(k=>li(k,arcLockTxt(k))).join('')}`:''}</details></div>`:'';
-  body=`<div class="card arcsav">${open<=0?'<div class="abusy">Both slots are busy. Land or drop an arc to assign one of these.</div>':''}${S.arcTok>0?`<div class="muted tiny" style="margin-bottom:6px">🔀 ${S.arcTok} reshuffle${S.arcTok>1?'s':''} to spend</div>`:''}
+  body=(ready.length?`<div class="card">${arcRecHtml(ready)}</div>`:'')+`<div class="card arcsav">${S.arcTok>0?`<div class="muted tiny" style="margin-bottom:6px">🔀 ${S.arcTok} reshuffle${S.arcTok>1?'s':''} to spend</div>`:''}
   ${ready.length?arcPotGroups(ready):'<div class="muted">No story fits anyone right now. Arcs reshuffle after the next PPV.</div>'}</div>`+more;
  }
  return head+seg+body};
 /* v435: Potential, by arc. Each arc once, with the wrestlers who could run it as small cards; tap it to see each one's story */
 let ARC_POTK=null;window.arcPotK=function(k){ARC_POTK=ARC_POTK===k?null:k;render()};
-const AGP={they:['he','she','he or she'],them:['him','her','him or her'],their:['his','her','his or her'],theirs:['his','hers','his or hers'],themself:['himself','herself','himself or herself'],themselves:['himself','herself','himself or herself'],"they're":["he's","she's","he or she is"],"they've":["he's","she's","he or she has"],"they'll":["he'll","she'll","he or she will"],"they'd":["he'd","she'd","he or she would"]};
-/* a line with no one cast yet: the wrestler is "your wrestler" (he / she when the whole group is one or the other), the rest are someone */
-function aGen(t,g){const x=g==='M'?0:g==='F'?1:2;let r=String(t||'').replace(/\{([ABC]):([A-Za-z']+)\}/g,(m,k,wd)=>{const lw=wd.toLowerCase();const f=AGP[lw];const v=f?f[k==='A'?x:2]:lw;return wd[0]!==lw[0]?v[0].toUpperCase()+v.slice(1):v})
+const AGP={they:['he','she','your wrestler','he or she'],them:['him','her','them'],their:['his','her','their'],theirs:['his','hers','theirs'],themself:['himself','herself','themself'],themselves:['himself','herself','themselves'],"they're":["he's","she's","they're"],"they've":["he's","she's","they've"],"they'll":["he'll","she'll","they'll"],"they'd":["he'd","she'd","they'd"]};
+/* a line with no one cast yet: the wrestler is "your wrestler" (he / she when the whole group is one or the other, they otherwise), the rest are someone */
+function aGen(t,g){const x=g==='M'?0:g==='F'?1:2;let r=String(t||'').replace(/\{([ABC]):([A-Za-z']+)\}/g,(m,k,wd)=>{const lw=wd.toLowerCase();const f=AGP[lw];const v=f?(k==='A'?f[x]:f[f.length>3?3:2]):lw;return wd[0]!==lw[0]?v[0].toUpperCase()+v.slice(1):v})
   .replace(/\{A\}/g,'your wrestler').replace(/\{B\}/g,'someone').replace(/\{C\}/g,'someone else').replace(/\{F2\}/g,'another faction').replace(/\{F\}/g,'a faction').replace(/\{G\}/g,'another crowd').replace(/\{T\}/g,'a new trait').replace(/\{S\} match/g,'one kind of match').replace(/\{S\}/g,'one kind of');
  return r.charAt(0).toUpperCase()+r.slice(1)}
-function arcPotGroups(ready){const G={};ready.forEach(({w,o})=>o.forEach(x=>{(G[x.k]=G[x.k]||[]).push({w,x,sid:arcStoryPick(x.k,w.id,null,x.b)})}));
- const ord={mic:0,ring:1,trait:2,star:3};const ks=Object.keys(G).sort((p,q)=>(ord[ARCS[p].lane]-ord[ARCS[q].lane])||(G[q].length-G[p].length)||ARCS[p].n.localeCompare(ARCS[q].n));
- let h='',lane=null;ks.forEach(k=>{const D=aDK(k);const l=G[k];const open=ARC_POTK===k;
-  /* the storylines this arc would tell, each with who'd get it */
+/* v440: Potential, cleaner. Compact rows (name, a two-line hook, price, a few faces); tap one open for its stories, road and wrestlers */
+let ARC_PF='all';window.arcPotF=function(f){ARC_PF=f;ARC_POTK=null;render()};
+const aFaces=(l,n)=>`<span class="apfc">${l.slice(0,n).map(e=>typeof face==='function'?face(e.w):'').join('')}${l.length>n?`<b class="apmore">+${l.length-n}</b>`:''}</span>`;
+const aPrice=cs=>{const lo=Math.min(...cs),hi=Math.max(...cs);return lo===hi?money(lo):money(lo)+'–'+money(hi)};
+function arcPotGroups(ready){const G={};ready.forEach(({w,o})=>o.forEach(x=>{(G[x.k]=G[x.k]||[]).push({w,x,sid:arcStoryPick(x.k,w.id,null,x.b),c:aCost(x.k,w.id,x)})}));
+ const cash=(S.money&&S.money.p)||0;const f=ARC_PF;
+ if(f==='cash')for(const k in G){G[k]=G[k].filter(e=>e.c<=cash);if(!G[k].length)delete G[k]}
+ const ord={mic:0,ring:1,trait:2,star:3};let ks=Object.keys(G).filter(k=>f==='all'||f==='cash'||ARCS[k].lane===f).sort((p,q)=>(ord[ARCS[p].lane]-ord[ARCS[q].lane])||(G[q].length-G[p].length)||ARCS[p].n.localeCompare(ARCS[q].n));
+ const lanes=['mic','ring','trait','star'].filter(x=>Object.keys(G).some(k=>ARCS[k].lane===x));
+ const chip=(v,t)=>`<button class="${f===v?'on':''}" onclick="arcPotF('${v}')">${t}</button>`;
+ let h=`<div class="apchips">${chip('all','All')}${lanes.map(x=>chip(x,ARC_LANES[x].replace(/ or popularity/,''))).join('')}${chip('cash','💰 Affordable')}</div>`;
+ if(!ks.length)return h+`<div class="muted" style="padding:10px 0">${f==='cash'?`Nothing fits the ${money(cash)} in the bank right now.`:'Nothing in this lane right now.'}</div>`;
+ let lane=null;const heads=f==='all'||f==='cash';
+ ks.forEach(k=>{const D=aDK(k);const l=G[k];const open=ARC_POTK===k;
   const SG=[];l.forEach(e=>{let g=SG.find(y=>y.sid===e.sid);if(!g)SG.push(g={sid:e.sid,l:[]});g.l.push(e)});
   const gOf=L=>L.every(e=>e.w.g==='M')?'M':L.every(e=>e.w.g==='F')?'F':null;
-  const head=sid=>{const so=(ARC_STORY[k]||[]).find(y=>y.id===sid);return so?so.head:D.d};
-  if(D.lane!==lane){lane=D.lane;h+=`<div class="asec apsec">${ARC_LANES[lane]}</div>`}
-  const faces=l.slice(0,5).map(({w})=>aMini(w.id,2)).join('')+(l.length>5?`<b class="apmore">+${l.length-5}</b>`:'');
-  const one=SG.length===1;
-  h+=`<div class="apg${open?' on':''}"><button class="apgh" onclick="arcPotK('${k}')"><div class="akick"><span>${D.i} ${esc(aName(k))}</span><small>${(()=>{const cs=l.map(e=>aCost(k,e.w.id,e.x));const lo=Math.min(...cs),hi=Math.max(...cs);return lo===hi?money(lo):money(lo)+'–'+money(hi)})()}</small></div>
-   <div class="${one?'ahd sm apgs':'apgd'}">${esc(one?aGen(head(SG[0].sid),gOf(l)):`${SG.length} stories: ${aGen(D.d,gOf(l))}`)}</div>${open?'':`<div class="apgf"><span class="apfc">${faces}</span><small>${l.length} wrestler${l.length>1?'s':''} <b>▾</b></small></div>`}</button>`;
+  const so=sid=>(ARC_STORY[k]||[]).find(y=>y.id===sid);
+  const head=sid=>{const x=so(sid);return x?x.head:D.d};
+  const hook=()=>{const x=SG.length===1&&so(SG[0].sid);return x&&x.hook||D.hook||(SG.length===1?head(SG[0].sid):D.d)};
+  if(heads&&D.lane!==lane){lane=D.lane;h+=`<div class="asec apsec">${ARC_LANES[lane]}</div>`}
+  h+=`<div class="apg${open?' on':''}"><button class="apgh" onclick="arcPotK('${k}')"><div class="apgm"><div class="apgn">${D.i} ${esc(aName(k))}${SG.length>1?` <em>${SG.length} stories</em>`:''}</div>
+   <div class="aphk">${esc(aGen(hook(),gOf(l)))}</div></div><div class="apgr"><small>${aPrice(l.map(e=>e.c))}</small>${aFaces(l,3)}<i>${open?'▴':'▾'}</i></div></button>`;
   if(open)h+=`<div class="apgl">${SG.map(g=>{const DS=aDK(k,null,g.sid);const n=aStopN(DS,g.l[0].w.id,g.l[0].x);
-    return `${one?'':`<div class="ahd sm apgs2">${esc(aGen(head(g.sid),gOf(g.l)))}</div>`}<div class="apgt">${arcTrack(n,0,'build')}<small>${n} stop${n>1?'s':''}, then the payoff · tap a wrestler</small></div>
-    <div class="apgw">${g.l.map(({w})=>{const fit=arcFitKnown(w)&&arcFitOf(w)===k;return `<button class="apw2" onclick="arcCast('${w.id}','${k}')">${aMini(w.id)}${fit?'<i class="gold">✨ Made for this</i>':''}</button>`}).join('')}</div>`}).join('')}
+    return `<div class="apst">${esc(aGen(head(g.sid),gOf(g.l)))}</div><div class="apgt">${arcTrack(n,0,'build')}<small>${n} stop${n>1?'s':''}, then the payoff · tap a wrestler</small></div>
+    <div class="apgw">${g.l.map(({w,c})=>{const fit=arcFitKnown(w)&&arcFitOf(w)===k;return `<button class="apw2${c>cash?' dim':''}" onclick="arcCast('${w.id}','${k}')">${aMini(w.id)}<i class="apc">${money(c)}</i>${fit?'<i class="gold">✨ Made for this</i>':''}</button>`}).join('')}</div>`}).join('')}
    <button class="apgx" onclick="arcPotK('${k}')">Close ▴</button></div>`;
   h+='</div>'});return h}
+/* v440: this week's pitches. Three wrestler + arc picks, each with the reason it's there; set on Monday, not on every look.
+   Leans on need (a contract running out, a breakout window, sitting at home, sinking morale), never on hidden "made for" arcs */
+const ARC_REC_N=3,ARC_REC_CON=8,ARC_REC_BRK=70,ARC_REC_LAST={shoot:1};
+function arcRecWhy(w,o){const p=w.pop||0;if(p>=ARC_STAR)return null;const ran=(S.arcLog||[]).some(e=>e.s===S.season&&(e.a===w.id||e.bb===w.id));
+ const last=o.find(x=>ARC_REC_LAST[x.k]);if(last&&(w.con||99)<=ARC_REC_CON)return {t:'Contract ending',v:100,k:last.k};
+ if(p>=ARC_REC_BRK&&!ran)return {t:'Ready to break out',v:80};
+ if((w.idle||0)>=2)return {t:'Off TV lately',v:60+(ARC_REC_BRK-p)/2};
+ if((w.mor||70)<50)return {t:'Morale slipping',v:55+(ARC_REC_BRK-p)/2};
+ if(p<60&&!ran)return {t:'Room to grow',v:30+(60-p)};return null}
+function arcRecLand(k,id,x){const D=aDK(k,null,arcStoryPick(k,id,null,x.b));const n=aStopN(D,id,x);const pp=typeof nextPPV==='function'?nextPPV():null;return pp&&pp.in>=n&&pp.in<=n+(typeof ARC_SLACK!=='undefined'?ARC_SLACK:2)?pp.n:null}
+function arcRecs(ready){const wk=AW();const cash=()=>(S.money&&S.money.p)||0;const ok=e=>{const w=aW(e.id);if(!w||w.own!=='p'||w.retd||arcIn(w.id)||arcCanStart(w.id))return false;const x=arcOffer(w.id).find(y=>y.k===e.k);return !!x&&aCost(e.k,w.id,x)<=cash()};
+ if(S.arcRec&&S.arcRec.w===wk)return S.arcRec.l.filter(ok);
+ const r=seeded((S.seed||'')+'|arcrec|'+wk);const out=[],usedK=new Set(),usedW=new Set(),usedT=new Set();
+ const cand=ready.map(({w,o})=>({w,o,why:arcRecWhy(w,o)})).filter(c=>c.why).map(c=>Object.assign(c,{j:r()})).sort((p,q)=>q.why.v-p.why.v||p.j-q.j);
+ const take=c=>{if(out.length>=ARC_REC_N||usedW.has(c.w.id))return;const l=c.o.filter(x=>!usedK.has(x.k)&&(!c.why.k||x.k===c.why.k)&&aCost(x.k,c.w.id,x)<=cash()).map(x=>({x,s:(arcRecLand(x.k,c.w.id,x)?2:0)+r()})).sort((p,q)=>q.s-p.s);if(!l.length)return;
+  const x=l[0].x;usedK.add(x.k);usedW.add(c.w.id);usedT.add(c.why.t);out.push({id:c.w.id,k:x.k,t:c.why.t,ppv:arcRecLand(x.k,c.w.id,x)})};
+ /* one of each reason first, so the three pitches cover different needs; then the strongest of the rest */
+ cand.forEach(c=>{if(!usedT.has(c.why.t))take(c)});cand.forEach(take);
+ S.arcRec={w:wk,l:out};return out}
+function arcRecHtml(ready){if(aFull())return `<div class="arec1">⭐ This week's pitches · <b>both arc slots in use</b></div>`;
+ const l=arcRecs(ready);if(!l.length)return '';
+ return `<div class="arec"><div class="arech">⭐ This week's pitches</div>${l.map(e=>{const w=aW(e.id);const x=arcOffer(e.id).find(y=>y.k===e.k);const D=aDK(e.k);
+  return `<button class="arr" onclick="arcCast('${e.id}','${e.k}')">${typeof face==='function'?face(w):''}<span class="arrt"><b>${esc(w.name)}</b><span>${D.i} ${esc(aName(e.k))}</span><span class="arrw"><em>${esc(e.t)}</em>${e.ppv?`<small>Pays off at ${esc(e.ppv)}</small>`:''}</span></span><span class="arrp">${money(aCost(e.k,e.id,x))}<i>›</i></span></button>`}).join('')}</div>`}
 /* the Office keeps a pointer; the arcs live on their own tab */
 window.arcOfficeCard=function(){return ''};
 {const st=document.createElement('style');st.textContent=`
@@ -1209,6 +1242,27 @@ window.arcOfficeCard=function(){return ''};
 .apw .acard .tkc{--w:60px}.apwt{flex:1;min-width:0}.apwt small{display:block;font:800 italic 12px/1.2 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.6)}
 .apwt>b{display:block;font:700 italic 15px/1.2 'Barlow',sans-serif;color:#fff;margin-top:2px}.apwt .atrk{margin:8px 2px 0}.apw>i{font-style:normal;color:var(--gold2);font-size:20px}
 .apt small{display:block;font:800 italic 11px/1.2 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--gold2);margin-bottom:2px}
+
+.apchips{display:flex;gap:6px;overflow-x:auto;margin:0 0 6px;padding-bottom:2px;scrollbar-width:none}.apchips::-webkit-scrollbar{display:none}
+.apchips button{flex:none;padding:7px 11px;background:none;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.7);font:800 italic 13px/1 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;white-space:nowrap}
+.apchips button.on{background:var(--gold);border-color:var(--gold);color:#111}
+.apgh{display:flex;align-items:center;gap:10px;padding:9px 8px 9px 12px}
+.apgm{flex:1;min-width:0}.apgn{font:800 italic 15px/1.15 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--gold2)}
+.apgn em{font-style:normal;font-weight:700;font-size:11px;letter-spacing:.06em;color:rgba(255,255,255,.5);margin-left:4px}
+.aphk{margin-top:3px;font:500 13.5px/1.3 'Barlow',sans-serif;color:rgba(255,255,255,.72);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.apgr{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:5px}.apgr small{font:700 12px/1 'Barlow',sans-serif;color:rgba(255,255,255,.55);white-space:nowrap}.apgr>i{display:none}
+.apfc .fav{width:26px;height:32px;margin:0 0 0 3px}.apfc .fav:first-child{margin-left:0}
+.apfc{display:flex;align-items:center}.apmore{font:800 11px 'Barlow',sans-serif;color:rgba(255,255,255,.55);margin-left:4px}
+.apst{margin:10px 0 2px;font:700 italic 15px/1.25 'Barlow',sans-serif;color:#fff}
+.apw2 .apc{font:700 11px/1 'Barlow',sans-serif;color:rgba(255,255,255,.55);font-style:normal}.apw2.dim{opacity:.45}
+.arech{font:800 italic 15px/1 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--gold2);margin-bottom:4px}
+.arec1{font:800 italic 14px/1.2 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.55)}.arec1 b{color:rgba(255,255,255,.8)}
+.arr{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-top:1px solid rgba(255,255,255,.08);padding:9px 0;color:inherit;cursor:pointer;font-family:inherit}.arr:first-of-type{border-top:0}
+.arr .fav{width:40px;height:48px;margin:0}
+.arrt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.arrt>b{font:700 15px/1.15 'Barlow',sans-serif;color:#fff}.arrt>span{font:600 13px/1.2 'Barlow',sans-serif;color:rgba(255,255,255,.75)}
+.arrw{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:2px}.arrw em{font:800 11px/1 'Barlow',sans-serif;font-style:normal;text-transform:uppercase;letter-spacing:.05em;color:var(--gold2);border:1px solid rgba(207,171,85,.7);padding:3px 6px;background:rgba(207,171,85,.08)}
+.arrw small{font-size:11.5px;color:rgba(255,255,255,.5)}
+.arrp{flex:none;font:700 13px/1 'Barlow',sans-serif;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:6px}.arrp i{font-style:normal;color:var(--gold2);font-size:20px}
 `;document.head.appendChild(st)}
 
 /* ---- the Book screen checklist: each arc's next step ---- */
@@ -1227,4 +1281,7 @@ window.arcMigrate=arcMigrate;
 {const st=document.createElement('style');st.textContent=`.arcrow{padding:6px 0;border-top:1px solid rgba(255,255,255,.08)}.arcrow:first-of-type{border-top:0}
 .arcdots{white-space:nowrap;letter-spacing:2px}.ad{font-style:normal;color:rgba(255,255,255,.35)}.ad.on{color:var(--gold)}.ad.pay{margin-left:4px}.ad.pay.on{color:var(--gold);text-shadow:0 0 6px rgba(255,200,0,.5)}
 .arcbig{font-size:26px;letter-spacing:6px;margin:6px 0 10px}.arcbd{margin-top:8px}.arcbd summary{cursor:pointer;color:var(--gold);font-weight:600}.arcbh{margin:8px 0 2px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.5)}.arcb{display:flex;justify-content:space-between;gap:8px;padding:3px 0;font-size:14px}.arcb small{color:rgba(255,255,255,.55);text-align:right}#modal .choice.arcch{display:block}.pf-arc .pf-s{width:100%}.arcst{font-style:italic;color:var(--gold);margin:2px 0 6px}.arccastl{display:flex;flex-wrap:wrap;gap:6px}.arccast{display:flex;flex-direction:column;align-items:flex-start;padding:8px 10px;min-width:44%;flex:1 1 44%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);color:inherit;text-align:left}.arccast small{opacity:.65;font-size:12px}.arccast.on{border-color:var(--gold);background:rgba(255,200,0,.12)}`;document.head.appendChild(st)}
+/* v440: Roster's 📖 Arcs sort, the wrestler-first way in: who has stories ready, and a tap opens them */
+window.rosterArcN=function(w){if(!w||w.own!=='p'||w.retd||arcIn(w.id))return arcOf(w.id)?-1:-2;return arcCanStart(w.id)&&!aFull()?0:arcOffer(w.id).length};
+window.rosterArcTxt=function(w){const a=arcOf(w.id);if(a)return `📖 In ${aD(a).n}`;if(arcIn(w.id))return '📖 In a story';const n=rosterArcN(w);return n>0?`📖 ${n} arc${n>1?'s':''} ready`:'No arc fits yet'};
 })();
