@@ -7,14 +7,16 @@
    Weights stay small next to popularity and skill: they decide between wrestlers of similar quality, never take a
    scrub over a star. */
 const DC_G=['cas','tech','blood','flip','chaos'];
-const DC_SHARE={cas:.3,tech:.175,blood:.175,flip:.175,chaos:.175};
+/* Casuals react to big stars and stories, not to Casual-group wrestlers (fbExpo gives them no exposure), so they're
+   never a need: popularity already carries them in draftChoice. The four hardcore crowds each want ~4 of 24. */
+const DC_SHARE={cas:0,tech:.175,blood:.175,flip:.175,chaos:.175};
 const DC_ONE={cas:'Casual',tech:'Technical wrestler',blood:'Bloodhound',flip:'Flippy wrestler',chaos:'Chaos fiend'};
 const DC_MANY={cas:'Casuals',tech:'Technical wrestlers',blood:'Bloodhounds',flip:'Flippy wrestlers',chaos:'Chaos fiends'};
-const DC_FILL={cas:6,tech:9,blood:9,flip:9,chaos:9};
+const DC_FILL={cas:0,tech:9,blood:9,flip:9,chaos:9};
 function dcCounts(b){const c={cas:0,tech:0,blood:0,flip:0,chaos:0,und:0};
  (typeof ownList==='function'?ownList(b):[]).forEach(w=>fgOf(w).forEach(g=>{if(c[g]!=null)c[g]++}));return c}
 function dcTargets(b){const n=ownList(b).length+(typeof picksLeft==='function'?picksLeft(b):0);const t={};
- DC_G.forEach(g=>t[g]=Math.max(2,Math.round(n*DC_SHARE[g])));return t}
+ DC_G.forEach(g=>t[g]=g==='cas'?0:Math.max(2,Math.round(n*DC_SHARE[g])));return t}
 function dcNeed(b,w){const gs=fgOf(w).filter(g=>DC_G.includes(g));if(!gs.length)return {v:1,why:''};
  const c=dcCounts(b),t=dcTargets(b);let v=0,why='',top=0;
  gs.forEach(g=>{const gap=Math.max(0,t[g]-c[g]);const f=gap>0?gap/t[g]*DC_FILL[g]:0;if(f>top){top=f;why=c[g]===0?`your first ${DC_ONE[g]}`:`you need more ${DC_MANY[g]}`}});
