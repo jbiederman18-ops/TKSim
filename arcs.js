@@ -91,12 +91,6 @@ const ARCS={
   pay:(s,a)=>{if(s.kind!=='promo'||!s.ids.includes(a.a))return false;const o=s.a===a.a?s.b:s.a;return !!(o&&aW(o)&&aW(o).pop>=aW(a.a).pop+10)},
   plan:(a,st)=>{const A=aW(a.a);const o=st==='build'?aBest(aRoster([a.a]).filter(w=>!(a.opp||[]).includes(w.id)),w=>w.pop):aBest(aRoster([a.a]).filter(w=>w.pop>=A.pop+10),w=>-w.pop);return o?[{kind:'promo',type:'callout',a:a.a,b:o.id}]:null},
   win:(a,w,q)=>({mic:1.2})},
- mouth:{lane:'mic',gets:'Mic for them, popularity for {B}',i:'📣',n:'Mouthpiece',need:3,
-  d:'Talk for a partner, and make them look like a killer.',build:'A promo with {B} on a night {B} wins a match',planAll:1,payoff:'{B} wins a singles match in the main event or on a PPV',
-  pick:A=>{const l=aRoster([A.id]).filter(w=>w.mic<A.mic-5&&w.ring>=A.ring-10);const B=aBest(l,w=>w.ring+aMate(A,w)*2+(aMates(A.id).includes(w.id)?20:0));return B?{b:B.id}:null},
-  step:(s,a)=>{if(sTog(s,a.a,a.b))a.hyP=AW();if(sWon(s,a.b))a.hyW=AW();return a.hyP===AW()&&a.hyW===AW()},pay:(s,a)=>sSingles(s)&&sWon(s,a.b)&&sBig(s),
-  plan:(a,st)=>st==='build'?[{kind:'promo',type:'rally',a:a.a,b:a.b},{kind:'match',type:'singles',side:[a.b],n:1,win:0}]:[{kind:'match',type:'singles',side:[a.b],n:1,win:0,main:1}],
-  win:(a,w,q)=>({mic:1.2,bpop:q==='great'?3:1.5,chem:1})},
  mentor:{lane:'ring',gets:'In-ring (more, the bigger the gap), and {B} is happier',i:'🧓',n:'Mentor & Protégé',need:3,
   d:'Learn from a veteran in the ring, then step up against them.',build:'In a match with {B} (either side)',payoff:'A singles match against {B}',
   pick:A=>{const B=aBest(aRoster([A.id]).filter(w=>w.ring>=A.ring+15),w=>w.ring+aMate(A,w));return B?{b:B.id}:null},
@@ -241,12 +235,6 @@ const ARCS={
   step:(s,a)=>(a.have||0)===0?s.kind==='promo'&&s.ids.includes(a.a):sWon(s,a.a),pay:(s,a)=>sWon(s,a.a)&&s.pos==='me',
   plan:(a,st)=>st==='build'&&!(a.have||0)?[{kind:'promo',type:'interview',a:a.a}]:[{kind:'match',type:'singles',side:[a.a],n:1,win:0,main:st==='pay'?1:0}],
   also:(a)=>{mor(aW(a.a),a.q==='great'?15:10)},win:(a,w,q)=>({mic:1,pop:q==='great'?2:1})},
- champvoice:{lane:'mic',star:1,i:'🎙️',n:"Champion's Voice",need:3,min:3,gets:'Mic, title prestige and popularity',
-  d:'A champion who talks like one, then defends like one on the big stage.',build:"A Champion's Address at 3★+",payoff:'A title defense on a PPV',
-  pick:A=>{const t=Object.values(S.titles||{}).find(t=>t.holders.includes(A.id));return t?{t2:t.id}:null},
-  step:(s,a)=>s.kind==='promo'&&s.type==='champ'&&s.a===a.a,pay:(s,a)=>s.ppv&&s.title===a.t2&&s.ids.includes(a.a),
-  plan:(a,st)=>{if(st==='build')return [{kind:'promo',type:'champ',a:a.a}];const t=S.titles[a.t2];if(!t||!t.holders.includes(a.a))return null;return [{kind:'match',type:'singles',side:t.holders.slice(),n:t.holders.length,title:a.t2,ppv:1,win:0}]},
-  also:(a)=>{const t=S.titles[a.t2];if(t)t.prestige=(t.prestige||0)+(a.q==='great'?5:3)},win:(a,w,q)=>({mic:1,pop:q==='great'?2:1})},
  streak:{lane:'ring',i:'🔥',n:'Undefeated Streak',need:4,gets:'In-ring and popularity',
   d:'Win and keep winning. One loss and the streak starts over.',build:'A win (a loss starts it over)',payoff:'A main event or PPV win over someone more popular',
   pick:A=>({}),
@@ -508,10 +496,39 @@ ARC_STORY.redemption.push({id:'tape',head:'After a big loss, {A} watches the mat
 ARC_STORY.mentor.push({id:'violence',head:'{A}, a sweet, lovable babyface, learns the ways of unsettling violence from {B} to beat a foe far more dangerous',need:(A,B)=>A.al==='f'&&!!B&&aGrpOf(B).includes('blood'),txt:{}});
 (ARC_STORY.voice=ARC_STORY.voice||[]).push({id:'stutter',head:'{A} overcomes a stutter to become the King of Speech',txt:{}});
 ARC_STORY.join.push({id:'cultjoin',head:'{A} joins a cult: {F}',txt:{}});
+/* v432: Josh's third round — every arc now tells a story */
+const aTagTitle=(a)=>Object.values(S.titles||{}).find(t=>t.kind!=='singles'&&t.holders.length===2&&t.holders.every(id=>aMine(id)&&!aW(id).inj)&&!t.holders.includes(a.a)&&!t.holders.includes(a.b));
+Object.assign(ARC_STORY,{
+ team:[{id:'twins',head:'{A} discovers {B} is their fraternal twin, separated at birth. They come together and lock it in with a tag title win',
+  payPlan:a=>{const t=aTagTitle(a);return t?[{kind:'match',type:'tag',vs2:[[a.a,a.b],t.holders.slice()],title:t.id,win:0}]:null},txt:{}}],
+ ironman:[{id:'smile',head:'{A} has lost their smile. A new challenge with a new stipulation every week, nothing fitting quite right, until they finally smile again',vary:1,txt:{}}],
+ comeback:[{id:'dirk',head:'Mourning the death of their beloved Dirk, {A} tries to power through and gets hurt. Now it\'s agonizing rehab and the stages of grief',txt:{}}],
+ hometown:[{id:'proveit',head:'{A} is frantic to rise up the card before their big hometown return, to prove to friends and family this career is actually going well',txt:{}}],
+ school:[{id:'manifest',head:'{A} suddenly manifests a new power mid-match, stunning everyone, themself included. Now they must control it before it destroys them',txt:{}}],
+ torch:[{id:'movie',head:'{A} finally scored a starring role in next year\'s direct-to-streaming "All Things Through Christ", and hand-picks {B} to take their spot',txt:{}}],
+ faction:[{id:'cult',head:'{A} starts a cult',txt:{}}],
+ fightchamp:[{id:'nobody',head:'With no one left to conquer, {A} issues open challenges, until someone comes out they simply cannot contend with',
+  payPlan:a=>{const t=S.titles[a.t2];if(!t||!t.holders.includes(a.a))return null;const A=aW(a.a);return [{kind:'match',type:'singles',side:[a.a],n:1,title:a.t2,ppv:1,win:1,oppF:w=>w.pop>=A.pop}]},txt:{}}],
+ proveit:[{id:'beautiful',head:'Furious at the crowd\'s narrow-mindedness and quote-tweeting in all caps, {A} sets out to prove every style of wrestling is beautiful',txt:{}}],
+ cross:[{id:'statusquo',head:'Furious at the idea that every style of wrestling is beautiful, {A} sets out to prove their style belongs only with the ones that suit it',txt:{}}],
+ techshow:[{id:'mainstream',head:'{A} is going to make technical wrestling a mainstream thing even if it kills them',txt:{}}],
+ hardcore:[{id:'blood',head:'After losing violently, {A} gets a taste for blood with no way to quench it, until a hardcore legend teaches them to leave the mat sticky and the fans squeamish',txt:{}}],
+ flyer:[{id:'high',head:'{A} can jump really high, and they want people to see that',txt:{}}],
+ dream:[{id:'catering',head:'{A} and {B} promise the crowd the best match they\'ve ever seen, until one finds out the other got meat banned from catering',need:(A,B)=>A.al==='f'&&!!B&&B.al==='f',txt:{}}],
+ farewell:[{id:'demons',head:'Ready to hang it up after a long career, {A} must battle the demons of their past to rid themself of the guilt that\'s plagued them, and retire in peace',txt:{}}],
+ lastchase:[{id:'hangup',head:'Ready to hang it up after a long career, {A} has one last thing to do: squash that stupid little fucker holding the world title, then retire in peace',
+  choice:[{k:'champ',n:'👑 Retire as champion',d:'They win the title tonight, then walk away on top.',win:'a'},{k:'fall',n:'🙇 Go out on their back',d:'They lose tonight, then retire.',win:'b'}],
+  after:(a,s,n)=>{const A=aW(a.a);if(!A||A.retd)return;arcRetire(A,n,a.choice==='champ'?`${A.name} retires as champion. A legend walks away on top.`:`${A.name} gave it everything, and retires.`)},txt:{}}],
+ passtitle:[{id:'worthy',head:'Holder of more world titles than they can count, {A} can\'t find peace until {B} finally gives them a fight worth having',txt:{}}],
+ invasion:[{id:'brigade',head:'{A} leads a tribal brigade to destroy everything the other show holds dear and become the one true wrestling show',
+  choice:[{k:'knife',n:'🔪 Stick the knife in',d:'Fans walk over from the other show.',fx:(a,s,n)=>{const x=20000;if(S.fans.ai!=null){const t=Math.min(x,Math.max(0,S.fans.ai-50000));S.fans.ai-=t;S.fans.p+=t;n.push(`🔪 ${aW(a.a).name} sticks the knife in: ${fmtFans(t)} fans walk over from ${S.rival||'the other show'}.`)}}},
+   {k:'peace',n:'🤝 Find common ground',d:'The power of friendship. Your locker room is happier for it.',fx:(a,s,n)=>{ownList('p').forEach(w=>mor(w,4));S.fans.p+=8000;n.push(`🤝 ${aW(a.a).name} finds common ground with the other show. The locker room loves it (+8K fans).`)}}],txt:{}}]});
+(ARC_STORY.shoot=ARC_STORY.shoot||[]).push({id:'fourth',head:'With their contract running out and nothing left to lose, {A} buries the promotion, the booker, and you, the disgusting pig playing vibecoded wrestling simulators on your phone',need:A=>(A.con||99)<=10,
+ after:(a,s,n)=>{if(a.bomb)return;const A=aW(a.a);const t=Object.values(S.titles||{}).find(t=>t.kind==='singles'&&t.g===A.g&&t.holders.length&&!t.holders.includes(A.id));if(t&&typeof tpContender==='function'){tpContender(t.id,A.id,null,n);n.push(`🎙️ It got enormously over: ${A.name} is now the number one contender for the ${t.n} title.`)}},txt:{}});
 window.ARC_STORY=ARC_STORY;
 /* the storyline a run would get: dealt by the game, the arc and the wrestler, so the offer and the run agree. vk: only with that variant */
 function arcStoryPick(k,id,v,b){const A=aW(id),B=b?aW(b):null;const l=(ARC_STORY[k]||[]).filter(x=>(x.vk==null||x.vk===(v!=null?v:aVarOf(k)))&&(!x.need||(()=>{try{return x.need(A,B)}catch(e){return false}})()));if(!l.length)return null;
- const r=seeded((S.seed||'')+'|arcst|'+k+'|'+id+'|'+S.season)();const i=Math.floor(r*(l.length+1));return i<l.length?l[i].id:null}
+ const r=seeded((S.seed||'')+'|arcst|'+k+'|'+id+'|'+S.season)();return l[Math.floor(r*l.length)].id}
 function arcStoryOf(a){return a&&a.sl?(ARC_STORY[a.k]||[]).find(x=>x.id===a.sl)||null:null}
 function arcHead(a,o){const st=o&&o.id?o:arcStoryOf(a);if(!st)return '';const nm=id=>id&&aW(id)?aW(id).name:'';
  return st.head.replace(/\{A\}/g,nm(a.a)).replace(/\{B\}/g,nm(a.b)||'their rival').replace(/\{C\}/g,nm(a.c)).replace(/\{F2\}/g,a.fn2||'the other faction').replace(/\{F\}/g,a.fn||'the other faction')}
@@ -566,7 +583,6 @@ const ARC_CAST={
  heelturn:{b:{lab:'The friend they turn on',f:(A,w)=>w.al==='f',r:(A,w)=>(aMates(A.id).includes(w.id)?100:0)+aMate(A,w)*3+w.pop/10}},
  faceturn:{b:{lab:'The face they stand with',f:(A,w)=>w.al==='f',r:(A,w)=>w.pop+aMate(A,w)*2}},
  betrayal:{b:{lab:'The partner they betray',f:(A,w)=>w.al==='h',r:(A,w)=>(aMates(A.id).includes(w.id)?100:0)+aMate(A,w)*3+w.pop/10}},
- mouth:{b:{lab:'Who they talk for',f:(A,w)=>w.mic<A.mic,r:(A,w)=>w.ring+aMate(A,w)*2}},
  mentor:{b:{lab:'The mentor',f:(A,w)=>w.ring>=A.ring+15,r:(A,w)=>w.ring+aMate(A,w)}},
  proveit:{b:{lab:'The star they have to beat',f:(A,w)=>{const g=aGrpOf(A)[0];return !!g&&aGrpOf(w).some(x=>aClash(g,x))},r:(A,w)=>w.pop}},
  team:{b:{lab:'Their partner',f:(A,w)=>!inTeam(A.id,w.id),r:(A,w)=>{try{return teamParts(A,w).reduce((s,x)=>s+x.v,0)*3+w.pop/10}catch(e){return w.pop/10}}}},
@@ -661,6 +677,7 @@ window.arcPost=function(ap,stars,notes){if(!ap||!ap.seg)return false;const s=ap.
  S.arcs=arcList().filter(a=>!a.done);return landed};
 function arcFinish(a,s,stars,notes){const D=aD(a);const A=aW(a.a);const q=a.st.reduce((x,y)=>x+y,0)/a.st.length;a.q=q>=ARC_GREAT?'great':'good';a.done=1;
  try{if(D.also)D.also(a,s,notes)}catch(e){console.warn('arc payoff',e)}
+ try{const SL=arcStoryOf(a);if(SL&&SL.choice){if(!a.choice){const wa=s.win.includes(a.a);const o=SL.choice.find(o=>o.win&&(o.win==='a')===wa)||SL.choice[Math.floor(seeded((S.seed||'')+'|ch|'+a.id)()*SL.choice.length)];a.choice=o.k}const o=SL.choice.find(o=>o.k===a.choice);if(o&&o.fx)o.fx(a,s,notes)}if(SL&&SL.after)SL.after(a,s,notes)}catch(e){console.warn('arc storyline',e)}
  let r={};try{r=D.win(a,A,a.q)||{}}catch(e){console.warn('arc reward',e)}
  const story=a.star||D.lane==='star';const parts=[];const FX=a.fit?ARC_FIT:1;if(a.fit){S.arcFitK=S.arcFitK||{};const was=S.arcFitK[a.a];S.arcFitK[a.a]=1;notes.push(`✨ ${was?'':'Found it: '}${A.name} was made for this. ${aName(a.k,a.v)} hits harder with them.`)}
  if(!story&&r.ring&&A.own){const g=trainGain(A.ring)*(a.q==='great'?ARC_G2:ARC_G1)*r.ring*FX;const v0=A.ring;addR(A,g);if(A.ring>v0)parts.push(`In-ring +${Math.round((A.ring-v0)*10)/10}`)}
@@ -694,10 +711,12 @@ function arcGroundswell(wk,notes){arcList().forEach(a=>{if(a.k!=='groundswell'||
   if(a.have>=a.need){a.stage='pay';a.payFrom=wk+1}})}
 /* The Corporate Offer: right before its payoff segment plays live, you decide what they choose */
 if(typeof liveNext==='function'){const _ln=liveNext;liveNext=function(){try{if(typeof LQ!=='undefined'&&LQ){const nx=LQ.items[LQ.k+1];if(nx&&!nx.arcAsked&&(nx.kind==='seg'||nx.kind==='promo')){const seg=nx.kind==='promo'?aSegPromo(S.card.p[nx.i].d):aSegMatch(nx.m,nx.main?'me':'mid');
-  const a=arcList().find(a=>!a.done&&!a.choice&&aD(a).choice&&a.stage==='pay'&&AW()>=(a.payFrom||0)&&aMine(a.a)&&(()=>{try{return aD(a).pay(seg,a)}catch(e){return false}})());
-  if(a){nx.arcAsked=1;const D=aD(a);const A=aW(a.a);return openModal(`<div class="h mhd">${D.i} ${esc(A.name)}: the decision</div>${arcHead(a)?`<p class="arcst">📜 ${esc(arcHead(a))}</p>`:''}<p class="muted" style="margin-top:0">It all comes down to tonight. What does ${esc(A.name)} choose?</p>
+  const chOf=a=>aD(a).choice||(arcStoryOf(a)||{}).choice;
+  const a=arcList().find(a=>!a.done&&!a.choice&&chOf(a)&&a.stage==='pay'&&AW()>=(a.payFrom||0)&&aMine(a.a)&&(()=>{try{return aD(a).pay(seg,a)}catch(e){return false}})());
+  if(a){nx.arcAsked=1;window.__arcNx=nx;const D=Object.assign({},aD(a),{choice:chOf(a)});const A=aW(a.a);return openModal(`<div class="h mhd">${D.i} ${esc(A.name)}: the decision</div>${arcHead(a)?`<p class="arcst">📜 ${esc(arcHead(a))}</p>`:''}<p class="muted" style="margin-top:0">It all comes down to tonight. What does ${esc(A.name)} choose?</p>
    ${D.choice.map(o=>`<button class="choice" onclick="arcChoose('${a.id}','${o.k}')"><div><b>${o.n}</b><div class="muted tiny">${esc(o.d)}</div></div></button>`).join('')}`)}}}}catch(e){console.warn('arc choice',e)}return _ln.apply(this,arguments)}}
-window.arcChoose=function(id,k){const a=arcList().find(x=>x.id===id);if(a)a.choice=k;try{closeModal()}catch(e){}liveNext()};
+window.arcChoose=function(id,k){const a=arcList().find(x=>x.id===id);if(a){a.choice=k;const o=((aD(a).choice||(arcStoryOf(a)||{}).choice)||[]).find(o=>o.k===k);const nx=window.__arcNx;
+  if(o&&o.win&&nx&&nx.m&&Array.isArray(nx.m.sides)){const si=nx.m.sides.findIndex(sd=>sd.includes(a.a));if(si>=0)nx.m.winner=o.win==='a'?si:(si===0?1:0)}}try{closeModal()}catch(e){}liveNext()};
 /* ---- what to book: a slot filled straight from the arc (the Book it button and the sweep bot) ---- */
 function arcPlan(a){const D=aD(a);if(!D||!D.plan||a.done)return null;try{return D.plan(a,a.stage)}catch(e){return null}}
 window.arcPlan=arcPlan;
@@ -708,7 +727,9 @@ function aCombos(l,n){if(n===1)return l.map(x=>[x]);const out=[];const go=(st,ac
 function aPickOpp(core,pool,n,p,sh){const top=pool.slice(0,n===1?14:n===2?8:6);if(top.length<n)return null;const type=n===1?'singles':n===2?'tag':'trios';let best=null,bv=-1e9;
  aCombos(top,n).forEach(cb=>{const ids=cb.map(w=>w.id);const m={type,stip:p.stip||'std',sides:[core.slice(),ids],winner:p.win!=null?p.win:0,title:''};let v;try{v=rateMatch(m,{ppv:sh&&sh.ppv,preview:true}).raw}catch(e){v=cb.reduce((x,w)=>x+w.pop,0)/n}if(v>bv){bv=v;best=ids}});return best}
 /* fill one open slot with the arc's next segment; returns the slot index or -1 */
-function arcFill(a,c,opt){opt=opt||{};let l=arcPlan(a);if(!l)return -1;{const SL=arcStoryOf(a);if(SL&&SL.stip&&a.stage==='pay'&&STIPS[SL.stip])l=l.map(p=>p.kind==='match'?Object.assign({},p,{stip:SL.stip}):p)}const used=arcUsed(c);const sh=curShow();
+function arcFill(a,c,opt){opt=opt||{};let l=arcPlan(a);{const SL=arcStoryOf(a);if(SL&&SL.payPlan&&a.stage==='pay'){try{const pp=SL.payPlan(a);if(pp)l=pp}catch(e){}}
+  if(!l)return -1;if(SL&&SL.stip&&a.stage==='pay'&&STIPS[SL.stip])l=l.map(p=>p.kind==='match'?Object.assign({},p,{stip:SL.stip}):p);
+  if(SL&&SL.vary&&a.stage==='build'){const pool=['street','nodq','falls','sub','tables','lms','iquit','cage','twoof3','ladder'].filter(k=>STIPS[k]&&!STIPS[k].ppv&&!(a.stipU||[]).includes(k));const k=pool[0];if(k){l=l.map(p=>p.kind==='match'&&!p.stip?Object.assign({},p,{stip:k}):p);a.stipU=(a.stipU||[]).concat([k])}}}const used=arcUsed(c);const sh=curShow();
  for(const p of l){if(p.ppv&&!sh.ppv)continue;
   if(p.kind==='promo'){const i=c.findIndex(sl=>sl&&sl.k==='promo'&&!sl.d);if(i<0)continue;if([p.a,p.b].some(id=>id&&(used.has(id)||!aW(id)||aW(id).inj||aW(id).own!=='p')))continue;c[i].d={type:PT[p.type]?p.type:'callout',a:p.a,b:p.b||null,played:false};return i}
   const ms=c.map((sl,i)=>sl&&sl.k==='match'&&!sl.opt?i:-1).filter(i=>i>=0);const main=ms[ms.length-1];const open=ms.filter(i=>!c[i].d);if(!open.length)continue;
