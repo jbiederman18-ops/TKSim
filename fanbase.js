@@ -464,8 +464,11 @@ function fbMatchGroups(m){const e=fbMatchExpo(m);if(!e)return [];const l=FB_HC.f
 /* casuals tune in for the whole show: star power, their own draws, titles, spectacle and stories (fbCalc's hooks, minus how
    good the show turns out — that part is never previewed). Lit once the card clears their drift by a real margin. */
 const FB_CAS_LIT=1;
+/* v458: star power is the top four names on the card; a seat nobody's in yet counts as neutral (70), so booking a match while
+   the card is still filling up never makes casuals look less hooked than an emptier card did. A full card is unchanged. */
+const FB_TP0=70;
 function fbCasHook(c){const sh=typeof curShow==='function'?curShow():{};const segs=[];(c||[]).forEach(sl=>{if(!sl||!sl.d)return;try{if(sl.k==='match'&&Array.isArray(sl.d.sides)&&sl.d.sides.flat().filter(Boolean).length)segs.push(fbSeg(sl.d,3,false));else if(sl.k==='promo'&&sl.d.a)segs.push(fbPromo(sl.d,3))}catch(e){}});
- if(!segs.length)return null;const ids=[...new Set(segs.flatMap(s=>s.ids))];const pops=ids.map(id=>S.w[id]?S.w[id].pop:0).sort((a,b)=>b-a).slice(0,4);const tp=pops.length?pops.reduce((a,x)=>a+x,0)/pops.length:0;
+ if(!segs.length)return null;const ids=[...new Set(segs.flatMap(s=>s.ids))];const pops=ids.map(id=>S.w[id]?S.w[id].pop:0).sort((a,b)=>b-a).slice(0,4);const tp=pops.length?(pops.reduce((a,x)=>a+x,0)+FB_TP0*(4-pops.length))/4:0;
  const ms=segs.filter(s=>s.k==='match');const draws=Math.min(1.8,ms.reduce((a,s)=>a+s.ids.filter(id=>S.w[id]&&fgOf(S.w[id]).includes('cas')).length*.6,0));
  const tl=Math.min(1.2,segs.filter(s=>s.title).length*.6);const spec=Math.min(.8,ms.filter(s=>s.stip!=='std'||FB_MULTI[s.type]).length*.4);
  let story=0;ms.map(s=>s.h||0).sort((x,y)=>y-x).slice(0,FB_STORYW.length).forEach((h,i)=>story+=Math.max(0,h-FB_STORY0)/FB_STORYH*FB_STORYW[i]);story=Math.min(FB_STORYCAP,story)*(sh&&sh.ppv?1.5:1);
@@ -513,7 +516,7 @@ function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X0=S.fbx[b],H=S.f
   /* the best matches turn casuals into fans of that group */
   let cv=0;l.forEach(x=>{if(x.sg.st>=4&&x.sg.st>X[g])cv+=f.cas*FB_CONV*x.e*(x.sg.st-3.75)/1.25});res.conv[g]=Math.round(cv)});
  /* casuals: tune out unless star power, titles, spectacle and a good show hook them */
- const ids=[...new Set(segs.flatMap(s=>s.ids))];const pops=ids.map(id=>S.w[id]?S.w[id].pop:0).sort((a,b)=>b-a).slice(0,4);const tp=pops.length?pops.reduce((a,x)=>a+x,0)/pops.length:0;
+ const ids=[...new Set(segs.flatMap(s=>s.ids))];const pops=ids.map(id=>S.w[id]?S.w[id].pop:0).sort((a,b)=>b-a).slice(0,4);const tp=pops.length?(pops.reduce((a,x)=>a+x,0)+FB_TP0*(4-pops.length))/4:0;
  const draws=Math.min(1.8,segs.filter(s=>s.k==='match').reduce((a,s)=>a+s.ids.filter(id=>S.w[id]&&fgOf(S.w[id]).includes('cas')).length*.6,0));
  const tl=Math.min(1.2,segs.filter(s=>s.title).length*.6)+(o.newch?.6:0);const spec=Math.min(.8,segs.filter(s=>s.k==='match'&&(s.stip!=='std'||FB_MULTI[s.type])).length*.4);
  let cs=0,cw=0;segs.forEach((s,i)=>{const w=s.me?1.6:1;cs+=s.st*w;cw+=w});const cav=cw?cs/cw:0;
