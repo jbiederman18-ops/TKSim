@@ -140,6 +140,9 @@ v438 (stories carry matches: heat on a curve HEAT_KN [10,40,70,100] / HEAT_SL [.
   [1,.6,.4], FB_CAVK 3 -> 2.5). Normal 12 x 2, match stars S1/S2: default 3.85/3.84 -> 3.53/3.52, engaged ~3.93 -> 3.74/3.74,
   lazy ~3.37 -> 2.71/2.79; seasons won default 75/33% -> 75/50%, engaged 92/75%, lazy 0%. Hard default 50/25 -> 42/17%. By heat
   (6 games each): no heat 3.4 -> 3.0, 1-35 4.07 -> 3.85, 35-60 4.5 -> 4.7, 60+ 4.7 -> 4.8; engaged 5 stars 2% -> 5.5% of matches.
+v439 (arcs count once for casuals: ARC_ONCE takes the bigger of ARC_CAS or the arc's story heat in the feud pull instead of both;
+  payoff fans x ARC_FBQ0 .4 at a 2.5-star build -> x1 at great). Normal 36 x 2, seasons won S1/S2 (fans K): v438 78/50% (582/361),
+  v439 58/33% (548/332), no arcs 39/6% (471/253), engaged + arcs 92/89% (679/452). Arcs worth ~+77K fans a season (v438 ~+110K).
 v431 (Groundswell, Breaking Free, The Corporate Offer, Absolute Power, Earn the Fight; 17 more storylines, storyline stipulations
   and cast conditions). Normal 20 x 2: default + arcs 45/25%, no arcs 25/15%, engaged + arcs 95/70%, engaged no arcs 85/65%. 0 errors.
 v432 (every arc has a storyline; Mouthpiece and Champion's Voice dropped; storyline payoffs and live choices for Last Chase and

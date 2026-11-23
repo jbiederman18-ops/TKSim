@@ -9,14 +9,20 @@
    Loaded after traits.js; everything here is only called once the game is running. */
 (function(){'use strict';
 const ARC_SLOTS=2,ARC_STAR=85,ARC_GREAT=3.9,ARC_PAY0=.6,ARC_PAYQ=.4,ARC_PAYMAX=.4,ARC_PAY_PPV=1.25,ARC_PAY_STORY=1.2,
- ARC_FANS=12000,ARC_G1=5,ARC_G2=8,ARC_FAIL=10,ARC_SLACK=3,ARC_MIN=2.5,ARC_VIGMIN=2,ARC_BUILD=.25,ARC_PROVE=6,ARC_STORYH=[25,35,45,50],ARC_STORYP=60,ARC_CAS=.5,ARC_CASCAP=1,
+ ARC_FANS=12000,ARC_G1=5,ARC_G2=8,ARC_FAIL=10,ARC_SLACK=3,ARC_MIN=2.5,ARC_VIGMIN=2,ARC_BUILD=.25,ARC_PROVE=6,ARC_STORYH=[25,35,45,50],ARC_STORYP=60,
+ 
  /* v437: arcs are for building people up. The price follows the popularity of whoever the story builds (half price at 45 or under,
     full at 80, superstars ×1.5; a build step asks up to ½★ less of someone at 55 or under), and a lower-card payoff lifts them more: up to +ARC_RISEPOP popularity and ×(1+ARC_RISEF) fans
     at 45, fading out at ARC_STAR. An upper-midcarder (70+) whose great payoff lands in the main event or on a PPV breaks through
     (+ARC_BREAK). A superstar in the payoff rubs off on someone below them (+ARC_RUB). Each earlier payoff for the same wrestler
     this season halves the rising-star part. */
  ARC_CP0=.5,ARC_CPLO=45,ARC_CPMID=80,ARC_CPUP=0,ARC_CPSTAR=1.5,ARC_EASE=.5,ARC_EASELO=55,ARC_RISEPOP=4,ARC_RISEF=.4,ARC_BREAK=3,ARC_RUB=2;
+let ARC_CAS=.5,ARC_CASCAP=1;
 const ARC_H=new WeakMap();
+/* v439: an arc segment hooks the casuals once — as an arc (ARC_CAS a segment, up to ARC_CASCAP) or through the story heat it
+   carries in the feud pull, whichever is bigger (ARC_ONCE 0: both, the v438 way). A payoff's fans follow the build: ARC_FBQ0 of
+   them at an average build of ARC_FBQLO★ or less, all of them at ARC_GREAT (ARC_FBQ 0: always all). */
+let ARC_ONCE=1,ARC_FBQ=1,ARC_FBQ0=.4,ARC_FBQLO=2.5;window.__arcTune=o=>{if('once' in o)ARC_ONCE=o.once;if('fbq' in o)ARC_FBQ=o.fbq;if('fbq0' in o)ARC_FBQ0=o.fbq0;if('cas' in o)ARC_CAS=o.cas;if('cap' in o)ARC_CASCAP=o.cap};
 /* ---- the story lines: {A} is the wrestler, {B}/{C} the others in the arc. Leave a key out to use the default. ---- */
 const ARC_TEXT=window.ARC_TEXT||{};window.ARC_TEXT=ARC_TEXT;
 /* pronouns: {A:they} {B:their} {C:them} … become he/she, his/her, him/her for that wrestler (they when unknown) */
@@ -903,10 +909,12 @@ function arcPre(s){const out={seg:s,st:0,pay:[]};arcList().forEach(a=>{if(a.stag
 window.arcMatchPre=function(m,mctx){try{const r=arcPre(aSegMatch(m,mctx&&mctx.pos));const h=arcStoryH(r.seg);if(h)ARC_H.set(m,h);return r}catch(e){console.warn('arcs',e);return null}};
 /* a running arc is a story the casuals follow, like a feud: its heat grows with each step, and the payoff is a big one */
 function arcStoryH(s){let h=0;if(s.arcPay&&s.arcPay.length)return ARC_STORYP;arcList().forEach(a=>{if(a.done||!a.have||!aMine(a.a)||!s.ids.includes(a.a))return;h=Math.max(h,ARC_STORYH[Math.min(a.have,ARC_STORYH.length)-1])});return h}
-if(typeof fbSeg==='function'){const _fs=fbSeg;fbSeg=function(m,st,me){const r=_fs.apply(this,arguments);try{const h=ARC_H.get(m);if(h&&r){r.h=Math.max(r.h||0,h);r.arc=h>=ARC_STORYP?2:1}}catch(e){}return r}}
+if(typeof fbSeg==='function'){const _fs=fbSeg;fbSeg=function(m,st,me){const r=_fs.apply(this,arguments);try{const h=ARC_H.get(m);if(h&&r){if(ARC_ONCE)r.arcH=h;else r.h=Math.max(r.h||0,h);r.arc=h>=ARC_STORYP?2:1}}catch(e){}return r}}
 if(typeof fbPromo==='function'){const _fp=fbPromo;fbPromo=function(p){const r=_fp.apply(this,arguments);try{const h=ARC_H.get(p);if(h&&r)r.arc=h>=ARC_STORYP?2:1}catch(e){}return r}}
 /* casuals follow your wrestlers' stories on top of the feuds: each arc segment on the card hooks a few more (a payoff counts double) */
-if(typeof fbCalc==='function'){const _fc=fbCalc;fbCalc=function(b,segs,show,o){const r=_fc.apply(this,arguments);try{const n=(segs||[]).reduce((x,sg)=>x+(sg&&sg.arc||0),0);if(n&&r&&r.pct&&r.pct.cas!=null){const add=Math.min(ARC_CASCAP,n*ARC_CAS)*(show&&show.ppv?1.5:1);r.pct.cas+=add;r.arcStory=add;if(add>=.75&&r.why)r.why.cas='Hooked on the stories — they want to see where they go'}}catch(e){}return r}}
+if(typeof fbCalc==='function'){const _fc=fbCalc;fbCalc=function(b,segs,show,o){const r=_fc.apply(this,arguments);try{const n=(segs||[]).reduce((x,sg)=>x+(sg&&sg.arc||0),0);if(n&&r&&r.pct&&r.pct.cas!=null){let add=Math.min(ARC_CASCAP,n*ARC_CAS)*(show&&show.ppv?1.5:1);
+   if(ARC_ONCE&&typeof FB_STORYW!=='undefined'){const pull=hs=>{let v=0;hs.sort((x,y)=>y-x).slice(0,FB_STORYW.length).forEach((h,i)=>v+=Math.max(0,h-FB_STORY0)/FB_STORYH*FB_STORYW[i]);return Math.min(FB_STORYCAP,v)*(show&&show.ppv?1.5:1)};
+    const ms=segs.filter(sg=>sg&&sg.k==='match');const viaHeat=pull(ms.map(sg=>Math.max(sg.h||0,sg.arcH||0)))-pull(ms.map(sg=>sg.h||0));add=Math.max(add,viaHeat)}r.pct.cas+=add;r.arcStory=add;if(add>=.75&&r.why)r.why.cas='Hooked on the stories — they want to see where they go'}}catch(e){}return r}}
 window.arcPromoPre=function(p){try{const r=arcPre(aSegPromo(p));const h=arcStoryH(r.seg);if(h)ARC_H.set(p,h);return r}catch(e){console.warn('arcs',e);return null}};
 /* returns true when a payoff landed */
 window.arcPost=function(ap,stars,notes){if(!ap||!ap.seg)return false;const s=ap.seg;let landed=false;
@@ -941,7 +949,7 @@ function arcFinish(a,s,stars,notes){const D=aD(a);const A=aW(a.a);const q=a.st.r
  if(r.fg2&&typeof FG_N!=='undefined')parts.push(`a second crowd: ${FG_N[r.fg2]}`);if(r.fgh&&typeof FG_N!=='undefined')parts.push(`halfway to winning over ${FG_N[r.fgh]}`);
  if(r.grp&&typeof fbHit==='function'&&A.own){try{fbHit('p',[A],Math.round(ARC_FANS*.6))}catch(e){}}
  if(A.own)mor(A,a.q==='great'?10:6);
- {const f=Math.round(ARC_FANS*(r.fans||1)*(a.q==='great'?1.3:1)*(1+ARC_RISEF*rf)*(typeof fanGrowF==='function'?fanGrowF(S.fans.p):1)/100)*100;if(f>0){const ws=[A,a.b&&aW(a.b)].filter(w=>w&&w.own==='p');try{if(typeof fbHit==='function'&&ws.length)fbHit('p',ws,f);else S.fans.p+=f}catch(e){S.fans.p+=f}parts.push(`+${fmtFans(f)} fans`)}}
+ {const bq=ARC_FBQ&&a.q!=='great'?ARC_FBQ0+(1-ARC_FBQ0)*clamp((q-ARC_FBQLO)/(ARC_GREAT-aEase(A)-ARC_FBQLO),0,1):1;const f=Math.round(ARC_FANS*(r.fans||1)*bq*(a.q==='great'?1.3:1)*(1+ARC_RISEF*rf)*(typeof fanGrowF==='function'?fanGrowF(S.fans.p):1)/100)*100;if(f>0){const ws=[A,a.b&&aW(a.b)].filter(w=>w&&w.own==='p');try{if(typeof fbHit==='function'&&ws.length)fbHit('p',ws,f);else S.fans.p+=f}catch(e){S.fans.p+=f}parts.push(`+${fmtFans(f)} fans`)}}
  A.arcEnd=AW();A.arcLast=(A.arcLast||[]).concat([a.k]).slice(-4);S.arcLog=(S.arcLog||[]).concat([{s:S.season,w:AW(),k:a.k,v:a.v||0,a:a.a,b:a.b||null,q:a.q,fit:a.fit||0,sl:a.sl||null,bb:RW&&RW!==A?RW.id:null}]).slice(-40);S.arcDone=(S.arcDone||0)+1;if(a.q==='great')S.arcGreatN=(S.arcGreatN||0)+1;if(a.q==='great'&&s.ppv&&S.season>=2){S.arcM=S.arcM||{};S.arcM.ppvg=S.arcM.ppvg||AW()}
  notes.push(`📖✅ ${arcLine(a,'pay')} ${arcLine(a,a.q)} ${D.n} ${a.q==='great'?'— a great payoff':'paid off'}${parts.length?': '+parts.join(', '):''}.`);
  news(`📖 ${A.name}'s ${D.n} paid off${a.q==='great'?' in a big way':''}.`)}
