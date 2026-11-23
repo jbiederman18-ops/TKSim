@@ -9,7 +9,7 @@
    Loaded after traits.js; everything here is only called once the game is running. */
 (function(){'use strict';
 const ARC_SLOTS=2,ARC_STAR=85,ARC_GREAT=3.9,ARC_PAY0=.6,ARC_PAYQ=.4,ARC_PAYMAX=.4,ARC_PAY_PPV=1.25,ARC_PAY_STORY=1.2,
- ARC_FANS=12000,ARC_G1=5,ARC_G2=8,ARC_FAIL=10,ARC_SLACK=3,ARC_MIN=2.5,ARC_BUILD=.25,ARC_PROVE=6,ARC_STORYH=[25,35,45,50],ARC_STORYP=60,ARC_CAS=.5,ARC_CASCAP=1;
+ ARC_FANS=12000,ARC_G1=5,ARC_G2=8,ARC_FAIL=10,ARC_SLACK=3,ARC_MIN=2.5,ARC_VIGMIN=2,ARC_BUILD=.25,ARC_PROVE=6,ARC_STORYH=[25,35,45,50],ARC_STORYP=60,ARC_CAS=.5,ARC_CASCAP=1;
 const ARC_H=new WeakMap();
 /* ---- the story lines: {A} is the wrestler, {B}/{C} the others in the arc. Leave a key out to use the default. ---- */
 const ARC_TEXT=window.ARC_TEXT||{};window.ARC_TEXT=ARC_TEXT;
@@ -395,6 +395,86 @@ const ARCS={
   plan:(a,st)=>st==='build'?[{kind:'match',type:'singles',side:[a.a],n:1,win:0,oppF:w=>w.id!==a.b&&!(a.opp||[]).includes(w.id)}]:[{kind:'match',type:'singles',vs:[a.a,a.b],ppv:1}],
   win:(a,w,q)=>({ring:1,pop:q==='great'?3:1.5})},
 };
+/* ---- v436: arcs from Josh's fourth round of storylines. Each lays out its own stops (stops: name n, text b, test s, plan p, min);
+   aStopArc turns them into the arc's build steps. ---- */
+{const vig=(s,a)=>s.kind==='promo'&&s.type==='vignette'&&s.a===a.a;vig.vig=1;const pVig=a=>[{kind:'promo',type:'vignette',a:a.a}];
+ const tog=(s,a)=>sTog(s,a.a,a.b);const pTog=(t,bFirst)=>a=>[{kind:'promo',type:t,a:bFirst?a.b:a.a,b:bFirst?a.a:a.b}];
+ const withB=(s,a)=>s.kind==='match'&&s.ids.includes(a.a)&&s.ids.includes(a.b);
+ const fac=A=>aTeams(A.id).find(t=>(t.type==='faction'||t.type==='trios')&&t.m.filter(id=>id!==A.id&&aMine(id)).length>=2);
+ const facM=a=>{const t=(S.teams||[]).find(t=>t.id===a.f);return t?t.m.filter(id=>id!==a.a&&aMine(id)):[]};
+ const mkTeam=(n,m,type)=>{S.teams=S.teams||[];const t={id:'t'+(typeof partyNid==='function'?partyNid():S.nid++),n,type,m};S.teams.push(t);return t};
+ const chemUp=(m,v)=>{for(let i=0;i<m.length;i++)for(let j=i+1;j<m.length;j++){const k=key(m[i],m[j]);S.chem[k]=clamp((S.chem[k]||0)+v,-5,6)}};
+ const peace=(x,y,how)=>{const k=key(x,y);if(S.heat&&S.heat[k]>0&&typeof endFeud==='function')endFeud(k,how,'🤝')};
+ const turnTo=(A,al)=>{if(A.al!==al){if(typeof pTurn==='function')pTurn(A);else A.al=al}A.turnW=AW()};
+ Object.assign(ARCS,{
+ number:{lane:'ring',i:'🧨',n:'Got Your Number',bstep:0,gets:'In-ring, and on a great payoff Daredevil',
+  d:'{B} has {A:their} number. {A:They} loses to {B:them} again and again, until {A:they} comes up with a move too dangerous for anyone else to try. Then {A:they} tries it.',
+  payoff:'A singles win over {B}: the move',
+  pick:A=>A.ring<92?{}:null,
+  stops:[{n:'Beaten',b:'A loss to {B}',s:(s,a)=>sLost(s,a.a)&&sOpps(s,a.a).includes(a.b),p:a=>[{kind:'match',type:'singles',vs:[a.a,a.b],win:1}]},
+   {n:'Beaten again',b:'Another loss to {B}',s:(s,a)=>sLost(s,a.a)&&sOpps(s,a.a).includes(a.b),p:a=>[{kind:'match',type:'singles',vs:[a.a,a.b],win:1}]},
+   {n:'Back to the drawing board',b:'A Backstage Vignette: a move too dangerous for anyone else',s:vig,p:pVig}],
+  pay:(s,a)=>sSingles(s)&&sWon(s,a.a)&&sOpps(s,a.a).includes(a.b),pplan:a=>[{kind:'match',type:'singles',vs:[a.a,a.b],win:0}],
+  also:(a,s,n)=>{n.push(`🧨 ${aW(a.a).name} hits the move nobody else would dare, and finally beats ${aW(a.b).name}.`)},
+  win:(a,w,q)=>{if(q==='great'&&Array.isArray(w.tr)&&w.tr.length<TR_SLOTS&&!w.tr.includes('dare')&&TRAITS.dare){trAdd(w,'dare');return {ring:1,trait:'dare'}}return {ring:1.2}}},
+ wedding:{lane:'trait',star:1,i:'💒',n:'The Wedding',bstep:0,gets:'Popularity and either a three-way feud or a throuple',
+  d:'{B} and {C} are getting married, until {A} reveals {A:they}\'s been married to both of them all along. They settle it three ways, then you decide how it ends.',
+  payoff:'A triple threat: {A}, {B} and {C}. Then they all break up, or form a throuple',
+  pick:A=>aRoster([A.id]).length>=2?{}:null,
+  stops:[{n:'The engagement',b:'A Backstage Vignette with {B} and {C}: the proposal',min:2,s:(s,a)=>s.kind==='promo'&&sTog(s,a.b,a.c),p:a=>[{kind:'promo',type:'vignette',a:a.b,b:a.c}]},
+   {n:'Speak now',b:'A promo with {B}: {A} objects. {A:They}\'s been married to {B:them} all along',s:tog,p:pTog('callout')},
+   {n:'Married twice',b:'A promo with {C}: and to {C:them} as well',s:(s,a)=>sTog(s,a.a,a.c),p:a=>[{kind:'promo',type:'callout',a:a.a,b:a.c}]}],
+  pay:(s,a)=>s.kind==='match'&&s.sides.length===3&&new Set([a.a,a.b,a.c].map(id=>sSide(s,id))).size===3&&![a.a,a.b,a.c].some(id=>sSide(s,id)<0),
+  pplan:a=>[{kind:'match',type:'triple',vs2:[[a.a],[a.b],[a.c]]}],
+  choice:[{k:'split',n:'💔 They all break up',d:'Three ways to hate each other: a feud between all three.'},{k:'throuple',n:'💞 They form a throuple',d:'All three together: a new faction, with chemistry.'}],
+  also:(a,s,n)=>{const A=aW(a.a),B=aW(a.b),C=aW(a.c);if(!a.choice)a.choice=seeded((S.seed||'')+'|wed|'+a.id)()<.5?'split':'throuple';const m=[a.a,a.b,a.c];
+   (S.teams||[]).forEach(t=>{if(t.type==='team'&&t.m.includes(a.b)&&t.m.includes(a.c))t.m=t.m.filter(x=>x!==a.c)});S.teams=(S.teams||[]).filter(t=>t.m.length>=2);
+   if(a.choice==='throuple'){m.forEach((x,i)=>m.slice(i+1).forEach(y=>peace(x,y,'They became a throuple')));chemUp(m,a.q==='great'?3:2);const t=mkTeam(`${aLast(A)}, ${aLast(B)} & ${aLast(C)}`,m,'faction');n.push(`💞 ${A.name}, ${B.name} and ${C.name} are a throuple now: ${t.n}.`)}
+   else{m.forEach((x,i)=>m.slice(i+1).forEach(y=>bumpHeat(x,y,a.q==='great'?40:25,[],'The wedding from hell')));chemUp([a.b,a.c],-2);[B,C].forEach(w=>mor(w,-4));n.push(`💔 The wedding is off. ${A.name}, ${B.name} and ${C.name} are all done with each other.`)}},
+  win:(a,w,q)=>({pop:q==='great'?3:1.5})},
+ faith:{lane:'mic',i:'🙏',n:'Crisis of Faith',gets:'Mic, and either a faction that converts or a feud with the one that kicks {A:them} out',
+  d:'{A} becomes deeply religious, much to the discomfort of the rest of {F}, until the faction has to decide: convert, or kick {A:them} out.',
+  payoff:'A Faction Rally with {B}: the faction converts, or kicks {A:them} out',
+  recast:(A,o)=>{const F=aTeams(A.id).find(t=>(t.type==='faction'||t.type==='trios')&&t.m.includes(o.b));return F?Object.assign({},o,{f:F.id,fn:F.n}):o},
+  pick:A=>{const F=fac(A);if(!F)return null;const B=aBest(F.m.filter(id=>id!==A.id&&aMine(id)).map(aW).filter(w=>w&&!w.inj),w=>w.pop);return B?{f:F.id,fn:F.n,b:B.id}:null},
+  stops:[{n:'The calling',b:'A Backstage Vignette: {A:they} finds religion',s:vig,p:pVig},
+   {n:'Preaching',b:'A Faction Rally with someone in {F}: {A:they} won\'t stop preaching',s:(s,a)=>s.kind==='promo'&&s.type==='rally'&&facM(a).some(id=>sTog(s,a.a,id)),p:a=>[{kind:'promo',type:'rally',a:a.a,b:a.b}]},
+   {n:'Squirming',b:'On the same side as someone in {F}, who\'d rather not be',s:(s,a)=>facM(a).some(id=>sSame(s,a.a,id)),p:a=>[{kind:'match',type:'tag',side:[a.a,a.b],n:2}]}],
+  pay:(s,a)=>s.kind==='promo'&&s.type==='rally'&&facM(a).some(id=>sTog(s,a.a,id)),pplan:a=>[{kind:'promo',type:'rally',a:a.b,b:a.a}],
+  choice:[{k:'convert',n:'🙏 Everyone in {F} converts',d:'They find faith together: chemistry for the whole faction, and {A} leads the flock.'},{k:'out',n:'🚪 Kick {A:them} out',d:'{A} is out of {F}: heat with every member, and the crowd feels for {A:them}.'}],
+  also:(a,s,n)=>{const A=aW(a.a);const t=(S.teams||[]).find(t=>t.id===a.f);if(!a.choice)a.choice=seeded((S.seed||'')+'|faith|'+a.id)()<.5?'convert':'out';if(!t)return;
+   if(a.choice==='convert'){chemUp(t.m,a.q==='great'?2:1);t.m.forEach(id=>{if(id!==a.a&&aW(id))mor(aW(id),3)});n.push(`🙏 Everyone in ${t.n} finds faith. ${A.name} leads the flock now.`)}
+   else{const was=t.m.filter(id=>id!==a.a);t.m=was;S.teams=(S.teams||[]).filter(x=>x.m.length>=2);was.forEach(id=>{if(aW(id))bumpHeat(a.a,id,a.q==='great'?35:25,[],`${t.n} kicked ${A.name} out`)});popx(A,a.q==='great'?3:2);n.push(`🚪 ${A.name} is out of ${t.n}.`)}},
+  win:(a,w,q)=>({mic:1,pop:q==='great'?2:1})},
+ haircut:{lane:'trait',i:'💇',n:'New Haircut',bstep:0,gets:'A new name and look, Mic and a debut pop, and {B} losing {B:their} mind',
+  d:'{A} gets a haircut, and everyone is convinced {A:they}\'s a brand new member of the roster. Everyone except {B}, who goes mad trying to get {A:them} to admit it.',
+  payoff:'A singles match against {B}: the "debut"',
+  pick:A=>A.pop<80&&!A.rbArc?{}:null,
+  stops:[{n:'The new arrival',b:'A Backstage Vignette: a "new" wrestler arrives',s:vig,p:pVig},
+   {n:'"It\'s the same person!"',b:'A promo with {B}, who insists it\'s {A} with a haircut',s:tog,p:pTog('callout',1)},
+   {n:'Losing it',b:'In a match with {B} (either side)',s:withB,p:a=>[{kind:'match',type:'singles',vs:[a.a,a.b]}]}],
+  pay:(s,a)=>sSingles(s)&&sVs(s,a.a,a.b),pplan:a=>[{kind:'match',type:'singles',vs:[a.a,a.b]}],
+  also:(a,s,n)=>{const w=aW(a.a),B=aW(a.b);w.rbArc=AW();w.rbDue=1;bumpHeat(a.a,a.b,a.q==='great'?30:20,[],`${B.name} won't let the haircut go`);mor(B,-4);
+   n.push(`💇 Everyone welcomes the "new arrival". Open ${aPr(w,'their')} profile to name ${aPr(w,'them')}.`);n.push(`🤯 ${B.name} has lost it: "IT'S THE SAME PERSON!"`)},
+  win:(a,w,q)=>({mic:.8,pop:q==='great'?5:2.5})},
+ goodwill:{lane:'mic',star:1,i:'🎁',n:'Too Good to Be True',bstep:0,gets:'Mic and popularity, and either a face turn and a friend in {B}, or a blood feud with {B}',
+  d:'{A} starts handing out presents, hugging opponents and baking apology soufflés. Everyone\'s buying it except {B}. Right before the payoff, you decide whether it was real.',
+  payoff:'Team with {B}: the truth comes out',
+  pick:A=>A.al==='h'?{}:null,
+  stops:[{n:'Presents',b:'A Backstage Vignette: presents for the kids in the crowd',s:vig,p:pVig},
+   {n:'Hugs',b:'A match against someone other than {B} (and a loving hug after)',s:(s,a)=>s.kind==='match'&&s.ids.includes(a.a)&&!s.ids.includes(a.b),p:a=>[{kind:'match',type:'singles',side:[a.a],n:1,oppF:w=>w.id!==a.b}]},
+   {n:'The soufflé',b:'A Sit-Down Interview: an apology soufflé for everyone {A:they}\'s wronged',s:(s,a)=>s.kind==='promo'&&s.ids.includes(a.a)&&!s.ids.includes(a.b),p:a=>[{kind:'promo',type:'interview',a:a.a}]},
+   {n:'Not buying it',b:'A promo with {B}, who\'s suspicious',s:tog,p:pTog('callout',1)}],
+  pay:(s,a)=>sSame(s,a.a,a.b),pplan:a=>[{kind:'match',type:'tag',side:[a.a,a.b],n:2}],
+  choice:[{k:'ruse',n:'🐍 It was all a ruse',d:'{A:They} got close to everyone {B} loves to turn them against {B:them}. {A} stays a heel, and {B} has a blood feud and a locker room that doubts {B:them}.'},
+   {k:'real',n:'🤗 It was real',d:'{A} turns face, and {A:they} and {B} become friends.'}],
+  also:(a,s,n)=>{const A=aW(a.a),B=aW(a.b);if(!a.choice)a.choice=seeded((S.seed||'')+'|gw|'+a.id)()<.5?'ruse':'real';
+   if(a.choice==='ruse'){bumpHeat(a.a,a.b,a.q==='great'?70:50,[],`${A.name}'s kindness was a ruse`);mor(B,-8);(typeof fgFriends==='function'?fgFriends(B):[]).filter(o=>o.id!==a.a).forEach(o=>mor(o,-3));n.push(`🐍 It was all a ruse. ${A.name} turns on ${B.name}, and the people ${B.name} loves aren't so sure about ${aPr(B,'them')} anymore.`)}
+   else{turnTo(A,'f');peace(a.a,a.b,'Became friends');chemUp([a.a,a.b],a.q==='great'?3:2);mor(B,6);n.push(`🤗 It was real. ${A.name} is a face now, and ${B.name} finally believes it.`)}},
+  win:(a,w,q)=>({mic:1,pop:q==='great'?3:1.5})}});
+ function aStopArc(D){const st=D.stops;const at=a=>st[Math.min((a&&a.have)||0,st.length-1)];D.need=st.length;D.builds=st.map(x=>x.b);D.mins=st.map(x=>x.min!=null?x.min:x.s&&x.s.vig?ARC_VIGMIN:ARC_MIN);D.build=st[0].b;
+  if(!D.tell)D.tell=st.map(x=>x.n||'');D.step=(s,a)=>at(a).s(s,a);D.plan=(a,stg)=>stg==='build'?(at(a).p?at(a).p(a):null):D.pplan(a)}
+ ['number','wedding','faith','haircut','goodwill'].forEach(k=>aStopArc(ARCS[k]))}
 for(const k in ARCS)ARCS[k].k=k;window.ARCS=ARCS;window.ARC_STAR=ARC_STAR;window.ARC_SLOTS=ARC_SLOTS;window.ARC_MIN=ARC_MIN;
 /* ---- variants: the big story arcs come in 2–3 versions, and each new game deals one (same name and reward, a different road) ---- */
 const ARC_VARS={
@@ -452,7 +532,7 @@ function aDK(k,v,sl){const D=ARCS[k];if(!D)return D;const V=(ARC_VARS[k]||[])[v!
    and its own payoff {payoff text, pay test, pplan}. Only runs started with it (a.rd) use it, so older runs keep their road. */
 function aRoadOf(D,SL){const R=SL&&SL.road;if(!R)return D;const X=Object.assign({},D);if(R.tell)X.tell=R.tell;if(R.bstep!=null)X.bstep=R.bstep;
  if(R.stops){const st=R.stops;const at=a=>st[Math.min((a&&a.have)||0,st.length-1)];X.need=st.length;delete X.need2;X.ok=R.ok||null;X.offShow=0;
-  X.builds=st.map(x=>x.b);X.mins=st.map(x=>x.min!=null?x.min:ARC_MIN);delete X.min;X.build=st[0].b;if(!R.tell)X.tell=st.map(x=>x.n||'');
+  X.builds=st.map(x=>x.b);X.mins=st.map(x=>x.min!=null?x.min:x.s&&x.s.vig?ARC_VIGMIN:ARC_MIN);delete X.min;X.build=st[0].b;if(!R.tell)X.tell=st.map(x=>x.n||'');
   X.step=(s,a)=>at(a).s(s,a);const P=D.plan;X.plan=(a,stg)=>stg==='build'?(at(a).p?at(a).p(a):null):(R.pplan?R.pplan(a):P(a,stg))}
  else if(R.pplan){const P=D.plan;X.plan=(a,stg)=>stg==='build'?P(a,stg):R.pplan(a)}
  if(R.payoff)X.payoff=R.payoff;if(R.pay)X.pay=R.pay;if(R.d)X.d=R.d;return X}
@@ -542,7 +622,7 @@ Object.assign(ARC_STORY,{
  after:(a,s,n)=>{if(a.bomb)return;const A=aW(a.a);const t=Object.values(S.titles||{}).find(t=>t.kind==='singles'&&t.g===A.g&&t.holders.length&&!t.holders.includes(A.id));if(t&&typeof tpContender==='function'){tpContender(t.id,A.id,null,n);n.push(`🎙️ It got enormously over: ${A.name} is now the number one contender for the ${t.n} title.`)}},txt:{}});
 /* ---- v435: roads that follow the story. A storyline whose arc's stops don't tell its story gets its own stops (and payoff);
    the rest get stop names that match. The reward is always the arc's. ---- */
-{const vig=(s,a)=>s.kind==='promo'&&s.type==='vignette'&&s.a===a.a;const pVig=a=>[{kind:'promo',type:'vignette',a:a.a}];
+{const vig=(s,a)=>s.kind==='promo'&&s.type==='vignette'&&s.a===a.a;vig.vig=1;const pVig=a=>[{kind:'promo',type:'vignette',a:a.a}];
  const pro=(s,a)=>s.kind==='promo'&&s.ids.includes(a.a);const tog=(s,a)=>sTog(s,a.a,a.b);const pTog=(t,bFirst)=>a=>[{kind:'promo',type:t,a:bFirst?a.b:a.a,b:bFirst?a.a:a.b}];
  const hard=s=>!!(STIPS[s.stip]&&STIPS[s.stip].g==='hard');const pTag=a=>[{kind:'match',type:'tag',side:[a.a,a.b],n:2}];
  const withB=(s,a)=>s.kind==='match'&&s.ids.includes(a.a)&&s.ids.includes(a.b);
@@ -624,6 +704,50 @@ Object.assign(ARC_STORY,{
   ['voice','stutter',['First words','Finding a rhythm','Speaking up']],['copycat','copy',['The outfit','The catchphrases','The moves']],['streak','pinfall',['Never again','Still standing','Untouchable','Unpinnable']],
   ['torch','movie',['Casting call','Rehearsals','The handoff']],['hometown','proveit',['Making moves','Calling home','Booking the flight']],['join','love',['Crossing paths','Falling','Welcome to the family']]]
   .forEach(([k,id,t])=>{const x=SL(k,id);if(x.id&&!x.road)x.road={tell:t}})}
+/* ---- v436: Josh's fourth round. Five new arcs bring their own roads; five storylines join older arcs with roads that tell them ---- */
+{const vig=(s,a)=>s.kind==='promo'&&s.type==='vignette'&&s.a===a.a;vig.vig=1;const pVig=a=>[{kind:'promo',type:'vignette',a:a.a}];
+ const tog=(s,a)=>sTog(s,a.a,a.b);const pTog=(t,bFirst)=>a=>[{kind:'promo',type:t,a:bFirst?a.b:a.a,b:bFirst?a.a:a.b}];
+ const hard=s=>!!(STIPS[s.stip]&&STIPS[s.stip].g==='hard');const pTag=a=>[{kind:'match',type:'tag',side:[a.a,a.b],n:2}];
+ const inFac=A=>aTeams(A.id).some(t=>(t.type==='faction'||t.type==='trios')&&t.m.some(id=>id!==A.id&&aMine(id)));
+ const mates=a=>{const s=new Set();aTeams(a.a).filter(t=>t.type==='faction'||t.type==='trios').forEach(t=>t.m.forEach(id=>{if(id!==a.a&&aMine(id))s.add(id)}));return [...s]};
+ Object.assign(ARC_STORY,{
+  number:[{id:'move',head:'{B} has {A}\'s number, and beats {A:them} again and again, until {A} comes up with a new move too dangerous for anyone else to try, one that could maybe, just maybe, get the win at last',txt:{}}],
+  wedding:[{id:'married',head:'{B} and {C}\'s wrestling wedding goes very wrong when {A} reveals {A:they}\'s been married to both of them all along',romance:1,txt:{}}],
+  faith:[{id:'religion',head:'{A} becomes deeply religious, much to the discomfort of the rest of {F}, until the faction must decide: convert, or kick {A:them} out',txt:{}}],
+  haircut:[{id:'haircut',head:'{A} changes {A:their} hair and everyone is convinced {A:they}\'s an entirely new member of the roster, except {B}, who goes mad trying to get everyone to admit it\'s just {A} with a haircut',txt:{}}],
+  goodwill:[{id:'souffle',head:'{A} suddenly starts giving presents to children in the crowd, hugging {A:their} opponents lovingly and baking apology soufflés for everyone {A:they}\'s wronged. Many are getting on board, but {B} is still suspicious something is amiss',txt:{}}]});
+ const add=(k,x)=>(ARC_STORY[k]=ARC_STORY[k]||[]).push(x);
+ add('team',{id:'blood',head:'In the middle of a blood-soaked brawl, {A} and {B} look at each other in awe, realize they have more in common than they ever thought, and form a tag team',
+  road:{d:'Beat each other bloody, see each other for the first time, then fight side by side.',stops:[
+   {n:'The brawl',b:'A hardcore stipulation match against {B} (Street Fight, No DQ, Tables…)',s:(s,a)=>sVs(s,a.a,a.b)&&hard(s),p:a=>[{kind:'match',type:'singles',vs:[a.a,a.b],stip:'street'}]},
+   {n:'The realization',b:'A promo with {B}: more in common than they thought',s:tog,p:pTog('interview')},
+   {n:'Side by side',b:'A tag match together at 2¾★+',min:2.75,s:(s,a)=>sSame(s,a.a,a.b)&&s.sides.every(x=>x.length===2),p:pTag}]},
+  after:(a,s,n)=>{const k=key(a.a,a.b);if(S.heat&&S.heat[k]>0&&typeof endFeud==='function'){endFeud(k,'Became a tag team','🤝');n.push(`🩸🤝 The feud between ${aW(a.a).name} and ${aW(a.b).name} is over. They're partners now.`)}},txt:{}});
+ add('betrayal',{id:'policy',head:'{A} secretly takes out a life insurance policy on {A:their} tag partner {B}, then starts sabotaging their matches to collect',
+  road:{d:'Sign the policy, cost {B} match after match, then finish the job.',stops:[
+   {n:'The policy',b:'A Backstage Vignette: {A:they} signs the papers',s:vig,p:pVig},
+   {n:'Sabotage',b:'A tag loss with {B}',s:(s,a)=>sSame(s,a.a,a.b)&&sLost(s,a.a),p:a=>[{kind:'match',type:'tag',side:[a.a,a.b],n:2,win:1}]},
+   {n:'Accidents happen',b:'Another tag loss with {B}',s:(s,a)=>sSame(s,a.a,a.b)&&sLost(s,a.a),p:a=>[{kind:'match',type:'tag',side:[a.a,a.b],n:2,win:1}]}],bstep:0},
+  after:(a,s,n)=>{const B=aW(a.b);if(!B||B.own!=='p'||isChampW(B))return;B.inj=Math.max(B.inj||0,2);B.angle=AW();n.push(`🚑 ${B.name} is stretchered out and off TV for two weeks. ${aW(a.a).name} files the claim.`)},txt:{}});
+ add('redemption',{id:'balloon',head:'After a big loss, {A} sinks into a deep depression, starts carrying around a single balloon and dyes {A:their} hair red',
+  road:{d:'Sink low with the balloon and the red hair, talk it through, then win {A:their} way back.',stops:[
+   {n:'The balloon',b:'A Backstage Vignette: {A:they} carries a single balloon everywhere',s:vig,p:pVig},
+   {n:'Red',b:'A Backstage Vignette: the red hair',s:vig,p:pVig},
+   {n:'Talking about it',b:'A Sit-Down Interview: {A:they} opens up',s:(s,a)=>s.kind==='promo'&&s.type==='interview'&&s.ids.includes(a.a),p:a=>[{kind:'promo',type:'interview',a:a.a}]}],
+   payoff:'A win in the main event: {A:they} lets the balloon go'},txt:{}});
+ add('voice',{id:'taxidermy',head:'{A} gets deeply into taxidermy and starts cutting ominous promos threatening to stuff {A:their} opponents, and the rest of {A:their} faction is getting uncomfortable',need:A=>inFac(A),
+  road:{d:'Show off the workshop, threaten the roster, unsettle {A:their} own faction, then threaten someone bigger.',stops:[
+   {n:'The workshop',b:'A Backstage Vignette: {A:they} shows off {A:their} latest specimen',s:vig,p:pVig},
+   {n:'Fresh specimens',b:'A promo with someone outside {A:their} faction: a threat to stuff them',s:(s,a)=>s.kind==='promo'&&!!s.b&&s.ids.includes(a.a)&&!s.ids.some(id=>mates(a).includes(id)),
+    p:a=>{const m=mates(a);const o=aBest(aRoster([a.a]).filter(w=>!m.includes(w.id)),w=>w.pop);return o?[{kind:'promo',type:'callout',a:a.a,b:o.id}]:null}},
+   {n:'Uncomfortable',b:'A Faction Rally with someone in {A:their} faction, who\'d rather be anywhere else',s:(s,a)=>s.kind==='promo'&&s.type==='rally'&&mates(a).some(id=>sTog(s,a.a,id)),
+    p:a=>{const m=mates(a).filter(id=>!aW(id).inj);return m.length?[{kind:'promo',type:'rally',a:a.a,b:m[0]}]:null}}],
+   payoff:'A promo with someone 10+ more popular: the ultimate trophy'},txt:{}});
+ add('faceturn',{id:'ghosts',head:'Over one month, {A} is visited by the ghosts of {A:their} past, present and future, and slowly realizes the error of {A:their} ways',
+  road:{d:'Three ghosts, three weeks, then {A:they} wakes up changed and stands with {B}.',bstep:0,stops:[
+   {n:'The ghost of the past',b:'A Backstage Vignette: the Ghost of Wrestling Past',s:vig,p:pVig},
+   {n:'The ghost of the present',b:'A Backstage Vignette: the Ghost of Wrestling Present',s:vig,p:pVig},
+   {n:'The ghost of the future',b:'A Backstage Vignette: the Ghost of Wrestling Yet to Come',s:vig,p:pVig}]},txt:{}})}
 window.ARC_STORY=ARC_STORY;
 /* the storyline a run would get: dealt by the game, the arc and the wrestler, so the offer and the run agree. vk: only with that variant */
 function arcStoryPick(k,id,v,b){const A=aW(id),B=b?aW(b):null;const l=(ARC_STORY[k]||[]).filter(x=>(x.vk==null||x.vk===(v!=null?v:aVarOf(k)))&&(!x.need||(()=>{try{return x.need(A,B)}catch(e){return false}})()));if(!l.length)return null;
@@ -666,9 +790,9 @@ const arcRunningK=k=>arcList().some(a=>a.k===k&&!a.done&&aMine(a.a));
 /* story size: small arcs early and right after the big shows, big ones on the road to the season's climaxes */
 const ARC_SIZE={heelturn:'s',faceturn:'s',voice:'s',mentor:'s',team:'s',under:'s',trial:'s',school:'s',mouth:'s',ironman:'s',comeback:'s',reunion:'s',hometown:'s',redemption:'s',
  gauntlet:'m',betrayal:'m',breakup:'m',stakes:'m',cult:'m',cross:'m',proveit:'m',tap:'m',streak:'m',techshow:'m',shoot:'m',faction:'m',join:'m',rebrand:'m',transform:'m',flyer:'m',hardcore:'m',fightchamp:'m',champvoice:'m',torch:'m',
- groundswell:'m',breakfree:'s',sellout:'b',absolute:'b',earnfight:'m',factionwar:'b',retire:'b',copycat:'b',dream:'b',farewell:'b',lastchase:'b',passtitle:'b',invasion:'b'};
+ groundswell:'m',breakfree:'s',number:'m',haircut:'m',faith:'m',goodwill:'m',wedding:'b',sellout:'b',absolute:'b',earnfight:'m',factionwar:'b',retire:'b',copycat:'b',dream:'b',farewell:'b',lastchase:'b',passtitle:'b',invasion:'b'};
 /* the crowd an arc leans toward: three times as likely for a wrestler of that crowd */
-const ARC_LEAN={techshow:'tech',tap:'tech',school:'tech',hardcore:'blood',transform:'blood',flyer:'flip',shoot:'chaos',cult:'chaos',copycat:'chaos',rebrand:'chaos',hometown:'cas',dream:'cas',under:'cas'};
+const ARC_LEAN={techshow:'tech',tap:'tech',school:'tech',hardcore:'blood',transform:'blood',flyer:'flip',shoot:'chaos',cult:'chaos',copycat:'chaos',rebrand:'chaos',hometown:'cas',dream:'cas',under:'cas',number:'flip',haircut:'chaos',wedding:'chaos',goodwill:'cas'};
 const ARC_LEAN_X=3;
 function arcPhase(){const wk=S.week||1;const cl=Object.keys(PPVS).map(Number).filter(w=>/WrestleMania|All In/.test(PPVS[w]));if(!cl.length)cl.push(Math.max(...Object.keys(PPVS).map(Number)));
  const to=cl.filter(w=>w>=wk).map(w=>w-wk)[0],from=cl.filter(w=>w<wk).map(w=>wk-w).pop();let p;
@@ -698,6 +822,11 @@ const ARC_CAST={
  breakfree:{b:{lab:'The leader tormenting {A:them}',f:(A,w)=>w.al==='h'&&w.pop>=A.pop-5,r:(A,w)=>(aTeams(A.id).some(t=>t.m.includes(w.id))?100:0)+w.pop}},
  absolute:{b:{lab:'Who has to stop {A:them}',f:(A,w)=>w.g===A.g,r:(A,w)=>w.pop+aHeat(A.id,w.id)}},
  earnfight:{b:{lab:'The despised foe',f:(A,w)=>true,r:(A,w)=>aHeat(A.id,w.id)*2+w.pop}},
+ number:{b:{lab:'Who has {A:their} number',f:(A,w)=>w.g===A.g,r:(A,w)=>aHeat(A.id,w.id)*2+w.pop+w.ring/2}},
+ wedding:{b:{lab:'Half of the happy couple',f:(A,w)=>true,r:(A,w)=>aMate(A,w)*3+w.pop/10},c:{lab:'The other half',f:(A,w)=>true,r:(A,w)=>aMate(A,w)*3+w.pop/10}},
+ faith:{b:{lab:'Who in the faction pushes back',f:(A,w)=>aTeams(A.id).some(t=>(t.type==='faction'||t.type==='trios')&&t.m.includes(w.id)&&t.m.filter(id=>id!==A.id&&aMine(id)).length>=2),r:(A,w)=>w.pop}},
+ haircut:{b:{lab:'The rival who isn\'t fooled',f:(A,w)=>true,r:(A,w)=>aHeat(A.id,w.id)*2+w.pop}},
+ goodwill:{b:{lab:'The rival who isn\'t buying it',f:(A,w)=>w.al==='f',r:(A,w)=>aHeat(A.id,w.id)*2+w.pop}},
  factionwar:{b:{lab:'The rival leader',f:(A,w)=>!aTeams(A.id).some(t=>(t.type==='faction'||t.type==='trios')&&t.m.includes(w.id)),r:(A,w)=>w.pop+(w.al!==A.al?20:0)}}};
 window.ARC_CAST=ARC_CAST;
 function arcCastList(A,k,role,ex){const R=(ARC_CAST[k]||{})[role];if(!R)return [];return aRoster([A.id].concat(ex||[])).filter(w=>!arcIn(w.id)&&R.f(A,w)&&(role!=='b'||!!arcStoryPick(k,A.id,null,w.id))).sort((x,y)=>R.r(A,y)-R.r(A,x)).slice(0,6)}
@@ -790,7 +919,7 @@ function arcFinish(a,s,stars,notes){const D=aD(a);const A=aW(a.a);const q=a.st.r
  if(r.fg2&&typeof FG_N!=='undefined')parts.push(`a second crowd: ${FG_N[r.fg2]}`);if(r.fgh&&typeof FG_N!=='undefined')parts.push(`halfway to winning over ${FG_N[r.fgh]}`);
  if(r.grp&&typeof fbHit==='function'&&A.own){try{fbHit('p',[A],Math.round(ARC_FANS*.6))}catch(e){}}
  if(A.own)mor(A,a.q==='great'?10:6);
- {const f=Math.round(ARC_FANS*(r.fans||1)*(a.q==='great'?1.3:1)*(typeof fanGrowF==='function'?fanGrowF(S.fans.p)/100:1)/100)*100;if(f>0){const ws=[A,a.b&&aW(a.b)].filter(w=>w&&w.own==='p');try{if(typeof fbHit==='function'&&ws.length)fbHit('p',ws,f);else S.fans.p+=f}catch(e){S.fans.p+=f}parts.push(`+${fmtFans(f)} fans`)}}
+ {const f=Math.round(ARC_FANS*(r.fans||1)*(a.q==='great'?1.3:1)*(typeof fanGrowF==='function'?fanGrowF(S.fans.p):1)/100)*100;if(f>0){const ws=[A,a.b&&aW(a.b)].filter(w=>w&&w.own==='p');try{if(typeof fbHit==='function'&&ws.length)fbHit('p',ws,f);else S.fans.p+=f}catch(e){S.fans.p+=f}parts.push(`+${fmtFans(f)} fans`)}}
  A.arcEnd=AW();A.arcLast=(A.arcLast||[]).concat([a.k]).slice(-4);S.arcLog=(S.arcLog||[]).concat([{s:S.season,w:AW(),k:a.k,v:a.v||0,a:a.a,b:a.b||null,q:a.q,fit:a.fit||0,sl:a.sl||null}]).slice(-40);S.arcDone=(S.arcDone||0)+1;if(a.q==='great')S.arcGreatN=(S.arcGreatN||0)+1;if(a.q==='great'&&s.ppv&&S.season>=2){S.arcM=S.arcM||{};S.arcM.ppvg=S.arcM.ppvg||AW()}
  notes.push(`📖✅ ${arcLine(a,'pay')} ${arcLine(a,a.q)} ${D.n} ${a.q==='great'?'— a great payoff':'paid off'}${parts.length?': '+parts.join(', '):''}.`);
  news(`📖 ${A.name}'s ${D.n} paid off${a.q==='great'?' in a big way':''}.`)}
