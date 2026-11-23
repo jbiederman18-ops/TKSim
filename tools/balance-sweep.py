@@ -126,6 +126,9 @@ v428 (a different board every game: 22 arcs shuffled across the unlock slots, 11
   100/71/33%, engaged no arcs 75/58/29%, lazy 0% (same picture as v427, within noise). 0 errors.
 v429 (storylines dealt per run, Copycat / Transformation / Faction War, Retirement: Absorption), Normal 20 x 2: default + arcs
   75/30%, no arcs 30/25%, engaged + arcs 100/70%, engaged no arcs 90/65%. 0 errors.
+v430 (hands: each wrestler holds 3 arcs dealt from their crowd, alignment and the calendar's story size; no milestone unlocks,
+  stage gates only; arcs set up their own stories; the player casts partners and rivals; milestone redeals). Normal 24 x 3:
+  default + arcs 46/38/4%, no arcs 21/4/0%, engaged + arcs 79/75/54%, engaged no arcs 88/58/38%, lazy 0%. 0 errors.
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
 
