@@ -14,7 +14,7 @@ const ARC_H=new WeakMap();
 /* ---- the story lines: {A} is the wrestler, {B}/{C} the others in the arc. Leave a key out to use the default. ---- */
 const ARC_TEXT=window.ARC_TEXT||{};window.ARC_TEXT=ARC_TEXT;
 const ARC_DEF_TXT={start:'{A} starts down a new road.',step:'{A}\'s story moves forward.',pay:'{A}\'s story pays off.',great:'The crowd won\'t forget it.',good:'It landed.',fail:'{A} feels let down. The story went nowhere.'};
-function arcLine(a,k){const D=ARCS[a.k];const T=ARC_TEXT[a.k]||{};let t=T[k]!=null?T[k]:D&&D.txt&&D.txt[k]!=null?D.txt[k]:ARC_DEF_TXT[k];if(Array.isArray(t))t=t[(a.have||0)%t.length];
+function arcLine(a,k){const D=aD(a);const T=ARC_TEXT[a.k]||{};let t=T[k]!=null?T[k]:D&&D.txt&&D.txt[k]!=null?D.txt[k]:ARC_DEF_TXT[k];if(Array.isArray(t))t=t[(a.have||0)%t.length];
  const nm=id=>id&&S.w[id]?S.w[id].name:'';return String(t||'').replace(/\{A\}/g,nm(a.a)).replace(/\{B\}/g,nm(a.b)||'their partner').replace(/\{C\}/g,nm(a.c)||'')}
 
 /* ---- small helpers ---- */
@@ -31,7 +31,7 @@ function aRoster(ex){ex=ex||[];return ownList('p').filter(w=>!w.inj&&!ex.include
 function aBest(l,f){let b=null,bv=-1e9;l.forEach(w=>{const v=f(w);if(v>bv){bv=v;b=w}});return b}
 const aChem=(a,b)=>{try{return chemOpp(a,b)}catch(e){return 0}};
 const aMate=(a,b)=>(S.chem&&S.chem[key(a.id,b.id)])||0;
-function aCost(k){const D=ARCS[k];const base=typeof pCost==='function'?pCost():20;return base*(D.lane==='ring'||D.lane==='mic'?2:3)}
+function aCost(k){const D=aDK(k);const base=typeof pCost==='function'?pCost():20;return base*(D.lane==='ring'||D.lane==='mic'?2:3)}
 function aGrpOf(w){const g=typeof fgOf==='function'?fgOf(w):[];return g.filter(x=>x&&x!=='und')}
 function aClash(x,y){return typeof grpPair==='function'&&grpPair(x,y)<0}
 function aGood(x,y){return typeof grpPair==='function'&&grpPair(x,y)>=4&&x!==y}
@@ -39,7 +39,7 @@ function aStipFor(t){const sb=TRAITS[t]&&TRAITS[t].sb;if(!sb)return null;const l
 
 /* ---- a segment as the arcs see it ---- */
 function aSegMatch(m,pos){const sh=typeof curShow==='function'?curShow():{};const win=m.nc?[]:(m.sides[m.winner]||[]);
- return {kind:'match',type:m.type,stip:typeof stipKey==='function'?stipKey(m):(m.stip||'std'),sides:m.sides,ids:m.sides.flat().filter(Boolean),win,fin:typeof finOf==='function'?finOf(m):'clean',pos:pos||'mid',ppv:!!(sh&&sh.ppv),title:m.title||null,nc:!!m.nc,ri:!!(typeof riOn==='function'&&riOn(m))}}
+ return {kind:'match',type:m.type,stip:typeof stipKey==='function'?stipKey(m):(m.stip||'std'),sides:m.sides,ids:m.sides.flat().filter(Boolean),win,fin:typeof finOf==='function'?finOf(m):'clean',pos:pos||'mid',ppv:!!(sh&&sh.ppv),title:m.title||null,nc:!!m.nc,...(()=>{const r=typeof riOn==='function'?riOn(m):null;return {ri:!!r,rix:r?r.X.id:null,rit:r?r.T.id:null,rik:r?r.k:null}})()}}
 function aSegPromo(p){const sh=typeof curShow==='function'?curShow():{};const ids=[p.a,p.b].filter(Boolean);return {kind:'promo',type:p.type,a:p.a,b:p.b||null,sides:[[p.a]].concat(p.b?[[p.b]]:[]),ids,win:[],ppv:!!(sh&&sh.ppv)}}
 const sSide=(s,id)=>s.sides.findIndex(x=>x.includes(id));
 const sSame=(s,a,b)=>s.kind==='match'&&s.ids.includes(a)&&s.ids.includes(b)&&sSide(s,a)===sSide(s,b);
@@ -64,7 +64,7 @@ const ARCS={
   pick:A=>{if(A.al!=='f')return null;const l=aMates(A.id).map(aW).filter(w=>w&&w.al==='f'&&!w.inj);const B=aBest(l.length?l:aRoster([A.id]).filter(w=>w.al==='f'),w=>aMate(A,w)*3+w.pop/10+(l.includes(w)?50:0));return B?{b:B.id}:null},
   step:(s,a)=>sSame(s,a.a,a.b)||sTog(s,a.a,a.b),pay:(s,a)=>sSame(s,a.a,a.b),
   plan:(a,st)=>st==='build'?[{kind:'promo',type:'rally',a:a.a,b:a.b},{kind:'match',type:'tag',side:[a.a,a.b],n:2}]:[{kind:'match',type:'tag',side:[a.a,a.b],n:2}],
-  also:(a,s,n)=>{const A=aW(a.a),B=aW(a.b);if(typeof pTurn==='function')pTurn(A);else{A.al='h';A.turnW=AW()}A.turnW=AW();bumpHeat(a.a,a.b,a.q==='great'?55:35,[],`${A.name} turned on ${B.name}`);mor(B,-6);n.push(`🔄😈 ${A.name} turns on ${B.name}! ${A.name} is a heel now.`)},
+  also:(a,s,n)=>{const A=aW(a.a),B=aW(a.b);if(A.al==='f'){if(typeof pTurn==='function')pTurn(A);else A.al='h'}A.turnW=AW();bumpHeat(a.a,a.b,a.q==='great'?55:35,[],`${A.name} turned on ${B.name}`);mor(B,-6);n.push(`🔄😈 ${A.name} turns on ${B.name}! ${A.name} is a heel now.`)},
   win:(a,w,q)=>({mic:1,pop:q==='great'?3:1.5})},
  faceturn:{lane:'mic',gets:'Mic, popularity and {B} on their side, as a face',star:1,i:'🛡️',n:'Face Turn',need:3,
   d:'Keep them close to a face until they can\'t stand by any more, then stand with them.',build:'In a segment with {B} (any side)',payoff:'On the same side as {B}: the turn',
@@ -72,7 +72,7 @@ const ARCS={
   pick:A=>{if(A.al!=='h')return null;const B=aBest(aRoster([A.id]).filter(w=>w.al==='f'),w=>w.pop+aMate(A,w)*2);return B?{b:B.id}:null},
   step:(s,a)=>s.ids.includes(a.a)&&s.ids.includes(a.b),pay:(s,a)=>sSame(s,a.a,a.b),
   plan:(a,st)=>st==='build'?[{kind:'match',type:'singles',vs:[a.a,a.b]},{kind:'promo',type:'callout',a:a.a,b:a.b}]:[{kind:'match',type:'tag',side:[a.a,a.b],n:2}],
-  also:(a,s,n)=>{const A=aW(a.a),B=aW(a.b);if(typeof pTurn==='function')pTurn(A);else A.al='f';A.turnW=AW();const k=key(a.a,a.b);S.chem[k]=clamp((S.chem[k]||0)+2,-5,6);n.push(`🔄🛡️ ${A.name} stands with ${B.name}! ${A.name} is a face now.`)},
+  also:(a,s,n)=>{const A=aW(a.a),B=aW(a.b);if(A.al==='h'){if(typeof pTurn==='function')pTurn(A);else A.al='f'}A.turnW=AW();const k=key(a.a,a.b);S.chem[k]=clamp((S.chem[k]||0)+2,-5,6);n.push(`🔄🛡️ ${A.name} stands with ${B.name}! ${A.name} is a face now.`)},
   win:(a,w,q)=>({mic:1,pop:q==='great'?3:1.5})},
  betrayal:{lane:'mic',gets:'Mic, popularity and a blood feud with {B}',star:1,i:'🗡️',n:'Betrayal',need:3,
   d:'Two heels on top of the world, until one of them wants it all.',build:'On the same side as {B} (at least one win along the way)',payoff:'Team with {B}, then turn on them',
@@ -333,6 +333,75 @@ const ARCS={
   win:(a,w,q)=>({pop:q==='great'?2:1,fans:1.5})},
 };
 for(const k in ARCS)ARCS[k].k=k;window.ARCS=ARCS;window.ARC_STAR=ARC_STAR;window.ARC_SLOTS=ARC_SLOTS;window.ARC_MIN=ARC_MIN;
+/* ---- variants: the big story arcs come in 2–3 versions, and each new game deals one (same name and reward, a different road) ---- */
+const ARC_VARS={
+ heelturn:[{vn:'Partners'},
+  {vn:'The Rally',payoff:'A promo with {B} that ends in the turn',pay:(s,a)=>sTog(s,a.a,a.b),
+   plan:(a,st)=>st==='build'?[{kind:'promo',type:'rally',a:a.a,b:a.b},{kind:'match',type:'tag',side:[a.a,a.b],n:2}]:[{kind:'promo',type:'attack',a:a.a,b:a.b}]},
+  {vn:'Costly Run-in',payoff:'Run in on {B}\'s match and cost them it',pay:(s,a)=>s.rix===a.a&&s.rit===a.b&&(s.rik==='cost'||s.rik==='attack'),
+   plan:(a,st)=>st==='build'?[{kind:'promo',type:'rally',a:a.a,b:a.b},{kind:'match',type:'tag',side:[a.a,a.b],n:2}]:[{kind:'match',type:'singles',side:[a.b],n:1,win:1,ri:{x:a.a,t:a.b,k:'cost',turn:true}}]}],
+ faceturn:[{vn:'Side by Side'},
+  {vn:'The Save',payoff:'Run in and save {B} from a heel',pay:(s,a)=>s.rix===a.a&&s.rik==='save'&&s.ids.includes(a.b),
+   plan:(a,st)=>st==='build'?[{kind:'match',type:'singles',vs:[a.a,a.b]},{kind:'promo',type:'callout',a:a.a,b:a.b}]:[{kind:'match',type:'singles',side:[a.b],n:1,oppF:w=>w.al==='h'&&w.id!==a.a,ri:{x:a.a,t:'$opp',k:'save',turn:true}}]},
+  {vn:'The Apology',payoff:'A promo with {B}: the apology, and the turn',pay:(s,a)=>sTog(s,a.a,a.b),
+   plan:(a,st)=>st==='build'?[{kind:'match',type:'singles',vs:[a.a,a.b]},{kind:'promo',type:'callout',a:a.a,b:a.b}]:[{kind:'promo',type:'interview',a:a.a,b:a.b}]}],
+ betrayal:[{vn:'After the Bell'},
+  {vn:'Ambush',payoff:'A promo with {B} that ends in an ambush',pay:(s,a)=>sTog(s,a.a,a.b),
+   plan:(a,st)=>st==='build'?[{kind:'match',type:'tag',side:[a.a,a.b],n:2,win:!(a.wins||0)?0:null}]:[{kind:'promo',type:'attack',a:a.a,b:a.b}]},
+  {vn:'Costs Them the Big One',payoff:'Run in on {B}\'s PPV match and cost them it',pay:(s,a)=>s.ppv&&s.rix===a.a&&s.rit===a.b&&s.rik==='cost',
+   plan:(a,st)=>st==='build'?[{kind:'match',type:'tag',side:[a.a,a.b],n:2,win:!(a.wins||0)?0:null}]:[{kind:'match',type:'singles',side:[a.b],n:1,win:1,ppv:1,ri:{x:a.a,t:a.b,k:'cost'}}]}],
+ breakup:[{vn:'Settle It in the Ring'},
+  {vn:'The Split on the Mic',build:'A tag loss together',payoff:'A promo together where they split',
+   step:(s,a)=>sSame(s,a.a,a.b)&&sLost(s,a.a),pay:(s,a)=>sTog(s,a.a,a.b),
+   plan:(a,st)=>st==='pay'?[{kind:'promo',type:'callout',a:a.a,b:a.b}]:[{kind:'match',type:'tag',side:[a.a,a.b],n:2,win:1}]}],
+ mentor:[{vn:'Student vs Teacher'},
+  {vn:'Graduation',payoff:'A tag win with {B} on a PPV',pay:(s,a)=>s.ppv&&sSame(s,a.a,a.b)&&sWon(s,a.a),
+   plan:(a,st)=>st==='build'?[{kind:'match',type:'tag',side:[a.a,a.b],n:2},{kind:'match',type:'singles',vs:[a.a,a.b]}]:[{kind:'match',type:'tag',side:[a.a,a.b],n:2,win:0,ppv:1}]}],
+ gauntlet:[{vn:'One at a Time'},
+  {vn:'Multi-Person Road',build:'A Triple Threat or Four-Way (at least 1 win along the way)',
+   step:(s,a)=>{if(s.kind!=='match'||!s.ids.includes(a.a)||s.sides.length<3)return false;if(sWon(s,a.a))a.wins=(a.wins||0)+1;return true},
+   plan:(a,st)=>{if(st==='build')return [{kind:'match',type:'triple',side:[a.a],ffa:2,win:(a.wins||0)?null:0}];return ARCS.gauntlet.plan(a,st)}}],
+ torch:[{vn:'Clean in the Middle'},
+  {vn:'The Endorsement',payoff:'A promo with {B} on a PPV: the handoff',pay:(s,a)=>s.ppv&&sTog(s,a.a,a.b),
+   plan:(a,st)=>st==='build'?[{kind:'match',type:'tag',side:[a.a,a.b],n:2}]:[{kind:'promo',type:'rally',a:a.a,b:a.b,ppv:1}]}],
+ dream:[{vn:'Face to Face'},
+  {vn:'Dream Team',payoff:'A tag win together on a PPV',pay:(s,a)=>s.ppv&&sSame(s,a.a,a.b)&&sWon(s,a.a),
+   plan:(a,st)=>st==='build'?[{kind:'promo',type:'rally',a:a.a,b:a.b}]:[{kind:'match',type:'tag',side:[a.a,a.b],n:2,win:0,ppv:1}]}],
+ stakes:[{vn:'Pay the Price'},
+  {vn:'Loser Leaves Town',payoff:'A singles match against {B}: the loser leaves for 8 weeks',
+   also:(a,s,n)=>{const wi=s.win.includes(a.a)?a.a:s.win.includes(a.b)?a.b:null;const lo=wi===a.a?a.b:wi===a.b?a.a:null;if(!lo)return;const L=aW(lo);L.inj=Math.max(L.inj||0,8);L.susp=true;mor(L,-8);popx(aW(wi),a.q==='great'?5:3);if(lo===a.a)a.lost=1;n.push(`🚪 ${L.name} lost, and leaves town for 8 weeks.`)}}],
+ cult:[{vn:'The Rally'},
+  {vn:'The Uprising',payoff:'A trios win with two of the followers',
+   pay:(s,a)=>s.kind==='match'&&sWon(s,a.a)&&(a.opp||[]).filter(id=>sSame(s,a.a,id)).length>=2,
+   plan:(a,st)=>{if(st==='build')return ARCS.cult.plan(a,st);const f=(a.opp||[]).filter(id=>aMine(id)&&!aW(id).inj).slice(0,2);return f.length===2?[{kind:'match',type:'trios',side:[a.a].concat(f),n:3,win:0}]:null}}],
+ reunion:[{vn:'Back Together'},
+  {vn:'Back for Gold',payoff:'A tag title match together',pay:(s,a)=>sSame(s,a.a,a.b)&&!!s.title,
+   plan:(a,st)=>{if(st==='build')return ARCS.reunion.plan(a,st);const A=aW(a.a);const t=Object.values(S.titles||{}).find(t=>t.kind!=='singles'&&t.holders.length===2&&t.holders.every(id=>aMine(id)&&!aW(id).inj)&&!t.holders.includes(a.a)&&!t.holders.includes(a.b));
+    return t?[{kind:'match',type:'tag',vs2:[[a.a,a.b],t.holders.slice()],title:t.id}]:null}}]};
+window.ARC_VARS=ARC_VARS;
+function aVarOf(k){const l=ARC_VARS[k];if(!l||l.length<2)return 0;S.arcVar=S.arcVar||{};if(S.arcVar[k]==null)S.arcVar[k]=Math.floor(seeded((S.seed||'')+'|arcv|'+k)()*l.length);return S.arcVar[k]}
+function aDK(k,v){const D=ARCS[k];if(!D)return D;const V=(ARC_VARS[k]||[])[v!=null?v:aVarOf(k)];return V?Object.assign({},D,V):D}
+function aD(a){return aDK(a.k,a.v)}
+window.aDK=aDK;
+const aName=(k,v)=>{const D=aDK(k,v);return D?D.n+(D.vn&&ARC_VARS[k]&&ARC_VARS[k].length>1?` · ${D.vn}`:''):''};
+
+/* ---- the board is dealt fresh every game: a core that's always there, story-locked arcs pinned to their milestone,
+   and everything else shuffled across the open slots ---- */
+const ARC_CORE=['heelturn','faceturn','mentor','team','voice','torch'];
+const ARC_PIN=['betrayal','stakes','faction','join','fightchamp','retire','champvoice','passtitle','farewell','lastchase','invasion'];
+function arcBoard(){if(S.arcBoard&&Object.keys(S.arcBoard).length===Object.keys(ARC_UNLOCK).length)return S.arcBoard;
+ const B={};const fixed=new Set(ARC_CORE.concat(ARC_PIN));const slots=[],free=[];
+ Object.keys(ARC_UNLOCK).forEach(k=>{if(fixed.has(k))B[k]=ARC_UNLOCK[k];else{slots.push(ARC_UNLOCK[k]);free.push(k)}});
+ const r=seeded((S.seed||'')+'|arcboard');for(let i=free.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[free[i],free[j]]=[free[j],free[i]]}
+ free.forEach((k,i)=>B[k]=slots[i]);return (S.arcBoard=B)}
+window.arcBoard=arcBoard;
+
+/* ---- hidden fits: everyone is secretly made for one arc. Run it with them and the payoff is bigger and they get more out of it;
+   it's found for good once it pays off ---- */
+const ARC_FIT=1.5;
+function arcFitOf(w){if(!w)return null;S.arcFit=S.arcFit||{};if(S.arcFit[w.id]===undefined){const l=Object.keys(ARCS).filter(k=>ARCS[k].lane!=='star');S.arcFit[w.id]=l[Math.floor(seeded((S.seed||'')+'|arcfit|'+w.id)()*l.length)]}return S.arcFit[w.id]}
+const arcFitKnown=w=>!!(w&&S.arcFitK&&S.arcFitK[w.id]);
+window.arcFitOf=arcFitOf;
 function trOpenA(w){return typeof trOpen==='function'&&trOpen(w)}
 function isChampW(w){return Object.values(S.titles||{}).some(t=>t.holders.includes(w.id))}
 const ARC_LANES={mic:'🎙️ Mic',ring:'🤼 In-ring',trait:'✨ Trait or popularity',star:'🌟 Story'};
@@ -373,19 +442,19 @@ function arcMs(){S.arcM=S.arcM||{};const M=S.arcM;const set=k=>{M[k]=M[k]||AW()}
   if(typeof venOwns==='function'){try{if(venOwns('p','arena'))set('arena')}catch(e){}}
   try{if(typeof fdSeason==='function'&&fdSeason())set('fd')}catch(e){}}
  return M}
-function arcOpenK(k){const u=ARC_UNLOCK[k];if(!u)return true;if(S.season>=3)return true;if(S.season<u[0])return false;return u[1]==='start'||!!(S.arcM||{})[u[1]]}
+function arcOpenK(k){const u=arcBoard()[k];if(!u)return true;if(S.season>=3)return true;if(S.season<u[0])return false;return u[1]==='start'||!!(S.arcM||{})[u[1]]}
 window.arcOpenK=arcOpenK;
 function arcRan(k){return ((S.arcUsed||{})[S.season]||[]).includes(k)}
 const arcRunningK=k=>arcList().some(a=>a.k===k&&!a.done&&aMine(a.a));
-function arcLockTxt(k){const u=ARC_UNLOCK[k];if(!u)return '';const ms=u[1]==='start'?`Season ${u[0]}`:`${ARC_MS[u[1]]}${u[0]>1?` (season ${u[0]})`:''}`;return S.season<u[0]&&u[1]!=='start'?`Season ${u[0]}: ${ARC_MS[u[1]].replace(/^./,c=>c.toLowerCase())}`:ms}
+function arcLockTxt(k){const u=arcBoard()[k];if(!u)return '';const ms=u[1]==='start'?`Season ${u[0]}`:`${ARC_MS[u[1]]}${u[0]>1?` (season ${u[0]})`:''}`;return S.season<u[0]&&u[1]!=='start'?`Season ${u[0]}: ${ARC_MS[u[1]].replace(/^./,c=>c.toLowerCase())}`:ms}
 /* announce what just opened up */
 function arcUnlockTick(notes){arcMs();S.arcSeen=S.arcSeen||[];const now=Object.keys(ARCS).filter(arcOpenK);const nw=now.filter(k=>!S.arcSeen.includes(k));
- if(nw.length&&S.arcSeen.length){const t=`📖 New arc${nw.length>1?'s':''} on the board: ${nw.map(k=>ARCS[k].i+' '+ARCS[k].n).join(', ')}.`;news(t);if(notes)notes.push(t)}S.arcSeen=now}
+ if(nw.length&&S.arcSeen.length){const t=`📖 New arc${nw.length>1?'s':''} on the board: ${nw.map(k=>aDK(k).i+' '+aDK(k).n).join(', ')}.`;news(t);if(notes)notes.push(t)}S.arcSeen=now}
 window.arcUnlockTick=arcUnlockTick;
 /* the arcs someone qualifies for: unlocked, not run yet this season, not running, and it fits who they are */
 function arcOffer(id){const A=aW(id);if(!A||A.own!=='p')return [];arcMs();const star=aStar(A);
- return Object.keys(ARCS).filter(k=>{const D=ARCS[k];return (star?D.lane==='star'||D.star:D.lane!=='star')&&arcOpenK(k)&&!arcRan(k)&&!arcRunningK(k)})
-  .map(k=>{let p=null;try{p=ARCS[k].pick(A)}catch(e){p=null}return p?Object.assign({k},p):null}).filter(Boolean)}
+ return Object.keys(ARCS).filter(k=>{const D=aDK(k);return (star?D.lane==='star'||D.star:D.lane!=='star')&&arcOpenK(k)&&!arcRan(k)&&!arcRunningK(k)})
+  .map(k=>{let p=null;try{p=aDK(k).pick(A)}catch(e){p=null}return p?Object.assign({k},p):null}).filter(Boolean)}
 window.arcOffer=arcOffer;
 function arcCanStart(id){const A=aW(id);if(!A||A.own!=='p'||A.retd)return 'Not on your roster';if(S.phase!=='season')return 'Arcs start once the season is under way';if(arcOf(id))return `${A.name} is already in an arc`;
  if(arcList().filter(a=>aMine(a.a)).length>=ARC_SLOTS)return `You have ${ARC_SLOTS} arcs running. Finish one first`;return ''}
@@ -393,20 +462,20 @@ window.arcCanStart=arcCanStart;
 function arcWords(o,txt){const nm=id=>id&&aW(id)?aW(id).name:'';const t=(o.t&&TRAITS[o.t])?TRAITS[o.t].n:'';const st=o.stip&&STIPS[o.stip]?STIPS[o.stip].n:'';const g=o.g&&typeof FG_N!=='undefined'?FG_N[o.g]:o.g||'';
  return String(txt||'').replace(/\{S\} match/g,st&&/match$/i.test(st)?st:st+' match').replace(/\{B\}/g,nm(o.b)).replace(/\{C\}/g,nm(o.c)).replace(/\{S\}/g,st).replace(/\{G\}/g,g).replace(/\{F\}/g,o.fn||'the faction').replace(/\{T\}/g,t)}
 function arcGain(D,A,a){if(aStar(A)&&D.lane!=='star')return 'A bigger payoff, popularity and heat'+(D.k==='heelturn'||D.k==='faceturn'||D.k==='betrayal'?' (and the turn)':'');return arcWords(a||{},D.gets||'')}
-function arcStart(id,i){if(typeof mpLocked==='function'&&mpLocked())return;const why=arcCanStart(id);if(why)return toast(why);const l=arcOffer(id);const o=typeof i==='number'?l[i]:l.find(x=>x.k===i);if(!o)return;const D=ARCS[o.k];const c=aCost(o.k);
+function arcStart(id,i){if(typeof mpLocked==='function'&&mpLocked())return;const why=arcCanStart(id);if(why)return toast(why);const l=arcOffer(id);const o=typeof i==='number'?l[i]:l.find(x=>x.k===i);if(!o)return;const D=aDK(o.k);const c=aCost(o.k);
  if(S.money.p<c)return toast(`This arc costs ${money(c)} up front.`);S.money.p-=c;const A=aW(id);A.arcN=(A.arcN||0)+1;
- const need=D.need2?D.need2({a:id,g:o.g}):D.need;const a=Object.assign({id:'a'+Date.now().toString(36)+Math.floor(Math.random()*999),a:id,start:AW(),end:AW()+need+ARC_SLACK,have:0,need,st:[],stage:'build',star:aStar(A)?1:0,cost:c},o);
+ const need=D.need2?D.need2({a:id,g:o.g}):D.need;const a=Object.assign({id:'a'+Date.now().toString(36)+Math.floor(Math.random()*999),a:id,start:AW(),end:AW()+need+ARC_SLACK,have:0,need,st:[],stage:'build',star:aStar(A)?1:0,cost:c,v:aVarOf(o.k),al0:A.al,fit:arcFitOf(A)===o.k?1:0},o);
  arcList().push(a);S.arcUsed=S.arcUsed||{};(S.arcUsed[S.season]=S.arcUsed[S.season]||[]).push(o.k);news(`📖 ${arcLine(a,'start')} (${D.n})`);save();render();arcOpen(id)}
 window.arcStart=arcStart;
-function arcDrop(id){const a=arcOf(id);if(!a)return;if(!confirm(`Drop ${aW(id).name}'s ${ARCS[a.k].n} arc? They'll be let down.`))return;arcFail(a,[]);S.arcs=arcList().filter(x=>x!==a);save();render();arcOpen(id)}
+function arcDrop(id){const a=arcOf(id);if(!a)return;if(!confirm(`Drop ${aW(id).name}'s ${aD(a).n} arc? They'll be let down.`))return;arcFail(a,[]);S.arcs=arcList().filter(x=>x!==a);save();render();arcOpen(id)}
 window.arcDrop=arcDrop;
 
 /* ---- on the night: the payoff bonus before the rating is set, then progress after it airs ---- */
-function arcBonus(a,s){const q=a.st.length?a.st.reduce((x,y)=>x+y,0)/a.st.length:3;let b=ARC_PAY0+clamp((q-3)*ARC_PAYQ,0,ARC_PAYMAX);if(s.ppv)b*=ARC_PAY_PPV;if(a.star||ARCS[a.k].lane==='star')b*=ARC_PAY_STORY;return Math.round(b*100)/100}
-function arcPre(s){const out={seg:s,st:0,pay:[]};arcList().forEach(a=>{if(a.stage!=='pay'||a.done||AW()<(a.payFrom||0)||![a.a,a.b,a.c].some(id=>id&&s.ids.includes(id))||!aMine(a.a))return;const D=ARCS[a.k];let ok=false;try{ok=D.pay(s,a)}catch(e){}
+function arcBonus(a,s){const q=a.st.length?a.st.reduce((x,y)=>x+y,0)/a.st.length:3;let b=ARC_PAY0+clamp((q-3)*ARC_PAYQ,0,ARC_PAYMAX);if(s.ppv)b*=ARC_PAY_PPV;if(a.star||aD(a).lane==='star')b*=ARC_PAY_STORY;if(a.fit)b*=ARC_FIT;return Math.round(b*100)/100}
+function arcPre(s){const out={seg:s,st:0,pay:[]};arcList().forEach(a=>{if(a.stage!=='pay'||a.done||AW()<(a.payFrom||0)||![a.a,a.b,a.c].some(id=>id&&s.ids.includes(id))||!aMine(a.a))return;const D=aD(a);let ok=false;try{ok=D.pay(s,a)}catch(e){}
   if(ok&&!out.pay.length){out.pay.push(a);out.st+=arcBonus(a,s)}});
  /* the crowd is invested in a story that's building: a little more each step, for a segment with the people in it */
- if(!out.pay.length){let bb=0;arcList().forEach(a=>{if(a.done||a.stage!=='build'||!a.have||!aMine(a.a)||!s.ids.includes(a.a)||a.b&&ARCS[a.k].bstep!==0&&!s.ids.includes(a.b))return;bb=Math.max(bb,ARC_BUILD*a.have)});out.st+=bb}
+ if(!out.pay.length){let bb=0;arcList().forEach(a=>{if(a.done||a.stage!=='build'||!a.have||!aMine(a.a)||!s.ids.includes(a.a)||a.b&&aD(a).bstep!==0&&!s.ids.includes(a.b))return;bb=Math.max(bb,ARC_BUILD*a.have)});out.st+=bb}
  s.arcPay=out.pay;return out}
 window.arcMatchPre=function(m,mctx){try{const r=arcPre(aSegMatch(m,mctx&&mctx.pos));const h=arcStoryH(r.seg);if(h)ARC_H.set(m,h);return r}catch(e){console.warn('arcs',e);return null}};
 /* a running arc is a story the casuals follow, like a feud: its heat grows with each step, and the payoff is a big one */
@@ -418,7 +487,7 @@ if(typeof fbCalc==='function'){const _fc=fbCalc;fbCalc=function(b,segs,show,o){c
 window.arcPromoPre=function(p){try{const r=arcPre(aSegPromo(p));const h=arcStoryH(r.seg);if(h)ARC_H.set(p,h);return r}catch(e){console.warn('arcs',e);return null}};
 /* returns true when a payoff landed */
 window.arcPost=function(ap,stars,notes){if(!ap||!ap.seg)return false;const s=ap.seg;let landed=false;
- arcList().slice().forEach(a=>{if(a.done||!aMine(a.a))return;const D=ARCS[a.k];
+ arcList().slice().forEach(a=>{if(a.done||!aMine(a.a))return;const D=aD(a);
   if((s.arcPay||[]).includes(a)){a.st.push(stars);landed=true;arcFinish(a,s,stars,notes);return}
   if(a.stage!=='build'||a.lastStep===AW()||!s.ids.includes(a.a)&&!(a.b&&s.ids.includes(a.b)))return;
   let hit=false;try{hit=D.step(s,a)&&stars>=(D.min||ARC_MIN)}catch(e){}
@@ -426,13 +495,13 @@ window.arcPost=function(ap,stars,notes){if(!ap||!ap.seg)return false;const s=ap.
    notes.push(`📖 ${aW(a.a).name} · ${D.n}: ${lab?lab+' — ':''}step ${a.have} of ${a.need}.${a.have>=a.need&&(!D.ok||D.ok(a))?' The payoff is next.':''}`);
    if(a.have>=a.need&&(!D.ok||D.ok(a))){a.stage='pay';a.payFrom=AW()+1}}});
  S.arcs=arcList().filter(a=>!a.done);return landed};
-function arcFinish(a,s,stars,notes){const D=ARCS[a.k];const A=aW(a.a);const q=a.st.reduce((x,y)=>x+y,0)/a.st.length;a.q=q>=ARC_GREAT?'great':'good';a.done=1;
+function arcFinish(a,s,stars,notes){const D=aD(a);const A=aW(a.a);const q=a.st.reduce((x,y)=>x+y,0)/a.st.length;a.q=q>=ARC_GREAT?'great':'good';a.done=1;
  try{if(D.also)D.also(a,s,notes)}catch(e){console.warn('arc payoff',e)}
  let r={};try{r=D.win(a,A,a.q)||{}}catch(e){console.warn('arc reward',e)}
- const story=a.star||D.lane==='star';const parts=[];
- if(!story&&r.ring&&A.own){const g=trainGain(A.ring)*(a.q==='great'?ARC_G2:ARC_G1)*r.ring;const v0=A.ring;addR(A,g);if(A.ring>v0)parts.push(`In-ring +${Math.round((A.ring-v0)*10)/10}`)}
- if(!story&&r.mic&&A.own){const g=trainGain(A.mic,1)*(a.q==='great'?ARC_G2:ARC_G1)*r.mic;const v0=A.mic;addM(A,g);if(A.mic>v0)parts.push(`Mic +${Math.round((A.mic-v0)*10)/10}`)}
- const pop=(r.pop||0)+(story?(a.q==='great'?2:1):0);if(pop&&A.own){popx(A,pop);parts.push(`popularity +${pop}`)}
+ const story=a.star||D.lane==='star';const parts=[];const FX=a.fit?ARC_FIT:1;if(a.fit){S.arcFitK=S.arcFitK||{};const was=S.arcFitK[a.a];S.arcFitK[a.a]=1;notes.push(`✨ ${was?'':'Found it: '}${A.name} was made for this. ${aName(a.k,a.v)} hits harder with them.`)}
+ if(!story&&r.ring&&A.own){const g=trainGain(A.ring)*(a.q==='great'?ARC_G2:ARC_G1)*r.ring*FX;const v0=A.ring;addR(A,g);if(A.ring>v0)parts.push(`In-ring +${Math.round((A.ring-v0)*10)/10}`)}
+ if(!story&&r.mic&&A.own){const g=trainGain(A.mic,1)*(a.q==='great'?ARC_G2:ARC_G1)*r.mic*FX;const v0=A.mic;addM(A,g);if(A.mic>v0)parts.push(`Mic +${Math.round((A.mic-v0)*10)/10}`)}
+ const pop=Math.round(((r.pop||0)+(story?(a.q==='great'?2:1):0))*FX*10)/10;if(pop&&A.own){popx(A,pop);parts.push(`popularity +${pop}`)}
  if(r.bpop&&a.b&&aW(a.b)){popx(aW(a.b),r.bpop);parts.push(`${aW(a.b).name} popularity +${r.bpop}`)}
  if(r.chem&&a.b){const k=key(a.a,a.b);S.chem[k]=clamp((S.chem[k]||0)+r.chem,-5,6)}
  if(r.trait&&TRAITS[r.trait])parts.push(`${TRAITS[r.trait].i} ${TRAITS[r.trait].n}`);if(r.trq&&TRAITS[r.trq])parts.push(`${TRAITS[r.trq].i} ${TRAITS[r.trq].n} is first in line for their next trait slot`);
@@ -440,20 +509,20 @@ function arcFinish(a,s,stars,notes){const D=ARCS[a.k];const A=aW(a.a);const q=a.
  if(r.grp&&typeof fbHit==='function'&&A.own){try{fbHit('p',[A],Math.round(ARC_FANS*.6))}catch(e){}}
  if(A.own)mor(A,a.q==='great'?10:6);
  {const f=Math.round(ARC_FANS*(r.fans||1)*(a.q==='great'?1.3:1)*(typeof fanGrowF==='function'?fanGrowF(S.fans.p)/100:1)/100)*100;if(f>0){const ws=[A,a.b&&aW(a.b)].filter(w=>w&&w.own==='p');try{if(typeof fbHit==='function'&&ws.length)fbHit('p',ws,f);else S.fans.p+=f}catch(e){S.fans.p+=f}parts.push(`+${fmtFans(f)} fans`)}}
- S.arcLog=(S.arcLog||[]).concat([{w:AW(),k:a.k,a:a.a,b:a.b||null,q:a.q}]).slice(-40);S.arcDone=(S.arcDone||0)+1;if(a.q==='great')S.arcGreatN=(S.arcGreatN||0)+1;if(a.q==='great'&&s.ppv&&S.season>=2){S.arcM=S.arcM||{};S.arcM.ppvg=S.arcM.ppvg||AW()}
+ S.arcLog=(S.arcLog||[]).concat([{w:AW(),k:a.k,v:a.v||0,a:a.a,b:a.b||null,q:a.q,fit:a.fit||0}]).slice(-40);S.arcDone=(S.arcDone||0)+1;if(a.q==='great')S.arcGreatN=(S.arcGreatN||0)+1;if(a.q==='great'&&s.ppv&&S.season>=2){S.arcM=S.arcM||{};S.arcM.ppvg=S.arcM.ppvg||AW()}
  notes.push(`📖✅ ${arcLine(a,'pay')} ${arcLine(a,a.q)} ${D.n} ${a.q==='great'?'— a great payoff':'paid off'}${parts.length?': '+parts.join(', '):''}.`);
  news(`📖 ${A.name}'s ${D.n} paid off${a.q==='great'?' in a big way':''}.`)}
-function arcFail(a,notes){S.arcFailN=(S.arcFailN||0)+1;S.arcFailK=S.arcFailK||{};const fk=a.k+':'+a.stage+':'+a.have;S.arcFailK[fk]=(S.arcFailK[fk]||0)+1;const A=aW(a.a);if(A&&A.own==='p'){mor(A,-(a.star?ARC_FAIL+2:ARC_FAIL));if(a.b&&aW(a.b)&&aW(a.b).own==='p')mor(aW(a.b),-4)}a.done=1;const t=`📖❌ ${arcLine(a,'fail')} (${ARCS[a.k].n})`;news(t);(notes||[]).push(t);S.arcNews=(S.arcNews||[]).concat([{w:AW(),t}]).slice(-8)}
+function arcFail(a,notes){S.arcFailN=(S.arcFailN||0)+1;S.arcFailK=S.arcFailK||{};const fk=a.k+':'+a.stage+':'+a.have;S.arcFailK[fk]=(S.arcFailK[fk]||0)+1;const A=aW(a.a);if(A&&A.own==='p'){mor(A,-(a.star?ARC_FAIL+2:ARC_FAIL));if(a.b&&aW(a.b)&&aW(a.b).own==='p')mor(aW(a.b),-4)}a.done=1;const t=`📖❌ ${arcLine(a,'fail')} (${aD(a).n})`;news(t);(notes||[]).push(t);S.arcNews=(S.arcNews||[]).concat([{w:AW(),t}]).slice(-8)}
 /* the deadline, and arcs whose people are gone: checked when a show is about to air */
 function arcTick(){if(!S||!Array.isArray(S.arcs))return;S.arcs=S.arcs.filter(a=>{if(a.done)return false;const A=aW(a.a);if(!A||A.own!=='p')return false;
-  if(a.gone||[a.b,a.c].some(id=>id&&(!aW(id)||aW(id).own!=='p'))){a.done=1;news(`📖 ${A.name}'s ${ARCS[a.k].n} arc ends — someone in it is gone.`);return false}
+  if(a.gone||[a.b,a.c].some(id=>id&&(!aW(id)||aW(id).own!=='p'))){a.done=1;news(`📖 ${A.name}'s ${aD(a).n} arc ends — someone in it is gone.`);return false}
   if(AW()>a.end){arcFail(a,[]);return false}return true})}
 window.arcTick=arcTick;
 if(typeof airPair==='function'){const _ap=airPair;airPair=function(){let th={};try{if(typeof bothSides==='function')bothSides(arcTick);else arcTick();S.injSeen=S.injSeen||{};ownList('p').forEach(w=>{if(w.inj)S.injSeen[w.id]=AW()});Object.values(S.titles||{}).forEach(t=>th[t.id]=t.holders.join('|'))}catch(e){console.warn('arcs',e)}
  const r=_ap.apply(this,arguments);try{Object.values(S.titles||{}).forEach(t=>{if(th[t.id]!=null&&t.holders.length&&t.holders.join('|')!==th[t.id]&&t.holders.every(aMine)){S.arcM=S.arcM||{};S.arcM.newch=S.arcM.newch||AW()}});arcUnlockTick(r&&r.notes)}catch(e){console.warn('arcs',e)}return r}}
 
 /* ---- what to book: a slot filled straight from the arc (the Book it button and the sweep bot) ---- */
-function arcPlan(a){const D=ARCS[a.k];if(!D||!D.plan||a.done)return null;try{return D.plan(a,a.stage)}catch(e){return null}}
+function arcPlan(a){const D=aD(a);if(!D||!D.plan||a.done)return null;try{return D.plan(a,a.stage)}catch(e){return null}}
 window.arcPlan=arcPlan;
 function arcUsed(c){const u=new Set();c.forEach(sl=>{if(!sl||!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(id=>u.add(id));if(sl.k==='promo'){u.add(sl.d.a);if(sl.d.b)u.add(sl.d.b)}});return u}
 function arcFit(id){const w=aW(id);return !!(w&&!w.inj&&w.own==='p'&&(typeof sta!=='function'||typeof FAT_RISK==='undefined'||sta(w)>=100-FAT_RISK))}
@@ -467,39 +536,44 @@ function arcFill(a,c,opt){opt=opt||{};const l=arcPlan(a);if(!l)return -1;const u
   if(p.kind==='promo'){const i=c.findIndex(sl=>sl&&sl.k==='promo'&&!sl.d);if(i<0)continue;if([p.a,p.b].some(id=>id&&(used.has(id)||!aW(id)||aW(id).inj||aW(id).own!=='p')))continue;c[i].d={type:PT[p.type]?p.type:'callout',a:p.a,b:p.b||null,played:false};return i}
   const ms=c.map((sl,i)=>sl&&sl.k==='match'&&!sl.opt?i:-1).filter(i=>i>=0);const main=ms[ms.length-1];const open=ms.filter(i=>!c[i].d);if(!open.length)continue;
   let i=p.main?(open.includes(main)?main:-1):(open.filter(x=>x!==main)[0]!=null?open.filter(x=>x!==main)[0]:open[0]);if(i<0)continue;
-  let sides;const core=p.vs?p.vs.slice():p.side.slice();if(core.some(id=>used.has(id)||!arcFit(id)))continue;
-  if(p.vs)sides=[[p.vs[0]],[p.vs[1]]];
-  else{const n=p.n||1;const g=aW(core[0]).g;const pool=aRoster(core).filter(w=>!used.has(w.id)&&arcFit(w.id)&&!core.includes(w.id)&&w.g===g&&!arcIn(w.id)&&!(c.some(sl=>sl&&sl.d&&sl.k==='match'&&sl.d.sides.flat().includes(w.id)))).sort((x,y)=>y.pop-x.pop);
+  let sides;const core=p.vs2?p.vs2.flat():p.vs?p.vs.slice():p.side.slice();if(core.some(id=>used.has(id)||!arcFit(id)))continue;
+  if(p.ri&&(used.has(p.ri.x)||!arcFit(p.ri.x)||core.includes(p.ri.x)))continue;
+  if(p.vs2)sides=p.vs2.map(x=>x.slice());
+  else if(p.vs)sides=[[p.vs[0]],[p.vs[1]]];
+  else if(p.ffa){const g=aW(core[0]).g;const ex=core.concat(p.ri?[p.ri.x]:[]);const pool=aRoster(ex).filter(w=>!used.has(w.id)&&arcFit(w.id)&&w.g===g&&!arcIn(w.id)&&!(c.some(sl=>sl&&sl.d&&sl.k==='match'&&sl.d.sides.flat().includes(w.id)))).sort((x,y)=>y.pop-x.pop);
+   const o=(p.oppF?pool.filter(p.oppF):pool).slice(0,p.ffa);if(o.length<p.ffa)continue;sides=[core].concat(o.map(w=>[w.id]))}
+  else{const n=p.n||1;const g=aW(core[0]).g;const pool=aRoster(core.concat(p.ri?[p.ri.x]:[])).filter(w=>!used.has(w.id)&&arcFit(w.id)&&!core.includes(w.id)&&w.g===g&&!arcIn(w.id)&&!(c.some(sl=>sl&&sl.d&&sl.k==='match'&&sl.d.sides.flat().includes(w.id)))).sort((x,y)=>y.pop-x.pop);
    const opp=aPickOpp(core,(p.oppF?pool.filter(p.oppF):pool),n,p,sh);if(!opp)continue;sides=[core,opp]}
-  const type=sides[0].length===1&&sides[1].length===1?'singles':sides[0].length===2?'tag':sides[0].length===3?'trios':p.type;
+  const type=sides.length===3?'triple':sides.length===4?'four':sides[0].length===1&&sides[1].length===1?'singles':sides[0].length===2?'tag':sides[0].length===3?'trios':p.type;
   let title=p.title||'';if(title&&!(typeof eligibleTitles!=='function'||eligibleTitles({type,sides}).includes(title)))title='';
   const win=p.win!=null?p.win:(()=>{let bi=0,bv=-1e9;sides.forEach((sd,k)=>{const v=sd.reduce((x,id)=>x+aW(id).pop,0)/sd.length;if(v>bv){bv=v;bi=k}});return bi})();
   c[i].d={type,stip:p.stip||'std',sides,winner:win,title};if(p.fin)c[i].d.fin=p.fin;
+  if(p.ri){const t=p.ri.t==='$opp'?(sides[1]||[])[0]:p.ri.t;if(t)c[i].d.ri={k:p.ri.k,x:p.ri.x,t,turn:!!p.ri.turn}}
   try{if(typeof finWhy==='function'&&c[i].d.fin&&finWhy(c[i].d,c[i].d.fin))delete c[i].d.fin}catch(e){}return i}
  return -1}
 /* an arc whose step needs two segments the same night (planAll) books them all, or none */
-const _af1=arcFill;function arcFillAll(a,c,opt){const D=ARCS[a.k];if(!D.planAll||a.stage!=='build')return _af1(a,c,opt);const l=arcPlan(a);if(!l)return -1;const keep=c.map(sl=>sl&&sl.d);let first=-1;
+const _af1=arcFill;function arcFillAll(a,c,opt){const D=aD(a);if(!D.planAll||a.stage!=='build')return _af1(a,c,opt);const l=arcPlan(a);if(!l)return -1;const keep=c.map(sl=>sl&&sl.d);let first=-1;
  for(let k=0;k<l.length;k++){const one=Object.assign({},a);const sv=D.plan;let r;try{D.plan=()=>[l[k]];r=_af1(a,c,opt)}finally{D.plan=sv}if(r<0){c.forEach((sl,i)=>{if(sl)sl.d=keep[i]});return -1}if(first<0)first=r}return first}
 window.arcFill=arcFillAll;
-window.arcBook=function(id){if(typeof mpLocked==='function'&&mpLocked())return;const a=arcOf(id);if(!a)return;const i=arcFillAll(a,S.card.p);if(i<0)return toast('No open slot fits it — clear a slot, or book it yourself from the steps.');try{closeModal()}catch(e){}save();render();toast(`📖 Booked: ${ARCS[a.k].n} for ${aW(id).name}. Change anything you like.`)};
+window.arcBook=function(id){if(typeof mpLocked==='function'&&mpLocked())return;const a=arcOf(id);if(!a)return;const i=arcFillAll(a,S.card.p);if(i<0)return toast('No open slot fits it — clear a slot, or book it yourself from the steps.');try{closeModal()}catch(e){}save();render();toast(`📖 Booked: ${aD(a).n} for ${aW(id).name}. Change anything you like.`)};
 
 /* ---- the progress display ---- */
-function arcDots(a){const D=ARCS[a.k];let h='';for(let i=0;i<a.need;i++)h+=`<i class="ad ${i<a.have?'on':''}">${i<a.have?'●':'○'}</i>`;return h+`<i class="ad pay ${a.stage==='pay'?'on':''}">★</i>`}
-function arcNow(a){const D=ARCS[a.k];const o=a;if(a.stage==='pay')return AW()<(a.payFrom||0)?'Payoff next week':`Payoff: ${arcWords(o,D.payoff)}`;
+function arcDots(a){const D=aD(a);let h='';for(let i=0;i<a.need;i++)h+=`<i class="ad ${i<a.have?'on':''}">${i<a.have?'●':'○'}</i>`;return h+`<i class="ad pay ${a.stage==='pay'?'on':''}">★</i>`}
+function arcNow(a){const D=aD(a);const o=a;if(a.stage==='pay')return AW()<(a.payFrom||0)?'Payoff next week':`Payoff: ${arcWords(o,D.payoff)}`;
  const lab=D.tell&&D.tell[Math.min(a.have,D.tell.length-1)];return `${lab?lab+' · ':''}Next: ${arcWords(o,D.build)}${D.min&&!/★/.test(D.build)?` (${D.min}★+)`:''}`}
 function arcLeft(a){const l=a.end-AW()+1;return l<=1?'<b class="bad">Last week</b>':`${l} weeks left`}
-function arcRowHtml(a,tap){const D=ARCS[a.k];const A=aW(a.a);return `<div class="arcrow"${tap?` onclick="showW('${a.a}')"`:''}><div class="row sb"><span><b>${D.i} ${esc(D.n)}</b>${tap?` · ${esc(A.name)}`:''}</span><span class="arcdots">${arcDots(a)}</span></div><div class="muted tiny">${esc(arcNow(a))} · ${arcLeft(a)}</div></div>`}
+function arcRowHtml(a,tap){const D=aD(a);const A=aW(a.a);return `<div class="arcrow"${tap?` onclick="showW('${a.a}')"`:''}><div class="row sb"><span><b>${D.i} ${esc(aName(a.k,a.v))}</b>${a.fit&&arcFitKnown(A)?' ✨':''}${tap?` · ${esc(A.name)}`:''}</span><span class="arcdots">${arcDots(a)}</span></div><div class="muted tiny">${esc(arcNow(a))} · ${arcLeft(a)}</div></div>`}
 window.arcRowHtml=arcRowHtml;
 /* the profile's Arc row */
 window.arcProfile=function(w){if(!w||w.own!=='p')return '';const a=arcOf(w.id);
- if(a)return `<div class="pf-row pf-arc tap" onclick="arcOpen('${w.id}')"><span class="pf-l">📖 Arc</span><div class="pf-s">${arcRowHtml(a)}</div></div>`;
- const part=arcList().find(x=>x.b===w.id||x.c===w.id);if(part)return `<div class="pf-row"><span class="pf-l">📖 Arc</span><span class="pf-v">In ${esc(aW(part.a).name)}'s ${esc(ARCS[part.k].n)}</span></div>`;
- const why=arcCanStart(w.id);const n=why?0:arcOffer(w.id).length;const rb=w.rbDue?`<div class="pf-row"><span class="pf-l">🎭 New character</span><span class="pf-v"><button class="pf-tg" onclick="arcRebrand('${w.id}')">Name it</button></span></div>`:'';
- return rb+`<div class="pf-row"><span class="pf-l">📖 Arc</span><span class="pf-v">${why?`<small>${esc(why)}</small>`:n?`<button class="pf-tg" onclick="arcOpen('${w.id}')">Start an arc · ${n}</button>`:'<small>No open arc fits them yet</small>'}</span></div>`};
+ if(a)return (arcFitKnown(w)&&ARCS[arcFitOf(w)]?`<div class="pf-row"><span class="pf-l">✨ Made for</span><span class="pf-v">${ARCS[arcFitOf(w)].i} ${esc(ARCS[arcFitOf(w)].n)}</span></div>`:'')+`<div class="pf-row pf-arc tap" onclick="arcOpen('${w.id}')"><span class="pf-l">📖 Arc</span><div class="pf-s">${arcRowHtml(a)}</div></div>`;
+ const part=arcList().find(x=>x.b===w.id||x.c===w.id);if(part)return `<div class="pf-row"><span class="pf-l">📖 Arc</span><span class="pf-v">In ${esc(aW(part.a).name)}'s ${esc(aD(part).n)}</span></div>`;
+ const why=arcCanStart(w.id);const n=why?0:arcOffer(w.id).length;const fk=arcFitKnown(w)?arcFitOf(w):null;const fitRow=fk&&ARCS[fk]?`<div class="pf-row"><span class="pf-l">✨ Made for</span><span class="pf-v">${ARCS[fk].i} ${esc(ARCS[fk].n)}</span></div>`:'';const rb=w.rbDue?`<div class="pf-row"><span class="pf-l">🎭 New character</span><span class="pf-v"><button class="pf-tg" onclick="arcRebrand('${w.id}')">Name it</button></span></div>`:'';
+ return rb+fitRow+`<div class="pf-row"><span class="pf-l">📖 Arc</span><span class="pf-v">${why?`<small>${esc(why)}</small>`:n?`<button class="pf-tg" onclick="arcOpen('${w.id}')">Start an arc · ${n}</button>`:'<small>No open arc fits them yet</small>'}</span></div>`};
 window.arcRebrand=function(id){const w=aW(id);if(!w||!w.rbDue)return;if(typeof rbAsk==='function'&&rbAsk(w,{i:'🎭',head:`${w.name}'s new character`,verb:'🎭 Debut it',where:'A brand new character.',go:()=>{delete w.rbDue},ok:()=>true}))return;delete w.rbDue;save();render()};
 function arcOpen(id){const A=aW(id);if(!A)return;const a=arcOf(id);
- if(a){const D=ARCS[a.k];const pl=arcPlan(a);const can=pl&&S.card&&S.card.p&&S.phase==='season';
-  return openModal(`<div class="h mhd">${D.i} ${esc(A.name)} · ${esc(D.n)}</div><p class="muted" style="margin-top:0">${esc(arcWords(a,D.d))}</p>
+ if(a){const D=aD(a);const pl=arcPlan(a);const can=pl&&S.card&&S.card.p&&S.phase==='season';
+  return openModal(`<div class="h mhd">${D.i} ${esc(A.name)} · ${esc(aName(a.k,a.v))}</div><p class="muted" style="margin-top:0">${esc(arcWords(a,D.d))}</p>
   <div class="arcbig">${arcDots(a)}</div>
   <div class="brow"><b>${a.stage==='pay'?'The payoff':'Build'}</b><br><span class="muted tiny">${esc(a.stage==='pay'?arcWords(a,D.payoff):arcWords(a,D.build))}${a.stage==='build'&&!/★/.test(D.build)?` · ${D.min||ARC_MIN}★ or better`:''}</span></div>
   ${a.stage==='build'?`<div class="brow"><b>Then the payoff</b><br><span class="muted tiny">${esc(arcWords(a,D.payoff))}</span></div>`:''}
@@ -509,23 +583,23 @@ function arcOpen(id){const A=aW(id);if(!A)return;const a=arcOf(id);
   <button class="btn ghost" onclick="arcDrop('${id}')">Drop the arc</button><button class="btn sec" onclick="showW('${id}')">Back</button>`)}
  const why=arcCanStart(id);if(why){toast(why);return}
  const o=arcOffer(id);if(!o.length)return openModal(`<div class="h mhd">📖 ${esc(A.name)}</div><p class="muted">None of the arcs open on your board fits ${esc(A.name)} right now. More unlock as you go, and every arc comes back next season.</p><button class="btn sec" onclick="showW('${id}')">Back</button>`);
- const lanes=aStar(A)?['star']:['mic','ring','trait'];const by=l=>o.filter(x=>aStar(A)||ARCS[x.k].lane===l);
+ const lanes=aStar(A)?['star']:['mic','ring','trait'];const by=l=>o.filter(x=>aStar(A)||aDK(x.k).lane===l);
  openModal(`<div class="h mhd">📖 An arc for ${esc(A.name)}</div><p class="muted" style="margin-top:0">${aStar(A)?`A superstar's arc is all story: a bigger payoff, popularity and heat.`:'Every arc on your board that fits them.'} Each arc runs once a season, so pick where it counts. Pay now, book the build, then land the payoff.</p>
- ${lanes.map(l=>{const L=by(l);if(!L.length)return '';return `<div class="h small" style="margin:10px 0 4px">${ARC_LANES[l]}</div>`+L.map(x=>{const D=ARCS[x.k];const c=aCost(x.k);return `<button class="choice arcch" ${S.money.p<c?'disabled':''} onclick="arcStart('${id}','${x.k}')"><div><div>${D.i} <b>${esc(D.n)}</b> <span class="muted tiny">· ${money(c)}</span></div>
+ ${lanes.map(l=>{const L=by(l);if(!L.length)return '';return `<div class="h small" style="margin:10px 0 4px">${ARC_LANES[l]}</div>`+L.map(x=>{const D=aDK(x.k);const c=aCost(x.k);return `<button class="choice arcch" ${S.money.p<c?'disabled':''} onclick="arcStart('${id}','${x.k}')"><div><div>${D.i} <b>${esc(aName(x.k))}</b>${arcFitKnown(A)&&arcFitOf(A)===x.k?' <span class="gold tiny">✨ Made for this</span>':''} <span class="muted tiny">· ${money(c)}</span></div>
   <div class="muted tiny">${esc(arcWords(x,D.d))}<br><b>Build, ${D.need2?D.need2({a:id,g:x.g}):D.need} times:</b> ${esc(arcWords(x,D.build))}<br><b>Payoff:</b> ${esc(arcWords(x,D.payoff))}<br><b>They get:</b> ${esc(arcGain(D,A,x))}</div></div></button>`}).join('')}).join('')}
  <button class="btn sec" onclick="showW('${id}')">Not now</button>`)}
 window.arcOpen=arcOpen;
 /* the Office card */
 window.arcOfficeCard=function(){const l=arcList().filter(a=>aMine(a.a));const last=(S.arcNews||[]).filter(n=>AW()-n.w<=1);arcMs();
- const ks=Object.keys(ARCS);const open=ks.filter(k=>arcOpenK(k)&&!arcRan(k)&&!arcRunningK(k)),used=ks.filter(k=>arcRan(k)&&!arcRunningK(k)),lock=ks.filter(k=>!arcOpenK(k)).sort((x,y)=>(ARC_UNLOCK[x]||[9])[0]-(ARC_UNLOCK[y]||[9])[0]);
- const li=(k,t)=>`<div class="arcb"><span>${ARCS[k].i} ${esc(ARCS[k].n)}${ARCS[k].lane==='star'?' <small>· superstars</small>':''}</span>${t?`<small>${esc(t)}</small>`:''}</div>`;
+ const ks=Object.keys(ARCS);const open=ks.filter(k=>arcOpenK(k)&&!arcRan(k)&&!arcRunningK(k)),used=ks.filter(k=>arcRan(k)&&!arcRunningK(k)),lock=ks.filter(k=>!arcOpenK(k)).sort((x,y)=>(arcBoard()[x]||[9])[0]-(arcBoard()[y]||[9])[0]);
+ const li=(k,t)=>`<div class="arcb"><span>${aDK(k).i} ${esc(aDK(k).n)}${aDK(k).lane==='star'?' <small>· superstars</small>':''}</span>${t?`<small>${esc(t)}</small>`:''}</div>`;
  return `<div class="card"><div class="h small">📖 Arcs (${l.length}/${ARC_SLOTS})</div>${l.map(a=>arcRowHtml(a,1)).join('')||'<div class="muted">Open a wrestler on your roster and tap Start an arc.</div>'}${last.map(n=>`<div class="muted tiny">${esc(n.t)}</div>`).join('')}
  <details class="arcbd"><summary>The arc board · ${open.length} open · ${used.length} run this season · ${lock.length} locked</summary>
- ${open.length?`<div class="arcbh">Open</div>${open.map(k=>li(k,ARC_LANES[ARCS[k].lane])).join('')}`:''}${used.length?`<div class="arcbh">Run this season · back next season</div>${used.map(k=>li(k,'')).join('')}`:''}${lock.length?`<div class="arcbh">Locked</div>${lock.map(k=>li(k,arcLockTxt(k))).join('')}`:''}</details></div>`};
+ ${open.length?`<div class="arcbh">Open</div>${open.map(k=>li(k,ARC_LANES[aDK(k).lane])).join('')}`:''}${used.length?`<div class="arcbh">Run this season · back next season</div>${used.map(k=>li(k,'')).join('')}`:''}${lock.length?`<div class="arcbh">Locked</div>${lock.map(k=>li(k,arcLockTxt(k))).join('')}`:''}</details></div>`};
 
 /* ---- the Book screen checklist: each arc's next step ---- */
 if(typeof attnItems==='function'){const _ai=attnItems;attnItems=function(){const out=_ai.apply(this,arguments);try{if(!S||S.phase!=='season')return out;const c=(S.card&&S.card.p)||[];
- arcList().filter(a=>aMine(a.a)&&!a.done).forEach(a=>{const D=ARCS[a.k];const A=aW(a.a);if(A.inj)return;const pay=a.stage==='pay'&&AW()>=(a.payFrom||0);if(a.stage==='pay'&&!pay)return;
+ arcList().filter(a=>aMine(a.a)&&!a.done).forEach(a=>{const D=aD(a);const A=aW(a.a);if(A.inj)return;const pay=a.stage==='pay'&&AW()>=(a.payFrom||0);if(a.stage==='pay'&&!pay)return;
   const left=a.end-AW()+1;const ids=[a.a,a.b,a.c].filter(Boolean);
   const on=c.some(sl=>sl&&sl.d&&(sl.k==='match'?sl.d.sides.flat().includes(a.a):sl.k==='promo'&&(sl.d.a===a.a||sl.d.b===a.a)));
   out.push({id:'arc'+a.id,g:left<=1?'must':'chance',i:D.i,h:`${A.name} · ${D.n}: ${pay?'the payoff':`step ${a.have+1} of ${a.need}`}`,d:`${arcWords(a,pay?D.payoff:D.build)}. ${left<=1?'Last week — miss it and they\'re let down.':`${left} weeks left.`}`,

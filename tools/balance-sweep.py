@@ -121,6 +121,9 @@ v427 (the arc board: 39 arcs, each runs once a season across the roster; 10 open
   10 more in season 2 plus 10 by season-2 milestones / Actual Arena, all open in season 3; the profile lists every arc that fits).
   Normal 24 games x 3 seasons, seasons won S1/S2/S3: v425 default 67/50/12%, default + arcs 62/50/25%, default no arcs 42/17/0%,
   engaged + arcs 83/75/38%, engaged no arcs 79/62/33%, lazy 0%. The bot starts ~13 arcs a season and never runs the board dry.
+v428 (a different board every game: 22 arcs shuffled across the unlock slots, 11 story arcs dealt one of 2-3 variants, a hidden
+  "made for" arc per wrestler at x1.5 payoff and rewards), Normal 24 x 3: default + arcs 50/29/8%, no arcs 29/4/8%, engaged + arcs
+  100/71/33%, engaged no arcs 75/58/29%, lazy 0% (same picture as v427, within noise). 0 errors.
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
 
