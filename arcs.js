@@ -1143,9 +1143,9 @@ function arcPotGroups(ready){const G={};ready.forEach(({w,o})=>o.forEach(x=>{(G[
   const gOf=L=>L.every(e=>e.w.g==='M')?'M':L.every(e=>e.w.g==='F')?'F':null;
   const so=sid=>(ARC_STORY[k]||[]).find(y=>y.id===sid);
   const head=sid=>{const x=so(sid);return x?x.head:D.d};
-  const hook=()=>{const x=SG.length===1&&so(SG[0].sid);return x&&x.hook||D.hook||(SG.length===1?head(SG[0].sid):D.d)};
+  const hook=()=>{const hs=[...new Set(SG.map(g=>so(g.sid)&&so(g.sid).hook).filter(Boolean))];return hs.length===SG.length?hs.join(' · '):D.hook||(SG.length===1?head(SG[0].sid):D.d)};
   if(heads&&D.lane!==lane){lane=D.lane;h+=`<div class="asec apsec">${ARC_LANES[lane]}</div>`}
-  h+=`<div class="apg${open?' on':''}"><button class="apgh" onclick="arcPotK('${k}')"><div class="apgm"><div class="apgn">${D.i} ${esc(aName(k))}${SG.length>1?` <em>${SG.length} stories</em>`:''}</div>
+  h+=`<div class="apg${open?' on':''}"><button class="apgh" onclick="arcPotK('${k}')"><div class="apgm"><div class="apgn">${D.i} ${esc(aName(k))}</div>
    <div class="aphk">${esc(aGen(hook(),gOf(l)))}</div></div><div class="apgr"><small>${aPrice(l.map(e=>e.c))}</small>${aFaces(l,3)}<i>${open?'▴':'▾'}</i></div></button>`;
   if(open)h+=`<div class="apgl">${SG.map(g=>{const DS=aDK(k,null,g.sid);const n=aStopN(DS,g.l[0].w.id,g.l[0].x);
     return `<div class="apst">${esc(aGen(head(g.sid),gOf(g.l)))}</div><div class="apgt">${arcTrack(n,0,'build')}<small>${n} stop${n>1?'s':''}, then the payoff · tap a wrestler</small></div>
@@ -1174,7 +1174,7 @@ function arcRecs(ready){const wk=AW();const cash=()=>(S.money&&S.money.p)||0;con
 function arcRecHtml(ready){if(aFull())return `<div class="arec1">⭐ This week's pitches · <b>both arc slots in use</b></div>`;
  const l=arcRecs(ready);if(!l.length)return '';
  return `<div class="arec"><div class="arech">⭐ This week's pitches</div>${l.map(e=>{const w=aW(e.id);const x=arcOffer(e.id).find(y=>y.k===e.k);const D=aDK(e.k);
-  return `<button class="arr" onclick="arcCast('${e.id}','${e.k}')">${typeof face==='function'?face(w):''}<span class="arrt"><b>${esc(w.name)}</b><span>${D.i} ${esc(aName(e.k))}</span><span class="arrw"><em>${esc(e.t)}</em>${e.ppv?`<small>Pays off at ${esc(e.ppv)}</small>`:''}</span></span><span class="arrp">${money(aCost(e.k,e.id,x))}<i>›</i></span></button>`}).join('')}</div>`}
+  return `<button class="arr" onclick="arcCast('${e.id}','${e.k}')">${typeof face==='function'?face(w):''}<span class="arrt"><b>${esc(w.name)}</b><span>${D.i} ${esc(aName(e.k))}${(()=>{const so=(ARC_STORY[e.k]||[]).find(y=>y.id===arcStoryPick(e.k,e.id,null,x&&x.b));return so&&so.hook?` · <i>${esc(so.hook)}</i>`:''})()}</span><span class="arrw"><em>${esc(e.t)}</em>${e.ppv?`<small>Pays off at ${esc(e.ppv)}</small>`:''}</span></span><span class="arrp">${money(aCost(e.k,e.id,x))}<i>›</i></span></button>`}).join('')}</div>`}
 /* the Office keeps a pointer; the arcs live on their own tab */
 window.arcOfficeCard=function(){return ''};
 {const st=document.createElement('style');st.textContent=`
@@ -1249,7 +1249,8 @@ window.arcOfficeCard=function(){return ''};
 .apgh{display:flex;align-items:center;gap:10px;padding:9px 8px 9px 12px}
 .apgm{flex:1;min-width:0}.apgn{font:800 italic 15px/1.15 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--gold2)}
 .apgn em{font-style:normal;font-weight:700;font-size:11px;letter-spacing:.06em;color:rgba(255,255,255,.5);margin-left:4px}
-.aphk{margin-top:3px;font:500 13.5px/1.3 'Barlow',sans-serif;color:rgba(255,255,255,.72);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.aphk{margin-top:3px;font:700 15px/1.25 'Barlow',sans-serif;color:#fff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.arrt>span i{font-style:normal;color:#fff;font-weight:700}
 .apgr{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:5px}.apgr small{font:700 12px/1 'Barlow',sans-serif;color:rgba(255,255,255,.55);white-space:nowrap}.apgr>i{display:none}
 .apfc .fav{width:26px;height:32px;margin:0 0 0 3px}.apfc .fav:first-child{margin-left:0}
 .apfc{display:flex;align-items:center}.apmore{font:800 11px 'Barlow',sans-serif;color:rgba(255,255,255,.55);margin-left:4px}
@@ -1284,4 +1285,15 @@ window.arcMigrate=arcMigrate;
 /* v440: Roster's 📖 Arcs sort, the wrestler-first way in: who has stories ready, and a tap opens them */
 window.rosterArcN=function(w){if(!w||w.own!=='p'||w.retd||arcIn(w.id))return arcOf(w.id)?-1:-2;return arcCanStart(w.id)&&!aFull()?0:arcOffer(w.id).length};
 window.rosterArcTxt=function(w){const a=arcOf(w.id);if(a)return `📖 In ${aD(a).n}`;if(arcIn(w.id))return '📖 In a story';const n=rosterArcN(w);return n>0?`📖 ${n} arc${n>1?'s':''} ready`:'No arc fits yet'};
+/* v441: a few-word hook per storyline, for the Potential rows and the pitches (the full headline shows once a row is open) */
+const ARC_HOOK={cult:'Starting a cult',bastard:'Secret love child',fraud:'Fallen hero',father:'Finding father',jealous:'Green with envy',toxic:'Toxic ex',
+ 'redemption/shoot':'Trial and rehab',home:'Burned-down home',absorb:'Aura absorbed',dream:'All a dream',shadow:'The shadow realm',mountain:'Wise old man',
+ love:'Forbidden love',copy:'Copycat',bulk:'Bulking season',holy:'Holy war',social:'Trending',abuse:'Breaking point',corp:'Corporate sellout',power:'Power corrupts',
+ run:'Run the gauntlet',watch:'Watch obsession',finish:'Finish the story',dog:'The dog incident',crimes:'Crime spree',custody:'Custody battle',hell:'Submission from hell',
+ box:'The mystery box',tape:'Watching the tape',pinfall:'Never pinned again',violence:'Learning violence',stutter:'King of Speech',cultjoin:'Joining a cult',
+ twins:'Long-lost twin',smile:'Lost smile',dirk:'Death of Dirk','hometown/proveit':'Hometown pressure',manifest:'Sudden powers',movie:'Movie star',nobody:'Open challenges',
+ beautiful:'All styles beautiful',statusquo:'Style snob',mainstream:'Mainstream technical','hardcore/blood':'Taste of blood','team/blood':'Bloodbath brothers',high:'Jumps really high',
+ catering:'Meat ban',demons:'Past demons',hangup:'One last squash',worthy:'A worthy fight',brigade:'Tribal brigade',fourth:'Burying you',move:'The forbidden move',
+ married:'Double marriage',religion:'Found religion',haircut:'New haircut',souffle:'Apology soufflés',policy:'Life insurance',balloon:'The red balloon',taxidermy:'Taxidermy',ghosts:'Three ghosts'};
+for(const k in ARC_STORY)(ARC_STORY[k]||[]).forEach(x=>{if(!x.hook)x.hook=ARC_HOOK[k+'/'+x.id]||ARC_HOOK[x.id]||''});
 })();
