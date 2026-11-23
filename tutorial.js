@@ -23,7 +23,7 @@
      Appending is how stops drift into patch notes.
    • tools/check-tutorial.py fails on history/design phrasing (TUT_BANNED). If it flags a line, rewrite it, don't
      dodge the pattern. */
-const TUT_REV=82;
+const TUT_REV=83;
 const TUT_KEY='tksim_tut';
 const TUT_WORDS=190;  /* longest a stop may be (checked by tools/check-tutorial.py) */
 const TUT_MISS=[];
@@ -88,8 +88,8 @@ const TUT_STEPS=[
  b:()=>`<b>Suggest the rest</b> fills your empty slots with the best matches on paper and leaves what you've booked alone. It doesn't look at promises, feuds, stamina or morale, so check its picks before you go live.`},
 {id:'s.buzz',track:'season',since:54,tab:'book',sel:()=>document.querySelector('main .tcs.act')||document.querySelector('main .tcs')||document.querySelector('main .rord.pips .slot .mpip')||document.querySelector('main .slot .tellrow')||document.querySelector('main .slot:not(.done)'),sys:['ratings','chemistry','risk','card','card table'],t:'Book a match',
  b:()=>`<b>Tap an empty slot</b> and your roster slides up, best fit first. Tap a wrestler, then their opponent; the stat that matters for the slot lights up on each card. The sheet's tabs add a stipulation, title, finish or run-in, and <b>👑 Win</b> picks the winner.<br><br>Your <b>last match is the main event</b> and counts the most: put your biggest names and hottest feud there.`},
-{id:'s.feuds',track:'season',since:82,tab:'book',sel:()=>tutCard(/your feuds/i),sys:['feuds','heat','repetition','arcs','stories'],t:'Stories are the engine',
- b:()=>`Put the same two people in matches and promos week after week and heat builds, fastest with face vs heel and a title on the line. A hot feud makes its matches better and hooks the casuals. Once it's hot (35+), pay it off with a clean finish: at a PPV for the biggest swing, or on TV with <b>Make it the blow-off</b>. Don't run the exact same match two weeks running.<br><br>Give your wrestlers <b>arcs</b> too: open someone on your roster and tap <b>Their hand</b>. Book its steps, land the payoff before the deadline, and the payoff rates higher and changes them: a turn, a new skill, a team, a jump in popularity. ${tv('ARC_SLOTS',()=>ARC_SLOTS,2)} can run at once. Each wrestler holds three that fit them, and each arc runs once a season.`},
+{id:'s.feuds',track:'season',since:83,tab:'book',sel:()=>tutCard(/your feuds/i),sys:['feuds','heat','repetition','arcs','stories'],t:'Stories are the engine',
+ b:()=>`Put the same two people in matches and promos week after week and heat builds, fastest with face vs heel and a title on the line. A hot feud makes its matches better and hooks the casuals. Once it's hot (35+), pay it off with a clean finish: at a PPV for the biggest swing, or on TV with <b>Make it the blow-off</b>. Don't run the exact same match two weeks running.<br><br>Give your wrestlers <b>arcs</b> too: assign a story on the <b>Arcs</b> tab. Book every stop, land the payoff before the deadline, and the payoff rates higher and changes them: a turn, a new skill, a team, a jump in popularity. ${tv('ARC_SLOTS',()=>ARC_SLOTS,2)} can run at once. Each wrestler gets up to three that fit them, and each arc runs once a season.`},
 {id:'s.tpic',track:'season',since:20,tab:'titles',sel:'main .card.belt',sys:['titles','prestige'],t:'Crown your champions',
  b:()=>`Your titles start vacant. <b>Put one on the line in any match</b> and the winner is your first champion.<br><br>Defenses build the champion and the belt's prestige; changing hands too fast drains it. Men's and women's titles stay in their division, so intergender matches are non-title.`},
 {id:'s.live',track:'season',since:44,tab:'book',sel:'main .btn.live',sys:['live','calls','production','fan groups'],t:'Go live',

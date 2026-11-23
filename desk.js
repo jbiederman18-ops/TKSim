@@ -6,7 +6,7 @@
                 the right side so the card table stays in view (tap another slot on the table to switch to it).
      Mouse    — right-click a wrestler card for their details (the mouse version of holding it); hover feedback on buttons, chips, cards and rows; pointer cursors on everything clickable; a mouse wheel
                 scrolls sideways rows (cards, shapes, tabs) without holding Shift.
-     Keyboard — 1–5 switch tabs (Home, Book, Roster, Titles, Office) and 0 opens Settings; A–E answer a lettered
+     Keyboard — 1–6 switch tabs (Home, Book, Roster, Arcs, Titles, Office) and 0 opens Settings; A–E answer a lettered
                 choice (office line, showdowns, live calls); Esc closes the open sheet the
                 same way a click on the dimmed backdrop does; Tab reaches every clickable panel, and Enter or Space
                 presses it. (Already in the game: Space/Enter/→ advance showdowns and the star reveal, Esc closes the
@@ -86,7 +86,7 @@ const st=document.createElement('style');st.id='deskcss';st.textContent=css;docu
 /* ---------- keyboard ---------- */
 const typing=t=>!!(t&&(/^(input|textarea|select)$/i.test(t.tagName)||t.isContentEditable));
 const modalOpen=()=>{const m=document.getElementById('modal');return !!(m&&!m.classList.contains('hidden'))};
-const TABS=['home','book','roster','titles','office'];
+const TABS=['home','book','roster','arcs','titles','office'];
 document.addEventListener('keydown',e=>{
  if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||typeof TV!=='undefined'&&TV)return;
  if(document.getElementById('tut'))return;/* the tutorial has its own keys */
@@ -102,7 +102,7 @@ document.addEventListener('keydown',e=>{
  if(/^[a-e]$/i.test(e.key)){const box=document.getElementById('sdbox')||(modalOpen()&&document.getElementById('modal'));if(!box)return;
   const L=e.key.toUpperCase();const c=[...box.querySelectorAll('.choice')].find(x=>{const k=x.querySelector('.key');return k&&k.textContent.trim()===L&&x.offsetParent!==null});
   if(c&&!c.disabled&&!c.classList.contains('dis')){e.preventDefault();e.stopImmediatePropagation();c.click()}return}
- if(/^[0-5]$/.test(e.key)){
+ if(/^[0-6]$/.test(e.key)){
   if(!S||!(S.phase==='season'||S.phase==='over')||modalOpen()||(typeof LIVE!=='undefined'&&LIVE)||document.getElementById('srv'))return;
   const t=e.key==='0'?'menu':TABS[+e.key-1];if(typeof tab!=='undefined'&&tab===t)return;
   e.preventDefault();go(t)}},true);

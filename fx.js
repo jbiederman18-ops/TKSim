@@ -188,7 +188,7 @@ if(typeof briefItems==='function'){const b0=briefItems;window.briefItems=briefIt
    v225: retired. The live header's face-off plates (index.html, lvPlates) carry each side's name and its title / team / record line. */
 
 /* ---------------- 7. smoother navigation ---------------- */
-const ORDER=['home','book','roster','titles','office','menu'];let DIR=null,NAVL=null;
+const ORDER=['home','book','roster','arcs','titles','office','menu'];let DIR=null,NAVL=null;
 if(typeof go==='function'){const g0=go;go=function(t){const a=ORDER.indexOf(tab),b=ORDER.indexOf(t);DIR=a>=0&&b>=0&&a!==b?(b>a?'fxr':'fxl'):null;return g0.apply(this,arguments)}}
 function navFx(){const n=document.querySelector('nav.tabs');if(!n)return;const on=n.querySelector('button.on');if(!on){NAVL=null;return}n.classList.add('fxn');let i=n.querySelector('.nvi');if(!i){i=document.createElement('i');i.className='nvi';n.appendChild(i)}
  const L=on.offsetLeft+on.offsetWidth*.1,W=on.offsetWidth*.8;
