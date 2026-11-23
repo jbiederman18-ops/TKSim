@@ -1122,7 +1122,14 @@ window.arcsView=function(){const l=arcList().filter(a=>aMine(a.a)&&!a.done);cons
 let ARC_POTK=null;window.arcPotK=function(k){ARC_POTK=ARC_POTK===k?null:k;render()};
 const AGP={they:['he','she','your wrestler','he or she'],them:['him','her','them'],their:['his','her','their'],theirs:['his','hers','theirs'],themself:['himself','herself','themself'],themselves:['himself','herself','themselves'],"they're":["he's","she's","they're"],"they've":["he's","she's","they've"],"they'll":["he'll","she'll","they'll"],"they'd":["he'd","she'd","they'd"]};
 /* a line with no one cast yet: the wrestler is "your wrestler" (he / she when the whole group is one or the other, they otherwise), the rest are someone */
-function aGen(t,g){const x=g==='M'?0:g==='F'?1:2;let r=String(t||'').replace(/\{([ABC]):([A-Za-z']+)\}/g,(m,k,wd)=>{const lw=wd.toLowerCase();const f=AGP[lw];const v=f?(k==='A'?f[x]:f[f.length>3?3:2]):lw;return wd[0]!==lw[0]?v[0].toUpperCase()+v.slice(1):v})
+/* "they" for a mixed group: verbs after it agree ("until they finally smile", "they've been", "they're back") */
+const AG_MOD=/^(can|cannot|can't|must|will|won't|would|could|should|might|may|did|didn't)$/i,AG_PP=/^(been|wronged|got|gotten|done|had|seen|lost|won|become|gone)$/i;
+function agVerb(v){if(AG_MOD.test(v))return v;const m={has:'have',is:'are',was:'were',does:'do',doesn:'don'}[v.toLowerCase()];if(m)return m;
+ if(/[^aeiou]ies$/.test(v))return v.slice(0,-3)+'y';if(/(ss|sh|ch|x|z|o)es$/.test(v))return v.slice(0,-2);if(/[^su]s$/.test(v))return v.slice(0,-1);return v}
+
+function aGen(t,g){const x=g==='M'?0:g==='F'?1:2;let r=String(t||'');
+ if(x===2)r=r.replace(/\{A:(T|t)hey\}'s (\w+)/g,(m,c,w)=>`${c}hey${AG_PP.test(w)?"'ve":"'re"} ${w}`).replace(/\{A:(T|t)hey\} ((?:\w+ly |not )?)(\w+)/g,(m,c,adv,v)=>`${c}hey ${adv}${agVerb(v)}`);
+ r=r.replace(/\{([ABC]):([A-Za-z']+)\}/g,(m,k,wd)=>{const lw=wd.toLowerCase();const f=AGP[lw];const v=f?(k==='A'?(x===2&&lw==='they'?'they':f[x]):f[2]==='your wrestler'?'they':f[2]):lw;return wd[0]!==lw[0]?v[0].toUpperCase()+v.slice(1):v})
   .replace(/\{A\}/g,'your wrestler').replace(/\{B\}/g,'someone').replace(/\{C\}/g,'someone else').replace(/\{F2\}/g,'another faction').replace(/\{F\}/g,'a faction').replace(/\{G\}/g,'another crowd').replace(/\{T\}/g,'a new trait').replace(/\{S\} match/g,'one kind of match').replace(/\{S\}/g,'one kind of');
  return r.charAt(0).toUpperCase()+r.slice(1)}
 /* v440: Potential, cleaner. Compact rows (name, a two-line hook, price, a few faces); tap one open for its stories, road and wrestlers */
@@ -1142,7 +1149,7 @@ function arcPotGroups(ready){const G={};ready.forEach(({w,o})=>o.forEach(x=>{(G[
   const SG=[];l.forEach(e=>{let g=SG.find(y=>y.sid===e.sid);if(!g)SG.push(g={sid:e.sid,l:[]});g.l.push(e)});
   const gOf=L=>L.every(e=>e.w.g==='M')?'M':L.every(e=>e.w.g==='F')?'F':null;
   const so=sid=>(ARC_STORY[k]||[]).find(y=>y.id===sid);
-  const head=sid=>{const x=so(sid);return x?x.head:D.d};
+  const head=sid=>{const x=so(sid);return x?x.gen||x.head:D.d};
   const hook=()=>{const hs=[...new Set(SG.map(g=>so(g.sid)&&so(g.sid).hook).filter(Boolean))];return hs.length===SG.length?hs.join(' · '):D.hook||(SG.length===1?head(SG[0].sid):D.d)};
   if(heads&&D.lane!==lane){lane=D.lane;h+=`<div class="asec apsec">${ARC_LANES[lane]}</div>`}
   h+=`<div class="apg${open?' on':''}"><button class="apgh" onclick="arcPotK('${k}')"><div class="apgm"><div class="apgn">${D.i} ${esc(aName(k))}</div>
@@ -1296,4 +1303,26 @@ const ARC_HOOK={cult:'Starting a cult',bastard:'Secret love child',fraud:'Fallen
  catering:'Meat ban',demons:'Past demons',hangup:'One last squash',worthy:'A worthy fight',brigade:'Tribal brigade',fourth:'Burying you',move:'The forbidden move',
  married:'Double marriage',religion:'Found religion',haircut:'New haircut',souffle:'Apology soufflés',policy:'Life insurance',balloon:'The red balloon',taxidermy:'Taxidermy',ghosts:'Three ghosts'};
 for(const k in ARC_STORY)(ARC_STORY[k]||[]).forEach(x=>{if(!x.hook)x.hook=ARC_HOOK[k+'/'+x.id]||ARC_HOOK[x.id]||''});
+/* v442: each storyline's headline before anyone is cast: the other people are their role (a rival, their tag partner), not "someone" */
+const ARC_GEN={bastard:'{A} is revealed to be the illegitimate child of a veteran on the roster',fraud:"{A}'s childhood hero is turning out to be a fraud",
+ violence:'{A}, a sweet, lovable babyface, learns the ways of unsettling violence from a veteran to beat a foe far more dangerous',
+ jealous:"{A} was {A:their} partner's biggest supporter, until the jealousy took over",policy:'{A} secretly takes out a life insurance policy on {A:their} tag partner, then starts sabotaging their matches to collect',
+ 'reunion/toxic':'{A} leaves {A:their} terrible, toxic partner to be with an old flame',home:"{A} burns down a rival's childhood home after the rival threatened {A:their} baby",
+ dog:"A rival cooked {A}'s dog and fed it to {A:them}. Now {A} will make the rival feel what a dog feels like",crimes:'{A} commits crimes in the ring week after week and evades arrest, until a rival agrees to an unsanctioned Lights Out match to stop {A:them}',
+ custody:"A bombshell: {A} is Dominik Mysterio's biological father, and must wrestle a rival for custody",absorb:"{A} absorbs a rival into {A:their} body and inherits the rival's aura",
+ 'join/love':'{A} falls in love with a member of a rival faction',cultjoin:'{A} joins a cult on the roster',copy:'{A} starts dressing exactly like a top star: the catchphrases, the moves, everything',
+ holy:'A holy war breaks out between two factions',abuse:'{A} is fed up after weeks of torment from a heel leader, and finally turns on the leader in one glorious, cathartic moment',
+ power:'{A} is corrupted by the power of the title and will do anything to keep it, until a challenger stops {A:them} at any cost',
+ run:"To give a despised foe the beating they truly deserve, {A} must first run the foe's gauntlet",
+ twins:'{A} discovers a fellow wrestler is {A:their} fraternal twin, separated at birth. They come together and lock it in with a tag title win',
+ 'team/blood':'In the middle of a blood-soaked brawl, {A} and {A:their} opponent look at each other in awe, realize they have more in common than they ever thought, and form a tag team',
+ movie:'{A} finally scored a starring role in next year\'s direct-to-streaming "All Things Through Christ", and hand-picks a rising star to take {A:their} spot',
+ catering:"{A} and a fellow superstar promise the crowd the best match they've ever seen, until one finds out the other got meat banned from catering",
+ worthy:"Holder of more world titles than {A:they} can count, {A} can't find peace until a rising star finally gives {A:them} a fight worth having",
+ move:"A rival has {A}'s number, and beats {A:them} again and again, until {A} comes up with a new move too dangerous for anyone else to try, one that could maybe, just maybe, get the win at last",
+ married:"A couple's wrestling wedding goes very wrong when {A} reveals {A:they}'s been married to both of them all along",
+ religion:'{A} becomes deeply religious, much to the discomfort of the rest of {A:their} faction, until the faction must decide: convert, or kick {A:them} out',
+ haircut:"{A} changes {A:their} hair and everyone is convinced {A:they}'s an entirely new member of the roster, except one rival, who goes mad trying to get everyone to admit it's just {A} with a haircut",
+ souffle:"{A} suddenly starts giving presents to children in the crowd, hugging {A:their} opponents lovingly and baking apology soufflés for everyone {A:they}'s wronged. Many are getting on board, but one rival is still suspicious something is amiss"};
+for(const k in ARC_STORY)(ARC_STORY[k]||[]).forEach(x=>{const g=ARC_GEN[k+'/'+x.id]||ARC_GEN[x.id];if(g&&!x.gen)x.gen=g});
 })();
