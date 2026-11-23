@@ -124,6 +124,8 @@ v427 (the arc board: 39 arcs, each runs once a season across the roster; 10 open
 v428 (a different board every game: 22 arcs shuffled across the unlock slots, 11 story arcs dealt one of 2-3 variants, a hidden
   "made for" arc per wrestler at x1.5 payoff and rewards), Normal 24 x 3: default + arcs 50/29/8%, no arcs 29/4/8%, engaged + arcs
   100/71/33%, engaged no arcs 75/58/29%, lazy 0% (same picture as v427, within noise). 0 errors.
+v429 (storylines dealt per run, Copycat / Transformation / Faction War, Retirement: Absorption), Normal 20 x 2: default + arcs
+  75/30%, no arcs 30/25%, engaged + arcs 100/70%, engaged no arcs 90/65%. 0 errors.
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
 
