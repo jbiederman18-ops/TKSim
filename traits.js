@@ -10,10 +10,10 @@
      roster the wrestler comes to the office door with three options (own group / another group / all-rounder), dealt fresh
      each game. The rival and free agents pick for themselves. A coach can open the next slot early.
    w.st stays as hidden build data (durability, portraits, flavor scenes, undiscovered wrestlers' lean); it no longer shows. */
-const TR_TIERS=[70,85],TR_SLOTS=3,TR_COACH_GAP=12,TR_SBMAX=8,TR_SBK=.6;
+const TR_TIERS=[70,85],TR_SLOTS=3,TR_HOLD=4,TR_DIP=3,TR_COACH_GAP=12,TR_SBMAX=8,TR_SBK=.6;
 const GRP_M={cas:{cas:3,tech:3,blood:-4,flip:4,chaos:5},tech:{tech:6,blood:4,flip:6,chaos:-4},blood:{blood:6,flip:4,chaos:6},flip:{flip:5,chaos:4},chaos:{chaos:2}};
 const GRP_UND=2;
-window.TR_TIERS=TR_TIERS;
+window.TR_TIERS=TR_TIERS;window.TR_HOLD=TR_HOLD;
 function grpPair(x,y){if(x==='und'||y==='und'||!x||!y)return GRP_UND;const a=GRP_M[x]&&GRP_M[x][y];return a!=null?a:(GRP_M[y]&&GRP_M[y][x]!=null?GRP_M[y][x]:GRP_UND)}
 /* the group a wrestler leans toward when they don't have one yet (undiscovered: their lean so far, else how they work) */
 function trLean(w){const g=fgOf(w)[0];if(g&&g!=='und')return g;const l=typeof fgLean==='function'&&fgLean(w.id);return l||FG_STYLE[w.st]||'cas'}
@@ -118,7 +118,15 @@ function trOptions(w,slot){const have=w.tr||[];const g=trLean(w);const r=seeded(
  return out}
 window.trOptions=trOptions;
 const trSlotsFor=w=>1+TR_TIERS.filter(x=>(w.pop||0)>=x).length;
-const trOpen=w=>w&&Array.isArray(w.tr)&&w.tr.length<Math.min(TR_SLOTS,trSlotsFor(w));
+/* v454: on your roster a new slot is earned by holding the popularity, not by touching it once — TR_HOLD shows at or
+   above the tier (a dip of TR_DIP or more starts the count over). Everyone else opens slots as soon as they reach the tier. */
+const trNeed=w=>TR_TIERS[(w.tr||[]).length-1];
+const trHeld=w=>{if(w.own!=='p')return true;const n=trNeed(w);return n!=null&&w.trHi&&w.trHi.n===n&&typeof AW==='function'&&AW()-w.trHi.w>=TR_HOLD};
+const trOpen=w=>w&&Array.isArray(w.tr)&&w.tr.length<Math.min(TR_SLOTS,trSlotsFor(w))&&trHeld(w);
+function trHoldTick(){if(!S||!S.w)return;ownList('p').forEach(w=>{if(!Array.isArray(w.tr)||w.tr.length>=TR_SLOTS)return;const n=trNeed(w);if(n==null)return;
+ if((w.pop||0)>=n){if(!w.trHi||w.trHi.n!==n)w.trHi={n,w:AW()}}else if(w.trHi&&(w.pop||0)<n-TR_DIP)delete w.trHi})}
+function trLeft(w){const n=trNeed(w);if(n==null||(w.pop||0)<n||!w.trHi||w.trHi.n!==n)return null;return Math.max(0,TR_HOLD-(AW()-w.trHi.w))}
+window.trLeft=trLeft;
 window.trSlotsFor=trSlotsFor;
 /* everyone off your roster (and new-game rosters) picks for themselves: usually their own group, sometimes another
    group or an all-rounder — dealt fresh each game */
@@ -136,7 +144,7 @@ window.trMigrate=trMigrate;
 /* after every show: anyone not on your roster who has an open slot picks one (offline only; in a league each GM picks for their own) */
 function trAuto(){if(!S||!S.w)return;Object.values(S.w).forEach(w=>{if(w.own==='p'||!trOpen(w))return;if(ON()&&w.own)return;const t=trAiPick(w);if(t)trAdd(w,t)})}
 window.trAuto=trAuto;
-if(typeof airPair==='function'){const _ap=airPair;airPair=function(){const r=_ap.apply(this,arguments);try{trAuto()}catch(e){console.warn('traits',e)}return r}}
+if(typeof airPair==='function'){const _ap=airPair;airPair=function(){const r=_ap.apply(this,arguments);try{trAuto()}catch(e){console.warn('traits',e)}try{trHoldTick()}catch(e){console.warn('traits hold',e)}return r}}
 
 /* ---- the office door: a slot opened on your roster ---- */
 function trVisit(){if(!S||!S.w)return null;const l=ownList('p').filter(trOpen).sort((a,b)=>b.pop-a.pop);return l[0]||null}
@@ -152,7 +160,7 @@ function trChoiceBtns(w,fn){const o=trOptions(w,w.tr.length+1);const K='ABC';
  return o.map((t,i)=>{const T=TRAITS[t];const g=T.g;const own=g&&fgOf(w).includes(g);
   return `<button class="choice" onclick="${fn}(${i})"><span class="key"><span>${K[i]}</span></span><div>${T.i} <b>${esc(T.n)}</b>${g?` <span class="muted tiny">· ${own?'their own crowd':'reaches '+FG_N[g]}</span>`:''}</div><div class="muted tiny">${esc(T.d)}</div></button>`}).join('')}
 function openTr(){const w=trVisit();if(!w)return closeModal();
- openModal(`<div class="h mhd mt">✨ ${esc(w.name)} is looking ambitious</div><div class="scene brief ibx">${typeof voiceH==='function'?voiceH(w.id,trLine(w)):`<p>${esc(trLine(w))}</p>`}<div class="brow"><span class="muted tiny">${esc(w.name)} reached ${TR_TIERS[w.tr.length-1]} popularity and opened trait slot ${w.tr.length+1} of ${TR_SLOTS}.</span></div></div>
+ openModal(`<div class="h mhd mt">✨ ${esc(w.name)} is looking ambitious</div><div class="scene brief ibx">${typeof voiceH==='function'?voiceH(w.id,trLine(w)):`<p>${esc(trLine(w))}</p>`}<div class="brow"><span class="muted tiny">${esc(w.name)} held ${TR_TIERS[w.tr.length-1]}+ popularity for ${TR_HOLD} shows and opened trait slot ${w.tr.length+1} of ${TR_SLOTS}.</span></div></div>
  ${trChoiceBtns(w,'trPick')}`)}
 window.openTr=openTr;
 function trAnswer(i){const w=trVisit();if(!w)return null;const t=trOptions(w,w.tr.length+1)[i];if(!t)return null;trAdd(w,t);mor(w,4);
@@ -176,7 +184,7 @@ window.trCoachPick=function(i){const w=S.w[window.__trCo];if(!trCoachOk(w))retur
 /* ---- profile: the three slots ---- */
 function trSlotsHtml(w){const l=(w.tr||[]).filter(t=>TRAITS[t]);const rows=l.map(t=>`<div class="pf-row pf-tr"><span class="pf-l">${TRAITS[t].i} <b>${TRAITS[t].n}</b></span><div class="pf-s">${esc(trDesc(t,w))}</div></div>`);
  for(let s=l.length+1;s<=TR_SLOTS;s++){const need=TR_TIERS[s-2];const co=s===l.length+1&&trCoachOk(w);
-  rows.push(`<div class="pf-row pf-tr pf-lock"><span class="pf-l">🔒 <b>Slot ${s}</b></span><div class="pf-s">Unlocks at ${need} popularity.${co?` <button class="chip" onclick="trCoach('${w.id}')">🎓 Coach it now · ${money(trCoachCost())}</button>`:''}</div></div>`)}
+  rows.push(`<div class="pf-row pf-tr pf-lock"><span class="pf-l">🔒 <b>Slot ${s}</b></span><div class="pf-s">${s===l.length+1&&trLeft(w)!=null?`At ${need} popularity: ${trLeft(w)>0?`opens after ${trLeft(w)} more show${trLeft(w)>1?'s':''} there`:'opens this week'}.`:`Unlocks after ${TR_HOLD} shows at ${need}+ popularity.`}${co?` <button class="chip" onclick="trCoach('${w.id}')">🎓 Coach it now · ${money(trCoachCost())}</button>`:''}</div></div>`)}
  return rows.join('')}
 window.trSlotsHtml=trSlotsHtml;
 

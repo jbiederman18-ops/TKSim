@@ -579,6 +579,14 @@ function fbRevealHtml(o,instant){const r=o&&o.fb&&o.fb.p;if(!r||!r.before||!r.af
  const rows=FB_G.map((g,n)=>{const w=fbWord(g,r.pct[g]||0)||['','',''];const d=Math.round(r.after[g]-r.before[g]);
   return `<div class="srcr"${instant?'':` style="animation-delay:${n*110}ms"`}><span class="fgw">${fgLbl(g)}</span><b class="${w[2]}">${w[1]}</b>${Math.abs(d)<100?'<em class="muted">steady</em>':`<em class="${d>0?'good':'bad'}">${d>0?'▲':'▼'}${fbK(Math.abs(d))}</em>`}</div>`}).join('');
  return `<div class="srcrowd${instant?'':' in'}"><div class="srch">How the crowds took it</div>${rows}</div>`}
+/* v454: the crowd reveal for both shows, after both main events and before the winner — each crowd gained or lost on each side */
+function fbRevealBoth(o,instant,nm){const P=o&&o.fb&&o.fb.p,Q=o&&o.fb&&o.fb.ai;if(!P||!P.before||!P.after||!Q||!Q.before||!Q.after)return fbRevealHtml(o,instant);
+ const dl=(r,g)=>Math.round(r.after[g]-r.before[g]);const cell=(d,n)=>`<em class="${Math.abs(d)<100?'muted':d>0?'good':'bad'}"${instant?'':` style="animation-delay:${n}ms"`}>${Math.abs(d)<100?'steady':(d>0?'▲':'▼')+fbK(Math.abs(d))}</em>`;
+ const tot=r=>FB_G.reduce((a,g)=>a+dl(r,g),0);
+ const rows=FB_G.map((g,n)=>{const w=fbWord(g,P.pct[g]||0)||['','',''];return `<div class="srcr2"${instant?'':` style="animation-delay:${n*260}ms"`}><span class="fgw">${fgLbl(g)}<b class="${w[2]}">${w[1]}</b></span>${cell(dl(P,g),n*260+120)}${cell(dl(Q,g),n*260+220)}</div>`}).join('');
+ const T=(d,n)=>`<b class="${d>=0?'good':'bad'}">${d>=0?'+':'−'}${fbK(Math.abs(d))}</b>`;
+ return `<div class="srcrowd srboth${instant?'':' in'}"><div class="srch">How the crowds took it</div><div class="srcr2 hd"><span></span><span>${esc(nm.p)}</span><span>${esc(nm.ai)}</span></div>${rows}<div class="srcr2 tot"${instant?'':` style="animation-delay:${FB_G.length*260+200}ms"`}><span>All fans</span>${T(tot(P))}${T(tot(Q))}</div></div>`}
+window.fbRevealBoth=fbRevealBoth;
 /* ---- after the show: The fans, then X Redditino (Head of PR) ---- */
 const FB_HANDLE={cas:['@JustHereForTheBelts','@MyDadWatchesThis','@CasualTuesdayKev'],tech:['@ChainWrestlingCarl','@HeadlockHistorian','@SnapSuplexSue'],
  blood:['@CrimsonMaskMike','@BarbedWireBetty','@BladeJobBrandon'],flip:['@SpotMonkeyKai','@ShootingStarSam','@450Splashley'],chaos:['@RunInRhonda','@NoDQNate','@SwerveSzn']};
@@ -652,6 +660,10 @@ Object.assign(window,{fbSync,fbSyncAll,fbSeg,fbPromo,fbCalc,fbApply,fbResultsCar
 .srcr{display:grid;grid-template-columns:7.4em 1fr auto;gap:8px;align-items:baseline;padding:4px 0;border-top:1px solid rgba(255,255,255,.06)}
 .srcr:first-of-type{border-top:0}.srcr .fgw{font-size:12.5px}.srcr b{font:800 italic 14px/1.1 'BC',sans-serif;text-transform:uppercase}.srcr b.warn{color:var(--gold)}
 .srcr em{font:700 13px 'BC',sans-serif;font-style:normal;white-space:nowrap}
+.srcr2{display:grid;grid-template-columns:1fr 5.2em 5.2em;gap:8px;align-items:baseline;padding:5px 0;border-top:1px solid rgba(255,255,255,.06)}.srcr2 .fgw{font-size:12.5px;display:flex;flex-direction:column;gap:1px}.srcr2 .fgw b{font:800 italic 12px/1.1 'BC',sans-serif;text-transform:uppercase}.srcr2 .fgw b.warn{color:var(--gold)}
+.srcr2 em{font:700 13px 'BC',sans-serif;font-style:normal;white-space:nowrap;text-align:right}.srcr2.hd{border-top:0;padding-bottom:2px}.srcr2.hd span{font:800 italic 11px/1.1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--gold2);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srcr2.tot{border-top:1px solid rgba(255,255,255,.2)}.srcr2.tot span{font:800 italic 13px 'BC',sans-serif;text-transform:uppercase}.srcr2.tot b{text-align:right;font:800 15px 'BC',sans-serif}
+.srcrowd.in .srcr2{opacity:0;animation:srcrIn .35s ease-out forwards}.srcrowd.in .srcr2.hd{opacity:1;animation:none}
 .srcrowd.in .srcr{opacity:0;animation:srcrIn .3s ease-out forwards}@keyframes srcrIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 body.tv .srcrowd{display:none}
 .tcs .tcmat.many .tkc .tcfg,.tlrow .tkc .tcfg,.twcd .tkc .tcfg{display:none}

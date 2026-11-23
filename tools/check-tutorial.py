@@ -118,10 +118,14 @@ async def main(shots):
             await pg.evaluate('simDraft()')
             await pg.wait_for_timeout(800)
             if await pg.evaluate("!document.querySelector('#modal').classList.contains('hidden')"):
-                problems.append('a sheet (the office line?) opened on top of the first-week tour offer')
+                problems.append('a sheet (the office line?) opened on top of the first-week tour')
                 await pg.evaluate('closeModal()')
-            if await expect_offer('first-week'):
+            # the first-week tour starts on its own right after the draft
+            try:
+                await pg.wait_for_function("!!(TUT&&TUT.track==='season')", timeout=5000)
                 await walk('first-week')
+            except Exception:
+                problems.append('the first-week tour did not start on its own after the draft')
 
             # coach tips: match details, the PPV card and the results
             await pg.evaluate("go('book')"); await pg.evaluate('suggestFill()'); await pg.wait_for_timeout(300)

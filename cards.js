@@ -27,9 +27,9 @@ window.TC_HAND=7;
 document.documentElement.classList.toggle('tcards',ONF);
 
 /* ---------------- state ---------------- */
-const TC={act:null,mode:'w',sel:null,confirm:null,dr:{},wk:null,dealt:0,sx:0,open:false,tg:null,rep:null,f:'fit',sh:{}};
+const TC={act:null,mode:'w',sel:null,confirm:null,dr:{},wk:null,dealt:0,sx:0,open:false,tg:null,rep:null,f:'fit',sh:{},ty:{}};
 function wkKey(){return S?[S.season||0,S.week,S.gm,S.phase].join('|'):''}
-function sync(){const k=wkKey();if(TC.wk!==k){TC.wk=k;TC.dr={};TC.sh={};TC.act=null;TC.mode='w';TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;TC.open=false}}
+function sync(){const k=wkKey();if(TC.wk!==k){TC.wk=k;TC.dr={};TC.sh={};TC.ty={};TC.act=null;TC.mode='w';TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;TC.open=false}}
 const card=()=>(S&&S.card&&S.card.p)||[];
 const ppvNow=()=>{try{return !!curShow().ppv}catch(e){return false}};
 const W_=id=>S&&S.w[id];
@@ -188,6 +188,13 @@ window.tcShape=function(k){const i=TC.act;if(i==null||locked())return;const sl=c
  else if(m.type==='squash'||m.type==='open'){m.type='singles';delete m.open;delete m.loc}
  TC.sh[i]=k;const cut=before-idsOf(i,m).length;commit(i,m);TC.tg=null;TC.rep=null;TC.mode=shapeNext(cur(i),k)?'w':TC.mode;TC.dealt=0;const sb=document.getElementById('tcsb'),st=sb?sb.scrollTop:0;render();const nb=document.getElementById('tcsb');if(nb)nb.scrollTop=st;center(i);
  if(cut>0)toast(`${cut} sent back to the roster.`)};
+/* v454: an untouched slot opens on its match or promo type first */
+function needTy(i){const sl=card()[i];if(!sl||TC.ty[i]||roV(sl)||xoV(sl))return false;const m=cur(i);if(sl.k==='promo')return !m.a;if(sl.k!=='match')return false;return !sl.d&&!idsOf(i,m).length}
+const SHAPE_D={singles:'One on one',tag:'Two-on-two',trios:'Three-on-three',eight:'Four-on-four',triple:'Three wrestlers, one winner',four:'Four wrestlers, one winner',squash:'A quick, one-sided win',open:'Someone answers live'};
+function tyHtml(i){const sl=card()[i];const m=cur(i);const promo=sl.k==='promo';
+ const l=promo?Object.entries(PT).map(([k,t])=>({x:k,k:t.b==='req'?'Two wrestlers':'One or two',n:t.n,d:String(t.d).split(/(?<=[.!?])\s/)[0],on:!!m.a&&m.type===k}))
+  :SHAPES.map(([k,n,a,b])=>({x:k,k:k==='squash'||k==='open'?'Special':a*b+' wrestlers',n,d:SHAPE_D[k]||'',on:!needTy(i)&&shapeOf(i,m)===k}));
+ return `<div class="tcgx lo">${l.map(x=>`<div class="tx ${x.on?'on':''}" data-tcx="y:${x.x}" tabindex="0" role="button"><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span></div>`).join('')}</div>`}
 function defTarget0(i,m){const t=targets(i,m);return t.find(x=>x.t==='side'||x.t==='a'||x.t==='b')||(()=>{const p=t.filter(x=>x.t==='partner');return p.length===1?p[0]:null})()}
 
 /* ---------------- playing a card ---------------- */
@@ -320,6 +327,8 @@ function riHtml(i){const d=card()[i].d;const ri=d.ri||{};const k=RUNIN[ri.k]?ri.
   return tcCard(w,{tab:sel?'Runs in':hv>=1?`🔥 ${hv}`:'',tabc:sel?'must':hv>=20?'feud':'hot',used:used.has(w.id),cls:(sel?'pickd ':'')+(TC.dealt&&n<9?'deal':''),attr:`data-tcx="r:${w.id}" style="animation-delay:${Math.min(n,8)*30}ms"`})}).join('')}</div>`;
  return h}
 function applyX(i,x){if(locked())return;const sl=card()[i];const [k,v]=[x.slice(0,1),x.slice(2)];
+ /* v454: the first step of an empty slot — pick the kind of match or promo, then the wrestlers */
+ if(k==='y'){TC.ty[i]=1;if(sl.k==='promo'){TC.mode='w';tcPType(v)}else{TC.mode='w';tcShape(v)}TC.mode='w';TC.dealt=1;render();return}
  /* v321: special-match controls in the sheet */
  if(k==='e'&&v&&W_(v)){TC.rep=v;TC.mode='w';TC.f='fit';TC.dealt=1;render();return}/* field: tap an entrant to swap them */
  if(k==='w'&&sl.d&&roV(sl)){const si=+v;if(!sl.d.sides[si])return;const ri=sl.d.ri;if(ri&&ri.k==='cost'&&sl.d.sides[si].includes(ri.t))return toast(`The run-in costs ${W_(ri.t).name} this match — change the run-in first.`);sl.d.winner=si;if(sl.d.pin&&!pinCands(sl.d).includes(sl.d.pin))delete sl.d.pin;delete sl.d.ev;save();buzz();render();return}
@@ -403,6 +412,7 @@ function sheetTitle(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';const 
  if(TC.rep&&W_(TC.rep))return [L,`Who replaces ${W_(TC.rep).name}?`];
  if(roV(sl)&&TC.mode==='w')return [L,sl.d.tour?'The bracket is set':'Entrants'];
  if(TC.mode==='v')return [L,'Result'];
+ if(TC.mode==='y')return [L,promo?'What kind of promo?':'What kind of match?'];
  if(m.type==='open'&&!TC.mode.match(/[xtfr]/))return [L,'Who throws the door open?'];
  if(m.type==='squash'&&tg&&tg.t==='side')return [L,tg.i?'Who gets squashed?':'Who wins it?'];
  if(TC.mode==='x')return [L,promo?'Pick the segment':'Stipulation'];
@@ -430,8 +440,10 @@ function xoCards(i,m,tg){const side=(tg&&tg.t)||'a';const A=W_(m.a);
    Faces / Heels, and only for the slot it was set on: open another slot and everyone's back. */
 const TC_FG=['cas','tech','blood','flip','chaos','und'];
 function tcFgOn(){return TC.fg&&TC.fgAt===TC.act?TC.fg:null}
-function tcFgOk(w){const g=tcFgOn();return !g||typeof fgOf!=='function'||fgOf(w).includes(g)}
-function tcFgRow(){if(typeof fgIc!=='function')return '';const g0=tcFgOn();return `<div class="tcsc tcfgr">${TC_FG.map(g=>`<button class="chip fgc ${g0===g?'on':''}" onclick="tcFg('${g}')" title="${FG_N[g]}" aria-label="${FG_N[g]} only" aria-pressed="${g0===g?'true':'false'}"><span class="fg-${g}">${fgIc(g)}</span></button>`).join('')}</div>`}
+function tcGnOn(){return TC.gn&&TC.gnAt===TC.act?TC.gn:null}
+function tcFgOk(w){const g=tcFgOn(),gn=tcGnOn();return (!gn||w.g===gn)&&(!g||typeof fgOf!=='function'||fgOf(w).includes(g))}
+window.tcGn=function(g){TC.gn=tcGnOn()===g?null:g;TC.gnAt=TC.act;TC.mode='w';TC.dealt=1;paint();const b=document.getElementById('tcsb');if(b)b.scrollTop=0};
+function tcFgRow(){if(typeof fgIc!=='function')return '';const g0=tcFgOn(),gn=tcGnOn();return `<div class="tcsc tcfgr"><button class="chip ${gn==='M'?'on':''}" onclick="tcGn('M')" aria-pressed="${gn==='M'?'true':'false'}">Men</button><button class="chip ${gn==='F'?'on':''}" onclick="tcGn('F')" aria-pressed="${gn==='F'?'true':'false'}">Women</button>${TC_FG.map(g=>`<button class="chip fgc ${g0===g?'on':''}" onclick="tcFg('${g}')" title="${FG_N[g]}" aria-label="${FG_N[g]} only" aria-pressed="${g0===g?'true':'false'}"><span class="fg-${g}">${fgIc(g)}</span></button>`).join('')}</div>`}
 window.tcFg=function(g){TC.fg=tcFgOn()===g?null:g;TC.fgAt=TC.act;TC.mode='w';TC.dealt=1;paint();const b=document.getElementById('tcsb');if(b)b.scrollTop=0};
 function sheetCards(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';if(sl.k==='xo')return xoCards(i,m,tg);const anchor=sheetAnchor(i,m,tg);const tt=tg&&tg.t;
  /* v314: wrestlers already booked tonight drop out of the list into an "Already booked" dropdown
@@ -452,6 +464,7 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
  else if(fl&&TC.mode==='v'){const d=sl.d;const pl=pinCands(d);const pn=pinOf(d);
   body=`<div class="tcgrid"><div class="tcwhy">Who wins${d.type==='rumble'?` · a title shot at ${esc(PPVS[WM_WEEK]||'WrestleMania')}`:d.type==='mitb'?' · the briefcase':' · a title shot'}</div>${d.sides.map((s,j)=>s[0]&&W_(s[0])?entC(s[0],'w:'+j,{tab:j===d.winner?'Wins':'',tabc:'must',cls:(j===d.winner?'pickd ':'')+(TC.dealt?'deal':'')}):'').join('')}
   ${pl.length>=2?`<div class="tcwhy">${d.type==='rumble'?'Eliminated last (gets a bump)':d.type==='mitb'?'Comes closest (takes the loss)':'Takes the pin'}</div>${pl.map(id=>{const [c,t]=pinRub(d,id);return entC(id,'n:'+id,{tab:id===pn?'Takes it':t.replace(/ for the winner$/,''),tabc:id===pn?'must':c==='good'?'hot':'',cls:(id===pn?'pickd ':'')+(TC.dealt?'deal':'')})}).join('')}`:''}</div>`}
+ else if(TC.mode==='y'&&!sp&&!xo)body=tyHtml(i);
  else if(TC.mode==='f'&&!promo&&sl.d){body=finExtras(sl.d)+`<div class="tcgx lo">${finTiles(sl.d).map(x=>`<div class="tx ${x.on?'on':''} ${x.dis?'dis':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"${x.dis?' aria-disabled="true"':''}><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span>${x.c||''}</div>`).join('')}</div>`}
  else if(TC.mode==='r'&&!promo&&sl.d)body=riHtml(i);
  else if(TC.mode==='x'||TC.mode==='t'){const xs=extras(i,TC.mode);body=xs.length?`<div class="tcgx">${xs.map(x=>`<div class="tx ${x.fit?'fit':''} ${x.on?'on':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span>${x.c||''}</div>`).join('')}</div>`:`<div class="tcempty">${promo?'Pick who’s on the mic first.':TC.mode==='t'&&sl.d?noTitleWhy(sl.d):'Fill both sides first.'}</div>`}
@@ -462,7 +475,7 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
   const lt=m.type==='squash'&&tg&&tg.t==='side'&&tg.i===1&&!TC.rep?`<div class="tcsf"><button class="btn sec" data-tcx="l:1">🧑‍🔧 Use local enhancement talent — costs nothing</button></div>`:'';
   if(!l.length)body=lt+`<div class="tcempty">Nobody fits that filter tonight.</div>`;
   else if(!xo){const mu=l.filter(x=>!x.bk&&x.r&&x.r[1]==='must'),rest=l.filter(x=>!x.bk&&!(x.r&&x.r[1]==='must')),bk=l.filter(x=>x.bk);let n=0;
-   const RL={fit:'Your roster',ch:'Champions',f:'Faces',h:'Heels'}[TC.f]||'Your roster';const fgL=tcFgOn()?' · '+FG_N[tcFgOn()]:'';
+   const RL={fit:'Your roster',ch:'Champions',f:'Faces',h:'Heels'}[TC.f]||'Your roster';const fgL=(tcGnOn()?' · '+(tcGnOn()==='M'?'Men':'Women'):'')+(tcFgOn()?' · '+FG_N[tcFgOn()]:'');
    body=lt+`<div class="tcgrid">${mu.length?`<div class="tcwhy">Needs you tonight</div>${mu.map(x=>pc(x,n++)).join('')}`:''}${rest.length?`<div class="tcwhy">${RL}${fgL} · best fit first</div>${rest.map(x=>pc(x,n++)).join('')}`:''}${bk.length?`<button class="tcwhy tcab ${TC.ab?'on':''}" onclick="tcAb()" aria-expanded="${TC.ab?'true':'false'}">Already booked tonight · ${bk.length} ${TC.ab?'▴':'▾'}</button>${TC.ab?bk.map(x=>pc(x,n++)).join(''):''}`:''}</div>`}
   else{let n=0;body=lt+`<div class="tcgrid">${l.map(x=>pc(x,n++)).join('')}</div>`}}
  const fc=xo?[['fit','Best fit'],['ch','Champions'],['f','Faces'],['h','Heels'],['all','All']]:[['fit','Everyone'],['ch','Champions'],['f','Faces'],['h','Heels']];
@@ -471,7 +484,7 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
  const tT=sl.d&&(titleEts(sl.d).length||sl.d.title)?[['t','Title']]:[];
  const tabL=TC.rep||promo||xo?null:tr?[['w','Bracket'],['x','Stipulation']].concat(tT,[['f','Finish']],sl.d.tour.k==='c2'?[]:[['r','Run-in']]):fl?[['w','Entrants'],['v','Result'],['r','Run-in']]:!sl.d?null:sl.d.type==='squash'?[['w','Wrestlers']].concat(tT.length||sl.d.sides.flat().some(id=>id&&isChamp(id))?[['t','Title']]:[]):sl.d.type==='open'?[['w','Wrestlers'],['x','Stipulation']].concat(tT):[['w','Wrestlers'],['x','Stipulation'],['t','Title'],['f','Finish'],['r','Run-in']];
  const tabs=tabL?tabL.map(([v,n])=>`<button class="tctab ${TC.mode===v?'on':''}" onclick="tcMode('${v}')">${n}</button>`).join(''):'';
- const pA=promo&&m.a?W_(m.a):null;const shc=xo?`<div class="tcshc tcshp">${[['a','Yours',m.a],['b',nameOf('ai')+'’s',m.b]].map(([k,n,id])=>`<button class="chip ${tg&&tg.t===k?'on':''}" onclick="tcXo('${k}')">${esc(n)}${id&&W_(id)?' · '+esc(ln(W_(id))):''}</button>`).join('')}</div>`:sp?'':promo&&!TC.rep?`<div class="tcshc tcshp">${Object.entries(PT).filter(([k,t])=>!t.champ||!pA||isChamp(pA.id)).map(([k,t])=>`<button class="chip ${m.type===k?'on':''}" onclick="tcPType('${k}')">${esc(t.n)}</button>`).join('')}</div>`:!promo&&!TC.rep?`<div class="tcshc tcshp">${SHAPES.map(([k,n])=>`<button class="chip ${shapeOf(i,m)===k?'on':''}" onclick="tcShape('${k}')">${n}</button>`).join('')}</div>`:'';
+ const pA=promo&&m.a?W_(m.a):null;const shc=xo?`<div class="tcshc tcshp">${[['a','Yours',m.a],['b',nameOf('ai')+'’s',m.b]].map(([k,n,id])=>`<button class="chip ${tg&&tg.t===k?'on':''}" onclick="tcXo('${k}')">${esc(n)}${id&&W_(id)?' · '+esc(ln(W_(id))):''}</button>`).join('')}</div>`:sp?'':!TC.rep&&TC.mode!=='y'?`<div class="tcshc tcshp"><button class="chip on" onclick="tcMode('y')">‹ ${esc(promo?(PT[m.type]||{}).n||'Promo':(SHAPES.find(x=>x[0]===shapeOf(i,m))||SHAPES[0])[1])}</button><span class="tcshn">${promo?'Promo type':'Match type'} · tap to change</span></div>`:'';
  const tch=false&&!TC.rep&&TC.mode==='w'&&tl.length>1&&!defTarget(i,m)?`<div class="tcshc">${tl.map((x,j)=>`<button class="chip ${tg&&x.t===tg.t&&x.i===tg.i?'on':''}" onclick="tcTg(${j})">${x.t==='partner'?`+ Partner · ${esc(ln(W_(m.sides[x.i][0])))}`:x.t==='third'?'+ Third corner':x.t==='side'?(x.i?'Right side':'Left side'):'Second'}</button>`).join('')}</div>`:'';
  const cf=TC.confirm&&W_(TC.confirm.id)?`<div class="tccf"><span>${esc(W_(TC.confirm.id).name)} is already in a match tonight. A second match costs ${DD_FAT}× the stamina.</span><button class="mini" onclick="tcNo()">No</button><button class="mini on" onclick="tcYes()">Book twice</button></div>`:'';
  const foot=TC.rep&&W_(TC.rep)?`<div class="tcsf">${fl?`<button class="btn sec" onclick="tcRepX()">Keep ${esc(ln(W_(TC.rep)))}</button>`:`<button class="btn sec" onclick="tcBack()">Send back</button>`}<button class="btn sec" onclick="showW('${TC.rep}')">Details</button></div>`:xo&&sl.d?`<div class="tcsf"><button class="btn sec" onclick="tcXoClear()">Call it off</button></div>`:'';
@@ -479,7 +492,7 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
  TC.dealt=0;
  return `<div class="tcscrim ${ent?'enter':''}" onclick="tcScrim()"></div><div class="tcdock tcsheet ${ent?'enter':''} ${TC.big?'big tall':''}" id="tcdock" role="dialog" aria-label="${esc(t)}"><button class="tcpull open" onclick="tcBig(!TC.big)" aria-label="${TC.big?'Shrink the sheet':'Fill the screen'}" aria-expanded="${TC.big?'true':'false'}"><span class="tcgrip"></span></button>
  <div class="tcsh"><div class="tcst"><span class="tcsk">${esc(k)}</span><b>${esc(t)}</b></div><button class="tcsx" onclick="tcShut()" aria-label="Close">✕</button></div>
- ${cf}${tabs?`<div class="tcsc tctabs">${tabs}</div>`:''}${tabs&&TC.mode!=='w'?'':shc}${(tabs&&TC.mode!=='w')||!showF?'':`<div class="tcsc">${tabs||xo?fcs:chips}</div>`+(TC.mode==='w'?tcFgRow():'')}${tch}<div class="tcsb" id="tcsb">${body}</div>${foot}</div>`}
+ ${cf}${tabs&&TC.mode!=='y'?`<div class="tcsc tctabs">${tabs}</div>`:''}${tabs&&TC.mode!=='w'?'':shc}${(tabs&&TC.mode!=='w')||!showF||TC.mode==='y'?'':`<div class="tcsc">${tabs||xo?fcs:chips}</div>`+(TC.mode==='w'?tcFgRow():'')}${tch}<div class="tcsb" id="tcsb">${body}</div>${foot}</div>`}
 function pickAct(){const c=card();if(TC.act!=null&&c[TC.act]&&editOk(c[TC.act]))return;
  const ok=c.map((sl,i)=>tableOk(sl)?i:-1).filter(i=>i>=0);if(!ok.length){TC.act=null;return}
  const empty=ok.filter(i=>!c[i].opt&&!c[i].d&&!TC.dr[i]);let mi=-1;try{mi=mainMi(c)}catch(e){}
@@ -502,7 +515,7 @@ function paint(){try{const app=document.getElementById('app');if(!bookOn()||!app
 window.tcAct=function(i,stay){const sl=card()[i];if(!sl)return;if(!editOk(sl)){if(sl.k==='match')return openMatch(i);if(sl.k==='xo'&&typeof openXo==='function')return openXo(i);return}
  if(roV(sl)||xoV(sl)){if(TC.act===i&&TC.open){if(!stay)center(i);return}TC.act=i;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;TC.f='fit';TC.mode='w';TC.open=true;TC.dealt=1;paint();if(!stay)center(i);return}
  if(TC.act===i&&TC.open){if(!stay)center(i);return}
- if(TC.act!==i||!TC.open){TC.act=i;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;TC.f='fit';if(sl.k==='match'&&!TC.sh[i])TC.sh[i]=shapeOf(i,cur(i));TC.mode=(sl.k==='promo'?promoOk(cur(i))&&cur(i).b:!!sl.d)?'x':'w'}
+ if(TC.act!==i||!TC.open){TC.act=i;TC.sel=null;TC.confirm=null;TC.tg=null;TC.rep=null;TC.f='fit';if(sl.k==='match'&&!TC.sh[i])TC.sh[i]=shapeOf(i,cur(i));TC.mode=needTy(i)?'y':(sl.k==='promo'?promoOk(cur(i))&&cur(i).b:!!sl.d)?'x':'w'}
  TC.open=true;TC.dealt=1;paint();if(!stay)center(i)};
 /* put the slot in the middle of the space between the header and the hand */
 function center(i){const w=(TC.entAt||0)+360-Date.now();if(TC.open&&w>0){setTimeout(()=>center0(i,'smooth'),w);return}center0(i)}
@@ -570,7 +583,7 @@ window.tcF=function(k){TC.f=k;TC.mode='w';TC.dealt=1;paint();const b=document.ge
 window.tcTg=function(j){const t=targets(TC.act,cur(TC.act))[j];if(t){TC.tg=t;TC.dealt=1;paint()}};
 window.tcBack=function(){const i=TC.act,id=TC.rep;TC.rep=null;TC.open=false;if(i!=null&&id)takeOff(i,id);else render()};
 /* open the sheet for one space on the table, or to swap out someone already there */
-function sheetAt(i,tg){if(locked())return;const sl=card()[i];if(!sl||!editOk(sl))return;if(sl.k==='match'&&!roV(sl)&&!TC.sh[i])TC.sh[i]=shapeOf(i,cur(i));TC.act=i;TC.tg=tg||null;TC.rep=null;TC.sel=null;TC.confirm=null;TC.mode='w';TC.f='fit';TC.open=true;TC.dealt=1;render();center(i)}
+function sheetAt(i,tg){if(locked())return;const sl=card()[i];if(!sl||!editOk(sl))return;if(sl.k==='match'&&!roV(sl)&&!TC.sh[i])TC.sh[i]=shapeOf(i,cur(i));TC.act=i;TC.tg=tg||null;TC.rep=null;TC.sel=null;TC.confirm=null;TC.mode=needTy(i)?'y':'w';TC.f='fit';TC.open=true;TC.dealt=1;render();center(i)}
 function sheetRep(i,id){if(locked())return;const sl=card()[i];if(!sl||!editOk(sl))return;if(tourV(sl))return tcAct(i);TC.act=i;TC.tg=null;TC.rep=id;TC.sel=null;TC.confirm=null;TC.mode='w';TC.f='fit';TC.open=true;TC.dealt=1;render();center(i)}
 /* a card tapped in the sheet goes into the space the sheet is filling; then the sheet moves on to the next open space or closes */
 function sheetPick(id){const i=TC.act;if(i==null||locked())return;const before=JSON.stringify(cur(i));
@@ -1108,6 +1121,7 @@ html.tcards .tcgrid .tkc{--w:min(29vw,118px);--w:min(calc((100cqw - 40px)/3),150
 .tcgrid .tkc:active{transform:scale(.95)}/* v335: only the first rows deal in (the rest are below the fold anyway) — thirty cards animating at once was the early-swipe stutter */
 .tcgrid .tkc.deal{animation:tcdeal .32s cubic-bezier(.2,.9,.3,1.15) backwards}
 .tcwhy{grid-column:1/-1;justify-self:stretch;font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);border-top:1px solid var(--line);padding-top:14px}.tcwhy:first-child{border:0;padding-top:0}.tcab{background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;cursor:pointer;width:100%}.tcab:hover,.tcab.on{color:var(--gold)}
+.tcshp .tcshn{align-self:center;font-size:12px;color:var(--mut);white-space:nowrap}
 .tcgx{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;padding:16px}.tcgx .tx{width:auto;cursor:pointer;touch-action:manipulation}
 .tcsheet .tcempty{padding:28px 16px;text-align:center}
 .tcsf{flex:none;display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--line)}.tcsf .btn{margin:0}

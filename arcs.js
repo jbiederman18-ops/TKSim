@@ -935,7 +935,8 @@ window.arcPost=function(ap,stars,notes){if(!ap||!ap.seg)return false;const s=ap.
   if(a.stage!=='build'||a.lastStep===AW()||!s.ids.includes(a.a)&&!(a.b&&s.ids.includes(a.b)))return;
   const mn=aMinAt(D,a.have)-aEase(aW(a.a));let hit=false;try{hit=D.step(s,a)&&stars>=mn}catch(e){}
   if(hit){a.have++;a.st.push(stars);a.lastStep=AW();if(D.heatStep&&a.b)try{bumpHeat(a.a,a.b,D.heatStep,[],`${D.n}: the story builds`)}catch(e){}const lab=D.tell&&D.tell[Math.min(a.have-1,D.tell.length-1)];
-   notes.push(`📖 ${aW(a.a).name} · ${D.n}: ${lab?lab+' — ':''}step ${a.have} of ${a.need}.${a.have>=a.need&&(!D.ok||D.ok(a))?' The payoff is next.':''}`);
+   const nt=`📖 ${aW(a.a).name} · ${D.n}: ${lab?lab+' — ':''}step ${a.have} of ${a.need}.${a.have>=a.need&&(!D.ok||D.ok(a))?' The payoff is next.':''}`;notes.push(nt);
+   arcEvPut(nt,{a:a.a,n:D.n,i:D.i,lab:lab||'',have:a.have,need:a.need,what:arcEvWhat(arcWords(a,aBuildAt(D,a.have-1))),head:arcHead(a)||'',next:a.have>=a.need?'pay':''});
    if(a.have>=a.need&&(!D.ok||D.ok(a))){a.stage='pay';a.payFrom=AW()+1}}});
  S.arcs=arcList().filter(a=>!a.done);return landed};
 function arcFinish(a,s,stars,notes){const D=aD(a);const A=aW(a.a);const q=a.st.reduce((x,y)=>x+y,0)/a.st.length;a.q=q>=ARC_GREAT-aEase(A)?'great':'good';a.done=1;
@@ -961,7 +962,8 @@ function arcFinish(a,s,stars,notes){const D=aD(a);const A=aW(a.a);const q=a.st.r
  if(A.own)mor(A,a.q==='great'?10:6);
  {const bq=ARC_FBQ&&a.q!=='great'?ARC_FBQ0+(1-ARC_FBQ0)*clamp((q-ARC_FBQLO)/(ARC_GREAT-aEase(A)-ARC_FBQLO),0,1):1;const f=Math.round(ARC_FANS*(r.fans||1)*bq*(a.q==='great'?1.3:1)*(1+ARC_RISEF*rf)*(typeof fanGrowF==='function'?fanGrowF(S.fans.p):1)/100)*100;if(f>0){const ws=[A,a.b&&aW(a.b)].filter(w=>w&&w.own==='p');try{if(typeof fbHit==='function'&&ws.length)fbHit('p',ws,f);else S.fans.p+=f}catch(e){S.fans.p+=f}parts.push(`+${fmtFans(f)} fans`)}}
  A.arcEnd=AW();A.arcLast=(A.arcLast||[]).concat([a.k]).slice(-4);S.arcLog=(S.arcLog||[]).concat([{s:S.season,w:AW(),k:a.k,v:a.v||0,a:a.a,b:a.b||null,q:a.q,fit:a.fit||0,sl:a.sl||null,bb:RW&&RW!==A?RW.id:null}]).slice(-40);S.arcDone=(S.arcDone||0)+1;if(a.q==='great')S.arcGreatN=(S.arcGreatN||0)+1;if(a.q==='great'&&s.ppv&&S.season>=2){S.arcM=S.arcM||{};S.arcM.ppvg=S.arcM.ppvg||AW()}
- notes.push(`📖✅ ${arcLine(a,'pay')} ${arcLine(a,a.q)} ${D.n} ${a.q==='great'?'— a great payoff':'paid off'}${parts.length?': '+parts.join(', '):''}.`);
+ {const nt=`📖✅ ${arcLine(a,'pay')} ${arcLine(a,a.q)} ${D.n} ${a.q==='great'?'— a great payoff':'paid off'}${parts.length?': '+parts.join(', '):''}.`;notes.push(nt);
+  arcEvPut(nt,{a:a.a,n:D.n,i:D.i,lab:a.q==='great'?'A great payoff':'Paid off',have:a.need,need:a.need,pay:1,what:arcLine(a,'pay'),head:arcHead(a)||'',gain:parts.join(', ')})}
  news(`📖 ${A.name}'s ${D.n} paid off${a.q==='great'?' in a big way':''}.`)}
 function arcFail(a,notes){S.arcFailN=(S.arcFailN||0)+1;{const A0=aW(a.a);if(A0){A0.arcEnd=AW();A0.arcLast=(A0.arcLast||[]).concat([a.k]).slice(-4)}}S.arcFailK=S.arcFailK||{};const fk=a.k+':'+a.stage+':'+a.have;S.arcFailK[fk]=(S.arcFailK[fk]||0)+1;const A=aW(a.a);if(A&&A.own==='p'){mor(A,-(a.star?ARC_FAIL+2:ARC_FAIL));if(a.b&&aW(a.b)&&aW(a.b).own==='p')mor(aW(a.b),-4)}a.done=1;const t=`📖❌ ${arcLine(a,'fail')} (${aD(a).n})`;news(t);(notes||[]).push(t);S.arcNews=(S.arcNews||[]).concat([{w:AW(),t}]).slice(-8)}
 /* the deadline, and arcs whose people are gone: checked when a show is about to air */
@@ -1061,6 +1063,20 @@ function arcRowHtml(a,tap){const D=aD(a);const A=aW(a.a);const pay=a.stage==='pa
  return `<div class="arun"${tap?` onclick="arcOpen('${a.a}')"`:''}>${aKick(D,a.k,a.v,`${esc(A.name)}${a.fit&&arcFitKnown(A)?' ✨':''}`)}<div class="ahd sm">${esc(arcHead(a)||D.d)}</div>${arcTrack(a.need,a.have,a.stage)}
  <div class="anx"><span>${pay?'★ Payoff':`Stop ${a.have+1} of ${a.need}`}: ${esc(arcNow(a).replace(/^Payoff: /,'').replace(/Next: /,''))}</span><b>${arcLeft(a)}</b></div></div>`}
 window.arcRowHtml=arcRowHtml;
+/* v454: what each arc step on tonight's show did, so the reveal can play it out in that segment's box (kept two weeks) */
+/* the story beat out of a stop's booking line: "A Backstage Vignette: he leaves it all behind. Keep him…" → "He leaves it all behind." */
+function arcEvWhat(t){t=String(t||'');const m=t.match(/:\s*([^.]+)/);if(!m)return t;const x=m[1].trim();return x?x[0].toUpperCase()+x.slice(1)+'.':t}
+function arcEvPut(note,o){S.arcEv=(S.arcEv||[]).filter(e=>AW()-e.w<=1);S.arcEv.push(Object.assign({w:AW(),t:note},o))}
+window.arcEvOf=function(note){return (S&&S.arcEv||[]).find(e=>e.t===note)||null};
+window.arcEvHtml=function(e){const A=aW(e.a);let tr='<div class="atrk">';for(let i=0;i<e.need;i++){const on=i<e.have,nw=!e.pay&&i===e.have-1;tr+=(i?`<i class="atl ${i<e.have?'on':''}"></i>`:'')+`<b class="atn ${on?'on':''}${nw?' new':''}"><span>${on?'✓':i+1}</span></b>`}
+ tr+=`<i class="atl ${e.pay||e.next==='pay'?'on':''}"></i><b class="atn ap ${e.pay?'on new':e.next==='pay'?'now':''}"><span>★</span></b></div>`;
+ return `<div class="twarc${e.pay?' pay':''}"><div class="twak">${e.i||'📖'} ${esc(A?A.name:'')} · ${esc(e.n)}${e.pay?'':` · step ${e.have} of ${e.need}`}</div>${e.head?`<div class="twah">${esc(e.head)}</div>`:''}${tr}<div class="twaw">${e.lab?`<b>${esc(e.lab)}.</b> `:''}${esc(e.what||'')}${e.gain?` <span class="twag">${esc(e.gain)}</span>`:e.next==='pay'?' <span class="twag">The payoff is next.</span>':''}</div></div>`};
+/* v454: running arcs on Home and the Book screen — each arc's stops, next step and deadline at a glance */
+window.arcStrip=function(where){try{if(!S||S.phase!=='season'||(typeof TV!=='undefined'&&TV))return '';const l=arcList().filter(a=>aMine(a.a)&&!a.done);
+ const open=ARC_SLOTS-l.length;if(!l.length&&where==='book')return '';
+ const due=a=>{const wk=(S.week||1)+(a.end-AW());return `Due by week ${wk}`};
+ const rows=l.slice().sort((x,y)=>x.end-y.end).map(a=>`<div class="astrip">${arcRowHtml(a,1)}<div class="asdue ${a.end-AW()<1?'bad':''}">${due(a)}</div></div>`).join('');
+ return `<div class="card arcstrip"><div class="row sb"><div class="h small" style="margin:0">📖 Your arcs</div><a href="#" class="tiny" style="color:var(--gold2)" onclick="go('arcs');return false">${open>0?`${open} open slot${open>1?'s':''} ›`:'Arcs ›'}</a></div>${rows||`<div class="muted tiny" style="margin-top:6px">No arcs running. Start one on the Arcs tab to build a wrestler up.</div>`}</div>`}catch(e){console.warn('arc strip',e);return ''}};
 /* the profile's Arcs row */
 window.arcProfile=function(w){if(!w||w.own!=='p')return '';const a=arcOf(w.id);
  const fk=arcFitKnown(w)?arcFitOf(w):null;const fitRow=fk&&ARCS[fk]?`<div class="pf-row"><span class="pf-l">✨ Made for</span><span class="pf-v">${ARCS[fk].i} ${esc(ARCS[fk].n)}</span></div>`:'';
@@ -1208,6 +1224,12 @@ window.arcOfficeCard=function(){return ''};
 .atl{flex:1;height:2px;background:rgba(255,255,255,.16);margin:0 3px;min-width:10px}.atl.on{background:var(--gold)}
 .atp{flex:none;font-size:22px;line-height:1;color:rgba(255,255,255,.25);font-style:normal}.atp.now{color:var(--gold2);text-shadow:0 0 10px rgba(240,190,70,.6)}.atp.on{color:var(--gold)}
 .anx{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:rgba(255,255,255,.6)}.anx b{white-space:nowrap;color:rgba(255,255,255,.8)}
+.twarc{display:none;margin:8px 0 2px;padding:8px 10px 9px;background:#0f0f12;border-left:3px solid var(--gold);text-align:left}
+.twh.nt .twarc{display:block;animation:twarcIn .5s ease-out both}.twarc .atrk{margin:8px 2px 6px}
+.twarc .atn.new{animation:twarcPop .7s .35s ease-out both}.twarc .twak{font:800 italic 12px/1.2 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--gold2)}
+.twarc .twah{font-size:13px;line-height:1.3;color:#fff;margin-top:3px}.twarc .twaw{font-size:13px;line-height:1.35;color:rgba(255,255,255,.75);animation:twarcIn .5s .6s ease-out both}.twarc .twaw b{color:#fff}.twarc .twag{color:var(--gold2)}
+@keyframes twarcIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes twarcPop{0%{transform:rotate(45deg) scale(.6);filter:brightness(2.2)}60%{transform:rotate(45deg) scale(1.35)}100%{transform:rotate(45deg)}}
+.arcstrip .astrip{border-top:1px solid rgba(255,255,255,.08)}.arcstrip .astrip:first-of-type{border-top:0}.arcstrip .astrip .arun{border-top:0;padding-bottom:4px}.arcstrip .asdue{font-size:12px;color:rgba(255,255,255,.5);padding-bottom:10px}.arcstrip .asdue.bad{color:var(--bad,#e66)}
 .arun{padding:12px 0;border-top:1px solid rgba(255,255,255,.08);cursor:pointer}.arun:first-of-type{border-top:0}
 .aslot{padding:14px;margin-top:8px;border:1px dashed rgba(255,255,255,.18);color:rgba(255,255,255,.45);text-align:center;font-size:13px}
 #modal .arct{display:block;width:100%;text-align:left;padding:12px 14px 10px;margin:0 0 10px;background:rgba(255,255,255,.04);border:0;border-left:3px solid var(--gold);color:inherit}

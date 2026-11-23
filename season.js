@@ -283,7 +283,9 @@ function suggestCard(){const sh=curShow();const c=JSON.parse(JSON.stringify(S.ca
  const empty=()=>mIdx().filter(i=>!c[i].d);
  /* how good a match looks from the two wrestlers alone */
  const score=(A,B)=>{const hi=Math.max(A.pop,B.pop),lo=Math.min(A.pop,B.pop);
-  return hi*.6+lo*.4+(Math.min(A.ring,B.ring)-70)*.5+chemOpp(A,B)*1.2+(A.al!==B.al?8:0)+(A.g===B.g?4:0)-recentMeets(A.id,B.id).length*25};
+  /* v454: the crowds' matchup (Bloodhounds with Chaos, Technical with Flippy) is a big part of how matches rate, so it shortlists pairs too */
+  let gv=0;try{if(typeof grpVal==='function')gv=grpVal(A,B).v}catch(e){}
+  return hi*.6+lo*.4+(Math.min(A.ring,B.ring)-70)*.5+chemOpp(A,B)*1.2+gv*3+(A.al!==B.al?8:0)+(A.g===B.g?4:0)-recentMeets(A.id,B.id).length*25};
  const winner=sides=>{let bi=0,bv=-1e9;sides.forEach((sd,i)=>{const v=avg(sd.map(id=>W(id).pop+(W(id).mom||0)*3));if(v>bv){bv=v;bi=i}});return bi};
  const put=(i,sides)=>{c[i].d={type:'singles',stip:'std',sides,winner:winner(sides),title:''};sides.flat().forEach(id=>used.add(id))};
  /* v352: the game's own match preview decides, minus feud heat (rivalries stay the GM's call). The quick score above only
@@ -298,7 +300,7 @@ function suggestCard(){const sh=curShow();const c=JSON.parse(JSON.stringify(S.ca
  const mi=mainI();const order=empty().sort((x,y)=>(x===mi?-1:y===mi?1:x-y));
  order.forEach(i=>{const l=ownList('p').filter(w=>ok(w.id));const cand=[];
   for(let x=0;x<l.length;x++)for(let y=x+1;y<l.length;y++){if(inTeam(l[x].id,l[y].id))continue;cand.push([score(l[x],l[y]),l[x],l[y]])}
-  let best=null,bv=-1e9;cand.sort((a,b)=>b[0]-a[0]).slice(0,40).forEach(([,A,B])=>{const sd=[[A.id],[B.id]];const v=real(sd,i===mi);if(v>bv){bv=v;best=sd}});
+  let best=null,bv=-1e9;cand.sort((a,b)=>b[0]-a[0]).slice(0,60).forEach(([,A,B])=>{const sd=[[A.id],[B.id]];const v=real(sd,i===mi);if(v>bv){bv=v;best=sd}});
   if(best)put(i,best)});
  /* a thin roster: the freshest two who can go, so a required slot is never left empty */
  empty().forEach(i=>{const l=ownList('p').filter(w=>!w.inj).sort((a,b)=>sta(b)-sta(a));const a=l.find(w=>!used.has(w.id))||l[0];const o=a&&(l.find(w=>w.id!==a.id&&!used.has(w.id))||l.find(w=>w.id!==a.id));if(a&&o)put(i,[[a.id],[o.id]])});
