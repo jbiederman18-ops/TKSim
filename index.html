@@ -1184,13 +1184,20 @@ html.lk-hy .roh-x .phead .lfl{background:#ff4b4b}
 html.lk-hy .roh-x .card{border-left:0;box-shadow:inset 0 3px 0 #b3161d}
 html.lk-hy .roh-x .chip.on{background:#b3161d!important}
 /* the draft's "on the clock" card, results, the live header: the show's red */
-html.lk-hy .card.ttape,html.lk-hy .res-hd,html.lk-hy .lvhd{background:var(--red);border:0;box-shadow:none;clip-path:var(--band);padding-bottom:26px}
-html.lk-hy .card.ttape .tt-bg,html.lk-hy .wdt .tt-bg{color:rgba(255,255,255,.08)}
-html.lk-hy .ttape .tt-k,html.lk-hy .lvl{color:#fff;font-style:italic;font-weight:800}
+html.lk-hy .res-hd,html.lk-hy .lvhd{background:var(--red);border:0;box-shadow:none;clip-path:var(--band);padding-bottom:26px}
+html.lk-hy .wdt .tt-bg{color:rgba(255,255,255,.08)}
+/* v450: the draft matches the rest of the game — Tale of the tape is a dark band like the wrestler profile (gold kicker, stats as one plain line), the tabs line up with every other chip row, big board names read like Tonight's card */
+html.lk-hy .card.ttape{background:#1a1a1e;border:0;box-shadow:none;clip-path:var(--band);padding-bottom:26px}
+html.lk-hy .ttape .tt-k{color:var(--gold);font-style:italic;font-weight:800}
+html.lk-hy .ttape .tt-g{gap:0}
+html.lk-hy .ttape .tt-g div{background:none;padding:2px 0}
+.dvtab{margin:0 -16px 12px}
+body:not(.tv) main .chips.dvtab{margin-bottom:12px}
+.bbn{font:600 15px/1.25 'Barlow',sans-serif;text-transform:none}
+html.lk-hy .lvl{color:#fff;font-style:italic;font-weight:800}
 html.lk-hy .ttape .dround{color:#fff}
-html.lk-hy .tt-g div{background:rgba(0,0,0,.32)}
-html.lk-hy .tt-g small{color:rgba(255,255,255,.75)}
-html.lk-hy .ttape .tt-s{color:rgba(255,255,255,.9)}
+html.lk-hy .wdt .tt-g div{background:rgba(0,0,0,.32)}
+html.lk-hy .wdt .tt-g small{color:rgba(255,255,255,.75)}
 html.lk-hy .ttape .btn.sec,html.lk-hy .lvhd .btn.sec{background:rgba(0,0,0,.3)}
 html.lk-hy .lvhd .lvn,html.lk-hy .lvhd .muted{color:#fff}
 html.lk-hy .lvvs{color:#fff}
@@ -1512,7 +1519,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v449';
+const APP_VERSION='v450';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4318,14 +4325,14 @@ function draftView(){const d=S.draft;const oc=onClock();
  const tape=best?`<div class="card ttape"><div class="tt-bg">${ovr(best)}</div>${typeof cardsOn==='function'&&cardsOn()&&typeof tcCard==='function'?`<div class="tt-pic tcin" onclick="showW('${best.id}')">${tcCard(best,{noWear:true})}</div>`:`<div class="tt-pic" onclick="showW('${best.id}')">${portrait(best)}</div>`}<div class="tt-hd"><div class="tt-k">Tale of the tape <span class="tt-al ${best.al==='f'?'fc':'hl'}">${best.al==='f'?'Face':'Heel'}</span></div><div class="tt-n">${esc(best.name)}</div><div class="tt-s">Best available${capOk(best,'p')?'':draftOk(best,'p')?' · <span class="gold">minimum deal</span>':' · <span class="bad">over your cap</span>'}</div></div>
  <div class="tt-g"><div><small>Ring</small><b>${Math.round(best.ring)}</b></div><div><small>Mic</small><b>${Math.round(best.mic)}</b></div><div><small>Pop</small><b>${Math.round(best.pop)}</b></div><div><small>Salary/wk</small><b class="gold">${money(mkt(best))}</b></div></div>${(d.cap||d.capB)&&draftOk(best,'p')?(()=>{const pl=picksLeft('p')-1,left=capRoom('p')-mkt(best);return `<div class="muted tiny" style="margin-top:6px">${pl>0?`After this pick: ${money(Math.max(0,left))}/wk for your other ${pl} pick${pl>1?'s':''} — about ${money(Math.max(0,left)/pl)} each.`:`Your last pick — ${money(Math.max(0,left))}/wk would go unspent.`}</div>`})():''}
  <div class="row mt"><button class="btn" style="flex:2" ${oc==='p'&&draftOk(best,'p')?'':'disabled'} onclick="pDraft('${best.id}')">Make the pick</button><button class="btn sec" style="flex:1" onclick="showW('${best.id}')">Details</button></div></div>`:'';
- return `<div class="card dhead"><div class="dhd"><div><span class="dk">${d.supp?"WWE Supplemental Draft":"The Draft"}</span><div class="dround dsm">Round ${d.round}<small>of ${d.rounds}</small></div></div>${oc==='p'?'<span class="livebug"><b>● On the clock</b></span>':`<span class="livebug wait"><b>${esc(nameOf(oc))}</b><span>picking…</span></span>`}</div><div class="rticks">${ticks}</div>${typeof dcStrip==='function'?dcStrip('p'):`<div class="muted">You: ${cnt(ownList('p'))}</div>`}${d.cap||d.capB?(()=>{const room=capRoom('p'),pl=picksLeft('p'),stuck=pl>0&&capStuck('p'),cap=d.supp?d.capB.p:d.cap;return `<div class="capbox mt"><div class="capline"><span>💼 <b class="${stuck?'bad':'gold'}">${money(room)}</b> left of ${money(cap)}/wk</span><span class="muted">${pl<1?'':stuck?'minimum deals from here':pl>1?`~${money(Math.round(room/pl))} a pick`:'last pick'}</span></div><div class="bar"><i style="width:${clamp(payroll('p')/cap*100,0,100)}%"></i></div></div>`})():''}
+ return `<div class="card phead dhead"><div class="dhd"><div><span class="dk">${d.supp?"WWE Supplemental Draft":"The Draft"}</span><div class="dround dsm">Round ${d.round}<small>of ${d.rounds}</small></div></div>${oc==='p'?'<span class="livebug"><b>● On the clock</b></span>':`<span class="livebug wait"><b>${esc(nameOf(oc))}</b><span>picking…</span></span>`}</div><div class="rticks">${ticks}</div>${typeof dcStrip==='function'?dcStrip('p'):`<div class="muted">You: ${cnt(ownList('p'))}</div>`}${d.cap||d.capB?(()=>{const room=capRoom('p'),pl=picksLeft('p'),stuck=pl>0&&capStuck('p'),cap=d.supp?d.capB.p:d.cap;return `<div class="capbox mt"><div class="capline"><span>💼 <b class="${stuck?'bad':'gold'}">${money(room)}</b> left of ${money(cap)}/wk</span><span class="muted">${pl<1?'':stuck?'minimum deals from here':pl>1?`~${money(Math.round(room/pl))} a pick`:'last pick'}</span></div><div class="bar"><i style="width:${clamp(payroll('p')/cap*100,0,100)}%"></i></div></div>`})():''}
  <div class="row mt"><button class="btn sec" ${oc!=='p'?'disabled':''} onclick="autoPick()">Auto-pick</button><button class="btn sec" onclick="simDraft()">${ON()?(S.online.auto&&S.online.auto.p?'🤖 Stop auto-drafting':'Auto-draft me'):'Sim rest'}</button></div></div>${dqCard()}
  ${chips('dv',[['pick','Make a pick'],['teams','Draft board']],dv).replace('class="chips"','class="chips dvtab"')}${dv==='teams'?draftTeamsHtml()+(d.log.length?`<div class="pickin"><span class="pt">Pick is in</span><span class="pl">${esc(d.log[0])}</span></div>`:''):`${tape}
  ${d.log.length?`<div class="pickin flat"><span class="pt">Pick is in</span><span class="pl">${esc(d.log[0])}</span></div>`:''}
  ${board.length?`<div class="h small">The big board</div><div class="bboard">${board.map(x=>`<button class="bbr ${x.w.al==='f'?'fc':'hl'}" onclick="showW('${x.w.id}')"><span class="bbk">${x.r}</span><span class="bbn">${esc(x.w.name)}</span><span class="bbs">${x.w.al==='f'?'Face':'Heel'}</span><span class="bbo">${ovr(x.w)}</span><span class="bbm">${dPrice(x.w)}</span></button>`).join('')}</div>`:''}
  <div class="h small">Everyone available</div>
- ${flBar()}
- <div class="mt">${chips('ds',[['ovr','Overall'],['pop','Popularity'],['ring','In-ring'],['mic','Mic'],['sal','Salary']],ds)}</div>
+ ${chips('ds',[['ovr','Overall'],['pop','Popularity'],['ring','In-ring'],['mic','Mic'],['sal','Salary']],ds)}
+ <div class="mt">${flBar()}</div>
  <div class="cgrid mt">${pool.length?'':'<p class="muted">Nobody matches those filters.</p>'}${pool.map(w=>wcard(w,{info:[ds==='sal'?'':gridInfo(w,ds),dPrice(w)].filter(Boolean).join(' · ')})).join('')}</div>`}`}
 function pDraft(id){if(mpLocked())return;if(onClock()!=='p')return;const w=S.w[id];if(!w||w.cw||w.rookie)return;if(w&&!draftOk(w,'p'))return toast(`${w.name} doesn't fit under your cap — you need to save room for your remaining picks.`);draftPick(id,'p');closeModal();if(ON())mpDraftStep();render()}
 function autoPick(){if(mpLocked())return;if(onClock()!=='p')return;const c=draftChoice('p');if(c)pDraft(c.id)}

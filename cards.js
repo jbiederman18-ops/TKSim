@@ -1078,8 +1078,8 @@ html.tcards #modal .sdmenu .choice>div:first-of-type{font-size:15px;line-height:
 html.tcards #modal .sdmenu .choice .muted.tiny{font-size:11.5px;line-height:1.3;margin:0}
 html.tcards .tv-last .tkc{--w:180px;width:var(--w)}
 /* roster, titles and home in cards (v280) */
-.tcrg{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 10px;justify-items:center;margin-top:12px}.tcrg .tkc{--w:min(29vw,124px)}html.tcards .tcrg .tkc{width:var(--w)}
-@media(min-width:620px){.tcrg{grid-template-columns:repeat(5,1fr)}.tcrg .tkc{--w:112px}}
+.tcrg{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 10px;justify-items:center;margin-top:12px}html.tcards .tcrg .tkc{--w:min(28vw,124px);width:var(--w)}
+@media(min-width:620px){.tcrg{grid-template-columns:repeat(5,1fr)}html.tcards .tcrg .tkc{--w:112px}}
 .tlrow .tlc{display:flex;gap:4px;flex:none}.tlrow .tlc .tkc{--w:58px}
 .tcfan{display:flex;justify-content:center;gap:8px;margin:14px 0 4px}.tcfan .tkc{--w:min(24vw,96px)}.tcfan .tkc:nth-child(1){transform:rotate(-5deg) translateY(4px)}.tcfan .tkc:nth-child(3){transform:rotate(5deg) translateY(4px)}
 .tcrow{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 8px;margin:0 -2px}.tcrow::-webkit-scrollbar{display:none}.tcrow .tkc{--w:84px}
