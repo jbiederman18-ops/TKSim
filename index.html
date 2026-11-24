@@ -819,7 +819,8 @@ span.smeter.smeter{position:relative;display:inline-block;line-height:1;letter-s
 .tws i.pt{overflow:hidden;width:calc(1em * var(--f))}
 .tws.gh{color:#3a3b42;text-shadow:none}
 .twfill{position:relative}
-.twfill .twbg{color:#3a3b42;text-shadow:none;letter-spacing:1px}
+.twfill .twbg{display:inline-flex;gap:1px;color:#3a3b42;text-shadow:none}
+.twfill .twbg i{font-style:normal;display:inline-block}
 .twfill .twfg{position:absolute;left:0;top:0;display:inline-flex;gap:1px}
 .twfill .twfg i{animation:twFillIn .36s cubic-bezier(.2,1.35,.4,1) both;animation-delay:calc(var(--i) * .24s + .05s)}
 .twfill.sl .twfg i{animation-duration:.42s;animation-delay:calc(var(--i) * .36s + .05s)}
@@ -1519,7 +1520,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v479';
+const APP_VERSION='v480';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4928,11 +4929,11 @@ function srClear(){if(SRV){SRV.tok++;SRV.busy=false}}
 function srKick(el,c){if(!el)return;el.classList.remove(c);void el.offsetWidth;el.classList.add(c)}
 function srQuake(n){srKick(document.getElementById('srv'),n>1?'quake2':'quake')}
 function srStars(v,cls){v=clamp(+v||0,0,5);let h='';for(let i=0;i<5;i++){const x=clamp(v-i,0,1);if(x<=0)break;h+=x<1?`<i class="pt" style="--i:${i};--f:${x.toFixed(2)}">★</i>`:`<i style="--i:${i}">★</i>`}
- return cls&&/fill/.test(cls)?`<span class="tws twfill ${cls}" role="img" aria-label="${stars(v)}"><span class="twbg">★★★★★</span><span class="twfg">${h}</span></span>`:`<span class="tws ${cls||''}" role="img" aria-label="${stars(v)}">${h}</span>`}
+ return cls&&/fill/.test(cls)?`<span class="tws twfill ${cls}" role="img" aria-label="${stars(v)}"><span class="twbg">${SR_BG}</span><span class="twfg">${h}</span></span>`:`<span class="tws ${cls||''}" role="img" aria-label="${stars(v)}">${h}</span>`}
 /* v211: how long a row takes to fill, star by star */
 function srFillMs(v,main){return Math.ceil(clamp(+v||0,0,5)-.001)*(main?360:240)+420}
 /* v312: the empty row uses the same dim background as the fill, so a segment starts empty and fills (the old .gh row was being painted gold) */
-const SR_GHOST='<span class="tws twfill gh"><span class="twbg">★★★★★</span></span>',SR_DRUM='<span class="twdrum"><i>●</i><i>●</i><i>●</i></span>';
+const SR_BG='<i>★</i><i>★</i><i>★</i><i>★</i><i>★</i>',SR_GHOST=`<span class="tws twfill gh"><span class="twbg">${SR_BG}</span></span>`,SR_DRUM='<span class="twdrum"><i>●</i><i>●</i><i>●</i></span>';
 /* a name plate: the card's overall, face/heel stripe, name, partners and title, without the photo */
 /* v303: in the card look each side is its wrestler's photo card (partners/extra corners as a line under it) */
 function srCards(){return typeof tcCard==='function'&&document.documentElement.classList.contains('tcards')}
