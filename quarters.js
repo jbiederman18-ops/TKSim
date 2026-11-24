@@ -65,6 +65,10 @@ Object.assign(window,{qhHtml,qhPush,qhHold,qhDraw,qhPlateIcons,qhNight,qhFmt,qhF
 .qht em{display:none}.qht.win{box-shadow:inset 3px 0 0 var(--gold),inset 0 0 0 1px var(--gold)}.qht.ai.win{box-shadow:inset -3px 0 0 var(--heel),inset 0 0 0 1px var(--gold)}
 .qht b.punch{animation:twPunch .5s cubic-bezier(.2,1.6,.4,1)}
 .srv.qh .twpair{min-height:0;justify-content:flex-start}
+.srv.qh .qhwrap,.srv.qh .twpair{transition:opacity .35s ease,filter .35s ease}
+.srv.qh.dim .qhwrap{position:relative;z-index:2}
+.srv.qh.qf-p .qhwrap{opacity:.3;filter:saturate(.4)}
+.srv.qh.qf-c .twpair{opacity:.3;filter:saturate(.4)}
 body:not(.tv) .srv.qh{min-height:min(760px,calc(100dvh - 100px))}
 .srv.qh .twrd{margin:8px 0 6px}
 body:not(.tv) .srv.qh .twcd .tkc{--w:58px;width:58px}
