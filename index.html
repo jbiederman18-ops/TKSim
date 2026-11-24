@@ -1519,7 +1519,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v461';
+const APP_VERSION='v462';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -3871,7 +3871,12 @@ function airPair(){
   out.fb[b]=fr;out.fans[b]=S.fans[b]-before;out.ratings[b]=r;try{fgAfterShow(infs[b]?infs[b].fs:[],b==='p'||ON()?out.notes:null)}catch(e){console.warn('fg',e)}});
  /* v400: fans switch shows — each group drifts toward the show that served it better tonight (fanbase.js); this replaced the flat head-to-head and main event war bonuses */
  if(!bye&&typeof fbDefect==='function')try{fbDefect(order.filter(b=>infs[b]),out)}catch(e){console.warn('defect',e)}
- if(!show.ppv&&!bye){const hw=grp?order.find(b=>place[b]===1):rt.p>=rt.ai?'p':'ai';S.hourWins[hw]=(S.hourWins[hw]||0)+1;out.hourWin=hw}
+ /* v462: tonight's fans, segment by segment, for the quarter-hour reveal (fanbase.js fbSplit) */
+ order.forEach(b=>{const r=out.fb[b],bl=out.blocks.find(x=>x.brand===b);if(!r||!bl||typeof fbSplit!=='function')return;try{const sp=fbSplit(r,bl.segs.length);if(sp)bl.segs.forEach((sg,i)=>{sg.fd=sp[i].t;sg.fi=sp[i].ic})}catch(e){console.warn('split',e)}});
+ /* v462: the night goes to the show that gained the most fans tonight (the show rating breaks a tie); placings follow it too */
+ const gain=b=>{const n=typeof fbNight==='function'?fbNight(out.fb[b]):null;return n==null?(out.fans[b]||0):n};
+ if(grp){const srt=order.filter(b=>infs[b]).sort((a,b)=>gain(b)-gain(a)||rt[b]-rt[a]);srt.forEach((b,i)=>place[b]=i+1);out.places=place}
+ if(!show.ppv&&!bye){const hw=grp?order.find(b=>place[b]===1):(gain('p')>gain('ai')||gain('p')===gain('ai')&&rt.p>=rt.ai)?'p':'ai';S.hourWins[hw]=(S.hourWins[hw]||0)+1;out.hourWin=hw}
  /* tickets, merch and ads follow the show; sell-outs cash in and cost fans */
  order.forEach(b=>showRevenue(b,out.cash[b],rt[b],show,ctx,out));
  order.forEach(b=>{if(infs[b])mandCheck(b,infs[b],rt[b],show,out.hourWin,out.notes)});
@@ -4862,9 +4867,9 @@ function promoReact(st){const t=st>=4.5?['🔥🔥🔥','The building is unglued
  return `<div class="center pr-react"><div class="pr-e">${t[0]}</div><b>${t[1]}</b><div class="muted tiny">Stars come out after the show</div></div>`}
 function lockPromo(){S.card.p[PS.i].d=PS.p;PS=null;save();closeModal();render()}
 
-/* v208: the solo star reveal is a tug of war you advance by tapping. Each round, your segment and the rival's in the
- same slot face off as name plates (no photos, so it fits any phone): the winner's plate lights up, both sets of stars
- land at once and a rope lurches toward the better segment. A tap plays the next round, or finishes the one that's
+/* v208: the solo reveal, advanced by tapping (v462: the quarter-hour ratings, quarters.js — it was a tug of war). Each
+ round, your segment and the rival's in the same slot face off: the plate with more fans lights up, its stars land and
+ that show's line on the overnights chart draws to its point. A tap plays the next round, or finishes the one that's
  playing. The main event dims the room, holds on a drumroll, stamps its stars slowly and runs straight into the result.
  Skip jumps to the end. Opened later from Last Show it goes straight to the full results, with a Replay button. */
 let SRV=null;
@@ -4944,9 +4949,9 @@ function srHalf(it,br,st,hold){const who=srNm(br);
  const tag=b.brand==='x'?esc(sub.split(' · ').pop()):`${esc(who)} · ${esc(sub.split(' · ').pop())}`;
  const plates=cs?`<div class="twps${srCards()?' cards':''}">${cs.map((c,i)=>(i?`<span class="twvs">${s.wi==null||s.wi<0?'&amp;':'vs'}</span>`:'')+srPlate(c)).join('')}</div>`:'';
  const txt=!cs||(cs.length<2&&!srCards())?`<div class="twt">${esc(s.txt)}</div>`:'';
- return `<div class="twh ${b.brand}${st?' dn nt':''}${hold?' hold':''}" id="srh-${b.brand==='x'?'x':br}" data-k="${it.bi}-${it.si}"><div class="twhd"><span class="twl">${tag}</span><span class="twsv">${st||SR_GHOST}</span></div>${plates}${txt}${(()=>{const ns=s.notes||[];const ev=typeof arcEvOf==='function'?ns.map(arcEvOf).filter(Boolean):[];const lead=ns.find(n=>!(typeof arcEvOf==='function'&&arcEvOf(n)));return (lead?`<div class="twnote">${esc(lead)}</div>`:'')+ev.map(arcEvHtml).join('')})()}</div>`}
-function srLabel(rd){if(rd.x)return esc(rd.x.b.label);const n=SRV.rounds.filter(r=>!r.x).length,k=SRV.rounds.filter(r=>!r.x).indexOf(rd)+1;return rd.main?'<b>Main event</b>':`Round ${k} of ${n}`}
-function srNextLabel(){const rd=SRV.rounds[SRV.i];return !rd?'':rd.main?'Tap for the main event ▸':rd.x?`Tap for ${rd.x.b.label} ▸`:`Tap for round ${SRV.rounds.filter(r=>!r.x).indexOf(rd)+1} ▸`}
+ return `<div class="twh ${b.brand}${st?' dn nt':''}${hold?' hold':''}" id="srh-${b.brand==='x'?'x':br}" data-k="${it.bi}-${it.si}"><div class="twhd"><span class="twl">${tag}</span><span class="twsv">${typeof qhPlateIcons==='function'?qhPlateIcons(s):''}<span class="twst">${st||SR_GHOST}</span></span></div>${plates}${txt}${(()=>{const ns=s.notes||[];const ev=typeof arcEvOf==='function'?ns.map(arcEvOf).filter(Boolean):[];const lead=ns.find(n=>!(typeof arcEvOf==='function'&&arcEvOf(n)));return (lead?`<div class="twnote">${esc(lead)}</div>`:'')+ev.map(arcEvHtml).join('')})()}</div>`}
+function srLabel(rd){if(rd.x)return esc(rd.x.b.label);const n=SRV.rounds.filter(r=>!r.x).length,k=SRV.rounds.filter(r=>!r.x).indexOf(rd)+1;return rd.main?'<b>Main event</b>':`Segment ${k} of ${n}`}
+function srNextLabel(){const rd=SRV.rounds[SRV.i];return !rd?'':rd.main?'Tap for the main event ▸':rd.x?`Tap for ${rd.x.b.label} ▸`:`Tap for segment ${SRV.rounds.filter(r=>!r.x).indexOf(rd)+1} ▸`}
 function srHint(t){const h=document.getElementById('tw-next');if(SRV&&SRV.tv)t='';/* v264: the TV plays itself — no "Tap for…" */if(h){h.textContent=t||'';h.hidden=!t}}
 /* draw a round in the pair area; settled shows its stars, winners and notes right away */
 function srShow(rd,settled){const pr=document.getElementById('tw-pair'),lb=document.getElementById('tw-rd');if(!pr)return;if(lb)lb.innerHTML=srLabel(rd);
@@ -4955,57 +4960,52 @@ function srShow(rd,settled){const pr=document.getElementById('tw-pair'),lb=docum
  /* v303: unsettled, the rival's half waits face down in its place until your segment's stars are in */
  const hold=!settled&&!!(rd.p&&rd.ai);
  pr.innerHTML=rd.x?srHalf(rd.x,'x',st(rd.x)):srHalf(rd.p,'p',st(rd.p))+(SRV.two||rd.ai?srHalf(rd.ai,'ai',hold?null:st(rd.ai),hold):'');
- if(settled)srMark(rd)}
+ if(settled){srMark(rd);if(rd.p&&rd.ai&&!SRV.tv){const ph=srHalfEl(rd.p);if(ph)ph.classList.add('mini')}}}
 /* a segment is "done" once its stars are in: its show's running score updates (safe to call twice) */
-function srDone(it){if(!it||it.ok)return;it.ok=true;SRV.seen.push(it);const br=it.b.brand;if(br!=='p'&&br!=='ai')return;const box=document.getElementById(br==='p'?'srs-p':'srs-ai');if(!box)return;
- const st=box.querySelector('b');st.textContent=stars(srScore(br));srKick(st,'punch')}
-/* v312: the running score counts the main event extra (×1.6), exactly like the final show rating does */
-function srScore(br){let t=0,w=0;SRV.seen.filter(x=>x.b.brand===br).forEach(x=>{const k=x.me?1.6:1;t+=x.s.stars*k;w+=k});return w?t/w:0}
-function srMark(rd){if(!rd.p||!rd.ai)return;const d=rd.p.s.stars-rd.ai.s.stars;const P=document.getElementById('srh-p'),A=document.getElementById('srh-ai');if(!P||!A)return;
- if(Math.abs(d)<.01){P.classList.add('tie');A.classList.add('tie')}else{(d>0?P:A).classList.add('won');(d>0?A:P).classList.add('lost')}}
-/* v219: the rope sits where the scores are — the gap between the two "So far" averages during the rounds, then the real
- final ratings (main event weight, show structure, production, ads) at the end, always on the side of whoever won */
-function srRope(gap,win,kick){if(!SRV)return;let pos=clamp(-gap*30,-42,42);
- if(win==='p'&&pos>-7)pos=-7;else if(win==='ai'&&pos<7)pos=7;else if(win==='tie')pos=0;SRV.pos=pos;
- const k=document.getElementById('tw-knot'),kp=document.getElementById('tw-kp');if(k){/* v304: slides with a transform on a full-width carrier, so the move never re-lays out the page */if(kp)kp.style.transform=`translateX(${pos}%)`;else k.style.left=(50+pos)+'%';if(kick){srKick(k.closest('.twrope'),'jolt');srKick(k,'ring')}}}
-/* v312: what moved a show's rating beyond its segments, item by item: show structure, production, ad breaks */
-function srExtras(o,br){const b=o.blocks.find(x=>x.brand===br);if(!b||!b.segs.length)return [];const l=[];const fm=b.flow&&b.flow.mod;if(fm&&Math.abs(fm)>=.005)l.push([`Show structure (${typeof flowWord==='function'?flowWord(fm).toLowerCase():''})`,fm]);
- const c=o.cash&&o.cash[br];const pk=c&&c.pk;if(pk&&PROD[pk]&&PROD[pk].b)l.push([PROD[pk].n,PROD[pk].b]);if(c&&(c.sell||[]).includes('ads'))l.push(['Extra ad breaks',-.25]);return l}
-/* how far the full show rating moved from its segments alone (show structure, production, ads) */
+function srDone(it){if(!it||it.ok)return;it.ok=true;SRV.seen.push(it);const br=it.b.brand;if(br!=='p'&&br!=='ai')return;if(typeof qhPush==='function')qhPush(it);const box=document.getElementById(br==='p'?'srs-p':'srs-ai');if(!box)return;
+ const st=box.querySelector('b');st.textContent=srScore(br);srKick(st,'punch')}
+/* v462: the running score is the fans each show has gained so far tonight (the same numbers the chart draws) */
+function srScore(br){const t=SRV.seen.filter(x=>x.b.brand===br).reduce((a,x)=>a+qhFd(SRV.o,x),0);return qhFmt(t)}
+/* the round's winner is the segment that gained more fans */
+function srMark(rd){if(!rd.p||!rd.ai)return;const d=qhFd(SRV.o,rd.p)-qhFd(SRV.o,rd.ai);const P=document.getElementById('srh-p'),A=document.getElementById('srh-ai');if(!P||!A)return;
+ if(Math.abs(d)<1){P.classList.add('tie');A.classList.add('tie')}else{(d>0?P:A).classList.add('won');(d>0?A:P).classList.add('lost')}}
 /* the round's result: running scores, the rope, the winner's panel. Visible only for the round on screen. */
 function srLand(rd,vis){if(rd.landed)return;rd.landed=true;[rd.p,rd.ai,rd.x].forEach(srDone);
- if(rd.p&&rd.ai){const d=rd.p.s.stars-rd.ai.s.stars;srRope(srScore('p')-srScore('ai'),null,vis&&Math.abs(d)>.01)}
- /* v373: a one-sided round (one show has an extra segment, e.g. the bonus promo) still moves that show's average, so the rope follows it quietly — no jolt, no head-to-head winner */
- else if(SRV.two&&(rd.p||rd.ai))srRope(srScore('p')-srScore('ai'),null,false)
+ /* a one-sided round (one show has an extra segment, e.g. the bonus promo): the other show's line holds flat through it */
+ if(SRV.two&&!rd.x&&!(rd.p&&rd.ai)&&typeof qhHold==='function')qhHold(rd);
  if(vis){document.querySelectorAll('#tw-pair .twh').forEach(h=>h.classList.add('nt'));srMark(rd);srKick(document.querySelector('#tw-pair .twh.won'),'slamw');if(!rd.main)srKick(document.getElementById('srv'),'nudge')}}
 /* v265: the stage's markup on its own, so the party-night TV can play it too (nm = the two shows' GM names, tv = no tapping) */
 function srStageHtml(o,nm,tv){const G=nm?nm.p:S.gm,Rv=nm?nm.ai:S.rival;const all=srRounds(o);const rounds=all.filter(r=>!r.x&&!r.main).concat(all.filter(r=>r.x),all.filter(r=>r.main));
  const two=!!o.ratings&&o.blocks.some(b=>b.brand==='ai');const cnt=br=>{const b=o.blocks.find(x=>x.brand===br);return b?b.segs.length:0};
  const html=(`<div id="srv" class="srv tw${tv?' srtv':''}" ${tv?'':'onclick="srTap(event)"'}>
  <div class="sr-top"><span class="livebug"><b>On air</b><span>Week ${o.week}</span></span><div class="sr-title">${esc(o.title)}</div></div>
- ${two?`<div class="twsc"><div class="me" id="srs-p"><span>${esc(G)}</span><b>–</b><em>So far</em></div><div id="srs-ai"><span>${esc(Rv)}</span><b>–</b><em>So far</em></div></div>
- <div class="twrope"><span class="twkp" id="tw-kp"><i id="tw-knot"></i></span></div><div class="twrl"><span>${esc(G)}</span><span>${esc(Rv)}</span></div>`:''}
+ ${two?`<div class="twsc"><div class="me" id="srs-p"><span>${esc(G)}</span><b>+0</b><em>Fans tonight</em></div><div id="srs-ai"><span>${esc(Rv)}</span><b>+0</b><em>Fans tonight</em></div></div>`:''}
  <div class="twrd" id="tw-rd"></div>
  <div class="twpair" id="tw-pair"><div class="twh p"><div class="twt">${esc(G)} · ${cnt('p')} segment${cnt('p')===1?'':'s'}</div></div>${two?`<div class="twh ai"><div class="twt">${esc(Rv)} · ${cnt('ai')} segment${cnt('ai')===1?'':'s'}</div></div>`:''}</div>
+ <div id="qh-slot"></div>
  <div class="twfoot" id="tw-foot"><div class="twnext" id="tw-next" aria-live="polite"${tv?' hidden':''}>Tap to start ▸</div></div>
  <div class="sr-ctl" id="sr-ctl">${tv?'':'<span class="muted tiny">Tap anywhere to advance</span>'}<button class="mini" onclick="event.stopPropagation();srSkip()">Skip ▸▸</button></div></div>`);
- SRV={o,rounds,i:0,tok:0,busy:false,done:false,seen:[],pos:0,two,nm:nm||null,tv:!!tv};return html}
+ SRV={o,rounds,i:0,tok:0,busy:false,done:false,seen:[],two,nm:nm||null,tv:!!tv};
+ /* v462: the overnights chart sits under the plates (quarters.js) */
+ return two&&typeof qhHtml==='function'?html.replace('<div id="qh-slot"></div>',qhHtml(SRV)):html}
 function srStage(o){const html=srStageHtml(o);openModal(html)}
 function srWait(ms,tok){return new Promise((res,rej)=>setTimeout(()=>srOn()&&SRV.tok===tok?res():rej(0),ms))}
 /* v303: a round plays one side at a time — your segment (cards, winner, stars), then the rival's flips over on the other
  side, and only then does the rope move. from='ai' picks the round up at the rival's half (a tap finished yours). */
 function srHalfEl(it){return it&&document.querySelector(`#tw-pair .twh[data-k="${it.bi}-${it.si}"]`)}
-function srSettleHalf(it){const h=srHalfEl(it);if(!h)return;h.classList.remove('hold');h.classList.add('dn','nt');const sv=h.querySelector('.twsv');if(sv)sv.innerHTML=srStars(it.s.stars);srDone(it)}
+function srSettleHalf(it){const h=srHalfEl(it);if(!h)return;h.classList.remove('hold');h.classList.add('dn','nt');const sv=h.querySelector('.twst');if(sv)sv.innerHTML=srStars(it.s.stars);srDone(it)}
 async function srPlay(from){const R=SRV,rd=R.rounds[R.i];if(!rd)return srFinal(false);const tok=++R.tok,w=ms=>srWait(ms,tok);R.busy=true;srHint('');
  const main=!!rd.main,v=document.getElementById('srv');
  const seq=rd.x?[['x',rd.x]]:[['p',rd.p],['ai',rd.ai]].filter(a=>a[1]);
  if(!from){srShow(rd,false);if(main&&v)v.classList.add('dim')}
  for(let k=from?Math.max(0,seq.findIndex(a=>a[0]===from)):0;k<seq.length;k++){const [br,it]=seq[k];R.ph=br;const h=srHalfEl(it);
   const anyWin=(srPick(it.s)||[]).some(x=>x.r==='w');
-  if(h&&h.classList.contains('hold')){h.classList.remove('hold');void h.offsetWidth;h.classList.add('unh');if(main){const sv=h.querySelector('.twsv');if(sv)sv.innerHTML=SR_DRUM}}
+  /* v462: once the rival's half starts, yours folds to one line so the chart below never gets pushed down (phones only) */
+  if(k&&!R.tv){const ph=srHalfEl(seq[0][1]);if(ph)ph.classList.add('mini')}
+  if(h&&h.classList.contains('hold')){h.classList.remove('hold');void h.offsetWidth;h.classList.add('unh');if(main){const sv=h.querySelector('.twst');if(sv)sv.innerHTML=SR_DRUM}}
   await w(k?(main?SR_T.mainHold2:SR_T.intro2):(main?SR_T.mainHold:SR_T.intro));
   if(h)h.classList.add('dn');await w(anyWin?(main?SR_T.mainSettle:SR_T.settle):SR_T.noWin);
-  const sv=h&&h.querySelector('.twsv');if(sv)sv.innerHTML=srStars(it.s.stars,main?'fill sl':'fill');if(window.SFX)SFX.stars(it.s.stars,main?.36:.24);
+  const sv=h&&h.querySelector('.twst');if(sv)sv.innerHTML=srStars(it.s.stars,main?'fill sl':'fill');if(window.SFX)SFX.stars(it.s.stars,main?.36:.24);
   await w(srFillMs(it.s.stars,main)+(main?250:150));
   srDone(it);if(h)h.classList.add('nt')
   /* v454: an arc step in this segment plays out in its box — hold long enough to read it */
@@ -5018,7 +5018,7 @@ async function srPlay(from){const R=SRV,rd=R.rounds[R.i];if(!rd)return srFinal(f
 function srAdvance(){if(!srOn()||SRV.done)return;const R=SRV;
  if(R.busy){R.tok++;const rd=R.rounds[R.i];
   /* v303: a tap during your half lands it and moves on to the rival's; a tap during theirs finishes the round */
-  if(R.ph==='p'&&rd&&rd.p&&rd.ai){srSettleHalf(rd.p);return srPlay('ai').catch(()=>{})}
+  if(R.ph==='p'&&rd&&rd.p&&rd.ai){srSettleHalf(rd.p);if(!R.tv){const ph=srHalfEl(rd.p);if(ph)ph.classList.add('mini')}return srPlay('ai').catch(()=>{})}
   R.ph=null;const v=document.getElementById('srv');if(v)v.classList.remove('dim');srShow(rd,true);srLand(rd,true);
   if(R.i>=R.rounds.length-1)return srEnd();R.busy=false;R.i++;return srHint(srNextLabel())}
  if(R.crowd)return srFinal(false);
@@ -5032,21 +5032,19 @@ function srEnd(){if(!srCrowdOk())return srFinal(false);const R=SRV;R.busy=false;
  srHint('Tap for the winner ▸')}
 function srTap(e){if(e&&e.target&&e.target.closest('button,a,summary,details'))return;srAdvance()}
 document.addEventListener('keydown',e=>{if(!srOn()||SRV.done||(e.target&&e.target.closest&&e.target.closest('button,input,textarea')))return;if(e.key===' '||e.key==='Enter'||e.key==='ArrowRight'){e.preventDefault();srAdvance()}});
-/* who won the night: the TV ratings war on TV weeks, the show ratings themselves on PPVs (they have no hour to win) */
-function srNight(o){if(o.hourWin)return o.hourWin;const r=o.ratings;if(!r||r.p==null||r.ai==null)return null;return r.p>r.ai+1e-9?'p':r.ai>r.p+1e-9?'ai':'tie'}
-function srFinal(instant){const R=SRV,o=R.o;R.tok++;R.busy=false;R.done=true;const nw=srNight(o);
+/* who won the night: the most fans gained tonight (the show rating breaks a tie). TV weeks carry it as hourWin; PPVs work it out */
+function srNight(o){if(o.hourWin)return o.hourWin;if(typeof qhNight==='function'){const n=qhNight(o);if(n)return n}const r=o.ratings;if(!r||r.p==null||r.ai==null)return null;return r.p>r.ai+1e-9?'p':r.ai>r.p+1e-9?'ai':'tie'}
+function srFinal(instant){const R=SRV,o=R.o;R.tok++;R.busy=false;R.done=true;if(instant)R.inst=true;const nw=srNight(o);
  if(instant){const last=R.rounds[R.rounds.length-1];if(last){srShow(last,true)}}
  R.rounds.forEach(rd=>srLand(rd,rd===R.rounds[R.rounds.length-1]&&!R.crowd));
  const v=document.getElementById('srv');if(!v)return;v.classList.remove('dim');const lb=v.querySelector('.livebug b');if(lb)lb.textContent='Final';const ctl=document.getElementById('sr-ctl');if(ctl){ctl.hidden=true;ctl.style.display='none'}
- if(o.ratings&&R.two&&o.ratings.p!=null&&o.ratings.ai!=null)srRope(o.ratings.p-o.ratings.ai,nw,!instant);
- if(o.ratings)[['p','srs-p'],['ai','srs-ai']].forEach(([k,id])=>{const box=document.getElementById(id);if(!box)return;box.querySelector('b').textContent=stars(o.ratings[k]);box.querySelector('em').textContent='Final';if(nw===k)box.classList.add('win');if(!instant){box.classList.remove('punch');void box.offsetWidth;box.classList.add('punch')}});
+ if(o.ratings)[['p','srs-p'],['ai','srs-ai']].forEach(([k,id])=>{const box=document.getElementById(id);if(!box)return;box.querySelector('b').textContent=qhFmt(qhTotal(o,k));box.querySelector('em').textContent='Final';if(nw===k)box.classList.add('win');if(!instant){box.classList.remove('punch');void box.offsetWidth;box.classList.add('punch')}});
  const bs=R.tv?srBestAll(o):srBest(o),pb=o.blocks.find(b=>b.brand==='p'),fl=pb&&pb.flow&&pb.flow.mod;
  /* v459: when the crowds are already up, the winner lands on top of them — the crowd table stays, nothing replays */
- const foot=document.getElementById('tw-foot');const banH=`${nw==='p'||nw==='ai'?`<div class="winban twban ${nw==='p'?'w':'l'}">${R.tv?esc(srNm(nw))+' wins the night!':nw==='p'?'You win the night!':esc(S.rival)+' takes the night'}</div>`:nw==='tie'?`<div class="winban twban t">Dead even</div>`:''}`,bestH=`${bs?`<div class="sr-motn"><span>Best of the night</span><b>${esc(bs.txt)}</b>${srStars(bs.stars)}</div>`:''}`,xtraH=`${(()=>{if(!o.ratings||!R.two||o.ratings.p==null||o.ratings.ai==null)return '';const g=o.ratings.p-o.ratings.ai,same=stars(o.ratings.p)===stars(o.ratings.ai);
-   const sg=v=>`${v>=0?'+':'−'}${Math.abs(v).toFixed(2)}★`;
-   /* v312: the extras on top of the segments are always spelled out, item by item, so the final swing of the rope is never a mystery */
-   const why=['p','ai'].map(b=>{const l=srExtras(o,b);return l.length?`<b>${esc(srNm(b))}</b> ${l.map(([n,v])=>`${n} ${sg(v)}`).join(' · ')}`:''}).filter(Boolean).join('<br>');
-   return `<div class="muted tiny center srx">${same&&(nw==='p'||nw==='ai')?Math.abs(g)<.005?`Level at ${o.ratings.p.toFixed(2)}★ — ties go to ${R.tv?esc(srNm(nw)):nw==='p'?'you':esc(S.rival)}${why?'<br>':''}`:`Won by a hair — ${o.ratings[nw].toFixed(2)}★ to ${o.ratings[nw==='p'?'ai':'p'].toFixed(2)}★${why?'<br>':''}`:''}${why}</div>`})()}`,btnH=`${R.tv?'':`<div class="sr-btns"><button class="btn" onclick="event.stopPropagation();showResults()">Full results ▸</button><button class="btn sec" onclick="event.stopPropagation();closeModal();go('home');if(S.crisis)setTimeout(openCrisis,250)">Continue</button></div>`}`;
+ const foot=document.getElementById('tw-foot');const banH=`${nw==='p'||nw==='ai'?`<div class="winban twban ${nw==='p'?'w':'l'}">${R.tv?esc(srNm(nw))+' wins the night!':nw==='p'?'You win the night!':esc(S.rival)+' takes the night'}</div>`:nw==='tie'?`<div class="winban twban t">Dead even</div>`:''}`,bestH=`${bs?`<div class="sr-motn"><span>Best of the night</span><b>${esc(bs.txt)}</b>${srStars(bs.stars)}</div>`:''}`,xtraH=`${(()=>{if(!o.ratings||!R.two||o.ratings.p==null||o.ratings.ai==null)return '';
+   /* v462: the night is won on fans; the show ratings are shown for what they are, and they break a dead heat */
+   const lvl=qhTotal(o,'p')===qhTotal(o,'ai')&&(nw==='p'||nw==='ai');
+   return `<div class="muted tiny center srx">${lvl?`Level on fans — the better show takes it<br>`:''}Show ratings: ${esc(srNm('p'))} ${o.ratings.p.toFixed(2)}★ · ${esc(srNm('ai'))} ${o.ratings.ai.toFixed(2)}★</div>`})()}`,btnH=`${R.tv?'':`<div class="sr-btns"><button class="btn" onclick="event.stopPropagation();showResults()">Full results ▸</button><button class="btn sec" onclick="event.stopPropagation();closeModal();go('home');if(S.crisis)setTimeout(openCrisis,250)">Continue</button></div>`}`;
  const cr0=R.crowd&&foot&&foot.querySelector('.srcrowd');
  if(cr0){cr0.classList.add('now');const nx=document.getElementById('tw-next');if(nx)nx.remove();foot.insertAdjacentHTML('afterbegin',banH);cr0.insertAdjacentHTML('afterend',bestH+xtraH+btnH);if(!instant)srQuake(1);return}
  if(foot)foot.innerHTML=banH+`
@@ -5149,7 +5147,8 @@ const HOWTO=`<p><b>📱 On a phone:</b> Go live stays pinned above the tabs on B
 <p><b>Arcs:</b> the <b>Arcs</b> tab has two views: <b>Active</b> (the arcs you're running, each with the wrestler's card and whoever they're working with) and <b>Potential</b>. Potential opens with <b>This week's pitches</b>: three wrestlers who could use a story right now, each paired with an arc and tagged with why (a contract ending, ready to break out, off TV lately, morale slipping, room to grow), set each Monday. Below them, every arc on offer is a short row (its name, a few-word hook for each storyline, the price, a few faces of who can run it); filter by Mic, In-ring, Trait, Story or what you can afford, tap a row to open its stories and wrestlers, then tap one to cast it. To start from the wrestler instead, sort the Roster by <b>📖 Arcs</b>: each card shows how many arcs they have ready, and a tap opens them. Each storyline lays its own road: its stops and payoff tell that story. Each wrestler is assigned up to three arcs that fit who they are, and every arc comes with a <b>storyline</b> that fits them and the partner or rival you cast. One Mic arc (a heel or face turn, a betrayal, finding their voice), one In-ring arc (a mentor, a gauntlet to a title shot, an undefeated streak) and one that changes who they are (a new trait, a second crowd, a tag team or faction, a rebrand). Their crowd tilts which arcs they get (Bloodhounds see hardcore stories more, Technical wrestlers technical ones), faces and heels get different turns, and superstars (85+ popularity) get story arcs: a bigger payoff, popularity and heat, never In-ring or Mic. The calendar sets the size: small stories early in the season and right after the big shows, big ones on the road to WrestleMania and All In. Arcs reshuffle after each PPV, after one of their arcs ends, or when they turn. The story doesn't have to exist first: starting a Stakes Match picks a rival and the build is the feud, a Faction War forms the factions, a Comeback opens with an injury angle. When an arc has a partner or rival, <b>you pick them</b> (the best fit is picked to start). <b>Each arc runs once a season</b> across your roster, whether it pays off or not, except Pride of the Town: any wrestler who qualifies can claim a hometown, once a season each. A few need a bigger stage: Hometown Hero and Dream Match the Good Building, Farewell Run and Last Chase the Actual Arena, and Force a Retirement waits for season 2. Milestones (your first great payoff, a blood feud, a new champion, a new team, a turn paying off) each earn a <b>🔀 reshuffle</b> once a season, to reshuffle any wrestler's arcs. Assign one, pay up front, book the build steps (each needs 2½★ or better, a backstage vignette 2★, unless it says more), then book the payoff before the deadline. The payoff segment gets a story bonus on the night, bigger after a strong build and on a PPV, brings in fans (a weak build brings in far fewer), and the wrestler comes out of it better: In-ring or Mic, a trait, a crowd, a team, popularity. A build that averages about 4★ or better is a great payoff and pays more. <b>Arcs build people up.</b> The price follows whoever the story builds (the successor in Passing the Torch and Passing the Title): half price at 45 popularity or under, full price at 75, more for a superstar. The lower on the card, the bigger the lift: the payoff gives someone on the way up extra popularity and more fans, a little less for each payoff they've already had this season. A superstar in the payoff segment rubs off on whoever's below them, and an upper-midcarder (70+) whose great payoff lands in the main event or on a PPV has a breakthrough night. The crowd gets more invested with every step, so segments with the people in a running arc rate a little higher. The big story arcs come in different versions each game (a Heel Turn might end in a costly run-in one game and a promo betrayal the next), the storyline leads each arc, and everyone is secretly <b>made for one arc</b>: run it with them and the payoff and rewards are half again as big, and their profile shows it with a ✨ from then on. Some arcs play differently: a <b>Groundswell</b> builds by keeping them off TV (or squashing them) while the crowd's anger costs you a few fans each week, until the big win pays it all back, and <b>The Corporate Offer</b> stops the show right before its payoff so you decide whether they sign or refuse (a few storylines do the same: a legend's Last Chase lets you decide whether they retire as champion, an Invasion whether they stick the knife in or find common ground, a Wedding whether the three break up or become a throuple, a Crisis of Faith whether the faction converts or kicks them out, Too Good to Be True whether the kindness was real or a ruse, and Flags of War whether the two sides call a ceasefire or go to total war). Two arcs run at once. Miss the deadline or drop one and the wrestler is let down. Tap an arc to see its road: every stop, the payoff and the reward. A running arc shows as a track of stops ending in the payoff ★, on the Arcs tab and their profile, and each stop shows on the Book screen's checklist with <b>Book it</b>. Your running arcs also sit on Home and the Book screen under <b>📖 Your arcs</b>: each one's stops, its next step and the week it's due. When a show hits a stop, the star reveal plays it out in that segment's box, so everyone can read what happened.</p>
 <p><b>Network mandates:</b> after each PPV the TV network asks for something specific by the next one: a 4★ main event, two women's matches on one show, a new champion, an arc paid off, a turn, a feud taken to 45 heat, and so on. Story mandates come up most and pay the most. Deliver for a big cash and fan bonus; miss it and you lose ${fmtFans(MAND_MISS)} fans. Check the Home or Book screen for your current one.</p>
 <p><b>🎯 Weekly goals &amp; 📣 crowd chants:</b> each week the Book screen gives you one small goal (hit it for a little cash and 3K fans — no penalty for missing it; a live ✅/🤞/⏳ line tells you if the card you've booked is on track), and the crowd starts chanting for someone on your roster. Book them in a match or promo that week and their segment gets +½★, they gain 2 popularity and you get 5K fans.</p>
-<p><b>Head to head:</b> in solo play the rival's card stays a surprise until the show airs. On TV, whoever's main event rates higher wins the main event war. Big free agents take sealed offers, so the rival can outbid you (see Offers &amp; contracts). In the star reveal, once both main events are in, you see how every crowd moved on your show, then on the rival's, and the winner of the night lands on top of it.</p>
+<p><b>Head to head:</b> in solo play the rival's card stays a surprise until the show airs. On TV, whoever's main event rates higher wins the main event war. Big free agents take sealed offers, so the rival can outbid you (see Offers &amp; contracts).</p>
+<p><b>The overnights:</b> the show that gains more fans tonight wins the night (the better show rating breaks a dead heat), and a win pays the ratings bonus. The reveal plays segment by segment: your segment lands with its cards, stars and the crowds it moved (▲ or ▼), then the rival's, and each show's line on the chart moves by the fans that segment gained or lost. The main event is the overrun at the far right. Once both main events are in, you see how every crowd moved on your show, then on the rival's, and the winner of the night lands on top of it.</p>
 <p><b>✨ Suggest the rest</b> on the Book screen fills any empty slots and keeps everything you've already booked, promised or entered in a tournament. It books the best matches it can from the wrestlers' own traits — popularity, in-ring skill, crowd matchups and traits, face vs heel, stamina, no recent rematches — rated the way the show rates them, minus feud heat, as plain singles matches with clean finishes, plus your best talkers for any open promo. It books on ability alone: it won't rest anyone who's worn down or steer around a miserable wrestler — stamina and morale are yours to manage. It ignores your checklist entirely: promises, contract clauses, title defenses, the weekly goal, the crowd's chant and feuds are all yours to handle, and the optional bonus promo stays empty. <b>Clear card</b> wipes everything else.</p>
 <p><b>Difficulty:</b> Hard rivals book like pros — they rest stars before PPVs, order their card for the ratings, protect new champions and pay off feuds cleanly. Easy rivals book sloppily.</p>
 <p><b>The offseason:</b> after ${PPVS[SEASON]}, the season ends with an awards show (Wrestler and Women's Wrestler of the Year, Breakout Star, Rookie, Tag Team, Feud, Match and Promo of the Year — winners start next season with a boost). Veterans feel Father Time: they lose a little in-ring each year and may retire. Prospects ready for the main roster (60+ in-ring) get called up with debut buzz. Re-sign anyone whose contract is running out before you start the new season.</p>`;
@@ -6048,6 +6047,7 @@ function hyTidy(root){if(!skinOn()||!root)return;root.querySelectorAll('.small,.
 <script src="draftcall.js"></script>
 <script src="draftcrowd.js"></script>
 <script src="opps.js"></script>
+<script src="quarters.js"></script>
 <script type="module" src="online.js"></script>
 </body>
 </html>

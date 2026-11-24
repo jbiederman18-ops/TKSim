@@ -23,7 +23,7 @@
      Appending is how stops drift into patch notes.
    • tools/check-tutorial.py fails on history/design phrasing (TUT_BANNED). If it flags a line, rewrite it, don't
      dodge the pattern. */
-const TUT_REV=88;
+const TUT_REV=89;
 const TUT_KEY='tksim_tut';
 const TUT_WORDS=190;  /* longest a stop may be (checked by tools/check-tutorial.py) */
 const TUT_MISS=[];
@@ -81,8 +81,8 @@ const TUT_STEPS=[
  b:()=>`<b>Make the pick</b> drafts the best available wrestler. To take someone else, tap their card and draft them from their profile.<br><br>In a hurry? <b>Auto-pick</b> takes the best fit for the crowds you're short on, and <b>${tv('online',()=>ON()?'Auto-draft me':'Sim rest','Sim rest')}</b> finishes your draft.`},
 
 /* ---- the first week: the essentials only — everything else is a coach tip the first time it comes up ---- */
-{id:'s.show',track:'season',since:75,tab:'home',sel:'main .card.showcard',sys:['shows','calendar','goal','fans','fan groups'],t:'Your show',
- b:()=>`Each week you book ${tv('show name',()=>esc(curShow().mine),'your show')} while ${tvRival()} books ${ON()?'theirs':tv('rival show',()=>esc(curShow().theirs),'theirs')}. The better show wins the night, and <b>the bigger audience wins the season</b>.<br><br>Grow it by giving each of your five crowds a real match of its own every week. A crowd you ignore drifts away. PPVs swing the most. ${tv('next PPV',()=>{const n=nextPPV();return n?`Next up: <b>${esc(n.n)}</b> in ${n.in} week${n.in===1?'':'s'}.`:''},'')}`},
+{id:'s.show',track:'season',since:89,tab:'home',sel:'main .card.showcard',sys:['shows','calendar','goal','fans','fan groups'],t:'Your show',
+ b:()=>`Each week you book ${tv('show name',()=>esc(curShow().mine),'your show')} while ${tvRival()} books ${ON()?'theirs':tv('rival show',()=>esc(curShow().theirs),'theirs')}. Whoever gains more fans tonight wins the night, and <b>the bigger audience wins the season</b>.<br><br>Grow it by giving each of your five crowds a real match of its own every week. A crowd you ignore drifts away. PPVs swing the most. ${tv('next PPV',()=>{const n=nextPPV();return n?`Next up: <b>${esc(n.n)}</b> in ${n.in} week${n.in===1?'':'s'}.`:''},'')}`},
 {id:'s.tabs',track:'season',since:88,tab:'home',sel:'nav.tabs',sys:['tabs','navigation','roster','arcs','titles','office'],t:'Your tabs',
  b:()=>`<b>Home</b> is your week: the fan war, news and who's waiting outside your office. <b>Book</b> is where you build tonight's show. <b>Roster</b> has your wrestlers, free agents and prospects. <b>Arcs</b> runs your wrestlers' storylines. <b>Titles</b> shows your champions and the title shots you owe. <b>Office</b> has your money, your buildings and the season calendar.`},
 {id:'s.attn',track:'season',since:80,tab:'book',sel:'main .card.attn',sys:['weekly goals','chants','promises','pitches','contracts','titles','morale','backstage heat','briefing','mandates','inbox','arcs'],t:'Needs your attention',

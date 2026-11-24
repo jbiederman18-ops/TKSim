@@ -172,8 +172,7 @@ wrap('mpLocked',(f,t,a)=>{const out=f.apply(t,a);if(out)play('nope');return out}
 wrap('farmSign',(f,t,a)=>{const out=f.apply(t,a);play('signed');return out});
 /* your own show going live */
 wrap('goLive',(f,t,a)=>{const was=typeof LIVE!=='undefined'&&LIVE;const out=f.apply(t,a);try{if(!was&&LIVE)play('onair')}catch(e){}return out});
-/* the solo star reveal: the knot moving, a title changing hands, the win */
-wrap('srRope',(f,t,a)=>{const out=f.apply(t,a);if(a[2])play('tug');return out});
+/* the solo star reveal: a title changing hands, the win */
 let SR_INST=false;
 const TRX=/(NEW|INAUGURAL) .+? CHAMPIONS?:/;
 wrap('srDone',(f,t,a)=>{const it=a[0];const was=it&&it.ok;const out=f.apply(t,a);try{if(it&&!was&&!SR_INST&&(it.s.notes||[]).some(n=>TRX.test(n)))play('newchamp',null,.4)}catch(e){}return out});
