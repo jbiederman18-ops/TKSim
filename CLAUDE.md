@@ -1,4 +1,4 @@
-# Tony Khan Simulator — notes for Claude
+# TKSim — notes for Claude
 
 - Push updates straight to `main` (no pull requests).
 - Every release: bump `VERSION` in `sw.js` and `APP_VERSION` in `index.html` to match (e.g. `aegm-v131` / `v131`), and add any new file to `FILES` in `sw.js`.

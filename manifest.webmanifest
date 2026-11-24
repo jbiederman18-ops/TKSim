@@ -1,6 +1,6 @@
 {
-  "name": "Tony Khan Simulator",
-  "short_name": "TK Simulator",
+  "name": "TKSim",
+  "short_name": "TKSim",
   "description": "Be Tony Khan: draft, book Dynamite and Collision, and build feuds on the road to All In.",
   "start_url": "./",
   "scope": "./",

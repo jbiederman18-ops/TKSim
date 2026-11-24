@@ -7,11 +7,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="TK Simulator">
+<meta name="apple-mobile-web-app-title" content="TKSim">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=286">
 <link rel="icon" type="image/png" href="icon-192.png?v=286">
-<title>Tony Khan Simulator</title>
+<title>TKSim</title>
 <script>try{localStorage.removeItem('tksim_look');localStorage.removeItem('tksim_look_px');localStorage.removeItem('tksim_skin')}catch(e){}document.documentElement.classList.add('lk-hy')</script>
 <style>
 html,body{overflow-anchor:none}/* v314: whole-screen redraws confused scroll anchoring and jumped the page */
@@ -1519,7 +1519,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v474';
+const APP_VERSION='v475';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -2740,7 +2740,7 @@ function quickPaste(){if(!QP)return;pastePhoto(QP.ids[QP.i],quickOk)}
 function quickFile(){const id=QP.ids[QP.i];const i=fileInput();i.accept='image/*';i.onchange=async()=>{const f=i.files[0];if(!f)return;try{if(await setPhotoFrom(id,{blob:f})){toast(`📸 Photo added for ${S.w[id].name}.`);quickOk()}}catch(e){toast("That image couldn't be opened.")}};i.click()}
 function studioAdd(id){const i=fileInput();i.accept='image/*';i.onchange=async()=>{const f=i.files[0];if(!f)return;try{const old=IMG[id];IMG[id]=await cutIn(await fileToPhoto(f),id);if(!saveImg()){if(old)IMG[id]=old;else delete IMG[id]}else toast(`Photo added for ${S.w[id].name}.`)}catch(e){toast("That image couldn't be opened.")}render();openStudio()};i.click()}
 function exportPhotos(){const n=Object.keys(IMG).length;if(!n)return toast('No photos to export yet.');const names={};Object.keys(IMG).forEach(id=>{if(S.w[id])names[id]=S.w[id].name});
- const blob=new Blob([JSON.stringify({type:'all-elite-gm-photos',v:1,names,img:IMG})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`tony-khan-sim-photos-${n}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);toast(`Exported ${n} photos.`)}
+ const blob=new Blob([JSON.stringify({type:'all-elite-gm-photos',v:1,names,img:IMG})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`tksim-photos-${n}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);toast(`Exported ${n} photos.`)}
 function importPhotos(){const i=fileInput();i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);const src=d.img||d.__img;if(!src)throw 0;
  const backup=Object.assign({},IMG);let n=0;for(const id in src){let tid=S.w[id]?id:null;if(!tid&&d.names&&d.names[id]){const w=Object.values(S.w).find(x=>x.name===d.names[id])||Object.values(S.w).find(x=>x.aka===d.names[id]);if(w)tid=w.id}if(tid&&typeof src[id]==='string'&&src[id].startsWith('data:image/')){IMG[tid]=src[id];n++}}
  if(!saveImg()){IMG=backup;return toast('Not enough storage for that pack.')}render();toast(`Imported ${n} photos.`);openStudio()}catch(e){toast("That file isn't a photo pack.")}};r.readAsText(f)};i.click()}
@@ -4097,7 +4097,7 @@ function saveLocal(){if(TV||MP_TX||RESTORING)return true;const k=saveKey(),v=JSO
  if(Date.now()-SAVE_WARNED>60000){SAVE_WARNED=Date.now();toast('⚠️ Device storage is full — progress isn\'t saving. Export your save from the ⚙️ menu.')}return false}
 function save(){if(TV||MP_TX)return;saveLocal();if(!ON()){touchSolo();cloudSoon();if(typeof stvSoon==='function')stvSoon()}else if(S.online.turn==='p'||partyOn()||simOn())mpSoon()}
 function load(){try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){return null}}
-function exportSave(){const blob=new Blob([JSON.stringify(Object.assign({},S,{__img:IMG}))],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`tony-khan-sim-s${S.season}-w${S.week}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);toast('Save file exported.')}
+function exportSave(){const blob=new Blob([JSON.stringify(Object.assign({},S,{__img:IMG}))],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`tksim-s${S.season}-w${S.week}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);toast('Save file exported.')}
 function importSave(){const i=fileInput();i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.w||!d.titles||!d.phase)throw 0;localBackup('Before importing a file');if(d.__img){for(const id in d.__img)if(typeof d.__img[id]==='string'&&d.__img[id].startsWith('data:image/'))IMG[id]=d.__img[id];delete d.__img;saveImg()}S=d;dataUpdate(S);ensureTraits(S);econMigrate(S);feudInit(S);calMigrate(S);showMigrate();save();loadRepoPhotos();closeModal();tab='home';render();toast('Save loaded.')}catch(e){toast('That file is not a valid save.')}};r.readAsText(f)};i.click()}
 function resetGame(){if(ON())return mpLeave();if(!confirm('Start a new game? This one stays in ⇄ Your games, so you can switch back any time.'))return;newSolo()}
 
@@ -4214,8 +4214,8 @@ function flBar(o){o=o||{};const c=(k,v,n)=>`<button class="chip ${FL[k]===v?'on'
 function chips(v,opts,cur){return `<div class="chips">${opts.map(([k,n])=>`<button class="chip ${k===cur?'on':''}" onclick="${v}='${k}';render()">${n}</button>`).join('')}</div>`}
 function icons(w){let s='';if(isChamp(w.id))s+='🏆';if(w.inj)s+=w.susp?'⛔':'🚑';if(w.own&&w.mor<30)s+='😠';if(w.own==='p'&&w.con<=4)s+=w.con<=1?'⏳':'📝';if(w.fat>=FAT_RISK)s+='🔋';return s?' '+s:''}
 function statBar(label,v,pot,cls){return `<div class="stat"><div class="row sb"><span>${label}</span><span>${Math.round(v)}</span></div><div class="bar ${cls||''}"><i style="width:${clamp(v,0,100)}%"></i>${pot!=null?`<b style="left:${clamp(pot,0,100)}%"></b>`:''}</div></div>`}
-/* the wordmark: TONY KHAN SIMULATOR (also on the party-night TV). v136: the gold glasses retired to give the HUD room */
-function brandHtml(ver){return `<div class="brand" aria-label="Tony Khan Simulator"><span class="lstack"><span class="logo">TONY KHAN</span><span class="logo2">SIMULATOR</span></span>${ver?`<span class="ver">${APP_VERSION}</span>`:''}</div>`}
+/* the wordmark: TKSIM (also on the party-night TV). v136: the gold glasses retired to give the HUD room */
+function brandHtml(ver){return `<div class="brand" aria-label="TKSim"><span class="lstack"><span class="logo">TKSIM</span></span>${ver?`<span class="ver">${APP_VERSION}</span>`:''}</div>`}
 function hdr(){const on=S&&(S.phase==='season'||S.phase==='over');return `<header class="top">${brandHtml(1)}<div class="hdr-r">${on?`<div class="hud"><span class="hudc cal" onclick="openCal()" role="button" title="Season calendar">WK <b>${Math.min(S.week,SEASON)}</b><i class="hl">/${SEASON}</i></span><span class="hudc" title="Fans"><b>${fmtFans(S.fans.p)}</b><i class="hl"> FANS</i></span><span class="hudc"><b>${money(S.money.p)}</b></span></div>`:''}${TV?'':!S?'<button class="gsw" onclick="openGames()" aria-label="Your games" title="Your games">⇄</button>':`<button class="gsw ${tab==='menu'?'on':''}" onclick="go(tab==='menu'?MENU_BACK:'menu')" aria-label="Game menu" title="Game menu">⚙️</button>`}</div></header>`}
 function navView(){return `<nav class="tabs">${[['home','Home'],['book','Book'],['roster','Roster'],...(typeof arcsView==='function'?[['arcs','Arcs']]:[]),['titles','Titles'],['office','Office']].map(([k,n])=>`<button class="${tab===k?'on':''}" onclick="go('${k}')">${ICON[k]}${n}</button>`).join('')}</nav>`}
 /* iOS can leave the page's layout viewport out of step with the screen (most often after the on-screen keyboard
@@ -4258,7 +4258,7 @@ function render(){const app=$('#app');
    aiT=null;const c=draftChoice('ai');if(c)draftPick(c.id,'ai');render()};
   aiT=setTimeout(tick,800)}}
 
-function setupView(){return `<div class="hero"><div class="kicker"><i></i>Tony Khan Simulator · A wrestling GM sim</div><div class="hero-t">Road to<br>Mania &amp; All In</div><div class="lfl hero-l"></div><p class="muted">Draft a roster against a rival GM, book Dynamite head-to-head against their Collision, build feuds, develop rookies into stars, and win the fan war over a ${SEASON}-week year from the Royal Rumble to Survivor Series.</p></div>
+function setupView(){return `<div class="hero"><div class="kicker"><i></i>TKSim · A wrestling GM sim</div><div class="hero-t">Road to<br>Mania &amp; All In</div><div class="lfl hero-l"></div><p class="muted">Draft a roster against a rival GM, book Dynamite head-to-head against their Collision, build feuds, develop rookies into stars, and win the fan war over a ${SEASON}-week year from the Royal Rumble to Survivor Series.</p></div>
 <div class="card"><label>Your GM name</label><input id="gmName" maxlength="24" placeholder="Your name">
 <label>Rival GM name</label><input id="rvName" maxlength="24" value="The Rival Office">
 <label>Difficulty</label>${diffDD()}
@@ -5359,7 +5359,7 @@ async function mpJoin(){const name=($('#mpName').value||'').trim()||'Friend';LS.
   saveLocal();LS.set('tksim_active',JSON.stringify(LMP));mpRemember();closeModal();tab='home';ANIM=true;render();mpConnect();
   toast(r.seat==='s0'?'Welcome back, commissioner.':`You're in! You book ${showNames().p}.`);if(!claim&&mpAvail()&&TKO.canAlert())setTimeout(()=>mpAlertsPrompt(),600)}
  catch(e){console.warn(e);b.disabled=false;b.textContent='Join';const m=String(e&&e.message||e);toast(m.includes('nogame')?'No league with that code.':m.includes('full')?'That league is full.':m.includes('badkey')?"That seat code doesn't match.":navigator.onLine?"Couldn't join — double-check the code.":'You need a connection to join.')}}
-function mpInviteText(){return `Join my Tony Khan Simulator league! Open ${location.href.split(/[?#]/)[0]} (add it to your home screen), tap "Join a league" and enter code ${LMP.code}.`}
+function mpInviteText(){return `Join my TKSim league! Open ${location.href.split(/[?#]/)[0]} (add it to your home screen), tap "Join a league" and enter code ${LMP.code}.`}
 function mpInvite(first){const open=nSeats()-joinedCount();openModal(`<div class="h mhd">${first?'League created!':'Invite GMs'}</div><p>Send ${nSeats()>2?'your friends':'your friend'} this code. They open the game, tap <b>Join a league</b>, and enter it.${open>0?` <b>${open}</b> seat${open>1?'s':''} open.`:' The league is full.'}</p><div class="mpcode">${LMP.code}</div>
  <button class="btn" onclick="mpShare()">Share invite</button>${first&&TKO.canAlert()?`<button class="btn sec" onclick="mpAlerts()">🔔 Turn on turn alerts</button>`:''}<button class="btn ghost" onclick="closeModal()">${first?'Start creating wrestlers':'Done'}</button>`)}
 async function mpShare(){const t=mpInviteText();try{if(navigator.share){await navigator.share({text:t});return}}catch(e){return}try{await navigator.clipboard.writeText(t);toast('Invite copied — paste it in a text.')}catch(e){toast('Code: '+LMP.code)}}
@@ -5483,16 +5483,16 @@ async function backupAll(){if(TV)return toast('Exit TV mode first (top right).')
  try{await IMGREADY}catch(e){}const img=Object.assign({},IMG);
  const n=gamesList().length,np=Object.keys(img).length;
  const data=JSON.stringify({type:'tksim-device-backup',v:1,at:Date.now(),app:APP_VERSION,ls,shelf,img});
- const d=new Date(),nm=`tony-khan-sim-backup-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.json`;
+ const d=new Date(),nm=`tksim-backup-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.json`;
  const blob=new Blob([data],{type:'application/json'});
  /* phones: the share sheet's "Save to Files" is the reliable way out of a home-screen app */
- try{const f=new File([blob],nm,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'Tony Khan Simulator backup'});toast(`Backed up ${n} game${n===1?'':'s'}${np?` and ${np} photos`:''}.`);return}}
+ try{const f=new File([blob],nm,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'TKSim backup'});toast(`Backed up ${n} game${n===1?'':'s'}${np?` and ${np} photos`:''}.`);return}}
  catch(e){if(e&&e.name==='AbortError')return;}
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nm;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
  toast(`Backed up ${n} game${n===1?'':'s'}${np?` and ${np} photos`:''}.`)}
 function restoreAll(){if(TV)return toast('Exit TV mode first (top right).');const i=fileInput();i.accept='.json,application/json';
  i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{let d=null;try{d=JSON.parse(r.result)}catch(e){}
-  if(!d||d.type!=='tksim-device-backup'){if(d&&d.w&&d.titles&&d.phase)return toast('That\'s a single-game save — use Load a save file / Import for it.');return toast("That file isn't a Tony Khan Simulator backup.")}
+  if(!d||d.type!=='tksim-device-backup'){if(d&&d.w&&d.titles&&d.phase)return toast('That\'s a single-game save — use Load a save file / Import for it.');return toast("That file isn't a TKSim backup.")}
   restoreAll2(d)};r.readAsText(f)};i.click()}
 async function restoreAll2(d){openModal(`<div class="h mhd">Restoring…</div><p class="muted">Putting your games back on this device.</p>`);
  const ls=d.ls||{},bShelf=d.shelf||{};let added=0,fail=0;
@@ -5547,7 +5547,7 @@ function gameHero(g){const lab=g.turn==='mine'?"It's your turn":g.active?'Pick u
 function openGames(){if(TV)return toast('This screen is showing a league — tap Exit TV to switch games.');const l=gamesList();
  const hero=l.find(g=>g.turn==='mine')||l.find(g=>g.active)||l.slice().sort((a,b)=>(b.at||0)-(a.at||0))[0];const rest=l.filter(g=>g!==hero);
  const tile=(i,t,d,on)=>`<button class="lbtile" onclick="${on}"><span class="lbti">${i}</span><b>${t}</b><small>${d}</small></button>`;
- openModal(`<div id="games"><div class="lbtop"><div class="lbbrand">Tony Khan <span>Simulator</span></div>${l.some(g=>g.active)?'<button class="lbx" onclick="closeModal()" aria-label="Close">✕</button>':''}</div>
+ openModal(`<div id="games"><div class="lbtop"><div class="lbbrand">TKSim</div>${l.some(g=>g.active)?'<button class="lbx" onclick="closeModal()" aria-label="Close">✕</button>':''}</div>
  ${inApp()?'':`<div class="note">📱 You're in a browser tab. Games here don't share saves with the home-screen app — to get turn alerts there, tap <b>⋯ → Move</b> on a game.</div>`}
  ${hero?gameHero(hero):'<div class="lbhero"><div class="lbht">No games yet</div><div class="lbsub">Start one below.</div></div>'}
  ${rest.length?`<div class="lbsec">Your other games <span>${rest.length}</span></div><div class="lblist">${rest.map(gameRow).join('')}</div>`:''}

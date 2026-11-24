@@ -1,5 +1,5 @@
 // Tony Khan Simulator — offline support. Bump VERSION whenever you upload a new index.html (and APP_VERSION in index.html to match — that's the label shown in the game).
-const VERSION = 'aegm-v474';
+const VERSION = 'aegm-v475';
 
 const FILES = ['./', './index.html', './fanbase.js', './traits.js', './arcs.js', './desk.js', './phone.js', './draftcall.js', './draftcrowd.js', './opps.js', './quarters.js', './profile.js', './fonts/bc-600.woff2', './fonts/bc-700.woff2', './fonts/bc-800i.woff2', './fonts/bc-900i.woff2', './fonts/barlow-500.woff2', './fonts/barlow-600.woff2', './fonts/barlow-700.woff2', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './icon-maskable-512.png',
   './online.js', './firebase-sdk.js', './firebase-config.js',
@@ -64,7 +64,7 @@ self.addEventListener('push', e => {
   let p = {};
   try { p = e.data ? e.data.json() : {}; } catch (err) { p = { data: { body: e.data && e.data.text() } }; }
   const d = Object.assign({}, p.notification || {}, p.data || {});
-  e.waitUntil(self.registration.showNotification(d.title || 'Tony Khan Simulator', {
+  e.waitUntil(self.registration.showNotification(d.title || 'TKSim', {
     body: d.body || "It's your turn!",
     icon: 'icon-192.png',
     badge: 'icon-192.png',

@@ -38,7 +38,7 @@ exports.turnAlert = onDocumentUpdated('games/{code}', async event => {
     try {
       await getMessaging().send({
         token,
-        data: { title: 'Tony Khan Simulator', body, url, code },
+        data: { title: 'TKSim', body, url, code },
         webpush: { headers: { Urgency: 'high', TTL: '86400' } }
       });
     } catch (err) {
