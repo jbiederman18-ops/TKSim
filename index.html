@@ -1519,7 +1519,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v462';
+const APP_VERSION='v463';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -4979,15 +4979,14 @@ function srStageHtml(o,nm,tv){const G=nm?nm.p:S.gm,Rv=nm?nm.ai:S.rival;const all
  const two=!!o.ratings&&o.blocks.some(b=>b.brand==='ai');const cnt=br=>{const b=o.blocks.find(x=>x.brand===br);return b?b.segs.length:0};
  const html=(`<div id="srv" class="srv tw${tv?' srtv':''}" ${tv?'':'onclick="srTap(event)"'}>
  <div class="sr-top"><span class="livebug"><b>On air</b><span>Week ${o.week}</span></span><div class="sr-title">${esc(o.title)}</div></div>
- ${two?`<div class="twsc"><div class="me" id="srs-p"><span>${esc(G)}</span><b>+0</b><em>Fans tonight</em></div><div id="srs-ai"><span>${esc(Rv)}</span><b>+0</b><em>Fans tonight</em></div></div>`:''}
+ <div id="qh-slot"></div>
  <div class="twrd" id="tw-rd"></div>
  <div class="twpair" id="tw-pair"><div class="twh p"><div class="twt">${esc(G)} · ${cnt('p')} segment${cnt('p')===1?'':'s'}</div></div>${two?`<div class="twh ai"><div class="twt">${esc(Rv)} · ${cnt('ai')} segment${cnt('ai')===1?'':'s'}</div></div>`:''}</div>
- <div id="qh-slot"></div>
  <div class="twfoot" id="tw-foot"><div class="twnext" id="tw-next" aria-live="polite"${tv?' hidden':''}>Tap to start ▸</div></div>
  <div class="sr-ctl" id="sr-ctl">${tv?'':'<span class="muted tiny">Tap anywhere to advance</span>'}<button class="mini" onclick="event.stopPropagation();srSkip()">Skip ▸▸</button></div></div>`);
  SRV={o,rounds,i:0,tok:0,busy:false,done:false,seen:[],two,nm:nm||null,tv:!!tv};
  /* v462: the overnights chart sits under the plates (quarters.js) */
- return two&&typeof qhHtml==='function'?html.replace('<div id="qh-slot"></div>',qhHtml(SRV)):html}
+ return two&&typeof qhHtml==='function'?html.replace('<div id="qh-slot"></div>',qhHtml(SRV,G,Rv)).replace('class="srv tw','class="srv qh tw'):html.replace('<div id="qh-slot"></div>','')}
 function srStage(o){const html=srStageHtml(o);openModal(html)}
 function srWait(ms,tok){return new Promise((res,rej)=>setTimeout(()=>srOn()&&SRV.tok===tok?res():rej(0),ms))}
 /* v303: a round plays one side at a time — your segment (cards, winner, stars), then the rival's flips over on the other
@@ -5148,7 +5147,7 @@ const HOWTO=`<p><b>📱 On a phone:</b> Go live stays pinned above the tabs on B
 <p><b>Network mandates:</b> after each PPV the TV network asks for something specific by the next one: a 4★ main event, two women's matches on one show, a new champion, an arc paid off, a turn, a feud taken to 45 heat, and so on. Story mandates come up most and pay the most. Deliver for a big cash and fan bonus; miss it and you lose ${fmtFans(MAND_MISS)} fans. Check the Home or Book screen for your current one.</p>
 <p><b>🎯 Weekly goals &amp; 📣 crowd chants:</b> each week the Book screen gives you one small goal (hit it for a little cash and 3K fans — no penalty for missing it; a live ✅/🤞/⏳ line tells you if the card you've booked is on track), and the crowd starts chanting for someone on your roster. Book them in a match or promo that week and their segment gets +½★, they gain 2 popularity and you get 5K fans.</p>
 <p><b>Head to head:</b> in solo play the rival's card stays a surprise until the show airs. On TV, whoever's main event rates higher wins the main event war. Big free agents take sealed offers, so the rival can outbid you (see Offers &amp; contracts).</p>
-<p><b>The overnights:</b> the show that gains more fans tonight wins the night (the better show rating breaks a dead heat), and a win pays the ratings bonus. The reveal plays segment by segment: your segment lands with its cards, stars and the crowds it moved (▲ or ▼), then the rival's, and each show's line on the chart moves by the fans that segment gained or lost. The main event is the overrun at the far right. Once both main events are in, you see how every crowd moved on your show, then on the rival's, and the winner of the night lands on top of it.</p>
+<p><b>The overnights:</b> the show that gains more fans tonight wins the night (the better show rating breaks a dead heat), and a win pays the ratings bonus. The reveal opens on the overnights chart, with both shows' running totals across the top, and plays segment by segment underneath it: your segment lands with its cards, stars and the crowds it moved (▲ or ▼), then the rival's, and each show's line on the chart moves by the fans that segment gained or lost. The main event is the overrun at the far right. Once both main events are in, you see how every crowd moved on your show, then on the rival's, and the winner of the night lands on top of it.</p>
 <p><b>✨ Suggest the rest</b> on the Book screen fills any empty slots and keeps everything you've already booked, promised or entered in a tournament. It books the best matches it can from the wrestlers' own traits — popularity, in-ring skill, crowd matchups and traits, face vs heel, stamina, no recent rematches — rated the way the show rates them, minus feud heat, as plain singles matches with clean finishes, plus your best talkers for any open promo. It books on ability alone: it won't rest anyone who's worn down or steer around a miserable wrestler — stamina and morale are yours to manage. It ignores your checklist entirely: promises, contract clauses, title defenses, the weekly goal, the crowd's chant and feuds are all yours to handle, and the optional bonus promo stays empty. <b>Clear card</b> wipes everything else.</p>
 <p><b>Difficulty:</b> Hard rivals book like pros — they rest stars before PPVs, order their card for the ratings, protect new champions and pay off feuds cleanly. Easy rivals book sloppily.</p>
 <p><b>The offseason:</b> after ${PPVS[SEASON]}, the season ends with an awards show (Wrestler and Women's Wrestler of the Year, Breakout Star, Rookie, Tag Team, Feud, Match and Promo of the Year — winners start next season with a boost). Veterans feel Father Time: they lose a little in-ring each year and may retire. Prospects ready for the main roster (60+ in-ring) get called up with debut buzz. Re-sign anyone whose contract is running out before you start the new season.</p>`;

@@ -6,7 +6,7 @@
    Each segment's fans come from airing (fbSplit in fanbase.js, stored as seg.fd / seg.fi on the block's segments) and add
    up to the show's real fan change tonight, which is also what decides the night. Old saves without them share the
    night's fans out evenly. */
-const QH_W=320,QH_H=132,QH_L=36,QH_R=312,QH_T=12,QH_B=104;
+const QH_W=320,QH_H=176,QH_L=36,QH_R=312,QH_T=12,QH_B=148;
 /* the segment's fans; fd is missing on shows aired before v462 */
 function qhFd(o,it){if(!it)return 0;const s=it.s;if(s.fd!=null)return s.fd;const b=it.b,n=b.segs.length||1;
  const tot=o.fans&&o.fans[b.brand]!=null?o.fans[b.brand]:0;return Math.round(tot/n)}
@@ -43,7 +43,9 @@ function qhSvg(){const Q=SRV.qh,n=Q.cols.length,lim=qhLim(),y0=qhY(0,lim);
 function qhIcons(){const Q=SRV.qh;if(typeof fgIc!=='function')return '';return Object.keys(Q.ic).map(c=>{const l=(Q.ic[c]||[]).slice(0,2);if(!l.length)return '';
  return `<span class="qhic" style="left:${(qhX(+c)/QH_W*100).toFixed(2)}%">${l.map(([g,s])=>`<i class="fg-${g}">${fgIc(g)}<b>${s>0?'▲':'▼'}</b></i>`).join('')}</span>`}).join('')}
 function qhDraw(){const el=document.getElementById('qh-chart');if(!el||!SRV||!SRV.qh)return;el.innerHTML=qhSvg()+`<div class="qhics">${qhIcons()}</div>`;SRV.qh.fresh={}}
-function qhHtml(R){qhInit(R);return `<div class="qhwrap"><div class="qhcap"><span>The overnights</span><em>Fans gained tonight</em></div><div class="qhchart" id="qh-chart">${qhSvg()}<div class="qhics"></div></div></div>`}
+/* v463: the chart is the scoreboard — it sits at the top of the stage, with each show's name and running total in its line's
+   colour (ids srs-p / srs-ai, which srDone and srFinal update) */
+function qhHtml(R,G,Rv){qhInit(R);return `<div class="qhwrap"><div class="qhcap"><span>The overnights</span><em>Fans gained tonight</em></div><div class="qhleg"><div class="qht p" id="srs-p"><span>${esc(G)}</span><b>+0</b><em>So far</em></div><div class="qht ai" id="srs-ai"><span>${esc(Rv)}</span><b>+0</b><em>So far</em></div></div><div class="qhchart" id="qh-chart">${qhSvg()}<div class="qhics"></div></div></div>`}
 /* the plate's crowds: which crowds this segment moved, no numbers */
 function qhPlateIcons(s){const l=s&&s.fi;if(!l||!l.length||typeof fgIc!=='function')return '';return `<span class="twfi">${l.map(([g,v])=>`<i class="fg-${g}" title="${FG_N[g]}">${fgIc(g)}<b>${v>0?'▲':'▼'}</b></i>`).join('')}</span>`}
 /* who won the night: the most fans gained tonight; the show rating breaks a tie */
@@ -53,7 +55,21 @@ function qhNight(o){const sum=br=>{const b=o.blocks.find(x=>x.brand===br);if(!b)
 function qhTotal(o,br){const b=o.blocks.find(x=>x.brand===br);return b?b.segs.reduce((a,s,i)=>a+qhFd(o,{s,b}),0):0}
 Object.assign(window,{qhHtml,qhPush,qhHold,qhDraw,qhPlateIcons,qhNight,qhFmt,qhFd,qhTotal});
 (function(){const c=document.createElement('style');c.textContent=`
-.qhwrap{margin:10px 0 2px}
+.qhwrap{margin:8px 0 2px}
+.qhleg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 6px}
+.qht{display:flex;align-items:baseline;gap:7px;min-width:0;padding:6px 10px;background:#141417;box-shadow:inset 3px 0 0 var(--gold),inset 0 0 0 1px var(--line)}
+.qht.ai{flex-direction:row-reverse;box-shadow:inset -3px 0 0 var(--heel),inset 0 0 0 1px var(--line)}
+.qht span{font:700 11px/1 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qht.p span{color:var(--gold)}
+.qht b{font:900 italic 22px/1 'BC',sans-serif;margin-left:auto;color:var(--gold);white-space:nowrap}.qht.ai b{margin-left:0;margin-right:auto;color:var(--heel)}
+.qht em{display:none}.qht.win{box-shadow:inset 3px 0 0 var(--gold),inset 0 0 0 1px var(--gold)}.qht.ai.win{box-shadow:inset -3px 0 0 var(--heel),inset 0 0 0 1px var(--gold)}
+.qht b.punch{animation:twPunch .5s cubic-bezier(.2,1.6,.4,1)}
+.srv.qh .twpair{min-height:0;justify-content:flex-start}
+body:not(.tv) .srv.qh{min-height:min(760px,calc(100dvh - 100px))}
+.srv.qh .twrd{margin:8px 0 6px}
+body:not(.tv) .srv.qh .twcd .tkc{--w:58px;width:58px}
+body:not(.tv) .srv.qh .twps.cards{gap:8px}
+body:not(.tv) .srv.qh .twh{gap:5px;padding-top:8px;padding-bottom:8px}
 .qhcap{display:flex;justify-content:space-between;align-items:baseline;padding:0 2px 2px}
 .qhcap span{font:900 italic 13px/1 'BC',sans-serif;text-transform:uppercase;letter-spacing:.04em;color:var(--text)}
 .qhcap em{font:700 10px 'BC',sans-serif;font-style:normal;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
