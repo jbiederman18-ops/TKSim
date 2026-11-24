@@ -1519,7 +1519,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v478';
+const APP_VERSION='v479';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -5014,6 +5014,8 @@ async function srPlay(from){const R=SRV,rd=R.rounds[R.i];if(!rd)return srFinal(f
   srDone(it,!!SRV.qh);if(h)h.classList.add('nt')
   /* v454: an arc step in this segment plays out in its box — hold long enough to read it */
   if(h&&h.querySelector('.twarc'))await w(SR_T.arc);
+  /* v479: a new champion plays in this box with the plates still lit; the spotlight moves on once it's done */
+  {const tm=window.fxTitleMs?fxTitleMs(it.s&&it.s.notes):0;if(tm)await w(tm)}
   /* v464: then the spotlight moves to the chart while this show's line draws */
   if(it.qw){srFocus('c');srChart(it);await w(main?SR_T.lineMain:SR_T.line)}
   if(k<seq.length-1)await w(SR_T.between)}

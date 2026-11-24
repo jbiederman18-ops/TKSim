@@ -127,6 +127,8 @@ function titleFx(note,rv,host){const t=titleParts(note);if(!t)return;
  if(host!==undefined)return boxTitle(host,t.html);
  overlay(t.html,'',4200,el=>sparks(el,26),rv)}
 window.fxTitle=titleFx;
+/* v479: how long a segment's new-champion moments take in its box, so the reveal can keep the plates lit until they've played */
+window.fxTitleMs=function(notes){const n=(notes||[]).filter(x=>TRX.test(x)).length;return n*(RM()?2130:4330)};
 function segTitles(notes,host){(notes||[]).forEach(n=>{if(TRX.test(n))titleFx(n,true,host||null)})}
 /* solo reveal: when a segment's stars land */
 if(typeof srDone==='function'){const d0=srDone;srDone=function(it){const was=it&&it.ok;const out=d0.apply(this,arguments);try{if(it&&!was&&!MUTE){hit(it);segTitles(it.s&&it.s.notes,typeof srHalfEl==='function'?srHalfEl(it):null)}}catch(e){}return out}}
