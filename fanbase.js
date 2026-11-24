@@ -769,5 +769,5 @@ Object.assign(window,{fbSync,fbSyncAll,fbSeg,fbPromo,fbCalc,fbApply,fbResultsCar
 .srcrowd.now .srcr2,.srcrowd.now .srv2,.srcrowd.now .srcp,.srcrowd.now .srcq{animation:none!important;opacity:1!important;transform:none!important}
 .srcr2 em.srv2,.srcr2 b.srv2{display:block}.srcr2 span.srv2{display:block}.srwy{display:block;margin-top:2px;font:500 12px/1.3 system-ui,sans-serif;font-style:normal;letter-spacing:0;text-transform:none;color:#a29d96;white-space:normal}@keyframes srcrIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 body.tv .srcrowd{display:none}
-.tcs .tcmat.many .tkc .tcfg,.tlrow .tkc .tcfg,.twcd .tkc .tcfg{display:none}
+.tlrow .tkc .tcfg,.twcd .tkc .tcfg{display:none}
 `;document.head.appendChild(s)})();

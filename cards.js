@@ -117,8 +117,8 @@ function why(w,anchor,i,am,tg){const sl=card()[i],promo=sl.k==='promo';
   return null}
  const A=W_(anchor);if(!A)return null;
  if(!promo&&promisedWith(anchor).includes(w.id))return ['Promised','must',95];
+ if(tg==='partner'){const t=inTeam(anchor,w.id);if(t)return ['Team','hot',50+t]}/* v488: an established partner is checked before heat, so a feud never outranks them */
  const h=heatOf(anchor,w.id);if(h>=20)return [heatLbl(h),'feud',55+h/4];if(h>=5)return [heatLbl(h),'feud',38+h/3];
- if(tg==='partner'){const t=inTeam(anchor,w.id);if(t)return ['Team','hot',50+t]}
  const met=metPair(anchor,w.id);const c=chemOpp(A,w);
  if(met&&c>=6)return [chemWord(c),'hot',30+c];
  if(!met&&c>=10)return ['Electric?','hot',20+c];
@@ -151,6 +151,8 @@ function hand(i,o){o=o||{};const sl=card()[i];if(!sl)return [];const m=cur(i);co
   /* v341: once one side is picked, their rivals lead the best fits (hottest first) — rating, chemistry and tiredness only
      order the rest. Not for a tag partner: that's who stands with them, not across from them. */
   if(rv)v+=200;
+  /* v488: a tag partner (someone already on a team with who they stand beside) leads the partner pick, ahead of the other side's rivals */
+  if(tt==='partner'&&anchor&&inTeam(anchor,w.id)){if(!(r&&r[1]==='must'))r=['Team','hot',50+inTeam(anchor,w.id)];v+=300+inTeam(anchor,w.id)*10+((S.teams||[]).some(t=>t.type==='team'&&t.m.length===2&&t.m.includes(anchor)&&t.m.includes(w.id))?400:0)}
   return {w,r,v}}).sort((a,b)=>b.v-a.v);
  /* at most two Rub tags — past that they keep their place in the order but lose the tab (v384: nobody drops off the list) */
  let rubs=0;const out=[];for(const x of sc){if(x.r&&x.r[0]==='Rub'){if(rubs>=2)x.r=null;else rubs++}out.push(x);if(out.length>=(o.n||TC_HAND))break}
