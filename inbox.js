@@ -155,10 +155,6 @@ window.netTake=function(){if(typeof mpLocked==='function'&&mpLocked())return;con
    ways you find out. Angry about a broken promise: smooth it over with a bonus for the friend (most of the hit undone) or
    call it business (it lingers). Thankful for a kept promise or a title win: take them both to dinner, or just say thanks. */
 function fgLine(f){const {v,F,A}=f,a=firstName(A),seed=F.id+A.id;
- /* v466: it wasn't done to their friend directly — the friend took someone else's mistreatment hard */
- if(v.d<0&&v.y&&!v.yo)return pickL([`You saw what happened this week. ${a} took it hard, and so did I.`,
-  `${a} hasn't stopped talking about what you did. When it gets to ${a}, it gets to me.`,
-  `It wasn't even ${a} you did it to, and ${a} is still rattled. That tells you how it landed back there.`],seed);
  if(v.d<0)return pickL([`${a} and I go back a long way. You gave your word and you didn't keep it. Don't think the rest of us didn't notice.`,
   `I'm not here about me. I'm here about ${a}. The way they got treated this week isn't right, and I want to know what you're going to do about it.`,
   `${a} is my friend. When you do that to them, you're doing it to me too.`],seed);
