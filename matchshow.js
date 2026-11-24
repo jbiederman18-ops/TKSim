@@ -431,7 +431,7 @@ async function msShow(){const pg=MS.q[MS.qi];if(!pg)return;const low=document.ge
  const fin=()=>{clearInterval(iv);el.textContent=t;MS_TYPE=null;done()};MS_TYPE={fin}}
 function msTap(){if(!MS||!MS.q||MS_PAN)return;if(MS_TYPE){MS_TYPE.fin();return}MS.qi++;if(MS.qi<MS.q.length)return msShow();const a=MS.after;MS.q=null;MS.after=null;if(a)a()}
 document.addEventListener('keydown',e=>{if(!MS||!MS.q||(e.key!==' '&&e.key!=='Enter'))return;if(e.target&&e.target.closest&&e.target.closest('button,input,select,textarea'))return;if(!document.getElementById('sdbox'))return;e.preventDefault();msTap()});
-function msPlay(pages,slot,detail,keep){return new Promise(res=>{pages=pages.filter(Boolean);if(window.hrMatchPages){/* v468: decisions only — keep:'tail' = the last 2 pages of a set-up before a call; the intro keeps its play-by-play line */pages=slot==='open'?pages.filter(pg=>pg.kind==='booth').slice(0,1):hrMatchPages(pages,keep==='tail'?2:1,keep==='tail')}if(slot&&typeof adMatch==='function')pages=adMatch(pages,MS,slot,detail);if(!pages.length)return res();MS.q=pages;MS.qi=0;MS.after=res;msShow()})}
+function msPlay(pages,slot,detail,keep){return new Promise(res=>{pages=pages.filter(Boolean);if(window.hrMatchPages&&keep!=='all'){/* v468: decisions only — keep:'tail' = the last 2 pages of a set-up before a call; the intro keeps its play-by-play line */pages=slot==='open'?pages.filter(pg=>pg.kind==='booth').slice(0,1):hrMatchPages(pages,keep==='tail'?2:1,keep==='tail')}if(slot&&typeof adMatch==='function')pages=adMatch(pages,MS,slot,detail);if(!pages.length)return res();MS.q=pages;MS.qi=0;MS.after=res;msShow()})}
 const msLines=ls=>ls.map(msPage);
 /* the call menu: same buttons as every other call, so party-night TV shows which one you picked */
 function msMenu(q,sub,items){MS.res=null;return new Promise(res=>{MS.menu={q,sub,items,res};msDrawMenu();if(typeof foPose==='function')foPose(null)})}
@@ -457,13 +457,13 @@ async function msMomentAct(slot){const g=MS.g,m=MS.m,r=g.r;
  const it=await msMenu(`${ck.i} ${ck.n}`,note||ck.l,items);const w0=m.winner;
  const out=g.sit?sitRoll(it.c,r,m):evRoll(it.c,r,m);MS.res=out.success?'ok':'no';MS.log.push({lab:slot==='heat'?'Heat':'Finish',t:it.label,ok:out.success});
  msFrame('');await msStamp(out.success?'It lands':'Not quite',out.success?'ok':'no');
- const pages=msNarr(out.text);pages.push({kind:'booth',who:'Play-by-play',t:fpick(msGrave(out)?MS_BOOTH_GRAVE:out.success&&msSoft(out)?MS_BOOTH_SOFT:out.success?MS_BOOTH_OK:MS_BOOTH_NO)});
+ const nar=msNarr(out.text);const pages=nar.slice();pages.push({kind:'booth',who:'Play-by-play',t:fpick(msGrave(out)?MS_BOOTH_GRAVE:out.success&&msSoft(out)?MS_BOOTH_SOFT:out.success?MS_BOOTH_OK:MS_BOOTH_NO)});
  (out.extra||[]).forEach(x=>pages.push({kind:'cam',t:x}));if(out.flip)pages.push({kind:'cam',t:`👑 New winner: ${sideName(m.sides[m.winner])}`});if(out.nc)pages.push({kind:'cam',t:'🚫 The match ends without a winner.'});
  out.over=msOver(m,out,w0)||(slot==='fin'&&msEnds(evFill(g.e.text,r)));
  /* at the finish, a call that keeps the match going still has to end it: the winner puts it away */
  if(slot==='fin'&&!out.over){const fam=msFam(m);const F=MS_FALL[fam==='pin'&&m.sides.length>2&&MS.r.C?'multi':fam];
   if(F){pages.push({kind:'cam',t:msFill(fpick(['A minute later, {A} puts it away.','{A} regroups, and this time it\'s over.','It takes one more big move from {A}.','{A} isn\'t giving them another chance.','{A} finds one last gear and finishes it.']),MS.r)});pages.push(...msLines(F.end))}else pages.push({kind:'cam',t:msFill('A minute later, {A} puts it away and gets the win.',MS.r)});out.over=true}
- await msPlay(pages);return out}
+ await(window.hrMomentPages?msPlay(hrMomentPages(nar,pages.slice(nar.length)),null,null,'all'):msPlay(pages));return out}
 function msIntro(m,hot){const ns=m.sides.map(sd=>sideName(sd));
  if(m.type==='rumble')return fpick(['It\'s the Royal Rumble, and the clock is ticking down to the first entrant.','Royal Rumble time. Every number is a new chance.']);
  if(m.type==='gauntlet')return fpick(['The Casino Gauntlet. Only one of them leaves a loser tonight.','Casino Gauntlet time. Nobody wants to be the one who gets pinned.']);

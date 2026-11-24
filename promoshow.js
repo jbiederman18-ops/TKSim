@@ -180,7 +180,7 @@ psChoose=function(ci){if(!PS||PS.done||PS.q)return;const c=PS.scene.ch[ci];if(!c
   if(c.drop)await shout('Mic drop!','gold');else if(c.cut)await shout('Hold it!');else if(out.success&&swingOf(pr).w>=.55)await shout('Take that!');
   const pre=c.drop?[]:attempt(c,out.success,ctx,out.text);
   if(pre.length){const L=PS.st.log;if(L&&L.length)L[L.length-1]=fill(c.t,ctx)+' — '+beatText(pre,ctx.A)+' '+out.text}
-  queue(PS.live&&window.hrPromoResult?hrPromoResult(pagesOf(out.text,'a',ctx,false,{ok:out.success})):beatPages(pre).concat(pagesOf(out.text,'a',ctx,false,{ok:out.success})),()=>{PS.out=out;_next()})})};
+  queue(PS.live&&window.hrPromoResult?beatPages(pre).slice(-1).concat(hrPromoResult(pagesOf(out.text,'a',ctx,false,{ok:out.success}))):beatPages(pre).concat(pagesOf(out.text,'a',ctx,false,{ok:out.success})),()=>{PS.out=out;_next()})})};
 
 (function(){const c=document.createElement('style');c.textContent=`
 .sdw .lvhd{margin-bottom:0}
