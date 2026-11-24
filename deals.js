@@ -135,7 +135,7 @@ function ccFinish(m,b){if(!(b==='p'||ON()))return null;
  m.sides.flat().map(id=>S.w[id]).filter(w=>w&&w.own===b&&ccOn(w)&&ccHeld(m,w)).forEach(w=>{const d=ccDeal(m,w.id);const lost=!(m.sides[m.winner]||[]).includes(w.id);if(!lost||d.k==='prot')return;
   S.ccOwe=(S.ccOwe||[]).filter(x=>x.a!==w.id).concat([{a:w.id,k:d.k,b:d.b,made:AW(),by:d.k==='big'?AW()+CC_BIG:ccBy().wk}])});
  const l=ccLosers(m,b);if(!l.length)return null;const w=l.sort((x,y)=>y.pop-x.pop)[0];
- if(Math.random()<.5){m.winner=m.sides.findIndex(s=>s.includes(w.id));return {pen:.25,note:`🎬 Creative control: ${w.name} refused the finish and went over instead (−¼★).`}}
+ if(!m._hrFinal&&Math.random()<.5){m.winner=m.sides.findIndex(s=>s.includes(w.id));return {pen:.25,note:`🎬 Creative control: ${w.name} refused the finish and went over instead (−¼★).`}}
  w.mor=clamp(w.mor-18,0,100);w.trust=(w.trust||0)+1;return {pen:0,note:`🎬 ${w.name} did the job under protest — they have creative control and you overruled them (morale −18).`}}
 function ccIssues(c){return (c||[]).filter(sl=>sl&&sl.k==='match'&&sl.d).flatMap(sl=>ccLosers(sl.d,'p').map(w=>({w,m:sl.d})))}
 /* checked when you lock in or go live: talk them round, change the card, or go live anyway */

@@ -321,6 +321,7 @@ History is recorded from v157 on (existing champions are picked up the first tim
 - Look for **🎬 Highlight reel** on the Book screen. The hottest blood feud payoff and one arc payoff can play out live each night.
 - Settle a blood feud with a decisive finish on PPV or in a TV blow-off. A disputed ending or no contest starts another chapter at reduced heat.
 - Book your arc payoff in the main event, on PPV, or in a promo. Your calls shape the rating. If the arc has a decision, you make it at the reel’s climax or on the decision card before an off-camera segment.
+- The true-father storyline in The Gauntlet gets a live reveal even on the undercard. After the title match, pick from up to two eligible wrestlers drawn from your roster. The selected wrestler is named in the segment and recorded in the arc history.
 
 ## Party night (same room, big screen)
 Party night is a way to play an online league, not a separate game. It uses the same league, the same save and the same code, so you can play some weeks together on the couch and the rest on your own time.

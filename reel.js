@@ -13,6 +13,7 @@ const hrCm=()=>clamp(1+(HRC-50)/125,.75,1.4);
 function hrMove(stars,extra){HRC=clamp(Math.round(HRC+clamp((stars-3.5)*8,-10,10)+(extra||0)),5,100);return HRC}
 /* ---- which segments get a highlight reel: at most hrCap() a night ---- */
 const hrCap=()=>HR_CAP;
+const hrFatherPayoff=a=>a?.k==='gauntlet'&&a.sl==='father';
 /* Pick the actual rivalry, even when neither wrestler is taking the fall. */
 function hrBloodPair(m,ppv){
  if(!m||!m.sides||!(ppv||m.bo)||isSp(m)||m.type==='gauntlet')return null;
@@ -31,20 +32,24 @@ function hrPlayable(kind,d){
 }
 function hrDemand(kind,d,main,ppv,b){
  if(!hrPlayable(kind,d))return '';
+ const a=b==='ai'?null:hrArc(kind,d,main);
+ if(hrFatherPayoff(a))return 'arc';
  if(kind==='match'&&hrBlood(d,ppv))return 'blood';
- return b!=='ai'&&(kind==='promo'||main||ppv)&&hrArc(kind,d,main)?'arc':''
+ return a&&(kind==='promo'||main||ppv)?'arc':''
 }
 function hrPlan(card,ppv,b){
  const out=new Map();if(!card)return out;
  const main=card.findLastIndex(sl=>sl?.k==='match'&&sl.d);
+ const father=b==='ai'?null:card.find((sl,i)=>sl?.k==='match'&&hrPlayable('match',sl.d)&&hrFatherPayoff(hrArc('match',sl.d,i===main)));
  let blood=null,arc=null;
  card.forEach((sl,i)=>{
-  if(!sl||sl.k!=='match'||!hrPlayable('match',sl.d))return;
+  if(!sl||sl===father||sl.k!=='match'||!hrPlayable('match',sl.d))return;
   const heat=hrBlood(sl.d,ppv);
   if(heat&&(!blood||heat>blood.heat||heat===blood.heat&&i===main))blood={d:sl.d,heat};
  });
  if(blood)out.set(blood.d,'blood');
- if(b!=='ai'){
+ if(father)out.set(father.d,'arc');
+ else if(b!=='ai'){
   const seen=new Set();
   card.forEach((sl,i)=>{
    if(!sl||!['match','promo'].includes(sl.k)||!hrPlayable(sl.k,sl.d))return;
@@ -124,114 +129,163 @@ function hrArcDecision(a){
  return options.length&&options.every(o=>lines?.[o.k])?lines:null
 }
 function hrFinishText(m){
- if(m.nc)return 'The referee calls for the bell. The match ends without a winner.';
- const fin=finOf(m);
- if(fin==='dq')return '{W} wins by disqualification.';
- if(fin==='co')return '{W} beats the referee’s count.';
- if(fin==='cheat')return '{W} gets the win with help. The replay makes clear what the referee missed.';
- if(fin==='upset'&&!FIN_NOPIN.has(stipKey(m)))return '{W} catches the opponent with a roll-up and gets the win.';
- if(isSp(m)||m.type==='gauntlet')return '{W} gets the win.';
- return BLOOD_REEL[stipKey(m)][4]
+ if(m.nc)return 'The referee calls it off. No contest.';
+ const fin=finOf(m),stip=stipKey(m);
+ if(fin==='dq')return '{L} is disqualified. {W} wins.';
+ if(fin==='co')return 'The referee counts {L} out. {W} wins by count-out.';
+ if(fin==='cheat')return (BLOOD_DIRTY[stip]||BLOOD_DIRTY.std);
+ if(fin==='upset'&&!FIN_NOPIN.has(stip)&&!['texas','iron','twoof3'].includes(stip))return '{P} catches {L} in a roll-up for three. {W} wins.';
+ if(m.type==='rumble')return '{P} sends the last entrant over the top rope. {W} wins the Rumble.';
+ if(m.type==='mitb')return '{P} unhooks the Money in the Bank briefcase and wins.';
+ if(m.type==='gauntlet')return '{P} takes the first fall and wins the Casino Gauntlet.';
+ return BLOOD_REEL[stip][4]
 }
-function hrNames(text,m){
+function hrNames(text,m,cast){
  if(!m)return text;
  const win=m.sides[m.winner]||[];
- return text.replace(/\{W\}/g,()=>sideName(win)).replace(/\{L\}/g,()=>S.w[pinOf(m)]?.name||sideName(m.sides.filter((_,i)=>i!==m.winner).flat()))
+ const losers=m.sides.filter((_,i)=>i!==m.winner).flat();
+ const p=[cast?.a,cast?.b,win[0]].find(id=>win.includes(id));
+ const title=m.title&&S.titles[m.title];
+ const fields={W:sideName(win),P:S.w[p]?.name,L:S.w[pinOf(m)||losers[0]]?.name,
+  PRIZE:cast?.sl==='custody'?'the custody papers':m.type==='mitb'?'the Money in the Bank briefcase':title?'the '+title.n+' title belt':'the prize'};
+ return text.replace(/\{(W|P|L|PRIZE)\}/g,(_,k)=>fields[k]||'')
+}
+function hrTitleText(m){
+ const title=m.title&&S.titles[m.title];
+ if(!title)return '';
+ const champions=title.holders;
+ const holder=m.sides.findIndex(sd=>champions.length&&champions.every(id=>sd.includes(id)));
+ if(holder<0&&champions.length&&title.won===AW())return `${sideName(champions)} already holds the ${title.n} title. The belt stays put.`;
+ if(m.nc)return `The ${title.n} title stays put.`;
+ if(holder===m.winner||holder>=0&&['dq','co'].includes(finOf(m)))return `${sideName(champions)} keeps the ${title.n} title.`;
+ return `${sideName(m.sides[m.winner])} leaves with the ${title.n} title.`
 }
 function hrScene(it,d,kind,why=LQ?.hrWhy,ppv=LQ?.ppv){
  if(why==='blood'){
   const pair=hrBloodPair(d,ppv);if(!pair)return null;
-  const stip=stipKey(d),[opens,text,...beats]=BLOOD_REEL[stip]||BLOOD_REEL.std;
+  const stip=stipKey(d),[opens,text,safe,risk]=BLOOD_REEL[stip];
   const log=(S.fh?.[key(pair.a,pair.b)]||[]).filter(row=>row.n||row.seg);
   const i=RI(0,opens.length-1);
-  const middle=log[Math.floor(log.length/2)];
-  const last=log[log.length-1];
-  const beat=i===0?log[0]:i===1?middle:last;
-  const start=beat?[beat.seg,beat.n].filter(Boolean).join(' — '):'The rivalry has never had a decisive ending.';
+  const beat=log[[0,Math.floor(log.length/2),log.length-1][i]];
+  const start=beat?[beat.seg,beat.n].filter(Boolean).join(' — '):'The bad blood between these two brings them to this match.';
   const A=S.w[pair.a],B=S.w[pair.b];
   const audiences=[fgOf(A),fgOf(B)];
   const mismatch=audiences[0].includes('blood')&&audiences[1].includes('cas')||audiences[1].includes('blood')&&audiences[0].includes('cas');
   return {blood:true,stip,open:[`Previously in ${A.name} vs ${B.name}: ${start}`,opens[i],mismatch?'One half of the crowd came to see its star. The other half came to see how much a star could take.':''],
-   heat:[text,beats[0],beats[1]],cast:pair,locked:it.arcDecision};
+   heat:[text,safe,risk],cast:pair,locked:it.arcDecision};
  }
  const a=hrArc(kind,d,it.main);if(!a)return null;
- if(kind==='match')d._hrArc=1;
  const script=ARC_REEL[a.k];if(!script)return null;
  const cast={...a};
  const seg=kind==='match'?d:null;
- let variant=kind==='promo'?'promo':'match';
+ const runIn=seg&&riOn(seg);
+ const variant=!seg?'promo':runIn?.X.id===a.a?(runIn.k==='cost'?'runin':'postrunin'):
+  a.k==='mentor'&&a.sl==='violence'?'violence':a.k==='cult'?'match':
+  seg.sides.some(sd=>sd.includes(a.a)&&sd.includes(a.b))?'team':'match';
  if(seg){
-  const side=seg.sides.find(sd=>sd.includes(a.a));
-  const runIn=riOn(seg);
-  if(runIn?.X.id===a.a&&!side)variant=runIn.k==='attack'?'postrunin':'runin';
-  else if(side?.includes(a.b))variant='team';
+  d._hrArc=1;
   cast.stip=stipKey(seg);
-  if(!cast.b)cast.b=seg.sides.find(sd=>!sd.includes(a.a))?.[0];
-  if(!a.b&&a.foe)cast.b=a.foe;
- }else if(!cast.b)cast.b=d.a===a.a?d.b:d.a;
+  const opponents=seg.sides.filter(sd=>!sd.includes(runIn?.X.id===a.a?a.b:a.a)).flat();
+  cast.opponent=runIn?.k==='save'?runIn.T.id:opponents[0];
+  if(!cast.b)cast.b=cast.opponent;
+ }else if(!cast.b||['join','faith','cult'].includes(a.k))cast.b=d.a===a.a?d.b:d.a;
+ if(a.k==='cult'){
+  const participants=seg?seg.sides.find(side=>side.includes(a.a))||[]:[d.a,d.b];
+  [cast.b,cast.c]=arcCultFollowers(a,participants);
+ }
+
  const custom=ARC_REEL_VARIANT[a.k+'/'+variant];
  const road=ARC_REEL_STORY[a.k+'/'+a.sl];
  const story=arcStoryOf(a);
- const romance=story?.romance;
- const romanceNote=romance&&a.k!=='wedding'&&adReelRomance([a.a,a.b].filter(Boolean).map(id=>S.w[id]))?
+ const romanceNote=story?.romance&&a.k!=='wedding'&&adReelRomance([a.a,a.b].filter(Boolean).map(id=>S.w[id]))?
   'Their eyes meet as the crowd settles. For a moment, neither is in a hurry to look away.':'';
- const intro=road?.[0]||custom?.[0]||script[0];
- const head=!road&&!romance&&story?(arcHead(a).replace(/[.!?]$/,'')+'.'):'';
- const finish=a.k==='torch'&&kind==='promo'?[
-  '{A} is about to give {B} the mic in the middle of the ring.',
-  ['Pass the mic without another word','{B} takes the mic. {A} steps out of the spotlight and the whole room waits to hear what comes next.'],
-  script[2][2]]:script[2];
- let heat=custom?.[1]||script[1];
- if(seg&&['proveit','cross'].includes(a.k)&&HR_CROWD_HEAT[a.g])heat=HR_CROWD_HEAT[a.g];
- if(a.k==='heelturn'&&a.sl==='watch'&&kind==='promo'){
-  heat=['{B} asks whether {A} can get through one conversation without looking at the watch.',
-   ['Let {A} check the time before answering','{A} reads the face of the watch, then looks up. “I can make time for the people who matter.” {A} knocks the mic out of {B}’s hand and hits {B:them}.'],
-   ['Make {B} interrupt the sales pitch','{A} starts describing the watch until {B} asks for it to stop. {A} stops talking and hits {B:them} instead.']];
- }
- if(seg&&['school','twitch'].includes(a.k)){
-  const [,setup,safe,risk]=BLOOD_REEL[cast.stip];
-  // Feud spots here do double duty as stipulation-specific wrestling.
-  heat=[setup,safe,risk];
- }
  const def=aDForReel(a);
- const leave=a.k==='stakes'&&/8 weeks/i.test(def.payoff||'');
- const result=leave?[road?.[1],'{L} is gone for eight weeks.']: [road?.[1]];
- return {a,cast,open:[def.n+'.',head,intro,romanceNote],heat,fin:finish,
-  result:result.filter(Boolean),decision:!a.choice&&hrArcDecision(a)};
+ const intro=custom?.[0]||script[0];
+ const stakes=a.k==='stakes'&&(def.vn==='Loser Leaves Town'
+  ?'Both agreed that the loser will leave town for eight weeks.'
+  :road?.[1]?'':'They put their reputations on the line. The loser has to live with the embarrassment of losing this fight.');
+ const open=[def.n+'.',road?.[0]||(!['wedding','faith','haircut','goodwill','war','townhero','likeness','pain','oil'].includes(a.k)&&story?arcHead(a).replace(/[.!?]$/,'')+'.':''),
+  intro,stakes,romanceNote];
+ let heat=custom?.[1]||script[1];
+ let finish=custom?.[2]||script[2];
+ const specific=ARC_REEL_VARIANT[a.k+'/'+a.sl];
+ if(specific&&['voice','shoot','rebrand'].includes(a.k)){
+  heat=specific[1]||heat;
+  finish=specific[2]||finish;
+ }
+ if(a.k==='mentor'&&a.sl==='fraud'){heat=specific[1];finish=specific[2]}
+ if(seg&&['proveit','cross'].includes(a.k)&&HR_CROWD_HEAT[a.g])heat=HR_CROWD_HEAT[a.g];
+ if(a.k==='heelturn'&&a.sl==='watch'&&kind==='promo')heat=ARC_REEL_VARIANT['heelturn/watch'][1];
+ if(seg&&['school','twitch','hardcore','techshow'].includes(a.k)){
+  const [,setup,safe,risk]=BLOOD_REEL[cast.stip];
+  const lead={
+   school:'This is the part of {S} that used to catch {A} out.',
+   twitch:'This is what chat voted to see.',
+   hardcore:'This is what the rough matches were preparing {A} for.',
+   techshow:'The two technicians have traded falls.'
+  };
+  const line=lead[a.k];
+  heat=[line+' '+setup,safe,risk];
+ }
+ if(a.k==='lastchase'&&a.sl!=='hangup'){
+  heat=['{A} sees {PRIZE} at ringside and looks back to {O}.',
+   ['Bring back an old title-match counter','{A} slips out of the old hold before {O} can lock it in.'],
+   ['Force one more exchange','{A} digs in and makes {O} find a new answer.']];
+  finish=['The title is at stake in the final exchange.'];
+ }
+ const afterBell=seg&&(variant==='postrunin'||['heelturn','betrayal','breakfree'].includes(a.k)&&runIn?.X.id!==a.a);
+ const finishBeforeCall=['sellout','invasion','torch','passtitle','groundswell','redemption','townhero','peace','likeness','retire','farewell','haircut'].includes(a.k);
+ return {a,cast,open,heat,fin:finish,variant,afterBell,finishBeforeCall,
+  result:[road?.[1],a.k==='stakes'&&def.vn==='Loser Leaves Town'?'{L} is gone for eight weeks.':''].filter(Boolean),
+  decision:!a.choice&&hrArcDecision(a),father:hrFatherPayoff(a)};
 }
-function hrFill(reel,text,m){return hrNames(arcWords(reel.cast,text),m)}
+function hrFill(reel,text,m){
+ const filled=arcWords(reel.cast,text).replace(/\{O\}/g,()=>S.w[reel.cast.opponent]?.name||'the opponent');
+ return hrNames(filled,m,reel.cast)
+}
 function hrBeat(reel,beat,m){
  const fill=t=>hrFill(reel,t,m);
  return {setup:fill(beat[0]),calls:beat.slice(1).map(([label,land],i)=>{
   const phase=beat===reel.heat?0:1;
-  const miss=fill(HR_ARC_MISS[reel.a?.k]?.[phase]||(m?
-   i?'The timing is half a beat off. The replay makes clear what they were going for.':'The exchange is there, but only the front rows pick up on it.':
-   i?'The line takes too long to get out. A murmur spreads before the room catches the point.':'A few fans respond. The rest of the room is still waiting for the line that will bring them in.'));
+  const named=HR_ARC_MISS[reel.a?.k]?.[phase];
+  // A botched camera cue or delivery can cost the reaction without changing the booked action.
+  const miss=fill(reel.a&&(named&&reel.variant==='match'
+   ?named:land+' The timing is off, and the crowd takes a moment to catch up.')||
+   'The exchange happens too fast for the crowd to follow. The replay gives them a better look.');
   return {t:fill(label),tip:i?'Bigger swing':'Lower risk',s:m?'ring':'mic',d:i?.18:-.05,st:i?.7:.3,fat:m&&i?3:0,injury:m&&reel.blood,ok:fill(land),no:miss,
    hit:[[['x',fill(land)]]],miss:[[['x',miss]]]};
  })};
 }
-const HR_BLOOD_FINISH=[
- {key:'clean',label:'Settle it decisively',info:'Keeps the booked winner. Ends the feud.'},
- {key:'flip',label:'Give the other side the decisive win',info:'Changes the winner. Ends the feud.'},
- {key:'dirty',label:'Let the finish be stolen',info:'The booked winner stands. The feud continues.'},
- {key:'nc',label:'Let it break down',info:'No contest. The feud continues.'}
-];
+function hrArcAfter(reel,m){
+ const a=reel.a,winner=m?.sides[m.winner]||[];
+ const line=ARC_REEL_CLOSE[a.k];
+ let result=typeof line==='function'?line(reel,m,winner):line;
+ if(a.k==='retire'&&aDForReel(a).vn==='Absorption'&&!m.nc){
+  const t=arcAbsorbedTrait(S.w[winner[0]],S.w[m.sides.find(sd=>sd!==winner)?.[0]]);
+  result=t?`{L} walks out for good. {P} takes in {L}’s aura and inherits ${TRAITS[t].n}.`:'{L} walks out for good. {P} reaches for the departing aura and feels it slip away.';
+ }
+ return [result,...(m?.nc?[]:reel.result)].filter(Boolean)
+}
+function hrBloodFlip(m,reel){
+ const side=id=>m.sides.findIndex(sd=>sd.includes(id));
+ return [...new Set([side(reel.cast.a),side(reel.cast.b)])].filter(i=>i>=0&&i!==m.winner)
+}
+function hrBloodOptions(m,reel){
+ const flips=hrBloodFlip(m,reel);
+ return [
+  {key:'clean',label:'Settle it decisively',info:'Keeps the booked winner. Ends the feud.'},
+  ...flips.map(side=>({key:'flip:'+side,label:'Give the decisive win to '+sideName(m.sides[side]),info:'Changes the winner. Ends the feud.'})),
+  {key:'dirty',label:'Let the finish be stolen',info:'The booked winner stands. The feud continues.'},
+  {key:'nc',label:'Let it break down',info:'No contest. The feud continues.'}
+ ]
+}
 function hrBloodFinish(m,reel,k){
- if(reel.locked||m.nc)return m.nc?'The referee waves it off. Neither rival gets the last word.':hrFinishText(m);
+ if(reel.locked||m.nc)return hrFinishText(m);
  const ev=evNew(m);ev.hit=true;
- const old=m.winner;
- if(k==='nc'){m.nc=true;ev.stars-=.35;return 'The ref calls it off while the fight is still going. Neither rival got the ending everyone came for.'}
- if(k==='flip'){
-  const rival=m.sides[old].includes(reel.cast.a)?reel.cast.b:reel.cast.a;
-  m.winner=m.sides.findIndex(side=>side.includes(rival)&&side!==m.sides[old]);
-  if(m.winner<0)m.winner=m.sides.findIndex((_,i)=>i!==old);
- }
- m.fin=k==='dirty'?'cheat':'clean';
- if(k==='dirty'){
-  ev.feudUnsettled=true;
-  return hrFinishText({...m,fin:'clean'})+' '+(BLOOD_DIRTY[reel.stip]||'The replay catches the cheap shot that opened the way. The other corner is already asking for a rematch.')
- }
+ if(k==='nc'){m.nc=true;ev.stars-=.35;return 'The referee calls it off. No contest. The rivals keep fighting.'}
+ if(k?.startsWith('flip:')){const side=Number(k.slice(5));if(hrBloodFlip(m,reel).includes(side))m.winner=side}
+ m.fin=k==='dirty'&&!finWhy(m,'cheat')?'cheat':'clean';
+ if(k==='dirty'){ev.feudUnsettled=true;return BLOOD_DIRTY[reel.stip]||BLOOD_DIRTY.std}
  return hrFinishText(m)
 }
 

@@ -185,6 +185,10 @@ function reelPromoChoose(ci){
   if(PS!==ps||ps.done||ps.q)return;
   frame('');
   const done=()=>{finalizePromo(ps.p,ps.ctx,ps.st);ps.done=true;renderPS()};
+  const close=()=>{
+   const lines=hrArcAfter(reel).flatMap(t=>chunks(hrFill(reel,t)).map(cam=>({cam})));
+   if(lines.length)queue(lines,done);else done();
+  };
   if(decision){
    arcApplyDecision(reel.a,option.key);
    const text=hrFill(reel,reel.decision[option.key]);
@@ -201,7 +205,7 @@ function reelPromoChoose(ci){
    Object.assign(lead,{ok:true,stamp:1});
    pages.pop();
   }
-  queue(pages,ps.beat===0?()=>{ps.beat=1;ps.scene={};renderPS()}:done);
+  queue(pages,ps.beat===0?()=>{ps.beat=1;ps.scene={};renderPS()}:close);
  });
 }
 

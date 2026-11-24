@@ -26,7 +26,10 @@ const page=readGameFile('index.html');
 for(const [,attrs,body] of page.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/g)){
  if(attrs.includes('type="module"'))continue;
  const src=attrs.match(/src="([^"]+)"/)?.[1];
- js(src?readGameFile(src):body,src||'index-inline');
+ const script=src?readGameFile(src):body;
+ const traced=src==='matchshow.js'?script.replace(/(function msPlay\(pages[^)]*\)\{)/,
+  '$1 window.reelTimeline?.push(...pages.map(page=>page.t||""));'):script;
+ js(traced,src||'index-inline');
 }
 js(`   window.reelFixture = (k, story, kind, type, stip='std', ppv=false) => {
     newGame('Tester','Rival','normal');
@@ -80,6 +83,7 @@ const cases=[
  ['invasion','brigade','match','singles','std',true,[['knife',0,false],['peace',0,false]]]
 ];
 function fixture(args){return js('reelFixture(...'+JSON.stringify(args)+')')}
+const fixtureName=role=>js(`S.w[reelTest[${JSON.stringify(role)}]].name`);
 for(const row of cases){
  const [k,...rest]=row.slice(0,6), options=row[6];
  for(const [key,winner,nc] of options){
@@ -95,7 +99,9 @@ for(const row of cases){
 console.log('All fourteen decision results and their payoff predicates passed.');
 
 const wait=()=>new Promise(r=>setTimeout(r,6));
-js(`openModal=(html)=>{window.modal=html;document.getElementById('sdlow').innerHTML=''};tcCard=()=>'';window.foPose=()=>{};`);
+js(`openModal=(html)=>{window.modal=html;document.getElementById('sdlow').innerHTML=''};tcCard=()=>'';window.foPose=()=>{};
+ window.reelTimeline=[];
+`);
 async function drive(target,isMatch){
  let decisionSheets=0;
  js('startTestReel()');
@@ -153,7 +159,7 @@ function pickReelChoice(choices,target){
  S.fh[key(a,b)]=[{seg:'Week one',n:'A disputed finish started it.'}];`;
  for(const [action,target,nc,winner,unsettled] of [
   ['clean','Settle it decisively',false,0,false],
-  ['flip','Give the other side',false,1,false],
+  ['flip','Give the decisive win to',false,1,false],
   ['dirty','Let the finish be stolen',false,0,true],
   ['nc','Let it break down',true,0,false]
  ]){
@@ -175,4 +181,80 @@ function pickReelChoice(choices,target){
  js('{'+bloodSetup+';hrAuto(S.card.p,"ai",curShow())}');
  assert(js('reelTest.match.ev?.notes.some(n=>n.includes("Heat"))'));
  console.log('Live match and promo flows, fallback decision, rival reel and four feud resolution paths passed.');
+ fixture(['gauntlet','father','match','singles']);
+ const fatherNames=js(`(()=>{
+  const {a,b,D,E,arc,match}=reelTest;
+  const title=Object.values(S.titles).find(t=>t.kind==='singles'&&t.g===S.w[a].g);
+  title.holders=[b];match.title=title.id;
+  const main={type:'singles',sides:[[D.id],[E.id]],winner:0};
+  match.bo=true;S.heat[key(a,b)]=90;
+  const card=[{k:'match',d:match},{k:'match',d:main}];
+  if(hrPlan(card,false,'p').get(match)!=='arc')throw Error('The reveal must get the live slot on an undercard or overlapping feud');
+  const choices=arcFatherChoices(arc);
+  if(new Set(choices).size!==2||choices.includes(a)||arc.father)throw Error('The reveal must start with two unrevealed candidates');
+  if(choices.join()!==arcFatherChoices(arc).join())throw Error('The candidates changed while the scene was open');
+  window.reelTimeline=[];
+  return choices.map(id=>S.w[id].name)
+ })()`);
+ await drive(fatherNames[1],true);
+ assert.equal(js('S.w[reelTest.arc.father].name'),fatherNames[1]);
+ assert(js(`reelTimeline.findIndex(t=>t.includes('counts three'))<reelTimeline.findIndex(t=>t.includes('An envelope'))`));
+ assert(js(`reelTimeline.some(t=>t.includes(${JSON.stringify(fatherNames[1]+' is ')} )&&t.includes('father'))`));
+ assert(js(`(()=>{
+  const {arc,match}=reelTest;const notes=[];
+  arcPost(arcMatchPre(match,{pos:'me'}),4,notes);
+  return S.arcLog.at(-1).father===arc.father&&notes.some(t=>t.includes('revealed as'));
+ })()`));
+
+ fixture([null,null,'match','singles','iquit',true]);
+ js('{const {a,b}=reelTest;S.heat[key(a,b)]=85;window.reelTimeline=[];}');
+ await drive('Let the finish be stolen',true);
+ const disputed=js('reelTimeline.find(t=>t.includes("mic cuts out"))');
+ assert(disputed&&disputed.includes(fixtureName('a')+' says “I quit” first'));
+ assert(disputed.includes(fixtureName('b')+' says it into the working mic'));
+ assert(js('reelTest.match.winner===0&&reelTest.match.ev.feudUnsettled&&reelTest.match._hrFinal'));
+
+ fixture(['stakes','custody','match','singles','std',true]);
+ assert(!js("arcPayoffFor('match',reelTest.match,true)"));
+ js("reelTest.match.stip='ladder'");
+ assert(js("arcPayoffFor('match',reelTest.match,true)"));
+ assert(js(`hrFill(hrScene({main:true},reelTest.match,'match','arc',true),hrFinishText(reelTest.match),reelTest.match).includes('unhooks the custody papers')`));
+
+ fixture(['tap','hell','match','tag','sub']);
+ const submission=js(`(()=>{
+  const {a,b,D,E,match}=reelTest;
+  match.sides=[[a,D.id],[b,E.id]];match.pin=E.id;
+  const reel=hrScene({main:true},match,'match','arc',false);
+  return [hrBeat(reel,reel.fin,match).calls[0].ok,hrFill(reel,hrFinishText(match),match),E.name,S.w[b].name];
+ })()`);
+ assert(submission[0].startsWith(submission[2]));
+ assert(submission[1].startsWith(submission[2]+' finally taps out'));
+ assert(!submission[1].includes(submission[3]));
+
+ fixture(['faceturn',null,'match','singles']);
+ const save=js(`(()=>{
+  const {arc,match,a,b,D}=reelTest;
+  arc.v=1;match.sides=[[b],[D.id]];match.ri={x:a,t:D.id,k:'save',turn:true};
+  const reel=hrScene({main:true},match,'match','arc',false);
+  return reel.afterBell&&hrBeat(reel,reel.heat,match).setup.includes(D.name);
+ })()`);
+ assert(save);
+
+ fixture(['retire',null,'match','singles']);
+ js("reelTest.match.nc=true");
+ assert(!js("arcPayoffFor('match',reelTest.match,true)"));
+ fixture(['breakup',null,'promo','singles']);
+ assert(js(`(()=>{
+  reelTest.arc.v=1;
+  const reel=hrScene({main:true},reelTest.promo,'promo','arc',false);
+  return !hrBeat(reel,reel.fin).calls[0].ok.includes('matching colors')&&hrArcAfter(reel)[0].includes('done taking bookings');
+ })()`));
+ fixture([null,null,'match','triple']);
+ assert(js(`(()=>{
+  const {a,b,c,match}=reelTest;
+  match.bo=true;S.heat[key(b,c)]=85;
+  const reel=hrScene({main:true},match,'match','blood',false);
+  return hrBloodOptions(match,reel).filter(o=>o.key.startsWith('flip:')).length===2;
+ })()`));
+ console.log('Father reveal, audio dispute, cast, stakes, bell order, retirement, breakup and three-way feud checks passed.');
 })().catch(e=>{console.error(e);process.exitCode=1});

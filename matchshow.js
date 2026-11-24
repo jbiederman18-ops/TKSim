@@ -437,7 +437,7 @@ const msLines=ls=>ls.map(msPage);
 function msMenu(q,sub,items){MS.res=null;return new Promise(res=>{MS.menu={q,sub,items,res};msDrawMenu();if(typeof foPose==='function')foPose(null)})}
 function msDrawMenu(){const M=MS.menu;if(!M)return;const bb=document.getElementById('msbooth');if(bb)bb.classList.remove('on');
  const low=document.getElementById('sdlow');if(!low){msFrame('');return msDrawMenu()}
- low.innerHTML=`<div class="sdmenu">${callBar(M.q,M.sub)}${M.items.map((c,i)=>`<button class="choice" onclick="msPick(${i})"><span class="key"><span>${'ABCD'[i]}</span></span><div>${esc(c.label)}</div><div class="muted tiny">${c.info}</div></button>`).join('')}</div>`;msFeed()}
+ low.innerHTML=`<div class="sdmenu">${callBar(M.q,M.sub)}${M.items.map((c,i)=>`<button class="choice" onclick="msPick(${i})"><span class="key"><span>${'ABCDE'[i]}</span></span><div>${esc(c.label)}</div><div class="muted tiny">${c.info}</div></button>`).join('')}</div>`;msFeed()}
 function msPick(i){if(!MS||!MS.menu)return;const M=MS.menu;pickFlash(()=>{if(!MS||MS.menu!==M)return;MS.menu=null;M.res(M.items[i])})}
 /* v301: match-showdown swings cut both ways, so the label says so */
 const msSw=w=>swingWord(w).replace(' swing',' swing either way');
@@ -507,46 +507,64 @@ async function msReelBeat(reel,script,lab){
 }
 async function msRunReel(reel){
  const {m}=MS;
+ const play=texts=>msPlay(msReelPages(texts.map(t=>hrFill(reel,t,m))));
+ const showFinish=()=>play([hrFinishText(m),hrTitleText(m)]);
  msFrame('');
  if(window.SFX)SFX.play('swell');
- await msPlay(msReelPages(reel.open.map(t=>hrFill(reel,t,m))));
+ await play(reel.open);
  if(MS.g?.sit){
   const out=await msMomentAct('heat');
-  if(m.nc||out?.flip)return msDone();
+  if(m.nc||out?.flip){m._hrFinal=true;return msDone()}
  }
- const postRunIn=reel.a&&riOn(m)?.k==='attack';
- const finishBeforeCall=postRunIn||['sellout','invasion','torch','passtitle','groundswell','redemption','townhero','peace','likeness'].includes(reel.a?.k);
- const showFinish=()=>msPlay(msReelPages([hrFill(reel,hrFinishText(m),m)]));
- if(postRunIn)await showFinish();
+ if(reel.afterBell)await showFinish();
  MS.act=1;msFrame('');
  await msReelBeat(reel,reel.heat,'Heat');
  MS.act=2;msFrame('');
- if(finishBeforeCall&&!postRunIn)await showFinish();
+ if(reel.finishBeforeCall&&!reel.afterBell)await showFinish();
  if(reel.blood){
-  await msPlay(msReelPages(['Both corners are running out of fight. The crowd came here for an ending.']));
-  const call=reel.locked?null:await msMenu('🏁 Settle the feud','Call the ending',HR_BLOOD_FINISH);
-  const line=hrFill(reel,hrBloodFinish(m,reel,call?.key),m);
+  await play(['The wrestlers are running out of fight. The crowd came here for an ending.']);
+  const call=reel.locked?null:await msMenu('🏁 Settle the feud','Call the ending',hrBloodOptions(m,reel));
+  const line=hrBloodFinish(m,reel,call?.key);
   if(call)MS.log.push({lab:'Finish',t:call.label,story:1});
   const open=m.nc||m.ev?.feudUnsettled||!['clean','upset'].includes(finOf(m));
   const hurt=m.ev?.inj?.some(([id,weeks])=>weeks>=7&&m.sides.flat().includes(id));
-  const closing=hurt?'The camera follows the referee out. The crowd goes quiet as a stretcher comes down the aisle.':open?
-   'The bell keeps ringing. Both corners push past the people sent in to separate them.':
-   'Both are slow to move. One gives the other a nod before the referee helps them apart.';
-  await msPlay(msReelPages([line]).concat({kind:'booth',who:'Play-by-play',t:open?'That bell settled the match. It didn’t settle the feud.':'After all that, they got an answer.'},msReelPages([closing])));
+  const closing=hurt?'The crowd goes quiet as a stretcher comes down the aisle.':open?
+   'Officials get between the rivals. There’s still an argument about how this should have ended.':
+   'The referee lets the winner have the ring while the rest of the wrestlers head up the aisle.';
+  const booth=open?(m.nc?'Nobody won, and the feud is still open.':'The decision stands tonight. The feud is still open.'):
+   hrFill(reel,'{A} and {B} finally got an answer. This feud is over.',m);
+  await msPlay(msReelPages([hrFill(reel,line,m),hrTitleText(m)]).concat({kind:'booth',who:'Play-by-play',t:booth},msReelPages([closing])));
  }else if(reel.decision){
-  await msPlay(msReelPages([hrFill(reel,reel.fin[0],m)]));
+  await play([reel.fin[0]]);
   const items=arcDecisionItems(reel.a).map(o=>({...o,info:esc(o.info)}));
   const call=await msMenu('🏁 The decision','Make the last call of the reel',items);
   arcApplyDecision(reel.a,call.key,m);
   const line=hrFill(reel,reel.decision[call.key],m);
   MS.log.push({lab:'Decision',t:call.label,story:1,note:line});
   evNew(m).notes.push('🎬 '+line);
-  await msPlay(msReelPages([line]));
+  if(reel.a.k==='goodwill'){
+   await play([line,hrTitleText(m)]);
+  }else{
+   if(!reel.finishBeforeCall&&!m.nc)await showFinish();
+   await play([line,m.nc?hrTitleText(m):'']);
+  }
  }else{
   if(reel.fin.length>1)await msReelBeat(reel,reel.fin,'Finish');
-  if(!finishBeforeCall)await showFinish();
-  if(reel.result.length)await msPlay(msReelPages(reel.result.map(t=>hrFill(reel,t,m))));
+  if(!reel.finishBeforeCall&&!reel.afterBell)await showFinish();
+  await play(hrArcAfter(reel,m));
+  if(reel.father){
+   await play(['An envelope comes down to ringside. The result of the match is in the books. The answer {A} came for is inside.']);
+   const items=arcFatherChoices(reel.a).map(id=>({id,label:S.w[id].name,info:'Reveal as the father'}));
+   if(items.length){
+    const call=await msMenu('Reveal the father','Choose who is named in the envelope',items);
+    const father=arcSetFather(reel.a,call.id);
+    const line=hrFill(reel,`{A} opens the envelope. The name goes up on the screen. ${S.w[father].name} is {A}’s father.`,m);
+    MS.log.push({lab:'Reveal',t:'Father revealed',story:1,note:line});
+    await play([line]);
+   }else await play(['{A} breaks the seal. The test didn’t identify a father.']);
+  }
  }
+ m._hrFinal=true;
  msDone();
 }
 function msAutoReel(m,brand,reel){
@@ -565,6 +583,7 @@ function msAutoReel(m,brand,reel){
   const chosen=options.find(o=>o.win==='a'&&m.sides[m.winner].includes(reel.a.a)||o.win==='b'&&!m.sides[m.winner].includes(reel.a.a))||pick(options);
   arcApplyDecision(reel.a,chosen.k,m);
  }else if(reel.fin.length>1)call(reel.fin,'Finish');
+ if(reel.father)arcSetFather(reel.a);
 }
 function msDone(){if(!MS)return;MS.fin=1;if(window.SFX)SFX.matchEnd();const m=MS.m;const rows=MS.log.map(e=>`<li><span class="mslab">${esc(e.lab)}</span><span>${esc(e.t)}</span><b class="${e.story?'msst':e.ok?'good':'bad'}">${e.story?'Story':e.ok?'Landed':'Fell short'}</b></li>`).join('');
  const post=MS.log.find(e=>e.story);const res=m.nc?'No contest':`${sideName(m.sides[m.winner])} def. ${m.sides.filter((s,i)=>i!==m.winner).map(sideName).join(', ')}`;

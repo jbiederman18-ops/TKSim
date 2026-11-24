@@ -1520,7 +1520,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v482';
+const APP_VERSION='v483';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -1551,7 +1551,7 @@ nodq:{n:'No DQ',g:'hard',b:{br:5,pw:3,sh:3},inj:1.5,f:5,c:8,hb:3,d:'No disqualif
 falls:{n:'Falls Count Anywhere',g:'hard',b:{sh:6,br:5,fl:3,pw:1},inj:1.5,f:6,c:12,hb:3,dare:1,d:'Pinfalls count anywhere in the building — through the crowd and backstage. Chaos fiends and Showstoppers love a bigger stage.'},
 street:{n:'Street Fight',g:'hard',b:{br:6,pw:3,sh:1,te:-1},inj:1.6,f:7,c:12,hb:4,d:'Anything goes. Built for Bloodhounds and Hard Hitters settling a score.'},
 tables:{n:'Tables Match',g:'hard',b:{pw:6,br:3,fl:2,te:-2},inj:1.5,f:6,c:15,hb:3,dare:1,d:'Put your opponent through a table to win. Monsters love it.'},
-lights:{n:'Lights Out',g:'hard',b:{br:8,pw:3,sh:2,te:-2},inj:2,f:10,c:15,hb:5,d:'Unsanctioned — it doesn\'t count, so anything goes. The ultimate grudge match.'},
+lights:{n:'Lights Out',g:'hard',b:{br:8,pw:3,sh:2,te:-2},inj:2,f:10,c:15,hb:5,d:'Unsanctioned — anything goes. The ultimate grudge match.'},
 dog:{n:'Dog Collar',g:'hard',b:{br:7,pw:4,fl:-2,te:-1},inj:1.8,f:9,c:15,hb:5,mt:['singles'],d:'Chained together at the neck. Nowhere to run.'},
 iquit:{n:'"I Quit"',g:'hard',b:{br:5,te:4,sh:2,pw:1},inj:1.6,f:9,c:15,hb:5,ppv:1,mt:['singles'],d:'Make them say it on the mic. Needs real hatred to land.'},
 lms:{n:'Last Man Standing',g:'hard',b:{br:7,pw:6,te:-1},inj:1.8,f:10,c:20,hb:4,ppv:1,d:'Keep them down for a ten count.'},
@@ -3390,6 +3390,7 @@ function finWhy(m,k){if(k==='clean')return '';if(m&&m.type==='squash')return 'A 
  if(k==='upset'&&avg(win.map(w=>w.pop))>Math.max(...los.map(w=>w.pop))-8)return 'The winner has to be the clear underdog (8+ less popular)';
  if((k==='dq'||k==='co')&&(m.sides.length!==2))return 'Only in a match with two sides';
  if(k==='dq'&&!(STIPS[stipKey(m)]||STIPS.std).dq)return 'No disqualifications in this stipulation';
+ if(k==='co'&&!['std','sub','tornado'].includes(stipKey(m)))return 'This stipulation has no ringside count-out finish';
  return ''}
 function finOf(m){const k=m&&m.fin;return k&&FINS[k]&&!finWhy(m,k)?k:'clean'}
 function finScore(m,heat,ctx){const k=finOf(m);const hot=heat>=30;const blow=ctx.ppv&&heat>=35;
@@ -4681,7 +4682,7 @@ function goLive(){if(LIVE||mpLocked())return;if(S.crisis)return openCrisis();con
  c.forEach((sl,i)=>{if(!sl.d)return;
   if(sl.k==='promo'){const p=sl.d;delete p.res;delete p.cut;p.played=false;if(S.w[p.a]&&!S.w[p.a].inj&&(!p.b||S.w[p.b]&&!S.w[p.b].inj))items.push({kind:'promo',i})}
   /* v260: every match comes up in running order and rolls for a highlight reel (reel.js) when it's reached */
-  else if(sl.k==='match'){const m=sl.d;delete m.ev;delete m.nc;delete m._hrArc;j++;const main=j===nM;if(isSq(m))try{sqPrep(m,'p',S.card.p.filter(x=>x!==sl))}catch(e){console.warn(e)}if(ocPending(m)){if(!ocResolve(m,'p',false)){sl.d=null;return}items.push({kind:'oc',m,n:j,main})}items.push({kind:'seg',m,n:j,main})}});
+  else if(sl.k==='match'){const m=sl.d;delete m.ev;delete m.nc;delete m._hrArc;delete m._hrFinal;j++;const main=j===nM;if(isSq(m))try{sqPrep(m,'p',S.card.p.filter(x=>x!==sl))}catch(e){console.warn(e)}if(ocPending(m)){if(!ocResolve(m,'p',false)){sl.d=null;return}items.push({kind:'oc',m,n:j,main})}items.push({kind:'seg',m,n:j,main})}});
  LIVE=true;if(!items.length)return finishLive();LQ={items,k:-1,show:sh.name,ppv:sh.ppv,crowd:typeof hrStart==='function'?hrStart('p',sh):50,hr:0,quiet:[]};liveNext()}
 function liveNext(){if(!LQ)return;PS=null;ME=null;OCL=null;if(window.msReset)msReset();
  /* v260: the segment that just played moves the crowd */
