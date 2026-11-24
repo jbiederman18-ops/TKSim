@@ -498,7 +498,7 @@ function fbCoverHtml(c){const v=fbCover(c);const W=['losing them: no real match 
 function fbGroupsHtml(m){const l=fbMatchGroups(m);return l.length?`<span class="crseg">${l.map(g=>`<i class="fg-${g}" title="${FG_N[g]}">${fgIc(g)}</i>`).join('')}</span>`:''}
 Object.assign(window,{fbCover,fbCoverHtml,fbGroupsHtml,fbMatchGroups,fbPromoGroupsHtml});
 /* the show's effect on each group (in %), with the reason. dry = a preview (nothing changes) */
-function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X0=S.fbx[b],H=S.fbh[b];const res={pct:{},why:{},E:{},avg:{},conv:{},best:{}};
+function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X0=S.fbx[b],H=S.fbh[b];const res={pct:{},why:{},wy:{},E:{},avg:{},conv:{},best:{}};
  /* v462: what each segment did for each crowd (in %), so the quarter-hour reveal can draw the night segment by segment */
  res.sc=segs.map(()=>({}));const sc=(sg,g,v)=>{const i=segs.indexOf(sg);if(i>=0&&isFinite(v))res.sc[i][g]=(res.sc[i][g]||0)+v};
  const xo=fbXOff(b);const X={};FB_G.forEach(g=>X[g]=(X0[g]||FB_X0)+xo);
@@ -515,6 +515,8 @@ function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X0=S.fbx[b],H=S.f
   res.pct[g]=sw+hold+pen;res.E[g]=E;res.avg[g]=sx?ss/sx:null;res.best[g]=l[0]?l[0].sg:null;
   res.why[g]=l.length?(sw>0?`Loved ${l[0].sg.txt||'their match'}`:`${l[0].sg.txt||'Their match'} didn't live up to it`)+(E<1?' · but only a taste of what they want':burn<1?' · getting a bit much of the same':''):'Nothing for them tonight';
   if(pen<0)res.why[g]+=` · hated the ${segs.some(s=>s.k==='match'&&s.ri)?'run-in':'screwy finish'}`;
+  /* v470: the short reason for the crowd table at the end of the reveal */
+  res.wy[g]=!l.length?'Nothing for them tonight':(sw>0?'Loved their match':'Their match came in under what they expect')+(E<1?', but only a taste of what they want':burn<1?', but too much of the same':'')+(pen<0?` · hated the ${segs.some(s=>s.k==='match'&&s.ri)?'run-in':'screwy finish'}`:'');
   /* the best matches turn casuals into fans of that group */
   let cv=0;l.forEach(x=>{if(x.sg.st>=4&&x.sg.st>X[g])cv+=f.cas*FB_CONV*x.e*(x.sg.st-3.75)/1.25});res.conv[g]=Math.round(cv)});
  /* casuals: tune out unless star power, titles, spectacle and a good show hook them */
@@ -536,10 +538,11 @@ function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X0=S.fbx[b],H=S.f
   const sk=sr>0?Math.min(FB_STORYCAP,sr)/sr*(show&&show.ppv?1.5:1):0;hm.forEach((s,i)=>{if(sv[i])cs2(s,sv[i]*sk)})}
  res.pct.cas=-FB_DRIFT+up+(segs.length?story:0);res.avg.cas=cw?cav:null;res.E.cas=1;
  const uu=up+story;res.why.cas=!segs.length?'Nothing on TV for them':uu>=FB_DRIFT+1?(story>=1&&story>=up*.5?'Hooked on the feuds — they want to see how it ends':tp>=80?'Big stars and a show worth watching':'A show worth watching'):uu>=FB_DRIFT?'Just enough to keep them':tp<70?'Not enough star power to hold them':'Drifting off — they want stars, titles, spectacle and a story';
+ res.wy.cas=!segs.length?'Nothing on TV for them':uu>=FB_DRIFT+1?(story>=1&&story>=up*.5?'Hooked on the feuds':tp>=80?'Big stars and a show worth watching':'A show worth watching'):uu>=FB_DRIFT?'Just enough to keep them':tp<70?'Not enough star power to hold them':'Drifting off: they want stars, titles, spectacle and a story';
  return res}
 /* apply a show's result: returns what each group did, for the results screen */
 function fbApply(b,segs,show,o){const r=fbCalc(b,segs,show,o);const f=S.fb[b],X=S.fbx[b],H=S.fbh[b];const before=Object.assign({},f);
- const grow=1;/* gains come from the pool and casuals tune out in proportion, so growth levels off by itself (no fanGrowF) */let conv=0;const out={before,after:{},pct:r.pct,why:r.why,conv:0,flat:0,sc:r.sc,E:r.E};
+ const grow=1;/* gains come from the pool and casuals tune out in proportion, so growth levels off by itself (no fanGrowF) */let conv=0;const out={before,after:{},pct:r.pct,why:r.why,wy:r.wy,conv:0,flat:0,sc:r.sc,E:r.E};
  FB_G.forEach(g=>{const p=r.pct[g];let d=p>0?FB_POOL*FB_SHARE[g]*p/100*(g==='cas'?FB_GKC:FB_GKH)*grow:f[g]*p/100;f[g]=Math.max(0,f[g]+Math.round(d))});
  FB_HC.forEach(g=>{const c=Math.min(r.conv[g],f.cas*.05);if(c>0){f[g]+=Math.round(c);f.cas-=Math.round(c);conv+=Math.round(c)}});
  /* everything else that moves fans on the night (head-to-head, main event war, debuts, chants, 5★ overflow) reaches casuals */
@@ -652,9 +655,12 @@ function fbSplit(r,n){if(!r||!r.before||!r.after||!n)return null;const sc=r.sc&&
  return {segs:out,night:FB_G.reduce((a,g)=>a+(night[g]||0),0),why:why.map(x=>[x[0],x[1]>0?1:-1])}}
 function fbNight(r){return r&&r.before&&r.after?FB_G.reduce((a,g)=>a+Math.round((r.after[g]||0)-(r.before[g]||0)),0):null}
 window.fbSplit=fbSplit;window.fbNight=fbNight;
+/* v470: one line on why a crowd moved, plus fans who switched shows */
+function fbWhyLine(r,g){if(!r||!r.wy||!r.wy[g])return '';const sw=r.sw&&r.sw[g]||0;
+ return `<i class="srwy">${esc(r.wy[g])}${Math.abs(sw)>=500?` · ${fbK(Math.abs(sw))} switched ${sw>0?'over to you':'to the other show'}`:''}</i>`}
 function fbRevealHtml(o,instant){const r=o&&o.fb&&o.fb.p;if(!r||!r.before||!r.after||!r.pct)return '';
  const rows=FB_G.map((g,n)=>{const w=fbWord(g,r.pct[g]||0)||['','',''];const d=Math.round(r.after[g]-r.before[g]);
-  return `<div class="srcr"${instant?'':` style="animation-delay:${n*110}ms"`}><span class="fgw">${fgLbl(g)}</span><b class="${w[2]}">${w[1]}</b>${Math.abs(d)<100?'<em class="muted">steady</em>':`<em class="${d>0?'good':'bad'}">${d>0?'▲':'▼'}${fbK(Math.abs(d))}</em>`}</div>`}).join('');
+  return `<div class="srcr"${instant?'':` style="animation-delay:${n*110}ms"`}><span class="fgw">${fgLbl(g)}</span><b class="${w[2]}">${w[1]}${fbWhyLine(r,g)}</b>${Math.abs(d)<100?'<em class="muted">steady</em>':`<em class="${d>0?'good':'bad'}">${d>0?'▲':'▼'}${fbK(Math.abs(d))}</em>`}</div>`}).join('');
  return `<div class="srcrowd${instant?'':' in'}"><div class="srch">How the crowds took it</div>${rows}</div>`}
 /* v459: the crowd reveal for both shows, after both main events and before the winner. The crowd names come up first, then
    your show's column fills in row by row with its total, then the rival's — one show's night, then the other's. */
@@ -665,7 +671,7 @@ function fbRevealBoth(o,instant,nm){const P=o&&o.fb&&o.fb.p,Q=o&&o.fb&&o.fb.ai;i
  const at=t=>instant?'':` style="animation-delay:${t}ms"`;
  const cell=(d,t)=>`<em class="srv2 ${Math.abs(d)<100?'muted':d>0?'good':'bad'}"${at(t)}>${Math.abs(d)<100?'steady':(d>0?'▲':'▼')+fbK(Math.abs(d))}</em>`;
  const tot=r=>FB_G.reduce((a,g)=>a+dl(r,g),0);
- const rows=FB_G.map((g,k)=>{const w=fbWord(g,P.pct[g]||0)||['','',''];return `<div class="srcr2"${at(k*FB_REV.row)}><span class="fgw">${fgLbl(g)}<b class="srv2 ${w[2]}"${at(FB_REV.p0+k*FB_REV.cell)}>${w[1]}</b></span>${cell(dl(P,g),FB_REV.p0+k*FB_REV.cell)}${cell(dl(Q,g),q0+k*FB_REV.cell)}</div>`}).join('');
+ const rows=FB_G.map((g,k)=>{const w=fbWord(g,P.pct[g]||0)||['','',''];return `<div class="srcr2"${at(k*FB_REV.row)}><span class="fgw">${fgLbl(g)}<b class="srv2 ${w[2]}"${at(FB_REV.p0+k*FB_REV.cell)}>${w[1]}</b>${P.wy&&P.wy[g]?`<span class="srv2"${at(FB_REV.p0+k*FB_REV.cell)}>${fbWhyLine(P,g)}</span>`:''}</span>${cell(dl(P,g),FB_REV.p0+k*FB_REV.cell)}${cell(dl(Q,g),q0+k*FB_REV.cell)}</div>`}).join('');
  const T=(d,t)=>`<b class="srv2 ${d>=0?'good':'bad'}"${at(t)}>${d>=0?'+':'−'}${fbK(Math.abs(d))}</b>`;
  return `<div class="srcrowd srboth${instant?'':' in'}"><div class="srch">How the crowds took it</div><div class="srcr2 hd"><span></span><span class="srcp"${at(FB_REV.p0-150)}>${esc(nm.p)}</span><span class="srcq"${at(q0-150)}>${esc(nm.ai)}</span></div>${rows}<div class="srcr2 tot"${at(n*FB_REV.row)}><span>All fans</span>${T(tot(P),FB_REV.p0+n*FB_REV.cell)}${T(tot(Q),q0+n*FB_REV.cell)}</div></div>`}
 window.fbRevealBoth=fbRevealBoth;window.FB_REV_MS=FB_REV_MS;
@@ -759,7 +765,7 @@ Object.assign(window,{fbSync,fbSyncAll,fbSeg,fbPromo,fbCalc,fbApply,fbResultsCar
 .srcrowd.in .srcr2 .srv2{opacity:0;animation:srcrPop .32s cubic-bezier(.2,1.4,.4,1) forwards}@keyframes srcrPop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
 .srcrowd.in .srcr2.hd .srcp,.srcrowd.in .srcr2.hd .srcq{opacity:.35;animation:srcrHd .3s ease-out forwards}@keyframes srcrHd{to{opacity:1}}
 .srcrowd.now .srcr2,.srcrowd.now .srv2,.srcrowd.now .srcp,.srcrowd.now .srcq{animation:none!important;opacity:1!important;transform:none!important}
-.srcr2 em.srv2,.srcr2 b.srv2{display:block}@keyframes srcrIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.srcr2 em.srv2,.srcr2 b.srv2{display:block}.srcr2 span.srv2{display:block}.srwy{display:block;margin-top:2px;font:500 12px/1.3 system-ui,sans-serif;font-style:normal;letter-spacing:0;text-transform:none;color:#a29d96;white-space:normal}@keyframes srcrIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 body.tv .srcrowd{display:none}
 .tcs .tcmat.many .tkc .tcfg,.tlrow .tkc .tcfg,.twcd .tkc .tcfg{display:none}
 `;document.head.appendChild(s)})();
