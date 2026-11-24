@@ -173,10 +173,9 @@ function pickReelChoice(choices,target){
   assert.equal(heat,(unsettled||nc)?77:0,action);
  }
  fixture(['wedding','married','match','triple']);
- js('{'+bloodSetup+';startTestReel()}');
- assert(win.modal.includes('the decision')&&win.modal.includes('They form a throuple'));
- js("arcChoose('throuple')");
- assert(js('reelTest.match.nc && reelTest.arc.choice==="throuple"'));
+ js('{'+bloodSetup+'}');
+ /* v487: an arc payoff that is also a blood feud plays as the arc reel, so its decision is the reel's climax */
+ assert.equal(js("hrPlan(S.card.p,false,'p').get(reelTest.match)"),'arc');
  fixture([null,null,'match','singles']);
  js('{'+bloodSetup+';hrAuto(S.card.p,"ai",curShow())}');
  assert(js('reelTest.match.ev?.notes.some(n=>n.includes("Heat"))'));

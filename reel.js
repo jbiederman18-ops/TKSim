@@ -32,34 +32,32 @@ function hrPlayable(kind,d){
 }
 function hrDemand(kind,d,main,ppv,b){
  if(!hrPlayable(kind,d))return '';
- const a=b==='ai'?null:hrArc(kind,d,main);
- if(hrFatherPayoff(a))return 'arc';
+ /* v487: an arc payoff wins over a blood feud — the arc's story (and its decision) is the climax; the feud still settles by the booked finish */
+ if(b!=='ai'&&hrArc(kind,d,main))return 'arc';
  if(kind==='match'&&hrBlood(d,ppv))return 'blood';
- return a?'arc':''
+ return ''
 }
 function hrPlan(card,ppv,b){
  const out=new Map();if(!card)return out;
  const main=card.findLastIndex(sl=>sl?.k==='match'&&sl.d);
- const father=b==='ai'?null:card.find((sl,i)=>sl?.k==='match'&&hrPlayable('match',sl.d)&&hrFatherPayoff(hrArc('match',sl.d,i===main)));
- let blood=null;
- card.forEach((sl,i)=>{
-  if(!sl||sl===father||sl.k!=='match'||!hrPlayable('match',sl.d))return;
-  const heat=hrBlood(sl.d,ppv);
-  if(heat&&(!blood||heat>blood.heat||heat===blood.heat&&i===main))blood={d:sl.d,heat};
- });
- if(blood)out.set(blood.d,'blood');
- if(father)out.set(father.d,'arc');
+ /* every arc payoff on the card (each arc once) */
  if(b!=='ai'){
   const seen=new Set();
   card.forEach((sl,i)=>{
    if(!sl||!['match','promo'].includes(sl.k)||!hrPlayable(sl.k,sl.d))return;
    const payoff=hrArc(sl.k,sl.d,i===main);
    if(!payoff||seen.has(payoff.id))return;
-   seen.add(payoff.id);
-   if(sl.d===blood?.d||sl===father)return;
-   out.set(sl.d,'arc');
+   seen.add(payoff.id);out.set(sl.d,'arc');
   });
  }
+ /* one blood feud reel: the hottest among the matches that aren't already an arc reel (the main event breaks a tie) */
+ let blood=null;
+ card.forEach((sl,i)=>{
+  if(!sl||sl.k!=='match'||out.has(sl.d)||!hrPlayable('match',sl.d))return;
+  const heat=hrBlood(sl.d,ppv);
+  if(heat&&(!blood||heat>blood.heat||heat===blood.heat&&i===main))blood={d:sl.d,heat};
+ });
+ if(blood)out.set(blood.d,'blood');
  return out
 }
 function hrPlanned(d){
