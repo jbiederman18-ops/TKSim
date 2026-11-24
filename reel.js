@@ -2,7 +2,7 @@
 'use strict';
 /* v481: a highlight reel is for a segment that demands it — a blood feud being settled, or an arc's payoff. Those always
    play out in full, live; nothing else does (a disaster brewing backstage still comes to you live, any night). */
-const HR_CAP=2,HR_BLOOD=75;/* one blood feud payoff and one arc payoff a night, at most */
+const HR_CAP=99,HR_BLOOD=75;/* v486: one blood feud payoff a night (the hottest), and every arc payoff on the card */
 /* ---- the crowd: 0–100, starts from the show's buzz and the size of the night ---- */
 let HRC=50;/* the crowd for whoever is airing right now (live show, the rival, the sim) */
 function hrStart(b,sh){const bz=typeof buzzOf==='function'?buzzOf(b):3;return clamp(Math.round(42+(bz-3)*12+(sh&&sh.ppv?10:0)+(sh&&sh.special?6:0)),20,78)}
@@ -11,7 +11,7 @@ const hrWord=c=>c<30?'Cold':c<55?'Warm':c<75?'Hot':'Electric';
 const hrCm=()=>clamp(1+(HRC-50)/125,.75,1.4);
 /* a segment moves the crowd: a 3½★ segment keeps it where it is, a great one fires it up, a dud cools it off */
 function hrMove(stars,extra){HRC=clamp(Math.round(HRC+clamp((stars-3.5)*8,-10,10)+(extra||0)),5,100);return HRC}
-/* ---- which segments get a highlight reel: at most hrCap() a night ---- */
+/* ---- which segments get a highlight reel (hrPlan decides; hrCap is only a safety ceiling) ---- */
 const hrCap=()=>HR_CAP;
 const hrFatherPayoff=a=>a?.k==='gauntlet'&&a.sl==='father';
 /* Pick the actual rivalry, even when neither wrestler is taking the fall. */
@@ -35,13 +35,13 @@ function hrDemand(kind,d,main,ppv,b){
  const a=b==='ai'?null:hrArc(kind,d,main);
  if(hrFatherPayoff(a))return 'arc';
  if(kind==='match'&&hrBlood(d,ppv))return 'blood';
- return a&&(kind==='promo'||main||ppv)?'arc':''
+ return a?'arc':''
 }
 function hrPlan(card,ppv,b){
  const out=new Map();if(!card)return out;
  const main=card.findLastIndex(sl=>sl?.k==='match'&&sl.d);
  const father=b==='ai'?null:card.find((sl,i)=>sl?.k==='match'&&hrPlayable('match',sl.d)&&hrFatherPayoff(hrArc('match',sl.d,i===main)));
- let blood=null,arc=null;
+ let blood=null;
  card.forEach((sl,i)=>{
   if(!sl||sl===father||sl.k!=='match'||!hrPlayable('match',sl.d))return;
   const heat=hrBlood(sl.d,ppv);
@@ -49,18 +49,17 @@ function hrPlan(card,ppv,b){
  });
  if(blood)out.set(blood.d,'blood');
  if(father)out.set(father.d,'arc');
- else if(b!=='ai'){
+ if(b!=='ai'){
   const seen=new Set();
   card.forEach((sl,i)=>{
    if(!sl||!['match','promo'].includes(sl.k)||!hrPlayable(sl.k,sl.d))return;
    const payoff=hrArc(sl.k,sl.d,i===main);
    if(!payoff||seen.has(payoff.id))return;
    seen.add(payoff.id);
-   if(sl.d===blood?.d||sl.k==='match'&&!(ppv||i===main))return;
-   if(!arc||i===main||arc.i!==main)arc={d:sl.d,i};
+   if(sl.d===blood?.d||sl===father)return;
+   out.set(sl.d,'arc');
   });
  }
- if(arc)out.set(arc.d,'arc');
  return out
 }
 function hrPlanned(d){
