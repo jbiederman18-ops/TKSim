@@ -15,7 +15,7 @@ function qhFmt(v){v=Math.round(v||0);return (v>=0?'+':'−')+(typeof fbK==='func
 /* v465: after the bell — the night-wide part of each show's fans (block.fn, reasons block.fr) gets its own last column */
 function qhBn(o,br){const b=o.blocks.find(x=>x.brand===br);return b&&b.fn!=null?b.fn:null}
 function qhHasBell(o){return ['p','ai'].some(br=>qhBn(o,br)!=null)}
-function qhInit(R){const cols=R.rounds.filter(r=>!r.x);const bell=qhHasBell(R.o);R.qh={cols,bell,n:cols.length+(bell?1:0),pts:{p:[{c:0,v:0}],ai:[{c:0,v:0}]},sum:{p:0,ai:0},lab:{},ic:{},lim:10000,fresh:{}};}
+function qhInit(R){const cols=R.rounds.filter(r=>!r.x);const bell=qhHasBell(R.o);R.qh={cols,bell,n:cols.length+(bell?1:0),pts:{p:[{c:0,v:0}],ai:[{c:0,v:0}]},sum:{p:0,ai:0},lab:{},ic:{},lim:2000,shown:null,fresh:{}};}
 function qhCol(rd){const R=SRV;return R&&R.qh?R.qh.cols.indexOf(rd)+1:0}
 function qhRdOf(it){return SRV.rounds.find(r=>r.p===it||r.ai===it)}
 /* a half landed: that show's line moves one column */
@@ -27,28 +27,38 @@ function qhHold(rd){const R=SRV;if(!R||!R.qh||!R.two)return;const c=qhCol(rd);['
 function qhX(c){const n=SRV.qh.n||1;return QH_L+(QH_R-QH_L)*c/n}
 /* the scale only ever widens, in round steps, so a point never sits off the chart and the axis never gives the ending away */
 function qhLim(){const Q=SRV.qh;let m=0;['p','ai'].forEach(b=>Q.pts[b].forEach(p=>m=Math.max(m,Math.abs(p.v))));
- const st=[10e3,20e3,30e3,50e3,75e3,100e3,150e3,200e3,300e3,500e3,750e3,1e6,2e6,5e6];while(Q.lim<m*1.08){const nx=st.find(x=>x>Q.lim);if(!nx){Q.lim=m*1.2;break}Q.lim=nx}return Q.lim}
+ const st=[2e3,5e3,10e3,20e3,30e3,50e3,75e3,100e3,150e3,200e3,300e3,500e3,750e3,1e6,2e6,5e6];while(Q.lim<m*1.08){const nx=st.find(x=>x>Q.lim);if(!nx){Q.lim=m*1.2;break}Q.lim=nx}return Q.lim}
 function qhY(v,lim){const mid=(QH_T+QH_B)/2;return mid-(v/lim)*(QH_B-QH_T)/2}
-function qhSvg(){const Q=SRV.qh,n=Q.cols.length,lim=qhLim(),y0=qhY(0,lim);const meX1=Q.bell?(qhX(n)+qhX(n+1))/2:QH_R;
- const grid=[lim,lim/2,0,-lim/2,-lim].map(v=>{const y=qhY(v,lim);return `<line x1="${QH_L}" y1="${y}" x2="${QH_R}" y2="${y}" class="${v?'qhg':'qhz'}"/>${Math.abs(v)===lim||!v?`<text x="${QH_L-5}" y="${y+3.5}" class="qhax" text-anchor="end">${v?qhFmt(v):'0'}</text>`:''}`}).join('');
+function qhSvg(){const Q=SRV.qh,n=Q.cols.length,tgt=qhLim(),lim=Q.shown||tgt,y0=qhY(0,lim);const meX1=Q.bell?(qhX(n)+qhX(n+1))/2:QH_R;
+ const grid=[lim,lim/2,0,-lim/2,-lim].map(v=>{const y=qhY(v,lim);return `<line x1="${QH_L}" y1="${y}" x2="${QH_R}" y2="${y}" class="${v?'qhg':'qhz'}"/>${Math.abs(v)===lim||!v?`<text x="${QH_L-5}" y="${y+3.5}" class="qhax" text-anchor="end">${v?qhFmt(v>0?tgt:-tgt):'0'}</text>`:''}`}).join('');
  const meX=n>1?(qhX(n-1)+qhX(n))/2:QH_L;
  const over=Q.cols[n-1]&&Q.cols[n-1].main?`<rect x="${meX}" y="${QH_T-4}" width="${meX1-meX+(Q.bell?0:4)}" height="${QH_B-QH_T+8}" class="qhov"/><text x="${(meX+meX1)/2}" y="${QH_B+1}" class="qhovt" text-anchor="middle">${Q.bell?'Over':'Overrun'}</text>`:'';
  const xl=Q.cols.map((r,i)=>`<text x="${qhX(i+1)}" y="${QH_B+16}" class="qhxl${r.main?' me':''}" text-anchor="middle">${r.main?'ME':i+1}</text>`).join('')+(Q.bell?`<text x="${qhX(n+1)}" y="${QH_B+16}" class="qhxl" text-anchor="middle">🔔</text>`:'');
  const line=br=>{const P=Q.pts[br];let h='';for(let i=1;i<P.length;i++){const a=P[i-1],b=P[i];const nw=Q.fresh[br]&&i===P.length-1&&!SRV.inst;
-   h+=`<line x1="${qhX(a.c)}" y1="${qhY(a.v,lim)}" x2="${qhX(b.c)}" y2="${qhY(b.v,lim)}" pathLength="1" class="qhl ${br}${nw?' nw':''}${nw&&Q.cols[b.c-1]&&Q.cols[b.c-1].main?' sl':''}"/>`}
-  const L=P[P.length-1];if(P.length>1)h+=`<circle cx="${qhX(L.c)}" cy="${qhY(L.v,lim)}" r="4.5" class="qhd ${br}${Q.fresh[br]&&!SRV.inst?' nw':''}"/>`;return h};
+   h+=`<line x1="${qhX(a.c)}" y1="${qhY(a.v,lim)}" x2="${qhX(b.c)}" y2="${qhY(b.v,lim)}" data-a="${a.v}" data-b="${b.v}" pathLength="1" class="qhl ${br}${nw?' nw':''}${nw&&Q.cols[b.c-1]&&Q.cols[b.c-1].main?' sl':''}"/>`}
+  const L=P[P.length-1];if(P.length>1)h+=`<circle cx="${qhX(L.c)}" cy="${qhY(L.v,lim)}" data-v="${L.v}" r="4.5" class="qhd ${br}${Q.fresh[br]&&!SRV.inst?' nw':''}"/>`;return h};
  /* only each show's latest number is on the chart; the higher point's sits above it, the lower one's below */
  const lab=()=>{const out=[];const L={};['p','ai'].forEach(br=>{const P=Q.pts[br],q=P[P.length-1];if(P.length>1&&q.d!=null&&Q.lab[br]===q.c)L[br]=q});
   const Y={};['p','ai'].forEach(br=>{const q=L[br];if(!q)return;const o=L[br==='p'?'ai':'p'];const up=!o||o.c!==q.c?q.v>=0:q.v>=o.v;Y[br]=qhY(q.v,lim)+(up?-9:16)});
   /* two labels in the same column never sit on top of each other */
   if(Y.p!=null&&Y.ai!=null&&L.p.c===L.ai.c&&Math.abs(Y.p-Y.ai)<15){const hi=Y.p<=Y.ai?'p':'ai',lo=hi==='p'?'ai':'p',m=(Y.p+Y.ai)/2;Y[hi]=m-7.5;Y[lo]=m+7.5}
   ['p','ai'].forEach(br=>{const q=L[br];if(!q)return;const x=qhX(q.c),y=Y[br];const end=x>QH_R-30;
-   out.push(`<text x="${end?x-7:x+7}" y="${y}" class="qhn ${br}${Q.fresh[br]&&!SRV.inst?' nw':''}" text-anchor="${end?'end':'start'}">${qhFmt(q.d)}</text>`)});return out.join('')};
+   out.push(`<text x="${end?x-7:x+7}" y="${y}" data-v="${q.v}" data-o="${(y-qhY(q.v,lim)).toFixed(2)}" class="qhn ${br}${Q.fresh[br]&&!SRV.inst?' nw':''}" text-anchor="${end?'end':'start'}">${qhFmt(q.d)}</text>`)});return out.join('')};
  return `<svg viewBox="0 0 ${QH_W} ${QH_H}" class="qhsvg" role="img" aria-label="Fans gained tonight, segment by segment">${over}${grid}${xl}${line('ai')}${line('p')}${lab()}</svg>`}
 /* the crowds each of your segments moved, in a row under the chart */
 function qhIcons(){const Q=SRV.qh;if(typeof fgIc!=='function')return '';return Object.keys(Q.ic).map(c=>{const l=(Q.ic[c]||[]).slice(0,2);if(!l.length)return '';
  return `<span class="qhic" style="left:${(qhX(+c)/QH_W*100).toFixed(2)}%">${l.map(([g,s])=>`<i class="fg-${g}">${fgIc(g)}<b>${s>0?'▲':'▼'}</b></i>`).join('')}</span>`}).join('')}
-function qhDraw(){const el=document.getElementById('qh-chart');if(!el||!SRV||!SRV.qh)return;el.innerHTML=qhSvg()+`<div class="qhics">${qhIcons()}</div>`;SRV.qh.fresh={}}
+/* v471: when the scale widens, the lines already drawn ease down to it instead of jumping */
+function qhDraw(){const el=document.getElementById('qh-chart');if(!el||!SRV||!SRV.qh)return;const Q=SRV.qh,tgt=qhLim();
+ if(Q.raf){cancelAnimationFrame(Q.raf);Q.raf=0}
+ if(Q.shown==null||SRV.inst||tgt<Q.shown||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))Q.shown=tgt;
+ el.innerHTML=qhSvg()+`<div class="qhics">${qhIcons()}</div>`;Q.fresh={};if(Q.shown<tgt)qhEase(el,Q.shown,tgt)}
+function qhEase(el,from,to){const Q=SRV.qh,t0=performance.now(),D=550;
+ const step=now=>{const k=Math.min(1,(now-t0)/D),e=1-Math.pow(1-k,3),L=from+(to-from)*e;Q.shown=L;
+  el.querySelectorAll('line[data-a]').forEach(l=>{l.setAttribute('y1',qhY(+l.dataset.a,L));l.setAttribute('y2',qhY(+l.dataset.b,L))});
+  el.querySelectorAll('circle[data-v]').forEach(c=>c.setAttribute('cy',qhY(+c.dataset.v,L)));
+  el.querySelectorAll('text[data-v]').forEach(t=>t.setAttribute('y',qhY(+t.dataset.v,L)+(+t.dataset.o)));
+  Q.raf=k<1?requestAnimationFrame(step):0};Q.raf=requestAnimationFrame(step)}
 /* v463: the chart is the scoreboard — it sits at the top of the stage, with each show's name and running total in its line's
    colour (ids srs-p / srs-ai, which srDone and srFinal update) */
 function qhHtml(R,G,Rv){qhInit(R);return `<div class="qhwrap"><div class="qhcap"><span>The overnights</span><em>Fans gained tonight</em></div><div class="qhleg"><div class="qht p" id="srs-p"><span>${esc(G)}</span><b>+0</b><em>So far</em></div><div class="qht ai" id="srs-ai"><span>${esc(Rv)}</span><b>+0</b><em>So far</em></div></div><div class="qhchart" id="qh-chart">${qhSvg()}<div class="qhics"></div></div></div>`}
