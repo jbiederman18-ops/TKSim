@@ -18,53 +18,52 @@ const WWE_RAW=`Roman Reigns|M|pw|f|86|88|97
 Jey Uso|M|br|f|80|80|87
 Jimmy Uso|M|br|f|80|74|78
 Jacob Fatu|M|pw|f|88|70|86|92
-Solo Sikoa|M|br|h|76|70|74
+Solo Sikoa|M|br|f|76|70|74
 Seth Rollins|M|te|f|90|90|92
 Bron Breakker|M|pw|h|88|70|88|95
 Bronson Reed|M|pw|h|84|64|80
 Austin Theory|M|te|h|80|72|68|84
 Logan Paul|M|sh|h|80|86|86
 LA Knight|M|sh|f|78|92|87
-Oba Femi|M|pw|f|86|70|82|95
+Oba Femi|M|pw|f|86|70|86|95
 Penta|M|fl|f|88|60|85|90
-Je'Von Evans|M|fl|f|82|62|72|94
+Je'Von Evans|M|fl|f|84|62|78|94
 Dominik Mysterio|M|sh|h|80|80|86|86
 JD McDonagh|M|te|h|82|62|60
 Rey Mysterio|M|fl|f|78|72|82
 Dragon Lee|M|fl|f|85|52|62|90
 Cruz Del Toro|M|fl|f|76|50|48|84
 Joaquin Wilde|M|fl|f|74|50|42
-Chad Gable|M|te|h|86|76|74
+Chad Gable|M|te|f|86|76|78
 El Grande Americano|M|te|h|80|64|64
 Joe Hendry|M|sh|f|74|86|74|80
-Ethan Page|M|br|h|80|78|64
+Ethan Page|M|br|h|80|78|72
 Rusev|M|pw|h|80|72|72
 Otis|M|pw|f|70|60|62
 Akira Tozawa|M|fl|f|74|55|48
 Big Cass|M|pw|h|66|72|60
-Julius Creed|M|te|h|80|58|60|86
-Brutus Creed|M|te|h|80|55|60|86
-Royce Keys|M|pw|h|80|60|64|86
+Royce Keys|M|pw|h|80|60|74|86
 Bronco Nima|M|pw|h|72|50|50|82
 Lucien Price|M|pw|h|72|50|50|82
 Montez Ford|M|fl|f|82|72|70
 Angelo Dawkins|M|pw|f|78|62|62
 Cody Rhodes|M|sh|f|86|94|96
 CM Punk|M|te|f|84|98|96
-Sami Zayn|M|br|f|86|90|90
-Randy Orton|M|te|f|84|86|90
+Sami Zayn|M|br|h|86|90|90
+Randy Orton|M|te|h|84|86|90
 Gunther|M|te|h|92|84|89
 Drew McIntyre|M|br|h|86|86|86
-Kevin Owens|M|br|h|86|90|86
-Damian Priest|M|br|f|82|74|80
+Kevin Owens|M|br|f|86|90|86
+Damian Priest|M|br|h|82|74|80
 Finn Bálor|M|te|f|86|72|78
 The Miz|M|sh|h|74|90|74
 R-Truth|M|sh|f|60|86|76
 Shinsuke Nakamura|M|te|h|82|62|70
 Kyoki|M|br|h|76|48|48|84
 Johnny Gargano|M|te|f|86|78|70
+Cruz Montana|M|br|h|80|78|66
 Carmelo Hayes|M|fl|h|84|78|68|90
-Trick Williams|M|sh|f|80|82|80|90
+Trick Williams|M|sh|f|80|82|83|90
 Ricky Saints|M|sh|h|80|84|72|88
 Rey Fenix|M|fl|f|90|52|76
 Axiom|M|fl|f|84|50|58|90
@@ -78,13 +77,13 @@ Kit Wilson|M|sh|h|72|72|52
 Elton Prince|M|sh|h|72|68|50
 Matt Cardona|M|sh|f|70|78|58
 Danhausen|M|sh|f|62|80|66
-Becky Lynch|F|br|h|86|92|91
-Liv Morgan|F|sh|h|78|84|88
+Becky Lynch|F|br|f|86|92|91
+Liv Morgan|F|sh|h|78|84|90
 Stephanie Vaquer|F|fl|f|88|62|86|94
-IYO SKY|F|fl|f|90|55|84
-Asuka|F|te|h|86|72|78
-Bayley|F|te|h|84|82|78
-Lyra Valkyria|F|te|f|84|66|72|90
+IYO SKY|F|fl|f|90|55|86
+Asuka|F|te|f|86|72|78
+Bayley|F|te|f|84|82|78
+Lyra Valkyria|F|te|h|84|66|72|90
 Raquel Rodriguez|F|pw|h|78|55|64
 Roxanne Perez|F|te|h|84|72|70|92
 Sol Ruca|F|fl|f|80|58|68|92
@@ -94,17 +93,17 @@ Jaida Parker|F|br|h|76|62|58|88
 Maxxine Dupri|F|sh|h|62|62|58|76
 Naomi|F|fl|h|80|76|78
 Charlotte Flair|F|te|f|86|84|88
-Tiffany Stratton|F|fl|f|84|78|87|94
+Tiffany Stratton|F|fl|h|84|78|89|94
 Jade Cargill|F|pw|h|78|66|82|86
 Bianca Belair|F|pw|f|88|78|88
 Rhea Ripley|F|br|f|86|80|92
 Nia Jax|F|pw|h|76|72|72
 Alexa Bliss|F|sh|f|72|80|80
-Chelsea Green|F|sh|h|70|90|80
-Giulia|F|br|h|86|58|72|92
+Chelsea Green|F|sh|f|70|90|83
+Giulia|F|br|f|86|58|72|92
 Jordynne Grace|F|pw|f|84|66|70
-Nikki Bella|F|br|f|68|78|76
-Brie Bella|F|br|f|66|70|70
+Nikki Bella|F|br|h|68|78|76
+Brie Bella|F|br|h|66|70|70
 Paige|F|te|f|72|80|78
 Blake Monroe|F|sh|h|78|84|72|90
 Lash Legend|F|pw|h|72|70|64|86
@@ -120,15 +119,13 @@ Piper Niven|F|pw|h|78|66|58`;
 
 /* WWE tag teams and factions (ids are slugs of the names above) */
 const WWE_TEAMS=[
-['The Bloodline','faction',['roman-reigns','jey-uso','jimmy-uso','jacob-fatu']],
+['The Bloodline','faction',['roman-reigns','jey-uso','jimmy-uso','jacob-fatu','solo-sikoa']],
 ['The Usos','team',['jey-uso','jimmy-uso']],
 ['The Vision','faction',['bron-breakker','bronson-reed','austin-theory','logan-paul','maxxine-dupri']],
 ['Breakker & Theory','team',['bron-breakker','austin-theory']],
 ['The Judgment Day','faction',['dominik-mysterio','jd-mcdonagh','liv-morgan','raquel-rodriguez','roxanne-perez']],
 ['LWO','faction',['rey-mysterio','dragon-lee','cruz-del-toro','joaquin-wilde']],
-['American Made','faction',['julius-creed','brutus-creed','ivy-nile']],
-['The Creed Brothers','team',['julius-creed','brutus-creed']],
-['The 946','faction',['royce-keys','bronco-nima','lucien-price','jaida-parker']],
+['The 946','faction',['royce-keys','bronco-nima','lucien-price','jaida-parker','carmelo-hayes','cruz-montana']],
 ['OTM','team',['bronco-nima','lucien-price']],
 ['Alpha Academy','team',['otis','akira-tozawa']],
 ['The Street Profits','team',['montez-ford','angelo-dawkins']],

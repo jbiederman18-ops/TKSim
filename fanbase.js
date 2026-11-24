@@ -106,7 +106,6 @@ Dani Luna|tech
 Hyan|tech
 Deonna Purrazzo|tech
 Yuka Sakazaki|flip
-Taya Valkyrie|blood
 Sammy Guevara|flip
 Dustin Rhodes|blood
 MVP|chaos
@@ -120,7 +119,6 @@ Buddy Matthews|blood
 The Beast Mortos|flip
 Blake Christian|flip
 Lee Moriarty|tech
-Anthony Bowens|cas
 Billy Gunn|chaos
 Rocky Romero|tech
 Trent Beretta|tech
@@ -230,9 +228,10 @@ Rusev|blood
 Otis|cas
 Akira Tozawa|flip
 Big Cass|chaos
-Julius Creed|tech
-Brutus Creed|tech
+Jacob Kasper|tech
+Drew Kasper|tech
 Royce Keys|cas
+Cruz Montana|blood
 Bronco Nima|und
 Lucien Price|und
 Montez Ford|flip
