@@ -170,7 +170,7 @@ function adCard(){
  <p class="muted tiny" style="margin:8px 0 0">Extra dialogue in live face-offs and singles matches. <b>Grudge</b>: threats and rougher action. <b>Tension</b>: flirtation. <b>Auto</b> picks by rivalry. Ratings unchanged.</p>
  ${o?`<div class="chips" role="group" aria-label="After Dark tone" style="margin:8px 0 0">${modes}</div>`:''}</div>`;
 }
-Object.assign(window,{adPromo,adMatch,adBadge,adSet,adSetMode,adCard});
+Object.assign(window,{adReelRomance:ws=>on()&&ws.length>=2&&ws.every(w=>w&&w.oc),adPromo,adMatch,adBadge,adSet,adSetMode,adCard});
 
 (function(){const c=document.createElement('style');c.textContent=`
 .sd .adbadge{position:absolute;top:8px;right:10px;z-index:5;pointer-events:none;padding:2px 10px 3px;background:rgba(9,9,11,.82);color:#c9b6ff;font:900 italic 12px 'BC','Barlow Condensed',sans-serif;letter-spacing:.08em;text-transform:uppercase;clip-path:var(--sl);border-left:3px solid #7a5cff}

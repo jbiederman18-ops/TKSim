@@ -450,7 +450,7 @@ const ARCS={
    {n:'Married twice',b:'A promo with {C}: and to {C:them} as well',s:(s,a)=>sTog(s,a.a,a.c),p:a=>[{kind:'promo',type:'callout',a:a.a,b:a.c}]}],
   pay:(s,a)=>s.kind==='match'&&s.sides.length===3&&new Set([a.a,a.b,a.c].map(id=>sSide(s,id))).size===3&&![a.a,a.b,a.c].some(id=>sSide(s,id)<0),
   pplan:a=>[{kind:'match',type:'triple',vs2:[[a.a],[a.b],[a.c]]}],
-  choice:[{k:'split',n:'💔 They all break up',d:'Three ways to hate each other: a feud between all three.'},{k:'throuple',n:'💞 They form a throuple',d:'All three together: a new faction, with chemistry.'}],
+  choice:[{k:'split',n:'💔 They all break up',d:'The booked winner survives the brawl. All three become rivals.'},{k:'throuple',n:'💞 They form a throuple',d:'No contest. All three form a faction and gain chemistry.'}],
   also:(a,s,n)=>{const A=aW(a.a),B=aW(a.b),C=aW(a.c);if(!a.choice)a.choice=seeded((S.seed||'')+'|wed|'+a.id)()<.5?'split':'throuple';const m=[a.a,a.b,a.c];
    (S.teams||[]).forEach(t=>{if(t.type==='team'&&t.m.includes(a.b)&&t.m.includes(a.c))t.m=t.m.filter(x=>x!==a.c)});S.teams=(S.teams||[]).filter(t=>t.m.length>=2);
    if(a.choice==='throuple'){m.forEach((x,i)=>m.slice(i+1).forEach(y=>peace(x,y,'They became a throuple')));chemUp(m,a.q==='great'?3:2);const t=mkTeam(`${aLast(A)}, ${aLast(B)} & ${aLast(C)}`,m,'faction');n.push(`💞 ${A.name}, ${B.name} and ${C.name} are a throuple now: ${t.n}.`)}
@@ -490,8 +490,8 @@ const ARCS={
    {n:'The soufflé',b:'A Sit-Down Interview: an apology soufflé for everyone {A:they}\'s wronged',s:(s,a)=>s.kind==='promo'&&s.ids.includes(a.a)&&!s.ids.includes(a.b),p:a=>[{kind:'promo',type:'interview',a:a.a}]},
    {n:'Hmmmmm',b:'A promo with {B}, who\'s suspicious',s:tog,p:pTog('callout',1)}],
   pay:(s,a)=>sSame(s,a.a,a.b),pplan:a=>[{kind:'match',type:'tag',side:[a.a,a.b],n:2}],
-  choice:[{k:'ruse',n:'🐍 It was all a ruse',d:'{A:They} got close to everyone {B} loves to turn them against {B:them}. {A} stays a heel, and {B} has a blood feud and a locker room that doubts {B:them}.'},
-   {k:'real',n:'🤗 It was real',d:'{A} turns face, and {A:they} and {B} become friends.'}],
+  choice:[{k:'ruse',n:'🐍 It was all a ruse',d:'{A:They} got close to everyone {B} loves to turn them against {B:them}. Their team loses, {A} stays a heel, and {B} has a blood feud and a locker room that doubts {B:them}.'},
+   {k:'real',n:'🤗 It was real',d:'Their team wins. {A} turns face, and {A:they} and {B} become friends.'}],
   also:(a,s,n)=>{const A=aW(a.a),B=aW(a.b);if(!a.choice)a.choice=seeded((S.seed||'')+'|gw|'+a.id)()<.5?'ruse':'real';
    if(a.choice==='ruse'){bumpHeat(a.a,a.b,a.q==='great'?70:50,[],`${A.name}'s kindness was a ruse`);mor(B,-8);(typeof fgFriends==='function'?fgFriends(B):[]).filter(o=>o.id!==a.a).forEach(o=>mor(o,-3));n.push(`🐍 It was all a ruse. ${A.name} turns on ${B.name}, and the people ${B.name} loves aren't so sure about ${aPr(B,'them')} anymore.`)}
    else{turnTo(A,'f');peace(a.a,a.b,'Became friends');chemUp([a.a,a.b],a.q==='great'?3:2);mor(B,6);n.push(`🤗 It was real. ${A.name} is a face now, and ${B.name} finally believes it.`)}},
@@ -940,7 +940,8 @@ if(typeof fbCalc==='function'){const _fc=fbCalc;fbCalc=function(b,segs,show,o){c
     const ms=segs.filter(sg=>sg&&sg.k==='match');const viaHeat=pull(ms.map(sg=>Math.max(sg.h||0,sg.arcH||0)))-pull(ms.map(sg=>sg.h||0));add=Math.max(add,viaHeat)}r.pct.cas+=add;r.arcStory=add;if(add>=.75&&r.why)r.why.cas='Hooked on the stories — they want to see where they go'}}catch(e){}return r}}
 window.arcPromoPre=function(p){try{const r=arcPre(aSegPromo(p));const h=arcStoryH(r.seg);if(h)ARC_H.set(p,h);return r}catch(e){console.warn('arcs',e);return null}};
 /* v481: does this segment, as booked, pay off one of your arcs? (highlight reels) — no side effects */
-window.arcPaysOff=function(kind,d,main){try{return !!arcPre(kind==='promo'?aSegPromo(d):aSegMatch(d,main?'me':'mid')).pay.length}catch(e){return false}};
+function arcPayoffFor(kind,d,main){try{return arcPre(kind==='promo'?aSegPromo(d):aSegMatch(d,main?'me':'mid')).pay[0]||null}catch(e){return null}}
+window.arcPaysOff=(kind,d,main)=>!!arcPayoffFor(kind,d,main);
 /* returns true when a payoff landed */
 window.arcPost=function(ap,stars,notes){if(!ap||!ap.seg)return false;const s=ap.seg;let landed=false;
  if(!S.arcSeenW||S.arcSeenW.w!==AW())S.arcSeenW={w:AW(),ids:[]};s.ids.forEach(id=>{if(!S.arcSeenW.ids.includes(id))S.arcSeenW.ids.push(id)});
@@ -1004,14 +1005,39 @@ function arcGroundswell(wk,notes){arcList().forEach(a=>{if(a.k!=='groundswell'||
   a.have++;a.st.push(3.5);a.lastStep=wk;const cost=ARC_GS_COST+1000*a.have;S.fans.p=Math.max(50000,S.fans.p-cost);
   const t=`📣 "WE WANT ${aLast(A).toUpperCase()}!" The groundswell grows (step ${a.have} of ${a.need}, −${fmtFans(cost)} fans).${a.have>=a.need?` Give ${aPr(A,'them')} the big win.`:''}`;news(t);if(notes)notes.push(t);
   if(a.have>=a.need){a.stage='pay';a.payFrom=wk+1}})}
-/* The Corporate Offer: right before its payoff segment plays live, you decide what they choose */
-if(typeof liveNext==='function'){const _ln=liveNext;liveNext=function(){try{if(typeof LQ!=='undefined'&&LQ){const nx=LQ.items[LQ.k+1];if(nx&&!nx.arcAsked&&(nx.kind==='seg'||nx.kind==='promo')){const seg=nx.kind==='promo'?aSegPromo(S.card.p[nx.i].d):aSegMatch(nx.m,nx.main?'me':'mid');
-  const chOf=a=>aD(a).choice||(arcStoryOf(a)||{}).choice;
-  const a=arcList().find(a=>!a.done&&!a.choice&&chOf(a)&&a.stage==='pay'&&AW()>=(a.payFrom||0)&&aMine(a.a)&&(()=>{try{return aD(a).pay(seg,a)}catch(e){return false}})());
-  if(a){nx.arcAsked=1;window.__arcNx=nx;const D=Object.assign({},aD(a),{choice:chOf(a)});const A=aW(a.a);return openModal(`<div class="h mhd">${D.i} ${esc(A.name)}: the decision</div>${arcHead(a)?`<p class="arcst">📜 ${esc(arcHead(a))}</p>`:''}<p class="muted" style="margin-top:0">It all comes down to tonight. What does ${esc(A.name)} choose?</p>
-   ${D.choice.map(o=>`<button class="choice" onclick="arcChoose('${a.id}','${o.k}')"><div><b>${esc(arcWords(a,o.n))}</b><div class="muted tiny">${esc(arcWords(a,o.d))}</div></div></button>`).join('')}`)}}}}catch(e){console.warn('arc choice',e)}return _ln.apply(this,arguments)}}
-window.arcChoose=function(id,k){const a=arcList().find(x=>x.id===id);if(a){a.choice=k;const o=((aD(a).choice||(arcStoryOf(a)||{}).choice)||[]).find(o=>o.k===k);const nx=window.__arcNx;
-  if(o&&o.win&&nx&&nx.m&&Array.isArray(nx.m.sides)){const si=nx.m.sides.findIndex(sd=>sd.includes(a.a));if(si>=0)nx.m.winner=o.win==='a'?si:(si===0?1:0)}}try{closeModal()}catch(e){}liveNext()};
+/* The live reel and the pre-segment sheet use the same decisions and result rules. */
+function arcChoiceOptions(a){return a&&(aD(a).choice||(arcStoryOf(a)||{}).choice)||[]}
+function arcDecisionItems(a){return arcChoiceOptions(a).map(o=>({key:o.k,label:arcWords(a,o.n),info:arcWords(a,o.d)}))}
+function arcApplyDecision(a,k,m){
+ const o=arcChoiceOptions(a).find(o=>o.k===k);if(!o||a.choice)return;
+ a.choice=k;if(!m)return;
+ m._hrArc=1;
+ if((a.k==='wedding'&&k==='throuple')||(a.k==='war'&&k==='peace')){m.nc=true;return}
+ const win=o.win||(a.k==='goodwill'?(k==='real'?'a':'b'):null);
+ if(win){const side=m.sides.findIndex(sd=>sd.includes(a.a));if(side>=0){m.winner=win==='a'?side:m.sides.findIndex((_,i)=>i!==side);m.fin='clean';delete m.nc}}
+}
+let arcPendingDecision=null;
+if(typeof liveNext==='function'){const next=liveNext;liveNext=function(){
+ if(typeof LQ!=='undefined'&&LQ){const it=LQ.items[LQ.k+1];
+  if(it&&!it.arcAsked&&(it.kind==='seg'||it.kind==='promo')){
+   const kind=it.kind==='seg'?'match':'promo',d=it.m||S.card.p[it.i].d;
+   const a=d&&!d.cut&&arcPayoffFor(kind,d,it.main);
+   if(a&&!a.choice&&arcChoiceOptions(a).length&&!(hrPlanned(d)==='arc'&&hrArcDecision(a))){
+    it.arcAsked=1;arcPendingDecision={it,a};
+    const D=aD(a);
+    return openModal(`<div class="h mhd">${D.i} ${esc(aW(a.a).name)}: the decision</div><p class="muted">It all comes down to tonight.</p>
+    ${arcDecisionItems(a).map(({key,label,info})=>`<button class="choice" onclick="arcChoose('${key}')"><div><b>${esc(label)}</b><div class="muted tiny">${esc(info)}</div></div></button>`).join('')}`,true);
+   }
+  }
+ }
+ return next.apply(this,arguments)
+}}
+Object.assign(window,{arcPayoffFor,arcChoiceOptions,arcDecisionItems,arcApplyDecision,arcWords,arcHead,arcStoryOf,aDForReel:aD});
+window.arcChoose=function(k){
+ const pending=arcPendingDecision;if(!LQ||!pending||LQ.items[LQ.k+1]!==pending.it||!arcChoiceOptions(pending.a).some(o=>o.k===k))return;
+ arcPendingDecision=null;
+ const {a,it}=pending;arcApplyDecision(a,k,it.m);it.arcDecision=a;closeModal();liveNext()
+};
 /* ---- what to book: a slot filled straight from the arc (the Book it button and the sweep bot) ---- */
 function arcPlan(a){const D=aD(a);if(!D||!D.plan||a.done)return null;try{return D.plan(a,a.stage)}catch(e){return null}}
 window.arcPlan=arcPlan;
@@ -1415,8 +1441,8 @@ for(const k in ARC_STORY)(ARC_STORY[k]||[]).forEach(x=>{const g=ARC_GEN[k+'/'+x.
    {n:'The other side',b:'A promo with {B}, who answers with the enemy\'s flag',s:tog,p:pTog('callout',1)},
    {n:'The first strike',b:'A Sneak Attack on {B}',s:(s,a)=>s.kind==='promo'&&s.type==='attack'&&tog(s,a),p:pTog('attack')}],
   pay:(s,a)=>sVs(s,a.a,a.b)&&hard(s),pplan:a=>[{kind:'match',type:'singles',vs:[a.a,a.b],stip:'street'}],
-  choice:[{k:'peace',n:'🕊️ Ceasefire',d:'{A} and {B} lower their flags and shake hands: the feud ends, both gain popularity and they work well together from now on.'},
-   {k:'war',n:'💥 Total war',d:'Nobody backs down: {A} and {B} are in a blood feud.'}],
+  choice:[{k:'peace',n:'🕊️ Ceasefire',d:'{A} and {B} lower their flags and shake hands: no contest. The feud ends and both gain popularity and chemistry.'},
+   {k:'war',n:'💥 Total war',d:'The booked winner stands. {A} and {B} start a blood feud.'}],
   also:(a,s,n)=>{const A=aW(a.a),B=aW(a.b);if(!a.choice)a.choice=seeded((S.seed||'')+'|war|'+a.id)()<.5?'peace':'war';
    if(a.choice==='peace'){peace(a.a,a.b,'A ceasefire');chemUp([a.a,a.b],a.q==='great'?3:2);if(B)popx(B,a.q==='great'?3:2);n.push(`🕊️ Ceasefire. ${A.name} and ${B.name} lower their flags and shake hands in the middle of the ring.`)}
    else{bumpHeat(a.a,a.b,a.q==='great'?80:60,[],'Total war');n.push(`💥 Total war. ${A.name} and ${B.name} won't stop until one of them surrenders.`)}},

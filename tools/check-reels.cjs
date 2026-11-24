@@ -1,0 +1,178 @@
+/* Run with node tools/check-reels.cjs. The game scripts run in browser order with a stub DOM.
+   These checks cover payoff scheduling and match results without browser dependencies. */
+const fs=require('node:fs');
+const vm=require('node:vm');
+const path=require('node:path');
+const readGameFile=file=>fs.readFileSync(path.join(__dirname,'..',file),'utf8');
+const assert=require('node:assert/strict');
+const {webcrypto}=require('node:crypto');
+const elements=new Map();
+class Element {
+ constructor(){Object.assign(this,{classList:{add(){},remove(){},toggle(){},contains(){return false}},style:{setProperty(){},removeProperty(){}},dataset:{},innerHTML:'',textContent:'',value:''})}
+ appendChild(x){return x} append(){} remove(){} addEventListener(){} removeEventListener(){} setAttribute(){} getAttribute(){return ''} querySelector(){return null} querySelectorAll(){return []}
+}
+const element=id=>{if(!elements.has(id))elements.set(id,new Element());return elements.get(id)};
+const win={console,crypto:webcrypto,document:{
+ head:element('head'),body:element('body'),documentElement:element('html'),createElement:()=>new Element(),getElementById:element,
+ querySelector:s=>s.startsWith('#')&&!s.includes(' ')?element(s.slice(1)):null,querySelectorAll:()=>[],addEventListener(){},removeEventListener(){},
+},localStorage:{getItem(){return null},setItem(){},removeItem(){}},location:{search:'',hash:'',href:'http://localhost/',hostname:'localhost'},
+ navigator:{},matchMedia:()=>({matches:true,addEventListener(){},addListener(){}}),addEventListener(){},removeEventListener(){},
+ setTimeout:(f,n)=>setTimeout(f,Math.min(n,3)),clearTimeout,setInterval:()=>0,clearInterval,requestAnimationFrame:f=>setTimeout(f,1),
+ Image:class {},MutationObserver:class {observe(){} disconnect(){}},URL,URLSearchParams,fetch:async()=>({ok:false}),history:{pushState(){},replaceState(){}},TextEncoder,performance};
+win.window=win;win.self=win;
+vm.createContext(win);
+const js=(s,file)=>vm.runInContext(s,win,{filename:file||'test'});
+const page=readGameFile('index.html');
+for(const [,attrs,body] of page.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/g)){
+ if(attrs.includes('type="module"'))continue;
+ const src=attrs.match(/src="([^"]+)"/)?.[1];
+ js(src?readGameFile(src):body,src||'index-inline');
+}
+js(`   window.reelFixture = (k, story, kind, type, stip='std', ppv=false) => {
+    newGame('Tester','Rival','normal');
+    S.phase='season';
+    S.week=ppv?Number(Object.keys(PPVS)[0]):1;
+    const [A,B,C,D,E,F]=Object.values(S.w).filter(w=>w.g==='M').slice(0,6);
+    for(const w of [A,B,C,D,E,F])Object.assign(w,{own:'p',ring:85,mic:85,mor:80,fat:0,inj:0});
+    const {id:a}=A,{id:b}=B,{id:c}=C;
+    const sides=type==='triple'?[[a],[b],[c]]:type==='tag'?[[a,b],[D.id,E.id]]:[[a],[b]];
+    const match={type,stip,sides,winner:0};
+    const promo={a:b,b:a,type:'rally'};
+    const arc={k,sl:story,id:'test-arc',a,b,c,stage:'pay',have:3,need:3,st:[4,4,4],payFrom:0,end:100};
+    S.arcs=k?[arc]:[];
+    if(k==='faith'){S.teams=[{id:'test-faction',n:'The Test Faction',type:'faction',m:[a,b,c]}];arc.f='test-faction';arc.fn=S.teams[0].n}
+    if(k==='voice'){A.pop=45;B.pop=80;promo.a=a;promo.b=b;promo.type='callout'}
+    if(k==='lastchase'){const title=Object.values(S.titles).find(t=>t.kind==='singles'&&t.g===A.g);title.holders=[b];match.title=title.id;match.winner=1}
+    if(k==='sellout'){B.pop=60;A.al='f'}
+    if(k==='invasion')S.week=FD_WEEK;
+    const d=kind==='promo'?promo:match;
+    S.card={p:[{k:kind,d}],ai:[]};
+    window.reelTest={a,b,c,D,E,F,arc,match,promo,d,kind};
+    return reelTest;
+   };
+   window.startTestReel=()=>{
+    const {kind,match,d}=reelTest,sh=curShow();
+    LIVE=true;
+    LQ={items:[kind==='promo'?{kind:'promo',i:0}:{kind:'seg',m:match,n:1,main:true}],
+     k:-1,show:sh.name,ppv:sh.ppv,crowd:50,hr:0,quiet:[]};
+    liveNext();
+   };
+`);
+js(`SFX=null;openModal=(html)=>{window.modal=html};closeModal=()=>{};
+`);
+const list=js(`({
+ arcs:Object.keys(ARCS).length, scenes:Object.keys(ARC_REEL).length,
+ missingArcs:Object.keys(ARCS).filter(k=>!ARC_REEL[k]),
+ stips:Object.keys(STIPS).length, missingStips:Object.keys(STIPS).filter(k=>!BLOOD_REEL[k]),
+ styleFilters:MEV.filter(e=>[e,...e.ch].some(c=>c.sty||c.bsty||c.nsty)).map(e=>e.id)
+})`);
+console.log(`${list.scenes}/${list.arcs} arc scripts and ${list.stips} stipulations checked.`);
+assert.equal(list.missingArcs.length,0);
+assert.equal(list.missingStips.length,0);
+assert.equal(list.styleFilters.length,0);
+const cases=[
+ ['sellout','corp','match','singles','std',false,[['sign',0,false],['refuse',0,false]]],
+ ['wedding','married','match','triple','std',false,[['split',0,false],['throuple',0,true]]],
+ ['faith','religion','promo','singles','std',false,[['convert',0,false],['out',0,false]]],
+ ['goodwill','souffle','match','tag','std',false,[['ruse',1,false],['real',0,false]]],
+ ['war','flags','match','singles','street',false,[['war',0,false],['peace',0,true]]],
+ ['lastchase','hangup','match','singles','std',true,[['champ',0,false],['fall',1,false]]],
+ ['invasion','brigade','match','singles','std',true,[['knife',0,false],['peace',0,false]]]
+];
+function fixture(args){return js('reelFixture(...'+JSON.stringify(args)+')')}
+for(const row of cases){
+ const [k,...rest]=row.slice(0,6), options=row[6];
+ for(const [key,winner,nc] of options){
+  const t=fixture([k,...rest]);
+  assert.equal(js(`hrPlan(S.card.p,curShow().ppv,'p').get(reelTest.d)`),'arc',k);
+  assert(js(`hrScene({main:true},reelTest.d,reelTest.kind,'arc',curShow().ppv).decision['${key}']`),k);
+  js(`arcApplyDecision(reelTest.arc,'${key}',${t.kind==='match'?'reelTest.match':'null'})`);
+  assert.equal(t.match.winner,winner,k);
+  assert.equal(!!t.match.nc,nc,k);
+  assert(js(`arcPayoffFor(reelTest.kind,reelTest.d,true)`),k);
+ }
+}
+console.log('All fourteen decision results and their payoff predicates passed.');
+
+const wait=()=>new Promise(r=>setTimeout(r,6));
+js(`openModal=(html)=>{window.modal=html;document.getElementById('sdlow').innerHTML=''};tcCard=()=>'';window.foPose=()=>{};`);
+async function drive(target,isMatch){
+ let decisionSheets=0;
+ js('startTestReel()');
+ for(let i=0;i<100;i++){
+  await wait();
+  const modal=win.modal||'', low=element('sdlow').innerHTML;
+  if(isMatch?modal.includes('class="msres"'):js('!!PS?.done'))return decisionSheets;
+  const choice=[...(modal+low).matchAll(/<button class="choice[^"]*" onclick="(msPick|psChoose)\((\d+)\)"[^>]*>(.*?)<\/button>/gs)];
+  if(pickReelChoice(choice,target))continue;
+  if(modal.includes('class="mhd"')&&modal.includes('the decision'))decisionSheets++;
+  if(low.includes('id="sdbox"'))js(isMatch?'msTap()':'sdTap()');
+ }
+ throw new Error('Live reel did not finish: '+(win.modal||'').slice(0,500)+' '+element('sdlow').innerHTML.slice(0,500));
+}
+function pickReelChoice(choices,target){
+ const choice=choices.find(row=>row[3].includes(target))||choices[0];
+ if(!choice)return false;
+ js(choice[1]+'('+choice[2]+')');
+ return true;
+}
+(async()=>{
+ fixture(['wedding','married','match','triple']);
+ assert.equal(await drive('form a throuple',true),0);
+ assert.equal(js('reelTest.arc.choice'),'throuple');
+ assert(win.modal.includes('No contest'));
+ fixture(['faith','religion','promo','singles']);
+ assert.equal(await drive('Kick',false),0);
+ assert.equal(js('reelTest.arc.choice'),'out');
+ fixture(['voice','taxidermy','promo','singles']);
+ assert.equal(await drive('none',false),0);
+ assert.equal(js('reelTest.promo.res.oks.length'),2);
+ fixture(['lastchase','hangup','match','singles','std',true]);
+ assert.equal(await drive('Retire as champion',true),0);
+ assert.equal(js('reelTest.match.winner'),0);
+ fixture(['sellout','corp','match','singles','std',true]);
+ const plan=js(`(()=>{
+  const {a,b,c,D,E,match}=reelTest;
+  const opener={type:'singles',sides:[[D.id],[b]],winner:0};
+  match.sides=[[a],[D.id]];
+  const main={type:'singles',sides:[[c],[E.id]],winner:0};
+  S.heat[key(D.id,b)]=85;S.heat[key(c,E.id)]=85;
+  const card=[opener,match,main].map(d=>({k:'match',d}));
+  const plan=hrPlan(card,true,'p');
+  return [plan.get(main),plan.get(match),plan.has(opener),hrPlan(card,true,'ai').size];
+ })()`);
+ assert.deepEqual(Array.from(plan),['blood','arc',false,1]);
+ assert(js(`(()=>{
+  const {match,a,b}=reelTest;
+  match._hrArc=1;match.stip='ladder';
+  const r={A:S.w[a],B:S.w[b],V:S.w[a],O:S.w[b]};
+  const options=evChoices({id:'sit:business',ch:SIT.business.ch},match,r);
+  return options.length===1&&options[0].tip==='Keeps the booked result';
+ })()`));
+ const bloodSetup=`const {a,b,match}=reelTest;match.stip='street';match.bo=true;S.heat[key(a,b)]=85;
+ S.fh[key(a,b)]=[{seg:'Week one',n:'A disputed finish started it.'}];`;
+ for(const [action,target,nc,winner,unsettled] of [
+  ['clean','Settle it decisively',false,0,false],
+  ['flip','Give the other side',false,1,false],
+  ['dirty','Let the finish be stolen',false,0,true],
+  ['nc','Let it break down',true,0,false]
+ ]){
+  fixture([null,null,'match','singles']);
+  js('{'+bloodSetup+'}');
+  await drive(target,true);
+  assert.equal(js('reelTest.match.winner'),winner,action);
+  assert.equal(js('!!reelTest.match.nc'),nc,action);
+  assert.equal(js('!!reelTest.match.ev.feudUnsettled'),unsettled,action);
+  const heat=js(`(()=>{const m=reelTest.match,ctx={ppv:false,pos:'me',name:'TV',worked:new Set()};applyMatch(m,rateMatch(m,ctx),ctx,[]);return heatOf(reelTest.a,reelTest.b)})()`);
+  assert.equal(heat,(unsettled||nc)?77:0,action);
+ }
+ fixture(['wedding','married','match','triple']);
+ js('{'+bloodSetup+';startTestReel()}');
+ assert(win.modal.includes('the decision')&&win.modal.includes('They form a throuple'));
+ js("arcChoose('throuple')");
+ assert(js('reelTest.match.nc && reelTest.arc.choice==="throuple"'));
+ fixture([null,null,'match','singles']);
+ js('{'+bloodSetup+';hrAuto(S.card.p,"ai",curShow())}');
+ assert(js('reelTest.match.ev?.notes.some(n=>n.includes("Heat"))'));
+ console.log('Live match and promo flows, fallback decision, rival reel and four feud resolution paths passed.');
+})().catch(e=>{console.error(e);process.exitCode=1});

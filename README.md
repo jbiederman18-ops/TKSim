@@ -316,6 +316,12 @@ History is recorded from v157 on (existing champions are picked up the first tim
 - The **go-home show** right before the PPV matters most: a strong one adds a lot, a flat one costs you.
 - On the night, hype moves **ticket sales** (−15% to +15%) and the crowd: a hot build brings extra fans, a cold one costs some. Then the meter resets.
 
+## Highlight reels
+
+- Look for **🎬 Highlight reel** on the Book screen. The hottest blood feud payoff and one arc payoff can play out live each night.
+- Settle a blood feud with a decisive finish on PPV or in a TV blow-off. A disputed ending or no contest starts another chapter at reduced heat.
+- Book your arc payoff in the main event, on PPV, or in a promo. Your calls shape the rating. If the arc has a decision, you make it at the reel’s climax or on the decision card before an off-camera segment.
+
 ## Party night (same room, big screen)
 Party night is a way to play an online league, not a separate game. It uses the same league, the same save and the same code, so you can play some weeks together on the couch and the rest on your own time.
 

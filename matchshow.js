@@ -216,7 +216,7 @@ function msFam(m){if(m.type==='gauntlet')return 'none';if(m.type==='rumble')retu
  const k=stipKey(m);return k==='sub'?'sub':k==='iquit'?'iquit':k==='ladder'?'ladder':k==='tables'?'tables':k==='lms'?'lms':k==='coffin'?'coffin':k==='bng'?'bng':'pin'}
 function msRoles(m,brand){const win=m.sides[m.winner]||[];const A=S.w[win[0]];const A2=win.length>1?S.w[win[1]]:null;
  const pin=typeof pinOf==='function'?pinOf(m):null;const los=m.sides.filter((s,i)=>i!==m.winner);
- const B=S.w[pin||(los[0]||[])[0]];const Cid=m.sides.flat().find(id=>id!==B.id&&!win.includes(id)&&!(m.sides.find(s=>s.includes(B.id))||[]).includes(id));
+ const B=S.w[pin||(los[0]||[])[0]];if(!A||!B)return {A,B,A2,C:null,brand};const Cid=m.sides.flat().find(id=>id!==B.id&&!win.includes(id)&&!(m.sides.find(s=>s.includes(B.id))||[]).includes(id));
  return {A,B,A2,C:Cid?S.w[Cid]:null,brand}}
 const MS_MOVES={FIN:['finish','the finisher'],NEAR:['near','a signature move'],HOLD:['hold','the hold']};
 function msFill(t,r){return String(t).replace(/\{(A2|A|B|C|FIN|NEAR|HOLD|TAG)\}/g,(_,k)=>{
@@ -241,7 +241,7 @@ function msRoll(c,r,m,st,lab){const p=msChance(c,r);const ok=Math.random()<p;con
  /* v260: risky calls (under ~60%) swing further in a hot crowd, less in a cold one (reel.js) */
  const cm=p<.6&&typeof hrCm==='function'?hrCm():1;
  const d=msAdd(m,(ok?1:-1)*sw.w*MS_K*cm,st);const ev=evNew(m);const extra=[];
- if(p<.6&&typeof injSev==='function'){const A=r.A;const ip=((p<.4?.05:.02)*cm*(ok?.6:1.5)+Math.max(0,(A.fat||0)-50)/1000)*(STIPS[stipKey(m)]||STIPS.std).inj;
+ if(c.injury!==false&&p<.6&&typeof injSev==='function'){const A=r.A;const ip=((p<.4?.05:.02)*cm*(ok?.6:1.5)+Math.max(0,(A.fat||0)-50)/1000)*(STIPS[stipKey(m)]||STIPS.std).inj;
   if(Math.random()<ip&&!A.inj&&!ev.inj.some(x=>x[0]===A.id)){const wk=injSev(A);ev.inj.push([A.id,wk,1]);extra.push({kind:'cam',side:'a',hurt:!!wk,t:wk?`🚑 ${A.name} is hurt. The trainer is out — they finish the match, but they'll miss time.`:`😮‍💨 ${A.name} is slow to get up. A scare, but they're OK.`})}}
  if(c.heat&&ok&&r.B)ev.heat.push([r.A.id,r.B.id,c.heat]);if(c.fat)m.sides.flat().forEach(id=>ev.fat.push([id,c.fat]));
  if(c.al==='h'&&ok&&r.A.al==='f')ev.pop.push([r.A.id,-1]);
@@ -443,7 +443,7 @@ function msPick(i){if(!MS||!MS.menu)return;const M=MS.menu;pickFlash(()=>{if(!MS
 const msSw=w=>swingWord(w).replace(' swing',' swing either way');
 function msInfo(c,r){const p=msChance(c,r);return `${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:''}${STAT_ICON[c.s]} · ${msTellH(p,swingOf(p,c.st).w)} · ${msSw(swingOf(p,c.st).w)}${c.sub?' · '+esc(msFill(c.sub,r)):''}`}
 const msItems=(list,r)=>list.map(c=>({c,label:msFill(c.t,r),info:msInfo(c,r)}));
-async function msCall(list,lab,q,sub){const r=MS.r;const it=await msMenu(q,sub,msItems(list,r));const o=msRoll(it.c,r,MS.m,MS.st,lab);
+async function msCall(list,lab,q,sub,r=MS.r){const it=await msMenu(q,sub,msItems(list,r));const o=msRoll(it.c,r,MS.m,MS.st,lab);
  MS.log.push({lab,t:it.label,ok:o.ok});MS.res=o.ok?'ok':'no';msFrame('');await msPan('a');await msStamp(o.ok?'It lands':'Not quite',o.ok?'ok':'no');if(it.c.id==='limb'&&o.ok)MS.workedKnee=r.B.id;
  await msPlay(msLines(o.lines).concat(o.extra),lab==='Heat'&&!o.extra.length?'heat':null,o.ok?it.c.id:null)}
 /* the big moment: the same calls, odds and results as any other match moment */
@@ -471,6 +471,7 @@ function msIntro(m,hot){const ns=m.sides.map(sd=>sideName(sd));
  const vs=ns.length===2?`${ns[0]} against ${ns[1]}`:`${ns.slice(0,-1).join(', ')} and ${ns[ns.length-1]}`;
  return fpick(hot?[`${vs}, and this one has been building for weeks.`,`There is real bad blood here. ${vs}.`,`${vs}. These two cannot stand each other.`,`${vs}. Weeks of words, and now it\'s fists.`]:MS&&MS.it&&!MS.it.main?[`${vs}, and the crowd can feel something coming.`,`${vs}. This one has people leaning forward.`,`${vs}. The fans are on their feet before the bell.`,`${vs}, and the building is humming.`]:[`Main event time: ${vs}.`,`Main event: ${vs}. Buckle up.`,`${vs} closes the show tonight.`,`Last match of the night: ${vs}.`,`It all comes down to this. ${vs}.`])}
 async function msRun(){const m=MS.m;const fam=msFam(m);const plan=msPlan(MS.g,m);
+ if(MS.it.reel)return msRunReel(MS.it.reel);
  MS.act=0;msFrame('');if(window.SFX)SFX.play('swell');const r0=MS.r;const hot=heatOf(r0.A.id,r0.B.id)>=30;
  await msPlay([{kind:'cam',t:fpick(MS.it&&!MS.it.main?['The bell rings, and the crowd is already buzzing.','Here we go. The crowd senses something special.','The bell rings. Eyes up, everyone.']:['The main event. The bell rings.','Main event time, and the crowd is on its feet for the opening bell.','Here we go. The main event is underway.'])},{kind:'booth',who:'Play-by-play',t:msIntro(m,hot)}],'open');
  await msCall(msDeal(MS_OPEN,MS.r,3),'Opening','🎬 The opening bell',`How does ${esc(MS.r.A.name)} start?`);
@@ -497,6 +498,74 @@ async function msRun(){const m=MS.m;const fam=msFam(m);const plan=msPlan(MS.g,m)
  if(pl.length){MS.act=3;msFrame('');const it=await msMenu('🎤 After the bell','What\'s the closing shot?',pl.map(c=>({c,label:msFill(c.t,r),info:`📖 Story only, no stars · ${esc(msFill(c.sub,r))}`})));
   msPost(it.c,r,m);MS.log.push({lab:'After',t:it.label,story:1,note:msFill(it.c.note||'',r)});msFrame('');await msStamp('Closing shot','gd',700);await msPlay(msLines(fpick(it.c.hit)),'post',it.c.id)}
  msDone()}
+/* Authored reels use the same match calls, stamps and results as the other showdowns. */
+const msReelPages=texts=>texts.filter(Boolean).map(t=>({kind:'cam',t}));
+async function msReelBeat(reel,script,lab){
+ const {setup,calls}=hrBeat(reel,script,MS.m);
+ await msPlay(msReelPages([setup]));
+ return msCall(calls,lab,lab==='Heat'?'🎬 Call the big moment':'🏁 Call the finish','Choose how the moment plays out',hrCallRoles(reel,MS.r));
+}
+async function msRunReel(reel){
+ const {m}=MS;
+ msFrame('');
+ if(window.SFX)SFX.play('swell');
+ await msPlay(msReelPages(reel.open.map(t=>hrFill(reel,t,m))));
+ if(MS.g?.sit){
+  const out=await msMomentAct('heat');
+  if(m.nc||out?.flip)return msDone();
+ }
+ const postRunIn=reel.a&&riOn(m)?.k==='attack';
+ const finishBeforeCall=postRunIn||['sellout','invasion','torch','passtitle','groundswell','redemption','townhero','peace','likeness'].includes(reel.a?.k);
+ const showFinish=()=>msPlay(msReelPages([hrFill(reel,hrFinishText(m),m)]));
+ if(postRunIn)await showFinish();
+ MS.act=1;msFrame('');
+ await msReelBeat(reel,reel.heat,'Heat');
+ MS.act=2;msFrame('');
+ if(finishBeforeCall&&!postRunIn)await showFinish();
+ if(reel.blood){
+  await msPlay(msReelPages(['Both corners are running out of fight. The crowd came here for an ending.']));
+  const call=reel.locked?null:await msMenu('🏁 Settle the feud','Call the ending',HR_BLOOD_FINISH);
+  const line=hrFill(reel,hrBloodFinish(m,reel,call?.key),m);
+  if(call)MS.log.push({lab:'Finish',t:call.label,story:1});
+  const open=m.nc||m.ev?.feudUnsettled||!['clean','upset'].includes(finOf(m));
+  const hurt=m.ev?.inj?.some(([id,weeks])=>weeks>=7&&m.sides.flat().includes(id));
+  const closing=hurt?'The camera follows the referee out. The crowd goes quiet as a stretcher comes down the aisle.':open?
+   'The bell keeps ringing. Both corners push past the people sent in to separate them.':
+   'Both are slow to move. One gives the other a nod before the referee helps them apart.';
+  await msPlay(msReelPages([line]).concat({kind:'booth',who:'Play-by-play',t:open?'That bell settled the match. It didn’t settle the feud.':'After all that, they got an answer.'},msReelPages([closing])));
+ }else if(reel.decision){
+  await msPlay(msReelPages([hrFill(reel,reel.fin[0],m)]));
+  const items=arcDecisionItems(reel.a).map(o=>({...o,info:esc(o.info)}));
+  const call=await msMenu('🏁 The decision','Make the last call of the reel',items);
+  arcApplyDecision(reel.a,call.key,m);
+  const line=hrFill(reel,reel.decision[call.key],m);
+  MS.log.push({lab:'Decision',t:call.label,story:1,note:line});
+  evNew(m).notes.push('🎬 '+line);
+  await msPlay(msReelPages([line]));
+ }else{
+  if(reel.fin.length>1)await msReelBeat(reel,reel.fin,'Finish');
+  if(!finishBeforeCall)await showFinish();
+  if(reel.result.length)await msPlay(msReelPages(reel.result.map(t=>hrFill(reel,t,m))));
+ }
+ msDone();
+}
+function msAutoReel(m,brand,reel){
+ const event=matchEvent(m,brand,true,0);
+ if(event?.sit){const out=runEvAI(event,m);if(m.nc||out?.flip)return}
+ const r=hrCallRoles(reel,msRoles(m,brand)),st={};
+ const call=(beat,lab)=>{const {calls}=hrBeat(reel,beat,m);msRoll(msAIPick(calls,r),r,m,st,lab)};
+ call(reel.heat,'Heat');
+ if(reel.blood){
+  // The rival honors the booked intent when there is a booked finish.
+  const action=['clean','upset'].includes(finOf(m))?'clean':'dirty';
+  const line=hrFill(reel,hrBloodFinish(m,reel,action),m);
+  evNew(m).notes.push('🎬 '+line);
+ }else if(reel.decision){
+  const options=arcChoiceOptions(reel.a);
+  const chosen=options.find(o=>o.win==='a'&&m.sides[m.winner].includes(reel.a.a)||o.win==='b'&&!m.sides[m.winner].includes(reel.a.a))||pick(options);
+  arcApplyDecision(reel.a,chosen.k,m);
+ }else if(reel.fin.length>1)call(reel.fin,'Finish');
+}
 function msDone(){if(!MS)return;MS.fin=1;if(window.SFX)SFX.matchEnd();const m=MS.m;const rows=MS.log.map(e=>`<li><span class="mslab">${esc(e.lab)}</span><span>${esc(e.t)}</span><b class="${e.story?'msst':e.ok?'good':'bad'}">${e.story?'Story':e.ok?'Landed':'Fell short'}</b></li>`).join('');
  const post=MS.log.find(e=>e.story);const res=m.nc?'No contest':`${sideName(m.sides[m.winner])} def. ${m.sides.filter((s,i)=>i!==m.winner).map(sideName).join(', ')}`;
  openModal(`<div class="sdw msw">${msHead()}<div class="msres"><h3>${esc(res)}</h3><ul class="mscalls">${rows}</ul>${post&&post.note?`<div class="muted tiny">${esc(post.note)}</div>`:''}<div class="muted tiny">The stars come in with the results.</div></div><button class="btn" onclick="msNext()">${MS.last?'Finish the show':'Continue the show ▸'}</button></div>`,true);msFeed()}
@@ -504,7 +573,7 @@ function msNext(){if(!MS||!MS.fin)return;MS=null;if(LQ)return liveNext();finishL
 function msStart(it,show,last){const m=it.m;const r=msRoles(m,'p');if(!r.A||!r.B)return false;
  MS={it,m,n:it.n,show,last,r,g:it.g||null,st:{},log:[],cam:'a',act:0};msRun().catch(e=>{console.error(e);if(MS){MS.fin=1;msNext()}});return true}
 function renderMS(){if(!MS)return;if(MS.fin)return msDone();msFrame('');if(MS.q)return msShow();if(MS.menu)return msDrawMenu()}
-Object.assign(window,{MS_CAP,msTap,msPick,msNext,msStart,msAuto,msOn,renderMS,msMoment,msReset:()=>{MS=null},msLive:()=>!!MS});
+Object.assign(window,{MS_CAP,msTap,msPick,msNext,msStart,msAuto,msOn,renderMS,msMoment,msAutoReel,msReset:()=>{MS=null},msLive:()=>!!MS});
 
 (function(){const c=document.createElement('style');c.textContent=`
 .msacts{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:-4px 0 10px}

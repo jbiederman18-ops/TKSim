@@ -82,7 +82,7 @@ function stageHtml(){const {ctx}=PS;const cam=PS.cam||'a';const two=!!ctx.B;
  return `<div class="sd${two?(typeof foPose==='function'?' duo':''):' solo'}" id="sd" onclick="sdTap()"><div class="sdpan${cam==='b'&&two?' at-b':''}" id="sdpan">${corner(ctx.A,'a')}${two?corner(ctx.B,'b'):''}</div>
  <div class="sdspeed" id="sdspeed"></div><div class="sdflash" id="sdflash"></div>
  <div class="sdcut" id="sdcut"></div><div class="sdtac" id="sdtac"></div><div class="sdfx" id="sdfx"></div>${typeof adBadge==='function'?adBadge(PS,'promo'):''}</div>`}
-function header(){const {scene,ctx}=PS;const lab=scene&&scene.ex&&typeof exLabel==='function'?exLabel(scene):PS.beat==='r'?'The response':PS.beat?'The twist':'On air';
+function header(){const {scene,ctx}=PS;const lab=PS.reel?(PS.beat?'The payoff':'On air'):scene&&scene.ex&&typeof exLabel==='function'?exLabel(scene):PS.beat==='r'?'The response':PS.beat?'The twist':'On air';
  return liveHd(PS.live&&typeof LQ!=='undefined'&&LQ?LQ.show:'',`Promo · ${lab}`,esc(PT[PS.p.type].n),[],PS.live?'● Live':'Preview')}
 /* an empty box holds the space while the stage plays something, so the sheet doesn't jump */
 const HOLD='<div class="sdbox k-cam"><div class="sdsay"></div></div><div class="sdhint">&nbsp;</div>';
@@ -152,13 +152,62 @@ const beatPages=bs=>bs.flatMap(b=>b.q!=null?chunks(b.q).map(t=>({side:'a',q:t}))
 const beatText=(bs,A)=>bs.map(b=>b.q!=null?`"${b.q}"`:`${A.name} ${b.act}.`).join(' ');
 
 /* ---------- the call menu ---------- */
-function menuHtml(){const {scene,ctx}=PS;
+function menuHtml(){const {scene}=PS;const ctx=PS.reel?{...PS.ctx,A:S.w[PS.reel.a.a]}:PS.ctx;
  const bar=scene.ex&&typeof exCall==='function'?callBar(...exCall(scene,ctx)):callBar(scene.rt?'Fire back':scene.hj?'👥 The crowd has a mind of its own':'🎧 Your call',scene.rt?`What does ${esc(ctx.A.name)} say back?`:`What does ${esc(ctx.A.name)} do?`);
  return `<div class="sdmenu">${bar}`+scene.ch.map((c,ci)=>`<button class="choice${c.drop?' mdrop':''}" onclick="psChoose(${ci})"><span class="key"><span>${'ABCDE'[ci]}</span></span><div>${esc(fill(c.t,ctx))}</div><div class="muted tiny">${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:''}${c.always?(c.close?'⏭️ Ends it here':'✅ Guaranteed'):`${STAT_ICON[c.wait?'luck':c.s]} · ${oddsWord(chance(c,ctx))} · ${swingWord(swingOf(chance(c,ctx)).w)}`}${c.tip?` · ${esc(fill(c.tip,ctx))}`:''}${c.turn?' · 🔄 turns them':''}${c.ch?' · 🎯 sets up a match':''}${c.stp?' · adds a stipulation':''}</div></button>`).join('')+'</div>'}
 
+/* Payoff rallies and exchanges keep the promo engine's scoring and result sheet. */
+function reelPromoMenu(){
+ const {reel}=PS;
+ if(PS.beat===1&&reel.decision){
+  const choices=arcDecisionItems(reel.a).map(({label,info},i)=>
+   `<button class="choice" onclick="psChoose(${i})"><div><b>${esc(label)}</b><div class="muted tiny">${esc(info)}</div></div></button>`).join('');
+  return '<div class="sdmenu">'+callBar('The decision','Make the last call of the reel')+choices+'</div>';
+ }
+ return menuHtml();
+}
+function reelPromoFrame(){
+ if(PS.q){frame('');return showPage()}
+ if(PS.shown===PS.scene)return frame(reelPromoMenu());
+ const reel=PS.reel,beat=PS.beat;
+ const {setup,calls}=hrBeat(reel,beat===0?reel.heat:reel.fin);
+ PS.scene={ch:calls};PS.shown=PS.scene;
+ const opening=beat===0?reel.open.map(t=>hrFill(reel,t)):[];
+ frame('');
+ queue(opening.concat(setup).filter(Boolean).flatMap(t=>chunks(t).map(cam=>({cam}))),()=>frame(reelPromoMenu()));
+}
+function reelPromoChoose(ci){
+ const ps=PS,{reel}=ps;
+ const decision=ps.beat===1&&reel.decision;
+ const option=decision?arcDecisionItems(reel.a)[ci]:ps.scene.ch[ci];
+ if(!option)return;
+ pickFlash(()=>{
+  if(PS!==ps||ps.done||ps.q)return;
+  frame('');
+  const done=()=>{finalizePromo(ps.p,ps.ctx,ps.st);ps.done=true;renderPS()};
+  if(decision){
+   arcApplyDecision(reel.a,option.key);
+   const text=hrFill(reel,reel.decision[option.key]);
+   ps.st.log.push(option.label+' — '+text);
+   queue(chunks(text).map(cam=>({cam})),done);
+   return;
+  }
+  const talker=S.w[reel.a.a];
+  const out=roll(option,{...ps.ctx,A:talker},ps.st);
+  const side=ps.ctx.B?.id===talker.id?'b':'a';
+  const pages=pagesOf(out.text.replace(/[“”]/g,'"'),side,ps.ctx,false,{ok:out.success});
+  const last=pages[pages.length-1],lead=pages[pages.length-2];
+  if(lead?.q&&last?.res==='The crowd is with it.'){
+   Object.assign(lead,{ok:true,stamp:1});
+   pages.pop();
+  }
+  queue(pages,ps.beat===0?()=>{ps.beat=1;ps.scene={};renderPS()}:done);
+ });
+}
+
 /* ---------- the flow ---------- */
 const _render=renderPS,_choose=psChoose,_next=psNext;
-renderPS=function(){if(!PS)return;const {scene,ctx}=PS;
+renderPS=function(){if(!PS)return;if(PS.reel&&!PS.done)return reelPromoFrame();const {scene,ctx}=PS;
  /* the result screen and gorilla pitches stay as they were */
  if(PS.done||(PS.beat===1&&!PS.gor&&scene&&scene.x&&ctx.X))return _render();
  if(PS.q)return frame(''),showPage();
@@ -170,7 +219,7 @@ renderPS=function(){if(!PS)return;const {scene,ctx}=PS;
   return setTimeout(()=>queue(pagesOf(scene.text,owner,ctx,cam),()=>renderPS(),PS.beat===0?'open':scene.ex==='tac'?'exchange':null),pre?1300:0)}
  if((PS.beat===1||PS.beat==='r'&&scene.last)&&!PS.done&&!scene._md&&typeof mdAdd==='function'){scene._md=1;mdAdd(PS)}
  frame(menuHtml())};
-psChoose=function(ci){if(!PS||PS.done||PS.q)return;const c=PS.scene.ch[ci];if(!c)return;
+psChoose=function(ci){if(!PS||PS.done||PS.q)return;if(PS.reel)return reelPromoChoose(ci);const c=PS.scene.ch[ci];if(!c)return;
  if(c.close&&typeof exClose==='function'){if(exClose(PS))renderPS();return}
  pickFlash(async p=>{if(!PS||PS.done||PS.q)return;PS.pick=p;const ctx=PS.ctx;
   const pr=chance(c,ctx);const out=roll(c,ctx,PS.st);
