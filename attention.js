@@ -322,7 +322,7 @@ function wkRows(secs){const l=attnItems();
  /* v362: the whole locker room's mood — below LR_MID every segment on the show pays a little */
  try{if(typeof lockerMood==='function'&&LR_K&&mine.length){const lm=lockerMood('p');if(lm<LR_MID)add('Backstage','lr','🌧️',`The locker room is down (average morale ${Math.round(lm)}). Everyone's work suffers a little until it picks up: keep promises, answer pitches, get people on TV.`,'lr'+Math.round(lm/3))}}catch(e){}
  const inj=mine.filter(w=>w.inj).sort((a,b)=>a.inj-b.inj);
- if(inj.length)add('Backstage','inj','🚑',`Out: ${inj.map(w=>`${nmA(w)} <span class="muted">(${w.susp?'suspended':'injured'}, ${w.inj} wk${w.inj===1?'':'s'})</span>`).join(', ')}.`,inj.map(w=>w.id).join(','));
+ if(inj.length)add('Backstage','inj','🚑',`Out: ${inj.map(w=>`${nmA(w)} <span class="muted">(${w.rein?'retraining':w.susp?'suspended':'injured'}, ${w.inj} wk${w.inj===1?'':'s'})</span>`).join(', ')}.`,inj.map(w=>w.id).join(','));
  const ti=l.find(x=>x.id==='tired');if(ti){const ws=(ti.who||[]).map(id=>S.w[id]).filter(Boolean);const ex=ws.filter(w=>w.fat>=FAT_RISK);
   add('Backstage','tired','🔋',`${ex.length?'Exhausted':'Worn down'}: ${ws.map(nmA).join(', ')}. ${ex.length?'Rest the exhausted ones or risk an injury.':'Tired wrestlers work a little slower.'}`,ws.map(w=>w.id).sort().join(','))}
  sec('☢️').forEach(x=>x.rows.forEach((r,j)=>add('Backstage','beef'+j,'☢️',strip(r))));

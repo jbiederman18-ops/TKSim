@@ -476,11 +476,11 @@ function briefItems(){const mine=ownList('p');const sec=cdBrief().concat(typeof 
  const cal=[];{const l=cdLeft();if(l!=null&&S.w[S.cdown.a])cal.push(`⏳ The countdown from ${esc(S.w[S.cdown.a].name)}'s promo hits zero ${l?`in <b>${l} week${l>1?'s':''}</b>`:'<b>after this show</b>'}`)}const np=nextPPV();if(np)cal.push(`📅 <b>${esc(np.n)}</b> ${np.in?`in ${np.in} week${np.in===1?'':'s'}`:'is <b>this week</b>'}`);
  for(const k in TOURS){const D=TOURS[k];const first=tourFirst(D);const d=first-S.week;if(d>=0&&d<=3)cal.push(`${D.i} <b>${esc(D.n)}</b> ${d?`starts in ${d} week${d===1?'':'s'} — pick your field`:'starts <b>this week</b>'}`);else if(S.week>first&&S.week<=D.final)cal.push(`${D.i} <b>${esc(D.n)}</b> is under way${S.week===D.final?' — the final is this week':''}`)}
  const vac=Object.values(S.titles).filter(t=>!t.holders.length&&t.br==='p');if(vac.length)cal.push(`👑 Yours to crown: ${vac.map(t=>esc(t.n)).join(', ')}`);
- mine.filter(w=>w.inj).sort((a,b)=>a.inj-b.inj).slice(0,5).forEach(w=>cal.push(`🚑 ${nm(w)} ${w.susp?'is suspended':'is injured'} — back in ${w.inj} week${w.inj===1?'':'s'}`));
+ mine.filter(w=>w.inj).sort((a,b)=>a.inj-b.inj).slice(0,5).forEach(w=>cal.push(`🚑 ${nm(w)} ${w.rein?'is retraining':w.susp?'is suspended':'is injured'} — back in ${w.inj} week${w.inj===1?'':'s'}`));
  if(cal.length)sec.push({i:'🗓️',t:'On the calendar',rows:cal.map(x=>`<div class="brow">${x}</div>`)});
  /* health */
  const inj=mine.filter(w=>w.inj).sort((a,b)=>a.inj-b.inj);const tired=mine.filter(w=>!w.inj&&w.fat>=FAT_RISK);
- if(inj.length||tired.length)sec.push({rep:1,i:'🚑',t:'Health',rows:inj.map(w=>`<div class="brow">${nm(w)} · ${w.susp?'suspended':'injured'} — back in ${w.inj} week${w.inj===1?'':'s'}</div>`).concat(tired.map(w=>`<div class="brow">${nm(w)} · 🔋 exhausted — rest them or risk an injury</div>`))});
+ if(inj.length||tired.length)sec.push({rep:1,i:'🚑',t:'Health',rows:inj.map(w=>`<div class="brow">${nm(w)} · ${w.rein?'retraining':w.susp?'suspended':'injured'} — back in ${w.inj} week${w.inj===1?'':'s'}</div>`).concat(tired.map(w=>`<div class="brow">${nm(w)} · 🔋 exhausted — rest them or risk an injury</div>`))});
  /* free agents leaving */
  const fa=Object.values(S.w).filter(w=>onMarket(w)&&!w.cw&&faLeft(w)===1&&w.pop>=55).sort((a,b)=>b.pop-a.pop).slice(0,4);
  if(fa.length)sec.push({rep:1,i:'🆕',t:'Last week to sign',rows:fa.map(w=>`<div class="brow">${nm(w)} · POP ${Math.round(w.pop)} · signs for ${money(signCost(w))}</div>`)});

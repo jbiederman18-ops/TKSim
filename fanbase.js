@@ -711,18 +711,20 @@ function fgWeek(notes){Object.values(S.w).forEach(w=>{if(!fgUnd(w))return;S.fgx=
  if(w.pop>=FB_BREAK){fgLock(w,ln||FG_STYLE[w.st]||'blood','their breakout locked it in',notes);return}
  if(w.pop>=FB_LINE&&!x.warn&&w.own==='p'){x.warn=AW();const n=`📈 ${w.name} is about to break out${ln?` — still leaning ${fbN(ln)}`:' and hasn’t leaned any way yet'}. Book them with the crowd you want them to land with before it locks in.`;news(n);if(notes)notes.push(n)}})}
 /* reinvention: a wrestler who's been left off TV for weeks or is miserable asks to try a different crowd */
-const FB_REIN_WK=6,FB_REIN_MOR=35;
-function fgReinWant(w){if(!w||w.own!=='p'||w.inj||fgUnd(w))return false;const x=S.fgx&&S.fgx[w.id];if(x&&x.ask&&AW()-x.ask<20)return false;if(x&&x.g&&x.at&&AW()-x.at<10)return false;
+const FB_REIN_WK=6,FB_REIN_MOR=35,FB_REIN_OUT=4;
+function fgReinWant(w){if(!w||w.own!=='p'||w.inj||fgUnd(w))return false;const x=S.fgx&&S.fgx[w.id];if(x&&x.ask&&AW()-x.ask<(x.did?40:20))return false;if(w.rein||w.inj||w.con<=FB_REIN_OUT+1)return false;try{if(isChamp(w.id)||(typeof arcIn==='function'&&arcIn(w.id))||inFeud(w.id))return false}catch(e){}if(x&&x.g&&x.at&&AW()-x.at<10)return false;
  return (S.week-(w.last||0))>=FB_REIN_WK&&S.week>FB_REIN_WK||w.mor<FB_REIN_MOR}
 function fgReinvent(id,g){const w=S.w[id];if(!w)return;S.fgx=S.fgx||{};const x=S.fgx[id]=S.fgx[id]||{l:{},n:0};x.ask=AW();
- if(g&&g!=='no'){x.g=g;w.mor=clamp(w.mor+8,0,100);news(`🎭 ${w.name} is reinventing themselves for the ${fbN(g)}.`)}else{w.mor=clamp(w.mor-4,0,100);news(`🎭 You told ${w.name} to stay the course.`)}
+ if(g&&g!=='no'){x.pend=g;x.did=1;w.inj=Math.max(w.inj||0,FB_REIN_OUT);w.susp=true;w.rein=1;w.mor=clamp(w.mor+8,0,100);news(`🎭 ${w.name} is away for ${FB_REIN_OUT} weeks, relearning how to work for the ${fbN(g)}.`)}else{w.mor=clamp(w.mor-4,0,100);news(`🎭 You told ${w.name} to stay the course.`)}
  try{save()}catch(e){}try{if(typeof closeModal==='function')closeModal()}catch(e){}try{render()}catch(e){}}
+/* back from retraining: the new crowd takes effect now */
+function fgReinBack(w){const x=S.fgx&&S.fgx[w.id];const g=x&&x.pend;delete w.rein;w.fat=0;if(x&&g){x.g=g;x.at=AW();delete x.pend;return `🎭 ${w.name} is back, rebuilt for the ${fbN(g)}.`}return `✅ ${w.name} is back.`}
 function fgReinBrief(){if(!S||S.phase!=='season')return [];const ask=Object.values(S.w).filter(fgReinWant).sort((a,b)=>a.mor-b.mor).slice(0,1);
  return ask.map(w=>{const cur=fgOf(w)[0];const opts=FB_G.filter(g=>g!==cur);
-  return {i:'🎭',t:`${w.name} wants a reinvention`,u:false,rows:[`<div class="brow">${esc(w.name)} <span class="fgw">${fgLbl(cur)}</span><br><span class="muted tiny">${w.mor<FB_REIN_MOR?'Miserable':'Off TV for weeks'} and wants to chase a different crowd. Pick one, or tell them to stay the course.</span><div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px">${opts.map(g=>`<button class="mini" onclick="fgReinvent('${w.id}','${g}')">${fbN(g)}</button>`).join('')}<button class="mini ghost" onclick="fgReinvent('${w.id}','no')">Stay the course</button></div></div>`]}})}
+  return {i:'🎭',t:`${w.name} wants a reinvention`,u:false,rows:[`<div class="brow">${esc(w.name)} <span class="fgw">${fgLbl(cur)}</span><br><span class="muted tiny">${w.mor<FB_REIN_MOR?'Miserable':'Off TV for weeks'}. Pick a new crowd and they're gone ${FB_REIN_OUT} weeks relearning how to work, or tell them to stay the course.</span><div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px">${opts.map(g=>`<button class="mini" onclick="fgReinvent('${w.id}','${g}')">${fbN(g)}</button>`).join('')}<button class="mini ghost" onclick="fgReinvent('${w.id}','no')">Stay the course</button></div></div>`]}})}
 if(typeof briefItems==='function'){const b0=briefItems;briefItems=window.briefItems=function(){const s=b0.apply(this,arguments);try{return fgReinBrief().concat(s)}catch(e){console.warn('rein',e);return s}}}
 if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){try{fgWeek(notes)}catch(e){console.warn('fg week',e)}return e0.apply(this,arguments)}}
-Object.assign(window,{fbSync,fbSyncAll,fbSeg,fbPromo,fbCalc,fbApply,fbResultsCard,fbRevealHtml,fbTag,fbStipTag,fbFinTag,fbRiTag,fgAfterShow,fgReinvent,fgLean,FB_STIP});
+Object.assign(window,{fbSync,fbSyncAll,fbSeg,fbPromo,fbCalc,fbApply,fbResultsCard,fbRevealHtml,fbTag,fbStipTag,fbFinTag,fbRiTag,fgAfterShow,fgReinvent,fgReinBack,fgLean,FB_STIP});
 
 (function(){const s=document.createElement('style');s.textContent=`
 .fgw{font:800 italic 1em/1 'BC',sans-serif;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}.fgw b{margin:0 .3em;color:#8a8580;font-weight:700}

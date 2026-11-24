@@ -30,7 +30,7 @@ function hero(w,id){const ts=titlesOf(id).map(t=>t.n);const who=w.own==='p'?'You
  return `<div class="wd-top wdt pf-hero"><div class="pf-ht">${pic}<div class="pf-id"><div class="tt-k">${who} · <span class="${w.al==='f'?'face':'heel'}">${w.al==='f'?'Face':'Heel'}</span></div>
   <div class="pf-name ${w.name.length>13?'ln':''}">${esc(w.name)}</div><div class="pf-bar"></div>
   <div class="pf-meta">${w.g==='M'?"Men's":"Women's"} division${typeof fgTag==='function'?` · ${fgTag(w)}`:''}${w.rookie?' · <span class="rk">ROOKIE</span>':''}</div>
-  ${ts.length?`<div class="pf-champ">🏆 ${esc(ts.join(', '))} Champion</div>`:''}${w.inj?`<div class="err pf-inj">${w.susp?'⛔ Suspended':'🚑 Injured'} · ${plural(w.inj,'week')}</div>`:''}</div></div>
+  ${ts.length?`<div class="pf-champ">🏆 ${esc(ts.join(', '))} Champion</div>`:''}${w.inj?`<div class="err pf-inj">${w.rein?'🎭 Retraining':w.susp?'⛔ Suspended':'🚑 Injured'} · ${plural(w.inj,'week')}</div>`:''}</div></div>
   <div class="pf-nums">${num('Ring',w.ring,grow(w.ring)+learnTag(w,'r').replace(' · ',' · '))}${num('Mic',w.mic,grow(w.mic)+learnTag(w,'m'))}${num('Pop',w.pop)}</div></div>`}
 
 /* owed and urgent: only shows when there's something to do */

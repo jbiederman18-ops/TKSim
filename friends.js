@@ -97,21 +97,21 @@ fgWrap('pitchTick','promise');
 fgWrap('applyMatch',(m,res,ctx)=>{if(!m||!m.title||m.nc)return 'match';const T=S.titles[m.title];const win=m.sides&&m.sides[m.winner];return T&&win&&T.holders.length&&!win.every(id=>T.holders.includes(id))?'title':'match'}/* crowning a vacant belt (every new game opens with a flurry) counts as a big match */,(m,res,ctx)=>!!(m&&ctx&&!ctx.preview&&(m.title||ctx.ppv||ctx.pos==='me')));
 if(typeof finishDraft==='function'){const d0=finishDraft;finishDraft=function(){const out=d0.apply(this,arguments);if(S&&S.phase==='season')fgSyncAll();return out}}
 /* friends drift apart, and loners find a new crowd */
-function fgChurn(b){if(!fgHum(b)||!S.fg||!S.fgm||!S.fgm[b])return;const wk=AW();const r=ownList(b).filter(w=>fgOn(w.id,b));S.fgx=S.fgx||{};
+function fgChurn(b){if(!fgHum(b)||!S.fg||!S.fgm||!S.fgm[b])return;const wk=AW();const r=ownList(b).filter(w=>fgOn(w.id,b));S.fgf=S.fgf||{};if(S.fgx)Object.keys(S.fgx).forEach(k=>{const x=S.fgx[k];if(x&&x.old!==undefined&&x.back!==undefined){S.fgf[k]=x;delete S.fgx[k]}});
  const groups={};r.forEach(w=>{const g=S.fg[w.id];if(g&&g[0]==='g')(groups[g]=groups[g]||[]).push(w)});
  Object.entries(groups).forEach(([g,m])=>{if(m.length<2)return;let hot=null;
   for(let i=0;i<m.length&&!hot;i++)for(let j=i+1;j<m.length;j++)if(typeof beefOf==='function'&&beefOf(m[i].id,m[j].id)>=(typeof BEEF_MIN!=='undefined'?BEEF_MIN:40)){hot=[m[i],m[j]];break}
   if(Math.random()>=(hot?FG_SPLIT_HEAT:FG_SPLIT))return;
   const top=m.slice().sort((a,c)=>c.pop-a.pop)[0];const pool=hot?hot.filter(w=>w!==top):m.filter(w=>w!==top);const L=pool.length?pick(pool):null;if(!L)return;
   const known=m.filter(o=>o!==L&&fgIsKnown(L.id,o.id));m.forEach(o=>{if(S.fgc)delete S.fgc[fgPair(L.id,o.id)]});
-  S.fg[L.id]='l'+(++S.fgN);S.fgx[L.id]={old:g,back:wk+RI(FG_ALONE[0],FG_ALONE[1])};
+  S.fg[L.id]='l'+(++S.fgN);S.fgf[L.id]={old:g,back:wk+RI(FG_ALONE[0],FG_ALONE[1])};
   /* v364: they come and tell you themselves (inbox.js) — about the friend they were closest to, or the one they fell out with */
   const Y=hot?hot.find(w=>w!==L):(known.length?known:m.filter(o=>o!==L)).slice().sort((a,c)=>c.pop-a.pop)[0];
   if(Y){S.fgd=S.fgd||{};const nv={a:L.id,y:Y.id,known:fgIsKnown(L.id,Y.id)||known.includes(Y),hot:!!hot,w:wk};if(S.fgd[b]){S.fgdq=S.fgdq||{};S.fgdq[b]=(S.fgdq[b]||[]).concat([nv])}else S.fgd[b]=nv}
   known.forEach(o=>{delete S.fgk[fgPair(L.id,o.id)]})});
  /* after some time alone, they find a different group */
- r.forEach(w=>{const x=S.fgx[w.id];if(!x||wk<x.back)return;const open=Object.entries(groups).filter(([g,m])=>g!==x.old&&m.length<FG_SIZE&&!m.includes(w));
-  delete S.fgx[w.id];if(!open.length)return;const ws=open.map(([g,m])=>fgFit(w,m));let t=Math.random()*ws.reduce((a,v)=>a+v,0);let g=open[open.length-1][0];
+ r.forEach(w=>{const x=S.fgf[w.id];if(!x||wk<x.back)return;const open=Object.entries(groups).filter(([g,m])=>g!==x.old&&m.length<FG_SIZE&&!m.includes(w));
+  delete S.fgf[w.id];if(!open.length)return;const ws=open.map(([g,m])=>fgFit(w,m));let t=Math.random()*ws.reduce((a,v)=>a+v,0);let g=open[open.length-1][0];
   for(let i=0;i<open.length;i++){t-=ws[i];if(t<=0){g=open[i][0];break}}S.fg[w.id]=g;groups[g].push(w)})}
 if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(){fgSyncAll();try{brands().forEach(fgChurn)}catch(e){console.warn('friends churn',e)}if(S.fgv)Object.keys(S.fgv).forEach(b=>{const v=S.fgv[b];if(v&&(v.w<AW()-FG_WAIT||!S.w[v.f]||S.w[v.f].own!==b)){if(S.w[v.a]&&S.w[v.f])fgReveal(S.w[v.a],S.w[v.f],'');delete S.fgv[b]}});if(S.fgd)Object.keys(S.fgd).forEach(b=>{const v=S.fgd[b];if(v&&(v.w<AW()-FG_WAIT||!S.w[v.a]||S.w[v.a].own!==b))fgDriftNews(b)});return e0.apply(this,arguments)}}
 /* the office visit (inbox.js shows it): a top star, about a friend */
