@@ -864,3 +864,154 @@ const ARC_REEL_CLOSE={
    :'Chat votes for more time in the ring and on the mic. {A} gets the work in both instead of taking on a new trait.';
  }
 };
+
+/* Blood feud beats are separate from the stipulation beats used by arc payoffs. */
+const BLOOD_BLOWOFF={
+ std:{
+  heat:['The referee keeps asking for a break. Every time they get one, {A} and {B} go straight back to each other.',
+   ['Let the body shots take their toll','{A} digs in with a shot to the ribs. {B} loses a breath, gives one back, and both have to take a step before they can swing again.','They trade glancing shots. Both stay upright, close enough for the referee to get between them.'],
+   ['Trade lariats in the middle','{A} and {B} hit each other flush. Both hit the mat. One gets a shoulder up off the canvas just to look at the other.','They clip shoulders on the charge. Both stagger to opposite ropes and turn around to try again.']],
+  decisive:'{P} stops {L} cold with a short lariat. The sound of the landing carries through the pause in the crowd.',
+  breakdown:'The referee gets between them once. {A} and {B} surge past the official, and the crew pours into the ring.'
+ },
+ barbed:{
+  heat:['The first blast rattles the camera. Smoke hangs over the wire and a line of blood runs into the tape at {A}’s wrist.',
+   ['Fight out of the wire','{B} is trapped against the wire for a beat. When both stumble clear, a strip of gear stays caught behind them.','{B} slips away before hitting the wire. The crowd can see how close it came.'],
+   ['Let the blast swallow both rivals','A white flash wipes out the picture. The camera comes back to both wrestlers on the canvas, smoke rolling over them and blood on the mat between them.','The blast goes off as both pull up short. Through the smoke, neither can see the other well enough to follow.']],
+  decisive:'{L} lurches out of the smoke and straight into {P}’s finishing slam. The wire is still shaking when the referee drops beside them.',
+  breakdown:'The smoke clears on two wrestlers still reaching for each other. The referee waves both corners back and signals to stop it.'
+ },
+ texas:{
+  heat:['There’s already blood on the canvas. The referee starts the count after a fall, and {A} and {B} are both listening for nine.',
+   ['Give the count one ugly escape','At nine, {B} gets to unsteady feet. {A} steps in again, and the next exchange ends with both dropping beside a crushed trash can.','The count gets to seven before {B} stands. {A} has to find something worse if this is going to stick.'],
+   ['Bring the fight down on the steel','The scramble spills across the steps and the remains of a table. Blood darkens the wood as both wrestlers drag themselves back toward the ring. Nobody looks ready to beat another count.','They reach the steps and lose their grip on each other. The collision everyone braced for never comes.']],
+  decisive:'{P} puts {L} down hard amid the wreckage. {L} reaches up for something to pull on and finds nothing but the apron.',
+  breakdown:'Officials crowd the apron as both wrestlers keep reaching through the wreckage. The referee stops it before another fall can be scored.'
+ },
+ lights:{
+  heat:['The work lights come up on bare boards and torn canvas. The people who fought for this match don’t wait to see who’s watching.',
+   ['Let the ring come apart around them','{A} drives {B} down onto the exposed boards. The hollow crack carries past commentary. {B} rolls over with blood on the side of the face.','They collide beside the torn canvas. Both get enough of a grip to keep from hitting the boards.'],
+   ['Follow the fight into the dark','The camera loses both beyond the lights. Something metallic crashes. When the wrestlers come back into view, one is dragging the other by a fistful of ruined gear.','The picture loses them past the work lights. They come back separated, both waiting for the other to step in first.']],
+  decisive:'{P} catches {L} with one last slam on the boards. For a beat the work lights are the only things still moving over the ring.',
+  breakdown:'The brawl disappears past the work lights and the referee loses sight of both sides. The bell stops the match. The shouting beyond the light goes on.'
+ },
+ iquit:{
+  heat:['The microphone is close enough to catch a ragged breath. A drop of blood hits the canvas while the referee waits for an answer.',
+   ['Leave the mic on through the refusal','{B} takes a hard shot and folds over the ropes. The ref puts the mic in close. “Ask me when I can’t get up.” {B} pulls upright again.','{B} knocks the mic away before the referee can get an answer. The mic thumps against the mat.'],
+   ['Make them fight over the microphone','{A} and {B} crash into the steps reaching for the mic. The feed catches a sharp breath and cuts to the referee holding the question open. Neither gives in.','The mic scrapes against the steps and the feed buzzes. The referee pulls it clear before putting the question again.']],
+  decisive:'{P} pulls {L} back into the hold. The referee has to lean close to hear any words through the crowd.',
+  breakdown:'{A} and {B} keep fighting after the microphone skids out of reach. The referee waves the officials in and ends it without a surrender.'
+ },
+ lms:{
+  heat:['The referee is up to eight. One wrestler is trying to push upright beside the wreckage and keeps getting only one knee off the floor.',
+   ['Stand at nine and go again','The hand comes off the floor at nine. The first shot back rattles both wrestlers against the rail, and the front row starts the count all over again.','The wrestler up at nine is too unsteady to follow through. Both back off while the referee resets the count.'],
+   ['Put both sides down in the wreckage','The collision knocks them into the announce desk. The referee starts counting with the monitors on the ground and both wrestlers trying to turn over.','The desk shifts as they hit the edge, but both catch enough of it to stay up. The referee backs away.']],
+  decisive:'{P} drives {L} down one last time and uses the barricade to stay upright. At nine, {L} gets one elbow off the floor and slips back down.',
+  breakdown:'Officials pour in while the fight is still moving. The referee waves off the match before anyone stays down for ten.'
+ },
+ dog:{
+  heat:['The chain goes taut and pulls both wrestlers short. Blood is already spotting the canvas underneath it.',
+   ['Make the chain drag them back together','They try to get away in opposite directions. The chain catches and brings them back into a furious exchange at arm’s length.','The chain snags on the bottom rope. Both stop to pull it clear, glaring across the slack.'],
+   ['Cut off an escape with the chain','{B} thinks there’s a step left to retreat. The chain snaps taut and {A} is on top of {B:them} in the corner. The crowd hears the steel hit the canvas when they go down.','The chain goes tight a beat too soon and both stumble to a knee. The fight starts again from there.']],
+  decisive:'{P} catches {L} trying to get distance. The chain draws them back in range for one last blow, and {L} drops.',
+  breakdown:'The officials can’t get them apart with the chain still on. The referee calls it off and sends both corners in to help separate them.'
+ },
+ cage:{
+  heat:['The locked door rattles with every collision. The referee has to step over a loose strip of tape as the fight comes back into the middle.',
+   ['Ram the rivalry into the mesh','The cage booms and rocks. {B} comes off the steel with a smear of blood over one eye, still swinging.','Both turn their shoulders in time. The mesh shakes, but neither takes the full impact.'],
+   ['Make the wall stop their momentum','{A} and {B} collide against the wall so hard the camera beside it shakes. Both stumble off the steel and meet again before either can catch a breath.','One hits the wall alone and slides down it. The other gets close, then has to back off from a swing.']],
+  decisive:'{P} cuts off {L}’s last charge and sends {L} crashing into the steel. The cage is still ringing when they hit the mat.',
+  breakdown:'The referee signals through the mesh. Officials get the door open after the bell and step between the wrestlers.'
+ },
+ street:{
+  heat:['The fight has left a trail of broken ringside gear. A bent trash can rolls down the aisle and neither side gives it room.',
+   ['Drive the brawl back through ringside','A shoulder sends the barricade sideways. The next shot flattens the trash can against the floor, and the wrestlers are still coming forward.','The barricade shifts but stays up. The wrestlers have to turn around and find each other through the gap.'],
+   ['Crash into the announce desk','The desk gives way under the collision. Commentary drops out for a beat, and the strongest sound on the feed is someone trying to breathe.','They hit the edge and slide off opposite sides. The desk stays up, and both climb back into view.']],
+  decisive:'{P} catches {L} in the middle of the wreckage with a finishing slam. The referee drops right beside the broken desk.',
+  breakdown:'The brawl goes past the wreckage with officials in pursuit. The referee calls it off as people from both corners try to clear the aisle.'
+ },
+ bng:{
+  heat:['The last gate shuts. The camera goes wide and finds one ring smeared with blood and the other full of wrestlers trying to reach their teammates.',
+   ['Send the rescue through the gap','The cage shakes as the save cuts between rings. The teammate who needed help is still down, but the other side has to turn and fight for the space again.','The rescue runs into bodies between the rings. The trapped teammate has to crawl clear on their own.'],
+   ['Make the whole cage shake','The two fights slam into the steel almost together. A chair skids across the gap. One team clears the near ring and the other can suddenly see who’s isolated.','The teams reach the gap out of step. Half the charge stops at the ropes while the fight goes on around them.']],
+  decisive:'{P}’s side isolates {L} against the steel. {L} sees one teammate still taking punishment in the next ring and signals to the referee.',
+  breakdown:'The referee calls it off and signals for the gates. The officials come in as the teams shout across the gap.'
+ },
+ anarchy:{
+  heat:['The broadcast can’t stay with one camera. A fight batters through the lower bowl while another knocks the entrance rig sideways.',
+   ['Cut between the two fights','The aisle camera catches a body slamming through a rail. The stage camera finds a teammate answering with a running shot that sends the opposite corner into the set.','The camera cuts a beat late. It catches both fights reforming, with the crowd already pointing to the next collision.'],
+   ['Bring the fights together on the floor','Both fights hit the same stretch of floor. A stack of chairs goes over and the crowd stumbles back as a save turns into another brawl.','They reach the same aisle from either side, but the railing keeps the fights apart. The broadcast has to keep cutting.']],
+  decisive:'{P} sends {L} crashing onto the arena floor just as the other fight spills into view. The nearest referee gets down beside them.',
+  breakdown:'The referees lose control of the floor as the fights split again. The bell calls it off, but both sides still have people fighting on different cameras.'
+ },
+ stampede:{
+  heat:['One feed shows the field. Another catches a fight coming out of the service tunnel. The stadium is too big for any one camera to keep up.',
+   ['Make the tunnel fight spill out','The tunnel door bangs open under the weight of the collision. One wrestler tumbles onto the turf and the rest of the fight comes out behind them.','The camera waits outside the tunnel. The fight goes the other way and has to be picked up on a second feed.'],
+   ['Bring both sides together at field level','Two feeds converge on the same tackle. Bodies and equipment go down at the mouth of the tunnel, and only one team gets back to the field together.','The teams take different exits. By the time the wide shot finds them, both sides are regrouping across the turf.']],
+  decisive:'{P} intercepts {L} coming out of the tunnel and drives {L} down onto the turf. The stadium camera stays wide as the referee runs in.',
+  breakdown:'Officials stop the match as the teams scatter down separate tunnels. The stadium feed keeps finding fights after the decision is off.'
+ },
+ falls:{
+  heat:['The referee follows the brawl off the arena floor. On the screen, the crowd sees {A} and {B} pass the concourse before either thinks to look back.',
+   ['Take it through the concourse','A running collision sends both into a stack of equipment cases. The referee gets low enough to see if anyone can make a cover right there.','The cases roll apart before the charge hits. The fight keeps moving through the concourse.'],
+   ['Follow the impact backstage','The backstage camera turns at the crash. {A} and {B} are on the concrete beside an overturned cart, and the referee never stops running toward them.','The cart rolls out of the way and both wrestlers miss the collision. They keep going past the camera.']],
+  decisive:'{P} drops {L} onto the concrete beside the loading doors. The referee is close enough to count the cover where it happens.',
+  breakdown:'The fight disappears through a service door. The referee calls it off in the hallway, with neither side there to take a fall.'
+ },
+ nodq:{
+  heat:['The referee sees the chair come up and backs out of the way. {A} and {B} both know there won’t be a warning.',
+   ['Fight over the chair','The fight over the chair ends with a clang and two wrestlers down. The referee keeps watching for a cover through the noise.','The chair skids under the ropes before either gets to use it. Both have to go back to their hands.'],
+   ['Let the weapon swing turn the fight','The chair shot rings out. The wrestler who took it catches the ropes, answers with a desperate shot, and both go down beside the bent seat.','The swing hits the turnbuckle instead. Both back away from the rebound and come in again.']],
+  decisive:'{P} cuts off {L}’s comeback with a blow that leaves the chair folded on the canvas. The official watches for the cover.',
+  breakdown:'The referee calls it off when both corners pour into the ring. Nobody has been disqualified and nobody gets the win.'
+ },
+ coffin:{
+  heat:['The lid is open. When the fight reaches the side of the coffin, the front row hears the wood take the weight of both wrestlers.',
+   ['Fight at the lip of the coffin','{A} and {B} slam against the coffin hard enough to shift it. An arm disappears over the lip, then comes back out with a grip that keeps the lid open.','The coffin slides away from the collision. Both stumble back to the apron with the lid still open.'],
+   ['Make the lid crash just short','The lid hits the rim with a crack as the wrestler inside rolls over it to the floor. The crowd hears the crash a beat before it sees the escape.','The lid drops partway and catches. Both wrestlers back away before either can take advantage.']],
+  decisive:'{L} braces on the rim of the open coffin. {P} drives the fight right to the lip, and {L}’s grip gives.',
+  breakdown:'The lid is still open when both sides crash to the floor. The referee waves it off as officials rush in.'
+ },
+ ladder:{
+  heat:['A ladder lies twisted at ringside. The one under {PRIZE} is still upright, and both sides are coming back for it.',
+   ['Make them fight for the same rung','The ladder bucks with every shot. Both wrestlers slide down a rung and hook an arm through to keep from falling.','One lets go early and drops to the canvas. The other stays on the ladder long enough to steady it.'],
+   ['Send the climb crashing down','The ladder tips. Both hit the canvas, and the ladder lands hard enough beside them to drown out the first reaction from the crowd.','They spot the tilt in time and climb down opposite sides. The ladder wobbles itself still between them.']],
+  decisive:'{P} sends {L} tumbling off the ladder. The base of the ladder jumps off the canvas. {P} steadies it for the last climb.',
+  breakdown:'The ring fills with officials after the last ladder goes over. {PRIZE} is still hanging when the referee stops the match.'
+ },
+ tables:{
+  heat:['A table is standing on the floor. The wrestlers keep getting close enough to see the grain in it and pulling each other back.',
+   ['Fight on the edge of the table','The tabletop groans as the weight shifts. Both wrestlers roll off beside it, and the crowd’s gasp turns into noise when they see it’s still standing.','One wrestler steps clear early and the edge of the table just catches the other on the way past.'],
+   ['Let the table break a beat too early','The legs give way under the struggle. Both crash to the floor beside the splinters. The referee waves it on and the other table comes into view.','The table slides out of reach. They hit the floor hard, and the table is still intact.']],
+  decisive:'{P} staggers up first and gets between {L} and the ropes. The table is right behind them.',
+  breakdown:'They tumble off the apron beside the table. The referee calls it off with the table still intact.'
+ },
+ twoof3:{
+  heat:['It’s one fall apiece. Every grip is slower now, and both wrestlers know which exchange the other one wants to bring back.',
+   ['Make the old counter hurt','The first-fall counter comes back and sends both down hard. They know the position well enough to escape, but getting up is a different matter.','They feel the counter coming and break away before either can take the fall.'],
+   ['Fight through the last reversal','The first wrestler slips the grip and walks straight into the return. Two hard takedowns later, both are reaching for the ropes.','The second reversal comes a beat late. They land awkwardly and have to square up again.']],
+  decisive:'{P} catches {L} in the exchange that cost the first fall. This time the counter leaves {L} flat on the canvas.',
+  breakdown:'At one fall each, the referee loses control of the exchange and waves it off. Neither side gets the second fall.'
+ },
+ iron:{
+  heat:['It’s one fall apiece. There’s barely time left, and both wrestlers stand up as if they’ve already been counted down.',
+   ['Make the last minute a fight for position','{A} and {B} trade takedowns that would have been sharp an hour ago. The second landing is heavy enough to stop the crowd counting down for a beat.','They drag each other down without getting control. The clock keeps running.'],
+   ['Sprint on legs that won’t cooperate','They hit the ropes once at full speed. The impact drops both wrestlers and a few seconds go by before either can turn over.','They try to sprint out of the break and both stumble. The clock takes more time than either has to give.']],
+  decisive:'{P} makes one last adjustment on the canvas. {L} tries to turn a shoulder and can barely move it.',
+  breakdown:'The referee waves it off while the clock is still running. The scoreboard never gets a deciding fall.'
+ },
+ sub:{
+  heat:['The referee crouches beside the hold. The only sounds close to the mat are a quick breath, a shoe scraping, and the crowd calling for the escape.',
+   ['Roll the escape into another hold','The first hold comes loose and the next one bites immediately. The wrestler caught in it can only drag one leg back toward the ropes.','The first escape works. Neither can get the second hold on before they have to reset.'],
+   ['Make the fingertips miss the rope','Fingers catch the fringe of the apron. The grip slips away, and the referee gets close enough for the crowd to see the free hand trembling.','The rope comes into reach and the referee forces the break. Both stay down for a moment even after the hold comes off.']],
+  decisive:'{P} pulls {L} away from the last rope break and locks the hold back in. The referee stays where the free hand is visible.',
+  breakdown:'Neither will give the official room to separate them. The referee calls it off without a tap.'
+ },
+ tornado:{
+  heat:['Everyone is legal. A wrestler trying to make a save takes the next hit, and the fight has already moved before anyone can see who’s down.',
+   ['Make two saves collide','Two wrestlers dive into the same exchange from opposite sides. The impact leaves a pile in the corner and both teams have to find someone still standing.','The saves arrive out of order. Each team gets someone clear, but neither gets to take over.'],
+   ['Send the whole match into one corner','The two brawls hit the corner together. A wrestler staggers out into a tandem shot and the partners who could help are still on the canvas.','The corner clears before anyone hits it square. The two fights split again before either side can follow up.']],
+  decisive:'{P} catches {L} with a finishing shot while the other wrestlers are occupied. Nobody reaches the cover in time.',
+  breakdown:'The referee can’t get the bodies in the ring separated. The bell rings without a fall as the officials come in from both sides.'
+ }
+};

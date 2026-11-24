@@ -257,4 +257,39 @@ function pickReelChoice(choices,target){
   return hrBloodOptions(match,reel).filter(o=>o.key.startsWith('flip:')).length===2;
  })()`));
  console.log('Father reveal, audio dispute, cast, stakes, bell order, retirement, breakup and three-way feud checks passed.');
+ const checked=js(`(()=>{
+  const all=Object.keys(STIPS);
+  for(const stip of all){
+   const ppv=!!STIPS[stip].ppv;
+   const type=STIPS[stip].mt?.[0]||(stip==='bng'?'trios':'singles');
+   const {a,b,c,D,E,F,match}=reelFixture(null,null,'match',type,stip,ppv);
+   if(type==='trios')match.sides=[[a,c,D.id],[b,E.id,F.id]];
+   if(type==='tag')match.sides=[[a,D.id],[b,E.id]];
+   S.heat[key(a,b)]=85;
+   match.bo=!ppv;
+   const reel=hrScene({},match,'match','blood',ppv);
+   const fail=message=>{throw Error(stip+': '+message)};
+   const {calls}=hrBeat(reel,reel.heat,match);
+   for(const call of calls){
+    if(!call.ok||!call.no||call.ok===call.no)fail('missing distinct hit and miss');
+    if(/\\{[A-Z]/.test(call.ok+call.no))fail('unfilled heat role');
+   }
+   for(const action of ['clean','flip:1','dirty','nc']){
+    const m={...match};
+    const line=hrFill(reel,hrBloodFinish(m,reel,action),m);
+    if(!line||/\\{[A-Z]/.test(line))fail('unfilled finish role');
+    if(m.winner!==(action==='flip:1'?1:0))fail('wrong booked side');
+    if(!!m.nc!==(action==='nc'))fail('wrong no-contest result');
+    if(!!m.ev?.feudUnsettled!==(action==='dirty'))fail('wrong feud outcome flag');
+    if(action==='clean'||action==='flip:1'){
+     if(!line.endsWith(hrFill(reel,hrFinishText(m),m)))fail('stipulation finish was replaced');
+    }
+    if(action==='dirty'&&line!==hrFill(reel,BLOOD_DIRTY[stip],m))fail('dispute changed');
+    if(action==='nc'&&!line.endsWith('No contest.'))fail('no-contest result missing');
+   }
+  }
+  return all.length;
+ })()`);
+ assert.equal(checked,list.stips);
+ console.log('Heat hits, misses, and four finish paths checked for all '+checked+' blood-feud stipulations.');
 })().catch(e=>{console.error(e);process.exitCode=1});

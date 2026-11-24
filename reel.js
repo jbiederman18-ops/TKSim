@@ -163,7 +163,7 @@ function hrTitleText(m){
 function hrScene(it,d,kind,why=LQ?.hrWhy,ppv=LQ?.ppv){
  if(why==='blood'){
   const pair=hrBloodPair(d,ppv);if(!pair)return null;
-  const stip=stipKey(d),[opens,text,safe,risk]=BLOOD_REEL[stip];
+  const stip=stipKey(d),[opens]=BLOOD_REEL[stip],blowoff=BLOOD_BLOWOFF[stip];
   const log=(S.fh?.[key(pair.a,pair.b)]||[]).filter(row=>row.n||row.seg);
   const i=RI(0,opens.length-1);
   const beat=log[[0,Math.floor(log.length/2),log.length-1][i]];
@@ -172,7 +172,7 @@ function hrScene(it,d,kind,why=LQ?.hrWhy,ppv=LQ?.ppv){
   const audiences=[fgOf(A),fgOf(B)];
   const mismatch=audiences[0].includes('blood')&&audiences[1].includes('cas')||audiences[1].includes('blood')&&audiences[0].includes('cas');
   return {blood:true,stip,open:[`Previously in ${A.name} vs ${B.name}: ${start}`,opens[i],mismatch?'One half of the crowd came to see its star. The other half came to see how much a star could take.':''],
-   heat:[text,safe,risk],cast:pair,locked:it.arcDecision};
+   heat:blowoff.heat,blowoff,cast:pair,locked:it.arcDecision};
  }
  const a=hrArc(kind,d,it.main);if(!a)return null;
  const script=ARC_REEL[a.k];if(!script)return null;
@@ -245,11 +245,11 @@ function hrFill(reel,text,m){
 }
 function hrBeat(reel,beat,m){
  const fill=t=>hrFill(reel,t,m);
- return {setup:fill(beat[0]),calls:beat.slice(1).map(([label,land],i)=>{
+ return {setup:fill(beat[0]),calls:beat.slice(1).map(([label,land,missLine],i)=>{
   const phase=beat===reel.heat?0:1;
   const named=HR_ARC_MISS[reel.a?.k]?.[phase];
   // A botched camera cue or delivery can cost the reaction without changing the booked action.
-  const miss=fill(reel.a&&(named&&reel.variant==='match'
+  const miss=fill(missLine||reel.a&&(named&&reel.variant==='match'
    ?named:land+' The timing is off, and the crowd takes a moment to catch up.')||
    'The exchange happens too fast for the crowd to follow. The replay gives them a better look.');
   return {t:fill(label),tip:i?'Bigger swing':'Lower risk',s:m?'ring':'mic',d:i?.18:-.05,st:i?.7:.3,fat:m&&i?3:0,injury:m&&reel.blood,ok:fill(land),no:miss,
@@ -282,11 +282,15 @@ function hrBloodOptions(m,reel){
 function hrBloodFinish(m,reel,k){
  if(reel.locked||m.nc)return hrFinishText(m);
  const ev=evNew(m);ev.hit=true;
- if(k==='nc'){m.nc=true;ev.stars-=.35;return 'The referee calls it off. No contest. The rivals keep fighting.'}
+ if(k==='nc'){
+  m.nc=true;
+  ev.stars-=.35;
+  return reel.blowoff.breakdown+' No contest.';
+ }
  if(k?.startsWith('flip:')){const side=Number(k.slice(5));if(hrBloodFlip(m,reel).includes(side))m.winner=side}
  m.fin=k==='dirty'&&!finWhy(m,'cheat')?'cheat':'clean';
  if(k==='dirty'){ev.feudUnsettled=true;return BLOOD_DIRTY[reel.stip]||BLOOD_DIRTY.std}
- return hrFinishText(m)
+ return [reel.blowoff.decisive,hrFinishText(m)].filter(Boolean).join(' ')
 }
 
 function hrCallRoles(reel,roles){
