@@ -167,7 +167,7 @@ renderPS=function(){if(!PS)return;const {scene,ctx}=PS;
   frame('');
   const pre=scene.ex==='time'?()=>{panTo('b').then(()=>shout('Listen up!','blue'))}:null;
   if(pre)pre();
-  return setTimeout(()=>queue(pagesOf(scene.text,owner,ctx,cam),()=>renderPS(),PS.beat===0?'open':scene.ex==='tac'?'exchange':null),pre?1300:0)}
+  return setTimeout(()=>queue((PS.live&&window.hrPromoSetup?hrPromoSetup:x=>x)(pagesOf(scene.text,owner,ctx,cam)),()=>renderPS(),PS.beat===0?'open':scene.ex==='tac'?'exchange':null),pre?1300:0)}
  if((PS.beat===1||PS.beat==='r'&&scene.last)&&!PS.done&&!scene._md&&typeof mdAdd==='function'){scene._md=1;mdAdd(PS)}
  frame(menuHtml())};
 psChoose=function(ci){if(!PS||PS.done||PS.q)return;const c=PS.scene.ch[ci];if(!c)return;
@@ -180,7 +180,7 @@ psChoose=function(ci){if(!PS||PS.done||PS.q)return;const c=PS.scene.ch[ci];if(!c
   if(c.drop)await shout('Mic drop!','gold');else if(c.cut)await shout('Hold it!');else if(out.success&&swingOf(pr).w>=.55)await shout('Take that!');
   const pre=c.drop?[]:attempt(c,out.success,ctx,out.text);
   if(pre.length){const L=PS.st.log;if(L&&L.length)L[L.length-1]=fill(c.t,ctx)+' — '+beatText(pre,ctx.A)+' '+out.text}
-  queue(beatPages(pre).concat(pagesOf(out.text,'a',ctx,false,{ok:out.success})),()=>{PS.out=out;_next()})})};
+  queue(PS.live&&window.hrPromoResult?hrPromoResult(pagesOf(out.text,'a',ctx,false,{ok:out.success})):beatPages(pre).concat(pagesOf(out.text,'a',ctx,false,{ok:out.success})),()=>{PS.out=out;_next()})})};
 
 (function(){const c=document.createElement('style');c.textContent=`
 .sdw .lvhd{margin-bottom:0}

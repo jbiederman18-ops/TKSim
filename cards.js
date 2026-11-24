@@ -359,6 +359,14 @@ function xoHtml(i){const sl=card()[i];const d=sl.d;const A=d&&W_(d.a),B=d&&W_(d.
  <div class="tcnum">${i+1}</div>
  <div class="tcin"><div class="tchd"><span class="tclb">${lab}</span>${tl?`<span class="tctl">${tl}</span>`:!A?`<span class="tcbk">Add</span>`:''}${A?`<button class="tcdet" onclick="event.stopPropagation();openXo(${i})">Details</button>`:''}</div>
  ${A&&B?`<div class="tcsum"><b>First time ever</b> · ${esc(nameOf(B.own||'ai'))}'s star · decided in the ring</div><div class="tcmat"><div class="tcside">${tcCard(A,{attr:`data-tcro="${i}"`})}</div><div class="tcvs">vs</div><div class="tcside">${tcCard(B,{attr:`data-tcro="${i}"`})}</div></div>`:`<div class="tcsum">Optional · one of yours vs one of ${esc(S.rival)}'s</div>`}</div></div>`}
+/* v468: the thin pip line under a booked match — Talent / Chemistry / Story / Extras in five coarse steps, the same read as Details but
+   only what the preview can know (chemistry that hasn't been discovered isn't in it), and no numbers or change markers. A stipulation
+   always shows its toll beside it: price, tiredness, injury risk. */
+function tcPipLine(d,sh){try{if(!d||typeof mdOf!=='function'||typeof segH!=='function'||!validMatch(d))return '';
+ if(d.type==='squash'||d.type==='open'||d.tour||d.nc||d.sides.length<2||d.sides.some(s=>!s.length))return '';
+ const x=mdOf(d,sh);if(!x||x.sq||!x.p)return '';const st=stipKey(d),S0=STIPS[st];
+ let cost='';if(st!=='std'&&S0){const bits=[];const pr=stipPrice(st,'p');if(pr>0)bits.push(money(pr));if((S0.f||0)>=10)bits.push('Very tiring');else if((S0.f||0)>=4)bits.push('Tiring');if((S0.inj||1)>=1.25)bits.push('Injury risk');if(bits.length)cost=`<span class="tcpc">${esc(bits.join(' · '))}</span>`}
+ return `<div class="tcpl" aria-label="How the match reads"><span>Talent${segH(x.p.talent)}</span><span>Chem${segH(x.p.chem)}</span><span>Story${segH(x.p.story)}</span><span>Extras${segH(x.p.extras)}</span>${cost}</div>`}catch(e){return ''}}
 function slotHtml(i){const c=card(),sl=c[i];if(xoV(sl))return xoHtml(i);let act=i===TC.act&&!locked();const m=cur(i);const promo=sl.k==='promo';
  const ml=promo?null:(()=>{try{return mLab(c,i)}catch(e){return {}}})();const main=ml&&ml.main,opt=!!sl.opt;
  const tg=act&&TC.open&&TC.mode==='w'&&!TC.rep?targets(i,m):[];const ct=act&&TC.open&&TC.mode==='w'&&!TC.rep?(TC.tg||defTarget(i,m)):null;
@@ -395,11 +403,11 @@ function slotHtml(i){const c=card(),sl=c[i];if(xoV(sl))return xoHtml(i);let act=
   :!promo&&op&&!empty?`<div class="tcsum"><b>${esc(MT.open.n)}</b> · Someone answers live${m.open&&m.open.hope&&W_(m.open.hope)?` · crowd wants ${esc(W_(m.open.hope).name)}`:''}</div>`
   :!promo&&d&&fl?`<div class="tcsum"><b>${esc(spName(d)||MT[d.type].n)}</b> · ${d.sides.length} entrants · ${esc(sideName(d.sides[d.winner]))} wins</div>`
   :!promo&&d?`<div class="tcsum"><b>${esc(MT[d.type].n)}</b> · ${esc(sideName(d.sides[d.winner]))} ${ro?'advances':'wins'}${pr?` · <span class="gold">${pr.kind==='contract'?'Contracted':pr.kind==='shot'?'Earned title shot':'Promised'}</span>`:''}</div>`:'';
- const tl=tellFor(i);
+ const tl=tellFor(i);const pl=!promo&&d&&!empty?tcPipLine(d,curShow()):'';
  return `<div class="tcs ${act?'act':''} ${main?'me':''} ${opt?'opt':''}" data-tcs="${i}" data-dp="slot:${i}">
  <div class="tcnum" data-dg="slot:${i}" title="Hold and drag to move it">${i+1}</div>
  <div class="tcin"><div class="tchd"><span class="tclb">${esc(slotLab(i))}${tr&&TOURS[d.tour.k]?` · ${TOURS[d.tour.k].i} ${esc(TOURS[d.tour.k].n)} ${esc(d.tour.lab)}`:fl&&d.sp&&SPK[d.sp]?` · ${SPK[d.sp].i} ${esc(SPK[d.sp].n)}`:fl&&d.type==='gauntlet'?' · 🎰 Casino Gauntlet':op?' · 🎤 Open challenge':''}${d&&d.stip==='bng'?' · Blood &amp; Guts':''}</span>${tl?`<span class="tctl">${tl}</span>`:empty&&!live?`<span class="tcbk">${opt?'Add':'Book it'}</span>`:''}${!empty?`<button class="tcdet" onclick="event.stopPropagation();segDetails(${i})">Details</button>`:''}</div>
- ${sum}${mat?`<div class="tcmat${many?' many':''}${fld?' fld':''}">${mat}</div>`:''}${mods?`<div class="tcmods">${mods}</div>`:''}</div></div>`}
+ ${sum}${mat?`<div class="tcmat${many?' many':''}${fld?' fld':''}">${mat}</div>`:''}${mods?`<div class="tcmods">${mods}</div>`:''}${pl}</div></div>`}
 /* the pick sheet (v280): tap a space on the table and the best cards for it slide up; tap one to place it */
 function sheetTitle(i,m,tg){const sl=card()[i];const promo=sl.k==='promo';const L=slotLab(i);
  if(sl.k==='xo')return [L,(tg&&tg.t)==='b'?`${m.a&&W_(m.a)?ln(W_(m.a)):'Yours'} vs… (from ${nameOf('ai')})`:'Your wrestler'];
@@ -909,6 +917,7 @@ html.tcards .tkc{--w:92px;position:relative;flex:none;width:var(--w);aspect-rati
 .tcdrop.mini{width:36px;aspect-ratio:auto;font-size:18px}.tcdrop.live{border-color:var(--gold);color:var(--gold);background:rgba(242,193,78,.06);animation:tcpulse 1.1s ease-in-out infinite}.tcdrop.over{background:rgba(242,193,78,.22);border-style:solid}
 @keyframes tcpulse{50%{background:rgba(242,193,78,.15)}}
 .tcs .tcmods{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.tcs .tcpl{display:grid;grid-template-columns:repeat(4,auto);justify-content:space-between;gap:7px 8px;margin-top:10px;font:800 italic 11px/1 'BC','Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}.tcs .tcpl>span{display:flex;flex-direction:column;align-items:flex-start;gap:4px}.tcs .tcpl .pipm i{width:11px;height:5px;transition:none}.tcs .tcpl .tcpc{grid-column:1/-1;flex-direction:row;color:var(--gold2);letter-spacing:.04em}
 button.tcm{border:0;margin:0;cursor:pointer;color:inherit;touch-action:manipulation}
 .tctabs{gap:0;padding-bottom:12px}
 .tctab{flex:1 0 auto;background:none;border:0;border-bottom:2px solid var(--line);color:var(--mut);font:800 italic 13px/1 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:10px 10px 9px;cursor:pointer}

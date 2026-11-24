@@ -78,7 +78,15 @@ function hrAuto(card,b,sh){if(!card)return;HRC=hrStart(b,sh);let hits=0;const ca
   if(!(m.ev&&m.ev.hit)){if(hits<cap&&typeof msOn==='function'&&msOn(m)&&Math.random()<hrMatchOdds(m,main,sh.ppv)){hits++;msAuto(m,b,sh.ppv||main)}
    else{const g=matchEvent(m,b,sh.ppv||main,0);if(g){if(g.sit)hits++;runEvAI(g,m)}}}
   let base=3;try{base=rateMatch(m,{ppv:sh.ppv,preview:true}).stars}catch(e){}hrMove(base+(m.ev&&m.ev.stars||0))})}
-Object.assign(window,{hrCap,hrWhy,hrStart,hrRoll,hrAfter,hrBug,hrRundown,hrGo,hrAuto,hrTag,hrCm,hrWord});
+/* ---- v468: a highlight reel is the decision, not the play-through ----
+   The face-off framing, the calls, the It lands / Not quite stamp and the result screen all stay. What goes is the
+   narration between them: a promo keeps the last two lines of its set-up and one stamped result line; a match keeps one
+   line of set-up or result per call (plus any change of winner or no contest). Same fan effect, same calls, same odds. */
+const hrKeepNote=pg=>!!pg&&typeof pg.t==='string'&&/^(👑|🚫|🚑|😮)/.test(pg.t);
+const hrPromoSetup=pages=>pages.length>2?pages.slice(-2):pages;
+const hrPromoResult=pages=>{const st=pages.filter(pg=>pg.stamp);return st.length?st.slice(-1):pages.slice(-1)};
+function hrMatchPages(pages,n,tail){if(pages.length<=n)return pages;const base=tail?pages.slice(-n):pages.slice(0,n);return base.concat(pages.filter(pg=>hrKeepNote(pg)&&!base.includes(pg)))}
+Object.assign(window,{hrPromoSetup,hrPromoResult,hrMatchPages,hrCap,hrWhy,hrStart,hrRoll,hrAfter,hrBug,hrRundown,hrGo,hrAuto,hrTag,hrCm,hrWord});
 (function(){const c=document.createElement('style');c.textContent=`
 .hrbug{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;margin:-2px 0 10px;font:800 italic 12px/1 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}
 .hrbar{height:9px;background:#15161a;position:relative;clip-path:var(--sl,none);overflow:hidden}.hrbar i{position:absolute;inset:0;transform-origin:0 50%;background:linear-gradient(90deg,#5a6a8a,var(--gold) 55%,#d8261f);transition:transform .6s}

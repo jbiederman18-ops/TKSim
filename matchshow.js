@@ -431,7 +431,7 @@ async function msShow(){const pg=MS.q[MS.qi];if(!pg)return;const low=document.ge
  const fin=()=>{clearInterval(iv);el.textContent=t;MS_TYPE=null;done()};MS_TYPE={fin}}
 function msTap(){if(!MS||!MS.q||MS_PAN)return;if(MS_TYPE){MS_TYPE.fin();return}MS.qi++;if(MS.qi<MS.q.length)return msShow();const a=MS.after;MS.q=null;MS.after=null;if(a)a()}
 document.addEventListener('keydown',e=>{if(!MS||!MS.q||(e.key!==' '&&e.key!=='Enter'))return;if(e.target&&e.target.closest&&e.target.closest('button,input,select,textarea'))return;if(!document.getElementById('sdbox'))return;e.preventDefault();msTap()});
-function msPlay(pages,slot,detail){return new Promise(res=>{pages=pages.filter(Boolean);if(slot&&typeof adMatch==='function')pages=adMatch(pages,MS,slot,detail);if(!pages.length)return res();MS.q=pages;MS.qi=0;MS.after=res;msShow()})}
+function msPlay(pages,slot,detail,keep){return new Promise(res=>{pages=pages.filter(Boolean);if(window.hrMatchPages){/* v468: decisions only — keep:'tail' = the last 2 pages of a set-up before a call; the intro keeps its play-by-play line */pages=slot==='open'?pages.filter(pg=>pg.kind==='booth').slice(0,1):hrMatchPages(pages,keep==='tail'?2:1,keep==='tail')}if(slot&&typeof adMatch==='function')pages=adMatch(pages,MS,slot,detail);if(!pages.length)return res();MS.q=pages;MS.qi=0;MS.after=res;msShow()})}
 const msLines=ls=>ls.map(msPage);
 /* the call menu: same buttons as every other call, so party-night TV shows which one you picked */
 function msMenu(q,sub,items){MS.res=null;return new Promise(res=>{MS.menu={q,sub,items,res};msDrawMenu();if(typeof foPose==='function')foPose(null)})}
@@ -450,7 +450,7 @@ async function msCall(list,lab,q,sub){const r=MS.r;const it=await msMenu(q,sub,m
 async function msMomentAct(slot){const g=MS.g,m=MS.m,r=g.r;
  if(g.e.need==='X'&&r.X&&!g.gor){const X=r.X;const it=await msMenu('🎧 Your call in gorilla',`${esc(X.name)} wants to go out there and start something`,[{label:'Send them out there',info:`They crash the main event and could start a new rivalry · morale +${GOR_MOR}`,yes:1},{label:'Not tonight',info:`The match goes on as booked · morale −${GOR_MOR}`}]);
   gorMor(X,!!it.yes,true);if(!it.yes){const r0=msRoles(m,'p');m._msr={a:r0.A.id,b:r0.B.id};let ng=null;try{ng=genEvent(m,'p',true,true)}finally{delete m._msr}if(ng&&ng.e.need!=='X'&&(msPlan(ng,m)==='heat')===(slot==='heat')){MS.g=ng;ng.gor=1;return msMomentAct(slot)}return null}g.gor=1}
- msFrame('');MS.res=null;await msPlay(msNarr(evFill(g.e.text,r)));
+ msFrame('');MS.res=null;await msPlay(msNarr(evFill(g.e.text,r)),null,null,'tail');
  const ch=evChoices(g.e,m,r);const ck=CALLS[callKind(g)];
  const items=ch.map(c=>({c,label:evFill(c.t,r),info:`${c.al?`<span class="${c.al==='f'?'face':'heel'}">${c.al==='f'?'😇 Face move':'😈 Heel move'}</span> · `:c.heelA&&r.A.al==='f'?'<span class="heel">😈 Dirty — fans won\'t like it from a face</span> · ':''}${c.always?'✅ Guaranteed':STAT_ICON[c.s]+' · '+msTellH(evChance(c,r),riskScaled(c)&&!g.sit?swingOf(evChance(c,r),c.st||0).w:null)}${c.flip?' · changes the winner':''}${c.nc?' · no winner':''} · ${callStakes(c,g,c.always?null:evChance(c,r))}${g.sit&&c.tip?` · ${esc(sitTip(c,r))}`:''}${typeof rcTag==='function'?rcTag(c,g):''}`}));
  const note=(g.sit?g.info:'')+(g.r&&g.r.CROWD?(g.sit?' · ':'')+'👥 '+esc(g.r.CROWD.text):'');
