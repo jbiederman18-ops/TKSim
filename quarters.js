@@ -137,5 +137,5 @@ body:not(.tv) .srv.qh .twh{gap:5px;padding-top:8px;padding-bottom:8px}
 body.tv .qhwrap{max-width:900px;margin:12px auto 0}
 /* v472: on a wide screen the chart keeps a sensible size instead of stretching to the sheet's width */
 @media (min-width:700px){body:not(.tv) .srv.qh .qhwrap{max-width:560px;margin-left:auto;margin-right:auto}}
-/* v472: the next tap stays in reach while the crowds table is longer than the screen */
-.qhstick{position:sticky;bottom:-26px;z-index:3;margin-top:8px;padding:12px 0 38px;background:#141417;box-shadow:inset 0 1px 0 var(--line)}`;document.head.appendChild(c)})();
+/* v472: the next tap stays in reach while the crowds table is longer than the screen; v474: flush with the true screen bottom (sheet pads 24px + the home-indicator inset below its sticky edge) */
+.qhstick{position:sticky;bottom:calc(-24px - env(safe-area-inset-bottom));z-index:3;margin-top:8px;padding:12px 0 calc(18px + env(safe-area-inset-bottom));background:#141417;box-shadow:inset 0 1px 0 var(--line)}`;document.head.appendChild(c)})();
