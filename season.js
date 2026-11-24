@@ -271,43 +271,43 @@ function rivalAdHtml(mode){const a=rivalAd();if(!a)return '';const nm=esc(curSho
 /* ===================== SUGGEST A CARD ===================== */
 /* the GM's assistant books the empty slots — keeps everything you've already booked, promised or entered in a tournament */
 /* ===== Suggest the rest (v265): the best matches on paper, nothing more =====
-   It books the strongest matches it can from the wrestlers themselves — popularity (top-heavy), in-ring ability, style
-   chemistry, face vs heel and freshness (no rematch from the last few weeks) — since v353 not stamina or morale. It ignores everything from the
-   briefing: promises, contract clauses, pitches, title defenses, the weekly goal, the crowd chant and feuds/rivalries are
-   all the GM's to handle. Every match it books is a plain singles match with a clean finish and no title on the line.
-   Since v352 the game's own match preview (minus feud heat) picks the matches. Anything already on the card stays put. */
+   It books the strongest matches it can from the wrestlers themselves — popularity, in-ring ability, crowd matchups and
+   traits, face vs heel and freshness (no rematch from the last few weeks) — since v353 not stamina or morale. It ignores everything from the
+   briefing: promises, contract clauses, pitches, title defenses, the weekly goal and the crowd chant are all the GM's to
+   handle, and so is building and paying off feuds (it counts a feud's current heat, nothing more). Every match it books is a plain singles match with a clean finish and no title on the line.
+   Since v352 the game's own match preview (minus stamina and morale) picks the matches. Anything already on the card stays put. */
 function suggestCard(){const sh=curShow();const c=JSON.parse(JSON.stringify(S.card.p));const used=new Set();
  c.forEach(sl=>{if(!sl.d)return;if(sl.k==='match')sl.d.sides.flat().forEach(id=>id&&used.add(id));if(sl.k==='promo'){used.add(sl.d.a);if(sl.d.b)used.add(sl.d.b)}if(sl.k==='chal'&&sl.d.c)used.add(sl.d.c);if(sl.k==='xo')used.add(sl.d.a)});
  const W=id=>S.w[id];const ok=id=>{const w=W(id);return !!(w&&w.own==='p'&&!w.inj&&!used.has(id))};
  const mIdx=()=>c.map((sl,i)=>sl.k==='match'&&!sl.opt?i:-1).filter(i=>i>=0);const mainI=()=>{const l=mIdx();return l[l.length-1]};
  const empty=()=>mIdx().filter(i=>!c[i].d);
- /* how good a match looks from the two wrestlers alone */
- const score=(A,B)=>{const hi=Math.max(A.pop,B.pop),lo=Math.min(A.pop,B.pop);
-  /* v454: the crowds' matchup (Bloodhounds with Chaos, Technical with Flippy) is a big part of how matches rate, so it shortlists pairs too */
-  let gv=0;try{if(typeof grpVal==='function')gv=grpVal(A,B).v}catch(e){}
-  return hi*.6+lo*.4+(Math.min(A.ring,B.ring)-70)*.5+chemOpp(A,B)*1.2+gv*3+(A.al!==B.al?8:0)+(A.g===B.g?4:0)-recentMeets(A.id,B.id).length*25};
  const winner=sides=>{let bi=0,bv=-1e9;sides.forEach((sd,i)=>{const v=avg(sd.map(id=>W(id).pop+(W(id).mom||0)*3));if(v>bv){bv=v;bi=i}});return bi};
  const put=(i,sides)=>{c[i].d={type:'singles',stip:'std',sides,winner:winner(sides),title:''};sides.flat().forEach(id=>used.add(id))};
- /* v352: the game's own match preview decides, minus feud heat (rivalries stay the GM's call). The quick score above only
-    shortlists pairs from the whole healthy roster — v265 picked from the top 18 names with it alone, which booked matches
-    about a quarter of a star weaker than the rating engine would pick. */
- /* v353: on ability alone — feud heat, tired legs and morale are taken back out: building feuds, resting people and keeping
-    them happy are the GM's job, so Suggest will happily book someone exhausted or miserable if they're the best on paper */
- const NOT=['Feud heat','Tired legs','Morale','Getting what they were owed'];
+ /* v352: the game's own match preview decides. v353: on ability alone — building feuds, resting people and keeping them happy
+    are the GM's job, so Suggest will happily book someone exhausted or miserable if they're the best on paper.
+    v473: what's hot right now counts — feud heat, face vs heel with history and a feud boiling over are part of a match's
+    numbers, so a hot pairing rates like it will on the night. Suggest never plans a feud (it doesn't build heat on purpose,
+    hold a match for a PPV or book a blow-off); it just reads the numbers. The room's mood (the same for every pair) and
+    promise payoffs are left out. Every healthy pair is rated (v352–v472 rated a quick-score shortlist of 60,
+    which missed the best pair now and then, most of all in the main event). */
+ const NOT=['Tired legs','Morale','Locker room mood','Getting what they were owed','Promise payoff'];
  const real=(sides,main)=>{const m={type:'singles',stip:'std',sides,winner:0,title:''};m.winner=winner(m.sides);
   try{const r=rateMatch(m,{ppv:sh.ppv,preview:true,main});return r.raw-(r.bd?r.bd.parts.filter(p=>NOT.includes(p[0])).reduce((a,p)=>a+p[1],0):0)}catch(e){return -1e9}};
- /* fill the main event first, then the rest — each with the best pair still available */
+ /* fill the main event first, then the rest — each with the best pair still available (a fresh pairing beats a rematch from the last month) */
  const mi=mainI();const order=empty().sort((x,y)=>(x===mi?-1:y===mi?1:x-y));
- order.forEach(i=>{const l=ownList('p').filter(w=>ok(w.id));const cand=[];
-  for(let x=0;x<l.length;x++)for(let y=x+1;y<l.length;y++){if(inTeam(l[x].id,l[y].id))continue;cand.push([score(l[x],l[y]),l[x],l[y]])}
-  let best=null,bv=-1e9;cand.sort((a,b)=>b[0]-a[0]).slice(0,60).forEach(([,A,B])=>{const sd=[[A.id],[B.id]];const v=real(sd,i===mi);if(v>bv){bv=v;best=sd}});
+ order.forEach(i=>{const l=ownList('p').filter(w=>ok(w.id));let best=null,bv=-1e9;
+  for(let x=0;x<l.length;x++)for(let y=x+1;y<l.length;y++){const A=l[x],B=l[y];if(inTeam(A.id,B.id))continue;const sd=[[A.id],[B.id]];const v=real(sd,i===mi)-recentMeets(A.id,B.id).length*25;if(v>bv){bv=v;best=sd}}
   if(best)put(i,best)});
  /* a thin roster: the freshest two who can go, so a required slot is never left empty */
  empty().forEach(i=>{const l=ownList('p').filter(w=>!w.inj).sort((a,b)=>sta(b)-sta(a));const a=l.find(w=>!used.has(w.id))||l[0];const o=a&&(l.find(w=>w.id!==a.id&&!used.has(w.id))||l.find(w=>w.id!==a.id));if(a&&o)put(i,[[a.id],[o.id]])});
- /* promos: the best talkers not already on the card */
+ /* promos: the best talkers not already in a promo. v473: ranked the way promos actually land (promoEst's weights, unrounded:
+    mic counts more than popularity, and a Motormouth talks like +8 mic), from the whole healthy roster — a promo costs no
+    stamina since v392, so being in a match tonight doesn't rule anyone out — and always a Backstage Vignette, the solo
+    promo that rates best (about +0.1★ over a Callout at every mic level in a quiet-promo sweep) */
  const exP=new Set();c.forEach(sl=>{if(sl.k==='promo'&&sl.d){exP.add(sl.d.a);if(sl.d.b)exP.add(sl.d.b)}});
- c.forEach(sl=>{if(sl.d||sl.k!=='promo'||sl.opt)return;const r=ownList('p').filter(w=>!w.inj&&!exP.has(w.id)).sort((a,b)=>(b.mic*1.2+b.pop)-(a.mic*1.2+a.pop));
-  const A=r.find(w=>!used.has(w.id))||r[0];if(!A)return;sl.d={type:A.mic>=70?'callout':'vignette',a:A.id,b:null,played:false};exP.add(A.id)});
+ const talk=w=>{const mm=w.mic+(hasT(w,'mouth')?8:0);const b0=(mm*.45+w.pop*.3)/20;return 1.115*b0+.438*Math.max(0,b0-2.7)+.313*mm/100};
+ c.forEach(sl=>{if(sl.d||sl.k!=='promo'||sl.opt)return;const A=ownList('p').filter(w=>!w.inj&&!exP.has(w.id)).sort((a,b)=>talk(b)-talk(a))[0];
+  if(!A)return;sl.d={type:'vignette',a:A.id,b:null,played:false};exP.add(A.id)});
  return c}
 /* the old assistant: books like a sharp rival (stips, finishes, run-ins, the title challenge). Kept for the balance
    sweep's "engaged booker" bot, so tuning can check that a hands-on GM clearly beats Suggest the rest. */
