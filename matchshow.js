@@ -507,7 +507,7 @@ async function msReelBeat(reel,script,lab){
 }
 async function msRunReel(reel){
  const {m}=MS;
- const play=texts=>msPlay(msReelPages(texts.map(t=>hrFill(reel,t,m))));
+ const play=texts=>msPlay(msReelPages(texts.filter(t=>typeof t==='string'&&t).map(t=>hrFill(reel,t,m))));
  const showFinish=()=>play([hrFinishText(m),hrTitleText(m)]);
  msFrame('');
  if(window.SFX)SFX.play('swell');

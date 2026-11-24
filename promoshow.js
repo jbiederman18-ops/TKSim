@@ -172,7 +172,7 @@ function reelPromoFrame(){
  const reel=PS.reel,beat=PS.beat;
  const {setup,calls}=hrBeat(reel,beat===0?reel.heat:reel.fin);
  PS.scene={ch:calls};PS.shown=PS.scene;
- const opening=beat===0?reel.open.map(t=>hrFill(reel,t)):[];
+ const opening=beat===0?reel.open.filter(t=>typeof t==='string'&&t).map(t=>hrFill(reel,t)):[];
  frame('');
  queue(opening.concat(setup).filter(Boolean).flatMap(t=>chunks(t).map(cam=>({cam}))),()=>frame(reelPromoMenu()));
 }

@@ -191,53 +191,37 @@ function hrScene(it,d,kind,why=LQ?.hrWhy,ppv=LQ?.ppv){
   [cast.b,cast.c]=arcCultFollowers(a,participants);
  }
 
- const custom=ARC_REEL_VARIANT[a.k+'/'+variant];
- const road=ARC_REEL_STORY[a.k+'/'+a.sl];
- const story=arcStoryOf(a);
- const romanceNote=story?.romance&&a.k!=='wedding'&&adReelRomance([a.a,a.b].filter(Boolean).map(id=>S.w[id]))?
+ /* v490: each part comes from the most specific script that has it: this storyline's lines for this variant, then the
+    variant's (a run-in or a team booking changes the scene), then the storyline's, then the arc's. Beats written as {win,lose} follow the booked result. */
+ const story=ARC_REEL_STORY[a.k+'/'+a.sl]||{};
+ const shape=ARC_REEL_VARIANT[a.k+'/'+variant]||{};
+ const part=p=>story[variant]?.[p]||shape[p]||story[p]||script[p];
+ const won=!seg||!!seg.sides[seg.winner]?.includes(a.a);
+ const side=b=>b&&!Array.isArray(b)?(won?b.win:b.lose):b;
+ const romanceNote=arcStoryOf(a)?.romance&&a.k!=='wedding'&&adReelRomance([a.a,a.b].filter(Boolean).map(id=>S.w[id]))?
   'Their eyes meet as the crowd settles. For a moment, neither is in a hurry to look away.':'';
  const def=aDForReel(a);
- const intro=custom?.[0]||script[0];
- const stakes=a.k==='stakes'&&(def.vn==='Loser Leaves Town'
-  ?'Both agreed that the loser will leave town for eight weeks.'
-  :road?.[1]?'':'They put their reputations on the line. The loser has to live with the embarrassment of losing this fight.');
- const open=[def.n+'.',road?.[0]||(!['wedding','faith','haircut','goodwill','war','townhero','likeness','pain','oil'].includes(a.k)&&story?arcHead(a).replace(/[.!?]$/,'')+'.':''),
-  intro,stakes,romanceNote];
- let heat=custom?.[1]||script[1];
- let finish=custom?.[2]||script[2];
- const specific=ARC_REEL_VARIANT[a.k+'/'+a.sl];
- if(specific&&['voice','shoot','rebrand'].includes(a.k)){
-  heat=specific[1]||heat;
-  finish=specific[2]||finish;
- }
- if(a.k==='mentor'&&a.sl==='fraud'){heat=specific[1];finish=specific[2]}
+ const stakes=a.k!=='stakes'?'':def.vn==='Loser Leaves Town'
+  ?'Whoever loses leaves town for eight weeks.'
+  :story.end?'':'Both have put their reputations on the line. The loser has to live with it.';
+ const recap=story.r||(arcHead(a)?arcHead(a).replace(/[.!?]$/,'')+'.':'');
+ const open=[def.n+': the payoff.',recap,part('t'),stakes,romanceNote].filter(Boolean);
+ let heat=side(part('h'));
+ let finish=side(part('f'));
  if(seg&&['proveit','cross'].includes(a.k)&&HR_CROWD_HEAT[a.g])heat=HR_CROWD_HEAT[a.g];
- if(a.k==='heelturn'&&a.sl==='watch'&&kind==='promo')heat=ARC_REEL_VARIANT['heelturn/watch'][1];
- if(seg&&['school','twitch','hardcore','techshow'].includes(a.k)){
-  const [,setup,safe,risk]=BLOOD_REEL[cast.stip];
-  const lead={
-   school:'This is the part of {S} that used to catch {A} out.',
-   twitch:'This is what chat voted to see.',
-   hardcore:'This is what the rough matches were preparing {A} for.',
-   techshow:'The two technicians have traded falls.'
-  };
-  const line=lead[a.k];
-  heat=[line+' '+setup,safe,risk];
- }
- if(a.k==='lastchase'&&a.sl!=='hangup'){
-  heat=['{A} sees {PRIZE} at ringside and looks back to {O}.',
-   ['Bring back an old title-match counter','{A} slips out of the old hold before {O} can lock it in.'],
-   ['Force one more exchange','{A} digs in and makes {O} find a new answer.']];
-  finish=['The title is at stake in the final exchange.'];
- }
  const afterBell=seg&&(variant==='postrunin'||['heelturn','betrayal','breakfree'].includes(a.k)&&runIn?.X.id!==a.a);
  const finishBeforeCall=['sellout','invasion','torch','passtitle','groundswell','redemption','townhero','peace','likeness','retire','farewell','haircut'].includes(a.k);
  return {a,cast,open,heat,fin:finish,variant,afterBell,finishBeforeCall,
-  result:[road?.[1],a.k==='stakes'&&def.vn==='Loser Leaves Town'?'{L} is gone for eight weeks.':''].filter(Boolean),
+  result:[story.end,a.k==='stakes'&&def.vn==='Loser Leaves Town'?'{L} is gone for eight weeks.':''].filter(Boolean),
   decision:!a.choice&&hrArcDecision(a),father:hrFatherPayoff(a)};
 }
+/* v490: {ROAD} names who the arc's build went through (up to three, most recent last) */
+function hrRoad(a){
+ const names=[...new Set((a?.so||[]).slice().reverse())].slice(0,3).reverse().map(id=>S.w[id]?.name).filter(Boolean);
+ return names.length>1?names.slice(0,-1).join(', ')+' and '+names.at(-1):names[0]||'one opponent after another';
+}
 function hrFill(reel,text,m){
- const filled=arcWords(reel.cast,text).replace(/\{O\}/g,()=>S.w[reel.cast.opponent]?.name||'the opponent');
+ const filled=arcWords(reel.cast,String(text).replace(/\{ROAD\}/g,()=>hrRoad(reel.a))).replace(/\{O\}/g,()=>S.w[reel.cast.opponent]?.name||'the opponent');
  return hrNames(filled,m,reel.cast)
 }
 /* a call that falls flat keeps the booked action but not the big reaction: drop the sentences about the crowd's response */
@@ -251,11 +235,8 @@ function hrMissOf(land){
 function hrBeat(reel,beat,m){
  const fill=t=>hrFill(reel,t,m);
  return {setup:fill(beat[0]),calls:beat.slice(1).map(([label,land,missLine],i)=>{
-  const phase=beat===reel.heat?0:1;
-  const named=HR_ARC_MISS[reel.a?.k]?.[phase];
   // A botched camera cue or delivery can cost the reaction without changing the booked action.
-  const miss=fill(missLine||reel.a&&(named&&reel.variant==='match'
-   ?named:hrMissOf(land))||
+  const miss=fill(missLine||reel.a&&hrMissOf(land)||
    'The exchange happens too fast for the crowd to follow. The replay gives them a better look.');
   return {t:fill(label),tip:i?'Bigger swing':'Lower risk',s:m?'ring':'mic',d:i?.18:-.05,st:i?.7:.3,fat:m&&i?3:0,injury:m&&reel.blood,ok:fill(land),no:miss,
    hit:[[['x',fill(land)]]],miss:[[['x',miss]]]};

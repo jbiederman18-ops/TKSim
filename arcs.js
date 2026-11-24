@@ -990,7 +990,7 @@ window.arcPost=function(ap,stars,notes){if(!ap||!ap.seg)return false;const s=ap.
   {const c=Object.assign({},a);for(const k in c)if(Array.isArray(c[k]))c[k]=c[k].slice();try{t=!!D.step(s,c)}catch(e){t=false}hit=t&&stars>=mn;if(hit||!t)Object.assign(a,c)}
   if(t&&!hit){const nt=`📖 ${aW(a.a).name} · ${D.n}: the right segment, but ${stars.toFixed(2).replace(/\.?0+$/,'')}★ didn't reach the ${mn}★ this stop needs, so it doesn't count yet.`;notes.push(nt)}
   if((hit||!t)&&a.have<h0)notes.push(`📖 ${aW(a.a).name} · ${D.n}: the run was broken, so it starts over.`);
-  if(hit){a.have++;a.st.push(stars);a.lastStep=AW();if(D.heatStep&&a.b)try{bumpHeat(a.a,a.b,D.heatStep,[],`${D.n}: the story builds`)}catch(e){}const lab=D.tell&&D.tell[Math.min(a.have-1,D.tell.length-1)];
+  if(hit){a.have++;a.st.push(stars);a.lastStep=AW();{const o=sOpps(s,a.a).find(id=>id!==a.b);if(o)(a.so=a.so||[]).push(o)}/* v490: who each stop was against, for the payoff reel */if(D.heatStep&&a.b)try{bumpHeat(a.a,a.b,D.heatStep,[],`${D.n}: the story builds`)}catch(e){}const lab=D.tell&&D.tell[Math.min(a.have-1,D.tell.length-1)];
    const nt=`📖 ${aW(a.a).name} · ${D.n}: ${lab?lab+' — ':''}step ${a.have} of ${a.need}.${a.have>=a.need&&(!D.ok||D.ok(a))?' The payoff is next.':''}`;notes.push(nt);
    arcEvPut(nt,{a:a.a,n:D.n,i:D.i,lab:lab||'',have:a.have,need:a.need,what:arcEvWhat(arcWords(a,aBuildAt(D,a.have-1))),head:arcHead(a)||'',next:a.have>=a.need?'pay':''});
    if(a.have>=a.need&&(!D.ok||D.ok(a))){a.stage='pay';a.payFrom=AW()+1}}});

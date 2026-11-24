@@ -291,4 +291,44 @@ function pickReelChoice(choices,target){
  })()`);
  assert.equal(checked,list.stips);
  console.log('Heat hits, misses, and four finish paths checked for all '+checked+' blood-feud stipulations.');
+ /* v490: every storyline of every arc, as a match (won and lost, singles and tag) and as a promo, reads with nothing left unfilled */
+ const swept=js(`(()=>{
+  const bad=[];let n=0;const realArc=hrArc;hrArc=()=>S.arcs[0];
+  const trait=Object.keys(TRAITS)[0];
+  const stories=Object.entries(ARC_STORY).flatMap(([k,l])=>l.map(x=>[k,x.id]));
+  for(const [k,sl] of stories){
+   if(!ARC_REEL_STORY[k+'/'+sl])bad.push(k+'/'+sl+': no recap');
+   const promoArc=['heelturn','faceturn','betrayal','voice','torch','shoot','cult','rebrand','breakup','join','faith'].includes(k);
+   const matchArc=!['voice','shoot','rebrand','join','faith'].includes(k);
+   for(const [kind,type,winner] of [['match','singles',0],['match','singles',1],['match','tag',0],['match','tag',1],['promo','singles',0]]){
+    if(kind==='promo'?!promoArc:!matchArc)continue;
+    const t=reelFixture(k,sl,kind,type);
+    t.match.winner=winner;
+    if(type==='tag')t.match.sides=[[t.a,t.D.id],[t.b,t.E.id]];
+    Object.assign(t.arc,{so:[t.D.id,t.E.id,t.F.id],g:'tech',fn:'The Order',fn2:'The Other Order',foe:t.F.id,gh:[t.D.id,t.E.id,t.F.id],t:trait});
+    let reel;try{reel=hrScene({main:true},t.d,kind,'arc',false)}catch(e){bad.push(k+'/'+sl+' '+kind+': '+e.message);continue}
+    if(!reel)continue;n++;
+    const tag=k+'/'+sl+' '+kind+' '+type+' '+(winner?'lost':'won')+' ('+reel.variant+')';
+    const texts=[...reel.open];
+    for(const beat of [reel.heat,reel.fin]){
+     if(!Array.isArray(beat)||!beat[0]){bad.push(tag+': missing beat');continue}
+     const calls=beat.length-1;
+     if(calls!==2&&!(beat===reel.fin&&reel.decision&&calls===0))bad.push(tag+': '+calls+' calls');
+     const b=hrBeat(reel,beat,kind==='match'?t.match:null);
+     texts.push(b.setup,...b.calls.flatMap(c=>[c.t,c.ok,c.no]));
+     b.calls.forEach(c=>{if(c.ok===c.no)bad.push(tag+': hit and miss are the same')});
+    }
+    texts.push(...hrArcAfter(reel,kind==='match'?t.match:undefined));
+    for(const x of texts){
+     const f=hrFill(reel,x,kind==='match'?t.match:null);
+     if(/\\{|\\}|\\bfalse\\b|\\bundefined\\b|\\bnull\\b|NaN/.test(f))bad.push(tag+': '+f.slice(0,140));
+    }
+   }
+  }
+  hrArc=realArc;
+  return {n,bad};
+ })()`);
+ if(swept.bad.length)console.error(swept.bad.slice(0,40).join('\\n'));
+ assert.equal(swept.bad.length,0);
+ console.log('Every storyline read through '+swept.n+' payoff reels (won, lost, singles, tag and promo) with every role filled.');
 })().catch(e=>{console.error(e);process.exitCode=1});
