@@ -539,7 +539,7 @@ function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X0=S.fbx[b],H=S.f
  return res}
 /* apply a show's result: returns what each group did, for the results screen */
 function fbApply(b,segs,show,o){const r=fbCalc(b,segs,show,o);const f=S.fb[b],X=S.fbx[b],H=S.fbh[b];const before=Object.assign({},f);
- const grow=1;/* gains come from the pool and casuals tune out in proportion, so growth levels off by itself (no fanGrowF) */let conv=0;const out={before,after:{},pct:r.pct,why:r.why,conv:0,flat:0,sc:r.sc};
+ const grow=1;/* gains come from the pool and casuals tune out in proportion, so growth levels off by itself (no fanGrowF) */let conv=0;const out={before,after:{},pct:r.pct,why:r.why,conv:0,flat:0,sc:r.sc,E:r.E};
  FB_G.forEach(g=>{const p=r.pct[g];let d=p>0?FB_POOL*FB_SHARE[g]*p/100*(g==='cas'?FB_GKC:FB_GKH)*grow:f[g]*p/100;f[g]=Math.max(0,f[g]+Math.round(d))});
  FB_HC.forEach(g=>{const c=Math.min(r.conv[g],f.cas*.05);if(c>0){f[g]+=Math.round(c);f.cas-=Math.round(c);conv+=Math.round(c)}});
  /* everything else that moves fans on the night (head-to-head, main event war, debuts, chants, 5★ overflow) reaches casuals */
@@ -633,14 +633,23 @@ function fbRiTag(){return fbTag('chaos',FB_THIRST.chaos)+fbTag('tech','Technical
    (casuals tuning out, a crowd left without a match, fans switching shows) are spread evenly, and the shares always add up
    to the crowd's real total. Returns [{t: fans, g: {crowd: fans}, ic: [[crowd, ±1]…]}] in the card's segment order. */
 const FB_IC_MIN=150,FB_IC_REL=.3;  /* a plate shows a crowd once that segment moved it by 150+ fans and by 30%+ of the night's biggest single move */
-function fbSplit(r,n){if(!r||!r.before||!r.after||!n)return null;const sc=r.sc&&r.sc.length===n?r.sc:null;
+function fbSplit(r,n){if(!r||!r.before||!r.after||!n)return null;const sc=r.sc&&r.sc.length===n?r.sc:null;const night={};
  const out=Array.from({length:n},()=>({t:0,g:{},ic:[]}));const sig=Array.from({length:n},()=>({}));
  FB_G.forEach(g=>{const D=Math.round((r.after[g]||0)-(r.before[g]||0));const cv=p=>p>0?FB_POOL*FB_SHARE[g]*p/100*(g==='cas'?FB_GKC:FB_GKH):(r.before[g]||0)*p/100;
-  let u=Array(n).fill(0);if(sc){const sum=sc.reduce((a,x)=>a+(x[g]||0),0),base=((r.pct&&r.pct[g])||0)-sum;u=sc.map((x,i)=>{sig[i][g]=cv(x[g]||0);return cv((x[g]||0)+base/n)})}
-  const res=(D-u.reduce((a,x)=>a+x,0))/n;let acc=0;u.forEach((x,i)=>{const v=i===n-1?D-acc:Math.round(x+res);acc+=v;out[i].g[g]=v;out[i].t+=v})});
+  /* v465: a segment keeps only what it did itself; the night-wide rest (tuning out, a crowd left hungry, switchers) is its own beat */
+  let u=Array(n).fill(0);if(sc)u=sc.map((x,i)=>{sig[i][g]=cv(x[g]||0);return Math.round(sig[i][g])});
+  if(!sc){const res=D/n;let acc=0;u=u.map((x,i)=>{const v=i===n-1?D-acc:Math.round(res);acc+=v;return v})}
+  u.forEach((v,i)=>{out[i].g[g]=v;out[i].t+=v});night[g]=D-u.reduce((a,x)=>a+x,0)});
  const top=Math.max(0,...sig.flatMap(x=>Object.values(x).map(Math.abs))),cut=Math.max(FB_IC_MIN,top*FB_IC_REL);
  out.forEach((o,i)=>{o.ic=FB_G.map(g=>[g,sig[i][g]||0]).filter(x=>Math.abs(x[1])>=cut).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,3).map(x=>[x[0],x[1]>0?1:-1])});
- return out}
+ /* after the bell: why the night moved beyond its segments, biggest first (no numbers — the chart has the total) */
+ const sw=r.sw||{},E=r.E||{},why=[];let swT=0,rest=0;FB_G.forEach(g=>swT+=sw[g]||0);
+ if(Math.abs(swT)>=FB_IC_MIN)why.push([swT>0?'Fans switched over from the other show':'Fans switched to the other show',swT]);else rest+=swT;
+ FB_G.forEach(g=>{const own=(night[g]||0)-(sw[g]||0);if(Math.abs(own)<FB_IC_MIN){rest+=own;return}
+  if(g==='cas')why.push([own<0?'Casuals tuned out':'Casuals stuck around',own]);
+  else if(own<0&&E[g]!=null&&E[g]<1)why.push([`${FG_N[g]} had nothing of their own`,own]);else rest+=own});
+ if(Math.abs(rest)>=FB_IC_MIN)why.push(['Everything else',rest]);why.sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
+ return {segs:out,night:FB_G.reduce((a,g)=>a+(night[g]||0),0),why:why.map(x=>[x[0],x[1]>0?1:-1])}}
 function fbNight(r){return r&&r.before&&r.after?FB_G.reduce((a,g)=>a+Math.round((r.after[g]||0)-(r.before[g]||0)),0):null}
 window.fbSplit=fbSplit;window.fbNight=fbNight;
 function fbRevealHtml(o,instant){const r=o&&o.fb&&o.fb.p;if(!r||!r.before||!r.after||!r.pct)return '';

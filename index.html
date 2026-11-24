@@ -1519,7 +1519,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v464';
+const APP_VERSION='v465';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -3872,7 +3872,7 @@ function airPair(){
  /* v400: fans switch shows — each group drifts toward the show that served it better tonight (fanbase.js); this replaced the flat head-to-head and main event war bonuses */
  if(!bye&&typeof fbDefect==='function')try{fbDefect(order.filter(b=>infs[b]),out)}catch(e){console.warn('defect',e)}
  /* v462: tonight's fans, segment by segment, for the quarter-hour reveal (fanbase.js fbSplit) */
- order.forEach(b=>{const r=out.fb[b],bl=out.blocks.find(x=>x.brand===b);if(!r||!bl||typeof fbSplit!=='function')return;try{const sp=fbSplit(r,bl.segs.length);if(sp)bl.segs.forEach((sg,i)=>{sg.fd=sp[i].t;sg.fi=sp[i].ic})}catch(e){console.warn('split',e)}});
+ order.forEach(b=>{const r=out.fb[b],bl=out.blocks.find(x=>x.brand===b);if(!r||!bl||typeof fbSplit!=='function')return;try{const sp=fbSplit(r,bl.segs.length);if(sp){bl.segs.forEach((sg,i)=>{sg.fd=sp.segs[i].t;sg.fi=sp.segs[i].ic});bl.fn=sp.night;bl.fr=sp.why}}catch(e){console.warn('split',e)}});
  /* v462: the night goes to the show that gained the most fans tonight (the show rating breaks a tie); placings follow it too */
  const gain=b=>{const n=typeof fbNight==='function'?fbNight(out.fb[b]):null;return n==null?(out.fans[b]||0):n};
  if(grp){const srt=order.filter(b=>infs[b]).sort((a,b)=>gain(b)-gain(a)||rt[b]-rt[a]);srt.forEach((b,i)=>place[b]=i+1);out.places=place}
@@ -4921,7 +4921,7 @@ function srPick(s){if(!s||!s.sd)return null;const sd=s.sd.map(x=>x.filter(id=>S.
  if(sd.length<=2){const l=sd.map((x,i)=>{if(!x.length)return null;const L=lead(x);return {id:L,r:wi<0?'':wi===i?'w':'l',info:part(x,L)}}).filter(Boolean);return wi>0?l.sort((a,b)=>(a.r==='w'?0:1)-(b.r==='w'?0:1)):l}
  const W=sd[wi]||sd[0];const L=lead(W);const others=sd.filter(x=>x!==W).flat();const top=lead(others);const more=others.length-1;
  return [{id:L,r:wi>=0?'w':'',info:part(W,L)},{id:top,r:wi>=0?'l':'',info:more>0?`+${more} more`:''}]}
-const SR_T={line:1150,lineMain:1900,arc:2600,intro:900,intro2:750,between:500,settle:800,noWin:350,stars:700,after:600,mainHold:2000,mainHold2:1500,mainSettle:900,mainAfter:1300};
+const SR_T={bell:3200,line:1150,lineMain:1900,arc:2600,intro:900,intro2:750,between:500,settle:800,noWin:350,stars:700,after:600,mainHold:2000,mainHold2:1500,mainSettle:900,mainAfter:1300};
 function srOn(){return !!(SRV&&document.getElementById('srv'))}
 function srClear(){if(SRV){SRV.tok++;SRV.busy=false}}
 /* v210: weight — a short jolt of the whole stage, a punch on whatever just landed */
@@ -5018,7 +5018,10 @@ async function srPlay(from){const R=SRV,rd=R.rounds[R.i];if(!rd)return srFinal(f
   if(it.qw){srFocus('c');srChart(it);await w(main?SR_T.lineMain:SR_T.line)}
   if(k<seq.length-1)await w(SR_T.between)}
  R.ph=null;srLand(rd,true);if(main&&v){v.classList.remove('dim');srQuake(1);const win=document.querySelector('#tw-pair .twh.won');if(win){win.classList.remove('flash');void win.offsetWidth;win.classList.add('flash')}}
- if(R.i>=R.rounds.length-1){await w(main?SR_T.mainAfter:SR_T.after);return srEnd()}
+ if(R.i>=R.rounds.length-1){await w(main?SR_T.mainAfter:SR_T.after);
+  /* v465: after the bell — the night-wide part of each show's fans gets its own beat before the crowds */
+  if(srBell()){R.busy=false;if(R.tv){await w(SR_T.bell);return srEnd()}R.bellWait=true;return srHint('Tap for the crowds ▸')}
+  return srEnd()}
  await w(SR_T.after);R.busy=false;R.i++;srHint(srNextLabel())}
 /* tap: start the next round, or finish the one that's playing */
 function srAdvance(){if(!srOn()||SRV.done)return;const R=SRV;
@@ -5026,9 +5029,14 @@ function srAdvance(){if(!srOn()||SRV.done)return;const R=SRV;
   /* v303: a tap during your half lands it and moves on to the rival's; a tap during theirs finishes the round */
   if(R.ph==='p'&&rd&&rd.p&&rd.ai){srSettleHalf(rd.p);if(!R.tv){const ph=srHalfEl(rd.p);if(ph)ph.classList.add('mini')}return srPlay('ai').catch(()=>{})}
   R.ph=null;const v=document.getElementById('srv');if(v)v.classList.remove('dim');srShow(rd,true);srLand(rd,true);srFocus(null);
-  if(R.i>=R.rounds.length-1)return srEnd();R.busy=false;R.i++;return srHint(srNextLabel())}
+  if(R.i>=R.rounds.length-1){R.busy=false;if(srBell(true)){R.bellWait=true;return srHint('Tap for the crowds ▸')}return srEnd()}R.busy=false;R.i++;return srHint(srNextLabel())}
+ if(R.bellWait){R.bellWait=false;return srEnd()}
  if(R.crowd)return srFinal(false);
  srPlay().catch(()=>{})}
+/* v465: the bell's beat — both shows' plates say what moved their fans beyond the segments, and both lines take that step */
+function srBell(inst){const R=SRV;if(!R||!R.qh||!R.qh.bell||R.qh.rung)return false;const pr=document.getElementById('tw-pair'),lb=document.getElementById('tw-rd');
+ srFocus(null);if(lb)lb.innerHTML='<b>After the bell</b>';if(pr){pr.className='twpair in';pr.innerHTML=qhBellHtml('p',srNm('p'))+qhBellHtml('ai',srNm('ai'))}
+ qhBell(!!inst);['p','ai'].forEach(br=>{const box=document.getElementById(br==='p'?'srs-p':'srs-ai');if(box){const b=box.querySelector('b');b.textContent=qhFmt(qhTotal(R.o,br));srKick(b,'punch')}});return true}
 /* v454: once both main events are in, the crowds each show won and lost — then a tap for the night's winner */
 function srCrowdOk(){const R=SRV,o=R&&R.o;return !!(R&&R.two&&!R.tv&&!o.league&&o.fb&&o.fb.p&&o.fb.ai&&typeof fbRevealBoth==='function')}
 function srEnd(){srFocus(null);if(!srCrowdOk())return srFinal(false);const R=SRV;R.busy=false;R.crowd=true;const foot=document.getElementById('tw-foot');
@@ -5040,9 +5048,9 @@ function srTap(e){if(e&&e.target&&e.target.closest('button,a,summary,details'))r
 document.addEventListener('keydown',e=>{if(!srOn()||SRV.done||(e.target&&e.target.closest&&e.target.closest('button,input,textarea')))return;if(e.key===' '||e.key==='Enter'||e.key==='ArrowRight'){e.preventDefault();srAdvance()}});
 /* who won the night: the most fans gained tonight (the show rating breaks a tie). TV weeks carry it as hourWin; PPVs work it out */
 function srNight(o){if(o.hourWin)return o.hourWin;if(typeof qhNight==='function'){const n=qhNight(o);if(n)return n}const r=o.ratings;if(!r||r.p==null||r.ai==null)return null;return r.p>r.ai+1e-9?'p':r.ai>r.p+1e-9?'ai':'tie'}
-function srFinal(instant){const R=SRV,o=R.o;R.tok++;R.busy=false;R.done=true;if(instant)R.inst=true;srFocus(null);const nw=srNight(o);
+function srFinal(instant){const R=SRV,o=R.o;R.tok++;R.busy=false;R.done=true;R.bellWait=false;if(instant)R.inst=true;srFocus(null);const nw=srNight(o);
  if(instant){const last=R.rounds[R.rounds.length-1];if(last){srShow(last,true)}}
- R.rounds.forEach(rd=>srLand(rd,rd===R.rounds[R.rounds.length-1]&&!R.crowd));
+ R.rounds.forEach(rd=>srLand(rd,rd===R.rounds[R.rounds.length-1]&&!R.crowd));if(typeof qhBell==='function')qhBell(true);
  const v=document.getElementById('srv');if(!v)return;v.classList.remove('dim');const lb=v.querySelector('.livebug b');if(lb)lb.textContent='Final';const ctl=document.getElementById('sr-ctl');if(ctl){ctl.hidden=true;ctl.style.display='none'}
  if(o.ratings)[['p','srs-p'],['ai','srs-ai']].forEach(([k,id])=>{const box=document.getElementById(id);if(!box)return;box.querySelector('b').textContent=qhFmt(qhTotal(o,k));box.querySelector('em').textContent='Final';if(nw===k)box.classList.add('win');if(!instant){box.classList.remove('punch');void box.offsetWidth;box.classList.add('punch')}});
  const bs=R.tv?srBestAll(o):srBest(o),pb=o.blocks.find(b=>b.brand==='p'),fl=pb&&pb.flow&&pb.flow.mod;
@@ -5154,7 +5162,7 @@ const HOWTO=`<p><b>📱 On a phone:</b> Go live stays pinned above the tabs on B
 <p><b>Network mandates:</b> after each PPV the TV network asks for something specific by the next one: a 4★ main event, two women's matches on one show, a new champion, an arc paid off, a turn, a feud taken to 45 heat, and so on. Story mandates come up most and pay the most. Deliver for a big cash and fan bonus; miss it and you lose ${fmtFans(MAND_MISS)} fans. Check the Home or Book screen for your current one.</p>
 <p><b>🎯 Weekly goals &amp; 📣 crowd chants:</b> each week the Book screen gives you one small goal (hit it for a little cash and 3K fans — no penalty for missing it; a live ✅/🤞/⏳ line tells you if the card you've booked is on track), and the crowd starts chanting for someone on your roster. Book them in a match or promo that week and their segment gets +½★, they gain 2 popularity and you get 5K fans.</p>
 <p><b>Head to head:</b> in solo play the rival's card stays a surprise until the show airs. On TV, whoever's main event rates higher wins the main event war. Big free agents take sealed offers, so the rival can outbid you (see Offers &amp; contracts).</p>
-<p><b>The overnights:</b> the show that gains more fans tonight wins the night (the better show rating breaks a dead heat), and a win pays the ratings bonus. The reveal opens on the overnights chart, with both shows' running totals across the top, and plays segment by segment underneath it: your segment lands with its cards, stars and the crowds it moved (▲ or ▼) while the chart dims, then the chart lights up and your line moves by the fans that segment gained or lost; then the same for the rival's. The main event is the overrun at the far right. Once both main events are in, you see how every crowd moved on your show, then on the rival's, and the winner of the night lands on top of it.</p>
+<p><b>The overnights:</b> the show that gains more fans tonight wins the night (the better show rating breaks a dead heat), and a win pays the ratings bonus. The reveal opens on the overnights chart, with both shows' running totals across the top, and plays segment by segment underneath it: your segment lands with its cards, stars and the crowds it moved (▲ or ▼) while the chart dims, then the chart lights up and your line moves by the fans that segment gained or lost; then the same for the rival's. The main event is the overrun. Each segment's point is only what that segment did; <b>after the bell</b>, both lines take one last step for what moved the whole night (casuals tuning out, a crowd with nothing of its own, fans switching shows), with the reasons on each show's plate. Then you see how every crowd moved on your show, then on the rival's, and the winner of the night lands on top of it.</p>
 <p><b>✨ Suggest the rest</b> on the Book screen fills any empty slots and keeps everything you've already booked, promised or entered in a tournament. It books the best matches it can from the wrestlers' own traits — popularity, in-ring skill, crowd matchups and traits, face vs heel, stamina, no recent rematches — rated the way the show rates them, minus feud heat, as plain singles matches with clean finishes, plus your best talkers for any open promo. It books on ability alone: it won't rest anyone who's worn down or steer around a miserable wrestler — stamina and morale are yours to manage. It ignores your checklist entirely: promises, contract clauses, title defenses, the weekly goal, the crowd's chant and feuds are all yours to handle, and the optional bonus promo stays empty. <b>Clear card</b> wipes everything else.</p>
 <p><b>Difficulty:</b> Hard rivals book like pros — they rest stars before PPVs, order their card for the ratings, protect new champions and pay off feuds cleanly. Easy rivals book sloppily.</p>
 <p><b>The offseason:</b> after ${PPVS[SEASON]}, the season ends with an awards show (Wrestler and Women's Wrestler of the Year, Breakout Star, Rookie, Tag Team, Feud, Match and Promo of the Year — winners start next season with a boost). Veterans feel Father Time: they lose a little in-ring each year and may retire. Prospects ready for the main roster (60+ in-ring) get called up with debut buzz. Re-sign anyone whose contract is running out before you start the new season.</p>`;
