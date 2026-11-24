@@ -16,6 +16,9 @@ const GRP_UND=2;
 window.TR_TIERS=TR_TIERS;window.TR_HOLD=TR_HOLD;
 function grpPair(x,y){if(x==='und'||y==='und'||!x||!y)return GRP_UND;const a=GRP_M[x]&&GRP_M[x][y];return a!=null?a:(GRP_M[y]&&GRP_M[y][x]!=null?GRP_M[y][x]:GRP_UND)}
 /* the group a wrestler leans toward when they don't have one yet (undiscovered: their lean so far, else how they work) */
+/* v481: Highlight Machine is a Flippy fans' trait — nobody outside that crowd gets it */
+const trOkFor=(w,t)=>t!=='hilite'||fgOf(w).includes('flip');
+window.trOkFor=trOkFor;
 function trLean(w){const g=fgOf(w)[0];if(g&&g!=='und')return g;const l=typeof fgLean==='function'&&fgLean(w.id);return l||FG_STYLE[w.st]||'cas'}
 function trGroupOf(t){return TRAITS[t]&&TRAITS[t].g||null}
 function trBridges(w){return (w.tr||[]).filter(t=>trGroupOf(t))}
@@ -101,14 +104,14 @@ function trFit(w,t){const s=w.st,r=w.ring,m=w.mic,p=w.pop,h=w.al==='h',f=w.al===
   dare:s==='fl'?4:2,hilite:p>=75?3.5:2,crowd:f?(p>=78?4:2):.3,bigm:p>=85?4:1,show:(s==='sh'?3:1.5)+(m>=80?1:0),
   story:r>=84&&m>=72?4:r>=80?1:.3,work:s==='te'||s==='br'?2:1,iron:w.dur!=null?(w.dur>=80?2.5:w.dur>=60?.8:.3):1,
   tag:typeof S!=='undefined'&&S&&S.teams&&S.teams.some(t=>t.type==='team'&&t.m.includes(w.id))?5:.4,under:s==='fl'?2:f&&p<70?1.5:.3})[t]||.5}
-function trStart(w){if(w.trS&&TRAITS[w.trS])return w.trS;const fx=TR_START_FIX[w.id]||TR_START_FIX[slug(w.name||'')];if(fx&&TRAITS[fx])return fx;
- const pool=TR_POOL[trLean(w)]||TR_POOL.cas;const r=seeded('trs|'+w.id+'|'+w.name);
+function trStart(w){if(w.trS&&TRAITS[w.trS])return w.trS;const fx=TR_START_FIX[w.id]||TR_START_FIX[slug(w.name||'')];if(fx&&TRAITS[fx]&&trOkFor(w,fx))return fx;
+ const pool=(TR_POOL[trLean(w)]||TR_POOL.cas).filter(t=>trOkFor(w,t));const r=seeded('trs|'+w.id+'|'+w.name);
  return pool.map(t=>[t,trFit(w,t)+r()*.3]).sort((a,b)=>b[1]-a[1])[0][0]}
 window.trStart=trStart;
 const trClash=(t,have)=>(t==='monster'&&have.includes('under'))||(t==='under'&&have.includes('monster'));
 /* the three options when a slot opens: one from their own group, one that reaches another group, one all-rounder */
 function trOptions(w,slot){const have=w.tr||[];const g=trLean(w);const r=seeded((S&&S.seed||'')+'|tro|'+w.id+'|'+slot);
- const ok=t=>TRAITS[t]&&!have.includes(t)&&!trClash(t,have);
+ const ok=t=>TRAITS[t]&&!have.includes(t)&&!trClash(t,have)&&trOkFor(w,t);
  const pickW=l=>{l=l.filter(ok);if(!l.length)return null;const ws=l.map(t=>trFit(w,t)+.4);let x=r()*ws.reduce((a,b)=>a+b,0);for(let i=0;i<l.length;i++){x-=ws[i];if(x<=0)return l[i]}return l[l.length-1]};
  const out=[];const own=pickW(TR_POOL[g]||[]);if(own)out.push(own);
  const others=Object.keys(TR_POOL).filter(k=>k!==g&&!fgOf(w).includes(k));
@@ -133,13 +136,18 @@ window.trSlotsFor=trSlotsFor;
 const TR_AI_W=[.55,.25,.2];
 function trAiPick(w,slot){slot=slot||(w.tr||[]).length+1;const o=trOptions(w,slot);if(!o.length)return null;const r=seeded((S&&S.seed||'')+'|trai|'+w.id+'|'+slot)();
  let x=r*TR_AI_W.slice(0,o.length).reduce((a,b)=>a+b,0);for(let i=0;i<o.length;i++){x-=TR_AI_W[i]||0;if(x<=0)return o[i]}return o[0]}
-function trAdd(w,t){if(!w||!TRAITS[t])return;w.tr=(w.tr||[]).concat([t]).slice(0,Math.max(TR_SLOTS,(w.tr||[]).length+1))}
+function trAdd(w,t){if(!w||!TRAITS[t]||!trOkFor(w,t))return;w.tr=(w.tr||[]).concat([t]).slice(0,Math.max(TR_SLOTS,(w.tr||[]).length+1))}
 /* new games, rookies, prospects: the starting trait, plus whatever their popularity has already opened */
 function trDeal(w){const out=[trStart(w)];const n=Math.min(TR_SLOTS,trSlotsFor(w));const tmp={...w,tr:out};
  for(let s=2;s<=n;s++){const t=trAiPick(tmp,s);if(t)out.push(t);tmp.tr=out}return out}
 window.trDeal=trDeal;
 /* old saves: everyone keeps the traits they have, and gains their starting trait in front */
-function trMigrate(st){if(!st||!st.w||st.trv)return;Object.values(st.w).forEach(w=>{if(!Array.isArray(w.tr))return;const s=trStart(w);if(!w.tr.includes(s))w.tr=[s].concat(w.tr.filter(x=>!trClash(x,[s])))});st.trv=1}
+function trMigrate(st){if(!st||!st.w)return;
+ /* v481: anyone outside the Flippy crowd holding Highlight Machine swaps it for a trait from their own crowd */
+ if(!st.trv2){Object.values(st.w).forEach(w=>{if(!Array.isArray(w.tr)||!w.tr.includes('hilite')||trOkFor(w,'hilite'))return;
+  const t=(TR_POOL[trLean(w)]||TR_POOL.cas).concat(TR_UTIL).find(x=>TRAITS[x]&&!w.tr.includes(x)&&!trClash(x,w.tr)&&trOkFor(w,x))||null;
+  w.tr=w.tr.map(x=>x==='hilite'?t:x).filter(Boolean);if(w.trS==='hilite')delete w.trS});st.trv2=1}
+ if(st.trv)return;Object.values(st.w).forEach(w=>{if(!Array.isArray(w.tr))return;const s=trStart(w);if(!w.tr.includes(s))w.tr=[s].concat(w.tr.filter(x=>!trClash(x,[s])))});st.trv=1}
 window.trMigrate=trMigrate;
 /* after every show: anyone not on your roster who has an open slot picks one (offline only; in a league each GM picks for their own) */
 function trAuto(){if(!S||!S.w)return;Object.values(S.w).forEach(w=>{if(w.own==='p'||!trOpen(w))return;if(ON()&&w.own)return;const t=trAiPick(w);if(t)trAdd(w,t)})}
@@ -195,3 +203,10 @@ window.styChart=function(id,back){const w=id&&S.w[id];const ks=['cas','tech','bl
  <p class="muted tiny">Each wrestler draws a fan group, and some groups' wrestlers are made for each other while others clash. Face vs heel, past matches and traits add on top. A trait that reaches another group carries a wrestler halfway to that group's pairing. First-time pairs are judged on paper until they share a ring.</p>
  <div style="overflow-x:auto"><table class="stygrid"><tr><th></th>${ks.map(k=>`<th>${GRP_WORD[k]}</th>`).join('')}</tr>${ks.map(x=>`<tr${mine.includes(x)?' class="hr"':''}><th>${GRP_WORD[x]}</th>${ks.map(y=>{const c=word(grpPair(x,y));return `<td class="${c[1]}">${c[0]}</td>`}).join('')}</tr>`).join('')}</table></div>
  ${w?`<p class="tiny muted">Highlighted: ${esc(w.name)} (${esc(fgWord(w))}).</p>`:''}`)};
+
+/* v481: Highlight Machine — every big spot ends up on social media: a 3½★+ match with one in it hooks extra Flippy fans and casuals */
+const TR_HM={flip:.5,cas:.2,cap:2,min:3.5};
+if(typeof fbCalc==='function'){const _fc=fbCalc;fbCalc=function(b,segs,show,o){const r=_fc.apply(this,arguments);try{if(!r||!r.pct||!segs)return r;
+ const hm=segs.filter(sg=>sg&&sg.k==='match'&&sg.st>=TR_HM.min&&sg.ids.some(id=>hasT(S.w[id],'hilite'))).slice(0,TR_HM.cap);
+ hm.forEach(sg=>{const i=segs.indexOf(sg);['flip','cas'].forEach(g=>{if(r.pct[g]==null)return;r.pct[g]+=TR_HM[g];if(r.sc&&r.sc[i])r.sc[i][g]=(r.sc[i][g]||0)+TR_HM[g]})});
+ if(hm.length&&r.wy&&r.wy.flip&&!/viral/.test(r.wy.flip))r.wy.flip+=' · the big spots went viral'}catch(e){}return r}}

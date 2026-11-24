@@ -316,7 +316,7 @@ const ARCS={
   win:(a,w,q)=>{if(q==='great'||!trOpenA(w)){trAdd(w,a.t);return {trait:a.t,grp:'blood'}}w.trQ=a.t;return {trq:a.t,grp:'blood'}}},
  flyer:{lane:'trait',i:'🪂',n:'High-Flyer Showcase',need:3,min:3.5,gets:'{T}, and Flippy fans',
   d:'Spotfests and ladders until the highlight reels can\'t keep up.',build:'A 3½★+ Ladder, Tornado Tag or multi-person match',payoff:'A Ladder match on a PPV',
-  pick:A=>{if(!Array.isArray(A.tr)||A.tr.length>=TR_SLOTS)return null;const t=['dare','hilite'].find(x=>!A.tr.includes(x)&&TRAITS[x]);return t?{t}:null},
+  pick:A=>{if(!Array.isArray(A.tr)||A.tr.length>=TR_SLOTS)return null;const t=['dare','hilite'].find(x=>!A.tr.includes(x)&&TRAITS[x]&&(typeof trOkFor!=='function'||trOkFor(A,x)));return t?{t}:null},
   step:(s,a)=>s.kind==='match'&&s.ids.includes(a.a)&&(s.stip==='ladder'||s.stip==='tornado'||s.sides.length>=3),pay:(s,a)=>s.ppv&&s.ids.includes(a.a)&&s.stip==='ladder',
   plan:(a,st)=>[{kind:'match',type:'singles',side:[a.a],n:1,stip:'ladder',ppv:st==='pay'?1:0}],
   win:(a,w,q)=>{if(q==='great'||!trOpenA(w)){trAdd(w,a.t);return {trait:a.t,grp:'flip'}}w.trQ=a.t;return {trq:a.t,grp:'flip'}}},
@@ -393,14 +393,14 @@ const ARCS={
   also:(a,s,n)=>{const A=aW(a.a),B=aW(a.b);if(A.al==='h'){if(typeof pTurn==='function')pTurn(A);else A.al='f'}A.turnW=AW();bumpHeat(a.a,a.b,a.q==='great'?60:40,[],`${A.name} broke free of ${B.name}`);
    (S.teams||[]).forEach(t=>{if(t.m.includes(a.a)&&t.m.includes(a.b))t.m=t.m.filter(x=>x!==a.a)});S.teams=(S.teams||[]).filter(t=>t.m.length>=2);mor(A,a.q==='great'?12:8);n.push(`⛓️ ${A.name} has had enough, and turns on ${B.name}!`)},
   win:(a,w,q)=>({mic:.8,pop:q==='great'?4:2})},
- sellout:{lane:'trait',i:'💼',n:'The Corporate Offer',need:3,choice:[{k:'sign',n:'💼 Sign',d:'Suits, baby powder ads and a top spot. {A:They} turns heel if {A:they} was a face.'},{k:'refuse',n:'✊ Refuse',d:'{A:They} stays true to {A:themself} and the fans. {A:They} turns face if {A:they} was a heel.'}],
+ sellout:{lane:'trait',i:'💼',n:'The Corporate Offer',need:3,choice:[{k:'sign',n:'💼 Sign',d:'{A:They} shaves {A:their} head in the ring and cuts a live promo selling baby powder, for a top spot. {A:They} turns heel if {A:they} was a face.'},{k:'refuse',n:'✊ Refuse',d:'{A:They} stays true to {A:themself} and the fans. {A:They} turns face if {A:they} was a heel.'}],
   gets:'Your call at the payoff: a top spot and money (sign), or the fans\' love (refuse)',
   d:'On the verge of stardom, an evil corporate force comes courting. Right before the payoff, you decide what {A:they} chooses.',build:'A promo (the corporation makes its pitch)',payoff:'A main event or PPV match: the decision',
   pick:A=>A.pop>=50&&A.pop<ARC_STAR?{}:null,
   step:(s,a)=>s.kind==='promo'&&s.ids.includes(a.a),pay:(s,a)=>s.kind==='match'&&s.ids.includes(a.a)&&sBig(s),
   plan:(a,st)=>st==='build'?[{kind:'promo',type:'interview',a:a.a}]:[{kind:'match',type:'singles',side:[a.a],n:1,main:curShow().ppv?0:1}],
   also:(a,s,n)=>{const A=aW(a.a);if(!a.choice)a.choice=seeded((S.seed||'')+'|sell|'+a.id)()<.5?'sign':'refuse';
-   if(a.choice==='sign'){if(A.al==='f'){if(typeof pTurn==='function')pTurn(A);else A.al='h'}A.turnW=AW();popx(A,a.q==='great'?8:5);S.money.p+=Math.round(aCost('sellout')*4);mor(A,4);n.push(`💼 ${A.name} signs with the corporation. Suits, baby powder, and a top spot.`)}
+   if(a.choice==='sign'){if(A.al==='f'){if(typeof pTurn==='function')pTurn(A);else A.al='h'}A.turnW=AW();popx(A,a.q==='great'?8:5);S.money.p+=Math.round(aCost('sellout')*4);mor(A,4);n.push(`💼 ${A.name} signs with the corporation, shaves ${aPr(A,'their')} head in the middle of the ring and cuts a live promo selling baby powder. A top spot awaits.`)}
    else{if(A.al==='h'){if(typeof pTurn==='function')pTurn(A);else A.al='f'}A.turnW=AW();popx(A,a.q==='great'?5:3);mor(A,a.q==='great'?14:8);n.push(`✊ ${A.name} turns the corporation down, and the crowd loves ${aPr(A,'them')} for it.`)}},
   win:(a,w,q)=>a.choice==='refuse'?{fans:2}:{}},
  absolute:{lane:'ring',star:1,i:'👑',n:'Absolute Power',need:3,gets:'Heat, and a big night for whoever wins the final match',
@@ -939,6 +939,8 @@ if(typeof fbCalc==='function'){const _fc=fbCalc;fbCalc=function(b,segs,show,o){c
    if(ARC_ONCE&&typeof FB_STORYW!=='undefined'){const pull=hs=>{let v=0;hs.sort((x,y)=>y-x).slice(0,FB_STORYW.length).forEach((h,i)=>v+=Math.max(0,h-FB_STORY0)/FB_STORYH*FB_STORYW[i]);return Math.min(FB_STORYCAP,v)*(show&&show.ppv?1.5:1)};
     const ms=segs.filter(sg=>sg&&sg.k==='match');const viaHeat=pull(ms.map(sg=>Math.max(sg.h||0,sg.arcH||0)))-pull(ms.map(sg=>sg.h||0));add=Math.max(add,viaHeat)}r.pct.cas+=add;r.arcStory=add;if(add>=.75&&r.why)r.why.cas='Hooked on the stories — they want to see where they go'}}catch(e){}return r}}
 window.arcPromoPre=function(p){try{const r=arcPre(aSegPromo(p));const h=arcStoryH(r.seg);if(h)ARC_H.set(p,h);return r}catch(e){console.warn('arcs',e);return null}};
+/* v481: does this segment, as booked, pay off one of your arcs? (highlight reels) — no side effects */
+window.arcPaysOff=function(kind,d,main){try{return !!arcPre(kind==='promo'?aSegPromo(d):aSegMatch(d,main?'me':'mid')).pay.length}catch(e){return false}};
 /* returns true when a payoff landed */
 window.arcPost=function(ap,stars,notes){if(!ap||!ap.seg)return false;const s=ap.seg;let landed=false;
  if(!S.arcSeenW||S.arcSeenW.w!==AW())S.arcSeenW={w:AW(),ids:[]};s.ids.forEach(id=>{if(!S.arcSeenW.ids.includes(id))S.arcSeenW.ids.push(id)});

@@ -126,7 +126,7 @@ window.SIM = async function (opt) {
 
   const seasons = [];
   let cur = null;
-  const startSeason = () => { cur = { arc0: [S.arcDone || 0, S.arcGreatN || 0, S.arcFailN || 0], season: S.season, weeks: 0, rp: [], rai: [], wins: 0, injP: 0, injAI: 0, promoStars: [], matchStars: [], fans0: { p: S.fans.p, ai: S.fans.ai }, pop0: Object.fromEntries(owned('p').map(w => [w.id, w.pop])), arcPop: [], arcCost: 0, crises: 0, errs: 0, titleChanges: 0, checklist: 0, cl: {}, rested: 0 } };
+  const startSeason = () => { cur = { hr0: window.hrN || 0, hrb0: window.hrNb || 0, arc0: [S.arcDone || 0, S.arcGreatN || 0, S.arcFailN || 0], season: S.season, weeks: 0, rp: [], rai: [], wins: 0, injP: 0, injAI: 0, promoStars: [], matchStars: [], fans0: { p: S.fans.p, ai: S.fans.ai }, pop0: Object.fromEntries(owned('p').map(w => [w.id, w.pop])), arcPop: [], arcCost: 0, crises: 0, errs: 0, titleChanges: 0, checklist: 0, cl: {}, rested: 0 } };
   startSeason();
 
   for (let wk = 0; wk < opt.weeks; wk++) {
@@ -207,6 +207,7 @@ window.SIM = async function (opt) {
     const allOwned = Object.values(S.w).filter(w => w.own);
     return {
       fansGained: { p: S.fans.p - cur.fans0.p, ai: S.fans.ai - cur.fans0.ai }, fans: { p: S.fans.p, ai: S.fans.ai }, fbd: cur.fbd || null, war: typeof fanWar === 'function' ? 'total' : 'gain', buzz: typeof buzzOf === 'function' ? { p: buzzOf('p'), ai: buzzOf('ai') } : null, venue: S.venue && S.venue.p ? (S.venue.p.k || '') : '', fb: S.fb && S.fb.p ? { p: Object.assign({}, S.fb.p), ai: Object.assign({}, S.fb.ai || {}) } : null,
+      reels: (window.hrN || 0) - cur.hr0, reelsBlood: (window.hrNb || 0) - cur.hrb0,
       arcs: { started: cur.arcS || 0, paid: (S.arcDone || 0) - cur.arc0[0], great: (S.arcGreatN || 0) - cur.arc0[1], failed: (S.arcFailN || 0) - cur.arc0[2], k: cur.arcK || {}, pop: cur.arcPop.length ? cur.arcPop.reduce((a, b) => a + b, 0) / cur.arcPop.length : 0, cost: cur.arcCost },
       rise: (() => { const l = owned('p').filter(w => cur.pop0[w.id] != null); return { up70: l.filter(w => cur.pop0[w.id] < 70 && w.pop >= 75).length, star: l.filter(w => cur.pop0[w.id] < 85 && w.pop >= 85).length, gain: l.filter(w => cur.pop0[w.id] < 75).reduce((a, w) => a + w.pop - cur.pop0[w.id], 0) } })(),
       money: { p: S.money.p, ai: S.money.ai }, payroll: { p: payroll('p'), ai: payroll('ai') },

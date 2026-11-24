@@ -211,7 +211,7 @@ def table(results):
                          'pop 90+': m([e['pop90'] for e in E]), 'pop 85+': m([e['pop85'] for e in E]), 'pop 80+': m([e['pop80'] for e in E]),
                          'median pop': m([e['medPop'] for e in E]), 'morale': m([e['mor']['p'] for e in E]),
                          'injured/wk': m([s['injP'] / s['weeks'] for s in S]), 'checklist/wk': m([s.get('checklist', 0) / s['weeks'] for s in S]), 'promo★': m([st.mean(s['promoStars']) for s in S if s['promoStars']]),
-                         'match★': m([st.mean(s['matchStars']) for s in S if s['matchStars']]), 'title changes': m([s['titleChanges'] for s in S]),
+                         'match★': m([st.mean(s['matchStars']) for s in S if s['matchStars']]), 'title changes': m([s['titleChanges'] for s in S]), 'reels you': m([e.get('reels',0) for e in E]), 'reels blood feud': m([e.get('reelsBlood',0) for e in E]),
                          **({('fans ' + g + ' K'): m([e['fb']['p'][g] / 1000 for e in E if e.get('fb')]) for g in ('cas', 'tech', 'blood', 'flip', 'chaos')} if any(e.get('fb') for e in E) else {}),
                          **({('show gain ' + k): m([e['fbd'].get(k, 0) / 1000 for e in E if e.get('fbd')]) for k in ('p.cas', 'p.tech', 'p.blood', 'p.flip', 'p.chaos', 'ai.cas', 'ai.tech', 'ai.blood', 'ai.flip', 'ai.chaos')} if any(e.get('fbd') for e in E) else {}),
                          **({'arcs started': m([e['arcs']['started'] for e in E]), 'arcs paid': m([e['arcs']['paid'] for e in E]), 'arcs great': m([e['arcs']['great'] for e in E]), 'arcs failed': m([e['arcs']['failed'] for e in E])} if any(e.get('arcs') for e in E) else {}),

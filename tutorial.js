@@ -23,7 +23,7 @@
      Appending is how stops drift into patch notes.
    • tools/check-tutorial.py fails on history/design phrasing (TUT_BANNED). If it flags a line, rewrite it, don't
      dodge the pattern. */
-const TUT_REV=90;
+const TUT_REV=91;
 const TUT_KEY='tksim_tut';
 const TUT_WORDS=190;  /* longest a stop may be (checked by tools/check-tutorial.py) */
 const TUT_MISS=[];
@@ -97,8 +97,8 @@ const TUT_STEPS=[
  b:()=>`An arc is a storyline you buy for one wrestler. Pick one under <b>Potential</b>: it lays out a few stops to book and a payoff, with a deadline. Book every stop, land the payoff in time, and the payoff rates higher and changes them: a turn, a new skill, a team, a jump in popularity. Miss the deadline and they're let down.<br><br>${tv('ARC_SLOTS',()=>ARC_SLOTS,2)} can run at once, and each arc runs once a season. Arcs do the most for wrestlers who aren't stars yet. Your running arcs, their next stop and their deadline sit on Home and the Book screen.`},
 {id:'s.tpic',track:'season',since:20,tab:'titles',sel:'main .card.belt',sys:['titles','prestige'],t:'Crown your champions',
  b:()=>`Your titles start vacant. <b>Put one on the line in any match</b> and the winner is your first champion.<br><br>Defenses build the champion and the belt's prestige; changing hands too fast drains it. Men's and women's titles stay in their division, so intergender matches are non-title.`},
-{id:'s.live',track:'season',since:44,tab:'book',sel:'main .btn.live',sys:['live','calls','production','fan groups'],t:'Go live',
- b:()=>`Right above this button, pick tonight's <b>🎆 production</b>: bigger production lifts the whole show. Then go live.<br><br>Most of the show plays out on its own. Now and then you get a live call, and every choice shows its risk: Safe, Risky or Playing with fire. The reveal ends with how each of your crowds took the show.<br><br>New things get a quick tip the first time they come up; ⚙️ has the full rulebook.`},
+{id:'s.live',track:'season',since:91,tab:'book',sel:'main .btn.live',sys:['live','calls','production','fan groups'],t:'Go live',
+ b:()=>`Right above this button, pick tonight's <b>🎆 production</b>: bigger production lifts the whole show. Then go live.<br><br>Most segments play out on their own. Settle a <b>blood feud</b>, or pay off an arc (a match in the main event or on a PPV, or a promo any night), and that segment plays out live as a <b>🎬 highlight reel</b> with you making the calls; every choice shows its risk: Safe, Risky or Playing with fire. The card tags it ahead of time. Trouble brewing backstage can come to you live on any night. The reveal ends with how each of your crowds took the show.<br><br>New things get a quick tip the first time they come up; ⚙️ has the full rulebook.`},
 
 /* ---- one-time coach tips ---- */
 {id:'t.wwe',track:'tip',opt:true,since:18,sel:'main .card.showcard',sys:['calendar','wwe','rumble','money in the bank'],t:'AEW meets WWE',
