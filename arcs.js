@@ -1051,8 +1051,8 @@ const aStopN=(D,id,x)=>D.need2?D.need2({a:id,g:x&&x.g}):D.need;
 const aStopName=(D,i)=>(D.tell&&D.tell[i])||'';
 const aKick=(D,k,v,extra)=>`<div class="akick"><span>${D.i} ${esc(aName(k,v))}</span>${extra?`<small>${extra}</small>`:''}</div>`;
 /* the horizontal track: one diamond per stop, then the payoff star */
-function arcTrack(n,have,stage,done){let h='<div class="atrk">';for(let i=0;i<n;i++){const on=i<have,now=!done&&stage==='build'&&i===have;h+=(i?`<i class="atl ${i<=have?'on':''}"></i>`:'')+`<b class="atn ${on?'on':now?'now':''}"><span>${on?'✓':i+1}</span></b>`}
- return h+`<i class="atl ${have>=n?'on':''}"></i><b class="atp ${done?'on':stage==='pay'?'now':''}">★</b></div>`}
+function arcTrack(n,have,stage,done){let h='<div class="atrk">';for(let i=0;i<n;i++){const on=i<have,now=!done&&stage==='build'&&i===have;h+=(i?`<i class="arcl ${i<=have?'on':''}"></i>`:'')+`<b class="atn ${on?'on':now?'now':''}"><span>${on?'✓':i+1}</span></b>`}
+ return h+`<i class="arcl ${have>=n?'on':''}"></i><b class="atp ${done?'on':stage==='pay'?'now':''}">★</b></div>`}
 /* the vertical road on an arc's own screen */
 function arcRoad(D,o,n,have,stage,payTxt,wid){let h='<div class="aroad">';const ez=aEase(aW(wid||(o&&o.a)));for(let i=0;i<n;i++){const on=i<have,now=stage==='build'&&i===have;const nm=aStopName(D,i);
   h+=`<div class="ars ${on?'on':now?'now':''}"><b class="arn"><span>${on?'✓':i+1}</span></b><div class="art"><div class="arh">Stop ${i+1}${nm?` · ${esc(nm)}`:''}${now?' <em>Next</em>':''}</div><div class="ard">${esc(arcWords(o,aBuildAt(D,i)))}${!/★/.test(aBuildAt(D,i))?` · ${aMinAt(D,i)-ez}★ or better`:''}</div></div></div>`}
@@ -1079,8 +1079,8 @@ window.arcRowHtml=arcRowHtml;
 function arcEvWhat(t){t=String(t||'');const m=t.match(/:\s*([^.]+)/);if(!m)return t;const x=m[1].trim();return x?x[0].toUpperCase()+x.slice(1)+'.':t}
 function arcEvPut(note,o){S.arcEv=(S.arcEv||[]).filter(e=>AW()-e.w<=1);S.arcEv.push(Object.assign({w:AW(),t:note},o))}
 window.arcEvOf=function(note){return (S&&S.arcEv||[]).find(e=>e.t===note)||null};
-window.arcEvHtml=function(e){const A=aW(e.a);let tr='<div class="atrk">';for(let i=0;i<e.need;i++){const on=i<e.have,nw=!e.pay&&i===e.have-1;tr+=(i?`<i class="atl ${i<e.have?'on':''}"></i>`:'')+`<b class="atn ${on?'on':''}${nw?' new':''}"><span>${on?'✓':i+1}</span></b>`}
- tr+=`<i class="atl ${e.pay||e.next==='pay'?'on':''}"></i><b class="atn ap ${e.pay?'on new':e.next==='pay'?'now':''}"><span>★</span></b></div>`;
+window.arcEvHtml=function(e){const A=aW(e.a);let tr='<div class="atrk">';for(let i=0;i<e.need;i++){const on=i<e.have,nw=!e.pay&&i===e.have-1;tr+=(i?`<i class="arcl ${i<e.have?'on':''}"></i>`:'')+`<b class="atn ${on?'on':''}${nw?' new':''}"><span>${on?'✓':i+1}</span></b>`}
+ tr+=`<i class="arcl ${e.pay||e.next==='pay'?'on':''}"></i><b class="atn ap ${e.pay?'on new':e.next==='pay'?'now':''}"><span>★</span></b></div>`;
  return `<div class="twarc${e.pay?' pay':''}"><div class="twak">${e.i||'📖'} ${esc(A?A.name:'')} · ${esc(e.n)}${e.pay?'':` · step ${e.have} of ${e.need}`}</div>${e.head?`<div class="twah">${esc(e.head)}</div>`:''}${tr}<div class="twaw">${e.lab?`<b>${esc(e.lab)}.</b> `:''}${esc(e.what||'')}${e.gain?` <span class="twag">${esc(e.gain)}</span>`:e.next==='pay'?' <span class="twag">The payoff is next.</span>':''}</div></div>`};
 /* v454: running arcs on Home and the Book screen — each arc's stops, next step and deadline at a glance */
 window.arcStrip=function(where){try{if(!S||S.phase!=='season'||(typeof TV!=='undefined'&&TV))return '';const l=arcList().filter(a=>aMine(a.a)&&!a.done);
@@ -1232,7 +1232,7 @@ window.arcOfficeCard=function(){return ''};
 .atn span{transform:rotate(-45deg);font:800 10px/1 'Barlow',sans-serif;color:rgba(255,255,255,.55)}
 .atn.on{background:var(--gold);border-color:var(--gold)}.atn.on span{color:#111}
 .atn.now{border-color:var(--gold2);box-shadow:0 0 10px rgba(240,190,70,.6)}.atn.now span{color:var(--gold2)}
-.atl{flex:1;height:2px;background:rgba(255,255,255,.16);margin:0 3px;min-width:10px}.atl.on{background:var(--gold)}
+.arcl{flex:1;height:2px;background:rgba(255,255,255,.16);margin:0 3px;min-width:10px}.arcl.on{background:var(--gold)}
 .atp{flex:none;font-size:22px;line-height:1;color:rgba(255,255,255,.25);font-style:normal}.atp.now{color:var(--gold2);text-shadow:0 0 10px rgba(240,190,70,.6)}.atp.on{color:var(--gold)}
 .anx{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:rgba(255,255,255,.6)}.anx b{white-space:nowrap;color:rgba(255,255,255,.8)}
 .twarc{display:none;margin:8px 0 2px;padding:8px 10px 9px;background:#0f0f12;border-left:3px solid var(--gold);text-align:left}

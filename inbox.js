@@ -155,6 +155,10 @@ window.netTake=function(){if(typeof mpLocked==='function'&&mpLocked())return;con
    ways you find out. Angry about a broken promise: smooth it over with a bonus for the friend (most of the hit undone) or
    call it business (it lingers). Thankful for a kept promise or a title win: take them both to dinner, or just say thanks. */
 function fgLine(f){const {v,F,A}=f,a=firstName(A),seed=F.id+A.id;
+ /* v466: it wasn't done to their friend directly — the friend took someone else's mistreatment hard */
+ if(v.d<0&&v.y&&!v.yo)return pickL([`You saw what happened this week. ${a} took it hard, and so did I.`,
+  `${a} hasn't stopped talking about what you did. When it gets to ${a}, it gets to me.`,
+  `It wasn't even ${a} you did it to, and ${a} is still rattled. That tells you how it landed back there.`],seed);
  if(v.d<0)return pickL([`${a} and I go back a long way. You gave your word and you didn't keep it. Don't think the rest of us didn't notice.`,
   `I'm not here about me. I'm here about ${a}. The way they got treated this week isn't right, and I want to know what you're going to do about it.`,
   `${a} is my friend. When you do that to them, you're doing it to me too.`],seed);
@@ -162,7 +166,7 @@ function fgLine(f){const {v,F,A}=f,a=firstName(A),seed=F.id+A.id;
   `Did you see ${a} last night? I've known them since we were nobodies. Whatever you're doing, keep doing it.`,
   `${a} called me in tears, the good kind. I owe you one.`],seed)}
 function openFg(){const f=fgVisit();if(!f)return closeModal();const {v,F,A}=f;const c=fgCost(F,A);
- openModal(`<div class="h mhd mt">${v.d<0?'😠':'🤝'} ${esc(F.name)} is looking ${v.d<0?'upset':'grateful'}</div><div class="scene brief ibx">${voiceH(F.id,fgLine(f))}<div class="brow"><span class="muted tiny">${esc(F.name)} and ${esc(A.name)} are close backstage. What happens to one, the other feels.</span></div></div>
+ openModal(`<div class="h mhd mt">${v.d<0?'😠':'🤝'} ${esc(F.name)} is looking ${v.d<0?'upset':'grateful'}</div><div class="scene brief ibx">${voiceH(F.id,fgLine(f))}${v.y?`<div class="fgwhy"><b>${v.d<0?'What happened':'What they saw'}</b>${esc(v.y)}</div>`:''}<div class="brow"><span class="muted tiny">${esc(F.name)} and ${esc(A.name)} are close backstage. What happens to one, the other feels.</span></div></div>
  ${v.d<0?`<button class="choice" onclick="fgPick(0)"><span class="key"><span>A</span></span><div>💵 "Let me make it right" · −${esc(money(c))}</div><div class="muted tiny">A bonus for ${esc(A.name)}. Takes most of the sting out for both.</div></button>
  <button class="choice" onclick="fgPick(1)"><span class="key"><span>B</span></span><div>🤷 "It's business"</div><div class="muted tiny">Free. ${esc(F.name)} won't forget it.</div></button>`
  :`<button class="choice" onclick="fgPick(0)"><span class="key"><span>A</span></span><div>🍽️ "Dinner's on me, bring ${esc(firstName(A))}" · −${esc(money(15))}</div><div class="muted tiny">A little more goodwill for both.</div></button>
@@ -246,7 +250,7 @@ function askSnap(){const wk=AW();const ys=Object.keys(S.asks||{}).filter(k=>{con
  return ys.map(k=>{const x=l.find(y=>y.id===k);return x?{k,w:(x.who||[])[0],ok:!!(x.s&&x.s[0]==='ok')}:{k,gone:1}})}
 function askSettle(snap){const wk=AW();snap.forEach(o=>{const r=S.asks[o.k];if(!r||r.done)return;r.done=1;const w=S.w[o.w];if(o.gone||!w||w.own!=='p')return;
  const m0=w.mor;let t;if(o.ok){mor(w,4);t=`🗣️ You told ${w.name} yes, and you kept your word (+4 morale).`}else{mor(w,-8);t=`🗣️ You told ${w.name} yes, then left it off the card. They noticed (−8 morale).`}
- try{if(typeof fgSpread==='function')fgSpread(w,w.mor-m0,'promise')}catch(e){console.warn(e)}
+ try{if(typeof fgSpread==='function')fgSpread(w,w.mor-m0,'promise',o.ok?null:`You told ${w.name} yes, then left them off the card.`)}catch(e){console.warn(e)}
  S.pitchNews=(S.pitchNews||[]).concat([{w:wk,t}]).slice(-12);news(t)})}
 
 /* ---- showing it ---- */
@@ -328,7 +332,8 @@ if(typeof go==='function'){const g1=go;go=window.go=function(t){const r=g1.apply
 /* a strip on Home in case anything is still waiting */
 window.inboxStrip=function(){let n=0;try{n=inboxList().length}catch(e){}if(!n)return '';
  return `<button class="card bstrip hot" onclick="openInbox()"><span class="bsn">${n}</span><span class="bst"><b>🚪 There's a line outside your office</b><span>${n===1?'One person is':n+' people are'} waiting for an answer before the week starts</span></span><span class="bsc">›</span></button>`};
-(function(){const c=document.createElement('style');c.textContent=`#modal .ibx-k{font-size:12px;color:var(--mut);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+(function(){const c=document.createElement('style');c.textContent=`#modal .fgwhy{margin:10px 0 4px;padding:8px 10px;background:#0f0f12;border-left:3px solid var(--red);font-size:14px;line-height:1.35}#modal .fgwhy b{display:block;font:700 10px 'BC',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:3px}
+#modal .ibx-k{font-size:12px;color:var(--mut);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
 #modal .ibx-q{display:flex;align-items:center;gap:6px;margin:6px 0 10px;flex-wrap:wrap}#modal .ibx-a{width:34px;height:34px;overflow:hidden;opacity:.5;flex:none;display:inline-flex;align-items:center;justify-content:center;background:var(--line);font-weight:800;font-size:13px;clip-path:polygon(8% 0,100% 0,92% 100%,0 100%)}#modal .ibx-a.on{opacity:1;width:42px;height:42px;outline:2px solid var(--gold)}#modal .ibx-a img,#modal .ibx-a .face{width:100%;height:100%;object-fit:cover}#modal .ibx-d{font-size:11px;color:var(--mut);margin-left:4px;order:-1;display:none}
 #modal .ibx .brow{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}#modal .ibx .scs+.brow{margin-top:12px}`;document.head.appendChild(c)})();
 })();

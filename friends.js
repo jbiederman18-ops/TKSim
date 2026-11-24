@@ -63,22 +63,31 @@ function fgSync(b){if(!S||!S.w||!fgHum(b)||S.phase==='draft')return;S.fgm=S.fgm|
  if(due.length){fgPlace(b,due,false);due.forEach(w=>delete S.fgw[w.id])}}
 function fgSyncAll(){try{brands().forEach(fgSync)}catch(e){console.warn('friends',e)}}
 /* the heart of it: a big swing for A reaches A's friends */
-function fgSpread(A,d,kind){if(!A||!A.own||!fgHum(A.own)||Math.abs(d)<FG_MIN)return;fgSync(A.own);
+/* v466: what happened, in a line — the news this event wrote about A, minus its emoji and the numbers in brackets */
+function fgWhyOf(A,lines){const all=(lines||[]).map(x=>x&&x.t||x).filter(t=>typeof t==='string'&&!/Word backstage/.test(t));
+ /* the line about them; failing that (the locker room took it badly on someone else's behalf) the night's main event of bad news */
+ const l=all.filter(t=>t.includes(A.name));const t=l.length?l[l.length-1]:all[0];if(!t)return null;
+ return (l.length?'':'~')+t.replace(/^[^\p{L}\p{N}"']+/u,'').replace(/\s*\([^)]*\)/g,'').replace(/\s+([.!])$/,'$1').trim()}
+function fgSpread(A,d,kind,why){if(!A||!A.own||!fgHum(A.own)||Math.abs(d)<FG_MIN)return;fgSync(A.own);
  const b=A.own;fgFriends(A).forEach(F=>{const s=Math.round(d*FG_SHARE*10)/10;if(!s)return;
   /* known friends are named; unknown ones still show a reason, so nobody's mood moves without one */
   const kn=fgIsKnown(A.id,F.id),who=kn?A.name:'a friend';
   if(typeof mlog==='function')mlog(F,s,s>0?`Happy for ${who}`:`Upset about how ${who} was treated`);else F.mor=clamp(F.mor+s,0,100);
   if(Math.abs(s)>=1&&!kn&&(kind!=='match'||FG_REVEAL_M)){S.fgc=S.fgc||{};const k=fgPair(A.id,F.id);S.fgc[k]=(S.fgc[k]||0)+1;
    if(S.fgc[k]>=FG_REVEAL_N||Math.random()<FG_REVEAL_P)fgReveal(A,F,s>0?`${F.name.split(' ')[0]} is thrilled for them`:`${F.name.split(' ')[0]} took it personally`)}
-  if(F.pop>=FG_STAR&&Math.abs(s)>=FG_VIS&&(kind==='promise'||kind==='title'&&s>0)&&!F.inj){S.fgv=S.fgv||{};const v=S.fgv[b];
-   if(!v||v.w<AW()-1||Math.abs(s)>Math.abs(v.d)&&v.w===AW()){if(v&&S.w[v.a]&&S.w[v.f]&&(v.a!==A.id||v.f!==F.id))fgReveal(S.w[v.a],S.w[v.f],'');S.fgv[b]={f:F.id,a:A.id,d:s,k:kind,w:AW()}}}})}
+  /* v466: no visit "about a friend" when the news was really about the visitor themselves */
+  const self=!!why&&why[0]==='~'&&why.includes(F.name);
+  if(F.pop>=FG_STAR&&Math.abs(s)>=FG_VIS&&(kind==='promise'||kind==='title'&&s>0)&&!F.inj&&!self){S.fgv=S.fgv||{};const v=S.fgv[b];
+   if(!v||v.w<AW()-1||Math.abs(s)>Math.abs(v.d)&&v.w===AW()){if(v&&S.w[v.a]&&S.w[v.f]&&(v.a!==A.id||v.f!==F.id))fgReveal(S.w[v.a],S.w[v.f],'');S.fgv[b]={f:F.id,a:A.id,d:s,k:kind,w:AW(),y:why?why.replace(/^~/,''):null,yo:!!why&&why[0]!=='~'}}}})}
 window.fgSpread=fgSpread;window.fgFriends=fgFriends;window.fgKnown=fgKnown;window.fgSyncAll=fgSyncAll;
 /* catch every big swing a function makes: snapshot morale, run it, spread whatever moved FG_MIN or more */
 let FG_IN=0;
 function fgSnap(){const s=new Map();brands().forEach(b=>{if(fgHum(b))ownList(b).forEach(w=>s.set(w.id,w.mor))});return s}
 function fgWrap(name,kind,when){const f0=window[name];if(typeof f0!=='function')return;window[name]=function(){if(FG_IN)return f0.apply(this,arguments);
- let snap=null,k0=kind;try{if(!when||when.apply(this,arguments)){snap=fgSnap();if(typeof kind==='function')k0=kind.apply(this,arguments)}}catch(e){}if(!snap)return f0.apply(this,arguments);FG_IN=1;let out;try{out=f0.apply(this,arguments)}finally{FG_IN=0}
- if(snap)try{const k=k0;snap.forEach((m0,id)=>{const w=S.w[id];if(w&&w.mor!=null)fgSpread(w,w.mor-m0,k)})}catch(e){console.warn('friends',e)}
+ let snap=null,k0=kind;try{if(!when||when.apply(this,arguments)){snap=fgSnap();if(typeof kind==='function')k0=kind.apply(this,arguments)}}catch(e){}if(!snap)return f0.apply(this,arguments);
+ /* v466: whatever this call writes to the news (and to a notes array passed in) says what happened, for the friend at the door */
+ const n0=new Set(S.news||[]),nt=Array.from(arguments).find(a=>Array.isArray(a)),nt0=nt?nt.length:0;FG_IN=1;let out;try{out=f0.apply(this,arguments)}finally{FG_IN=0}
+ if(snap)try{const k=k0;const said=(S.news||[]).filter(x=>!n0.has(x)).concat(nt?nt.slice(nt0):[]);if(typeof out==='string')said.push(out);snap.forEach((m0,id)=>{const w=S.w[id];if(w&&w.mor!=null)fgSpread(w,w.mor-m0,k,fgWhyOf(w,said))})}catch(e){console.warn('friends',e)}
  return out}}
 fgWrap('settlePromises',s=>'promise');
 fgWrap('breach','promise');
