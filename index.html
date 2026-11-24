@@ -1519,7 +1519,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v471';
+const APP_VERSION='v472';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -5039,8 +5039,8 @@ function srBell(inst){const R=SRV;if(!R||!R.qh||!R.qh.bell||R.qh.rung)return fal
  qhBell(!!inst);['p','ai'].forEach(br=>{const box=document.getElementById(br==='p'?'srs-p':'srs-ai');if(box){const b=box.querySelector('b');b.textContent=qhFmt(qhTotal(R.o,br));srKick(b,'punch')}});return true}
 /* v454: once both main events are in, the crowds each show won and lost — then a tap for the night's winner */
 function srCrowdOk(){const R=SRV,o=R&&R.o;return !!(R&&R.two&&!R.tv&&!o.league&&o.fb&&o.fb.p&&o.fb.ai&&typeof fbRevealBoth==='function')}
-function srEnd(){srFocus(null);if(!srCrowdOk())return srFinal(false);const R=SRV;R.busy=false;R.crowd=true;const foot=document.getElementById('tw-foot');
- if(foot){foot.innerHTML=`${fbRevealBoth(R.o,false,{p:srNm('p'),ai:srNm('ai')})}<div class="twnext" id="tw-next" aria-live="polite" style="${(()=>{const t=typeof FB_REV_MS!=='undefined'?FB_REV_MS:0;return `opacity:0;animation:srcrIn .3s ease-out ${t}ms forwards,twNudge 1.1s ease-in-out ${t+300}ms infinite`})()}">Tap for the winner ▸</div>`;foot.classList.remove('flash');void foot.offsetWidth;foot.classList.add('flash')}
+function srEnd(){srFocus(null);if(!srCrowdOk())return srFinal(false);const R=SRV;R.busy=false;R.crowd=true;if(typeof qhFold==='function')qhFold(false);const foot=document.getElementById('tw-foot');
+ if(foot){foot.innerHTML=`${fbRevealBoth(R.o,false,{p:srNm('p'),ai:srNm('ai')})}<div class="qhstick"><div class="twnext" id="tw-next" aria-live="polite" style="${(()=>{const t=typeof FB_REV_MS!=='undefined'?FB_REV_MS:0;return `opacity:0;animation:srcrIn .3s ease-out ${t}ms forwards,twNudge 1.1s ease-in-out ${t+300}ms infinite`})()}">Tap for the winner ▸</div></div>`;foot.classList.remove('flash');void foot.offsetWidth;foot.classList.add('flash')}
  /* the crowds take the main event's place on screen, so nothing has to scroll */
  const pr=document.getElementById('tw-pair'),lb=document.getElementById('tw-rd');if(pr)pr.style.display='none';if(lb)lb.innerHTML='<b>The crowds</b>';
  srHint('Tap for the winner ▸')}
@@ -5059,8 +5059,8 @@ function srFinal(instant){const R=SRV,o=R.o;R.tok++;R.busy=false;R.done=true;R.b
    /* v462: the night is won on fans; the show ratings are shown for what they are, and they break a dead heat */
    const lvl=qhTotal(o,'p')===qhTotal(o,'ai')&&(nw==='p'||nw==='ai');
    return `<div class="muted tiny center srx">${lvl?`Level on fans — the better show takes it<br>`:''}Show ratings: ${esc(srNm('p'))} ${o.ratings.p.toFixed(2)}★ · ${esc(srNm('ai'))} ${o.ratings.ai.toFixed(2)}★</div>`})()}`,btnH=`${R.tv?'':`<div class="sr-btns"><button class="btn" onclick="event.stopPropagation();showResults()">Full results ▸</button><button class="btn sec" onclick="event.stopPropagation();closeModal();go('home');if(S.crisis)setTimeout(openCrisis,250)">Continue</button></div>`}`;
- const cr0=R.crowd&&foot&&foot.querySelector('.srcrowd');
- if(cr0){cr0.classList.add('now');const nx=document.getElementById('tw-next');if(nx)nx.remove();foot.insertAdjacentHTML('afterbegin',banH);cr0.insertAdjacentHTML('afterend',bestH+xtraH+btnH);if(!instant)srQuake(1);return}
+ const cr0=R.crowd&&foot&&foot.querySelector('.srcrowd');if(!R.tv&&!o.league&&srCrowdOk()&&typeof qhFold==='function')qhFold(instant);
+ if(cr0){cr0.classList.add('now');const nx=document.getElementById('tw-next');if(nx)(nx.closest('.qhstick')||nx).remove();foot.insertAdjacentHTML('afterbegin',banH);cr0.insertAdjacentHTML('afterend',bestH+xtraH+btnH);if(!instant)srQuake(1);return}
  if(foot)foot.innerHTML=banH+`
   ${!R.tv&&!o.league?(srCrowdOk()?fbRevealBoth(o,instant||R.crowd,{p:srNm('p'),ai:srNm('ai')}):typeof fbRevealHtml==='function'?fbRevealHtml(o,instant):''):''}`+bestH+xtraH+btnH;
  if(!instant&&foot){foot.classList.remove('flash');void foot.offsetWidth;foot.classList.add('flash');srQuake(1)}}
