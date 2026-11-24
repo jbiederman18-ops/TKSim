@@ -243,6 +243,14 @@ function hrFill(reel,text,m){
  const filled=arcWords(reel.cast,text).replace(/\{O\}/g,()=>S.w[reel.cast.opponent]?.name||'the opponent');
  return hrNames(filled,m,reel.cast)
 }
+/* a call that falls flat keeps the booked action but not the big reaction: drop the sentences about the crowd's response */
+const HR_REACT=/\b(crowd|building|audience|fans|room|section|cheers?|chants?|roar|erupts?|front row|people|noise|reaction|boos?|applau\w*|standing|seats|rail|everyone|everybody|whole place)\b/i;
+function hrMissOf(land){
+ const parts=String(land).match(/[^.!?”]+[.!?]+”?|[^.!?]+$/g)||[land];
+ const keep=parts.filter((s,i)=>i===0||!HR_REACT.test(s)||/“/.test(s)).map(s=>s.trim()).filter(Boolean);
+ const body=(keep.length?keep:[parts[0]]).join(' ').replace(/\s+/g,' ').trim();
+ return body+' The timing is off, and the crowd takes a moment to catch up.'
+}
 function hrBeat(reel,beat,m){
  const fill=t=>hrFill(reel,t,m);
  return {setup:fill(beat[0]),calls:beat.slice(1).map(([label,land,missLine],i)=>{
@@ -250,7 +258,7 @@ function hrBeat(reel,beat,m){
   const named=HR_ARC_MISS[reel.a?.k]?.[phase];
   // A botched camera cue or delivery can cost the reaction without changing the booked action.
   const miss=fill(missLine||reel.a&&(named&&reel.variant==='match'
-   ?named:land+' The timing is off, and the crowd takes a moment to catch up.')||
+   ?named:hrMissOf(land))||
    'The exchange happens too fast for the crowd to follow. The replay gives them a better look.');
   return {t:fill(label),tip:i?'Bigger swing':'Lower risk',s:m?'ring':'mic',d:i?.18:-.05,st:i?.7:.3,fat:m&&i?3:0,injury:m&&reel.blood,ok:fill(land),no:miss,
    hit:[[['x',fill(land)]]],miss:[[['x',miss]]]};
