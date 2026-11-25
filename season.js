@@ -179,7 +179,7 @@ const goalCash=g=>Math.min(g.cash||0,goalReward().cash);
 let CHANT_ST=.5,CHANT_FANS=5000;
 const CHANTS=['“We want {L}!”','“{U}! {U}! {U}!”','“Let’s go {L}!”','“{L} deserves it!”'];
 function weekTick(){if(S.phase!=='season')return;S.goal=S.goal||{};S.chant=S.chant||{};const sh=curShow();const wk=AW();
- brands().filter(b=>b==='p'||ON()).forEach(b=>{if(!S.goal[b]||S.goal[b].w!==wk){const last=S.goal[b]&&S.goal[b].k;const l=Object.keys(GOALS).filter(k=>k!==last&&GOALS[k].ok(sh,b));if(l.length){const rw=goalReward();S.goal[b]={k:pick(l),w:wk,cash:rw.cash,fans:rw.fans}}}
+ brands().filter(b=>b==='p'||ON()||(typeof rvGoals==='function'&&rvGoals(b))).forEach(b=>{if(!S.goal[b]||S.goal[b].w!==wk){const last=S.goal[b]&&S.goal[b].k;const l=Object.keys(GOALS).filter(k=>k!==last&&GOALS[k].ok(sh,b));if(l.length){const rw=goalReward();S.goal[b]={k:pick(l),w:wk,cash:rw.cash,fans:rw.fans}}}
   if(!S.chant[b]||S.chant[b].w!==wk){const was=S.chant[b]&&S.chant[b].id;const pool=ownList(b).filter(w=>!w.inj&&w.id!==was&&w.pop<80);if(pool.length){const w=pick(pool);const L=w.name.split(' ').slice(-1)[0];S.chant[b]={id:w.id,w:wk,t:pick(CHANTS).replace('{L}',L).replace(/\{U\}/g,L.toUpperCase())}}}})}
 /* the crowd gets its wish: first segment on the card with the chanted wrestler gets the pop */
 function chantHit(b,ids){const c=S.chant&&S.chant[b];if(!c||c.w!==AW()||c.hit||!ids.includes(c.id))return null;const w=S.w[c.id];if(!w)return null;

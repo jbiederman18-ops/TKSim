@@ -1027,6 +1027,8 @@ function arcTick(){if(!S||!Array.isArray(S.arcs))return;S.arcs=S.arcs.filter(a=>
   if(a.gone||[a.b,a.c].some(id=>id&&(!aW(id)||aW(id).own!=='p'))){a.done=1;news(`📖 ${A.name}'s ${aD(a).n} arc ends — someone in it is gone.`);return false}
   if(AW()>a.end){arcFail(a,[]);return false}return true})}
 window.arcTick=arcTick;
+/* the arc rules the offline rival's arcs share (rivalstory.js) */
+window.ARC_RULES={aPopF,aRiseF,aEase,ARC_SLACK,ARC_PAY0,ARC_PAYQ,ARC_PAYMAX,ARC_PAY_PPV,ARC_BUILD,ARC_STORYP,ARC_STORYH,ARC_GREAT,ARC_FBQ0,ARC_FBQLO,ARC_FANS,ARC_RISEF,ARC_RISEPOP,ARC_FAIL};
 if(typeof airPair==='function'){const _ap=airPair;airPair=function(){let th={};try{if(typeof bothSides==='function')bothSides(arcTick);else arcTick();S.injSeen=S.injSeen||{};ownList('p').forEach(w=>{if(w.inj)S.injSeen[w.id]=AW()});th.__ppv=!!(curShow()&&curShow().ppv);th.__w=AW();if(S.arcS0s!==S.season){S.arcS0s=S.season;S.arcS0=AW()}Object.values(S.titles||{}).forEach(t=>{th[t.id]=t.holders.join('|')})}catch(e){console.warn('arcs',e)}
  const r=_ap.apply(this,arguments);try{Object.values(S.titles||{}).forEach(t=>{if(th[t.id]!=null&&t.holders.length&&t.holders.join('|')!==th[t.id]&&t.holders.every(aMine)){S.arcM=S.arcM||{};S.arcM.newch=AW()}});if(th.__ppv)S.arcPPV=(S.arcPPV||0)+1;arcGroundswell(th.__w,r&&r.notes);arcUnlockTick(r&&r.notes);arcTokTick(r&&r.notes)}catch(e){console.warn('arcs',e)}return r}}
 

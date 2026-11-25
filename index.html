@@ -1520,7 +1520,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v491';
+const APP_VERSION='v492';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -3728,6 +3728,24 @@ function applyPromo(p,notes){const r=p.res;const A=S.w[p.a];if(!A||!r)return;
  if(r.turn){A.al=A.al==='f'?'h':'f';A.turnW=AW();const n=`🔄 ${A.name} has turned ${A.al==='f'?'FACE':'HEEL'}!`;notes.push(n);news(n);if(r.whip)notes.push(`😵 Fans have whiplash — ${A.name} only turned ${r.whip} week${r.whip>1?'s':''} ago.`)}}
 
 /* ===================== AI BOOKER ===================== */
+/* v492: the offline rival tells stories and books for its crowds (rivalstory.js turns its programs into arcs). n: programs it runs at once. tv: chance a program gets its
+   match on a TV week when they haven't met in 3 weeks (every program is booked on a PPV once they've had a build). crowd: how
+   much a pairing is worth for feeding a crowd tonight's card hasn't fed. No bonus stars or heat: it earns both by booking.
+   Never used by Suggest the rest or by online leagues. */
+const AI_STORY={easy:{n:0,tv:0,crowd:0},normal:{n:2,tv:.5,crowd:10},hard:{n:3,tv:.7,crowd:18}};
+const AIP_WEEKS=12,AIP_BUILD=2;
+function aiStory(brand){if(brand!=='ai'||ON())return null;const T=AI_STORY[S.diff||'normal']||AI_STORY.normal;return typeof rvRamp==='function'?rvRamp(T):T}
+function aiProgs(){const T=aiStory('ai');if(!T)return [];const ok=id=>S.w[id]&&S.w[id].own==='ai';
+ S.aiProg=(S.aiProg||[]).filter(p=>ok(p.a)&&ok(p.b)&&!p.paid&&(p.arc||AW()-p.w<=AIP_WEEKS)&&S.w[p.a].inj<=3&&S.w[p.b].inj<=3).slice(0,T.n);
+ const busy=new Set(S.aiProg.flatMap(p=>[p.a,p.b]));
+ const l=Object.values(S.w).filter(w=>w.own==='ai'&&!w.inj&&!busy.has(w.id)).sort((a,b)=>b.pop-a.pop).slice(0,16);
+ while(S.aiProg.length<T.n){let bp=null,bv=-1e9;for(let i=0;i<l.length;i++)for(let j=i+1;j<l.length;j++){const a=l[i],b=l[j];if(a.g!==b.g||inTeam(a.id,b.id)||busy.has(a.id)||busy.has(b.id))continue;const v=(a.pop+b.pop)/2+chemOpp(a,b)*3+heatOf(a.id,b.id)+(a.al!==b.al?8:0)+R(0,8);if(v>bv){bv=v;bp=[a.id,b.id]}}
+  if(!bp)break;S.aiProg.push({a:bp[0],b:bp[1],w:AW()});bp.forEach(x=>busy.add(x))}
+ if(typeof rvArcStart==='function')S.aiProg.forEach(rvArcStart);
+ return S.aiProg}
+/* what a pairing is worth to the crowds the card so far hasn't given a real match */
+function aiCrowdVal(brand,card,ws){const T=aiStory(brand);if(!T||!T.crowd||!S.fb||!S.fb[brand])return 0;const fed={};card.forEach(c=>{if(c.d&&c.d.sides){const e=fbExpo(fbSeg(c.d,3.5,false));for(const g in e)fed[g]=(fed[g]||0)+e[g]}});
+ const e=fbExpo(fbSeg({type:'singles',stip:'std',winner:0,title:'',sides:ws.map(w=>[w.id])},3.5,false));let v=0;for(const g in e)v+=Math.min(e[g],Math.max(0,1-(fed[g]||0)));return v*T.crowd}
 function autoBook(brand,show,extUsed,opt){opt=opt||{};
  const used=new Set(extUsed||[]);/* v97: honour a promised week off */if(brand==='p')(S.trials||[]).forEach(t=>{if(t.goal==='rest')used.add(t.a)});const card=[];const nM=cardMatches(show.ppv);const q=aiq(brand);const smart=opt.smart!=null?opt.smart:(q.smart||0);
  const np=nextPPV();const prePPV=!show.ppv&&np&&np.in===1;
@@ -3765,6 +3783,10 @@ function autoBook(brand,show,extUsed,opt){opt=opt||{};
  /* a title shot the rival earned (Casino Gauntlet or Owen Hart Cup) gets booked when it comes due */
  if(brand==='ai'&&!ON()){const shots=[];if(S.aiShot&&S.aiShot.week===S.week)shots.push(S.aiShot);spShotsFor(brand).forEach(x=>shots.push(x));if(S.week===ALLIN_WEEK)for(const k in TOURS){const t=tourState(brand,k);if(t.shot)shots.push({a:t.shot,title:t.stitle||TOURS[k].prize})}
   shots.forEach(x=>{const t=S.titles[x.title];const h=t&&t.holders[0];if(!h||used.has(h)||used.has(x.a)||!S.w[h]||S.w[h].own!==brand||S.w[h].inj||!S.w[x.a]||S.w[x.a].own!==brand||S.w[x.a].inj||card.length>=nM)return;mk('singles',[[h],[x.a]],t.id)})}
+ if(brand==='ai'&&typeof rvPromise==='function'&&!show.ppv)rvPromise();
+ if(aiStory(brand))for(const p of aiProgs()){if(card.length>=nM-(show.ppv?0:1))break;const A=S.w[p.a],B=S.w[p.b];if(A.inj||B.inj||used.has(p.a)||used.has(p.b)||rest.has(p.a)&&!show.ppv||rest.has(p.b)&&!show.ppv)continue;
+  if(show.ppv){if(AW()-p.w<AIP_BUILD)continue}else if(A.fat>=FAT_RISK||B.fat>=FAT_RISK||recentMeets(p.a,p.b).some(w=>AW()-w<3)||Math.random()>aiStory(brand).tv)continue;
+  const t=Object.values(S.titles).find(t=>t.kind==='singles'&&t.g===A.g&&t.holders.length&&(t.holders[0]===p.a||t.holders[0]===p.b)&&show.ppv);mk('singles',[[p.a],[p.b]],t?t.id:'')}
  const teamUnits=(pool,per,exclude)=>S.teams.map(tt=>tt.m.filter(id=>pool.some(w=>w.id===id)&&!(exclude||[]).includes(id))).filter(a=>a.length>=per).map(a=>a.slice(0,per));
  const tl=shuffle(Object.values(S.titles).filter(t=>t.holders.length&&t.holders.every(h=>S.w[h]&&S.w[h].own===brand&&S.w[h].inj===0)&&(show.ppv||S.week-t.last>=3||Math.random()<.25)));
  const vac=Object.values(S.titles).filter(t=>!t.holders.length&&(!t.br||t.br===brand)&&Math.random()<(show.ppv?.9:.5));
@@ -3789,7 +3811,7 @@ function autoBook(brand,show,extUsed,opt){opt=opt||{};
   if(Math.random()<.3){const u=teamUnits(pool,2);const pair=[];for(const a of shuffle(u)){if(!pair.length)pair.push(a);else if(!a.some(id=>pair[0].includes(id))){pair.push(a);break}}
    if(pair.length===2&&!pair[0].some(a=>pair[1].some(b=>recentMeets(a,b).length))){mk('tag',pair);continue}}
   const top=pool.slice().sort((a,b)=>b.pop-a.pop).slice(0,14);let bp=null,bv=-1e9;
-  for(let i=0;i<top.length;i++)for(let j=i+1;j<top.length;j++){const a=top[i],b=top[j];if(inTeam(a.id,b.id))continue;const v=(a.g!==b.g?-12:0)+heatOf(a.id,b.id)*1.3*(isStale(a.id,b.id)?.3:1)+chemOpp(a,b)*1.5+(a.pop+b.pop)/2+R(0,15)-(Math.max(0,a.fat-FAT_OK)+Math.max(0,b.fat-FAT_OK))*.6-(show.ppv&&heatOf(a.id,b.id)>=45?0:metW(a.id,b.id)*60)-(show.ppv?0:(meW(a.id)+meW(b.id))*18);if(v>bv){bv=v;bp=[a,b]}}
+  for(let i=0;i<top.length;i++)for(let j=i+1;j<top.length;j++){const a=top[i],b=top[j];if(inTeam(a.id,b.id))continue;const v=(a.g!==b.g?-12:0)+heatOf(a.id,b.id)*1.3*(isStale(a.id,b.id)?.3:1)+chemOpp(a,b)*1.5+(a.pop+b.pop)/2+R(0,15)+aiCrowdVal(brand,card,[a,b])+(brand==='ai'&&show.ppv&&(S.rvProm||[]).some(x=>x.due<=AW()&&(x.id===a.id||x.id===b.id))?400:0)-(Math.max(0,a.fat-FAT_OK)+Math.max(0,b.fat-FAT_OK))*.6-(show.ppv&&heatOf(a.id,b.id)>=45?0:metW(a.id,b.id)*60)-(show.ppv?0:(meW(a.id)+meW(b.id))*18);if(v>bv){bv=v;bp=[a,b]}}
   if(!bp)break;mk('singles',[[bp[0].id],[bp[1].id]])}
  {let n=0;Object.entries(S.heat).filter(([k,h])=>h>=25).sort((a,b)=>b[1]-a[1]).forEach(([k])=>{if(n>=2)return;const [a,b]=k.split('|');const A=S.w[a],B=S.w[b];if(!A||!B||A.own!==brand||B.own!==brand)return;
   for(const [x,t] of [[b,a],[a,b]]){if(S.w[x].inj||S.w[x].al==='f'&&S.w[t].al==='f'||rest.has(x))continue;const sl=card.find(c=>c.d&&!c.d.ri&&!(c.d.tour&&c.d.tour.k==='c2')&&c.d.sides.flat().includes(t)&&!c.d.sides.flat().includes(x));if(!sl||Math.random()>q.ri)continue;
@@ -3802,7 +3824,10 @@ function autoBook(brand,show,extUsed,opt){opt=opt||{};
  const exP=new Set();
  const out=[];let mi=0;CARD_TV.forEach(k=>{if(k==='match'){if(ms[mi])out.push(ms[mi++])}else{const p=autoPromo(brand,exP);if(p){exP.add(p.a);if(p.b)exP.add(p.b)}const sl={k:'promo',d:p};if(k.endsWith('?'))sl.opt=true;out.push(sl)}});
  while(mi<ms.length)out.push(ms[mi++]);return out}
-function autoPromo(brand,ex){ex=ex||new Set();const r=Object.values(S.w).filter(w=>w.own===brand&&w.inj===0&&!ex.has(w.id));if(!r.length)return null;
+function aiProgPromo(brand,ex){if(!aiStory(brand))return null;const l=aiProgs().filter(p=>!S.w[p.a].inj&&!S.w[p.b].inj&&!ex.has(p.a)&&!ex.has(p.b));if(!l.length)return null;
+ const last=p=>Math.max(0,...promoHist(p.a,p.b).map(x=>x.w));const p=l.slice().sort((x,y)=>last(x)-last(y))[0];const [A,B]=[S.w[p.a],S.w[p.b]].sort((x,y)=>y.mic-x.mic);const lw=promoHist(A.id,B.id).filter(x=>x.w===AW()-1).map(x=>x.t);
+ const soon=PPVS[S.week]||PPVS[S.week+1];const q={type:soon&&heatOf(A.id,B.id)>35?'contract':pick(['callout','attack','interview'].filter(t=>!lw.includes(t))),a:A.id,b:B.id};runAutoPromo(q,brand);return q}
+function autoPromo(brand,ex){ex=ex||new Set();const pp=aiProgPromo(brand,ex);if(pp)return pp;const r=Object.values(S.w).filter(w=>w.own===brand&&w.inj===0&&!ex.has(w.id));if(!r.length)return null;
  let bp=null,bv=0;for(const k in S.heat){const [a,b]=k.split('|');const A=S.w[a],B=S.w[b];if(A&&B&&A.own===brand&&B.own===brand&&!A.inj&&!B.inj&&!ex.has(a)&&!ex.has(b)&&S.heat[k]>bv){bv=S.heat[k];bp=[A,B]}}
  let p;
  if(bp&&Math.random()<.8){const [A,B]=bp.sort((x,y)=>y.mic-x.mic);const soon=PPVS[S.week]||PPVS[S.week+1];const lw=promoHist(A.id,B.id).filter(x=>x.w===AW()-1).map(x=>x.t);p={type:soon&&bv>35&&Math.random()<.5?'contract':pick(['callout','attack','interview','vignette'].filter(t=>!lw.includes(t))),a:A.id,b:B.id}}
@@ -5183,6 +5208,7 @@ const HOWTO=`<p><b>📱 On a phone:</b> Go live stays pinned above the tabs on B
 <p><b>Head to head:</b> in solo play the rival's card stays a surprise until the show airs. On TV, whoever's main event rates higher wins the main event war. Big free agents take sealed offers, so the rival can outbid you (see Offers &amp; contracts).</p>
 <p><b>The overnights:</b> the show that gains more fans tonight wins the night (the better show rating breaks a dead heat), and a win pays the ratings bonus. The reveal opens on the overnights chart, with both shows' running totals across the top, and plays segment by segment underneath it: your segment lands with its cards, stars and the crowds it moved (▲ or ▼) while the chart dims, then the chart lights up and your line moves by the fans that segment gained or lost; then the same for the rival's. The main event is the overrun. Each segment's point is only what that segment did; <b>after the bell</b>, both lines take one last step for what moved the whole night (casuals tuning out, a crowd with nothing of its own, fans switching shows), with the reasons on each show's plate. Then you see how every crowd moved on your show, then on the rival's, and the winner of the night lands on top of it.</p>
 <p><b>✨ Suggest the rest</b> on the Book screen fills any empty slots and keeps everything you've already booked, promised or entered in a tournament. It books the best matches it can from the wrestlers' own traits — popularity, in-ring skill, crowd matchups and traits, face vs heel, no recent rematches — rated the way the show rates them, including how hot a feud is right now, as plain singles matches with clean finishes, plus a Backstage Vignette from your best talker for any open promo. It books on ability alone: it won't rest anyone who's worn down or steer around a miserable wrestler — stamina and morale are yours to manage. It ignores your checklist entirely: promises, contract clauses, title defenses, the weekly goal, the crowd's chant and building feuds and paying them off are all yours to handle, and the optional bonus promo stays empty. <b>Clear card</b> wipes everything else.</p>
+<p><b>🆚 Your rival plays for fans too</b> (solo, on Normal and Hard): it comes back to the same rivalries and pays them off on PPVs, and goes after the bonuses you can. <b>Arcs:</b> up to two at once, with the same price, build, deadline and fan reward as yours; letting one fall apart costs it. <b>PPV promises:</b> it promises wrestlers a PPV spot (one at a time on Normal, two on Hard); keeping it brings fans, breaking it costs them. <b>Weekly goals and crowd chants:</b> it gets its own, worth what yours are, and goes after them some weeks on Normal and most weeks on Hard. Show results report its story payoffs, promises and weekly goals. On Normal, in your first season, its arcs, promises, goals and chants start in week 7; it runs one rivalry and arc at a time until week 15, then up to two. An Easy rival does none of this.</p>
 <p><b>Difficulty:</b> Hard rivals book like pros — they rest stars before PPVs, order their card for the ratings, protect new champions and pay off feuds cleanly. Easy rivals book sloppily.</p>
 <p><b>The offseason:</b> after ${PPVS[SEASON]}, the season ends with an awards show (Wrestler and Women's Wrestler of the Year, Breakout Star, Rookie, Tag Team, Feud, Match and Promo of the Year — winners start next season with a boost). Veterans feel Father Time: they lose a little in-ring each year and may retire. Prospects ready for the main roster (60+ in-ring) get called up with debut buzz. Re-sign anyone whose contract is running out before you start the new season.</p>`;
 /* the rival scouts too: harder rivals invest in better prospects more often */
@@ -6069,6 +6095,7 @@ function hyTidy(root){if(!skinOn()||!root)return;root.querySelectorAll('.small,.
 <script src="fanbase.js"></script>
 <script src="traits.js"></script>
 <script src="arcs.js"></script>
+<script src="rivalstory.js"></script>
 <script src="inbox.js"></script>
 <script src="sfx.js"></script>
 <script src="feed.js"></script>
