@@ -61,7 +61,7 @@ js(`   window.reelFixture = (k, story, kind, type, stip='std', ppv=false) => {
     liveNext();
    };
 `);
-js(`SFX=null;openModal=(html)=>{window.modal=html};closeModal=()=>{};
+js(`window.HR_ON=true;SFX=null;openModal=(html)=>{window.modal=html};closeModal=()=>{};
 `);
 const list=js(`({
  arcs:Object.keys(ARCS).length, scenes:Object.keys(ARC_REEL).length,

@@ -2,6 +2,9 @@
 'use strict';
 /* v481: a highlight reel is for a segment that demands it — a blood feud being settled, or an arc's payoff. Those always
    play out in full, live; nothing else does (a disaster brewing backstage still comes to you live, any night). */
+/* v496: highlight reels are switched off while their dialogue is rewritten. The code and lines stay here;
+   tools/check-reels.cjs sets HR_ON to keep testing them. Set it to true to bring reels back. */
+window.HR_ON=false;
 const HR_CAP=99,HR_BLOOD=75;/* v486: one blood feud payoff a night (the hottest), and every arc payoff on the card */
 /* ---- the crowd: 0–100, starts from the show's buzz and the size of the night ---- */
 let HRC=50;/* the crowd for whoever is airing right now (live show, the rival, the sim) */
@@ -31,14 +34,14 @@ function hrPlayable(kind,d){
  return msOn(d)&&d.sides.flat().every(id=>S.w[id]&&!S.w[id].inj)
 }
 function hrDemand(kind,d,main,ppv,b){
- if(!hrPlayable(kind,d))return '';
+ if(!window.HR_ON||!hrPlayable(kind,d))return '';
  /* v487: an arc payoff wins over a blood feud — the arc's story (and its decision) is the climax; the feud still settles by the booked finish */
  if(b!=='ai'&&hrArc(kind,d,main))return 'arc';
  if(kind==='match'&&hrBlood(d,ppv))return 'blood';
  return ''
 }
 function hrPlan(card,ppv,b){
- const out=new Map();if(!card)return out;
+ const out=new Map();if(!window.HR_ON||!card)return out;
  const main=card.findLastIndex(sl=>sl?.k==='match'&&sl.d);
  /* every arc payoff on the card (each arc once) */
  if(b!=='ai'){

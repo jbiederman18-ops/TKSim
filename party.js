@@ -1,8 +1,8 @@
 /* Tony Khan Simulator — Party night.
    Party night is a way to play an online league, not a separate game: same league, same save, same code.
    - Any GM turns it on from their phone (Start party night on Home, or the ⚙️ Game menu). While it's on, everyone
-     books at the same time, then goes live one at a time: the TV shows any highlight reels as they happen, then a
-     rundown of the rest of that GM's card (v351; dropped in v381 — the reveal covers it).
+     books at the same time, then goes live one at a time: any live calls show on the TV as they
+     happen, and the reveal covers the card.
    - Any screen can be the TV: open the game there, tap "Show a league on this screen" and enter the league code.
      The TV only watches the league. It shows who's still booking and plays each week's results segment by segment.
    - Once every card is locked in, the GMs go live one at a time: the TV shows that GM's promo beats and match
@@ -229,7 +229,7 @@ document.addEventListener('click',e=>{const b=e.target&&e.target.closest&&e.targ
   const key=(b.querySelector('.key')||{}).textContent||'';const txt=((b.querySelector('.key+div')||b).textContent||'').trim();
   partyFeed(c.innerHTML,true);FEED_HOLD=Date.now()+PICK_HOLD;FEED_PICK={k:key.trim(),t:txt.slice(0,160)}}catch(err){console.warn(err)}},true);
 function partyLivePrompt(){if(!partyLiveTurn()||LIVE)return false;const key=S.season*100+S.week;if(+(LS.get('tksim_livep_'+LMP.code)||0)===key)return false;LS.set('tksim_livep_'+LMP.code,key);
- openModal(`<div class="h mhd">🔴 You're live!</div><p>It's your turn on the TV. Any highlight reel plays out there for the room while you make the calls here, then the TV runs through the rest of your card.</p><button class="btn live" onclick="closeModal();goLive()">Start my show ▸</button><button class="btn ghost" onclick="closeModal()">Give me a second</button>`);return true}
+ openModal(`<div class="h mhd">🔴 You're live!</div><p>It's your turn on the TV. Any live call shows there for the room while you make it here.</p><button class="btn live" onclick="closeModal();goLive()">Start my show ▸</button><button class="btn ghost" onclick="closeModal()">Give me a second</button>`);return true}
 function partyLocked(){if(partyMyTurn())return false;
  toast(S.phase==='draft'?`${nameOf(onClock())} is on the clock.`:S.phase==='rookies'?"You're ready — waiting on the others.":'Your card is locked in — eyes on the TV! (Unlock it from the banner to make changes.)');return true}
 function partyLockCard(){const o=S.online;o.booked=o.booked||{};o.booked.p=true;const sh=curShow();const left=partyWaiting();

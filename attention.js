@@ -463,8 +463,7 @@ window.pdOf=pdOf;
 const tellSpan=st=>{const t=tellOf(st,1);return `<span class="tell ${t[3]} big">${t[1]} ${t[2]}</span>`};
 window.promoDetails=function(p,i){const d=pdOf(p);if(!d)return '';const req=chipsWith(i,{type:p.type,a:p.a,b:p.b||''});
  return `<div class="det"><div class="dh">Promo details</div>
- ${row('Talent',d.p.talent,esc(d.talentW))}${row('Fit',d.p.fit,esc(d.fitW))}${row('Story',d.p.story,esc(d.storyW))}${row('Your calls',0,'Decided live, if it gets a showdown',null,1)}
- ${chipRow('Requests',req,1)}${chipRow('Holding back',d.back)}</div>`};
+ ${row('Talent',d.p.talent,esc(d.talentW))}${row('Fit',d.p.fit,esc(d.fitW))}${row('Story',d.p.story,esc(d.storyW))}${chipRow('Requests',req,1)}${chipRow('Holding back',d.back)}</div>`};
 window.segDetails=function(i){const sl=S.card&&S.card.p[i];if(!sl||!sl.d)return;const sh=curShow();
  const body=sl.k==='promo'?promoDetails(sl.d,i):matchDetails(sl.d,sh,i);
  openModal(`<div class="row sb"><div class="h mhd" style="margin:0">${sl.k==='promo'?'Promo':(()=>{try{const l=mLab(S.card.p,i);return l.main?'Main event':l.lab}catch(e){return 'Match'}})()}</div><button class="mini" onclick="closeModal()">Close</button></div>${body}
