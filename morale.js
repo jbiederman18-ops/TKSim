@@ -57,7 +57,7 @@ if(typeof applyMatch==='function'){const a0=applyMatch;applyMatch=function(m,res
  const out=a0.apply(this,arguments);
  try{if(!m.nc&&m.sides[m.winner]){const win=m.sides[m.winner];const fin=finOf(m);const losers=ids.filter(id=>!win.includes(id));const big=ids.length>=3;const pin=big&&losers.length?pinOf(m):null;const wTop=Math.max(...win.map(id=>S.w[id]?S.w[id].pop:0));
   win.forEach(id=>{const w=S.w[id];if(w&&HUM(w.own))mlog(w,w.mor-before[id],'Wins',false)});
-  losers.forEach(id=>{const w=S.w[id];if(!w||!HUM(w.own))return;if(big&&id!==pin)return;
+  const screwed=typeof riProt==='function'?riProt(m):null;losers.forEach(id=>{const w=S.w[id];if(!w||!HUM(w.own)||id===screwed)return;if(big&&id!==pin)return;
    if(fin==='clean'||fin==='upset'){let d=w.pop>=70?-3:w.pop>=45?-2:-1;mlog(w,d,'Losses');if(w.pop>=wTop+15)mlog(w,-2,'Lost to someone below them')}
    else if(w.pop>=60)mlog(w,-1,'Losses')});
   if(ctx&&ctx.pos==='me')ids.forEach(id=>{const w=S.w[id];if(w&&HUM(w.own))mlog(w,3,'Main event',false)})}}catch(e){console.warn('morale match',e)}

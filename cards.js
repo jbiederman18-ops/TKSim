@@ -310,7 +310,7 @@ function riParts(d){return d.sides.flat().filter(Boolean)}
 function riBest(d,k,x){const l=riParts(d).filter(id=>k!=='cost'||!(d.sides[d.winner]||[]).includes(id));return l.sort((a,b)=>heatOf(x,b)-heatOf(x,a)||(W_(b).al!==W_(x).al)-(W_(a).al!==W_(x).al))[0]||''}
 function riHtml(i){const d=card()[i].d;const ri=d.ri||{};const k=RUNIN[ri.k]?ri.k:null;const X=k&&ri.x&&W_(ri.x);const parts=riParts(d);
  const tile=x=>`<div class="tx ${x.on?'on':''} ${x.dis?'dis':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"${x.dis?' aria-disabled="true"':''}><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b>${x.d?`<span class="txd">${esc(x.d)}</span>`:''}${x.c||''}</div>`;
- let h=`<div class="tcgx lo">`+[{x:'k:none',k:'Run-in',n:'None',d:'The match plays out on its own.',on:!k},...Object.entries(RUNIN).map(([kk,v])=>({x:`k:${kk}`,k:'Run-in',n:v.n,d:first(v.d),c:typeof fbRiTag==='function'?fbRiTag():'',on:kk===k}))].map(tile).join('');
+ let h=`<div class="tcgx lo">`+[{x:'k:none',k:'Run-in',n:'None',d:'The match plays out on its own.',on:!k},...Object.entries(RUNIN).map(([kk,v])=>({x:`k:${kk}`,k:'Run-in',n:v.n,d:first(v.d),c:typeof fbRiTag==='function'?fbRiTag(kk):'',on:kk===k}))].map(tile).join('');
  if(k){h+=`<div class="tcwhy">${esc(RUNIN[k].lab)}</div>`+parts.map(id=>{const w=W_(id);const lock=k==='cost'&&(d.sides[d.winner]||[]).includes(id);
    return tile({x:`g:${id}`,k:X?`🔥 ${Math.round(heatOf(X.id,id))} with ${ln(X)}`:w.al==='f'?'Face':'Heel',n:w.name,d:lock?'On the winning side — can’t be cost the match.':'',on:ri.t===id,dis:lock})}).join('');
   const r=riOn(d);

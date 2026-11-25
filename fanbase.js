@@ -405,7 +405,7 @@ const FB_GKC=.018,FB_GKH=.065;                  /* share of the pool a +1% show 
 const FB_FED=.25;                            /* a group that gets its own match at about what it expects still grows a little */
 const FB_DRIFT=1.2;                          /* casuals tune out by this % each show unless something hooks them */
 const FB_CONV=.004;                          /* casuals who convert on a 4★+ match that beats a group's expectations */
-const FB_RI_TECH=3,FB_SCREW_TECH=1;          /* Technical fans hate run-ins and screwy finishes */
+const FB_RI_TECH=3,FB_SCREW_TECH=1;          /* Technical fans hate match-costing run-ins and screwy finishes */
 /* which group each stipulation and match type speaks to */
 const FB_STIP={sub:'tech',twoof3:'tech',iron:'tech',street:'blood',iquit:'blood',lms:'blood',texas:'blood',barbed:'blood',cage:'blood',dog:'blood',bng:'blood',lights:'blood',
  ladder:'flip',tornado:'flip',tables:'flip',nodq:'chaos',falls:'chaos',anarchy:'chaos',stampede:'chaos',coffin:'cas'};
@@ -439,7 +439,7 @@ function fbSync(b){if(!S||!S.fans||S.fans[b]==null)return null;if(!fbHas(b))fbIn
  return f}
 function fbSyncAll(){if(S&&S.fans)Object.keys(S.fans).forEach(fbSync)}
 /* one aired (or projected) segment, as the fans see it */
-function fbSeg(m,st,me){return {k:'match',ids:m.sides.flat(),n:m.sides.flat().length,stip:stipKey(m),type:m.type,ri:!!(typeof riOn==='function'&&riOn(m)),fin:typeof finOf==='function'?finOf(m):'clean',st,me:!!me,title:!!m.title,txt:typeof matchText==='function'?matchText(m):'',h:fbHeat(m)}}
+function fbSeg(m,st,me){return {k:'match',ids:m.sides.flat(),n:m.sides.flat().length,stip:stipKey(m),type:m.type,ri:!!(typeof riOn==='function'&&riOn(m)),ric:!!(typeof riProt==='function'&&riProt(m)),fin:typeof finOf==='function'?finOf(m):'clean',st,me:!!me,title:!!m.title,txt:typeof matchText==='function'?matchText(m):'',h:fbHeat(m)}}
 function fbPromo(p,st){return {k:'promo',ids:[p.a,p.b].filter(id=>id&&S.w[id]),st,txt:(S.w[p.a]?S.w[p.a].name:'')+(p.b&&S.w[p.b]?' & '+S.w[p.b].name:'')}}
 /* how much a match speaks to each group: each wrestler gives their share to their group (two groups .6/.4; undiscovered and
    casual draws reach only casuals), the stipulation and multi-person chaos add their group, a run-in feeds Chaos fiends, and a
@@ -486,7 +486,7 @@ function fbHcHook(c,b){b=b||'p';const f=fbSync(b);if(!f)return null;const H=S.fb
   l.forEach((x,i)=>{if(i>=FB_W.length)return;const ee=x.e*FB_W[i];E+=ee;sw+=ee*FB_FED*FB_PER*(x.sg.me?FB_ME:1)});
   const hist=H[g]||[];const run=1+(hist[0]>=1.6?1+(hist[1]>=1.6?1:0):0);const burn=E>=1.6?(run>=3?.6:run>=2?.8:1):1;if(sw>0)sw*=burn*ppvK;
   const hold=E<1?-(1-E)*((hist[0]!=null&&hist[0]<1)?FB_STARVE:FB_HOLD):0;
-  let pen=0;if(g==='tech'){const ri=ms.filter(s=>s.ri).length;const sc=ms.filter(s=>['cheat','dq','co'].includes(s.fin)&&fbExpo(s).tech).length;pen=-(ri*FB_RI_TECH+sc*FB_SCREW_TECH)}
+  let pen=0;if(g==='tech'){const ri=ms.filter(s=>s.ric).length;const sc=ms.filter(s=>['cheat','dq','co'].includes(s.fin)&&fbExpo(s).tech).length;pen=-(ri*FB_RI_TECH+sc*FB_SCREW_TECH)}
   out[g]=sw+hold+pen});return out}
 /* v457: a promo's crowds, for the tag under it — Chaos fiends when one's on the mic */
 function fbPromoGroups(p){try{if(!p||!p.a||!S.w[p.a])return [];const e=fbExpo(fbPromo(p,3));return FB_HC.filter(g=>(e[g]||0)>0)}catch(e){return []}}
@@ -510,12 +510,12 @@ function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X0=S.fbx[b],H=S.f
   const hist=H[g]||[];const run=1+(hist[0]>=1.6?1+(hist[1]>=1.6?1:0):0);const burn=E>=1.6?(run>=3?.6:run>=2?.8:1):1;
   const pk=sw>0?burn*ppvK:1;pc.forEach(([sg,c])=>sc(sg,g,c*pk));
   if(sw>0)sw*=burn*ppvK;let hold=0;if(E<1)hold=-(1-E)*((hist[0]!=null&&hist[0]<1)?FB_STARVE:FB_HOLD);
-  let pen=0;if(g==='tech'){const ri=segs.filter(s=>s.k==='match'&&s.ri).length;const scr=segs.filter(s=>s.k==='match'&&['cheat','dq','co'].includes(s.fin)&&fbExpo(s).tech).length;pen=-(ri*FB_RI_TECH+scr*FB_SCREW_TECH);segs.forEach(s=>{if(s.k!=='match')return;if(s.ri)sc(s,'tech',-FB_RI_TECH);else if(['cheat','dq','co'].includes(s.fin)&&fbExpo(s).tech)sc(s,'tech',-FB_SCREW_TECH)})}
+  let pen=0;if(g==='tech'){const ri=segs.filter(s=>s.k==='match'&&s.ric).length;const scr=segs.filter(s=>s.k==='match'&&['cheat','dq','co'].includes(s.fin)&&fbExpo(s).tech).length;pen=-(ri*FB_RI_TECH+scr*FB_SCREW_TECH);segs.forEach(s=>{if(s.k!=='match')return;if(s.ric)sc(s,'tech',-FB_RI_TECH);else if(['cheat','dq','co'].includes(s.fin)&&fbExpo(s).tech)sc(s,'tech',-FB_SCREW_TECH)})}
   res.pct[g]=sw+hold+pen;res.E[g]=E;res.avg[g]=sx?ss/sx:null;res.best[g]=l[0]?l[0].sg:null;
   res.why[g]=l.length?(sw>0?`Loved ${l[0].sg.txt||'their match'}`:`${l[0].sg.txt||'Their match'} didn't live up to it`)+(E<1?' · but only a taste of what they want':burn<1?' · getting a bit much of the same':''):'Nothing for them tonight';
-  if(pen<0)res.why[g]+=` · hated the ${segs.some(s=>s.k==='match'&&s.ri)?'run-in':'screwy finish'}`;
+  if(pen<0)res.why[g]+=` · hated the ${segs.some(s=>s.k==='match'&&s.ric)?'run-in':'screwy finish'}`;
   /* v470: the short reason for the crowd table at the end of the reveal */
-  res.wy[g]=!l.length?'Nothing for them tonight':(sw>0?'Loved their match':'Their match came in under what they expect')+(E<1?', but only a taste of what they want':burn<1?', but too much of the same':'')+(pen<0?` · hated the ${segs.some(s=>s.k==='match'&&s.ri)?'run-in':'screwy finish'}`:'');
+  res.wy[g]=!l.length?'Nothing for them tonight':(sw>0?'Loved their match':'Their match came in under what they expect')+(E<1?', but only a taste of what they want':burn<1?', but too much of the same':'')+(pen<0?` · hated the ${segs.some(s=>s.k==='match'&&s.ric)?'run-in':'screwy finish'}`:'');
   /* the best matches turn casuals into fans of that group */
   let cv=0;l.forEach(x=>{if(x.sg.st>=4&&x.sg.st>X[g])cv+=f.cas*FB_CONV*x.e*(x.sg.st-3.75)/1.25});res.conv[g]=Math.round(cv)});
  /* casuals: tune out unless star power, titles, spectacle and a good show hook them */
@@ -628,7 +628,7 @@ function fbTag(g,t,bad){return g&&FG_C[g]?`<span class="txc${bad?' no':''}" styl
 function fbStipTag(k){const g=FB_STIP[k];return g?fbTag(g,FB_THIRST[g]):''}
 /* a screwy finish only costs you with Technical fans when the match is one of theirs */
 function fbFinTag(k,d){if(!['cheat','dq','co'].includes(k))return '';try{if(d&&!fbExpo(fbSeg(d,0,false)).tech)return ''}catch(e){}return fbTag('tech','Technical fans hate it',1)}
-function fbRiTag(){return fbTag('chaos',FB_THIRST.chaos)+fbTag('tech','Technical fans hate it',1)}
+function fbRiTag(k){return fbTag('chaos',FB_THIRST.chaos)+(k==='cost'?fbTag('tech','Technical fans hate it',1):'')}
 /* the end of the reveal: one line per crowd — how they took it and how many came or went */
 /* v462: the quarter-hour reveal — tonight's fans, segment by segment. Each crowd's real change on the night (before → after,
    switchers included) is shared out: every segment gets what it did for that crowd (fbCalc's sc), the night-wide pieces
