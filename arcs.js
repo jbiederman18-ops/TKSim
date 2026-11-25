@@ -937,6 +937,13 @@ window.arcRedeal=function(id){if(typeof mpLocked==='function'&&mpLocked())return
 function arcUnlockTick(notes){S.arcSeen=S.arcSeen||[];const now=Object.keys(ARC_GATE).filter(arcOpenK);const nw=now.filter(k=>!S.arcSeen.includes(k));
  if(nw.length&&S.arcSeen.length+Object.keys(ARC_GATE).length>0&&S.arcSeenInit){const t=`📖 Bigger stories open up: ${nw.map(k=>ARCS[k].i+' '+ARCS[k].n).join(', ')} can now be assigned.`;news(t);if(notes)notes.push(t)}S.arcSeen=now;S.arcSeenInit=1}
 window.arcUnlockTick=arcUnlockTick;
+/* v498: a payoff that only works on a PPV gets a deadline that lands on one, so the window can't close between PPVs.
+   Runs on start, on load (rescues runs already in a save) and before the deadline check. The crossover payoff waits
+   for this season's crossover PPV and never carries into another year. */
+const aNeedsPPV=D=>{const t=String(D&&D.payoff||'');return /PPV/.test(t)&&!/main event/i.test(t)};
+function aPPVEnd(D,end,st){st=st||S;if(!aNeedsPPV(D))return end;const wkOf=e=>st.week+e-(awBase(st)+st.week);
+ if(/crossover/i.test(D.payoff))return wkOf(end)<FD_WEEK?end+FD_WEEK-wkOf(end):end;
+ for(let e=end;e<end+SEASON;e++)if(PPVS[((wkOf(e)-1)%SEASON+SEASON)%SEASON+1])return e;return end}
 function arcCanStart(id){const A=aW(id);if(!A||A.own!=='p'||A.retd)return 'Not on your roster';if(S.phase!=='season')return 'Arcs start once the season is under way';if(arcOf(id))return `${A.name} is already in an arc`;
  if(arcList().filter(a=>aMine(a.a)).length>=ARC_SLOTS)return `You have ${ARC_SLOTS} arcs running. Finish one first`;return ''}
 window.arcCanStart=arcCanStart;
@@ -949,7 +956,7 @@ function arcStart(id,i,cast){if(typeof mpLocked==='function'&&mpLocked())return;
  if(cast){const A0=aW(id);o=Object.assign({},o);['b','c'].forEach(r=>{if(cast[r]&&arcCastList(A0,o.k,r,r==='c'?[cast.b||o.b]:[]).some(w=>w.id===cast[r]))o[r]=cast[r]});if(o.b&&o.c&&o.b===o.c)return toast('Pick two different people.');if(D.recast)try{o=D.recast(A0,o)||o}catch(e){}}
  const c=aCost(o.k,id,o);if(S.money.p<c)return toast(`This arc costs ${money(c)} up front.`);S.money.p-=c;const A=aW(id);A.arcN=(A.arcN||0)+1;
  const sl0=arcStoryPick(o.k,id,aVarOf(o.k),o.b);const SL0=sl0&&(ARC_STORY[o.k]||[]).find(x=>x.id===sl0);const DR=SL0&&SL0.road?aDK(o.k,null,sl0):D;const need=DR.need2?DR.need2({a:id,g:o.g}):DR.need;const a=Object.assign({rd:SL0&&SL0.road?1:0,id:'a'+Date.now().toString(36)+Math.floor(Math.random()*999),a:id,start:AW(),end:AW()+need+ARC_SLACK,have:0,need,st:[],stage:'build',star:aStar(A)?1:0,cost:c,v:aVarOf(o.k),al0:A.al,fit:arcFitOf(A)===o.k?1:0},o);
- a.sl=arcStoryPick(o.k,id,a.v,a.b);if(!a.sl){S.money.p+=c;A.arcN--;return toast('No storyline fits that pairing.')}try{if(D.setup)D.setup(a,A)}catch(e){console.warn('arc setup',e)}try{const SLx=arcStoryOf(a);if(SLx&&SLx.setup)SLx.setup(a,A)}catch(e){console.warn('arc story setup',e)}arcList().push(a);if(S.arcHand)delete S.arcHand[id];S.arcUsed=S.arcUsed||{};(S.arcUsed[S.season]=S.arcUsed[S.season]||[]).push(o.k);S.arcUsedW=S.arcUsedW||{};{const u=S.arcUsedW[S.season]=S.arcUsedW[S.season]||{};(u[id]=u[id]||[]).push(o.k)}news(`📖 ${arcHead(a)||arcLine(a,'start')} (${D.n})`);save();render();arcOpen(id)}
+ a.sl=arcStoryPick(o.k,id,a.v,a.b);if(!a.sl){S.money.p+=c;A.arcN--;return toast('No storyline fits that pairing.')}try{if(D.setup)D.setup(a,A)}catch(e){console.warn('arc setup',e)}try{const SLx=arcStoryOf(a);if(SLx&&SLx.setup)SLx.setup(a,A)}catch(e){console.warn('arc story setup',e)}a.end=aPPVEnd(aD(a),a.end);arcList().push(a);if(S.arcHand)delete S.arcHand[id];S.arcUsed=S.arcUsed||{};(S.arcUsed[S.season]=S.arcUsed[S.season]||[]).push(o.k);S.arcUsedW=S.arcUsedW||{};{const u=S.arcUsedW[S.season]=S.arcUsedW[S.season]||{};(u[id]=u[id]||[]).push(o.k)}news(`📖 ${arcHead(a)||arcLine(a,'start')} (${D.n})`);save();render();arcOpen(id)}
 window.arcStart=arcStart;
 function arcDrop(id){const a=arcOf(id);if(!a)return;if(!confirm(`Drop ${aW(id).name}'s ${aD(a).n} arc? ${aPr(aW(id),"They'll")} be let down.`))return;arcFail(a,[]);S.arcs=arcList().filter(x=>x!==a);save();render();arcOpen(id)}
 window.arcDrop=arcDrop;
@@ -1025,6 +1032,7 @@ function arcFail(a,notes){S.arcFailN=(S.arcFailN||0)+1;{const A0=aW(a.a);if(A0){
 /* the deadline, and arcs whose people are gone: checked when a show is about to air */
 function arcTick(){if(!S||!Array.isArray(S.arcs))return;S.arcs=S.arcs.filter(a=>{if(a.done)return false;const A=aW(a.a);if(!A||A.own!=='p')return false;
   if(a.gone||[a.b,a.c].some(id=>id&&(!aW(id)||aW(id).own!=='p'))){a.done=1;news(`📖 ${A.name}'s ${aD(a).n} arc ends — someone in it is gone.`);return false}
+  a.end=aPPVEnd(aD(a),a.end);
   if(AW()>a.end){arcFail(a,[]);return false}return true})}
 window.arcTick=arcTick;
 /* the arc rules the offline rival's arcs share (rivalstory.js) */
@@ -1217,7 +1225,7 @@ window.arcCast=function(id,k,sel){const A=aW(id);const card=arcOffer(id).find(x=
  const roles=C?['b','c'].filter(r=>C[r]):[];
  openModal(`${aKick(D,k,null,`${esc(A.name)} · ${ARC_LANES[aStar(A)?'star':D.lane]}`)}<div class="ahd">${esc(sl?arcHead(Object.assign({a:id,k},o),sl):D.d)}</div><p class="muted adsc">${esc(arcWords(o,D.d))}</p>
  ${roles.map(r=>{const l=arcCastList(A,k,r,r==='c'?[sel.b]:[]);return `<div class="asec">${esc(arcWords(o,C[r].lab))}</div><div class="arccastl">${l.map(w=>row(r,w)).join('')}</div>`}).join('')}
- <div class="asec">The road · ${n} stop${n>1?'s':''} in ${n+ARC_SLACK} weeks</div>${arcRoad(D,o,n,0,'',aPayTxt(D,o,sl),id)}
+ <div class="asec">The road · ${n} stop${n>1?'s':''} in ${aPPVEnd(D,AW()+n+ARC_SLACK)-AW()} weeks</div>${arcRoad(D,o,n,0,'',aPayTxt(D,o,sl),id)}
  <div class="asec">The reward</div>${arcReward(D,A,o)}
  ${aFull()?`<button class="btn" disabled>Both arc slots are busy</button>`:`<button class="btn" ${S.money.p<c?'disabled':''} onclick="window.__arcSel=null;arcStart('${id}','${k}',{b:'${sel.b||''}',c:'${sel.c||''}'})">Assign this arc · ${money(c)}</button>`}<button class="btn sec" onclick="window.__arcSel=null;arcOpen('${id}')">Back</button>`)};
 window.arcOpen=arcOpen;
@@ -1421,7 +1429,8 @@ if(typeof attnItems==='function'){const _ai=attnItems;attnItems=function(){const
    chip:i=>{const d=c[i]&&c[i].d;if(!d)return null;const ws=c[i].k==='match'?d.sides.flat():[d.a,d.b];return ws.includes(a.a)?['ok',pay?`${D.n}: the payoff`:`${D.n}: step ${a.have+1}`]:null}})})}catch(e){console.warn('arc checklist',e)}return out};window.attnItems=attnItems}
 
 /* ---- old saves: the Performance Center closes; nobody's mid-arc ---- */
-function arcMigrate(st){if(!st)return;if(!Array.isArray(st.arcs))st.arcs=[];if(Array.isArray(st.training)&&st.training.length)st.training=[]}
+function arcMigrate(st){if(!st)return;if(!Array.isArray(st.arcs))st.arcs=[];if(Array.isArray(st.training)&&st.training.length)st.training=[];
+ if(st.week)st.arcs.forEach(a=>{if(a.done)return;try{a.end=aPPVEnd(aD(a),a.end,st)}catch(e){console.warn('arc deadline',e)}})}
 window.arcMigrate=arcMigrate;
 /* ---- looks ---- */
 {const st=document.createElement('style');st.textContent=`.arcrow{padding:6px 0;border-top:1px solid rgba(255,255,255,.08)}.arcrow:first-of-type{border-top:0}
