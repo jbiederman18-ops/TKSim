@@ -414,6 +414,8 @@ const FB_MULTI={triple:1,four:1,gauntlet:1,rumble:1,mitb:1};
    (FB_STIP1, now 0). What stops you running one everywhere is its toll (STIP_TOLL in index.html: stamina, injury risk, price).
    The same stipulation two shows running pulls its crowd at FB_REP: they've just seen one. */
 const FB_STIP0=.35,FB_STIP1=0,FB_STIPH=45;
+/* v494: the bloodiest matches pull Bloodhounds harder than other stipulations. Blood & Guts is a full match for them on its own. */
+const FB_PULL={bng:1,barbed:.6,lights:.6,texas:.6};
 const FB_REP=.5;
 /* v405: casuals follow a story — the card's hottest feuds (heat over FB_STORY0) hook them, the top one most (x1.5 on a PPV) */
 let FB_STORY0=10,FB_STORYH=35,FB_STORYW=[1,.6,.4],FB_STORYCAP=1.4,FB_CAVK=2.5;  /* v438: stories hook casuals more (cap was 1, weights [1,.5,.3]); show quality over what they expect a little less (was 3) */  /* v416: was 1.5 — a feud-heavy GM was pulling casuals far past the rival */
@@ -449,7 +451,7 @@ function fbExpo(sg){const e={};const add=(g,v)=>{if(g&&g!=='cas'&&g!=='und')e[g]
   /* v403: a found hidden specialty opens a second crowd — in their specialty match a wrestler also reaches the crowd that
      stipulation speaks to (a flyer who's a natural in a cage brings in Bloodhounds), and counts as theirs for a pure match */
   const sp=fbSpecGroup(w,sg.stip);if(sp&&!gs.includes(sp)){add(sp,1/n);t.push(sp)}tags.push(t)});
- add(FB_STIP[sg.stip],(FB_STIP0+FB_STIP1*Math.min(1,(sg.h||0)/FB_STIPH))*(sg.rep?FB_REP:1));if(FB_MULTI[sg.type])add('flip',.5);if(sg.ri)add('chaos',.5);
+ add(FB_STIP[sg.stip],((FB_PULL[sg.stip]||FB_STIP0)+FB_STIP1*Math.min(1,(sg.h||0)/FB_STIPH))*(sg.rep?FB_REP:1));if(FB_MULTI[sg.type])add('flip',.5);if(sg.ri)add('chaos',.5);
  const hc=tags.map(gs=>gs.filter(g=>FB_HC.includes(g)));if(hc.length>1&&hc.every(x=>x.length)){FB_HC.forEach(g=>{if(hc.every(x=>x.includes(g))&&e[g])e[g]*=1.4})}
  for(const g in e)e[g]=Math.min(FB_CAP,e[g]);return e}
 /* v455: coverage while booking — which crowds tonight's card gives a match of its own. Coverage only, never a forecast:
