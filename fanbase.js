@@ -417,9 +417,6 @@ const FB_STIP0=.35,FB_STIP1=0,FB_STIPH=45;
 const FB_REP=.5;
 /* v405: casuals follow a story — the card's hottest feuds (heat over FB_STORY0) hook them, the top one most (x1.5 on a PPV) */
 let FB_STORY0=10,FB_STORYH=35,FB_STORYW=[1,.6,.4],FB_STORYCAP=1.4,FB_CAVK=2.5;  /* v438: stories hook casuals more (cap was 1, weights [1,.5,.3]); show quality over what they expect a little less (was 3) */  /* v416: was 1.5 — a feud-heavy GM was pulling casuals far past the rival */
-/* v405: tougher crowds by difficulty — on a solo game, your crowds expect this much more (in stars) than they'd otherwise ask for */
-const FB_XDIFF={easy:-.15,normal:.26,hard:.42};  /* v416: was .18 / .36 (v413), .12 / .3 (v410), .05 / .25 (v405) */
-function fbXOff(b){if(b!=='p'||!S||(typeof ON==='function'&&ON()))return 0;return FB_XDIFF[S.diff||'normal']||0}
 /* the hottest feud across the sides of a match */
 function fbHeat(m){let x=0;if(!m||!m.sides||typeof heatOf!=='function')return 0;for(let i=0;i<m.sides.length;i++)for(let j=i+1;j<m.sides.length;j++)for(const a of m.sides[i])for(const b of m.sides[j])x=Math.max(x,heatOf(a,b));return x}
 const fbN=g=>FG_N[g];
@@ -501,7 +498,7 @@ Object.assign(window,{fbCover,fbCoverHtml,fbGroupsHtml,fbMatchGroups,fbPromoGrou
 function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X0=S.fbx[b],H=S.fbh[b];const res={pct:{},why:{},wy:{},E:{},avg:{},conv:{},best:{}};
  /* v462: what each segment did for each crowd (in %), so the quarter-hour reveal can draw the night segment by segment */
  res.sc=segs.map(()=>({}));const sc=(sg,g,v)=>{const i=segs.indexOf(sg);if(i>=0&&isFinite(v))res.sc[i][g]=(res.sc[i][g]||0)+v};
- const xo=fbXOff(b);const X={};FB_G.forEach(g=>X[g]=(X0[g]||FB_X0)+xo);
+ const X={};FB_G.forEach(g=>X[g]=X0[g]||FB_X0);   /* v491: every brand is judged only by what it has delivered, on every difficulty */
  const ppvK=show&&show.ppv?(o.allin?2:1.5):show&&show.special?1.5:1;
  const per={};FB_HC.forEach(g=>per[g]=[]);
  const last=(S.fbls&&S.fbls[b])||[];segs.forEach(sg=>{if(sg.k==='match')sg.rep=!!(sg.stip&&sg.stip!=='std'&&last.includes(sg.stip))});
