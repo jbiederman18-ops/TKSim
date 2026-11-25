@@ -1067,6 +1067,27 @@ if(typeof liveNext==='function'){const next=liveNext;liveNext=function(){
  }
  return next.apply(this,arguments)
 }}
+/* The true-father storyline: the envelope opens right after the title match, and you name who's in it. A reel asks this
+   itself; a card that airs without live play falls back to arcSetFather's own pick. */
+let arcPendingFather=null;
+if(typeof liveNext==='function'){const next=liveNext;liveNext=function(){
+ if(typeof LQ!=='undefined'&&LQ){const it=LQ.items[LQ.k];
+  if(it&&it.m&&it.kind!=='oc'&&!it.reel&&!it.fatherAsked){
+   const a=arcPayoffFor('match',it.m,it.main);
+   const options=a&&a.k==='gauntlet'&&a.sl==='father'&&!a.father?arcFatherChoices(a):[];
+   if(options.length){
+    arcPendingFather={it,a};const name=esc(aW(a.a).name);
+    return openModal(`<div class="h mhd">🧬 ${name}: the envelope</div><p class="muted">The title match is in the books. An envelope comes down to ringside with the name of ${name}'s true father. Who's in it?</p>
+    ${options.map(id=>`<button class="choice" onclick="arcFatherChoose('${id}')"><div><b>${esc(aW(id).name)}</b><div class="muted tiny">Reveal as the father</div></div></button>`).join('')}`,true);
+   }
+  }
+ }
+ return next.apply(this,arguments)
+}}
+window.arcFatherChoose=function(id){
+ const pending=arcPendingFather;if(!LQ||!pending||LQ.items[LQ.k]!==pending.it||!arcSetFather(pending.a,id))return;
+ arcPendingFather=null;pending.it.fatherAsked=1;closeModal();liveNext()
+};
 Object.assign(window,{arcPayoffFor,arcChoiceOptions,arcDecisionItems,arcApplyDecision,arcWords,arcHead,arcStoryOf,arcFatherChoices,arcSetFather,arcAbsorbedTrait,arcChatTrait,arcCultFollowers,aDForReel:aD});
 window.arcChoose=function(k){
  const pending=arcPendingDecision;if(!LQ||!pending||LQ.items[LQ.k+1]!==pending.it||!arcChoiceOptions(pending.a).some(o=>o.k===k))return;
