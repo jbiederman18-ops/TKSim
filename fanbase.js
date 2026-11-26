@@ -702,20 +702,21 @@ function fbRevealHtml(o,instant){const r=o&&o.fb&&o.fb.p;if(!r||!r.before||!r.af
  const rows=FB_G.map((g,n)=>{const v=fbVd(r,g);const d=Math.round(r.after[g]-r.before[g]);
   return `<div class="srcr"${instant?'':` style="animation-delay:${n*110}ms"`}><span class="fgw">${fgLbl(g)}</span><b class="${v[1]}">${v[0]}</b>${Math.abs(d)<100?'<em class="muted">steady</em>':`<em class="${d>0?'good':'bad'}">${d>0?'▲':'▼'}${fbK(Math.abs(d))}</em>`}${top.includes(g)?fbWhyLine(r,g):''}</div>`}).join('');
  return `<div class="srcrowd${instant?'':' in'}"><div class="srch">How they took your show</div>${rows}${fbNextHtml(r,instant?'':` style="animation-delay:${FB_G.length*110}ms"`)}</div>`}
-/* v459: the crowd reveal for both shows, after both main events and before the winner. The crowd names come up first, then
-   your show's column fills in row by row with its total, then the rival's — one show's night, then the other's. */
-const FB_REV={row:90,cell:200,p0:550,gap:550};
-const FB_REV_MS=(()=>{const n=5,q0=FB_REV.p0+(n+1)*FB_REV.cell+FB_REV.gap;return q0+(n+1)*FB_REV.cell+250})();
-function fbRevealBoth(o,instant,nm){const P=o&&o.fb&&o.fb.p,Q=o&&o.fb&&o.fb.ai;if(!P||!P.before||!P.after||!Q||!Q.before||!Q.after)return fbRevealHtml(o,instant);
- const dl=(r,g)=>Math.round(r.after[g]-r.before[g]);const n=FB_G.length,q0=FB_REV.p0+(n+1)*FB_REV.cell+FB_REV.gap;
+/* the crowd reveal, after both main events and before the winner: one booker's night at a time. The two fan totals above
+   the chart switch between them (srWho in index.html). It opens on 'p': the names come up, then each row's verdict and fans. */
+const FB_REV={row:90,cell:200,p0:550};
+const FB_REV_MS=FB_REV.p0+6*FB_REV.cell+250;
+/* br: whose night. who: that booker's name, or empty for your own. A Next time tip only shows on your own. */
+function fbCrowdOne(o,br,instant,who){const r=o&&o.fb&&o.fb[br];if(!r||!r.before||!r.after||!r.pct)return '';
+ const dl=g=>Math.round(r.after[g]-r.before[g]);const n=FB_G.length;
  const at=t=>instant?'':` style="animation-delay:${t}ms"`;
- const cell=(d,t)=>`<em class="srv2 ${Math.abs(d)<100?'muted':d>0?'good':'bad'}"${at(t)}>${Math.abs(d)<100?'steady':(d>0?'▲':'▼')+fbK(Math.abs(d))}</em>`;
- const tot=r=>FB_G.reduce((a,g)=>a+dl(r,g),0);
- const top=fbTopMoves(P);
- const rows=FB_G.map((g,k)=>{const v=fbVd(P,g),pop=at(FB_REV.p0+k*FB_REV.cell);return `<div class="srcr2"${at(k*FB_REV.row)}><span class="fgw">${fgLbl(g)}<b class="srv2 ${v[1]}"${pop}>${v[0]}</b></span>${cell(dl(P,g),FB_REV.p0+k*FB_REV.cell)}${cell(dl(Q,g),q0+k*FB_REV.cell)}${top.includes(g)&&P.wy&&P.wy[g]?`<span class="srv2 srwyr"${pop}>${fbWhyLine(P,g)}</span>`:''}</div>`}).join('');
- const T=(d,t)=>`<b class="srv2 ${d>=0?'good':'bad'}"${at(t)}>${d>=0?'+':'−'}${fbK(Math.abs(d))}</b>`;
- return `<div class="srcrowd srboth${instant?'':' in'}"><div class="srcr2 hd"><span class="srch">How they took your show</span><span class="srcp"${at(FB_REV.p0-150)}>You</span><span class="srcq"${at(q0-150)}>Rival</span></div>${rows}<div class="srcr2 tot"${at(n*FB_REV.row)}><span>All fans</span>${T(tot(P),FB_REV.p0+n*FB_REV.cell)}${T(tot(Q),q0+n*FB_REV.cell)}</div>${fbNextHtml(P,at(FB_REV_MS-250))}</div>`}
-window.fbRevealBoth=fbRevealBoth;window.FB_REV_MS=FB_REV_MS;
+ /* the reasons are worded for the booker reading about their own show */
+ const why=g=>{const t=r.wy&&r.wy[g];return t&&who?t.replace('than your usual','than their usual').replace('up to your usual','up to their usual'):t};
+ const top=fbTopMoves(r);
+ const rows=FB_G.map((g,k)=>{const v=fbVd(r,g),d=dl(g),pop=at(FB_REV.p0+k*FB_REV.cell),w=top.includes(g)?why(g):'';return `<div class="srcr2"${at(k*FB_REV.row)}><span class="fgw">${fgLbl(g)}<b class="srv2 ${v[1]}"${pop}>${v[0]}</b></span><em class="srv2 ${Math.abs(d)<100?'muted':d>0?'good':'bad'}"${pop}>${Math.abs(d)<100?'steady':(d>0?'▲':'▼')+fbK(Math.abs(d))}</em>${w?`<span class="srv2 srwyr"${pop}><i class="srwy">${esc(w)}</i></span>`:''}</div>`}).join('');
+ const t=FB_G.reduce((a,g)=>a+dl(g),0);
+ return `<div class="srcrowd srone${instant?'':' in'}" data-br="${br}"><div class="srcr2 hd"><span class="srch">How they took ${who?esc(who)+'’s':'your'} show</span></div>${rows}<div class="srcr2 tot"${at(n*FB_REV.row)}><span>All fans</span><b class="srv2 ${t>=0?'good':'bad'}"${at(FB_REV.p0+n*FB_REV.cell)}>${t>=0?'+':'−'}${fbK(Math.abs(t))}</b></div>${who?'':fbNextHtml(r,at(FB_REV_MS-250))}</div>`}
+window.fbCrowdOne=fbCrowdOne;window.FB_REV_MS=FB_REV_MS;
 /* ---- after the show: The fans, then X Redditino (Head of PR) ---- */
 const FB_HANDLE={cas:['@JustHereForTheBelts','@MyDadWatchesThis','@CasualTuesdayKev'],tech:['@ChainWrestlingCarl','@HeadlockHistorian','@SnapSuplexSue'],
  blood:['@CrimsonMaskMike','@BarbedWireBetty','@BladeJobBrandon'],flip:['@SpotMonkeyKai','@ShootingStarSam','@450Splashley'],chaos:['@RunInRhonda','@NoDQNate','@SwerveSzn']};
@@ -773,8 +774,8 @@ if(typeof briefItems==='function'){const b0=briefItems;briefItems=window.briefIt
 if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){try{fgWeek(notes)}catch(e){console.warn('fg week',e)}return e0.apply(this,arguments)}}
 (function(){const c=document.createElement('style');c.textContent=`
 .srcr2 .srwyr,.srcr .srwy{grid-column:1/-1}.srcr2 .srwyr .srwy,.srcr .srwy{font-size:13px;line-height:1.3;color:#c9c4bc;margin-top:2px}
-.srcrowd .srcr2{align-items:center;row-gap:0;padding:4px 0}.srcrowd .srcr2 .fgw{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:0 8px}.srcrowd.srboth{margin-top:2px;padding-top:6px}.srcrowd .srcr2 .fgw b{margin:0;font-size:16px}.srcrowd .srcr2 .fgw b.good,.srcrowd .srcr b.good{color:var(--good)}.srcrowd .srcr2 .fgw b.bad,.srcrowd .srcr b.bad{color:var(--bad)}
-.srcrowd .srcr2.hd{align-items:end;padding:0 0 2px}.srcrowd .srcr2.tot{padding:6px 0 1px}.srcr2.hd .srch{text-align:left;color:var(--gold);margin:0;white-space:normal;font-size:11px;letter-spacing:.1em}
+.srcrowd .srcr2{align-items:center;row-gap:0;padding:4px 0}.srcrowd .srcr2 .fgw{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:0 8px}.srcrowd.srone{margin-top:2px;padding-top:6px}.srcrowd .srcr2 .fgw b{margin:0;font-size:16px}.srcrowd .srcr2 .fgw b.good,.srcrowd .srcr b.good{color:var(--good)}.srcrowd .srcr2 .fgw b.bad,.srcrowd .srcr b.bad{color:var(--bad)}
+.srcrowd .srcr2.hd{align-items:end;padding:0 0 2px}.srcrowd .srcr2.tot{padding:6px 0 1px}.srcr2.hd .srch{grid-column:1/-1;text-align:left;color:var(--gold);margin:0;white-space:normal;font-size:11px;letter-spacing:.1em}
 .srnext{margin:6px 0 0;padding:6px 10px;background:#1d1d22}.srnext b{display:block;font-size:12px;margin-bottom:3px}.srnext span{display:block;font:500 14px/1.35 'Barlow',system-ui,sans-serif}
 .srcrowd.in .srnext{opacity:0;animation:srcrIn .3s ease-out forwards}.srcrowd.now .srnext{animation:none!important;opacity:1!important}`;document.head.appendChild(c)})();
 Object.assign(window,{fbSync,fbSyncAll,fbSeg,fbPromo,fbCalc,fbApply,fbResultsCard,fbRevealHtml,fbTag,fbStipTag,fbFinTag,fbRiTag,fgAfterShow,fgReinvent,fgReinBack,fgLean,FB_STIP});
@@ -812,14 +813,13 @@ Object.assign(window,{fbSync,fbSyncAll,fbSeg,fbPromo,fbCalc,fbApply,fbResultsCar
 .crcov .crc.l2{background:color-mix(in srgb,currentColor 24%,#111114);box-shadow:inset 0 0 0 2px currentColor,0 0 12px color-mix(in srgb,currentColor 45%,transparent);--lt1:currentColor;--lt2:currentColor}.crcov .crc.l2 .fgi{filter:drop-shadow(0 0 4px currentColor)}
 .tell.fmeet{color:var(--gold2);background:rgba(216,180,73,.12);box-shadow:inset 0 0 0 1px rgba(216,180,73,.45)}
 .crseg{display:inline-flex;gap:3px;vertical-align:middle;margin-right:4px}.crseg i{display:inline-grid;place-items:center}.crseg .fgi{width:15px;height:15px}
-.srcr2{display:grid;grid-template-columns:1fr 5.2em 5.2em;gap:8px;align-items:baseline;padding:5px 0;border-top:1px solid rgba(255,255,255,.06)}.srcr2 .fgw{font-size:12.5px;display:flex;flex-direction:column;gap:1px}.srcr2 .fgw b{font:800 italic 12px/1.1 'BC',sans-serif;text-transform:uppercase}.srcr2 .fgw b.warn{color:var(--gold)}
+.srcr2{display:grid;grid-template-columns:1fr 5.2em;gap:8px;align-items:baseline;padding:5px 0;border-top:1px solid rgba(255,255,255,.06)}.srcr2 .fgw{font-size:12.5px;display:flex;flex-direction:column;gap:1px}.srcr2 .fgw b{font:800 italic 12px/1.1 'BC',sans-serif;text-transform:uppercase}.srcr2 .fgw b.warn{color:var(--gold)}
 .srcr2 em{font:700 13px 'BC',sans-serif;font-style:normal;white-space:nowrap;text-align:right}.srcr2.hd{border-top:0;padding-bottom:2px}.srcr2.hd span{font:800 italic 11px/1.1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--gold2);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .srcr2.tot{border-top:1px solid rgba(255,255,255,.2)}.srcr2.tot span{font:800 italic 13px 'BC',sans-serif;text-transform:uppercase}.srcr2.tot b{text-align:right;font:800 15px 'BC',sans-serif}
 .srcrowd.in .srcr2{opacity:0;animation:srcrIn .35s ease-out forwards}.srcrowd.in .srcr2.hd{opacity:1;animation:none}
 .srcrowd.in .srcr{opacity:0;animation:srcrIn .3s ease-out forwards}
 .srcrowd.in .srcr2 .srv2{opacity:0;animation:srcrPop .32s cubic-bezier(.2,1.4,.4,1) forwards}@keyframes srcrPop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
-.srcrowd.in .srcr2.hd .srcp,.srcrowd.in .srcr2.hd .srcq{opacity:.35;animation:srcrHd .3s ease-out forwards}@keyframes srcrHd{to{opacity:1}}
-.srcrowd.now .srcr2,.srcrowd.now .srv2,.srcrowd.now .srcp,.srcrowd.now .srcq{animation:none!important;opacity:1!important;transform:none!important}
+.srcrowd.now .srcr2,.srcrowd.now .srv2{animation:none!important;opacity:1!important;transform:none!important}
 .srcr2 em.srv2,.srcr2 b.srv2{display:block}.srcr2 span.srv2{display:block}.srwy{display:block;margin-top:2px;font:500 12px/1.3 system-ui,sans-serif;font-style:normal;letter-spacing:0;text-transform:none;color:#a29d96;white-space:normal}@keyframes srcrIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 body.tv .srcrowd{display:none}
 .tlrow .tkc .tcfg,.twcd .tkc .tcfg{display:none}

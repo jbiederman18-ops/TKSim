@@ -15,13 +15,13 @@ function qhFmt(v){v=Math.round(v||0);if(Math.abs(v)<100)return '+0';return (v>=0
 /* v465: after the bell — the night-wide part of each show's fans (block.fn, reasons block.fr) gets its own last column */
 function qhBn(o,br){const b=o.blocks.find(x=>x.brand===br);return b&&b.fn!=null?b.fn:null}
 function qhHasBell(o){return ['p','ai'].some(br=>qhBn(o,br)!=null)}
-function qhInit(R){const cols=R.rounds.filter(r=>!r.x);const bell=qhHasBell(R.o);R.qh={cols,bell,n:cols.length+(bell?1:0),pts:{p:[{c:0,v:0}],ai:[{c:0,v:0}]},sum:{p:0,ai:0},lab:{},ic:{},lim:2000,shown:null,k:0,fresh:{}};}
+function qhInit(R){const cols=R.rounds.filter(r=>!r.x);const bell=qhHasBell(R.o);R.qh={cols,bell,n:cols.length+(bell?1:0),pts:{p:[{c:0,v:0}],ai:[{c:0,v:0}]},sum:{p:0,ai:0},lab:{},ic:{p:{},ai:{}},lim:2000,shown:null,k:0,fresh:{}};}
 function qhCol(rd){const R=SRV;return R&&R.qh?R.qh.cols.indexOf(rd)+1:0}
 function qhRdOf(it){return SRV.rounds.find(r=>r.p===it||r.ai===it)}
 /* a half landed: that show's line moves one column */
 function qhPush(it){const R=SRV;if(!R||!R.qh||!R.two||!it)return;const br=it.b.brand;if(br!=='p'&&br!=='ai')return;const rd=qhRdOf(it);if(!rd)return;
  const c=qhCol(rd),d=qhFd(R.o,it);R.qh.sum[br]+=d;R.qh.pts[br].push({c,v:R.qh.sum[br],d});R.qh.fresh[br]=true;R.qh.lab[br]=c;
- if(br==='p')R.qh.ic[c]=it.s.fi||[];qhDraw()}
+ R.qh.ic[br][c]=it.s.fi||[];qhDraw()}
 /* a round where one show had nothing in that slot: its line holds flat through the column */
 function qhHold(rd){const R=SRV;if(!R||!R.qh||!R.two)return;const c=qhCol(rd);['p','ai'].forEach(br=>{if(rd[br])return;const P=R.qh.pts[br];if(P[P.length-1].c>=c)return;P.push({c,v:R.qh.sum[br],d:null})});qhDraw()}
 function qhX(c){const n=SRV.qh.n||1;return QH_L+(QH_R-QH_L)*c/n}
@@ -48,8 +48,8 @@ function qhSvg(){const Q=SRV.qh,QB=qhBot(),QHh=QH_H-(Q.k||0)*QH_FOLD,n=Q.cols.le
   ['p','ai'].forEach(br=>{const q=L[br];if(!q)return;const x=qhX(q.c),y=Y[br];const end=x>QH_R-30;
    out.push(`<text x="${end?x-7:x+7}" y="${y}" data-v="${q.v}" data-o="${(y-qhY(q.v,lim)).toFixed(2)}" class="qhn ${br}${Q.fresh[br]&&!SRV.inst?' nw':''}" text-anchor="${end?'end':'start'}">${qhFmt(q.d)}</text>`)});return out.join('')};
  return `<svg viewBox="0 0 ${QH_W} ${QHh}" class="qhsvg" role="img" aria-label="Fans gained tonight, segment by segment">${over}${grid}${xl}${line('ai')}${line('p')}${lab()}</svg>`}
-/* the crowds each of your segments moved, in a row under the chart */
-function qhIcons(){const Q=SRV.qh;if(typeof fgIc!=='function')return '';return Object.keys(Q.ic).map(c=>{const l=(Q.ic[c]||[]).slice(0,2);if(!l.length)return '';
+/* the crowds each segment moved, in a row under the chart — yours, unless the other booker's total is picked */
+function qhIcons(){const Q=SRV.qh;if(typeof fgIc!=='function')return '';const I=Q.ic[SRV.who||'p']||{};return Object.keys(I).map(c=>{const l=(I[c]||[]).slice(0,2);if(!l.length)return '';
  return `<span class="qhic" style="left:${(qhX(+c)/QH_W*100).toFixed(2)}%">${l.map(([g,s])=>`<i class="fg-${g}">${fgIc(g)}<b>${s>0?'▲':'▼'}</b></i>`).join('')}</span>`}).join('')}
 /* v471: when the scale widens, the lines already drawn ease down to it instead of jumping */
 function qhDraw(){const el=document.getElementById('qh-chart');if(!el||!SRV||!SRV.qh)return;const Q=SRV.qh,tgt=qhLim();
@@ -64,7 +64,7 @@ function qhEase(el,from,to){const Q=SRV.qh,t0=performance.now(),D=550;
   Q.raf=k<1?requestAnimationFrame(step):0};Q.raf=requestAnimationFrame(step)}
 /* v463: the chart is the scoreboard — it sits at the top of the stage, with each show's name and running total in its line's
    colour (ids srs-p / srs-ai, which srDone and srFinal update) */
-function qhHtml(R,G,Rv){qhInit(R);return `<div class="qhwrap"><div class="qhcap"><span>The overnights</span><em>Fans gained tonight</em></div><div class="qhleg"><div class="qht p" id="srs-p"><span>${esc(G)}</span><b>+0</b><em>So far</em></div><div class="qht ai" id="srs-ai"><span>${esc(Rv)}</span><b>+0</b><em>So far</em></div></div><div class="qhchart" id="qh-chart">${qhSvg()}<div class="qhics"></div></div></div>`}
+function qhHtml(R,G,Rv){qhInit(R);return `<div class="qhwrap"><div class="qhcap"><span>The overnights</span><em id="qh-sub">Fans gained tonight</em></div><div class="qhleg"><div class="qht p" id="srs-p"><span>${esc(G)}</span><b>+0</b><em>So far</em></div><div class="qht ai" id="srs-ai"><span>${esc(Rv)}</span><b>+0</b><em>So far</em></div></div><div class="qhchart" id="qh-chart">${qhSvg()}<div class="qhics"></div></div></div>`}
 /* the plate's crowds: which crowds this segment moved, no numbers */
 function qhPlateIcons(s){const l=s&&s.fi;if(!l||!l.length||typeof fgIc!=='function')return '';return `<span class="twfi">${l.map(([g,v])=>`<i class="fg-${g}" title="${FG_N[g]}">${fgIc(g)}<b>${v>0?'▲':'▼'}</b></i>`).join('')}</span>`}
 /* who won the night: the most fans gained tonight; the show rating breaks a tie */
@@ -95,6 +95,12 @@ Object.assign(window,{qhFold,qhBell,qhBellHtml,qhHtml,qhPush,qhHold,qhDraw,qhPla
 .qht.p span{color:var(--gold)}
 .qht b{font:900 italic 22px/1 'BC',sans-serif;margin-left:auto;color:var(--gold);white-space:nowrap}.qht.ai b{margin-left:0;margin-right:auto;color:var(--heel)}
 .qht em{display:none}.qht.win{box-shadow:inset 3px 0 0 var(--gold),inset 0 0 0 1px var(--gold)}.qht.ai.win{box-shadow:inset -3px 0 0 var(--heel),inset 0 0 0 1px var(--gold)}
+.qht.tap{cursor:pointer;min-height:44px;align-items:center;-webkit-tap-highlight-color:transparent;transition:opacity .2s}
+.qht.tap:not(.sel){opacity:.55}
+.qht.tap.sel{background:#2b2618}.qht.ai.tap.sel{background:#2e1b19}
+.qht.tap.sel::after{content:'';position:absolute;left:50%;bottom:-6px;margin-left:-6px;border:6px solid transparent;border-bottom:0;border-top-color:var(--gold)}
+.qht.ai.tap.sel::after{border-top-color:var(--heel)}
+.qht{position:relative}
 .qht b.punch{animation:twPunch .5s cubic-bezier(.2,1.6,.4,1)}
 .srv.qh .twpair{min-height:0;justify-content:flex-start}
 .srv.qh .qhwrap,.srv.qh .twpair{transition:opacity .35s ease,filter .35s ease}
