@@ -15,9 +15,8 @@ GitHub runs it on every push (.github/workflows/tutorial.yml).
 """
 import asyncio, os, re, socket, subprocess, sys
 
-# hookStep calls that only register when their function exists, which it doesn't at boot:
-# openFg (budget.js) is private to inbox.js, so budget's friend-visit price check never attaches (known, v510)
-NOT_AT_BOOT = {'openFg'}
+# hookStep calls that only register when their function exists, which it doesn't at boot (none right now)
+NOT_AT_BOOT = set()
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 problems = []
 

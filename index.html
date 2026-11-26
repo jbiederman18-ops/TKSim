@@ -38,7 +38,7 @@
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v510';
+const APP_VERSION='v511';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -3051,7 +3051,7 @@ function whyMatch(m,sh){const ws=m.sides.map(s=>s.map(id=>S.w[id]));let h='';con
  {const all=ws.flat();const rm=roleMix(all,m),cb=chaosB(all,m);const mx=[];if(rm.t)mx.push({t:rm.t,v:rm.v>=2?4:rm.v});if(cb)mx.push({t:'Flyers & showmen bring chaos',v:cb>=2.5?4:1});if(all.length>=3&&m.type!=='gauntlet')mx.push({t:'The top two names carry the crowd',v:0});
   if(mx.length)h+=`<div class="tiny muted" style="margin-top:6px"><b>Multi-person match</b></div><div>${partsHtml(mx)}</div>${all.length>=3&&m.type!=='gauntlet'?'<div class="tiny muted" style="margin-top:4px">Only one loser takes the fall, lower names gain from working with the top star, and the top star does less of the work.</div>':''}`}
  const rr=rateMatch(m,{ppv:sh.ppv,preview:true});if(rr.boil)h+=`<div class="tiny muted" style="margin-top:6px"><b>Bonus</b></div><div><span class="why up">💥 Boiling over ▲</span></div>`;
- if(rr.rep)h+=`<div class="tiny muted" style="margin-top:6px"><b>Repetition</b></div><div><span class="why dn">🔁 Same as last week — ${repWord(rr)}</span></div>`;
+ if(rr.rep)h+=`<div class="tiny muted" style="margin-top:6px"><b>Repetition</b></div><div><span class="why dn">🔁 Same as last week — ${Math.min(...pairs.map(([a,b])=>repMult(a.id,b.id,m.type)))<.6?'half heat':'75% heat'}</span></div>`;
  return h?`<details class="whyd"><summary>Why?</summary>${h}</details>`:''}
 /* ---- generic in-game dropdown: dd(id,{title,sub,opts:[{t,sub,right,tags,on,dis,group,pick}],rerender}) ---- */
 const DDR={},DDP={};let DDO=null,DDKEEP=false;

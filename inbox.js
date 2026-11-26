@@ -64,7 +64,7 @@ function inboxList(){if(!allowed())return [];const out=[];
  if(S.pitch&&typeof PITCHES!=='undefined'&&PITCHES[S.pitch.k]&&S.w[S.pitch.a]&&S.w[S.pitch.a].own==='p')out.push({k:'pitch',open:()=>_op()});
  try{if(typeof arcDeskList==='function')arcDeskList().forEach(x=>out.push({k:x.k,id:x.id,open:()=>arcDeskOpen(x.k,x.id)}))}catch(e){console.warn('inbox arcs',e)}
  try{if(netDue())out.push({k:'net',open:openNet})}catch(e){console.warn('inbox net',e)}
- try{if(typeof fgVisit==='function'&&fgVisit())out.push({k:'fg',open:openFg})}catch(e){console.warn('inbox friends',e)}
+ try{if(typeof fgVisit==='function'&&fgVisit())out.push({k:'fg',open:()=>window.openFg()})}catch(e){console.warn('inbox friends',e)}
  try{if(typeof fgDrift==='function'&&fgDrift())out.push({k:'fgd',open:openFgd})}catch(e){console.warn('inbox drift',e)}
  try{if(typeof trVisit==='function'&&trVisit())out.push({k:'tr',open:openTr})}catch(e){console.warn('inbox traits',e)}
  try{agentList().forEach(w=>out.push({k:'agent',w,open:()=>openAgent(w.id)}))}catch(e){console.warn('inbox agents',e)}
@@ -298,6 +298,8 @@ const picRow=(...ids)=>`<div class="duo ibx-pics">${ids.map(id=>S.w[id]?face(S.w
 window.picRow=picRow;
 (function(){const c=document.createElement('style');c.textContent=`.duo.ibx-pics{justify-content:center;gap:10px}html .duo.ibx-pics .fav,html.lk-hy .duo.ibx-pics .fav,html.tcards.lk-hy .duo.ibx-pics .fav{width:96px;height:132px;flex:none;overflow:hidden}.duo.ibx-pics .fav img,.duo.ibx-pics .fav svg{width:100%;height:100%;object-fit:cover;object-position:50% 18%}`;document.head.appendChild(c)})();
 window.openInbox=openInbox;
+/* global, and called through window, so other files can add steps to the friend visit (budget.js greys out what you can't afford) */
+window.openFg=openFg;
 /* once the last one is answered, the briefing */
 /* v237: Home re-draws as the line clears, so its strip never shows people who've already been answered */
 function finish(){ON_=false;N0=0;CUR=null;try{render()}catch(e){}/* v324: the briefing is a panel on Home now — nothing else opens */}

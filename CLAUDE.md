@@ -52,8 +52,8 @@ load order, exactly like hand-written wrappers did: the file loaded last runs it
 carries values from a step's `before` to its own `after`. `HOOKS.go` (etc.) in the console lists every step, innermost first;
 v510 converted the old wrappers mechanically, so their label is the file name.
 - `name` must be a global function (a top-level `function` or one exposed with `window.x=`) — check-boot fails if a step
-  doesn't register. Functions private to an IIFE can't be hooked from another file (budget.js's `openFg` step never attaches,
-  because openFg is private to inbox.js — a known gap, listed in check-boot's NOT_AT_BOOT).
+  doesn't register. A function private to an IIFE has to be exposed with `window.x=x` *and* called through `window.x()`
+  inside its own file, or the file's own calls skip the steps (v511 did this for inbox.js's `openFg`).
 - Left hand-wrapped on purpose (the wrapper's saved copy is used elsewhere, or the name is local): `toast` (index.html,
   cards.js), `roll` (exchange.js), `card` (index.html, a local).
 
@@ -64,8 +64,7 @@ builds and compares the final save byte for byte. It must say "Same game ✓" (`
 purpose from the save copy first). The balance sweep only shows "within noise", so it can't prove a refactor is safe; use it
 for real gameplay changes. For CSS or screen-code cleanup, also compare the screens: v510 used a side-by-side run of both
 builds on a virtual clock, clicking through the game and comparing every element's HTML and computed style after each click —
-`python3 tools/check-screens.py <older-commit>` (~5 min a walk; it must say "Same screens ✓"). Known bug in both builds as of
-v510: Match details throws `repWord is not defined` for a match repeating last week's (index.html, "Same as last week").
+`python3 tools/check-screens.py <older-commit>` (~5 min a walk; it must say "Same screens ✓").
 
 ## External files
 | File | System |
