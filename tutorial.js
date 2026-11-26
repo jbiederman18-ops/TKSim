@@ -23,7 +23,7 @@
      Appending is how stops drift into patch notes.
    • tools/check-tutorial.py fails on history/design phrasing (TUT_BANNED). If it flags a line, rewrite it, don't
      dodge the pattern. */
-const TUT_REV=96;
+const TUT_REV=97;
 const TUT_KEY='tksim_tut';
 const TUT_WORDS=190;  /* longest a stop may be (checked by tools/check-tutorial.py) */
 const TUT_MISS=[];
@@ -97,8 +97,8 @@ const TUT_STEPS=[
  b:()=>`An arc is a storyline you buy for one wrestler. Pick one under <b>Potential</b>: it lays out a few stops to book and a payoff, with a deadline. Book every stop, land the payoff in time, and the payoff rates higher and changes them: a turn, a new skill, a team, a jump in popularity. Miss the deadline and they're let down.<br><br>If someone an arc needs is unavailable, <b>hold the story</b> to keep your finished stops for their return, or drop it and get the unfinished part of the price back.<br><br>${tv('ARC_SLOTS',()=>ARC_SLOTS,2)} can run at once, and each arc runs once a season. Arcs do the most for wrestlers who aren't stars yet. Your running arcs, their next stop and their deadline sit on Home and the Book screen.`},
 {id:'s.tpic',track:'season',since:20,tab:'titles',sel:'main .card.belt',sys:['titles','prestige'],t:'Crown your champions',
  b:()=>`Your titles start vacant, at most one world, midcard and tag title per division. <b>Put one on the line in any match</b> and the winner is your first champion.<br><br>Defenses build the champion and the belt's prestige; changing hands too fast drains it. Men's and women's titles stay in their division, so intergender matches are non-title.`},
-{id:'s.live',track:'season',since:94,tab:'book',sel:'main .btn.live',sys:['live','calls','production','fan groups'],t:'Go live',
- b:()=>`Pick tonight's <b>🎆 production</b> above Go live. Bigger production lifts the whole show.<br><br>When an arc asks you to decide its ending, you choose right before the payoff.<br><br>Backstage trouble can call you into gorilla any night. The reveal shows how each crowd took your show; tap the rival’s fan total to scout theirs.`},
+{id:'s.live',track:'season',since:97,tab:'book',sel:'main .btn.live',sys:['live','calls','production','fan groups'],t:'Go live',
+ b:()=>`Pick tonight's <b>🎆 production</b> above Go live. Bigger production lifts the whole show.<br><br>When an arc asks you to decide its ending, you choose right before the payoff.<br><br>In the reveal, each segment names the crowds it moved and why. Crowds judge stars against what they’ve come to expect: <b>Expect more now</b> means your recent quality raised their standards, so bring them better. Tap the rival’s fan total at the end to scout theirs.`},
 
 /* ---- one-time coach tips ---- */
 {id:'t.wwe',track:'tip',opt:true,since:18,sel:'main .card.showcard',sys:['calendar','wwe','rumble','money in the bank'],t:'AEW meets WWE',

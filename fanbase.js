@@ -543,10 +543,31 @@ function fbNextHtml(r,at){if(!r.nx)return '';const d=g=>r.after[g]-r.before[g];c
 /* v505: the segment a crowd's verdict is about, small enough to keep on the result (X Redditino's timeline names its wrestlers) */
 function fbSegBrief(segs,nm){if(!nm)return null;const sg=segs.find(s=>fbSegName(s)===nm);if(!sg)return null;
  const sn=sg.k==='promo'?sg.ids.map(id=>S.w[id]&&S.w[id].name).filter(Boolean):(sg.sn||[]);return {k:sg.k,sn:sn.slice(0,4),st:sg.st,me:!!sg.me,title:!!sg.title,stip:sg.stip||''}}
+/* v508: why a segment moved a crowd. Each cause is recorded as it's scored, so a reason can't disagree with the numbers. */
+function fbPart(r,i,g,k,v){if(!k||!r.scw||!v)return;const p=r.scw[i][g]||(r.scw[i][g]={});p[k]=(p[k]||0)+v}
+/* the stars against a crowd's bar x (grace: how far under it still counts). 'up' only when the same stars would not have
+   lost this crowd at a bar it really had in its last few shows — so "expect more now" is always true */
+const FB_XHIST=4;
+function fbQk(st,x,hist,grace){if(st<x-grace)return (hist||[]).some(h=>h<x&&st>=h-grace-1e-9)?'up':'miss';return st-x>=.5?'wow':st>x?'love':'ok'}
+const FB_BECAUSE={up:'Expect more now',miss:'Wanted better',wow:'Blown away',love:'Loved it',ok:'Satisfied',ri:'Hated that run-in',fin:'Hated that finish',
+ stars:'Came for the stars',lowstars:'Wanted bigger stars',draws:'Came for their favorites',title:'Came for the title',spec:'Came for the match type',story:'Hooked by the story',viral:'Saw the viral spots'};
+/* the crowds worth naming for one segment: the biggest mover in the same direction as the segment's total, then the next
+   biggest either way. t = the segment's fans, moved = fans by crowd, parts = causes by crowd. Returns [[crowd, ±1, reason]] */
+function fbReasons(t,moved,parts,qk){const all=FB_G.filter(g=>moved[g]).sort((a,b)=>Math.abs(moved[b])-Math.abs(moved[a]));
+ const lead=Math.abs(t)>=100?all.find(g=>moved[g]*t>0):null;const pick=lead?[lead]:[];
+ all.forEach(g=>{if(pick.length<2&&!pick.includes(g)&&Math.abs(moved[g])>=100)pick.push(g)});
+ return pick.map(g=>{const s=moved[g]>0?1:-1;const P=(parts&&parts[g])||{};
+  const k=Object.keys(P).filter(k=>P[k]*s>0).sort((a,b)=>Math.abs(P[b])-Math.abs(P[a]))[0];if(!k)return null;
+  const why=k==='q'?qk&&qk[g]:k==='stars'&&s<0?'lowstars':k;return FB_BECAUSE[why]?[g,s,why]:null}).filter(Boolean)}
+Object.assign(window,{fbPart,fbQk,fbReasons,FB_BECAUSE});
 /* the show's effect on each group (in %), with the reason. dry = a preview (nothing changes) */
 function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X0=S.fbx[b],H=S.fbh[b];const res={pct:{},why:{},wy:{},vd:{},nx:{},mt:{},ms:{},E:{},avg:{},conv:{},best:{}};
  /* v462: what each segment did for each crowd (in %), so the quarter-hour reveal can draw the night segment by segment */
- res.sc=segs.map(()=>({}));const sc=(sg,g,v)=>{const i=segs.indexOf(sg);if(i>=0&&isFinite(v))res.sc[i][g]=(res.sc[i][g]||0)+v};
+ res.sc=segs.map(()=>({}));
+ /* v508: and what made it up, by cause (scw), plus how its stars compared with that crowd's bar (qk) — the reveal's reasons */
+ res.scw=segs.map(()=>({}));res.qk=segs.map(()=>({}));
+ const sc=(sg,g,v,k)=>{const i=segs.indexOf(sg);if(i>=0&&isFinite(v)){res.sc[i][g]=(res.sc[i][g]||0)+v;fbPart(res,i,g,k,v)}};
+ const HX=(S.fbxh&&S.fbxh[b])||{};const qk=(sg,g,x,grace)=>{const i=segs.indexOf(sg);if(i>=0)res.qk[i][g]=fbQk(sg.st,x,HX[g],grace)};
  const X={};FB_G.forEach(g=>X[g]=X0[g]||FB_X0);   /* v491: every brand is judged only by what it has delivered, on every difficulty */
  const ppvK=show&&show.ppv?(o.allin?2:1.5):show&&show.special?1.5:1;
  const per={};FB_HC.forEach(g=>per[g]=[]);
@@ -555,9 +576,9 @@ function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X0=S.fbx[b],H=S.f
  FB_HC.forEach(g=>{const l=per[g].sort((a,b)=>b.e-a.e);let E=0,sw=0,ss=0,sx=0;
   const pc=[];l.forEach((x,i)=>{const w=FB_W[Math.min(i,FB_W.length-1)];if(i>=FB_W.length)return;const ee=x.e*w;E+=ee;const c=ee*(x.sg.st-X[g]+FB_FED)*FB_PER*(x.sg.me?FB_ME:1);sw+=c;pc.push([x.sg,c]);ss+=x.sg.st*x.e;sx+=x.e});
   const hist=H[g]||[];const run=1+(hist[0]>=1.6?1+(hist[1]>=1.6?1:0):0);const burn=E>=1.6?(run>=3?.6:run>=2?.8:1):1;
-  const pk=sw>0?burn*ppvK:1;pc.forEach(([sg,c])=>sc(sg,g,c*pk));
+  const pk=sw>0?burn*ppvK:1;pc.forEach(([sg,c])=>{sc(sg,g,c*pk,'q');qk(sg,g,X[g],FB_FED)});
   if(sw>0)sw*=burn*ppvK;let hold=0;if(E<1)hold=-(1-E)*((hist[0]!=null&&hist[0]<1)?FB_STARVE:FB_HOLD);
-  let pen=0;if(g==='tech'){const ri=segs.filter(s=>s.k==='match'&&s.ric).length;const scr=segs.filter(s=>s.k==='match'&&['cheat','dq','co'].includes(s.fin)&&fbExpo(s).tech).length;pen=-(ri*FB_RI_TECH+scr*FB_SCREW_TECH);segs.forEach(s=>{if(s.k!=='match')return;if(s.ric)sc(s,'tech',-FB_RI_TECH);else if(['cheat','dq','co'].includes(s.fin)&&fbExpo(s).tech)sc(s,'tech',-FB_SCREW_TECH)})}
+  let pen=0;if(g==='tech'){const ri=segs.filter(s=>s.k==='match'&&s.ric).length;const scr=segs.filter(s=>s.k==='match'&&['cheat','dq','co'].includes(s.fin)&&fbExpo(s).tech).length;pen=-(ri*FB_RI_TECH+scr*FB_SCREW_TECH);segs.forEach(s=>{if(s.k!=='match')return;if(s.ric)sc(s,'tech',-FB_RI_TECH,'ri');else if(['cheat','dq','co'].includes(s.fin)&&fbExpo(s).tech)sc(s,'tech',-FB_SCREW_TECH,'fin')})}
   res.pct[g]=sw+hold+pen;res.E[g]=E;res.avg[g]=sx?ss/sx:null;res.best[g]=l[0]?l[0].sg:null;
   const v=fbVerdict(g,{pc,E,burn,pen,X:X[g],hist,ric:segs.some(s=>s.k==='match'&&s.ric)});
   res.vd[g]=v.vd;res.wy[g]=res.why[g]=v.why;res.nx[g]=v.nx;res.mt[g]=v.mt;res.ms[g]=fbSegBrief(segs,v.mt);
@@ -572,14 +593,14 @@ function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X0=S.fbx[b],H=S.f
  story=Math.min(FB_STORYCAP,story)*(show&&show.ppv?1.5:1);res.story=story;
  let up=(tp-70)*.12+draws+tl+spec+(cav-X.cas)*FB_CAVK;if(!segs.length)up=0;if(up>0)up*=ppvK;
  /* v462: the same casual hooks, segment by segment (the tune-out drift and a new champion's bump belong to the whole night) */
- if(segs.length){const k=up>0?ppvK:1,cs2=(sg,v)=>sc(sg,'cas',v);
-  ids.map(id=>({id,p:S.w[id]?S.w[id].pop:0})).sort((a,b)=>b.p-a.p).slice(0,4).forEach(x=>{const sg=segs.find(s=>s.ids.includes(x.id));if(sg)cs2(sg,(x.p-FB_TP0)*.12/4*k)});
-  const dr=segs.map(s=>s.k==='match'?s.ids.filter(id=>S.w[id]&&fgOf(S.w[id]).includes('cas')).length*.6:0),drT=dr.reduce((a,x)=>a+x,0);segs.forEach((s,i)=>{if(dr[i])cs2(s,dr[i]*Math.min(1,1.8/drT)*k)});
-  const tN=segs.filter(s=>s.title).length;segs.forEach(s=>{if(s.title)cs2(s,.6*Math.min(1,1.2/(tN*.6))*k)});
-  const spN=segs.filter(s=>s.k==='match'&&(s.stip!=='std'||FB_MULTI[s.type])).length;segs.forEach(s=>{if(s.k==='match'&&(s.stip!=='std'||FB_MULTI[s.type]))cs2(s,.4*Math.min(1,.8/(spN*.4))*k)});
-  segs.forEach(s=>cs2(s,(s.st-X.cas)*(s.me?1.6:1)/cw*FB_CAVK*k));
+ if(segs.length){const k=up>0?ppvK:1,cs2=(sg,v,w)=>sc(sg,'cas',v,w);
+  ids.map(id=>({id,p:S.w[id]?S.w[id].pop:0})).sort((a,b)=>b.p-a.p).slice(0,4).forEach(x=>{const sg=segs.find(s=>s.ids.includes(x.id));if(sg)cs2(sg,(x.p-FB_TP0)*.12/4*k,'stars')});
+  const dr=segs.map(s=>s.k==='match'?s.ids.filter(id=>S.w[id]&&fgOf(S.w[id]).includes('cas')).length*.6:0),drT=dr.reduce((a,x)=>a+x,0);segs.forEach((s,i)=>{if(dr[i])cs2(s,dr[i]*Math.min(1,1.8/drT)*k,'draws')});
+  const tN=segs.filter(s=>s.title).length;segs.forEach(s=>{if(s.title)cs2(s,.6*Math.min(1,1.2/(tN*.6))*k,'title')});
+  const spN=segs.filter(s=>s.k==='match'&&(s.stip!=='std'||FB_MULTI[s.type])).length;segs.forEach(s=>{if(s.k==='match'&&(s.stip!=='std'||FB_MULTI[s.type]))cs2(s,.4*Math.min(1,.8/(spN*.4))*k,'spec')});
+  segs.forEach(s=>{cs2(s,(s.st-X.cas)*(s.me?1.6:1)/cw*FB_CAVK*k,'q');qk(s,'cas',X.cas,0)});
   const hm=segs.filter(s=>s.k==='match').sort((x,y)=>(y.h||0)-(x.h||0)).slice(0,FB_STORYW.length);let sr=0;const sv=hm.map((s,i)=>{const v=Math.max(0,(s.h||0)-FB_STORY0)/FB_STORYH*FB_STORYW[i];sr+=v;return v});
-  const sk=sr>0?Math.min(FB_STORYCAP,sr)/sr*(show&&show.ppv?1.5:1):0;hm.forEach((s,i)=>{if(sv[i])cs2(s,sv[i]*sk)})}
+  const sk=sr>0?Math.min(FB_STORYCAP,sr)/sr*(show&&show.ppv?1.5:1):0;hm.forEach((s,i)=>{if(sv[i])cs2(s,sv[i]*sk,'story')})}
  res.nc=o.newch&&segs.length?.6*(up>0?ppvK:1):0;
  res.pct.cas=-FB_DRIFT+up+(segs.length?story:0);res.avg.cas=cw?cav:null;res.E.cas=1;
  const cv=fbCasVerdict({segs,up,story,tp,draws,tl,spec,q:(cav-X.cas)*FB_CAVK});
@@ -587,11 +608,13 @@ function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X0=S.fbx[b],H=S.f
  return res}
 /* apply a show's result: returns what each group did, for the results screen */
 function fbApply(b,segs,show,o){const r=fbCalc(b,segs,show,o);const f=S.fb[b],X=S.fbx[b],H=S.fbh[b];const before=Object.assign({},f);
- const grow=1;/* gains come from the pool and casuals tune out in proportion, so growth levels off by itself (no fanGrowF) */let conv=0;const out={before,after:{},pct:r.pct,why:r.why,wy:r.wy,vd:r.vd,nx:r.nx,mt:r.mt,ms:r.ms,conv:0,flat:0,sc:r.sc,E:r.E,nc:r.nc,arcStory:r.arcStory};
+ const grow=1;/* gains come from the pool and casuals tune out in proportion, so growth levels off by itself (no fanGrowF) */let conv=0;const out={before,after:{},pct:r.pct,why:r.why,wy:r.wy,vd:r.vd,nx:r.nx,mt:r.mt,ms:r.ms,conv:0,flat:0,sc:r.sc,scw:r.scw,qk:r.qk,E:r.E,nc:r.nc,arcStory:r.arcStory};
  FB_G.forEach(g=>{const p=r.pct[g];let d=p>0?FB_POOL*FB_SHARE[g]*p/100*(g==='cas'?FB_GKC:FB_GKH)*grow:f[g]*p/100;f[g]=Math.max(0,f[g]+Math.round(d))});
  out.cv={};FB_HC.forEach(g=>{const c=Math.min(r.conv[g],f.cas*.05);if(c>0){out.cv[g]=Math.round(c);f[g]+=Math.round(c);f.cas-=Math.round(c);conv+=Math.round(c)}});
  /* everything else that moves fans on the night (head-to-head, main event war, debuts, chants, 5★ overflow) reaches casuals */
  const flat=Math.round(o.flat||0);if(flat){if(flat>0)f.cas+=Math.round(flat*(flat>0?grow:1));else f.cas=Math.max(0,f.cas+flat)}
+ /* v508: each crowd's recent bars, from before tonight moves them */
+ S.fbxh=S.fbxh||{};const XH=S.fbxh[b]=S.fbxh[b]||{};FB_G.forEach(g=>{if(r.avg[g]!=null)XH[g]=[X[g]].concat(XH[g]||[]).slice(0,FB_XHIST)});
  FB_HC.forEach(g=>{H[g]=[r.E[g]].concat(H[g]||[]).slice(0,3);if(r.avg[g]!=null)X[g]+=FB_XK*(r.avg[g]-X[g])});if(r.avg.cas!=null)X.cas+=FB_XKC*(r.avg.cas-X.cas);
  FB_G.forEach(g=>X[g]=clamp(X[g],2.5,4.6));
  S.fbls=S.fbls||{};S.fbls[b]=segs.filter(sg=>sg.k==='match'&&sg.stip&&sg.stip!=='std').map(sg=>sg.stip);
@@ -721,7 +744,7 @@ function fbSplit(r,n){if(!r||!r.before||!r.after||!n)return null;const sc=r.sc&&
  if(Math.abs(left)>=100||!bell.length)add('Other fan changes',left);else if(left){bell.slice().sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]))[0][1]+=left}
  bell.sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
  const top=Math.max(0,...sig.flatMap(x=>Object.values(x).map(Math.abs))),cut=Math.max(FB_IC_MIN,top*FB_IC_REL);
- out.forEach((o,i)=>{o.ic=FB_G.map(g=>[g,sig[i][g]||0]).filter(x=>Math.abs(x[1])>=cut).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,3).map(x=>[x[0],x[1]>0?1:-1])});
+ out.forEach((o,i)=>{o.why=sc&&r.scw?fbReasons(o.t,o.g,r.scw[i],r.qk[i]):null;o.ic=FB_G.map(g=>[g,sig[i][g]||0]).filter(x=>Math.abs(x[1])>=cut).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,3).map(x=>[x[0],x[1]>0?1:-1])});
  /* conversions move fans between your own crowds, so they sit beside the receipt rather than in it */
  return {segs:out,night:tot,bell,conv:FB_HC.filter(g=>(cvt[g]||0)>=100).map(g=>[g,cvt[g]])}}
 const fbList=l=>l.length<2?l.join(''):l.slice(0,-1).join(', ')+' and '+l[l.length-1];

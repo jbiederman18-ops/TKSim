@@ -21,7 +21,7 @@ function qhRdOf(it){return SRV.rounds.find(r=>r.p===it||r.ai===it)}
 /* a half landed: that show's line moves one column */
 function qhPush(it){const R=SRV;if(!R||!R.qh||!R.two||!it)return;const br=it.b.brand;if(br!=='p'&&br!=='ai')return;const rd=qhRdOf(it);if(!rd)return;
  const c=qhCol(rd),d=qhFd(R.o,it);R.qh.sum[br]+=d;R.qh.pts[br].push({c,v:R.qh.sum[br],d});R.qh.fresh[br]=true;R.qh.lab[br]=c;
- R.qh.ic[br][c]=it.s.fi||[];qhDraw()}
+ R.qh.ic[br][c]=it.s.fw?[]:it.s.fi||[];qhDraw()}
 /* a round where one show had nothing in that slot: its line holds flat through the column */
 function qhHold(rd){const R=SRV;if(!R||!R.qh||!R.two)return;const c=qhCol(rd);['p','ai'].forEach(br=>{if(rd[br])return;const P=R.qh.pts[br];if(P[P.length-1].c>=c)return;P.push({c,v:R.qh.sum[br],d:null})});qhDraw()}
 function qhX(c){const n=SRV.qh.n||1;return QH_L+(QH_R-QH_L)*c/n}
@@ -75,6 +75,10 @@ function qhTotal(o,br){const b=o.blocks.find(x=>x.brand===br);return b?b.segs.re
 /* the bell: both lines take their night-wide step together. Safe to call twice. */
 function qhBell(inst){const R=SRV;if(!R||!R.qh||!R.qh.bell||R.qh.rung)return false;R.qh.rung=true;const c=R.qh.n,was=R.inst;if(inst)R.inst=true;
  ['p','ai'].forEach(br=>{const d=qhBn(R.o,br)||0;R.qh.sum[br]+=d;R.qh.pts[br].push({c,v:R.qh.sum[br],d});R.qh.fresh[br]=true;R.qh.lab[br]=c});qhDraw();R.inst=was;return true}
+/* v508: under a segment's cards, the crowds it moved and why (fbReasons) — one line each, shown once its stars are in */
+function qhWhyHtml(s){const l=s&&s.fw;if(!l||!l.length||typeof fgIc!=='function')return '';
+ return `<div class="twwhy">${l.map(([g,v,k])=>`<div class="twwr fg-${g}">${fgIc(g)}<span><i>${FG_N[g]}</i><b>${FB_BECAUSE[k]||''}</b></span><em class="${v>0?'good':'bad'}" role="img" aria-label="${v>0?'gained fans':'lost fans'}">${v>0?'▲':'▼'}</em></div>`).join('')}</div>`}
+window.qhWhyHtml=qhWhyHtml;
 /* the bell's plate (v503): a receipt of what moved each show's fans beyond its segments. Every line has its size and the
    lines add up to the total. Biggest first; the small ones sit behind a "more" row (one combined line on the TV, which can't be tapped). */
 const QH_ROWS=4,QH_TV_ROWS=6;
@@ -136,7 +140,7 @@ body:not(.tv) .srv.qh .twh{gap:5px;padding-top:8px;padding-bottom:8px}
 .qhcap{display:flex;justify-content:space-between;align-items:baseline;padding:0 2px 2px}
 .qhcap span{font:900 italic 13px/1 'BC',sans-serif;text-transform:uppercase;letter-spacing:.04em;color:var(--text)}
 .qhcap em{font:700 10px 'BC',sans-serif;font-style:normal;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
-.qhchart{position:relative;background:#141417;box-shadow:inset 0 0 0 1px var(--line);padding:2px 0 22px}
+.qhchart{position:relative;background:#141417;box-shadow:inset 0 0 0 1px var(--line);padding:2px 0}.qhchart:has(.qhic){padding-bottom:22px}
 .qhsvg{display:block;width:100%;height:auto;overflow:visible}
 .qhg{stroke:rgba(255,255,255,.06);stroke-width:1}.qhz{stroke:rgba(255,255,255,.22);stroke-width:1;stroke-dasharray:3 3}
 .qhax{fill:var(--mut);font:700 9px 'BC',sans-serif;letter-spacing:.04em}
@@ -152,6 +156,16 @@ body:not(.tv) .srv.qh .twh{gap:5px;padding-top:8px;padding-bottom:8px}
 .qhn{font:900 italic 12px 'BC',sans-serif}.qhn.p{fill:var(--gold)}.qhn.ai{fill:var(--heel)}
 .qhn.nw{opacity:0;animation:qhIn .3s ease-out .75s forwards}
 @keyframes qhIn{to{opacity:1}}
+.twwhy{display:flex;flex-direction:column;gap:3px;text-align:left;opacity:0;transform:translateY(4px);transition:opacity .3s,transform .3s}.twh.nt .twwhy{opacity:1;transform:none}
+.twwr{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#1e1e22}
+.twwr .fgi{width:22px;height:22px;margin:0}
+.twwr span{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.twwr span i{font:700 11px/1 'BC',sans-serif;font-style:normal;letter-spacing:.1em;text-transform:uppercase}
+.twwr span b{font:800 italic 19px/1 'BC',sans-serif;text-transform:uppercase;color:var(--text)}
+.twwr em{font-style:normal;font-size:17px}.twwr em.good{color:var(--good)}.twwr em.bad{color:var(--bad)}
+.twh.mini .twwhy{display:none}
+body.tv .twwhy{flex-direction:row}body.tv .twwr{flex:1 1 0;min-width:0;gap:5px;padding:4px 6px}
+body.tv .twwr .fgi{width:18px;height:18px}body.tv .twwr span i{font-size:11px}body.tv .twwr span b{font-size:17px;line-height:1.05}body.tv .twwr em{font-size:13px}
 .qhics{position:absolute;left:0;right:0;bottom:3px;height:16px}
 .qhic{position:absolute;top:0;transform:translateX(-50%);display:flex;gap:1px;white-space:nowrap}
 .qhic i,.twfi i{display:inline-flex;align-items:center;font-style:normal}
