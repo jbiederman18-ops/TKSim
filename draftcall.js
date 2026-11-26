@@ -18,7 +18,7 @@ let DC_KEY=null, DC_SEEN=0, DC_Q=[], DC_CUR=null, DC_T=null;
 #dcall .dc-top{display:flex;align-items:stretch;height:26px}
 #dcall .dc-tag{display:flex;align-items:center;padding:0 18px 0 12px;background:var(--red);color:#fff;font:900 italic 15px 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.04em;clip-path:polygon(0 0,100% 0,88% 100%,0 100%)}
 #dcall .dc-rd{display:flex;align-items:center;padding:0 10px;margin-left:-6px;background:#111114;color:var(--gold2);font:800 italic 13px 'BC','Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em}
-#dcall .dc-body{display:flex;gap:12px;align-items:center;padding:10px 12px;background:linear-gradient(180deg,var(--st1),var(--st2));box-shadow:inset 0 0 0 1px var(--gold),0 14px 40px rgba(0,0,0,.7)}
+#dcall .dc-body{display:flex;gap:12px;align-items:center;padding:10px 12px;background:var(--st1);box-shadow:inset 0 0 0 1px var(--gold)}
 #dcall .dc-pic{flex:none;width:58px;height:58px;overflow:hidden;background:#0c0c0e url(card-bg.jpg) center/cover no-repeat;box-shadow:0 0 0 1px #5a4a2e}
 #dcall .dc-pic img{width:100%;height:100%;object-fit:cover;object-position:top}
 #dcall .dc-pic.af{box-shadow:0 0 0 2px var(--face,#3aa0ff)}#dcall .dc-pic.ah{box-shadow:0 0 0 2px var(--heel,#e0453a)}

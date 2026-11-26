@@ -56,7 +56,7 @@ const css=`
 }
 /* the pick sheet docks down the right; the card table slides left to make room and stays clickable */
 @media ${MQ}{
- body:not(.tv) .tcdock.tcsheet{left:auto;right:0;top:60px;bottom:0;width:var(--dk-side);max-width:none;margin:0;height:auto;transform:none;padding-bottom:0;box-shadow:-1px 0 0 var(--gold3),-24px 0 48px rgba(0,0,0,.55)}
+ body:not(.tv) .tcdock.tcsheet{left:auto;right:0;top:60px;bottom:0;width:var(--dk-side);max-width:none;margin:0;height:auto;transform:none;padding-bottom:0;box-shadow:-1px 0 0 var(--gold3)}
  body:not(.tv) .tcdock.tcsheet.enter{animation:dkside .28s cubic-bezier(.2,.9,.3,1) both}
  body:not(.tv) .tcdock.tcsheet:not(.tall) .tcsb{padding-bottom:0;overflow-y:auto}
  body:not(.tv) .tcdock.tcsheet .tcpull{display:none}

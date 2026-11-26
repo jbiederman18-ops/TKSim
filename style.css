@@ -313,7 +313,7 @@ nav.tabs:before{height:2px;background:linear-gradient(90deg,transparent,rgba(207
 nav.tabs button.on svg{filter:none}
 .showcard{background:var(--grain),radial-gradient(70% 90% at 85% 0%,rgba(224,119,58,.28),transparent 60%),radial-gradient(60% 80% at 0% 100%,rgba(204,63,53,.16),transparent 65%),linear-gradient(160deg,#22170f 0%,#130d09 55%,#09090a 100%);border-color:#3a2c20}
 .showcard.ppv{background:var(--grain),radial-gradient(80% 90% at 50% -10%,rgba(232,207,142,.3),transparent 60%),radial-gradient(60% 80% at 100% 100%,rgba(204,63,53,.15),transparent 65%),linear-gradient(170deg,#2a2010 0%,#140f07 60%,#09090a 100%);border-color:#7a6433}
-.kicker i{box-shadow:0 0 5px rgba(204,63,53,.6);animation:none;background:var(--red)}
+.kicker i{animation:none;background:var(--red)}
 .venue b{color:#f1ebdf}
 .bar>b{background:#ece6da;box-shadow:none}
 .bar.fat>i{background:linear-gradient(90deg,#4fa872,#d6a445,#cc3f35)}
@@ -357,7 +357,7 @@ nav.tabs button.on svg{filter:none}
 .lrd>summary:after{content:"▾";color:var(--gold2);margin-left:8px}.lrd:not([open])>summary:after{content:"▸"}
 .lrk{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px}.lrk span{display:inline-flex;align-items:center;gap:5px}
 .lrk .dot{width:9px;height:9px;border-radius:50%;display:inline-block}.lrk .dot.f{background:var(--face)}.lrk .dot.h{background:var(--heel)}
-.lrk .bar3{width:18px;height:4px;display:inline-block;background:linear-gradient(90deg,#ff5a52,#e6b640,#4fd585)}
+.lrk .bar3{width:18px;height:4px;display:inline-block;background:linear-gradient(90deg,#ff5a52 0 33.3%,#e6b640 33.3% 66.6%,#4fd585 66.6%)}
 .lrg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px}
 @media(min-width:560px){.lrg{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .lr{display:flex;align-items:center;gap:8px;padding:6px 8px;color:var(--text);font-family:inherit;text-align:left;cursor:pointer;min-width:0}
@@ -672,7 +672,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none
 .bbs{font:800 12px 'BC','Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--face)}.bbr.hl .bbs{color:var(--heel)}
 .bbo{flex:none;width:28px;text-align:right;font:900 italic 20px 'BC','Barlow Condensed',sans-serif}
 .bbm{flex:none;min-width:46px;text-align:right;font-size:12px;font-weight:700;color:inherit;white-space:nowrap}.bbm.bad{color:var(--bad)}
-.pickin{position:sticky;bottom:max(10px,env(safe-area-inset-bottom));z-index:4;display:flex;align-items:stretch;min-height:46px;margin:14px 0 0;background:#f3efe6;color:#09090b;box-shadow:0 -6px 24px rgba(0,0,0,.65)}
+.pickin{position:sticky;bottom:max(10px,env(safe-area-inset-bottom));z-index:4;display:flex;align-items:stretch;min-height:46px;margin:14px 0 0;background:#f3efe6;color:#09090b}
 .pickin.flat{position:static;box-shadow:none}/* v372: under the tape, so it never covers Make the pick */
 .pickin .pt{flex:none;display:flex;align-items:center;padding:0 18px 0 12px;font:900 italic 17px 'BC','Barlow Condensed',sans-serif;text-transform:uppercase}
 .pickin .pl{display:flex;align-items:center;padding:4px 10px;font-size:13px;font-weight:700;line-height:1.25}
@@ -1002,7 +1002,7 @@ html.lk-hy .chip{font:700 12px 'BC',sans-serif;letter-spacing:.12em;padding:6px 
 /* v213: name plates on the Book screen, segmented hype meter */
 .hych{font:800 11px/1 'BC','Barlow Condensed',sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:3px 6px;background:#000;color:var(--text);white-space:nowrap}
 .hych.g{color:var(--good)}.hych.w{color:#f0b54a}.hych.b{color:var(--bad)}html.lk-hy .hyb{height:8px;background:#2a2b31;-webkit-mask:repeating-linear-gradient(90deg,#000 0 calc(20% - 3px),transparent calc(20% - 3px) 20%);mask:repeating-linear-gradient(90deg,#000 0 calc(20% - 3px),transparent calc(20% - 3px) 20%);transform:skewX(-18deg)}
-html.lk-hy .hyb i{background:var(--gold2);box-shadow:0 0 6px rgba(246,221,142,.35)}
+html.lk-hy .hyb i{background:var(--gold2)}
 /* production: a plain line above Go live, like the mockup */
 html.lk-hy .prodf{background:none;border:0;box-shadow:none;clip-path:none;padding:6px 2px}
 html.lk-hy .prodf[open]{background:linear-gradient(180deg,#18191e,#101115);border:1px solid var(--line);clip-path:var(--cut);padding:12px 14px}
