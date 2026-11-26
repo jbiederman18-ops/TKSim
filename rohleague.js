@@ -60,9 +60,9 @@ function rohWeek(notes){if(S.phase!=='season')return;const R=L();const a=AW();if
 hookStep('endWeek','ROH league and prospect tapes',{after(ctx,r,notes){try{rohWeek(notes||[])}catch(e){console.warn('roh league',e)}try{bothSides(()=>tapeTick(notes||[]))}catch(e){console.warn('tapes',e)}}});
 
 /* ---------------- call-ups cash in the buzz; leaving ROH vacates titles ---------------- */
-if(typeof callUp==='function'){const c0=callUp;window.callUp=callUp=function(id){const w=F('p').r[id];const buzz=w?w.buzz||0:0;const tk=titleOf(id);const out=c0.apply(this,arguments);
+if(typeof callUp==='function'){hookStep('callUp','rohleague.js',{around(c0,...args){let [id]=args;const w=F('p').r[id];const buzz=w?w.buzz||0:0;const tk=titleOf(id);const out=c0.apply(this,args);
  const W=S.w[id];if(W&&W.own==='p'){const bonus=Math.round(Math.min(9,buzz*.8))+(tk?3:0);if(bonus>0){W.pop=clamp(W.pop+bonus,1,100);W.mor=clamp(W.mor+Math.min(8,bonus),0,100);news(`📣 ${W.name} arrives with ${buzzWord(buzz)[1].toLowerCase()} buzz from ROH${tk?` as the ${TT[tk].n} Champion`:''} (+${bonus} popularity).`)}if(tk)vacate(id,'was called up to AEW',null);delete W.buzz;save();render()}
- return out}}
+ return out}})}
 ['farmRelease','farmExc'].forEach(fn=>{const f0=window[fn];if(typeof f0!=='function')return;window[fn]=function(id){const before=!!F('p').r[id];const out=f0.apply(this,arguments);const w=F('p').r[id];if(before&&(!w||w.exc))vacate(id,!w?'was released':'left on excursion',null);return out}});
 
 /* ---------------- tapes & the watchlist ---------------- */
@@ -121,7 +121,7 @@ function rohBrief(){const out=[];const me=farmL('p');const ids=new Set(me.map(w=
   const ask=hot.filter(w=>!w.cuNo||AW()-w.cuNo>=4);
   if(ask.length)out.push({i:'📣',t:'Ready for the call-up',rows:ask.map(w=>`<div class="brow">🔥 <b>${esc(w.name)}</b> · ${w.rw||0}–${w.rl||0} on ROH, <b>hot</b> buzz — the hotter they are, the bigger their AEW debut.<div class="row" style="gap:6px;margin-top:6px"><button class="mini on" onclick="callUp('${w.id}');rohBack()">📣 Call them up</button><button class="mini" onclick="rohNotYet('${w.id}')">Not yet</button></div></div>`)})}
  return out}
-if(typeof briefItems==='function'){const b0=briefItems;window.briefItems=briefItems=function(){const sec=b0.apply(this,arguments);try{const x=rohBrief();if(x.length){const at=sec.findIndex(s=>s.i==='🗓️');if(at<0)sec.push(...x);else sec.splice(at,0,...x)}}catch(e){console.warn('roh brief',e)}return sec}}
+if(typeof briefItems==='function'){hookStep('briefItems','rohleague.js',{after(ctx,sec){try{const x=rohBrief();if(x.length){const at=sec.findIndex(s=>s.i==='🗓️');if(at<0)sec.push(...x);else sec.splice(at,0,...x)}}catch(e){console.warn('roh brief',e)}return sec}})}
 
 /* ---------------- the ROH screen ---------------- */
 function champsCard(){const R=L();return `<div class="card"><div class="h small">🏟️ ROH champions</div>${Object.entries(TT).map(([k,T])=>{const t=R.t[k];const w=t.h&&get(t.h);const mine=w&&F('p').r[w.id];return `<div class="row sb" style="margin:4px 0"><span>${T.i} ${T.n}</span><b class="${mine?'good':''}">${w?esc(w.name):'<span class="muted">Vacant</span>'}${w&&t.def?` <span class="muted tiny">· ${t.def} def.</span>`:''}</b></div>`}).join('')}</div>`}
@@ -129,12 +129,12 @@ function standCard(){const P=pool().concat(farmL('p').filter(w=>w.inj||w.exc));c
  if(!l.length)return '';return `<div class="card"><div class="h small">📊 ROH standings</div>${l.map((w,i)=>`<div class="row sb tiny" style="margin:3px 0"><span>${i+1}. <b class="${mine.has(w.id)?'gold':''}">${esc(w.name)}</b>${titleOf(w.id)?' '+TT[titleOf(w.id)].i:''}</span><span>${w.rw||0}–${w.rl||0}${w.rs>=3?' 🔥'+w.rs:''}</span></div>`).join('')}<div class="muted tiny" style="margin-top:4px">Gold = yours. Title shots go to the best records.</div></div>`}
 function resCard(){const R=S.rohL;if(!R||!R.res||!R.res[0])return '';const ids=new Set(farmL('p').map(w=>w.id));return `<div class="card"><div class="h small">📺 Last week on HonorClub</div>${R.res[0].l.slice(0,10).map(r=>resRow(r,ids)).join('')}</div>`}
 function watchCard(){const l=S.follow||[];if(!l.length)return '';return `<div class="card"><div class="h small">👀 Watchlist · ${l.length}/${MAX_FOLLOW}</div>${l.map(followRow).join('')}</div>`}
-if(typeof window.farmView==='function'){const v0=window.farmView;window.farmView=function(){let h=v0.apply(this,arguments);try{L();
+if(typeof window.farmView==='function'){hookStep('farmView','rohleague.js',{after(ctx,h){try{L();
  h=h.replace(/Everyone here works ROH TV each week and keeps growing[^<]*/,'ROH books itself every week: everyone here works a match, builds an ROH record and keeps growing. Wins, good matches and ROH titles build <b>call-up buzz</b> — the hotter it is, the bigger their AEW debut. ')
  const ins=champsCard()+resCard()+standCard()+watchCard();const sd=h.indexOf('<div class="card"><div class="h small">Send down');
- if(sd>0)h=h.slice(0,sd)+ins+h.slice(sd);else h+=ins}catch(e){console.warn(e)}return h}}
+ if(sd>0)h=h.slice(0,sd)+ins+h.slice(sd);else h+=ins}catch(e){console.warn(e)}return h}})}
 /* buzz + record on each ROH card */
-if(typeof window.farmCard==='function'){const c0=window.farmCard;window.farmCard=function(w){let h=c0.apply(this,arguments);try{const [ic,wd]=buzzWord(w.buzz||0);const tk=titleOf(w.id);
+if(typeof window.farmCard==='function'){hookStep('farmCard','rohleague.js',{after(ctx,h,w){try{const [ic,wd]=buzzWord(w.buzz||0);const tk=titleOf(w.id);
  const line=`<div class="tiny" style="margin-top:6px">${tk?`<b class="gold">${TT[tk].i} ${TT[tk].n} Champion</b> · `:''}ROH record <b>${w.rw||0}–${w.rl||0}</b> · Call-up buzz ${ic} <b>${wd}</b></div>`;
- const i=h.indexOf('<div class="row" style="gap:6px;margin-top:10px');if(i>0)h=h.slice(0,i)+line+h.slice(i)}catch(e){}return h}}
+ const i=h.indexOf('<div class="row" style="gap:6px;margin-top:10px');if(i>0)h=h.slice(0,i)+line+h.slice(i)}catch(e){}return h}})}
 })();

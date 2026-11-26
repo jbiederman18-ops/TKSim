@@ -131,12 +131,12 @@ window.fxTitle=titleFx;
 window.fxTitleMs=function(notes){const n=(notes||[]).filter(x=>TRX.test(x)).length;return n*(RM()?2130:4330)};
 function segTitles(notes,host){(notes||[]).forEach(n=>{if(TRX.test(n))titleFx(n,true,host||null)})}
 /* solo reveal: when a segment's stars land */
-if(typeof srDone==='function'){const d0=srDone;srDone=function(it){const was=it&&it.ok;const out=d0.apply(this,arguments);try{if(it&&!was&&!MUTE){hit(it);segTitles(it.s&&it.s.notes,typeof srHalfEl==='function'?srHalfEl(it):null)}}catch(e){}return out}}
-if(typeof srFinal==='function'){const f0=srFinal;srFinal=function(instant){if(instant)MUTE=true;let out;try{out=f0.apply(this,arguments)}finally{MUTE=false}
- try{const o=SRV&&SRV.o;if(o&&o.hourWin==='p')setTimeout(()=>fireworks(6),instant?100:900)}catch(e){}return out}}
+if(typeof srDone==='function'){hookStep('srDone','fx.js',{around(d0,...args){let [it]=args;const was=it&&it.ok;const out=d0.apply(this,args);try{if(it&&!was&&!MUTE){hit(it);segTitles(it.s&&it.s.notes,typeof srHalfEl==='function'?srHalfEl(it):null)}}catch(e){}return out}})}
+if(typeof srFinal==='function'){hookStep('srFinal','fx.js',{around(f0,...args){let [instant]=args;if(instant)MUTE=true;let out;try{out=f0.apply(this,args)}finally{MUTE=false}
+ try{const o=SRV&&SRV.o;if(o&&o.hourWin==='p')setTimeout(()=>fireworks(6),instant?100:900)}catch(e){}return out}})}
 /* party-night TV reveal */
-if(typeof tvRevealShow==='function'){const t0=tvRevealShow;tvRevealShow=function(stp,instant){const out=t0.apply(this,arguments);try{if(!instant){const el=document.getElementById(stp.id);if(el){const v=+el.dataset.st;if(v>=5)burst(el);else if(v&&v<2)el.classList.add('fxflat');[...el.querySelectorAll('.note')].forEach(n=>{if(TRX.test(n.textContent))titleFx(n.textContent,false,el)})}
- if(stp.final&&document.querySelector('#rv .rv-score.win'))setTimeout(()=>fireworks(7),600)}}catch(e){}return out}}
+if(typeof tvRevealShow==='function'){hookStep('tvRevealShow','fx.js',{after(ctx,out,stp,instant){try{if(!instant){const el=document.getElementById(stp.id);if(el){const v=+el.dataset.st;if(v>=5)burst(el);else if(v&&v<2)el.classList.add('fxflat');[...el.querySelectorAll('.note')].forEach(n=>{if(TRX.test(n.textContent))titleFx(n.textContent,false,el)})}
+ if(stp.final&&document.querySelector('#rv .rv-score.win'))setTimeout(()=>fireworks(7),600)}}catch(e){}return out}})}
 
 /* ---------------- 3. results that hit ---------------- */
 function burst(el){if(RM()||!el)return;el.classList.remove('fx5');void el.offsetWidth;el.classList.add('fx5');const pos=getComputedStyle(el).position;if(pos==='static')el.style.position='relative';
@@ -167,12 +167,12 @@ function numbers(){if(!S||!S.fans||!S.money||!(S.phase==='season'||S.phase==='ov
  document.querySelectorAll('[data-hyv]').forEach(b=>{const v=+b.dataset.hyv;const p=window.__HYP;if(p!=null&&p!==v&&!RM()){b.style.transition='none';b.style.width=p+'%';void b.offsetWidth;b.style.transition='width .9s cubic-bezier(.2,.8,.2,1)';b.style.width=v+'%'}window.__HYP=v})}
 
 /* ---------------- 5. wrestler cards ---------------- */
-if(typeof wcard==='function'){const w0=wcard;wcard=function(w,o){let h=w0.apply(this,arguments);try{if(!w)return h;const inS=S&&(S.phase==='season'||S.phase==='over');let add='';
+if(typeof wcard==='function'){hookStep('wcard','fx.js',{around(w0,...args){let [w,o]=args;let h=w0.apply(this,args);try{if(!w)return h;const inS=S&&(S.phase==='season'||S.phase==='over');let add='';
  if(inS&&w.own==='p'&&w.mor<50&&typeof moodWord==='function')add+=`<span class="fxb md" title="${esc(moodWord(w.mor)[1])}">${moodWord(w.mor)[0]}</span>`;
  h=h.replace('<button class="wc ','<button class="wc '+(w.al==='f'?'af ':'ah '));
- if(add){const i=h.indexOf('<div class="nm">');if(i>0)h=h.slice(0,i)+add+h.slice(i)}}catch(e){}return h}}
+ if(add){const i=h.indexOf('<div class="nm">');if(i>0)h=h.slice(0,i)+add+h.slice(i)}}catch(e){}return h}})}
 /* ROH buzz meter on farm cards */
-if(typeof window.farmCard==='function'){const f0=window.farmCard;window.farmCard=function(w){let h=f0.apply(this,arguments);try{const b=clamp((w.buzz||0)/15*100,0,100);h=h.replace(/(Call-up buzz [^<]*<b>[^<]*<\/b>)/,`$1<span class="bzm"><i style="width:${b}%"></i></span>`)}catch(e){}return h}}
+if(typeof window.farmCard==='function'){hookStep('farmCard','fx.js',{after(ctx,h,w){try{const b=clamp((w.buzz||0)/15*100,0,100);h=h.replace(/(Call-up buzz [^<]*<b>[^<]*<\/b>)/,`$1<span class="bzm"><i style="width:${b}%"></i></span>`)}catch(e){}return h}})}
 
 /* ---------------- hottest on the roster (weekly briefing) ---------------- */
 /* tracks each of your wrestlers' popularity over the last 4 weeks; "hot" = win streak + momentum + recent popularity gains */
@@ -180,18 +180,18 @@ hookStep('endWeek','fx: popularity history for the hot list',{after(){try{brands
 function heatScore(w){const ph=w.ph4||[];const gain=ph.length>1?w.pop-ph[0]:0;return {s:Math.max(0,w.strk||0)*2+Math.max(0,w.mom||0)*1.5+Math.max(0,gain)*1.2+(w.lme!=null&&AW()-w.lme<=1?1.5:0),gain}}
 function hotList(){return ownList('p').filter(w=>!w.inj).map(w=>Object.assign({w},heatScore(w))).filter(x=>x.s>=4).sort((a,b)=>b.s-a.s).slice(0,5)}
 window.hotList=hotList;
-if(typeof briefItems==='function'){const b0=briefItems;window.briefItems=briefItems=function(){const sec=b0.apply(this,arguments);try{const l=hotList();if(l.length){
+if(typeof briefItems==='function'){hookStep('briefItems','fx.js',{around(b0,...args){const sec=b0.apply(this,args);try{const l=hotList();if(l.length){
  const why=x=>{const r=[];if((x.w.strk||0)>=3)r.push(`${x.w.strk}-match win streak`);if(x.gain>=1)r.push(`+${Math.round(x.gain)} popularity in ${Math.min(4,(x.w.ph4||[]).length-1)} weeks`);if((x.w.mom||0)>=3)r.push('strong momentum');if(x.w.lme!=null&&AW()-x.w.lme<=1)r.push('fresh off a main event');return r.join(' · ')||'on a roll'};
  const row=`<div class="brow"><span class="muted tiny">Ride the wave — feature them or put them next to someone you're building.</span></div>`;
  const at=sec.findIndex(x=>x.i==='🗓️');const item={i:'🔥',t:'Hottest on your roster',rows:l.map((x,i)=>`<div class="brow"><b>${i+1}. <a href="#" onclick="closeModal();showW('${x.w.id}');return false">${esc(x.w.name)}</a></b> <span class="muted tiny">· POP ${Math.round(x.w.pop)}</span><br><span class="tiny">${why(x)}</span></div>`).concat([row])};
- if(at<0)sec.push(item);else sec.splice(at,0,item)}}catch(e){console.warn(e)}return sec}}
+ if(at<0)sec.push(item);else sec.splice(at,0,item)}}catch(e){console.warn(e)}return sec}})}
 
 /* ---------------- 6. lower-thirds on live segments ----------------
    v225: retired. The live header's face-off plates (index.html, lvPlates) carry each side's name and its title / team / record line. */
 
 /* ---------------- 7. smoother navigation ---------------- */
 const ORDER=['home','book','roster','arcs','titles','office','menu'];let DIR=null,NAVL=null;
-if(typeof go==='function'){const g0=go;go=function(t){const a=ORDER.indexOf(tab),b=ORDER.indexOf(t);DIR=a>=0&&b>=0&&a!==b?(b>a?'fxr':'fxl'):null;return g0.apply(this,arguments)}}
+if(typeof go==='function'){hookStep('go','fx.js',{before(ctx,t){const a=ORDER.indexOf(tab),b=ORDER.indexOf(t);DIR=a>=0&&b>=0&&a!==b?(b>a?'fxr':'fxl'):null;}})}
 function navFx(){const n=document.querySelector('nav.tabs');if(!n)return;const on=n.querySelector('button.on');if(!on){NAVL=null;return}n.classList.add('fxn');let i=n.querySelector('.nvi');if(!i){i=document.createElement('i');i.className='nvi';n.appendChild(i)}
  const L=on.offsetLeft+on.offsetWidth*.1,W=on.offsetWidth*.8;
  /* v305: the highlight glides with a transform instead of left/width, so the slide doesn't re-lay out the page every frame */
@@ -201,5 +201,5 @@ function navFx(){const n=document.querySelector('nav.tabs');if(!n)return;const o
 hookStep('render','fx: screen transitions and numbers',{before(ctx){ctx.d=DIR;DIR=null},after(ctx){const d=ctx.d;try{const m=document.querySelector('main');if(m&&d&&!RM()){m.classList.remove('enter');m.classList.add(d)}navFx();numbers()}catch(e){}}});
 
 /* ---------------- 8. ROH identity ---------------- */
-if(typeof window.farmView==='function'){const v0=window.farmView;window.farmView=function(){return `<div class="roh-x">${v0.apply(this,arguments)}</div>`}}
+if(typeof window.farmView==='function'){hookStep('farmView','fx.js',{around(v0,...args){return `<div class="roh-x">${v0.apply(this,args)}</div>`}})}
 })();

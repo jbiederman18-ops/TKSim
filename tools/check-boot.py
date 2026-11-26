@@ -10,11 +10,14 @@ Checks:
   2. sw.js VERSION ('aegm-vNNN') matches APP_VERSION ('vNNN') in index.html
   3. no stray images in the repo root that nothing uses (screenshots committed by accident)
   4. the game boots, starts a new game, drafts and opens every tab with no page errors,
-     and the hookStep() steps on endWeek / airPair / render are all registered
+     and every hookStep() in the code has registered (HOOKS)
 GitHub runs it on every push (.github/workflows/tutorial.yml).
 """
 import asyncio, os, re, socket, subprocess, sys
 
+# hookStep calls that only register when their function exists, which it doesn't at boot:
+# openFg (budget.js) is private to inbox.js, so budget's friend-visit price check never attaches (known, v510)
+NOT_AT_BOOT = {'openFg'}
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 problems = []
 
@@ -59,10 +62,14 @@ async def boot_checks():
             pg = await b.new_page(viewport={'width': 390, 'height': 844})
             errs = []
             pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+            # errors the game catches and only logs (a broken screen piece still shows as console.error/warn)
+            pg.on('console', lambda m: errs.append('console: ' + m.text[:200]) if m.type in ('error', 'warning') and re.search(r'ReferenceError|TypeError|SyntaxError|RangeError', m.text) else None)
             pg.on('dialog', lambda d: asyncio.ensure_future(d.accept()))
             await pg.goto(f'http://127.0.0.1:{port}/index.html'); await pg.wait_for_timeout(1500)
             if errs: problems.append('page errors while booting: ' + ' | '.join(errs)); errs.clear()
-            steps = ["startGame()", "simDraft()", "closeModal()"] + [f"go('{t}')" for t in ('home', 'book', 'roster', 'arcs', 'titles', 'office')] + ["go('book');suggestFill()"]
+            steps = ["startGame()", "simDraft()", "closeModal()",
+                     "let g=0;while(S.phase==='draft'&&g++<2000){const b=onClock();const c=draftChoice(b);if(!c){finishDraft();break}draftPick(c.id,b)}",
+                     "closeModal()"] + [f"go('{t}')" for t in ('home', 'book', 'roster', 'arcs', 'titles', 'office')] + ["go('book');suggestFill()", "go('home')", "go('book')"]
             for js in steps:
                 try:
                     await pg.evaluate(f"(()=>{{try{{if(typeof TUT!=='undefined'&&TUT&&typeof tutEnd==='function')tutEnd()}}catch(e){{}};{js}}})()")
@@ -71,13 +78,20 @@ async def boot_checks():
                 await pg.wait_for_timeout(500)
                 if errs: problems.append(f'page errors after {js}: ' + ' | '.join(errs)); errs.clear()
             hooks = await pg.evaluate("typeof HOOKS==='object'?Object.fromEntries(Object.entries(HOOKS).map(([k,v])=>[k,v.length])):null")
-            want = {'endWeek': 17, 'airPair': 7, 'render': 8}
             if hooks is None: problems.append('HOOKS is missing')
             else:
-                for k, n in want.items():
-                    if hooks.get(k, 0) < n:
-                        problems.append(f'only {hooks.get(k, 0)} hookStep steps on {k} (expected at least {n}) — a file failed to register its step')
-            print('hook steps:', hooks)
+                # every hookStep(...) in the code must have registered by the time the game is up
+                want = {}
+                for f in sorted(os.listdir(ROOT)):
+                    if f.endswith('.js') and f not in ('firebase-sdk.js', 'sw.js') or f == 'index.html':
+                        for m in re.finditer(r"hookStep\('([A-Za-z_$][\w$]*)',", read(f)):
+                            want[m.group(1)] = want.get(m.group(1), 0) + 1
+                want['endWeek'] -= 1  # the usage example in index.html's HOOKS comment
+                for k in NOT_AT_BOOT: want.pop(k, None)
+                for k, n in sorted(want.items()):
+                    if hooks.get(k, 0) != n:
+                        problems.append(f'{hooks.get(k, 0)} hookStep steps registered on {k}, {n} in the code — a step failed to register (is {k} a global function by then?)')
+            print('hook steps registered:', sum((hooks or {}).values()))
             await b.close()
     finally:
         srv.kill()

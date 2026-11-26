@@ -92,16 +92,16 @@ function tick(notes){const c=C();if(!c||c.st!=='on'||ON())return;const sc=CH(c.i
   const l=sc.lost&&sc.lost();if(l){decide('lost',l,notes);return}
   if(S.week>sc.by)decide('lost',`The deadline (week ${sc.by}) passed.`,notes)}catch(e){console.warn('challenge',e)}}
 
-if(typeof finishDraft==='function'){const f0=finishDraft;finishDraft=function(){const out=f0.apply(this,arguments);const c=C();if(c&&c.st==='on'&&!c.drafted){c.drafted=1;const sc=CH(c.id);if(sc&&sc.afterDraft)sc.afterDraft()}return out}}
+if(typeof finishDraft==='function'){hookStep('finishDraft','challenges.js',{after(ctx,out){const c=C();if(c&&c.st==='on'&&!c.drafted){c.drafted=1;const sc=CH(c.id);if(sc&&sc.afterDraft)sc.afterDraft()}return out}})}
 hookStep('endWeek','challenges: progress',{after(ctx,r,notes){tick(notes||[])}});
 hookStep('airPair','challenges: streak',{after(ctx,out){const c=C();
  if(c&&c.st==='on'&&c.id==='streak'&&S.week<=ALLIN_WEEK&&out&&out.hourWin){c.run=out.hourWin==='p'?(c.run||0)+1:0;c.best=Math.max(c.best||0,c.run)}}});
-if(typeof applyMatch==='function'){const m0=applyMatch;applyMatch=function(m,res){const out=m0.apply(this,arguments);const c=C();
+if(typeof applyMatch==='function'){hookStep('applyMatch','challenges.js',{after(ctx,out,m,res){const c=C();
  try{if(c&&c.st==='on'&&c.id==='five'&&!ON()&&res&&res.stars>=5&&m.sides.flat().every(id=>S.w[id]&&S.w[id].own==='p'))c.fives=(c.fives||0)+1}catch(e){}
- return out}}
-if(typeof leave==='function'){const l0=leave;leave=function(w,msg){const c=C();
+ return out}})}
+if(typeof leave==='function'){hookStep('leave','challenges.js',{before(ctx,w,msg){const c=C();
  if(c&&c.st==='on'&&c.id==='happy'&&w&&w.own==='p'&&/😠|💸/.test(msg||''))c.walk=`${w.name} walked out on you.`;
- return l0.apply(this,arguments)}}
+ }})}
 
 /* ---------------- Make a Star: choose the project ---------------- */
 window.chalPick=function(){const c=C();if(!c)return;let l=mineL().filter(w=>w.pop<=50&&!w.inj);if(!l.length)l=mineL().slice().sort((a,b)=>a.pop-b.pop).slice(0,3);
@@ -122,8 +122,8 @@ function card(){const c=C();if(!c||ON())return '';const sc=CH(c.id);if(!sc)retur
 window.chalResult=function(){const c=C();if(!c)return;const sc=CH(c.id);c.seen=1;save();if(!sc)return;
  openModal(`<div class="h mhd">${c.st==='won'?'🎉 Challenge complete':'Challenge over'}</div><p style="font-size:1.1em"><b>${sc.i} ${esc(sc.t)}</b></p>
  <p class="muted">${c.st==='won'?`You did it in week ${c.at}.`:esc(c.why||'')}</p><button class="btn" onclick="closeModal()">Keep playing</button>`)};
-if(typeof homeView==='function'){const h0=homeView;homeView=function(){const out=h0.apply(this,arguments);let k='';try{k=card();const c=C();if(c&&c.st!=='on'&&!c.seen)setTimeout(()=>{try{chalResult()}catch(e){}},400)}catch(e){}
- if(!k)return out;const i=out.indexOf('<div class="tiles">');return i<0?k+out:out.slice(0,i)+k+out.slice(i)}}
-if(typeof setupView==='function'){const s0=setupView;setupView=function(){const out=s0.apply(this,arguments);
- const btn=`<button class="btn sec" onclick="openChallenges()">🎯 Challenge scenarios</button>`;const i=out.indexOf('<button class="btn sec" onclick="importSave()">');return i<0?out:out.slice(0,i)+btn+out.slice(i)}}
+if(typeof homeView==='function'){hookStep('homeView','challenges.js',{around(h0,...args){const out=h0.apply(this,args);let k='';try{k=card();const c=C();if(c&&c.st!=='on'&&!c.seen)setTimeout(()=>{try{chalResult()}catch(e){}},400)}catch(e){}
+ if(!k)return out;const i=out.indexOf('<div class="tiles">');return i<0?k+out:out.slice(0,i)+k+out.slice(i)}})}
+if(typeof setupView==='function'){hookStep('setupView','challenges.js',{around(s0,...args){const out=s0.apply(this,args);
+ const btn=`<button class="btn sec" onclick="openChallenges()">🎯 Challenge scenarios</button>`;const i=out.indexOf('<button class="btn sec" onclick="importSave()">');return i<0?out:out.slice(0,i)+btn+out.slice(i)}})}
 })();

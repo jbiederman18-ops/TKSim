@@ -685,7 +685,7 @@ function fbAiTune(b,card,show){if(!card||!S.fb||!S.fb[b])return card;const T=FB_
     const v=bon+ws.filter(w=>fgOf(w).includes(g)).length/ws.length+Math.random()*.3;if(!best||v>best.v)best={v,m,k}})});
   if(!best)break;best.m.stip=best.k}
  return card}
-if(typeof autoBook==='function'){const a0=autoBook;autoBook=window.autoBook=function(brand,show,extUsed,opt){const c=a0.apply(this,arguments);try{if(brand==='ai'&&!(typeof ON==='function'&&ON())&&show)fbAiTune(brand,c,show)}catch(e){console.warn('ai tune',e)}return c}}
+if(typeof autoBook==='function'){hookStep('autoBook','fanbase.js',{after(ctx,c,brand,show,extUsed,opt){try{if(brand==='ai'&&!(typeof ON==='function'&&ON())&&show)fbAiTune(brand,c,show)}catch(e){console.warn('ai tune',e)}return c}})}
 
 /* ---- v402: a brand's audience as one bar of its five crowds (league standings, Home, party TV) and last week's crowds on the TV ---- */
 function fbBar(b){if(!S||!S.fans||S.fans[b]==null)return '';const f=fbSync(b);const T=fbSum(b)||1;
@@ -807,7 +807,7 @@ function fgReinBack(w){const x=S.fgx&&S.fgx[w.id];const g=x&&x.pend;delete w.rei
 function fgReinBrief(){if(!S||S.phase!=='season')return [];const ask=Object.values(S.w).filter(fgReinWant).sort((a,b)=>a.mor-b.mor).slice(0,1);
  return ask.map(w=>{const cur=fgOf(w)[0];const opts=FB_G.filter(g=>g!==cur);
   return {i:'🎭',t:`${w.name} wants a reinvention`,u:false,rows:[`<div class="brow">${esc(w.name)} <span class="fgw">${fgLbl(cur)}</span><br><span class="muted tiny">${w.mor<FB_REIN_MOR?'Miserable':'Off TV for weeks'}. Pick a new crowd and they're gone ${FB_REIN_OUT} weeks relearning how to work, or tell them to stay the course.</span><div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px">${opts.map(g=>`<button class="mini" onclick="fgReinvent('${w.id}','${g}')">${fbN(g)}</button>`).join('')}<button class="mini ghost" onclick="fgReinvent('${w.id}','no')">Stay the course</button></div></div>`]}})}
-if(typeof briefItems==='function'){const b0=briefItems;briefItems=window.briefItems=function(){const s=b0.apply(this,arguments);try{return fgReinBrief().concat(s)}catch(e){console.warn('rein',e);return s}}}
+if(typeof briefItems==='function'){hookStep('briefItems','fanbase.js',{around(b0,...args){const s=b0.apply(this,args);try{return fgReinBrief().concat(s)}catch(e){console.warn('rein',e);return s}}})}
 hookStep('endWeek','fan groups: weekly',{before(ctx,notes){try{fgWeek(notes)}catch(e){console.warn('fg week',e)}}});
 (function(){const c=document.createElement('style');c.textContent=`
 .srcr2 .srwyr,.srcr .srwy{grid-column:1/-1}.srcr2 .srwyr .srwy,.srcr .srwy{font-size:13px;line-height:1.3;color:#c9c4bc;margin-top:2px}

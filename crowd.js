@@ -81,24 +81,24 @@ function hjTry(p,ctx,ai){if(!p||!ctx||!ctx.A||!S)return null;const brand=ctx.bra
  return {text,ch,hj:1}}
 
 /* ---------- hooks ---------- */
-const _gl=goLive;goLive=function(){if(!LIVE)CRWD.p=0;return _gl.apply(this,arguments)};
+hookStep('goLive','crowd.js',{before(ctx){if(!LIVE)CRWD.p=0;}});
 /* the rival's show (and the next week's live show) start with a fresh crowd */
 hookStep('airPair','crowd: reset hijacks',{before(){CRWD.ai=0;CRWD.p=0}});
-const _pt=pickTwist;pickTwist=function(p,ctx,ai){let h=null;try{h=hjTry(p,ctx,ai)}catch(e){console.warn(e)}return h||_pt(p,ctx,ai)};
-const _me=matchEvent;matchEvent=function(m,brand,big,rate){const g=_me(m,brand,big,rate);if(g&&!g.sit)try{rcTry(g,m,brand,big)}catch(e){console.warn(e)}return g};
-const _er=evRoll;evRoll=function(c,r,m){const out=_er(c,r,m);const C=r&&r.CROWD;
+hookStep('pickTwist','crowd.js',{around(_pt,...args){let [p,ctx,ai]=args;let h=null;try{h=hjTry(p,ctx,ai)}catch(e){console.warn(e)}return h||_pt(p,ctx,ai)}});
+hookStep('matchEvent','crowd.js',{around(_me,...args){let [m,brand,big,rate]=args;const g=_me(m,brand,big,rate);if(g&&!g.sit)try{rcTry(g,m,brand,big)}catch(e){console.warn(e)}return g}});
+hookStep('evRoll','crowd.js',{around(_er,...args){let [c,r,m]=args;const out=_er(c,r,m);const C=r&&r.CROWD;
  if(C&&!C.done){C.done=1;const tg=C.tags[c.t];
   if(out.success&&tg==='w'){const ev=evNew(m);ev.stars+=RC_BONUS;ev.notes.push('👥 Gave the crowd exactly what they wanted (+¼★)');(out.extra=out.extra||[]).push('👥 The crowd got exactly what they wanted (+¼★)')}
   else if(out.success&&tg==='a'&&r.A&&r.B){const ev=evNew(m);ev.heat.push([r.A.id,r.B.id,RC_HEAT]);ev.notes.push(`👥 Went against the crowd — they're furious (heat +${RC_HEAT})`);(out.extra=out.extra||[]).push(`👥 The crowd is furious — ${r.A.name} vs ${r.B.name} heat +${RC_HEAT}`)}}
- return out};
-const _roll=roll;roll=function(c,ctx,st){
+ return out}});
+hookStep('roll','crowd.js',{around(_roll,...args){let [c,ctx,st]=args;
  if(c.safe){st.lastC=c;st.score+=.3;const text=fill(typeof voiceText==='function'?voiceText(c,true,ctx.A):c.ok,ctx);st.log.push(fill(c.t,ctx)+' — '+text);(st.oks=st.oks||[]).push(true);return {success:true,text}}
- const out=_roll(c,ctx,st);if(c.hj&&out.success&&ctx.H)st.hj={id:ctx.H.id,k:c.hj};return out};
-const _fp=finalizePromo;finalizePromo=function(p,ctx,st){_fp(p,ctx,st);if(p.res&&st&&st.hj)p.res.hj=st.hj};
-const _apr=applyPromo;applyPromo=function(p,notes){_apr(p,notes);const r=p&&p.res;if(!r||!r.hj)return;const H=S.w[r.hj.id],A=S.w[p.a];if(!H||!A)return;
+ const out=_roll(c,ctx,st);if(c.hj&&out.success&&ctx.H)st.hj={id:ctx.H.id,k:c.hj};return out}});
+hookStep('finalizePromo','crowd.js',{around(_fp,...args){let [p,ctx,st]=args;_fp(p,ctx,st);if(p.res&&st&&st.hj)p.res.hj=st.hj}});
+hookStep('applyPromo','crowd.js',{around(_apr,...args){let [p,notes]=args;_apr(p,notes);const r=p&&p.res;if(!r||!r.hj)return;const H=S.w[r.hj.id],A=S.w[p.a];if(!H||!A)return;
  const was=H.pop;const g=was<70?4:was<80?2.5:1.5;H.pop=clamp(H.pop+g*(1-H.pop/110),1,100);H.mor=clamp(H.mor+3,0,100);
  if(r.hj.k==='join'){const k=key(A.id,H.id);S.chem[k]=clamp((S.chem[k]||0)+1,-5,6);if(H.pop>A.pop)A.pop=clamp(A.pop+1,1,100)}
- if(A.own==='p'){notes.push(was<75?`🌟 The crowd hijacked ${A.name}'s segment for ${H.name} — and made them look like a star.`:`👥 The crowd got their wish: ${H.name} crashed ${A.name}'s segment.`)}};
+ if(A.own==='p'){notes.push(was<75?`🌟 The crowd hijacked ${A.name}'s segment for ${H.name} — and made them look like a star.`:`👥 The crowd got their wish: ${H.name} crashed ${A.name}'s segment.`)}}});
 
 (function(){const c=document.createElement('style');c.textContent=`#modal .note.crowdn{border-left:3px solid var(--gold);padding-left:10px}`;document.head.appendChild(c)})();
 Object.assign(window,{rcNote,rcTag,rcTry,hjTry,CRWD});

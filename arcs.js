@@ -832,18 +832,18 @@ function isChampW(w){return Object.values(S.titles||{}).some(t=>t.holders.includ
 const ARC_LANES={mic:'🎙️ Mic',ring:'🤼 In-ring',trait:'✨ Trait or popularity',star:'🌟 Story'};
 
 /* Prove It: while it runs, they work that crowd's wrestlers like they mean it */
-if(typeof chemParts==='function'){const _cp=chemParts;chemParts=function(x,y){const p=_cp(x,y);try{if(x&&y&&S&&Array.isArray(S.arcs))S.arcs.forEach(a=>{if(a.k!=='proveit'||a.done)return;const me=a.a===x.id?x:a.a===y.id?y:null;if(!me)return;const o=me===x?y:x;if(aGrpOf(o).includes(a.g))p.push({t:`${me.name.split(' ')[0]} is proving it`,v:ARC_PROVE})})}catch(e){}return p}}
+if(typeof chemParts==='function'){hookStep('chemParts','arcs.js',{around(_cp,...args){let [x,y]=args;const p=_cp(x,y);try{if(x&&y&&S&&Array.isArray(S.arcs))S.arcs.forEach(a=>{if(a.k!=='proveit'||a.done)return;const me=a.a===x.id?x:a.a===y.id?y:null;if(!me)return;const o=me===x?y:x;if(aGrpOf(o).includes(a.g))p.push({t:`${me.name.split(' ')[0]} is proving it`,v:ARC_PROVE})})}catch(e){}return p}})}
 /* ---- retirement: gone from the roster for good, never back on the market ---- */
 function arcRetire(w,notes,msg){if(!w)return;const was=w.own;w.retd=AW();if(typeof leave==='function')leave(w,`🪦 ${msg}`,notes||[]);else{w.own=null;news(msg)}
  Object.values(S.titles||{}).forEach(t=>{if(t.holders.includes(w.id)){t.holders=[];news(`🏆 The ${t.n} title is vacant — ${w.name} has retired.`)}});
  (S.teams||[]).forEach(t=>t.m=t.m.filter(x=>x!==w.id));S.teams=(S.teams||[]).filter(t=>t.m.length>=2);if(S.fa)delete S.fa[w.id];if(was)arcList().concat(arcHeld()).filter(a=>a.b===w.id||a.c===w.id).forEach(a=>a.gone=1)}
-if(typeof onMarket==='function'){const _om=onMarket;onMarket=function(w){return !!w&&!w.retd&&_om(w)};window.onMarket=onMarket}
-if(typeof inPool==='function'){const _ip=inPool;inPool=function(w){return !w.retd&&_ip(w)}}
+if(typeof onMarket==='function'){hookStep('onMarket','arcs.js',{around(_om,...args){let [w]=args;return !!w&&!w.retd&&_om(w)}});window.onMarket=onMarket}
+if(typeof inPool==='function'){hookStep('inPool','arcs.js',{around(_ip,...args){let [w]=args;return !w.retd&&_ip(w)}})}
 /* a second crowd won through a Crossover */
-if(typeof fgOf==='function'){const _fg=fgOf;fgOf=function(w){const r=_fg(w);if(!w||!w.fg2||r[0]==='und'||r.includes(w.fg2))return r;return r.slice(0,1).concat([w.fg2])};window.fgOf=fgOf}
+if(typeof fgOf==='function'){hookStep('fgOf','arcs.js',{around(_fg,...args){let [w]=args;const r=_fg(w);if(!w||!w.fg2||r[0]==='und'||r.includes(w.fg2))return r;return r.slice(0,1).concat([w.fg2])}});window.fgOf=fgOf}
 /* a trait earned through a Schooling arc waits at the front of the options when the slot opens */
-if(typeof trOptions==='function'){const _to=trOptions;trOptions=function(w,slot){const o=_to(w,slot);if(!w||!w.trQ||!TRAITS[w.trQ]||(w.tr||[]).includes(w.trQ))return o;return [w.trQ].concat(o.filter(t=>t!==w.trQ)).slice(0,3)};window.trOptions=trOptions}
-if(typeof trAdd==='function'){const _ta=trAdd;trAdd=function(w,t){_ta(w,t);if(w&&w.trQ&&(w.tr||[]).includes(w.trQ))delete w.trQ}}
+if(typeof trOptions==='function'){hookStep('trOptions','arcs.js',{around(_to,...args){let [w,slot]=args;const o=_to(w,slot);if(!w||!w.trQ||!TRAITS[w.trQ]||(w.tr||[]).includes(w.trQ))return o;return [w.trQ].concat(o.filter(t=>t!==w.trQ)).slice(0,3)}});window.trOptions=trOptions}
+if(typeof trAdd==='function'){hookStep('trAdd','arcs.js',{around(_ta,...args){let [w,t]=args;_ta(w,t);if(w&&w.trQ&&(w.tr||[]).includes(w.trQ))delete w.trQ}})}
 
 /* ---- what's on offer for someone: one Mic, one In-ring, one trait/popularity arc (superstars: three story arcs) ---- */
 /* ---- v430: hands. Each wrestler holds three arcs dealt from who they are: their crowd, face or heel, superstar or not,
@@ -974,12 +974,12 @@ function arcPre(s){const out={seg:s,st:0,pay:[]};arcList().forEach(a=>{if(a.stag
 window.arcMatchPre=function(m,mctx){try{const r=arcPre(aSegMatch(m,mctx&&mctx.pos));const h=arcStoryH(r.seg);if(h)ARC_H.set(m,h);return r}catch(e){console.warn('arcs',e);return null}};
 /* a running arc is a story the casuals follow, like a feud: its heat grows with each step, and the payoff is a big one */
 function arcStoryH(s){let h=0;if(s.arcPay&&s.arcPay.length)return ARC_STORYP;arcList().forEach(a=>{if(a.done||!a.have||!aMine(a.a)||!s.ids.includes(a.a))return;h=Math.max(h,ARC_STORYH[Math.min(a.have,ARC_STORYH.length)-1])});return h}
-if(typeof fbSeg==='function'){const _fs=fbSeg;fbSeg=function(m,st,me){const r=_fs.apply(this,arguments);try{const h=ARC_H.get(m);if(h&&r){if(ARC_ONCE)r.arcH=h;else r.h=Math.max(r.h||0,h);r.arc=h>=ARC_STORYP?2:1}}catch(e){}return r}}
-if(typeof fbPromo==='function'){const _fp=fbPromo;fbPromo=function(p){const r=_fp.apply(this,arguments);try{const h=ARC_H.get(p);if(h&&r)r.arc=h>=ARC_STORYP?2:1}catch(e){}return r}}
+if(typeof fbSeg==='function'){hookStep('fbSeg','arcs.js',{after(ctx,r,m,st,me){try{const h=ARC_H.get(m);if(h&&r){if(ARC_ONCE)r.arcH=h;else r.h=Math.max(r.h||0,h);r.arc=h>=ARC_STORYP?2:1}}catch(e){}return r}})}
+if(typeof fbPromo==='function'){hookStep('fbPromo','arcs.js',{after(ctx,r,p){try{const h=ARC_H.get(p);if(h&&r)r.arc=h>=ARC_STORYP?2:1}catch(e){}return r}})}
 /* casuals follow your wrestlers' stories on top of the feuds: each arc segment on the card hooks a few more (a payoff counts double) */
-if(typeof fbCalc==='function'){const _fc=fbCalc;fbCalc=function(b,segs,show,o){const r=_fc.apply(this,arguments);try{const n=(segs||[]).reduce((x,sg)=>x+(sg&&sg.arc||0),0);if(n&&r&&r.pct&&r.pct.cas!=null){let add=Math.min(ARC_CASCAP,n*ARC_CAS)*(show&&show.ppv?1.5:1);
+if(typeof fbCalc==='function'){hookStep('fbCalc','arcs.js',{around(_fc,...args){let [b,segs,show,o]=args;const r=_fc.apply(this,args);try{const n=(segs||[]).reduce((x,sg)=>x+(sg&&sg.arc||0),0);if(n&&r&&r.pct&&r.pct.cas!=null){let add=Math.min(ARC_CASCAP,n*ARC_CAS)*(show&&show.ppv?1.5:1);
    if(ARC_ONCE&&typeof FB_STORYW!=='undefined'){const pull=hs=>{let v=0;hs.sort((x,y)=>y-x).slice(0,FB_STORYW.length).forEach((h,i)=>v+=Math.max(0,h-FB_STORY0)/FB_STORYH*FB_STORYW[i]);return Math.min(FB_STORYCAP,v)*(show&&show.ppv?1.5:1)};
-    const ms=segs.filter(sg=>sg&&sg.k==='match');const viaHeat=pull(ms.map(sg=>Math.max(sg.h||0,sg.arcH||0)))-pull(ms.map(sg=>sg.h||0));add=Math.max(add,viaHeat)}r.pct.cas+=add;r.arcStory=add;if(add>=.75&&r.why)r.why.cas='Hooked on the stories — they want to see where they go'}}catch(e){}return r}}
+    const ms=segs.filter(sg=>sg&&sg.k==='match');const viaHeat=pull(ms.map(sg=>Math.max(sg.h||0,sg.arcH||0)))-pull(ms.map(sg=>sg.h||0));add=Math.max(add,viaHeat)}r.pct.cas+=add;r.arcStory=add;if(add>=.75&&r.why)r.why.cas='Hooked on the stories — they want to see where they go'}}catch(e){}return r}})}
 window.arcPromoPre=function(p){try{const r=arcPre(aSegPromo(p));const h=arcStoryH(r.seg);if(h)ARC_H.set(p,h);return r}catch(e){console.warn('arcs',e);return null}};
 /* v481: does this segment, as booked, pay off one of your arcs? (highlight reels) — no side effects */
 function arcPayoffFor(kind,d,main){try{return arcPre(kind==='promo'?aSegPromo(d):aSegMatch(d,main?'me':'mid')).pay[0]||null}catch(e){return null}}
@@ -1153,7 +1153,7 @@ function arcApplyDecision(a,k,m){
  if(win){const side=m.sides.findIndex(sd=>sd.includes(a.a));if(side>=0){m.winner=win==='a'?side:m.sides.findIndex((_,i)=>i!==side);m.fin='clean';delete m.nc}}
 }
 let arcPendingDecision=null;
-if(typeof liveNext==='function'){const next=liveNext;liveNext=function(){
+if(typeof liveNext==='function'){hookStep('liveNext','arcs.js',{around(next,...args){
  if(typeof LQ!=='undefined'&&LQ){const it=LQ.items[LQ.k+1];
   if(it&&!it.arcAsked&&(it.kind==='seg'||it.kind==='promo')){
    const kind=it.kind==='seg'?'match':'promo',d=it.m||S.card.p[it.i].d;
@@ -1166,12 +1166,12 @@ if(typeof liveNext==='function'){const next=liveNext;liveNext=function(){
    }
   }
  }
- return next.apply(this,arguments)
-}}
+ return next.apply(this,args)
+}})}
 /* The true-father storyline: the envelope opens right after the title match, and you name who's in it. A reel asks this
    itself; a card that airs without live play falls back to arcSetFather's own pick. */
 let arcPendingFather=null;
-if(typeof liveNext==='function'){const next=liveNext;liveNext=function(){
+if(typeof liveNext==='function'){hookStep('liveNext','arcs.js',{around(next,...args){
  if(typeof LQ!=='undefined'&&LQ){const it=LQ.items[LQ.k];
   if(it&&it.m&&it.kind!=='oc'&&!it.reel&&!it.fatherAsked){
    const a=arcPayoffFor('match',it.m,it.main);
@@ -1183,8 +1183,8 @@ if(typeof liveNext==='function'){const next=liveNext;liveNext=function(){
    }
   }
  }
- return next.apply(this,arguments)
-}}
+ return next.apply(this,args)
+}})}
 window.arcFatherChoose=function(id){
  const pending=arcPendingFather;if(!LQ||!pending||LQ.items[LQ.k]!==pending.it||!arcSetFather(pending.a,id))return;
  arcPendingFather=null;pending.it.fatherAsked=1;closeModal();liveNext()
@@ -1515,13 +1515,13 @@ window.arcOfficeCard=function(){return ''};
 `;document.head.appendChild(st)}
 
 /* ---- the Book screen checklist: each arc's next step ---- */
-if(typeof attnItems==='function'){const _ai=attnItems;attnItems=function(){const out=_ai.apply(this,arguments);try{if(!S||S.phase!=='season')return out;const c=(S.card&&S.card.p)||[];
+if(typeof attnItems==='function'){hookStep('attnItems','arcs.js',{around(_ai,...args){const out=_ai.apply(this,args);try{if(!S||S.phase!=='season')return out;const c=(S.card&&S.card.p)||[];
  arcList().filter(a=>aMine(a.a)&&!a.done).forEach(a=>{const D=aD(a);const A=aW(a.a);if(A.inj)return;const pay=a.stage==='pay'&&AW()>=(a.payFrom||0);if(a.stage==='pay'&&!pay)return;
   const left=a.end-AW()+1;const ids=[a.a,a.b,a.c].filter(Boolean);
   const on=c.some(sl=>sl&&sl.d&&(sl.k==='match'?sl.d.sides.flat().includes(a.a):sl.k==='promo'&&(sl.d.a===a.a||sl.d.b===a.a)));
   out.push({id:'arc'+a.id,g:left<=1?'must':'chance',i:D.i,h:`${A.name} · ${D.n}: ${pay?'the payoff':`step ${a.have+1} of ${a.need}`}`,d:`${arcWords(a,pay?D.payoff:aBuildAt(D,a.have))}${!pay&&!/★/.test(aBuildAt(D,a.have))?` (${aMinAt(D,a.have)-aEase(A)}★+)`:''}. ${left<=1?`Last week — miss it and ${aPr(A,"they're")} let down.`:`${left} weeks left.`}`,
    s:D.offShow&&!pay?(on?['w',`On the card: the groundswell needs ${aPr(A,'them')} off it`]:['ok','Kept off the show']):on?['ok','On the card']:[left<=1?'b':'w','Not on the card'],a:on||D.offShow&&!pay?null:['Book it',`arcBook('${a.a}')`,left<=1?1:0],gate:false,who:ids,where:`📖 ${aPr(A,'Their')} arc`,
-   chip:i=>{const d=c[i]&&c[i].d;if(!d)return null;const ws=c[i].k==='match'?d.sides.flat():[d.a,d.b];return ws.includes(a.a)?['ok',pay?`${D.n}: the payoff`:`${D.n}: step ${a.have+1}`]:null}})})}catch(e){console.warn('arc checklist',e)}return out};window.attnItems=attnItems}
+   chip:i=>{const d=c[i]&&c[i].d;if(!d)return null;const ws=c[i].k==='match'?d.sides.flat():[d.a,d.b];return ws.includes(a.a)?['ok',pay?`${D.n}: the payoff`:`${D.n}: step ${a.have+1}`]:null}})})}catch(e){console.warn('arc checklist',e)}return out}});window.attnItems=attnItems}
 
 /* ---- old saves: the Performance Center closes; nobody's mid-arc ---- */
 function arcMigrate(st){if(!st)return;if(!Array.isArray(st.arcHeld))st.arcHeld=[];if(!Array.isArray(st.arcs))st.arcs=[];if(Array.isArray(st.training)&&st.training.length)st.training=[];
@@ -1665,17 +1665,17 @@ for(const k in ARC_STORY)(ARC_STORY[k]||[]).forEach(x=>{const g=ARC_GEN[k+'/'+x.
  /* Off the Grid: a stop only counts the week they stay out of matches and have no rivals; a match while building costs them that week's stop */
  {const st=ARCS.peace.step;ARCS.peace.step=(s,a)=>a.brk!==AW()&&!rivals(aW(a.a)).length&&st(s,a)}
  /* the arc hooks that need to know what just aired */
- const _post=window.arcPost;window.arcPost=function(ap,stars,notes){const s=ap&&ap.seg;const was={};
+ hookStep('arcPost','arcs.js',{around(_post,...args){let [ap,stars,notes]=args;const s=ap&&ap.seg;const was={};
   try{if(s)arcList().forEach(a=>{if(a.done||!aMine(a.a))return;was[a.id]=a.have;
    if(a.k==='peace'&&a.stage==='build'&&s.kind==='match'&&s.ids.includes(a.a)){a.brk=AW();if(a.lastStep===AW()&&a.have>0){a.have--;a.st.pop();a.lastStep=0}
     if(notes)notes.push(`🌲 ${aW(a.a).name} was pulled back into the ring: no peace this week (Off the Grid).`)}})}catch(e){console.warn('arcs',e)}
-  const r=_post.apply(this,arguments);
+  const r=_post.apply(this,args);
   try{arcList().forEach(a=>{if(!(a.id in was)||a.have===was[a.id])return;const A=aW(a.a);
    if(a.k==='pain'&&s&&s.kind==='match'&&A)A.fat=Math.min(90,(A.fat||0)+ARC_PAIN_FAT);
    if(a.k==='twitch'&&Array.isArray(a.stips)){a.stip=a.stips[Math.min(Math.max(0,a.have-1),a.stips.length-1)];if(a.have>1&&notes&&STIPS[a.stip])notes.push(`🎮 Chat has spoken: ${A.name}'s next match is ${STIPS[a.stip].n}.`)}})}catch(e){console.warn('arcs',e)}
-  return r};
+  return r}});
  /* Likeness Rights: the faction sells the likeness on top of its own merch for a few weeks */
- if(typeof merchRev==='function'){const _mr=merchRev;merchRev=function(b){const v=_mr.apply(this,arguments);try{const L=S&&S.likeW;if(b==='p'&&L&&AW()<=L.to&&(S.teams||[]).some(t=>t.id===L.f))return Math.round(v*(1+L.x))}catch(e){}return v}}
+ if(typeof merchRev==='function'){hookStep('merchRev','arcs.js',{around(_mr,...args){let [b]=args;const v=_mr.apply(this,args);try{const L=S&&S.likeW;if(b==='p'&&L&&AW()<=L.to&&(S.teams||[]).some(t=>t.id===L.f))return Math.round(v*(1+L.x))}catch(e){}return v}})}
  window.__arcRivals=rivals}
 /* ---- v451 storylines, crowds, sizes and casting for the new arcs ---- */
 Object.assign(ARC_STORY,{

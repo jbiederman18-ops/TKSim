@@ -33,7 +33,7 @@ function build(notes){const sh=curShow();const P=np();if(!P)return;const wk=S.we
 function reset(){const P=np();brands().forEach(b=>{const h=HY(b);if(h.paid&&(!P||h.paid<S.week)){S.hype[b]={v:START,log:[]}}})}
 hookStep('endWeek','hype: PPV build-up',{before(ctx,notes){try{build(notes||[])}catch(e){console.warn('hype',e)}},after(){try{reset()}catch(e){}}});
 /* hype moves the gate on PPV night */
-if(typeof tixRev==='function'){const t0=tixRev;tixRev=function(b,ppv){const v=t0.apply(this,arguments);if(!ppv||!S||!S.hype)return v;return Math.round(v*(.85+hype(b)*.003))}}
+if(typeof tixRev==='function'){hookStep('tixRev','hype.js',{around(t0,...args){let [b,ppv]=args;const v=t0.apply(this,args);if(!ppv||!S||!S.hype)return v;return Math.round(v*(.85+hype(b)*.003))}})}
 
 /* ---------------- display ---------------- */
 function card(compact){const P=np();if(!P||S.phase!=='season')return '';const v=hype('p');const [ic,wd]=word(v);const h=HY('p');const ann=announced('p',P);const goHome=P.w===S.week+1;const tonight=P.w===S.week;
@@ -48,6 +48,6 @@ window.hypeCard=card;
 function slim(){const P=np();if(!P||S.phase!=='season')return '';const v=hype('p');const [ic,wd]=word(v);const tonight=P.w===S.week;const full=card(false);
  const body=full.replace(/^<div class="card">[\s\S]*?<div class="muted tiny">/,'<div class="muted tiny">').replace(/<\/div>$/,'');
  return `<details class="card rfold hyps"><summary><b style="flex:none">${ic} ${tonight?'Tonight':esc(P.n)}</b><span class="hyb"><i data-hyv="${v}" style="width:${v}%"></i></span><span class="tg ${v>=60?'good':v<25?'bad':''}" style="flex:none">${wd}${tonight?'':` · ${P.w-S.week} wk${P.w-S.week>1?'s':''}`}</span></summary>${body}</details>`}
-if(typeof homeView==='function'){const h0=homeView;homeView=function(){const out=h0.apply(this,arguments);let k='';try{k=slim()}catch(e){}if(!k)return out;/* v201: one line, right under the calendar strip */const i=out.indexOf('<button class="card bstrip');const j=i<0?out.indexOf('<div class="tiles">'):i;return j<0?out+k:out.slice(0,j)+k+out.slice(j)}}
-if(typeof bookView==='function'){const b0=bookView;bookView=function(){const out=b0.apply(this,arguments);let k='';try{k=slim()}catch(e){}if(!k)return out;/* right under the show poster: before the card holding this week's goal, or the running order */const nb=out.indexOf('Now booking');const g=nb<0?-1:out.indexOf('<div class="card',nb);const i=g;return i<0?k+out:out.slice(0,i)+k+out.slice(i)}}
+if(typeof homeView==='function'){hookStep('homeView','hype.js',{around(h0,...args){const out=h0.apply(this,args);let k='';try{k=slim()}catch(e){}if(!k)return out;/* v201: one line, right under the calendar strip */const i=out.indexOf('<button class="card bstrip');const j=i<0?out.indexOf('<div class="tiles">'):i;return j<0?out+k:out.slice(0,j)+k+out.slice(j)}})}
+if(typeof bookView==='function'){hookStep('bookView','hype.js',{around(b0,...args){const out=b0.apply(this,args);let k='';try{k=slim()}catch(e){}if(!k)return out;/* right under the show poster: before the card holding this week's goal, or the running order */const nb=out.indexOf('Now booking');const g=nb<0?-1:out.indexOf('<div class="card',nb);const i=g;return i<0?k+out:out.slice(0,i)+k+out.slice(i)}})}
 })();

@@ -15,7 +15,7 @@
 - Big content files (`promos.js`, `scenarios*.js`, `retorts.js`, `gimmicks.js`, `reelcontent.js`, `wrestlervoice.js`) are mostly written lines. Grep for the specific scene or key; don't read them to learn the engine.
 
 ## index.html map (line numbers approximate, as of v509 — grep the section markers for current ones)
-The CSS is in `style.css`: the live look is the **v222 Pay-per-view** block (`html.lk-hy …`, near the end) plus card styles. Earlier blocks (Balanced, Classic Dynamite, Calmer pass, v212 Hybrid) are older layers that still partly apply; rules nothing uses were stripped in v291 and v509, so what's left is load-bearing. Party-night TV CSS is the "Party night: the TV screen" block.
+The CSS is in `style.css`. The game has one look: the **Pay-per-view** block (`html.lk-hy …`, the last section). The "Base" sections above it hold only what that look builds on — v510 removed every base declaration the Pay-per-view block overrides. Change the look in the Pay-per-view block, and when you override a base declaration there, delete the base one instead of leaving it underneath. Party-night TV CSS is the "Party night: the TV screen" block.
 | Lines | Section | What's there |
 |---|---|---|
 | 22–37 | `<script>` tags | External files loaded *before* the main script (party, scenarios, season, wwe, deals, promos.js…) |
@@ -43,20 +43,29 @@ The CSS is in `style.css`: the live look is the **v222 Pay-per-view** block (`ht
 | 3753–4350 | CLOUD SAVE, YOUR GAMES, BACKUPS, CLOUD SYNC | Save safety — be careful here |
 | 4356–4406 | `<script>` tags | Load order of the external files loaded after the main script |
 
-## Adding a step to endWeek, airPair or render: use hookStep
-Other files add their weekly/show/render steps with `hookStep(name, label, {before(ctx,...args){}, after(ctx,result,...args){}})`
-(or `{around(next,...args){…}}` when the step has to wrap the call, e.g. try/finally). Steps nest in script load order, exactly
-like hand-written wrappers: the file loaded last runs its `before` first and its `after` last; `ctx` carries values from a
-step's `before` to its own `after`. `HOOKS.endWeek` in the console lists every step, innermost first. Don't hand-wrap
-`endWeek`, `airPair` or `render` any more (`const e0=endWeek;endWeek=function…`) — check-boot counts their steps.
-Other functions are still hand-wrapped in places (applyMatch, go, finishDraft, autoBook, openModal, briefItems…); convert a
-function's wrappers to hookStep all at once, and prove it with tools/check-same.py.
+## Adding a step to an existing function: use hookStep (never hand-wrap)
+Files add steps to functions defined elsewhere (endWeek, airPair, render, go, applyMatch, openModal, briefItems…) with
+`hookStep(name, label, {before(ctx,...args){}, after(ctx,result,...args){}})`, or `{around(prev,...args){… prev.apply(this,args) …}}`
+when the step has to wrap the call (try/finally, an early return, changing the arguments or the result): `prev` is the function
+as it was before this step. An `after` that returns something other than undefined replaces the result. Steps nest in script
+load order, exactly like hand-written wrappers did: the file loaded last runs its `before` first and its `after` last; `ctx`
+carries values from a step's `before` to its own `after`. `HOOKS.go` (etc.) in the console lists every step, innermost first;
+v510 converted the old wrappers mechanically, so their label is the file name.
+- `name` must be a global function (a top-level `function` or one exposed with `window.x=`) — check-boot fails if a step
+  doesn't register. Functions private to an IIFE can't be hooked from another file (budget.js's `openFg` step never attaches,
+  because openFg is private to inbox.js — a known gap, listed in check-boot's NOT_AT_BOOT).
+- Left hand-wrapped on purpose (the wrapper's saved copy is used elsewhere, or the name is local): `toast` (index.html,
+  cards.js), `roll` (exchange.js), `card` (index.html, a local).
 
 ## Proving a refactor changes nothing
-For cleanup that shouldn't change play (moving code, hookStep conversions, removing dead code), run
+For cleanup that shouldn't change play (moving code, hookStep conversions, removing dead code or CSS), run
 `python3 tools/check-same.py <older-commit>`: it plays the same seeded games (~30 weeks, five seeds and difficulties) in both
-builds and compares the final save byte for byte. It must say "Same game ✓". The balance sweep only shows "within noise",
-so it can't prove a refactor is safe; use it for real gameplay changes.
+builds and compares the final save byte for byte. It must say "Same game ✓" (`--strip 'JS'` drops a field you removed on
+purpose from the save copy first). The balance sweep only shows "within noise", so it can't prove a refactor is safe; use it
+for real gameplay changes. For CSS or screen-code cleanup, also compare the screens: v510 used a side-by-side run of both
+builds on a virtual clock, clicking through the game and comparing every element's HTML and computed style after each click —
+`python3 tools/check-screens.py <older-commit>` (~5 min a walk; it must say "Same screens ✓"). Known bug in both builds as of
+v510: Match details throws `repWord is not defined` for a match repeating last week's (index.html, "Same as last week").
 
 ## External files
 | File | System |

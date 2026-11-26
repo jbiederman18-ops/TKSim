@@ -198,13 +198,13 @@ function cardProj(){const sh=curShow();const c=(S.card&&S.card.p)||[];const ctx=
  const P={sh,booked:0,me:null,women:0,title:0,tag:0,stip:0,pr:null,nm:0,loMid:5,loHi:5,rk:0,newch:false,tagdef:false,deb:false,show:null,fs:[]};
  const ch=S.chant&&S.chant.p&&S.chant.p.w===AW()?S.chant.p.id:null;let chUsed=false;const stUsed=new Set();
  const meSlot=c.map((sl,i)=>sl.k==='match'?i:-1).filter(i=>i>=0).pop();
- const mids=[],his=[],meta=[];
+ const mids=[],his=[];
  c.forEach((sl,si)=>{if(!sl.d||fixedK(sl))return;
   if(sl.k==='match'){const m=sl.d;if(!validMatch(m))return;const ids=m.sides.flat();const ws=ids.map(id=>S.w[id]);if(ws.some(w=>w.inj))return;
    const r=rateMatch(m,ctx);let bump=Math.min(1,ws.filter(w=>w.deb).reduce((a,w)=>a+debutStars(w,sh.ppv),0));if(ch&&!chUsed&&ids.includes(ch)){bump+=CHANT_ST;chUsed=true}
    /* v350: a chair stashed under the ring comes out in that wrestler's next match (+¼★ live, see stashHit) — count it here too */
    {const sid=ids.find(id=>S.stash&&S.stash[id]!=null&&S.stash[id]<AW()&&AW()-S.stash[id]<=10&&!stUsed.has(id));if(sid){bump+=.25;stUsed.add(sid)}}
-   const mid=clamp((r.lo+r.hi)/2+bump,.25,5),hi=clamp(r.hi+bump,.25,5);P.booked++;if(typeof fbSeg==='function')P.fs.push(fbSeg(m,mid,si===meSlot));P.nm++;mids.push(mid);his.push(hi);meta.push(segMeta(sl,mid));
+   const mid=clamp((r.lo+r.hi)/2+bump,.25,5),hi=clamp(r.hi+bump,.25,5);P.booked++;if(typeof fbSeg==='function')P.fs.push(fbSeg(m,mid,si===meSlot));P.nm++;mids.push(mid);his.push(hi);
    if(ws.some(w=>w.g==='F'))P.women++;if(m.title)P.title++;if(m.type==='tag'||m.type==='trios'||m.type==='tag8'||m.sides[0].length>1)P.tag++;if(stipKey(m)!=='std')P.stip++;
    P.loMid=Math.min(P.loMid,mid);P.loHi=Math.min(P.loHi,hi);if(si===meSlot)P.me={mid,hi,lo:clamp(r.lo+bump,.25,5)};
    if(ws.some(w=>w.rookie&&w.own==='p'))P.rk=Math.max(P.rk,tellLv(mid,3)==='y'?2:tellLv(mid,3)==='m'?1:0.5);
@@ -216,12 +216,11 @@ function cardProj(){const sh=curShow();const c=(S.card&&S.card.p)||[];const ctx=
    else if(t&&!t.holders.length&&win){const wo=S.w[(m.sides[m.winner]||[])[0]];if(wo&&wo.own==='p')P.newch=true}}
   else if(sl.k==='promo'){const p=sl.d;if(!S.w[p.a])return;let st=p.res?p.res.stars:promoEst(p);const ids=[p.a,p.b].filter(Boolean);
    st+=Math.min(1,ids.map(id=>S.w[id]).filter(w=>w&&w.deb).reduce((a,w)=>a+debutStars(w,sh.ppv),0));if(ch&&!chUsed&&ids.includes(ch)){st+=CHANT_ST;chUsed=true}
-   st=clamp(st,.5,5);P.booked++;if(typeof fbPromo==='function')P.fs.push(fbPromo(p,st));P.pr=Math.max(P.pr||0,st);mids.push(st);his.push(st);meta.push(segMeta(sl,st));
+   st=clamp(st,.5,5);P.booked++;if(typeof fbPromo==='function')P.fs.push(fbPromo(p,st));P.pr=Math.max(P.pr||0,st);mids.push(st);his.push(st);
    if(ids.some(id=>S.w[id]&&S.w[id].deb&&S.w[id].own==='p'))P.deb=true}});
  if(mids.length){const wavg=v=>{let s=0,ws=0;v.forEach((x,i)=>{const w=i===v.length-1?1.6:1;s+=x*w;ws+=w});return s/ws};
-  const fm=flowScore(meta,sh.ppv,'p').mod;const pk=prodOf('p',sh);const pb=PROD[pk]&&PROD[pk].b||0;
-  P.show={mid:clamp(wavg(mids)+fm+pb,0,5),hi:clamp(wavg(his)+fm+pb,0,5)}}
- P.meta=meta;/* v350: the Show flow graph draws from these same segments, so it can't disagree with the projection */
+  const pk=prodOf('p',sh);const pb=PROD[pk]&&PROD[pk].b||0;
+  P.show={mid:clamp(wavg(mids)+pb,0,5),hi:clamp(wavg(his)+pb,0,5)}}
  return P}
 /* status: y = on track, m = could go either way, n = not yet, x = doesn't apply this week */
 const LV=(s,t)=>({s,t});

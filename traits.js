@@ -206,7 +206,7 @@ window.styChart=function(id,back){const w=id&&S.w[id];const ks=['cas','tech','bl
 
 /* v481: Highlight Machine — every big spot ends up on social media: a 3½★+ match with one in it hooks extra Flippy fans and casuals */
 const TR_HM={flip:.5,cas:.2,cap:2,min:3.5};
-if(typeof fbCalc==='function'){const _fc=fbCalc;fbCalc=function(b,segs,show,o){const r=_fc.apply(this,arguments);try{if(!r||!r.pct||!segs)return r;
+if(typeof fbCalc==='function'){hookStep('fbCalc','traits.js',{around(_fc,...args){let [b,segs,show,o]=args;const r=_fc.apply(this,args);try{if(!r||!r.pct||!segs)return r;
  const hm=segs.filter(sg=>sg&&sg.k==='match'&&sg.st>=TR_HM.min&&sg.ids.some(id=>hasT(S.w[id],'hilite'))).slice(0,TR_HM.cap);
  hm.forEach(sg=>{const i=segs.indexOf(sg);['flip','cas'].forEach(g=>{if(r.pct[g]==null)return;r.pct[g]+=TR_HM[g];if(r.sc&&r.sc[i]){r.sc[i][g]=(r.sc[i][g]||0)+TR_HM[g];if(typeof fbPart==='function')fbPart(r,i,g,'viral',TR_HM[g])}})});
- if(hm.length&&r.wy&&r.wy.flip&&!/viral/.test(r.wy.flip))r.wy.flip+=' · the big spots went viral'}catch(e){}return r}}
+ if(hm.length&&r.wy&&r.wy.flip&&!/viral/.test(r.wy.flip))r.wy.flip+=' · the big spots went viral'}catch(e){}return r}})}

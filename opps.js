@@ -53,9 +53,9 @@ hookStep('airPair','opportunities: missed ones let wrestlers down',{before(ctx){
   S.opps=oppList().filter(o=>!o.done||AW()-o.due<2)}catch(e){console.warn('opp sweep',e)}}});
 
 /* on the checklist, up top: it's owed tonight */
-if(typeof attnItems==='function'){const _ai=attnItems;attnItems=function(){const out=_ai.apply(this,arguments);try{if(!S||S.phase!=='season')return out;const c=(S.card&&S.card.p)||[];
+if(typeof attnItems==='function'){hookStep('attnItems','opps.js',{around(_ai,...args){const out=_ai.apply(this,args);try{if(!S||S.phase!=='season')return out;const c=(S.card&&S.card.p)||[];
  oppOpen().filter(o=>o.due>=AW()).forEach(o=>{const C=CRISES[o.k];if(!C)return;const A=S.w[o.a];if(A.inj)return;const on=c.some(sl=>sl&&sl.k==='promo'&&oppHit(o,sl.d));
   out.push({id:o.id,g:'must',i:C.i,h:`${C.t}: ${oppNames(o)} in a promo`,d:on?'On the card. A strong promo makes it land.':'You said yes at the office. Put them in a promo tonight or the moment passes.',
    s:on?['ok','On the card']:['b','Not on the card'],a:on?null:['Book it',`oppBook('${o.id}')`,1],gate:false,who:[o.a,o.b].filter(Boolean),where:'📺 Tonight',
-   chip:i=>{const sl=c[i];return sl&&sl.k==='promo'&&oppHit(o,sl.d)?['ok',`${C.i} ${C.t}`]:null}})})}catch(e){console.warn('opp checklist',e)}return out};window.attnItems=attnItems}
+   chip:i=>{const sl=c[i];return sl&&sl.k==='promo'&&oppHit(o,sl.d)?['ok',`${C.i} ${C.t}`]:null}})})}catch(e){console.warn('opp checklist',e)}return out}});window.attnItems=attnItems}
 })();

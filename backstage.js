@@ -39,7 +39,7 @@ const CF={t:'Backstage confrontation',i:'😤',need:2,
    return `${c.A.name} vs ${c.B.name} is promised for this week's show. When they meet, it's going to get real.`}}]};
 if(typeof CRISES!=='undefined')CRISES.confront=CF;
 /* real heat on your roster gets a good chance to surface as a confrontation before any other event */
-const _cg=crisisGen;crisisGen=function(){try{if(!S.crisis&&S.week>=2&&S.phase==='season'){const pr=cfPair(ownList('p').filter(w=>!w.inj));if(pr&&Math.random()<CF_P){S.crisis={k:'confront',a:pr[0].id,b:pr[1].id,w:S.week,tal:RI(0,99)};S.crisisLog=['confront',...(S.crisisLog||[]).filter(x=>x!=='confront')].slice(0,12);return}}}catch(e){console.warn(e)}return _cg.apply(this,arguments)};
+hookStep('crisisGen','backstage.js',{around(_cg,...args){try{if(!S.crisis&&S.week>=2&&S.phase==='season'){const pr=cfPair(ownList('p').filter(w=>!w.inj));if(pr&&Math.random()<CF_P){S.crisis={k:'confront',a:pr[0].id,b:pr[1].id,w:S.week,tal:RI(0,99)};S.crisisLog=['confront',...(S.crisisLog||[]).filter(x=>x!=='confront')].slice(0,12);return}}}catch(e){console.warn(e)}return _cg.apply(this,args)}});
 /* "settle it in the ring": their match this week is guaranteed the real-heat call */
 function cfSettleEvent(m,brand){if(!S.settle||brand!=='p')return null;const ids=m.sides.flat();
  for(const k of Object.keys(S.settle)){if(S.settle[k]!==AW())continue;const [a,b]=k.split('|');if(!inMatch(m,a,b))continue;delete S.settle[k];const A=S.w[a],B=S.w[b];if(!A||!B||A.inj||B.inj||!ids.includes(a))return null;
@@ -130,13 +130,13 @@ function wsRollEv(c,r,m){const ev=evNew(m);ev.hit=true;const W=S.w[c.ws];const s
  const text=ok?c.okT:c.noT;ev.notes.push(`⚡ ${c.t.replace(/^💬 /,'')} — ${text}`);return {success:ok,text,flip:false,nc:false,extra}}
 
 /* ===================== hooks ===================== */
-const _me=matchEvent;matchEvent=function(m,brand,big,rate){const s=cfSettleEvent(m,brand);if(s)return s;let g=_me(m,brand,big,rate);try{g=wsInject(g,m,brand,big)}catch(e){console.warn(e)}return g};
-const _er=evRoll;evRoll=function(c,r,m){if(c&&c.ws)return wsRollEv(c,r,m);const out=_er(c,r,m);if(c&&c.morW&&S.w[c.morW])evNew(m).mor.push([c.morW,-1]);return out};
-const _ec=evChance;evChance=function(c,r){if(c&&c.ws){const W=S.w[c.ws];return W?chance(c,{A:W}):.5}return _ec(c,r)};
-const _st=slotTags;slotTags=function(m,ppv){try{wsRoll(m)}catch(e){console.warn(e)}let h=_st(m,ppv);let add='';try{add=wsTag(m);
+hookStep('matchEvent','backstage.js',{around(_me,...args){let [m,brand,big,rate]=args;const s=cfSettleEvent(m,brand);if(s)return s;let g=_me(m,brand,big,rate);try{g=wsInject(g,m,brand,big)}catch(e){console.warn(e)}return g}});
+hookStep('evRoll','backstage.js',{around(_er,...args){let [c,r,m]=args;if(c&&c.ws)return wsRollEv(c,r,m);const out=_er(c,r,m);if(c&&c.morW&&S.w[c.morW])evNew(m).mor.push([c.morW,-1]);return out}});
+hookStep('evChance','backstage.js',{around(_ec,...args){let [c,r]=args;if(c&&c.ws){const W=S.w[c.ws];return W?chance(c,{A:W}):.5}return _ec(c,r)}});
+hookStep('slotTags','backstage.js',{around(_st,...args){let [m,ppv]=args;try{wsRoll(m)}catch(e){console.warn(e)}let h=_st(m,ppv);let add='';try{add=wsTag(m);
   const ids=m.sides.flat().filter(Boolean);const tr=[];for(let i=0;i<ids.length;i++)for(let j=i+1;j<ids.length;j++){const u=truceOf(ids[i],ids[j]);if(u!=null)tr.push(`${last(S.w[ids[i]].name)} & ${last(S.w[ids[j]].name)}`)}
   if(tr.length)add+=`<span class="tg bad">🤝 Truce: ${esc(tr.join(', '))} — booking them breaks it</span>`}catch(e){console.warn(e)}
- if(!add)return h;return h?h.replace(/<\/div>$/,add+'</div>'):`<div class="tags">${add}</div>`};
+ if(!add)return h;return h?h.replace(/<\/div>$/,add+'</div>'):`<div class="tags">${add}</div>`}});
 hookStep('endWeek','backstage: truces',{before(ctx,notes){try{truceCheck(notes||[])}catch(e){console.warn(e)}}});
 
 (function(){const c=document.createElement('style');c.textContent=`html .tg.wsp,html.lk-hy .tg.wsp{background:#e8c35a!important;color:#1b1406!important;cursor:pointer}.tg.good[onclick]{cursor:pointer}`;document.head.appendChild(c)})();

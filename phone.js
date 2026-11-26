@@ -77,9 +77,9 @@ document.addEventListener('touchend',swEnd,{passive:true});document.addEventList
 /* ---------- 3. the back button ---------- */
 try{history.scrollRestoration='manual'}catch(e){}
 const TABS=[];let BACKING=false;
-if(typeof go==='function'){const g0=go;go=window.go=function(t){
+if(typeof go==='function'){hookStep('go','phone.js',{before(ctx,t){
   try{if(!BACKING&&typeof tab!=='undefined'&&tab&&tab!==t&&typeof S!=='undefined'&&S){TABS.push(tab);if(TABS.length>30)TABS.shift()}}catch(e){}
-  return g0.apply(this,arguments)}}
+  }})}
 let armed=false;
 function arm(){if(armed||isTV())return;try{history.pushState({tkb:1},'',location.href);armed=true}catch(e){}}
 /* browsers only honour a back-button guard the page set up after the player has touched it */

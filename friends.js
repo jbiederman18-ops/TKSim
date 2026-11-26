@@ -95,7 +95,7 @@ fgWrap('pitchTick','promise');
 /* matches: only the big ones (a title match, the main event, a PPV) — a Tuesday win is theirs alone */
 /* 'title' only for a new champion (a defense is just a big match) */
 fgWrap('applyMatch',(m,res,ctx)=>{if(!m||!m.title||m.nc)return 'match';const T=S.titles[m.title];const win=m.sides&&m.sides[m.winner];return T&&win&&T.holders.length&&!win.every(id=>T.holders.includes(id))?'title':'match'}/* crowning a vacant belt (every new game opens with a flurry) counts as a big match */,(m,res,ctx)=>!!(m&&ctx&&!ctx.preview&&(m.title||ctx.ppv||ctx.pos==='me')));
-if(typeof finishDraft==='function'){const d0=finishDraft;finishDraft=function(){const out=d0.apply(this,arguments);if(S&&S.phase==='season')fgSyncAll();return out}}
+if(typeof finishDraft==='function'){hookStep('finishDraft','friends.js',{after(ctx,out){if(S&&S.phase==='season')fgSyncAll();return out}})}
 /* friends drift apart, and loners find a new crowd */
 function fgChurn(b){if(!fgHum(b)||!S.fg||!S.fgm||!S.fgm[b])return;const wk=AW();const r=ownList(b).filter(w=>fgOn(w.id,b));S.fgf=S.fgf||{};if(S.fgx)Object.keys(S.fgx).forEach(k=>{const x=S.fgx[k];if(x&&x.old!==undefined&&x.back!==undefined){S.fgf[k]=x;delete S.fgx[k]}});
  const groups={};r.forEach(w=>{const g=S.fg[w.id];if(g&&g[0]==='g')(groups[g]=groups[g]||[]).push(w)});

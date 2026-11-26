@@ -218,7 +218,7 @@ document.addEventListener('keydown',e=>{if((e.key!=='g'&&e.key!=='G')||e.ctrlKey
  const b=document.querySelector('header.top .dkgo');if(!b||b.disabled||!desk())return;e.preventDefault();b.click()});
 
 /* 2. Book in two panes */
-const ASIDE=[':scope>.card.attn',':scope>.lvdock',':scope>.card.flowc',':scope>.card.warn',':scope>.card.prodstrip',':scope>details.prodf',':scope>details.fbd',':scope>details.lrd:not(.fbd)'];
+const ASIDE=[':scope>.card.attn',':scope>.lvdock',':scope>.card.venpull',':scope>.card.warn',':scope>.card.prodstrip',':scope>details.prodf',':scope>details.fbd',':scope>details.lrd:not(.fbd)'];
 function bookPanes(m){if(!m.classList.contains('t-book'))return;
  let L=m.querySelector(':scope>.dkbl'),A=m.querySelector(':scope>.dkba');
  const found=ASIDE.map(s=>m.querySelector(s)||(L&&L.querySelector(s))).filter(Boolean);
@@ -265,12 +265,11 @@ let FL=null,FI=-1;
 function listIds(){const m=mainEl();if(!m)return [];const inDraft=S&&S.phase==='draft';if(!inDraft&&!(typeof tab!=='undefined'&&tab==='roster'))return [];
  const src=m.querySelector(':scope>.dkrt')&&RT?[...m.querySelectorAll(':scope>.dkrt tr[data-id]')].map(r=>r.dataset.id):[...m.querySelectorAll('[data-tcw]')].filter(c=>!c.closest('#tcdock')).map(c=>c.dataset.tcw);
  return [...new Set(src)]}
-if(typeof showW==='function'){const sw0=showW;
- showW=window.showW=function(id){const flip=FL&&FL._flip;const fromEd=typeof WD_BACK!=='undefined'&&!!WD_BACK;const out=sw0.apply(this,arguments);
+if(typeof showW==='function'){hookStep('showW','desk.js',{around(sw0,...args){let [id]=args;const flip=FL&&FL._flip;const fromEd=typeof WD_BACK!=='undefined'&&!!WD_BACK;const out=sw0.apply(this,args);
   try{if(!flip){FL=desk()&&!fromEd?listIds():null}if(FL)FL._flip=false;FI=FL?FL.indexOf(id):-1;
    if(desk()&&FL&&FI>=0&&FL.length>1){const sh=document.querySelector('#modal>.sheet');if(sh&&sh.querySelector('.wdt')&&!sh.querySelector('.dkflip')){
     sh.insertAdjacentHTML('afterbegin',`<div class="dkflip"><button aria-label="Previous wrestler" title="Previous (←)" ${FI>0?'':'disabled'} onclick="dkFlip(-1)">‹</button><span>${FI+1} / ${FL.length}</span><button aria-label="Next wrestler" title="Next (→)" ${FI<FL.length-1?'':'disabled'} onclick="dkFlip(1)">›</button></div>`)}}}catch(e){}
-  return out}}
+  return out}})}
 window.dkFlip=d=>{if(!FL||FI<0)return;const j=FI+d;if(j<0||j>=FL.length)return;FL._flip=true;showW(FL[j]);const sh=document.querySelector('#modal>.sheet');if(sh)sh.scrollTop=0};
 document.addEventListener('keydown',e=>{if((e.key!=='ArrowLeft'&&e.key!=='ArrowRight')||typing(e.target)||!desk()||!modalOpen()||!document.querySelector('#modal .dkflip'))return;e.preventDefault();dkFlip(e.key==='ArrowLeft'?-1:1)});
 

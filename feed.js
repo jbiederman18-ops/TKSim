@@ -62,9 +62,9 @@ function draw(anim){const el=document.getElementById('lrf');if(el)el.innerHTML=i
 window.lrfHtml=function(){if(!S||!S.online||!S.online.party)return '';return `<div id="lrf" class="lrf">${inner(false)}</div>`};
 window.lrfSeat=()=>F.cur?F.cur.seat:null;
 window.lrfTake=d=>take(d); /* v262: the TV feed's own document (party.js tvSide) */
-if(typeof tvIncoming==='function'){const t0=tvIncoming;window.tvIncoming=tvIncoming=function(d){const out=t0.apply(this,arguments);try{if(typeof TV!=='undefined'&&TV)take(d)}catch(e){console.warn('feed',e)}return out}}
+if(typeof tvIncoming==='function'){hookStep('tvIncoming','feed.js',{after(ctx,out,d){try{if(typeof TV!=='undefined'&&TV)take(d)}catch(e){console.warn('feed',e)}return out}})}
 /* leaving the TV starts fresh next time */
-if(typeof tvStop==='function'){const s0=tvStop;window.tvStop=tvStop=function(){F.seen.clear();F.init=false;F.q=[];F.cur=null;F.past=[];clearTimeout(F.t);return s0.apply(this,arguments)}}
+if(typeof tvStop==='function'){hookStep('tvStop','feed.js',{before(ctx){F.seen.clear();F.init=false;F.q=[];F.cur=null;F.past=[];clearTimeout(F.t);}})}
 
 const css=`
 .lrf{margin-top:22px}

@@ -26,19 +26,19 @@ window.linSync=linSync;
 
 /* ---------------- careers & head to head ---------------- */
 function cr(w){return w.cr||(w.cr={m:0,w:0,l:0,me:0,ppvW:0,five:0,best:null,pk:Math.round(w.pop)})}
-if(typeof applyMatch==='function'){const a0=applyMatch;applyMatch=function(m,res,ctx){const out=a0.apply(this,arguments);
+if(typeof applyMatch==='function'){hookStep('applyMatch','history.js',{around(a0,...args){let [m,res,ctx]=args;const out=a0.apply(this,args);
  try{H();const ids=m.sides.flat().filter(id=>S.w[id]);const win=m.nc?[]:(m.sides[m.winner]||[]);const txt=matchText(m);
   ids.forEach(id=>{const w=S.w[id],c=cr(w);c.m++;if(m.nc){}else if(win.includes(id))c.w++;else c.l++;if(ctx&&ctx.pos==='me')c.me++;if(ctx&&ctx.ppv&&win.includes(id))c.ppvW++;if(res.stars>=5)c.five++;
    if(!c.best||res.stars>c.best.st)c.best={st:res.stars,t:txt,s:S.season,wk:S.week,show:ctx&&ctx.name||''};c.pk=Math.max(c.pk||0,Math.round(w.pop))});
   if(m.sides.length===2&&m.sides[0].length===1&&m.sides[1].length===1&&!m.nc){const [a,b]=[m.sides[0][0],m.sides[1][0]];const k=key(a,b);const r=S.hh[k]=S.hh[k]||{};const x=win[0];r[x]=(r[x]||0)+1;r.n=(r.n||0)+1;r.last={x,s:S.season,wk:S.week,show:ctx&&ctx.name||''}}
   linSync('',ctx&&ctx.name||'')}catch(e){console.warn('history',e)}
- return out}}
+ return out}})}
 /* titles also change outside matches: vacated after the week, after injuries, releases or retirements */
 hookStep('endWeek','history: title lineage',{after(){try{linSync('Vacated')}catch(e){}}});
-if(typeof crisisChoose==='function'){const c0=crisisChoose;crisisChoose=function(){const out=c0.apply(this,arguments);try{linSync('Vacated')}catch(e){}return out}}
-if(typeof finishDraft==='function'){const f0=finishDraft;finishDraft=function(){const out=f0.apply(this,arguments);try{linSync('Vacated after the draft')}catch(e){}return out}}
+if(typeof crisisChoose==='function'){hookStep('crisisChoose','history.js',{after(ctx,out){try{linSync('Vacated')}catch(e){}return out}})}
+if(typeof finishDraft==='function'){hookStep('finishDraft','history.js',{after(ctx,out){try{linSync('Vacated after the draft')}catch(e){}return out}})}
 /* remember names of wrestlers who leave the world, so old reigns and records still read right */
-if(typeof purgeW==='function'){const p0=purgeW;purgeW=function(id){try{H();const w=S.w[id];if(w){S.gone[id]=w.name;linSync('Vacated')}}catch(e){}const out=p0.apply(this,arguments);try{linSync('Vacated — the champion retired')}catch(e){}return out}}
+if(typeof purgeW==='function'){hookStep('purgeW','history.js',{around(p0,...args){let [id]=args;try{H();const w=S.w[id];if(w){S.gone[id]=w.name;linSync('Vacated')}}catch(e){}const out=p0.apply(this,args);try{linSync('Vacated — the champion retired')}catch(e){}return out}})}
 
 /* ---------------- the Hall of Fame ---------------- */
 function reigns(id){let n=0,wk=0;for(const tid in (S.lin||{}))(S.lin[tid]||[]).forEach(r=>{if(r.h.includes(id)){n++;wk+=((r.end?r.end.a:AW())-r.a)}});return {n,wk}}
@@ -47,10 +47,10 @@ window.legacyOf=legacy;
 function snap(w,why){const c=w.cr||{};const r=reigns(w.id);return {id:w.id,n:w.name,s:S.season,why,leg:legacy(w),rec:`${c.w||0}–${c.l||0}`,reigns:r.n,five:c.five||0,me:c.me||0,pk:c.pk||Math.round(w.pop)}}
 const HOF_AUTO=45;
 function inducted(id){return (S.hof2||[]).some(x=>x.id===id)}
-if(typeof offseasonApply==='function'){const o0=offseasonApply;offseasonApply=function(){try{H();const o=S.offs||{};const cls=[];
+if(typeof offseasonApply==='function'){hookStep('offseasonApply','history.js',{around(o0,...args){try{H();const o=S.offs||{};const cls=[];
   (o.ret||[]).forEach(id=>{const w=S.w[id];if(w&&!inducted(id)&&legacy(w)>=HOF_AUTO)cls.push(snap(w,'Inducted on retirement'))});
   cls.forEach(x=>{S.hof2.push(x);news(`🏛️ Hall of Fame: ${x.n} is inducted, class of Season ${x.s}.`)})}catch(e){console.warn(e)}
- const out=o0.apply(this,arguments);try{delete S.hofPick}catch(e){}return out}}
+ const out=o0.apply(this,args);try{delete S.hofPick}catch(e){}return out}})}
 window.hofPick=function(id){if(typeof mpLocked==='function'&&mpLocked())return;H();if(S.phase!=='over')return toast('Hall of Fame picks happen at the end of the year.');if(S.hofPick&&S.hofPick[canonKey('p')])return toast("You've made your pick this year.");
  const w=S.w[id];if(!w||inducted(id))return;S.hofPick=S.hofPick||{};S.hofPick[typeof canonKey==='function'?canonKey('p'):'p']=1;const x=snap(w,`${S.gm}'s pick`);S.hof2.push(x);news(`🏛️ Hall of Fame: ${S.gm} inducts ${w.name} into the class of Season ${S.season}.`);save();openHistory('hof')};
 

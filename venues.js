@@ -63,7 +63,7 @@ window.venAnswer=function(yes){const a=venAsker('p');if(!a)return;const s=venSt(
  try{save()}catch(e){}try{if(typeof closeModal==='function')closeModal()}catch(e){}try{render()}catch(e){}};
 function venBrief(){if(!S||S.phase!=='season'||!S.venue)return [];const a=venAsker('p');if(!a)return [];const{w,W}=a;const owned=venOwns('p',W.k);
  return [{i:'🪑',t:`${w.name} wants a bigger room`,u:false,rows:[`<div class="brow">${esc(w.name)}<br><span class="muted tiny">${fmtFans(S.fans.p)} fans and the show is still in the ${esc(venOf('p').n)}. Promise the ${esc(W.n)} next week (${owned?`${money(W.rent)} that night`:`unlock it for ${money(W.unlock)}, then ${money(W.rent)} that night`}) and the top of the card perks up; break it and they sour.</span><div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px"><button class="mini" onclick="venAnswer(true)">You'll be in the ${esc(W.n)}</button><button class="mini ghost" onclick="venAnswer(false)">We're not there yet</button></div></div>`]}]}
-if(typeof briefItems==='function'){const b0=briefItems;briefItems=window.briefItems=function(){const s=b0.apply(this,arguments);try{return venBrief().concat(s)}catch(e){console.warn('venue brief',e);return s}}}
+if(typeof briefItems==='function'){hookStep('briefItems','venues.js',{around(b0,...args){const s=b0.apply(this,args);try{return venBrief().concat(s)}catch(e){console.warn('venue brief',e);return s}}})}
 function venueFans(b,d,show,c){if(show.ppv||!c||!c.ven)return d;if(c.ven.empty)return d-VEN_EMPTY_FANS;const V=venOf(b);return d>0&&V.fans?Math.round(d*(1+V.fans)):d}
 /* unlocking and booking */
 function venueBuy(b,k){const V=BLDG.find(v=>v.k===k),s=venSt(b);if(!V||s.own.includes(k))return 'have';const i=BLDG.indexOf(V);if(!s.own.includes(BLDG[i-1].k))return 'order';
@@ -89,11 +89,12 @@ function venueCard(){const s=venSt('p'),V=venOf('p');const ceil=x=>money(Math.ro
  return `<div class="card"><div class="h small" style="margin:0">Your buildings</div><div class="muted tiny">Crowds lately come from your last 3 shows${lr?`, with the locker room ${lr>0?'talking it up':'dragging it down'}`:''}. Pick tonight's building on the Book screen.</div>${BLDG.map(row).join('')}</div>`}
 window.venueCard=venueCard;
 /* the Book screen: tonight's building, and will tonight's card fill it? */
-if(typeof flowCard==='function'){const f0=flowCard;flowCard=function(sh){let h=f0.apply(this,arguments);try{if(!sh.ppv){const s=venSt('p'),V=venOf('p');const P=cardProj();const r=P&&P.show?P.show.mid:buzzOf('p');const p=crowdPull('p',r);
+function venueTonight(sh){let h='';try{if(!sh.ppv){const s=venSt('p'),V=venOf('p');const P=cardProj();const r=P&&P.show?P.show.mid:buzzOf('p');const p=crowdPull('p',r);
   const opts=BLDG.filter(x=>s.own.includes(x.k));let vl;
-  if(opts.length>1)vl=`<div class="tiny"${h?' style="margin-top:6px"':''}>Tonight's building</div><div class="row venpick" style="flex-wrap:wrap;gap:6px;margin-top:4px">${opts.map(x=>{const w=x.pull?pullWord(p,x.pull):['Always full','good'];return `<button class="mini${x.k===V.k?' on':''}" onclick="venPick('${x.k}')" ${x.k!==V.k&&(typeof bgLeft==='function'?bgLeft('p',null,{noRent:true}):S.money.p)<x.rent?'disabled':''}>${x.i} ${esc(x.n)}${x.rent?` · ${money(x.rent)}`:''} · <b class="${x.k===V.k?'':w[1]}">${w[0]}</b></button>`}).join('')}</div>`;
-  else if(V.pull){const w=pullWord(p,V.pull);vl=`<div class="tiny"${h?' style="margin-top:6px"':''}>${V.i} ${esc(V.n)}: <b class="${w[1]}">${w[0]}</b>${w[1]==='good'?'':' <span class="muted">· a hotter card fills more seats</span>'}</div>`}
-  if(vl)h=h?h.replace(/<\/div>\s*$/,vl+'</div>'):`<div class="card flowc venpull">${vl}</div>`}}catch(e){console.warn('venue',e)}return h}}
+  if(opts.length>1)vl=`<div class="tiny">Tonight's building</div><div class="row venpick" style="flex-wrap:wrap;gap:6px;margin-top:4px">${opts.map(x=>{const w=x.pull?pullWord(p,x.pull):['Always full','good'];return `<button class="mini${x.k===V.k?' on':''}" onclick="venPick('${x.k}')" ${x.k!==V.k&&(typeof bgLeft==='function'?bgLeft('p',null,{noRent:true}):S.money.p)<x.rent?'disabled':''}>${x.i} ${esc(x.n)}${x.rent?` · ${money(x.rent)}`:''} · <b class="${x.k===V.k?'':w[1]}">${w[0]}</b></button>`}).join('')}</div>`;
+  else if(V.pull){const w=pullWord(p,V.pull);vl=`<div class="tiny">${V.i} ${esc(V.n)}: <b class="${w[1]}">${w[0]}</b>${w[1]==='good'?'':' <span class="muted">· a hotter card fills more seats</span>'}</div>`}
+  if(vl)h=`<div class="card venpull">${vl}</div>`}}catch(e){console.warn('venue',e)}return h}
+window.venueTonight=venueTonight;
 window.venOf=venOf;window.venueRent=venueRent;window.venueNight=venueNight;window.venueFans=venueFans;window.venueWeek=venueWeek;window.venueBuy=venueBuy;window.venuePick=venuePick;window.venOwns=venOwns;window.crowdPull=crowdPull;window.venWant=venWant;window.venAsker=venAsker;
 /* after the week's bills (this week's building fee included), set up next week */
 hookStep('endWeek','venues: weekly',{after(ctx,r,notes){try{venueWeek(notes)}catch(e){console.warn('venue week',e)}}});

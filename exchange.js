@@ -221,8 +221,7 @@ function exAuto(p,ctx,st,sc){let g=0;while(sc&&g++<14){const ch=sc.ch.filter(c=>
   const r=exNext(p,ctx,st,1);if(!r)return;sc=r.sc;if(r.b===1){if(!(typeof mdAI==='function'&&mdAI(p,ctx,st,sc)))roll(aiChoose(sc.ch,ctx),ctx,st);return}}}
 
 /* ---------- scoring the calls ---------- */
-const _chance=chance;
-chance=function(c,ctx){return c&&c.wait&&ctx&&ctx.B?waitP(ctx):_chance(c,ctx)};
+hookStep('chance','exchange.js',{around(_chance,...args){let [c,ctx]=args;return c&&c.wait&&ctx&&ctx.B?waitP(ctx):_chance(c,ctx)}});
 const _roll=roll;
 roll=function(c,ctx,st){const out=roll0(c,ctx,st);if(st)st.lastTx=out&&out.text;return out};
 function roll0(c,ctx,st){const x=st&&st.ex;

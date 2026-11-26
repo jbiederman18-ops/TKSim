@@ -40,10 +40,10 @@ window.tampTalk=function(id){const w=mineW(id),t=S.tamp&&S.tamp[id];if(!w||!t||t
 window.tampLet=function(id){const t=S.tamp&&S.tamp[id];if(!t)return;t.let=1;save();tampRefresh();toast("Understood. If they leave, it won't be a surprise.")};
 function tampRefresh(){render()}
 /* the deal runs out with the rival already in their ear: offline, the rival signs them on the spot */
-if(typeof leave==='function'){const l0=leave;leave=function(w,msg,notes){const t=w&&S.tamp&&S.tamp[w.id];const was=w&&w.own;
+if(typeof leave==='function'){hookStep('leave','frontoffice.js',{around(l0,...args){let [w,msg,notes]=args;const t=w&&S.tamp&&S.tamp[w.id];const was=w&&w.own;
  if(t&&was==='p'&&!ON()&&/contract expired/.test(msg||'')){delete S.tamp[w.id];w.own='ai';w.sal=t.offer;w.con=RI(26,40);w.mor=80;w.deb=AW();S.training=S.training.filter(x=>x.id!==w.id);
   const n=`🕵️ ${w.name}'s contract ran out — and they signed with ${S.rival} the same day. The rumors were true.`;news(n);if(notes)notes.push(n);return}
- if(t)delete S.tamp[w.id];return l0.apply(this,arguments)}}
+ if(t)delete S.tamp[w.id];return l0.apply(this,args)}})}
 
 /* ---------------- injury decisions ---------------- */
 function injScan(){if(S.phase!=='season')return;S.injq=(S.injq||[]).filter(q=>{const w=mineW(q.id);return w&&w.inj>0&&!w.susp});
@@ -61,7 +61,7 @@ function medWeek(notes){ownList('p').concat(ON()?[]:ownList('ai')).forEach(w=>{
 hookStep('endWeek','front office: tampering, medical, injuries',{after(ctx,r,notes){notes=notes||[];
  try{bothSides(()=>{tampTick(notes);medWeek(notes);injScan()})}catch(e){console.warn('front office',e)}}});
 /* scan right after a show too, so the decision is waiting on the results screen's way home */
-if(typeof airShow==='function'){const a0=airShow;airShow=function(){const out=a0.apply(this,arguments);try{injScan()}catch(e){}return out}}
+if(typeof airShow==='function'){hookStep('airShow','frontoffice.js',{after(ctx,out){try{injScan()}catch(e){}return out}})}
 
 /* ---------------- briefing ---------------- */
 function brief(){const out=[];tampPrune();
@@ -74,6 +74,6 @@ function brief(){const out=[];tampPrune();
  if(tl.length)out.push({i:'🕵️',t:`Tampering rumors · ${tl.length}`,u:tl.some(x=>!x.t.let),rows:tl.map(({t,w})=>`<div class="brow"><b>${esc(w.name)}</b> <span class="muted tiny">· morale ${Math.round(w.mor)} · deal ends ${conWhen(w)}</span><br><span class="tiny">${esc(who())} ${ON()?'is':'is reportedly'} offering about <b>${money(t.offer)}/wk</b> (they make ${money(sal(w))}). ${t.let?'<span class="muted">You\'ve decided to let them go.</span>':`If the deal runs out, ${ON()?'they\'ll hit free agency with offers waiting':`they sign with ${esc(S.rival)} on the spot`}.`}</span>
   ${t.let?'':`<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="mini" ${S.money.p<t.offer*4?'disabled':''} onclick="tampMatch('${w.id}')">✍️ Match & extend · ${money(t.offer*4)}</button><button class="mini" onclick="dealNegotiate('${w.id}')">Negotiate</button>${t.talked?'':`<button class="mini" onclick="tampTalk('${w.id}')">🤝 Sit down with them</button>`}<button class="mini" onclick="tampLet('${w.id}')">Let them go</button></div>`}</div>`)});
  return out}
-if(typeof briefItems==='function'){const b0=briefItems;window.briefItems=briefItems=function(){const sec=b0.apply(this,arguments);try{const x=brief();if(x.length)sec.unshift(...x)}catch(e){console.warn(e)}return sec}}
+if(typeof briefItems==='function'){hookStep('briefItems','frontoffice.js',{after(ctx,sec){try{const x=brief();if(x.length)sec.unshift(...x)}catch(e){console.warn(e)}return sec}})}
 /* a red card on Home too, so a decision is never missed */
 })();

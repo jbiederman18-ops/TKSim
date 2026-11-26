@@ -77,7 +77,7 @@ function dcHide(){clearTimeout(DC_T);DC_T=null;DC_CUR=null;const e=document.getE
 /* v419: a sheet opening (Your games at launch, the menu, a wrestler's details) takes a banner that's up off the screen and
    puts its pick back at the front of the queue, so it plays once you're back on the board */
 function dcPause(){if(!DC_CUR)return;const x=DC_CUR;dcHide();DC_Q.unshift(x);clearTimeout(DC_T);DC_T=setTimeout(dcNext,600)}
-(function(){if(typeof openModal!=='function')return;const o0=openModal;openModal=window.openModal=function(){const out=o0.apply(this,arguments);try{dcPause()}catch(e){}return out}})();
+(function(){if(typeof openModal!=='function')return;hookStep('openModal','draftcall.js',{after(ctx,out){try{dcPause()}catch(e){}return out}})})();
 
 /* after every render (that's when picks — solo, synced or queued — reach the screen) */
 (function(){if(typeof render!=='function')return;hookStep('render','draft pick banner',{after(){try{dcScan()}catch(e){console.error(e)}}})})();

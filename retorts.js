@@ -552,8 +552,7 @@ function mdAdd(PSx){if(!mdOk(PSx.p,PSx.ctx,PSx.st,PSx.scene))return;PSx.scene.ch
 function mdAI(p,ctx,st,tw){if(!mdOk(p,ctx,st,tw))return false;const best=aiChoose(tw.ch,ctx);if(chance(best,ctx)>=.7)return false;roll(mdChoice(ctx),ctx,st);return true}
 
 /* ---------- hooks ---------- */
-const _roll=roll;
-roll=function(c,ctx,st){st.lastC=c;
+hookStep('roll','retorts.js',{around(_roll,...args){let [c,ctx,st]=args;st.lastC=c;
  if(c.drop){st.drop=true;st.score+=MD_SCORE;st.heat+=2;st.pop+=1;const text=fill(c.ok,ctx);st.log.push(fill(c.t.replace(/^🎤\s*/,''),ctx)+' — '+text);(st.oks=st.oks||[]).push(true);return {success:true,text}}
  /* the response beat is centred: a landed answer is worth more the riskier it was, a miss costs more the safer it was,
     and on average it adds nothing — so the extra beat changes how a promo goes, not how high promos rate */
@@ -561,14 +560,12 @@ roll=function(c,ctx,st){st.lastC=c;
   st.score=s0+(st.score-s0)*RT_LAST.score;st.heat=h0+(st.heat-h0)*RT_LAST.heat;st.pop=p0+(st.pop-p0)*RT_LAST.pop;return out}
  if(c.rt&&!st.rtFull){const f=['heat','hx','pop','chem'],s0={};f.forEach(k=>s0[k]=st[k]||0);const sc0=st.score,p=chance(c,ctx);const out=_roll(c,ctx,st);
   {const sw=swingOf(p);st.score=sc0+RT_RS*(out.success?sw.w:-sw.l)/.35}f.forEach(k=>{st[k]=s0[k]+((st[k]||0)-s0[k])*RT_W});return out}
- return _roll(c,ctx,st)};
-const _pc=promoCtx;
-promoCtx=function(p,brand){const c=_pc(p,brand);c.brand=brand;if(c.B){const bt=titlesOf(c.B.id)[0];c.BT=bt?bt.n:''}
+ return _roll(c,ctx,st)}});
+hookStep('promoCtx','retorts.js',{around(_pc,...args){let [p,brand]=args;const c=_pc(p,brand);c.brand=brand;if(c.B){const bt=titlesOf(c.B.id)[0];c.BT=bt?bt.n:''}
  /* v229: every promo knows the next PPV (a promised match's PPV first), so lines can name it */
  let pv='';try{const pr=c.B&&pendingPromises().find(x=>key(x.a,x.b)===key(p.a,p.b)&&x.ppv&&x.week>S.week);const np=nextPPVAfter(S.week);pv=pr?pr.ppv:np&&np.w-S.week<=4?np.n:''}catch(e){}c.PPV=pv
- return c};
-const _fill=fill;
-fill=function(s,c){return _fill(s,c).replace(/\{BT\}/g,c.BT||'the title').replace(/\{PPV\}/g,c.PPV||'the next pay-per-view').replace(/\{H\}/g,c.H?c.H.name:'')};
+ return c}});
+hookStep('fill','retorts.js',{around(_fill,...args){let [s,c]=args;return _fill(s,c).replace(/\{BT\}/g,c.BT||'the title').replace(/\{PPV\}/g,c.PPV||'the next pay-per-view').replace(/\{H\}/g,c.H?c.H.name:'')}});
 
 /* ---------- look ---------- */
 (function(){const c=document.createElement('style');c.textContent=`

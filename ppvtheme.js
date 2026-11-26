@@ -157,8 +157,8 @@ function pxApply(o){pxClear();const k=pxKey(o);if(!k)return;const t=PX_T[k],m=do
  /* the floor grid (Revolution) sits at the bottom of the reveal; everything else is behind the header */
  const tmp=document.createElement('div');tmp.innerHTML=t.deco||'';const g=tmp.querySelector('.grid');if(g){g.remove();const f=document.createElement('div');f.className='pxfl';f.appendChild(g);v.appendChild(f)}
  const d=document.createElement('div');d.className='pxd';d.innerHTML=tmp.innerHTML;sh.insertBefore(d,sh.firstChild)}
-if(typeof openModal==='function'){const o0=openModal;openModal=window.openModal=function(){pxClear();return o0.apply(this,arguments)}}
-if(typeof closeModal==='function'){const c0=closeModal;closeModal=window.closeModal=function(){pxClear();return c0.apply(this,arguments)}}
-if(typeof srStage==='function'){const s0=srStage;srStage=window.srStage=function(o){const r=s0.apply(this,arguments);try{pxApply(o)}catch(e){console.warn('ppv theme',e)}return r}}
+if(typeof openModal==='function'){hookStep('openModal','ppvtheme.js',{before(ctx){pxClear();}})}
+if(typeof closeModal==='function'){hookStep('closeModal','ppvtheme.js',{before(ctx){pxClear();}})}
+if(typeof srStage==='function'){hookStep('srStage','ppvtheme.js',{after(ctx,r,o){try{pxApply(o)}catch(e){console.warn('ppv theme',e)}return r}})}
 Object.assign(window,{pxApply,pxClear,PX_T});
 })();

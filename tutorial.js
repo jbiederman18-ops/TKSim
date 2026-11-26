@@ -335,9 +335,9 @@ function tutMenuCard(){if(!S)return '';const dr=S.phase==='draft',on=tutTipsOn()
  hookStep('render','tutorial: keep the spotlight placed',{after(){
   if(TUT){const st=TUT.steps[TUT.i];setTimeout(()=>{if(TUT&&TUT.steps[TUT.i]===st)tutPlace(tutFind(st))},40)}
   else setTimeout(()=>{try{tutAuto()}catch(e){}},420)}});
- if(typeof closeModal==='function'){const c0=closeModal;closeModal=window.closeModal=function(){const out=c0.apply(this,arguments);try{xrIntroEnd()}catch(e){}return out}}
- if(typeof segDetails==='function'){const d0=segDetails;segDetails=window.segDetails=function(){const out=d0.apply(this,arguments);try{tutTip('t.editor')}catch(e){}return out}}
- if(typeof showResults==='function'){const s0=showResults;showResults=function(rv){const out=s0.apply(this,arguments);/* the solo reveal shows this tip itself once it finishes */if(rv!==true)try{tutTip('t.results')}catch(e){}return out}}
+ if(typeof closeModal==='function'){hookStep('closeModal','tutorial.js',{after(ctx,out){try{xrIntroEnd()}catch(e){}return out}})}
+ if(typeof segDetails==='function'){hookStep('segDetails','tutorial.js',{after(ctx,out){try{tutTip('t.editor')}catch(e){}return out}})}
+ if(typeof showResults==='function'){hookStep('showResults','tutorial.js',{after(ctx,out,rv){/* the solo reveal shows this tip itself once it finishes */if(rv!==true)try{tutTip('t.results')}catch(e){}return out}})}
  let raf=0;const re=()=>{if(!TUT||raf)return;raf=requestAnimationFrame(()=>{raf=0;if(TUT)tutPlace(tutFind(TUT.steps[TUT.i]))})};
  addEventListener('resize',re);addEventListener('scroll',re,true);
  setTimeout(()=>{try{tutAuto()}catch(e){}},900);

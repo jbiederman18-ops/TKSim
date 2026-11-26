@@ -7,6 +7,8 @@ Plays the same seeded games (Math.random and the clock are fixed, then reseeded 
 and in this checkout with tools/balance-sim.js, and compares the final save byte for byte (S.fmt, the save-format stamp,
 is ignored). Use it for refactors that must not change play: moving code, hookStep conversions, removing dead code.
 Gameplay or balance changes will (correctly) show DIFFERENT — use tools/balance-sweep.py for those.
+--strip 'JS' runs on a copy of the save (as s) before comparing, in both builds, to drop a field the change removes on
+purpose, e.g. --strip "(s.last&&s.last.blocks||[]).forEach(b=>delete b.flow)" (v510, Show flow's leftover).
 Needs: pip install playwright (set CHROME_PATH if Playwright's own Chromium isn't installed).
 """
 import argparse, asyncio, hashlib, os, shutil, socket, subprocess, sys, tempfile
@@ -26,7 +28,7 @@ def free_port():
         s.bind(('127.0.0.1', 0)); return s.getsockname()[1]
 
 
-async def play(p, port, seed, diff, engaged, weeks, sim):
+async def play(p, port, seed, diff, engaged, weeks, sim, strip=''):
     exe = os.environ.get('CHROME_PATH')
     b = await p.chromium.launch(**({'executable_path': exe} if exe else {}))
     pg = await (await b.new_context()).new_page()
@@ -37,14 +39,14 @@ async def play(p, port, seed, diff, engaged, weeks, sim):
     await pg.goto(f'http://127.0.0.1:{port}/index.html'); await pg.wait_for_timeout(500)
     await pg.add_script_tag(content=sim)
     out = await pg.evaluate("(__reseed(),SIM({diff:'%s',weeks:%d,spend:true,engaged:%s,checklist:true,skip:[]})"
-                            ".then(r=>{const s=Object.assign({},S);delete s.fmt;return JSON.stringify([r.seasons,r.errs,s])}))"
-                            % (diff, weeks, 'true' if engaged else 'false'))
+                            ".then(r=>{const s=JSON.parse(JSON.stringify(S));delete s.fmt;%s;return JSON.stringify([r.seasons,r.errs,s])}))"
+                            % (diff, weeks, 'true' if engaged else 'false', strip or '0'))
     await b.close()
     return hashlib.md5(out.encode()).hexdigest(), errs
 
 
 async def main():
-    ap = argparse.ArgumentParser(); ap.add_argument('commit'); ap.add_argument('--weeks', type=int, default=30)
+    ap = argparse.ArgumentParser(); ap.add_argument('commit'); ap.add_argument('--weeks', type=int, default=30); ap.add_argument('--strip', default='')
     a = ap.parse_args()
     from playwright.async_api import async_playwright
     old = tempfile.mkdtemp(prefix='tksim-old-')
@@ -58,8 +60,8 @@ async def main():
         await asyncio.sleep(1)
         async with async_playwright() as p:
             for seed, diff, eng in RUNS:
-                x = await play(p, ports['old'], seed, diff, eng, a.weeks, sim)
-                y = await play(p, ports['new'], seed, diff, eng, a.weeks, sim)
+                x = await play(p, ports['old'], seed, diff, eng, a.weeks, sim, a.strip)
+                y = await play(p, ports['new'], seed, diff, eng, a.weeks, sim, a.strip)
                 same = x[0] == y[0] and not y[1]; ok &= same
                 print(f"seed {seed:>5} {diff:<6} {'engaged' if eng else 'default':<8} {'SAME' if same else 'DIFFERENT'}"
                       + (f"  errors: {y[1][:2]}" if y[1] else ''))

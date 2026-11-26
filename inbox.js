@@ -316,10 +316,9 @@ function autoLine(){if(ON_||AUTO_T||!allowed())return;if(typeof tab==='undefined
  AUTO_T=setTimeout(()=>{AUTO_T=0;const m=document.getElementById('modal');if(ON_||!m||!m.classList.contains('hidden')||!allowed())return;if(typeof TUT!=='undefined'&&TUT||typeof TUT_OFFER!=='undefined'&&TUT_OFFER)return;if(inboxList().length)openInbox()},450)}
 hookStep('render','office line: auto-open',{after(){try{autoLine()}catch(e){}}});
 if(typeof _ob==='function')window.openBrief=openBrief=function(){if(allowed()&&inboxList().length){openInbox();return}if(ON_){ON_=false;N0=0}return _ob.apply(this,arguments)};
-const _cm=window.closeModal;
-window.closeModal=closeModal=function(){const r=_cm.apply(this,arguments);
+hookStep('closeModal','inbox.js',{around(_cm,...args){const r=_cm.apply(this,args);
  if(ON_){setTimeout(()=>{const m=document.getElementById('modal');if(!ON_||!m||!m.classList.contains('hidden'))return;if(!allowed()){ON_=false;return}if(inboxList().length)openInbox();else finish()},40)}
- return r};
+ return r}});
 /* the briefing keeps everything that isn't a decision */
 if(typeof briefItems==='function'){B0=window.briefItems||briefItems;window.briefItems=briefItems=function(){const sec=B0.apply(this,arguments);if(!allowed())return sec;
  return sec.map(s=>{if(!deskKind(s))return s;const rows=(s.rows||[]).filter(r=>!isAsk(r));return rows.length?Object.assign({},s,{rows,u:0}):null}).filter(Boolean)}}
@@ -329,13 +328,13 @@ function nextBtn(){const m=document.querySelector('#modal .sbody');if(!m||!ON_)r
 ['pitchChoose','crisisChoose'].forEach(fn=>{const f=window[fn];if(typeof f!=='function')return;window[fn]=function(){const r=f.apply(this,arguments);try{if(ON_)nextBtn()}catch(e){}return r}});
 /* nothing goes live with a notification unanswered, and the Book screen brings them up first */
 let ASK_PEND=null;
-if(typeof goLive==='function'){const g0=goLive;goLive=window.goLive=function(){if(allowed()&&inboxList().length){openInbox();return}
+if(typeof goLive==='function'){hookStep('goLive','inbox.js',{around(g0,...args){if(allowed()&&inboxList().length){openInbox();return}
  /* v322: the card is read as you go live and settled once the show has really aired (finishLive) — a go-live that
     stops at a checklist or a gate settles nothing */
  ASK_PEND=null;try{if(!(typeof LIVE!=='undefined'&&LIVE)&&allowed())ASK_PEND=askSnap()}catch(e){}
- return g0.apply(this,arguments)}}
-if(typeof finishLive==='function'){const f0=finishLive;finishLive=window.finishLive=function(){try{if(ASK_PEND&&typeof LIVE!=='undefined'&&LIVE)askSettle(ASK_PEND)}catch(e){console.warn('asks',e)}ASK_PEND=null;return f0.apply(this,arguments)}}
-if(typeof go==='function'){const g1=go;go=window.go=function(t){const r=g1.apply(this,arguments);if(t==='book'&&allowed()){setTimeout(()=>{const m=document.getElementById('modal');if(m&&m.classList.contains('hidden')&&inboxList().length)openInbox()},120)}return r}}
+ return g0.apply(this,args)}})}
+if(typeof finishLive==='function'){hookStep('finishLive','inbox.js',{before(ctx){try{if(ASK_PEND&&typeof LIVE!=='undefined'&&LIVE)askSettle(ASK_PEND)}catch(e){console.warn('asks',e)}ASK_PEND=null;}})}
+if(typeof go==='function'){hookStep('go','inbox.js',{after(ctx,r,t){if(t==='book'&&allowed()){setTimeout(()=>{const m=document.getElementById('modal');if(m&&m.classList.contains('hidden')&&inboxList().length)openInbox()},120)}return r}})}
 /* a strip on Home in case anything is still waiting */
 window.inboxStrip=function(){let n=0;try{n=inboxList().length}catch(e){}if(!n)return '';
  return `<button class="card bstrip hot" onclick="openInbox()"><span class="bsn">${n}</span><span class="bst"><b>🚪 There's a line outside your office</b><span>${n===1?'One person is':n+' people are'} waiting for an answer before the week starts</span></span><span class="bsc">›</span></button>`};

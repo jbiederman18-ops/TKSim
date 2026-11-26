@@ -44,10 +44,10 @@ window.rvHoldWeek=function(){const c=cfg();if(!c||!c.arcs||S.phase!=='season')re
 function bonus(kind,ids,ppv){let b=0;for(const p of live()){if(built(p)){if(kind==='match'&&both(ids,p)&&AW()>(p.ready||0)){const q=avg(p.st);let x=ARC_PAY0+clamp((q-3)*ARC_PAYQ,0,ARC_PAYMAX);if(ppv)x*=ARC_PAY_PPV;return {st:Math.round(x*100)/100,pay:p}}}else if(p.st.length&&has(ids,p))b=Math.max(b,ARC_BUILD*p.st.length)}return {st:b,pay:null}}
 const HEAT=new WeakMap();
 function pre(obj,kind,ids){if(!aired()||!ids.length||!ids.every(i=>S.w[i]&&S.w[i].own==='ai'))return null;const r=bonus(kind,ids,!!curShow().ppv);const n=r.pay?ARC_STORYP:Math.max(0,...live().filter(p=>p.st.length&&has(ids,p)).map(p=>ARC_STORYH[Math.min(p.st.length,ARC_STORYH.length)-1]));if(n)HEAT.set(obj,n);return r.st?{st:r.st,pay:[]}:null}
-const mp=window.arcMatchPre;window.arcMatchPre=function(m,mctx){const ids=m.sides.flat();return pre(m,'match',ids)||(mp?mp.apply(this,arguments):null)};
-const pp=window.arcPromoPre;window.arcPromoPre=function(q){const ids=[q.a,q.b].filter(Boolean);return pre(q,'promo',ids)||(pp?pp.apply(this,arguments):null)};
+hookStep('arcMatchPre','rivalstory.js',{around(mp,...args){let [m,mctx]=args;const ids=m.sides.flat();return pre(m,'match',ids)||(mp?mp.apply(this,args):null)}});
+hookStep('arcPromoPre','rivalstory.js',{around(pp,...args){let [q]=args;const ids=[q.a,q.b].filter(Boolean);return pre(q,'promo',ids)||(pp?pp.apply(this,args):null)}});
 /* a running arc is a story the casuals follow */
-const fs=fbSeg;fbSeg=window.fbSeg=function(m){const r=fs.apply(this,arguments);const h=HEAT.get(m);if(h&&r)r.h=Math.max(r.h||0,h);return r};
+hookStep('fbSeg','rivalstory.js',{after(ctx,r,m){const h=HEAT.get(m);if(h&&r)r.h=Math.max(r.h||0,h);return r}});
 const fanF=()=>typeof fanGrowF==='function'?fanGrowF(S.fans.ai):1;
 /* after the rival's show: move its arcs on, pay them off, and settle its promises */
 function settle(segs,ppv){const c=cfg();if(!c)return;
@@ -87,8 +87,8 @@ function chase(card,show){const c=cfg();if(!c)return;weekTick();
  else if(g.k==='rookie'&&!ms.some(s=>s.d.sides.flat().some(i=>S.w[i].rookie))){const r=l.find(w=>w.rookie);if(r){const keep=m.sides.flat().find(i=>S.w[i].g===r.g)||m.sides[0][0];redo(m,[[r.id],[keep]])}}
  else if(g.k==='title'&&!ms.some(s=>s.d.title)){const u=onCard(card);for(const t of Object.values(S.titles)){const h=t.holders[0];if(t.kind!=='singles'||!h||!S.w[h]||S.w[h].own!=='ai'||S.w[h].inj||u.has(h))continue;const o=l.find(w=>w.g===t.g&&w.id!==h&&!titlesOf(w.id).some(x=>x.kind==='singles'));if(o){redo(m,[[h],[o.id]]);m.title=t.id;break}}}
  else if(g.k==='stip'&&!ms.some(s=>s.d.stip&&s.d.stip!=='std')){const k=['nodq','street','ladder','sub','tables'].find(k=>stipOk(k,m.type,!!show.ppv)&&stipPrice(k,'ai')*2<=(S.money.ai||0)&&(typeof bgLeft!=='function'||stipPrice(k,'ai')<=bgLeft('ai',card,{noProd:true})));if(k)m.stip=k}}
-const ab=autoBook;autoBook=window.autoBook=function(brand,show){const card=ab.apply(this,arguments);if(brand==='ai'&&show&&S.phase==='season'){try{chase(card,show)}catch(e){console.warn('rival goals',e)}}return card};
-const gc=goalCheck;goalCheck=window.goalCheck=function(b){const g=S.goal&&S.goal[b],was=g&&g.done;if(b==='ai'&&g&&cfg()&&!tried(g,cfg().goal))return;const r=gc.apply(this,arguments);if(b==='ai'&&cfg()&&g&&!was&&g.done){fbSync('ai');note(`🎯 ${S.rival} hit its weekly goal: ${GOALS[g.k].n} (+${fmtFans(g.fans)} fans).`)}return r};
-hookStep('airPair','rival story notes',{around(next){let out;S.rvNotes=[];window.__rvAir=1;try{out=next()}finally{window.__rvAir=0}if(out&&out.notes&&S.rvNotes.length)out.notes.push(...S.rvNotes);S.rvNotes=[];return out}});
-const fa=fbApply;fbApply=window.fbApply=function(b,segs,show,o){const r=fa.apply(this,arguments);if(b==='ai'&&cfg()){try{settle(segs,!!(show&&show.ppv))}catch(e){console.warn('rival story',e)}}return r};
+hookStep('autoBook','rivalstory.js',{after(ctx,card,brand,show){if(brand==='ai'&&show&&S.phase==='season'){try{chase(card,show)}catch(e){console.warn('rival goals',e)}}return card}});
+hookStep('goalCheck','rivalstory.js',{around(gc,...args){let [b]=args;const g=S.goal&&S.goal[b],was=g&&g.done;if(b==='ai'&&g&&cfg()&&!tried(g,cfg().goal))return;const r=gc.apply(this,args);if(b==='ai'&&cfg()&&g&&!was&&g.done){fbSync('ai');note(`🎯 ${S.rival} hit its weekly goal: ${GOALS[g.k].n} (+${fmtFans(g.fans)} fans).`)}return r}});
+hookStep('airPair','rival story notes',{around(prev,...args){let out;S.rvNotes=[];window.__rvAir=1;try{out=prev.apply(this,args)}finally{window.__rvAir=0}if(out&&out.notes&&S.rvNotes.length)out.notes.push(...S.rvNotes);S.rvNotes=[];return out}});
+hookStep('fbApply','rivalstory.js',{after(ctx,r,b,segs,show,o){if(b==='ai'&&cfg()){try{settle(segs,!!(show&&show.ppv))}catch(e){console.warn('rival story',e)}}return r}});
 })();

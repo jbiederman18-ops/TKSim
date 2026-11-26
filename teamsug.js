@@ -45,43 +45,38 @@ function suggest(ids,why,notes,t,b){const T=TSb(b||'p');const k=kOf(ids);
   :`🤝 ${names(ids)} have teamed up ${T.c[k]} times. Make it official? There's a suggested name waiting in the Front office.`)}
 
 /* ---------- counting pairings after each match ---------- */
-const _apply=window.applyMatch;
-window.applyMatch=function(m,res,ctx,notes){const out=_apply.apply(this,arguments);
+hookStep('applyMatch','teamsug.js',{around(_apply,...args){let [m,res,ctx,notes]=args;const out=_apply.apply(this,args);
  try{const per=MT[m.type]&&MT[m.type].per;if(m.nc!==true&&(per===2||per===3)&&!m.tour){
   m.sides.forEach((sd,si)=>{const b=sd.length>1&&ownerOf(sd);if(!b||(b!=='p'&&!(typeof ON==='function'&&ON()))||named(sd))return;const T=TSb(b);const k=kOf(sd);T.c[k]=(T.c[k]||0)+1;
    const t=m.title&&S.titles[m.title];
    if(t&&si===m.winner&&t.won===AW()&&t.holders.length===sd.length&&sd.every(id=>t.holders.includes(id)))suggest(sd,'gold',notes,t.n,b);
    else if(T.c[k]>=TS_N)suggest(sd,'pair',notes,null,b)})}}catch(e){console.warn(e)}
- return out};
+ return out}});
 
 /* ---------- making it official ---------- */
 let TSK=null;
 window.tsOpen=function(k){if(typeof mpLocked==='function'&&mpLocked())return;const s=live().find(x=>x.k===k);if(!s)return toast('That team is no longer available.');
  TSK=k;const ideas=nameIdeas(s.ids);TE={id:null,n:ideas[0]||'',type:'team',m:s.ids.slice(),keep:[],ideas};renderTeam()};
 window.tsNo=function(k){const T=TS();T.l=T.l.filter(s=>s.k!==k);if(!T.no.includes(k))T.no.push(k);save();render()};
-const _render=window.renderTeam;
-window.renderTeam=function(){_render.apply(this,arguments);
+hookStep('renderTeam','teamsug.js',{around(_render,...args){_render.apply(this,args);
  if(!TE||!TE.ideas||!TE.ideas.length)return;const inp=document.getElementById('tmName');if(!inp)return;
  const d=document.createElement('div');d.className='chips';d.style.marginTop='6px';d.style.flexWrap='wrap';
  d.innerHTML=`<span class="muted tiny" style="align-self:center;margin-right:4px">Ideas:</span>`+TE.ideas.map((n,i)=>`<button type="button" class="chip ${TE.n===n?'on':''}" onclick="tsIdea(${i})">${esc(n)}</button>`).join('');
  inp.after(d);
  /* the suggested members first, so it's clear who's in it */
- const tl=document.querySelector('#modal .tmlist');if(tl)[...tl.querySelectorAll('.tmrow.on')].reverse().forEach(r=>tl.prepend(r))};
+ const tl=document.querySelector('#modal .tmlist');if(tl)[...tl.querySelectorAll('.tmrow.on')].reverse().forEach(r=>tl.prepend(r))}});
 window.tsIdea=function(i){if(!TE||!TE.ideas)return;TE.n=TE.ideas[i];renderTeam()};
-const _saveT=window.saveTeam;
-window.saveTeam=function(){const k=TE&&TE.ideas?TSK:null;const ids=TE&&TE.m.slice();_saveT.apply(this,arguments);
- if(k&&!TE&&S.tsug){S.tsug.l=S.tsug.l.filter(s=>s.k!==k&&s.k!==kOf(ids));TSK=null;save();render()}};
+hookStep('saveTeam','teamsug.js',{around(_saveT,...args){const k=TE&&TE.ideas?TSK:null;const ids=TE&&TE.m.slice();_saveT.apply(this,args);
+ if(k&&!TE&&S.tsug){S.tsug.l=S.tsug.l.filter(s=>s.k!==k&&s.k!==kOf(ids));TSK=null;save();render()}}});
 
 /* ---------- where it shows ---------- */
 function why(s){const T=TS();return s.why==='gold'?`Won the ${esc(s.t||'tag')} titles together`:`Teamed up ${T.c[s.k]||TS_N} times`}
 function rowB(s,close){const c=close?'closeModal();':'';return `<div class="brow" style="margin-bottom:10px"><b>${esc(names(s.ids))}</b><br><span class="muted tiny">${why(s)} · suggested name: ${esc(nameIdeas(s.ids)[0]||'')}</span><div class="row" style="gap:6px;margin-top:6px"><button class="mini" onclick="${c}tsOpen('${s.k}')">Name the team</button><button class="mini ghost" onclick="${c}tsNo('${s.k}')">Not a team</button></div>${close?`<span class="wkonly"> <a href="#" onclick="go('office');return false">Name them in the Front office ›</a></span>`:''}</div>`}
-const _brief=window.briefItems;
-window.briefItems=function(){const out=_brief.apply(this,arguments);
+hookStep('briefItems','teamsug.js',{after(ctx,out){
  try{const l=live();if(l.length)out.push({i:'🤝',t:l.length>1?'Teams in the making':'A team in the making',rows:l.map(s=>rowB(s,true))})}catch(e){console.warn(e)}
- return out};
-const _office=window.officeView;
-window.officeView=function(){let h=_office.apply(this,arguments);
+ return out}});
+hookStep('officeView','teamsug.js',{after(ctx,h){
  try{const l=live();if(l.length){const at='<button class="btn sec" onclick="openTeam()">';const i=h.indexOf(at);
   if(i>=0)h=h.slice(0,i)+`<div class="muted tiny" style="margin:4px 0 6px">Suggested — they keep teaming up:</div>`+l.map(s=>rowB(s,false)).join('')+h.slice(i)}}catch(e){console.warn(e)}
- return h};
+ return h}});
 })();

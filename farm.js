@@ -136,7 +136,7 @@ function boards(){reprice();const s=S.scout;if(!s)return;
  if(!s.intl){const l=known('intl',2);for(let i=0;i<8&&l.length<4;i++){const w=intlGen();if(w&&!l.some(x=>x.name===w.name))l.push(w)}s.intl=shuffle(l)}
  /* v154: one or two known indie names on every Indies board, in place of generic prospects first */
  if(!s.kn&&s.l){s.kn=1;const k=known('indie',Math.random()<.5?1:2);k.forEach(w=>{let i=s.l.findIndex(x=>!x.gim&&!x.real);if(i<0)i=s.l.length-1;if(i>=0)s.l[i]=w;else s.l.push(w)})}}
-if(typeof scoutTick==='function'){const s0=scoutTick;scoutTick=function(){const before=S&&S.scout;const out=s0.apply(this,arguments);try{if(S.scout&&S.scout!==before)boards()}catch(e){console.warn('farm boards',e)}return out}}
+if(typeof scoutTick==='function'){hookStep('scoutTick','farm.js',{around(s0,...args){const before=S&&S.scout;const out=s0.apply(this,args);try{if(S.scout&&S.scout!==before)boards()}catch(e){console.warn('farm boards',e)}return out}})}
 function board(reg){boards();const s=S.scout;return !s?[]:reg==='indie'?s.l:s[reg]||[]}
 const signCostF=w=>w.fee+mkt(w)*4;
 
@@ -225,5 +225,5 @@ function farmView(){const l=farmL('p').sort((a,b)=>b.ring-a.ring);const pay=l.re
  ${cand.length?`<div class="card"><div class="h small">Send down</div><div class="muted" style="margin-bottom:8px">Rookies and anyone at 45 popularity or lower can go to ROH to develop. Champions can't.</div>${cand.slice(0,12).map(w=>`<div class="prow">${face(w)}<div class="wl"><div class="wn">${esc(w.name)}</div><div class="muted tiny">Popularity ${Math.round(w.pop)} · Ring ${Math.round(w.ring)}${w.rookie?' · ROOKIE':''}</div></div><button class="mini" onclick="sendDown('${w.id}')">🏟️ Send down</button></div>`).join('')}</div>`:''}`}
 window.farmView=farmView;window.farmCard=farmCard;
 window.FARM={reprice,F,farmL,fsal,toFarm,taken,rohGen,intlGen,known,signCostF,INTL,FARM_MAX,ROH_POP_CAP};
-if(typeof rosterView==='function'){const r0=rosterView;rosterView=function(){if(rf==='roh')return window.farmView();return r0.apply(this,arguments)}}
+if(typeof rosterView==='function'){hookStep('rosterView','farm.js',{around(r0,...args){if(rf==='roh')return window.farmView();return r0.apply(this,args)}})}
 })();

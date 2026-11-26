@@ -53,15 +53,15 @@ function weekMorale(){const wk=AW();
 hookStep('endWeek','morale: weekly',{before(){try{weekMorale()}catch(e){console.warn('morale',e)}}});
 
 /* ---------------- wins, losses and main events ---------------- */
-if(typeof applyMatch==='function'){const a0=applyMatch;applyMatch=function(m,res,ctx){const before={};const ids=(m&&m.sides?m.sides.flat():[]).filter(id=>S.w[id]);ids.forEach(id=>before[id]=S.w[id].mor);
- const out=a0.apply(this,arguments);
+if(typeof applyMatch==='function'){hookStep('applyMatch','morale.js',{around(a0,...args){let [m,res,ctx]=args;const before={};const ids=(m&&m.sides?m.sides.flat():[]).filter(id=>S.w[id]);ids.forEach(id=>before[id]=S.w[id].mor);
+ const out=a0.apply(this,args);
  try{if(!m.nc&&m.sides[m.winner]){const win=m.sides[m.winner];const fin=finOf(m);const losers=ids.filter(id=>!win.includes(id));const big=ids.length>=3;const pin=big&&losers.length?pinOf(m):null;const wTop=Math.max(...win.map(id=>S.w[id]?S.w[id].pop:0));
   win.forEach(id=>{const w=S.w[id];if(w&&HUM(w.own))mlog(w,w.mor-before[id],'Wins',false)});
   const screwed=typeof riProt==='function'?riProt(m):null;losers.forEach(id=>{const w=S.w[id];if(!w||!HUM(w.own)||id===screwed)return;if(big&&id!==pin)return;
    if(fin==='clean'||fin==='upset'){let d=w.pop>=70?-3:w.pop>=45?-2:-1;mlog(w,d,'Losses');if(w.pop>=wTop+15)mlog(w,-2,'Lost to someone below them')}
    else if(w.pop>=60)mlog(w,-1,'Losses')});
   if(ctx&&ctx.pos==='me')ids.forEach(id=>{const w=S.w[id];if(w&&HUM(w.own))mlog(w,3,'Main event',false)})}}catch(e){console.warn('morale match',e)}
- return out}}
+ return out}})}
 
 /* ---------------- grievances ---------------- */
 const others=A=>ownList('p').filter(w=>w!==A);
@@ -107,7 +107,7 @@ function grvPick(){if(S.week<2||S.phase!=='season')return null;const wk=AW();if(
  else if(m<45)k='g_threat';
  else k=A.pop>=45&&A.con>4?'g_pay':'g_threat';
  return {k,a:A.id}}
-if(typeof crisisGen==='function'){const c0=crisisGen;crisisGen=function(){if(!S.crisis){try{const g=grvPick();if(g){S.crisis={k:g.k,a:g.a,b:null,w:S.week,tal:RI(0,99)};S.grvLast=AW();return}}catch(e){console.warn('grievance',e)}}return c0.apply(this,arguments)}}
+if(typeof crisisGen==='function'){hookStep('crisisGen','morale.js',{around(c0,...args){if(!S.crisis){try{const g=grvPick();if(g){S.crisis={k:g.k,a:g.a,b:null,w:S.week,tal:RI(0,99)};S.grvLast=AW();return}}catch(e){console.warn('grievance',e)}}return c0.apply(this,args)}})}
 
 /* ---------------- Mood on the wrestler card ---------------- */
 function moodHtml(w){const [ic,wd]=moodWord(w.mor);const l=moodTop(w,4);
@@ -122,18 +122,18 @@ window.moodWatch=moodWatch;
 })();
 
 /* v195: creative-control deals — a promised win is kept when it happens and broken when the deadline passes (deals.js) */
-if(typeof applyMatch==='function'){const a0=applyMatch;applyMatch=function(m,res,ctx,notes){const out=a0.apply(this,arguments);
+if(typeof applyMatch==='function'){hookStep('applyMatch','morale.js',{around(a0,...args){let [m,res,ctx,notes]=args;const out=a0.apply(this,args);
  try{if(S.ccOwe&&S.ccOwe.length&&m&&!m.nc&&m.sides&&m.sides[m.winner]){const win=m.sides[m.winner];const sh=curShow();
   S.ccOwe=S.ccOwe.filter(x=>{const w=S.w[x.a];if(!w||!win.includes(x.a)||AW()<=x.made)return true;
    const ok=x.k==='big'?(ctx&&ctx.pos==='me')||!!sh.ppv:m.sides.some((s,i)=>i!==m.winner&&s.includes(x.b));
    if(!ok)return true;kept(w,`got ${ccOweLabel(x)}, as you promised`,notes||[]);return false})}}catch(e){console.warn('cc owe',e)}
- return out}}
+ return out}})}
 hookStep('endWeek','morale: owed creative-control wins',{before(ctx,notes){try{if(S.ccOwe&&S.ccOwe.length){const n=notes||[];
   S.ccOwe=S.ccOwe.filter(x=>{const w=S.w[x.a];if(!w||!w.own)return false;if(AW()<x.by)return true;breach(w,w.own,`the ${x.k==='big'?'big win':ccOweLabel(x).replace(/^a /,'')} you promised for doing the job never came`,n);return false})}}catch(e){console.warn('cc owe',e)}}});
 
 /* v354: storylines that pay off — anything a wrestler was owed and got on tonight's show brings fans in (deliverFans, index.html) */
-if(typeof applyMatch==='function'){const a0=applyMatch;applyMatch=function(m,res,ctx,notes){let due=[];
+if(typeof applyMatch==='function'){hookStep('applyMatch','morale.js',{around(a0,...args){let [m,res,ctx,notes]=args;let due=[];
  try{if(typeof DELIVER_FANS!=='undefined'&&DELIVER_FANS&&m&&m.sides&&!(ctx&&ctx.preview)){const seen=new Set();m.sides.flat().forEach(id=>{const w=S.w[id];if(!w||!w.own||seen.has(id))return;const why=owedWhy(w,m,ctx||{});if(why){seen.add(id);due.push([w,why])}})}}catch(e){console.warn('deliver',e)}
- const out=a0.apply(this,arguments);
+ const out=a0.apply(this,args);
  try{due.forEach(([w,why])=>{if(!w.inj)deliverFans(w.own,why,w,notes||[])})}catch(e){console.warn('deliver',e)}
- return out}}
+ return out}})}

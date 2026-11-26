@@ -41,15 +41,15 @@ function dcStrip(b,cls){const own=ownList(b),c=dcCounts(b),sh=dcShort(b),m=own.f
  const tile=(k,ic,n,ti)=>`<span class="dcs${sh[k]?' need':''}${n?'':' z'}" title="${ti}: ${n}${sh[k]?' — short':''}">${ic}<b>${n}</b></span>`;
  return `<div class="dcstrip ${cls||''}">${tile('M','<i class="dcg">M</i>',m,'Men')}${tile('F','<i class="dcg">W</i>',f,'Women')}<span class="dcsep"></span>${DC_G.map(g=>tile(g,`<i class="fg-${g}">${fgIc(g)}</i>`,c[g],FG_N[g])).join('')}${c.und?tile('und',`<i class="fg-und">${fgIc('und')}</i>`,c.und,'Undiscovered'):''}</div>`}
 /* draftChoice + crowd needs for human GMs; Auto-pick says why */
-if(typeof draftChoice==='function'){const dc0=draftChoice;draftChoice=window.draftChoice=function(brand){
- if(!dcOn(brand)||!S.draft)return dc0.apply(this,arguments);
+if(typeof draftChoice==='function'){hookStep('draftChoice','draftcrowd.js',{around(dc0,...args){let [brand]=args;
+ if(!dcOn(brand)||!S.draft)return dc0.apply(this,args);
  try{let pool=Object.values(S.w).filter(w=>inPool(w));const mine=ownList(brand);
   const fit=pool.filter(w=>capOk(w,brand));pool=fit.length?fit:pool.sort((a,b)=>mkt(a)-mkt(b)).slice(0,1);
   const allow=S.draft.cap||S.draft.capB?capRoom(brand)/Math.max(1,picksLeft(brand)):Infinity;
   const wn=mine.filter(w=>w.g==='F').length;const needF=mine.length>=3&&wn/mine.length<.3;
   const cand=needF?pool.filter(w=>w.g==='F'):pool;const list=cand.length?cand:pool;
   let best=null,bv=-1e9,bw='';list.forEach(w=>{const n=dcNeed(brand,w);const v=w.pop*.5+w.ring*.35+w.mic*.15+room(w.ring)*UPS_K+(isChamp(w.id)?8:0)+(mine.some(o=>inTeam(o.id,w.id))?6:0)+n.v+R(0,aiq(brand).noise)-Math.max(0,mkt(w)-allow)*.9;if(v>bv){bv=v;best=w;bw=n.why}});
-  if(best)window.__dcWhy=bw;return best}catch(e){console.warn('draft crowds',e);return dc0.apply(this,arguments)}}}
+  if(best)window.__dcWhy=bw;return best}catch(e){console.warn('draft crowds',e);return dc0.apply(this,args)}}})}
 if(typeof autoPick==='function'){autoPick=window.autoPick=function(){if(mpLocked())return;if(onClock()!=='p')return;window.__dcWhy='';const c=draftChoice('p');if(!c)return;const why=window.__dcWhy;pDraft(c.id);
  if(c.own==='p')toast(why?`Auto-pick: ${c.name} — ${why}.`:`Auto-pick: ${c.name}.`)}}
 Object.assign(window,{DC_SHARE,dcCounts,dcNeed,dcTally,dcStrip});

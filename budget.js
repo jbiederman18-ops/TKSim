@@ -66,11 +66,11 @@ function bgTrim(b,card,o){o=o||{};const prot=o.protect||new Set();const dropped=
 window.bgTrim=bgTrim;
 
 /* the offline rival: its booker and its crowd tuner stay inside the budget (Suggest the rest is trimmed below) */
-if(typeof autoBook==='function'){const a0=autoBook;autoBook=window.autoBook=function(brand,show,extUsed,opt){const c=a0.apply(this,arguments);
- try{if(Array.isArray(c)&&brand!=='p'&&!bgHum(brand))bgTrim(brand,c,{noProd:true})}catch(e){console.warn('budget',e)}return c}}
+if(typeof autoBook==='function'){hookStep('autoBook','budget.js',{after(ctx,c,brand,show,extUsed,opt){
+ try{if(Array.isArray(c)&&brand!=='p'&&!bgHum(brand))bgTrim(brand,c,{noProd:true})}catch(e){console.warn('budget',e)}return c}})}
 /* the rival's production: never more than what's left after its stipulations */
-if(typeof aiProd==='function'){const p0=aiProd;aiProd=window.aiProd=function(b,show){let k=p0.apply(this,arguments);try{const card=S.card&&S.card[b];const room=(S.money[b]||0)-bgSpend(b,card,{noProd:true,sh:show})-bgReserve(b);
- const ord=['max','plus','std'];let i=ord.indexOf(k);while(i<ord.length-1&&prodCost(ord[i],show,b)>room)i++;k=ord[Math.max(0,i)]}catch(e){}return k}}
+if(typeof aiProd==='function'){hookStep('aiProd','budget.js',{after(ctx,k,b,show){try{const card=S.card&&S.card[b];const room=(S.money[b]||0)-bgSpend(b,card,{noProd:true,sh:show})-bgReserve(b);
+ const ord=['max','plus','std'];let i=ord.indexOf(k);while(i<ord.length-1&&prodCost(ord[i],show,b)>room)i++;k=ord[Math.max(0,i)]}catch(e){}return k}})}
 
 /* Suggest the rest (and the bots' assistants): the stipulations it adds have to fit what's left; yours stay */
 ['suggestCard','suggestCardEngaged'].forEach(fn=>{const f0=window[fn];if(typeof f0!=='function')return;window[fn]=function(){const c=f0.apply(this,arguments);
@@ -98,23 +98,23 @@ hookStep('endWeek','budget: network advances',{before(ctx){const adv=ctx.adv={};
   if(pay&&bgHum(b)&&Array.isArray(notes))notes.push(`🏦 ${typeof ON==='function'&&ON()?nameOf(b)+' paid':'You paid'} the network back ${money(pay)}${S.adv[b]?` (${money(S.adv[b])} to go)`:' — all square'}.`)})}catch(e){console.warn('advance',e)}}});
 
 /* ---- the Office: what's owed to the network ---- */
-if(typeof finCard==='function'){const f0=finCard;finCard=window.finCard=function(){let h=f0.apply(this,arguments);try{const o=S.adv&&S.adv.p,a=bgAdvEst('p');let x='';
+if(typeof finCard==='function'){hookStep('finCard','budget.js',{after(ctx,h){try{const o=S.adv&&S.adv.p,a=bgAdvEst('p');let x='';
  if(a>0)x+=`<div class="tiny mt">🏦 Tonight's card costs ${money(a)} more than your budget. The network fronts up to that for the big match (less if tonight's takings cover some) and takes it back out of your TV deal (up to ${Math.round(ADV_CUT*100)}% a week).</div>`;
  if(o>0)x+=`<div class="muted tiny mt">🏦 Owed to the network: <b>${money(o)}</b>, repaid from the TV deal (up to ${Math.round(ADV_CUT*100)}% a week).</div>`;
- if(x&&typeof h==='string')h=h.replace(/<\/div>\s*$/,x+'</div>')}catch(e){}return h}}
+ if(x&&typeof h==='string')h=h.replace(/<\/div>\s*$/,x+'</div>')}catch(e){}return h}})}
 
 /* ---- office choices that cost money need it in the bank ---- */
 function bgOptCost(o,x){const t=(o.t||'')+' '+(o.d||'');if(/\{COST\}/.test(t)&&x&&x.cost)return x.cost;const m=t.match(/\(\$(\d+(?:\.\d+)?)(K|M)\)/);return m?Math.round(+m[1]*(m[2]==='M'?1000:1)):0}
 window.bgOptCost=bgOptCost;
-if(typeof openCrisis==='function'){const oc=openCrisis;openCrisis=window.openCrisis=function(){const r=oc.apply(this,arguments);
+if(typeof openCrisis==='function'){hookStep('openCrisis','budget.js',{around(oc,...args){const r=oc.apply(this,args);
  try{const c=S.crisis;if(!c||!CRISES[c.k])return r;const C=CRISES[c.k];const x=crisisCtx();const cost=C.ch.map(o=>bgOptCost(o,x));const bank=S.money.p||0;
   if(!cost.some((v,i)=>!v||v<=bank))return r;
-  document.querySelectorAll('#modal .choice, .modal .choice').forEach((el,i)=>{if(cost[i]&&cost[i]>bank){el.disabled=true;el.classList.add('dis');el.style.opacity='.45';const n=document.createElement('div');n.className='muted tiny';n.textContent=`Not enough in the bank (${money(bank)}).`;el.appendChild(n)}})}catch(e){}return r}}
-if(typeof crisisChoose==='function'){const cc=crisisChoose;crisisChoose=window.crisisChoose=function(i){try{const c=S.crisis;if(c&&CRISES[c.k]){const C=CRISES[c.k];const x=crisisCtx();const cost=C.ch.map(o=>bgOptCost(o,x));
- if(cost[i]&&cost[i]>(S.money.p||0)&&cost.some(v=>!v||v<=(S.money.p||0)))return toast('Not enough in the bank for that.')}}catch(e){}return cc.apply(this,arguments)}}
+  document.querySelectorAll('#modal .choice, .modal .choice').forEach((el,i)=>{if(cost[i]&&cost[i]>bank){el.disabled=true;el.classList.add('dis');el.style.opacity='.45';const n=document.createElement('div');n.className='muted tiny';n.textContent=`Not enough in the bank (${money(bank)}).`;el.appendChild(n)}})}catch(e){}return r}})}
+if(typeof crisisChoose==='function'){hookStep('crisisChoose','budget.js',{around(cc,...args){let [i]=args;try{const c=S.crisis;if(c&&CRISES[c.k]){const C=CRISES[c.k];const x=crisisCtx();const cost=C.ch.map(o=>bgOptCost(o,x));
+ if(cost[i]&&cost[i]>(S.money.p||0)&&cost.some(v=>!v||v<=(S.money.p||0)))return toast('Not enough in the bank for that.')}}catch(e){}return cc.apply(this,args)}})}
 /* a friend's visit: the bonus and the dinner need the money */
-if(typeof fgAnswer==='function'){const fa=fgAnswer;fgAnswer=window.fgAnswer=function(i){try{const x=fgVisit();if(x&&i===0){const c=x.v.d<0?fgCost(x.F,x.A):15;if((S.money.p||0)<c){toast('Not enough in the bank for that.');return ''}}}catch(e){}return fa.apply(this,arguments)}}
-if(typeof openFg==='function'){const of=openFg;openFg=window.openFg=function(){const r=of.apply(this,arguments);try{const x=fgVisit();if(x){const c=x.v.d<0?fgCost(x.F,x.A):15;if((S.money.p||0)<c){const el=document.querySelector('[onclick="fgPick(0)"]');if(el){el.disabled=true;el.style.opacity='.45';const n=document.createElement('div');n.className='muted tiny';n.textContent=`Not enough in the bank (${money(S.money.p||0)}).`;el.appendChild(n)}}}}catch(e){}return r}}
+if(typeof fgAnswer==='function'){hookStep('fgAnswer','budget.js',{around(fa,...args){let [i]=args;try{const x=fgVisit();if(x&&i===0){const c=x.v.d<0?fgCost(x.F,x.A):15;if((S.money.p||0)<c){toast('Not enough in the bank for that.');return ''}}}catch(e){}return fa.apply(this,args)}})}
+if(typeof openFg==='function'){hookStep('openFg','budget.js',{after(ctx,r){try{const x=fgVisit();if(x){const c=x.v.d<0?fgCost(x.F,x.A):15;if((S.money.p||0)<c){const el=document.querySelector('[onclick="fgPick(0)"]');if(el){el.disabled=true;el.style.opacity='.45';const n=document.createElement('div');n.className='muted tiny';n.textContent=`Not enough in the bank (${money(S.money.p||0)}).`;el.appendChild(n)}}}}catch(e){}return r}})}
 
 /* ---- tonight's building comes out of the same money ---- */
-if(typeof venuePick==='function'){const vp=venuePick;venuePick=window.venuePick=function(b,k){try{const V=BLDG.find(v=>v.k===k);if(V&&V.rent&&bgHum(b)&&venOf(b).k!==k&&V.rent>bgLeft(b,null,{noRent:true}))return 'money'}catch(e){}return vp.apply(this,arguments)}}
+if(typeof venuePick==='function'){hookStep('venuePick','budget.js',{around(vp,...args){let [b,k]=args;try{const V=BLDG.find(v=>v.k===k);if(V&&V.rent&&bgHum(b)&&venOf(b).k!==k&&V.rent>bgLeft(b,null,{noRent:true}))return 'money'}catch(e){}return vp.apply(this,args)}})}

@@ -38,7 +38,7 @@
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v509';
+const APP_VERSION='v510';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -772,7 +772,8 @@ function runEvAI(g,m){if(g.sit)return sitRoll(aiSit(evChoices(g.e,m,g.r),g.r),g.
 /* ===================== HELPERS ===================== */
 /* HOOKS: other files add a step around a core function (endWeek, airPair, render) with hookStep() instead of
    re-wrapping it by hand:  hookStep('endWeek','farm: weekly',{before(ctx,...args){}, after(ctx,result,...args){}})
-   or {around(next,...args){ … return next() }} for a step that has to wrap the call itself (try/finally).
+   or {around(prev,...args){ … return prev.apply(this,args) }} for a step that has to wrap the call itself (try/finally, an
+   early return, changing the arguments): prev is the function as it was before this step, called exactly like the original.
    Steps nest in script load order exactly like hand-written wrappers did: the file loaded last runs its 'before' first
    and its 'after' last. ctx carries values from a step's 'before' to its own 'after'. An 'after' that returns something
    other than undefined replaces the result. HOOKS.endWeek (in the console) lists the steps innermost first.
@@ -781,7 +782,7 @@ function runEvAI(g,m){if(g.sit)return sitRoll(aiSit(evChoices(g.e,m,g.r),g.r),g.
 const HOOKS={};
 function hookStep(name,label,h){const prev=window[name];if(typeof prev!=='function')return false;
  const f=function(...a){
-  if(h.around)return h.around.call(this,(...b)=>prev.apply(this,b.length?b:a),...a);
+  if(h.around)return h.around.call(this,prev,...a);
   const ctx={};if(h.before)h.before.call(this,ctx,...a);
   const r=prev.apply(this,a);
   if(h.after){const x=h.after.call(this,ctx,r,...a);if(x!==undefined)return x}
@@ -2124,25 +2125,25 @@ function airPair(){
  /* run fn from brand b's own seat (online), so each GM's card airs exactly as it would for them */
  const fromSeat=(b,fn)=>b==='p'||!ON()?fn():b==='ai'?asOther(fn):asPair(canonKey(b),canonKey('p'),fn);
  /* each GM's card is aired from their own side, so promises, proxy wars and promo payoffs work for both people online */
- const airCard=b=>{const segs=[],v=[],meta=[];let df=0;const bx={},bon=(k,n)=>{if(n)bx[k]=(bx[k]||0)+n};const dl={on:[],me:[],ttl:[]};const inf={ovf:0,women:0,me:0,rk:false,deb:false,newch:false,tagdef:false,sold:sellOf(b,show).length>0,title:0,tag:0,stip:0,pr:0,lo:5,nm:0,fs:[]};
+ const airCard=b=>{const segs=[],v=[];let df=0;const bx={},bon=(k,n)=>{if(n)bx[k]=(bx[k]||0)+n};const dl={on:[],me:[],ttl:[]};const inf={ovf:0,women:0,me:0,rk:false,deb:false,newch:false,tagdef:false,sold:sellOf(b,show).length>0,title:0,tag:0,stip:0,pr:0,lo:5,nm:0,fs:[]};
   const debut=(ws,notes)=>{const r=debutPop(ws.filter(w=>w&&w.deb),show.ppv);if(r.ws.length)inf.deb=true;r.ws.forEach(w=>{delete w.deb;w.pop=clamp(w.pop+1.5,1,100);w.mor=clamp(w.mor+5,0,100)});df+=r.fans;bon('Debut buzz',r.fans);notes.unshift(...r.notes);return r.stars};
   S.card[b].forEach(sl=>{if(sl&&sl.k==='match'&&sl.d&&ocPending(sl.d)&&!ocResolve(sl.d,b,true))sl.d=null});
   S.card[b].forEach(sl=>{if(sl&&sl.k==='match'&&isSq(sl.d))try{sqPrep(sl.d,b,S.card[b].filter(x=>x!==sl))}catch(e){console.warn(e)}});
   const mIdx=S.card[b].map((sl,i)=>sl.k==='match'&&sl.d&&validMatch(sl.d)&&!sl.d.sides.flat().some(id=>S.w[id].inj)?i:-1).filter(i=>i>=0);
   S.card[b].forEach((sl,si)=>{if(!sl.d)return;
    const shw=show.ppv?show.name:(showNames()[b]||show.name);
-   if(sl.k==='match'){const m=sl.d;spHeal(m);ctx.worked=ctx.worked||new Set();if(validMatch(m)){const hurt=m.sides.flat().filter(id=>S.w[id].inj&&ctx.worked.has(id));if(hurt.length&&(b==='p'||ON()))news(`🚑 ${hurt.map(id=>S.w[id].name).join(' and ')} got hurt earlier tonight, so their second match was scrapped.`)}if(!validMatch(m)||m.sides.flat().some(id=>S.w[id].inj))return;const mctx=Object.assign({},ctx,{pos:mIdx.length>=3&&si===mIdx[mIdx.length-1]?'me':mIdx.length>=3&&si===mIdx[0]?'open':'mid'});const cc=ccFinish(m,b);const res=rateMatch(m,mctx);res.u=uStars(res.raw)+adj(b)+(m.ev?m.ev.stars:0)-(cc?cc.pen:0);res.bdx=[['In-match moments',m.ev?m.ev.stars:0],['Creative control',cc?-cc.pen:0],['House edge',adj(b)]];res.stars=clamp(res.u,.25,5);const notes=m.ev?m.ev.notes.slice():[];if(cc)notes.push(cc.note);dl.on.push(...m.sides.flat());if(si===mIdx[mIdx.length-1])dl.me.push(...m.sides.flat());if(m.title)dl.ttl.push(...m.sides.flat());{const ch=chantHit(b,m.sides.flat());if(ch){res.u+=CHANT_ST;res.stars=clamp(res.u,.25,5);df+=CHANT_FANS;bon('Crowd chant delivered',CHANT_FANS);notes.push(ch);res.bdx.push(['Crowd chant',CHANT_ST])}}{const sh=stashHit(m);if(sh){res.u+=.25;res.stars=clamp(res.u,.25,5);notes.push(sh);res.bdx.push(['Fresh return',.25])}}const ASG=typeof arcMatchPre==='function'?arcMatchPre(m,mctx):null;if(ASG&&ASG.st){res.u+=ASG.st;res.stars=clamp(res.u,.25,5);res.bdx.push(['Story payoff',ASG.st])}if(res.boil)notes.push(`💥 Boiling over! After weeks of talk, ${res.boil} finally got their hands on each other (+¼★, +50% heat).`);if(res.rep)notes.push(`🔁 ${res.repWhy} again — they met last week, so it builds ${res.repLight?'75% heat (a tag or multi-person rematch is a lighter repeat)':'half heat'}.`);{const db=debut(m.sides.flat().map(id=>S.w[id]),notes);if(db){res.u+=db;res.stars=clamp(res.u,.25,5);res.bdx.push(['Debut pop',db])}}const txt=matchText(m);SEG={t:`${shw} · ${txt} ${stars(res.stars)}`,win:m.nc?[]:(m.sides[m.winner]||[]),sides:m.sides};const th=m.title&&S.titles[m.title]?S.titles[m.title].holders.join('|'):null;applyMatch(m,res,mctx,notes);if(m.ev)applyEv(m.ev,notes);applyRunIn(m,res,notes);if(m.tour)tourResult(b,m,notes);if(m.type==='gauntlet')gauntletPrize(b,m,notes);if(m.type==='rumble')rumblePrize(b,m,notes);if(m.type==='mitb')mitbPrize(b,m,notes);if(m.cash)try{cashAfter(b,m,res,notes,mctx)}catch(e){console.warn(e)}{const ov=overflowRewards(b,m,res,mctx,notes,OVF_FAN_CAP(show.ppv)*(ctx.allin?1.5:1)-(inf.ovFans||0));if(ov.o){inf.ovf+=ov.o;df+=ov.fans;bon('Instant classic',ov.fans);inf.ovFans=(inf.ovFans||0)+ov.fans}}try{ocAfter(b,m,res,notes)}catch(e){console.warn(e)}try{sqAfter(b,m,res,notes)}catch(e){console.warn(e)}try{pitchSeg({kind:'match',sides:m.sides,stars:res.stars,pos:mctx.pos,title:m.title||null,won:m.nc?[]:m.sides[m.winner]},notes)}catch(e){console.warn(e)}try{if(ASG&&arcPost(ASG,res.stars,notes))inf.arc=true}catch(e){console.warn(e)}SEG=null;segs.push({txt,sub:matchSub(m),stars:res.stars,notes,bd:bdReveal(res),sd:m.sides.map(x=>x.slice()),wi:m.nc?-1:m.winner});v.push(res.stars);if(typeof fbSeg==='function')inf.fs.push(fbSeg(m,res.stars,si===mIdx[mIdx.length-1]));meta.push(segMeta(sl,res.stars));
+   if(sl.k==='match'){const m=sl.d;spHeal(m);ctx.worked=ctx.worked||new Set();if(validMatch(m)){const hurt=m.sides.flat().filter(id=>S.w[id].inj&&ctx.worked.has(id));if(hurt.length&&(b==='p'||ON()))news(`🚑 ${hurt.map(id=>S.w[id].name).join(' and ')} got hurt earlier tonight, so their second match was scrapped.`)}if(!validMatch(m)||m.sides.flat().some(id=>S.w[id].inj))return;const mctx=Object.assign({},ctx,{pos:mIdx.length>=3&&si===mIdx[mIdx.length-1]?'me':mIdx.length>=3&&si===mIdx[0]?'open':'mid'});const cc=ccFinish(m,b);const res=rateMatch(m,mctx);res.u=uStars(res.raw)+adj(b)+(m.ev?m.ev.stars:0)-(cc?cc.pen:0);res.bdx=[['In-match moments',m.ev?m.ev.stars:0],['Creative control',cc?-cc.pen:0],['House edge',adj(b)]];res.stars=clamp(res.u,.25,5);const notes=m.ev?m.ev.notes.slice():[];if(cc)notes.push(cc.note);dl.on.push(...m.sides.flat());if(si===mIdx[mIdx.length-1])dl.me.push(...m.sides.flat());if(m.title)dl.ttl.push(...m.sides.flat());{const ch=chantHit(b,m.sides.flat());if(ch){res.u+=CHANT_ST;res.stars=clamp(res.u,.25,5);df+=CHANT_FANS;bon('Crowd chant delivered',CHANT_FANS);notes.push(ch);res.bdx.push(['Crowd chant',CHANT_ST])}}{const sh=stashHit(m);if(sh){res.u+=.25;res.stars=clamp(res.u,.25,5);notes.push(sh);res.bdx.push(['Fresh return',.25])}}const ASG=typeof arcMatchPre==='function'?arcMatchPre(m,mctx):null;if(ASG&&ASG.st){res.u+=ASG.st;res.stars=clamp(res.u,.25,5);res.bdx.push(['Story payoff',ASG.st])}if(res.boil)notes.push(`💥 Boiling over! After weeks of talk, ${res.boil} finally got their hands on each other (+¼★, +50% heat).`);if(res.rep)notes.push(`🔁 ${res.repWhy} again — they met last week, so it builds ${res.repLight?'75% heat (a tag or multi-person rematch is a lighter repeat)':'half heat'}.`);{const db=debut(m.sides.flat().map(id=>S.w[id]),notes);if(db){res.u+=db;res.stars=clamp(res.u,.25,5);res.bdx.push(['Debut pop',db])}}const txt=matchText(m);SEG={t:`${shw} · ${txt} ${stars(res.stars)}`,win:m.nc?[]:(m.sides[m.winner]||[]),sides:m.sides};const th=m.title&&S.titles[m.title]?S.titles[m.title].holders.join('|'):null;applyMatch(m,res,mctx,notes);if(m.ev)applyEv(m.ev,notes);applyRunIn(m,res,notes);if(m.tour)tourResult(b,m,notes);if(m.type==='gauntlet')gauntletPrize(b,m,notes);if(m.type==='rumble')rumblePrize(b,m,notes);if(m.type==='mitb')mitbPrize(b,m,notes);if(m.cash)try{cashAfter(b,m,res,notes,mctx)}catch(e){console.warn(e)}{const ov=overflowRewards(b,m,res,mctx,notes,OVF_FAN_CAP(show.ppv)*(ctx.allin?1.5:1)-(inf.ovFans||0));if(ov.o){inf.ovf+=ov.o;df+=ov.fans;bon('Instant classic',ov.fans);inf.ovFans=(inf.ovFans||0)+ov.fans}}try{ocAfter(b,m,res,notes)}catch(e){console.warn(e)}try{sqAfter(b,m,res,notes)}catch(e){console.warn(e)}try{pitchSeg({kind:'match',sides:m.sides,stars:res.stars,pos:mctx.pos,title:m.title||null,won:m.nc?[]:m.sides[m.winner]},notes)}catch(e){console.warn(e)}try{if(ASG&&arcPost(ASG,res.stars,notes))inf.arc=true}catch(e){console.warn(e)}SEG=null;segs.push({txt,sub:matchSub(m),stars:res.stars,notes,bd:bdReveal(res),sd:m.sides.map(x=>x.slice()),wi:m.nc?-1:m.winner});v.push(res.stars);if(typeof fbSeg==='function')inf.fs.push(fbSeg(m,res.stars,si===mIdx[mIdx.length-1]));
     /* what the show delivered, for the network's mandates and the year-end awards */
     const ws=m.sides.flat().map(id=>S.w[id]);if(ws.some(w=>w.g==='F'))inf.women++;inf.nm++;inf.lo=Math.min(inf.lo,res.stars);if(m.title)inf.title++;if(m.type==='tag'||m.type==='trios'||m.type==='tag8'||m.sides[0].length>1)inf.tag++;if(stipKey(m)!=='std')inf.stip++;if(si===mIdx[mIdx.length-1]){inf.me=res.stars;if(!S.meh)S.meh={};S.meh[b]=((S.meh[b]||[]).filter(x=>AW()-x.w<4).concat([{w:AW(),ids:m.sides.flat()}]))}if(res.stars>=3&&ws.some(w=>w.rookie&&w.own===b))inf.rk=true;
     if(th!=null){const t=S.titles[m.title];const now=t.holders.join('|');if(now!==th&&t.holders.length&&S.w[t.holders[0]].own===b)inf.newch=true;if(now===th&&t.kind!=='singles'&&!m.nc&&t.holders.length&&S.w[t.holders[0]].own===b)inf.tagdef=true}
     if(!m.nc&&(m.type==='tag')){const wk=m.sides[m.winner].slice().sort().join('|');S.tagW=S.tagW||{};S.tagW[wk]=(S.tagW[wk]||0)+1}}
-   else if(sl.k==='promo'&&sl.d.res&&!sl.d.cut){const p=sl.d;const notes=[];let st=clamp(p.res.stars+adj(b)+debut([S.w[p.a],p.b&&S.w[p.b]],notes),.5,5);{const ch=chantHit(b,[p.a,p.b].filter(Boolean));if(ch){st=clamp(st+CHANT_ST,.5,5);df+=CHANT_FANS;bon('Crowd chant delivered',CHANT_FANS);notes.push(ch)}}const ASG=typeof arcPromoPre==='function'?arcPromoPre(p):null;if(ASG&&ASG.st)st=clamp(st+ASG.st,.5,5);inf.pr=Math.max(inf.pr,st);dl.on.push(p.a);if(p.b)dl.on.push(p.b);SEG={t:`${shw} · ${PT[p.type].n}: ${S.w[p.a].name}${p.b&&S.w[p.b]?' & '+S.w[p.b].name:''} ${stars(st)}`};applyPromo(p,notes);if(st>=3.5)[p.a,p.b].forEach(id=>{if(id&&S.w[id])S.w[id].feat=AW()});try{pitchSeg({kind:'promo',sides:[[p.a],[p.b].filter(Boolean)],stars:st},notes)}catch(e){console.warn(e)}try{if(ASG&&arcPost(ASG,st,notes))inf.arc=true}catch(e){console.warn(e)}try{if(typeof oppSeg==='function')oppSeg(b,p,st,notes)}catch(e){console.warn(e)}SEG=null;segs.push({sd:[[p.a]].concat(p.b&&S.w[p.b]?[[p.b]]:[]),txt:S.w[p.a].name+(p.b&&S.w[p.b]?' & '+S.w[p.b].name:''),sub:PT[p.type].n,stars:st,notes});v.push(st);if(typeof fbPromo==='function')inf.fs.push(fbPromo(p,st));meta.push(segMeta(sl,st));
+   else if(sl.k==='promo'&&sl.d.res&&!sl.d.cut){const p=sl.d;const notes=[];let st=clamp(p.res.stars+adj(b)+debut([S.w[p.a],p.b&&S.w[p.b]],notes),.5,5);{const ch=chantHit(b,[p.a,p.b].filter(Boolean));if(ch){st=clamp(st+CHANT_ST,.5,5);df+=CHANT_FANS;bon('Crowd chant delivered',CHANT_FANS);notes.push(ch)}}const ASG=typeof arcPromoPre==='function'?arcPromoPre(p):null;if(ASG&&ASG.st)st=clamp(st+ASG.st,.5,5);inf.pr=Math.max(inf.pr,st);dl.on.push(p.a);if(p.b)dl.on.push(p.b);SEG={t:`${shw} · ${PT[p.type].n}: ${S.w[p.a].name}${p.b&&S.w[p.b]?' & '+S.w[p.b].name:''} ${stars(st)}`};applyPromo(p,notes);if(st>=3.5)[p.a,p.b].forEach(id=>{if(id&&S.w[id])S.w[id].feat=AW()});try{pitchSeg({kind:'promo',sides:[[p.a],[p.b].filter(Boolean)],stars:st},notes)}catch(e){console.warn(e)}try{if(ASG&&arcPost(ASG,st,notes))inf.arc=true}catch(e){console.warn(e)}try{if(typeof oppSeg==='function')oppSeg(b,p,st,notes)}catch(e){console.warn(e)}SEG=null;segs.push({sd:[[p.a]].concat(p.b&&S.w[p.b]?[[p.b]]:[]),txt:S.w[p.a].name+(p.b&&S.w[p.b]?' & '+S.w[p.b].name:''),sub:PT[p.type].n,stars:st,notes});v.push(st);if(typeof fbPromo==='function')inf.fs.push(fbPromo(p,st));
     if(!S.bestP||st>S.bestP.s)S.bestP={s:st,t:`${PT[p.type].n}: ${S.w[p.a].name}${p.b&&S.w[p.b]?' & '+S.w[p.b].name:''} (${shw}, W${S.week})`}}});
   {const tn=[];tourSweep(b,tn);if(tn.length)out.notes.push(...tn)}
-  inf.dl=dl;inf.bx=bx;return {segs,v,df,inf,flow:flowScore(meta,show.ppv,b)}};
- const flows={},debF={},infs={};
- order.forEach(b=>{const r=ON()&&b!=='p'?fromSeat(b,()=>airCard('p')):airCard(b);vals[b]=r.v;flows[b]=r.flow;debF[b]=r.df;infs[b]=r.inf;
-  out.blocks.push({brand:b,label:show.ppv?`${nameOf(b)}'s card`:`${showNames()[b]} — ${nameOf(b)}`,segs:r.segs,flow:r.flow})});
+  inf.dl=dl;inf.bx=bx;return {segs,v,df,inf}};
+ const debF={},infs={};
+ order.forEach(b=>{const r=ON()&&b!=='p'?fromSeat(b,()=>airCard('p')):airCard(b);vals[b]=r.v;debF[b]=r.df;infs[b]=r.inf;
+  out.blocks.push({brand:b,label:show.ppv?`${nameOf(b)}'s card`:`${showNames()[b]} — ${nameOf(b)}`,segs:r.segs})});
  const extra={};order.forEach(b=>extra[b]=0);
  if(show.ppv){
   if(show.fd)airXo(order,ctx,vals,extra,out)}
@@ -2154,7 +2155,7 @@ function airPair(){
    out.notes.push(`🥊 Main event war: ${nameOf(W)}'s main event (${stars(top)}) was the best of the night and won the final quarter-hour.`)}}
  else if(!show.ppv&&!bye&&infs.p&&infs.ai&&infs.p.me&&infs.ai.me&&infs.p.me!==infs.ai.me){const w=infs.p.me>infs.ai.me?'p':'ai';out.notes.push(`🥊 Main event war: ${nameOf(w)}'s main event (${stars(infs[w].me)}) beat ${nameOf(w==='p'?'ai':'p')}'s (${stars(infs[w==='p'?'ai':'p'].me)}) head-to-head in the final quarter-hour.`)}
  const rt={};
- order.forEach(b=>{const v=vals[b];if(!v.length){rt[b]=.5;return}let s=0,ws=0;v.forEach((x,i)=>{const w=i===v.length-1?1.6:1;s+=x*w;ws+=w});rt[b]=clamp(s/ws+(flows[b]?flows[b].mod:0),0,5)});
+ order.forEach(b=>{const v=vals[b];if(!v.length){rt[b]=.5;return}let s=0,ws=0;v.forEach((x,i)=>{const w=i===v.length-1?1.6:1;s+=x*w;ws+=w});rt[b]=clamp(s/ws,0,5)});
  out.cash={};
  order.forEach(b=>{const pk=prodOf(b,show);if(vals[b].length&&PROD[pk].b)rt[b]=clamp(rt[b]+PROD[pk].b,0,5);
   const c={prod:prodCost(pk,show,b),pk,stip:stipCost(S.card[b],b),gate:0,bill:0,ad:0,sell:sellOf(b,show)};if(c.sell.includes('ads')&&vals[b].length)rt[b]=clamp(rt[b]-.25,0,5);
@@ -2832,41 +2833,7 @@ function debutPop(ws,ppv){const out={stars:0,fans:0,notes:[],ws};ws.forEach(w=>{
  out.stars=Math.min(1,out.stars);return out}
 function debutTag(ws,ppv){const d=ws.filter(w=>w&&w.deb);if(!d.length)return '';const st=Math.min(1,d.reduce((a,w)=>a+debutStars(w,ppv),0));return `<span class="tg gold">Debut${d.length>1?'s':''}: ${d.map(w=>esc(w.name.split(' ').slice(-1)[0])).join(', ')}${st?' +'+fracTxt(st)+'★':''}</span>`}
 
-/* ===================== SHOW STRUCTURE =====================
-   Modelled on how AEW TV plays to its audience in the quarter-hour ratings: open hot, keep the
-   middle moving (back-to-back talking segments and dead spots are where viewers leave), build through
-   the back half, and close on a main event that's the best thing on the show. */
-function segMeta(sl,st){const ids=sl.k==='match'?sl.d.sides.flat():[sl.d.a,sl.d.b].filter(Boolean);const ws=ids.map(id=>S.w[id]).filter(Boolean);
- /* v348: a rub match — a star working someone well below them — is how new stars get made, so the flow doesn't hold a
-  short bar against it as a dead spot or a flat opener (its own lower rating still counts) */
- const pp=ws.map(w=>w.pop);const rub=sl.k==='match'&&ws.length>1&&Math.max(...pp)>=70&&Math.max(...pp)-Math.min(...pp)>=20;
- return {k:sl.k,s:st,rub,stp:sl.k==='match'?stipKey(sl.d):null,mt:sl.k==='match'?sl.d.type:null,f:ws.some(w=>w.g==='F'),name:sl.k==='match'?vsLine(sl.d):ws[0]?ws[0].name+"'s "+PT[sl.d.type].n.toLowerCase():'A promo'}}
-/* v399: Show flow is retired — the fan groups replaced it (the Crowd read on the Book screen). FLOW_ON brings it back. */
-const FLOW_ON=false;
-function flowScore(segs,ppv,brand){const out={mod:0,notes:[]};const n=segs.length;if(n<3||!FLOW_ON)return out;
- const add=(d,t,i,k)=>{out.mod+=d;out.notes.push({d,t,i,k})};const mean=a=>a.reduce((x,y)=>x+y.s,0)/a.length;
- const avg=mean(segs),mts=segs.filter(x=>x.k==='match'),top=Math.max(0,...mts.map(x=>x.s));/* promos don't compete with the main event — matches do */const op=segs[0],me=segs[n-1];
- if(op.s>=Math.max(avg+.25,3.25)||op.s>=4)add(.15,`Hot opener — ${op.name} grabbed the audience early`,0,'hot');
- else if(op.s<=avg-.75&&!op.rub)add(-.15,`Flat opener — ${op.name} gave viewers a reason to change the channel`,0,'flat');
- if(me.k!=='match')add(-.25,'The show went off the air on talking, not a main event match',n-1,'talk');
- else if(me.s>=top)add(.2,'The main event was the best thing on the show',n-1,'best');
- else if(top-me.s>=.75)add(-.25,`The main event got outshone — ${mts.find(x=>x.s===top).name} stole the show`,n-1,'out');
- else if(top-me.s>=.5)add(-.1,'The main event didn\'t quite top the rest of the card',n-1,'out');
- const mid=segs.slice(1,-1),h=Math.floor(mid.length/2);
- if(h>=2){const f=mean(mid.slice(0,h)),b=mean(mid.slice(-h));if(b>=f+.25)add(.1,'The show built momentum through the back half');else if(f>=b+.5){add(-.15,'Front-loaded — the back half sagged before the main event');/* v350: mark the sagging back half on the graph */mid.slice(-h).forEach(x=>out.notes.push({d:0,t:'',i:segs.indexOf(x),k:'sag'}))}}
- let pp=0;for(let i=1;i<n;i++)if(segs[i].k==='promo'&&segs[i-1].k==='promo'){pp++;out.notes.push({d:0,t:'',i,k:'pp'})}if(pp)add(-.15*pp,pp>1?`${pp} stretches of back-to-back promos stalled the pace`:'Back-to-back promos stalled the pace');
- if(!ppv){let run=0,mx=0,end=0;segs.forEach((x,i)=>{run=x.k==='match'?run+1:0;if(run>mx){mx=run;end=i}});if(mx>=4){add(-.1,`${mx} straight matches with no story segment — the crowd burned out`);/* v350: mark where the run burns the crowd out (its 4th match on) */for(let i=end-mx+4;i<=Math.min(end,n-2);i++)out.notes.push({d:0,t:'',i,k:'run'})}}
- const dead=mid.filter(x=>x.s<=avg-1&&!x.rub).slice(0,2);dead.forEach(x=>add(-.1,`Dead spot — ${x.name} lost the crowd`,segs.indexOf(x),'dead'));
- /* v95: variety. A PPV that mixes up its gimmicks and match types feels like an event; the same match five times doesn't */
- {const sp=mts.map(x=>x.stp).filter(x=>x&&x!=='std');const ds=new Set(sp).size;const dt=new Set(mts.map(x=>x.mt).filter(Boolean)).size;
-  if(ppv){if(ds>=3)add(.2,`Something for everyone — ${ds} different stipulations made it feel like an event`);else if(ds===2)add(.1,'Two different stipulation matches broke up the card');else if(ds===1&&mts.length>=4)add(.05,'A gimmick match broke up the card')}
-  else if(ds>=2)add(.05,'Mixed up the gimmicks on free TV');
-  /* v122: TV is 3 matches now, so 3 different match types earns the mix there */
-  if(ppv?(mts.length>=4&&dt>=4):(mts.length>=3&&dt>=3))add(.05,'A good mix of singles, tags and multi-person matches')}
- if(!segs.some(x=>x.f)&&brand&&Object.values(S.w).filter(w=>w.own===brand&&w.g==='F'&&!w.inj).length>=2)add(-.1,'Nothing for the women\'s division tonight',null,'women');
- out.mod=Math.round(clamp(out.mod,-.6,.6)*100)/100;return out}
-function flowWord(m){return m>=.3?'Great flow':m>=.1?'Good flow':m>-.1?'Even':m>-.3?'Choppy':'Poorly paced'}
-function flowHtml(f){if(!f||!f.notes||!f.notes.some(x=>x.t))return '';return `<div class="flow"><div class="row sb"><span class="muted tiny">SHOW STRUCTURE · ${flowWord(f.mod)}</span><b class="${f.mod>0?'good':f.mod<0?'bad':'muted'}">${f.mod>0?'+':f.mod<0?'−':'±'}${Math.abs(f.mod).toFixed(2)}★</b></div>${f.notes.filter(x=>x.t).map(x=>`<div class="fl ${x.d>0?'good':'bad'}">${x.d>0?'+':'−'} ${esc(x.t)}</div>`).join('')}</div>`}
+/* ===================== SHOW STRUCTURE: the Book screen ===================== */
 /* booking-screen preview: projected matches use the middle of their range, promos a rough guess from mic skill */
 /* v235: the promo crowd buzz is calibrated to what promos actually score. It used to skip the curve every promo goes
    through (a good promo is ~3½★, like a match), so it ran almost a full star high — 🔥🔥 promos landed around 3★.
@@ -2880,34 +2847,6 @@ function promoEst(p){const A=S.w[p.a],B=p.b&&S.w[p.b];if(!A)return 2;const mm=w=
  const b0=(mic*.45+pop*.3)/20;let s=1.115*b0+.438*Math.max(0,b0-2.7)+.313*mm(A)/100-.801+(PEST_T[p.type]||0);
  if(p.type==='turn'&&typeof turnWhip==='function'&&turnWhip(A))s-=.75;if(B&&p.type==='attack'&&typeof boilingOver==='function'&&boilingOver(p.a,p.b))s+=.25;
  return clamp(Math.round(s*4)/4,.5,5)}
-/* v348: the Show flow card is a graph, not a list. Each segment is a bar (its crowd-buzz band — never an exact star readout),
- the dashed line is the shape the show rating rewards for this card, and a bar turns red when flowScore itself is docking the
- show for it. The verdict and the red bars come from flowScore run on the same projections the rest of the Book screen uses —
- not on the rounded bands — so the preview can't flag something the show won't (or miss something it will). */
-function flowIdeal(segs){const n=segs.length,a=segs.reduce((x,y)=>x+y.s,0)/n;
- const topO=Math.max(0,...segs.slice(0,-1).filter(x=>x.k==='match').map(x=>x.s));
- /* opener: the "hot opener" bar; middle: may dip a touch, then builds (back half above the front); main event: top every other match */
- return segs.map((x,i)=>clamp(i===0?Math.min(4,Math.max(a+.25,3.25)):i===n-1?Math.max(topO,a+.25):a-.15+.3*(n>3?(i-1)/(n-3):0),.5,5))}
-const FLOW_WHY={sag:'the back half sags before the main event',run:'too many matches in a row with no story segment',flat:'flat for an opener',dead:'a dead spot — well below the rest of the show',out:'the main event isn’t the best match on the show',talk:'the show ends on talking, not a main event',pp:'back-to-back talking'};
-function flowCard(sh){if(!FLOW_ON)return '';/* v404: no crowd preview while booking — the crowds' reaction closes the reveal instead *//* v350: the same segments (chants, a stashed chair, injured wrestlers left out…) the projected rating uses */
- let segs=[];try{segs=(cardProj().meta||[]).slice()}catch(e){segs=[]}
- /* v372: an empty card used to draw a blank graph with an "Even" verdict */
- if(!segs.length)return `<div class="card flowc"><div class="h small" style="margin:0">Show flow</div><div class="muted" style="font-size:13.5px;margin-top:6px">Book a few segments to see the flow.</div></div>`;const pv=segs.map(x=>tellStar(x.s));
- const f=flowScore(segs,sh.ppv,'p');const n=segs.length,bad={};f.notes.forEach(x=>{if(x.i!=null&&x.d<=0&&FLOW_WHY[x.k])bad[x.i]=x.k});
- const tg=flowIdeal(segs),H=50,y=v=>H-v/5*(H-3),cx=i=>i*10+5;
- window.FLOWSEGS=segs.map((x,i)=>({slot:i===n-1?'Main event':i===0?'Opener':'Segment '+(i+1),name:x.name,why:bad[i]?FLOW_WHY[bad[i]]:''}));
- const bars=segs.map((x,i)=>`<rect data-i="${i}" class="fb ${bad[i]?'bad':x.k}" x="${i*10+1.6}" y="${y(pv[i]).toFixed(2)}" width="6.8" height="${(H-y(pv[i])).toFixed(2)}"/><rect data-i="${i}" class="fn" x="${i*10+1}" y="${(y(tg[i])-.6).toFixed(2)}" width="8" height="1.2"/>`).join('');
- const line=tg.map((t,i)=>`${cx(i)},${y(t).toFixed(2)}`).join(' ');
- return `<div class="card flowc"><div class="row sb"><div class="h small" style="margin:0">Show flow</div><b class="flw ${f.mod>=.1?'good':f.mod<=-.1?'bad':'muted'}">${flowWord(f.mod)}</b></div>
- <div class="flowg"><svg viewBox="0 0 ${n*10} ${H}" preserveAspectRatio="none" aria-hidden="true">${bars}<polyline points="${line}" fill="none" vector-effect="non-scaling-stroke"/></svg>
- <div class="flhit">${segs.map((x,i)=>`<button aria-label="${esc(FLOWSEGS[i].slot+': '+x.name+(FLOWSEGS[i].why?' — '+FLOWSEGS[i].why:''))}" onclick="flowTap(${i})"></button>`).join('')}</div></div>
- <div class="fllab">${segs.map((x,i)=>`<span class="${bad[i]?'bad':''}">${i===0?'Open':i===n-1?'Main':i+1}</span>`).join('')}</div>
- <div class="flcap" id="flcap"></div>${f.notes.some(x=>x.k==='women')?`<div class="bad" style="font-size:12.5px;margin-top:4px">Costing you: nothing for the women’s division tonight</div>`:''}
- <div class="flkey"><span><i class="kl"></i>Ideal shape</span><span><i class="km"></i>Match</span><span><i class="kp"></i>Promo</span><span><i class="kb"></i>Costing you</span></div></div>`}
-function flowTap(i){const g=document.querySelector('.flowc .flowg'),c=document.getElementById('flcap');if(!g||!c||!window.FLOWSEGS)return;
- const on=g.dataset.sel===String(i);g.dataset.sel=on?'':String(i);g.classList.toggle('sel',!on);
- g.querySelectorAll('[data-i]').forEach(r=>r.classList.toggle('on',!on&&r.dataset.i===String(i)));
- const x=FLOWSEGS[i];c.textContent=on||!x?'':`${x.slot} · ${x.name}${x.why?' — '+x.why:''}`}
 /* v234: Blood & Guts night leads the Book screen — the show's own name on the poster, and a card saying what's
    special about tonight, whether the war is booked, and a one-tap way to set one up */
 function bngHero(sh){if(!S||sh.ppv||S.week!==BNG_WEEK||S.phase!=='season')return '';const c=S.card.p||[];const i=c.findIndex(sl=>sl&&sl.k==='match'&&sl.d&&sl.d.stip==='bng');
@@ -2937,7 +2876,7 @@ function bookView(){const sh=curShow();cardTidy(S.card.p);const c=S.card.p;const
    const p=sl.d;const pdb=debutTag([S.w[p.a],p.b&&S.w[p.b]].filter(Boolean),sh.ppv);return `<button class="slot done" ${dgA(i)} onclick="openPromo(${i})">${GRIP}<span class="num">${i+1}</span><div class="lbl">Promo · ${PT[p.type].n}</div>${skinOn()?(BOOK_CMP?hyCpPromo(p,i):hyPromo(p,i)):`<div><b>${dnm(S.w[p.a],`pw:${i}:a`)}${p.b&&S.w[p.b]?' <span class="muted">&amp;</span> '+dnm(S.w[p.b],`pw:${i}:b`):''}</b></div>`}${(p.b&&S.w[p.b]&&heatOf(p.a,p.b)>=1)||pdb?`<div class="tags">${pdb}${p.b&&S.w[p.b]&&heatOf(p.a,p.b)>=1?`<span class="fdt t${heatTier(heatOf(p.a,p.b))+1}">Heat ${Math.round(heatOf(p.a,p.b))}</span>`:''}</div>`:''}${typeof promoPips==='function'?promoPips(p,i):''}</button>`}
   if(sl.k==='xo'){const d=sl.d;return `<button class="slot ${d?'done':'opt'}" data-dp="slot:${i}" onclick="openXo(${i})"><span class="num">${i+1}</span><div class="lbl">⚔️ ${esc(PPVS[FD_WEEK])} dream match (optional)</div>${d&&S.w[d.a]&&S.w[d.b]?`<div><b>${alSpan(S.w[d.a])} <span class="muted">vs</span> ${alSpan(S.w[d.b])}</b></div><div class="muted">First time ever · ${esc(nameOf(S.w[d.b].own||'ai'))}'s star · the winner is decided in the ring</div>`:`<div class="add">+ Pick one of yours vs one of ${esc(S.rival)}'s</div>`}</button>`}
   return ''}
- const um=unmetPromises(c);return `${inaugCard()}${poster(sh,sh.ppv?`<div class="venue mt">Your full PPV card</div>`:'',{kick:`Now booking · Week ${S.week}`,compact:true})}${bngHero(sh)}${typeof chantHero==='function'&&S.phase==='season'?chantHero('book'):''}${typeof attnPanel==='function'&&S.phase==='season'?attnPanel():`${um.length?`<div class="card warn">${um.map(pr=>`<div>⚠️ Fans were ${pr.kind==='contract'?'contracted':'promised'} <b>${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)}</b> this week. Skip it and you'll lose fans and morale.</div>`).join('')}</div>`:''}${rivalAdHtml('line')}${weekGoalsCard()}${mandCard()}${dealBookCard(c)}${typeof conBook==='function'?conBook():''}${typeof mitbBook==='function'?mitbBook():''}`}${typeof arcStrip==='function'?arcStrip('book'):''}<div class="row sb" style="margin-top:14px"><div class="h small" style="margin:0">The running order</div></div><div class="rord ${BOOK_PIPS?'pips':''}">${slots}</div><div class="row bkacts" style="gap:8px;margin-top:4px">${c.some(sl=>!sl.d&&!sl.opt)||c.some(sl=>!sl.d&&sl.k==='promo')?`<button class="btn" style="margin:0" onclick="suggestFill()">✨ Suggest the rest</button>`:''}${c.some(sl=>sl.d&&!(sl.k==='match'&&(sl.d.tour||promiseOf(sl.d))))?`<button class="btn ghost" style="margin:0" onclick="clearCard()">Clear card</button>`:''}</div>${flowCard(sh)}${prodFold(sh)}${feudBoard()}${lockerRoom()}
+ const um=unmetPromises(c);return `${inaugCard()}${poster(sh,sh.ppv?`<div class="venue mt">Your full PPV card</div>`:'',{kick:`Now booking · Week ${S.week}`,compact:true})}${bngHero(sh)}${typeof chantHero==='function'&&S.phase==='season'?chantHero('book'):''}${typeof attnPanel==='function'&&S.phase==='season'?attnPanel():`${um.length?`<div class="card warn">${um.map(pr=>`<div>⚠️ Fans were ${pr.kind==='contract'?'contracted':'promised'} <b>${esc(S.w[pr.a].name)} vs ${esc(S.w[pr.b].name)}</b> this week. Skip it and you'll lose fans and morale.</div>`).join('')}</div>`:''}${rivalAdHtml('line')}${weekGoalsCard()}${mandCard()}${dealBookCard(c)}${typeof conBook==='function'?conBook():''}${typeof mitbBook==='function'?mitbBook():''}`}${typeof arcStrip==='function'?arcStrip('book'):''}<div class="row sb" style="margin-top:14px"><div class="h small" style="margin:0">The running order</div></div><div class="rord ${BOOK_PIPS?'pips':''}">${slots}</div><div class="row bkacts" style="gap:8px;margin-top:4px">${c.some(sl=>!sl.d&&!sl.opt)||c.some(sl=>!sl.d&&sl.k==='promo')?`<button class="btn" style="margin:0" onclick="suggestFill()">✨ Suggest the rest</button>`:''}${c.some(sl=>sl.d&&!(sl.k==='match'&&(sl.d.tour||promiseOf(sl.d))))?`<button class="btn ghost" style="margin:0" onclick="clearCard()">Clear card</button>`:''}</div>${typeof venueTonight==='function'?venueTonight(sh):''}${prodFold(sh)}${feudBoard()}${lockerRoom()}
  ${partyOn()?partyBookBtn(ready):ON()&&(S.online.booked||{}).p?`<div class="card"><b>Card locked in ✓</b><div class="muted">${allIn()?`It airs when everyone's locked in${(w=>w.length?` — still booking: ${w.map(k=>esc(nameOf(k))).join(', ')}`:'')(localSeats().filter(k=>k!=='p'&&!(S.online.booked||{})[k]))}.`:`It airs when ${esc(S.rival)} books ${sh.ppv?'theirs':esc(sh.theirs)}.`}</div></div>`:`${prodStrip(sh)}<div class="lvdock"><div class="lvst">${ready?'<b class="good">Card full</b>':`<b>${c.filter(sl=>!sl.d&&!sl.opt&&sl.k!=='chal').length} to book</b>`}<span>${(()=>{let n=0;try{n=attnItems().filter(x=>x.g==='must'&&x.s[0]==='b').length}catch(e){}return n?`${n} to fix`:'Ready'})()}</span></div><button class="btn live" ${ready&&myTurn()?'':'disabled'} onclick="goLive()">${ON()&&!S.online.booked.ai?'Go live & lock in ▸':'Go live ▸'}</button></div>`}`}
 /* v201: production and selling out live behind one line on the Book screen */
 /* v338: the Compact / Show details toggles belonged to the classic Book screen; the card table draws its own slots */
@@ -3210,7 +3149,7 @@ function showResults(rv){let o=S.last;if(!o)return;let rest=[];
  ${typeof fbResultsCard==='function'&&!o.league?fbResultsCard(o):''}
  ${(()=>{const shown=new Set();const segRow=(b,s)=>{const ns=s.notes||[];ns.forEach(n=>shown.add(n));const lead=ns[0],rest=ns.slice(1);
    return `<div class="seg rseg ${s===best?'best':''}">${s===best?'<span class="motn">Best of the night</span>':''}<div class="rst"><div class="rsw"><div class="muted tiny">${esc(s.sub)}</div><div class="rsn">${esc(s.txt)}</div></div><div class="stars">${stars(s.stars)}</div></div>${lead?`<div class="note">${esc(lead)}</div>`:''}${rest.length?`<details class="rsx"><summary>+${rest.length} more</summary>${rest.map(n=>`<div class="note">${esc(n)}</div>`).join('')}</details>`:''}${b.brand==='p'?bdHtml(s.bd):''}</div>`};
-  const block=b=>{const inner=`${flowHtml(b.flow)}${b.segs.length?b.segs.map(s=>segRow(b,s)).join(''):'<div class="muted">Nothing aired.</div>'}`;
+  const block=b=>{const inner=`${b.segs.length?b.segs.map(s=>segRow(b,s)).join(''):'<div class="muted">Nothing aired.</div>'}`;
    const head=`<div class="h small" style="margin:0">${esc(b.label)}</div>${b.rating!=null?`<div class="stars">${stars(b.rating)}</div>`:''}`;
    return b.brand==='p'?`<div class="card mine"><div class="row sb">${head}</div>${inner}</div>`:`<details class="card theirs rfold"><summary><span class="row sb" style="flex:1">${head}</span></summary>${inner}</details>`};
   const mineB=o.blocks.filter(b=>b.brand==='p'),other=o.blocks.filter(b=>b.brand!=='p');
@@ -3389,7 +3328,7 @@ function srFinal(instant){const R=SRV,o=R.o;R.tok++;R.busy=false;R.done=true;R.b
  R.rounds.forEach(rd=>srLand(rd,rd===R.rounds[R.rounds.length-1]&&!R.crowd));if(typeof qhBell==='function')qhBell(true);
  const v=document.getElementById('srv');if(!v)return;v.classList.remove('dim');const lb=v.querySelector('.livebug b');if(lb)lb.textContent='Final';const ctl=document.getElementById('sr-ctl');if(ctl){ctl.hidden=true;ctl.style.display='none'}
  if(o.ratings)[['p','srs-p'],['ai','srs-ai']].forEach(([k,id])=>{const box=document.getElementById(id);if(!box)return;box.querySelector('b').textContent=qhFmt(qhTotal(o,k));box.querySelector('em').textContent='Final';if(nw===k)box.classList.add('win');if(!instant){box.classList.remove('punch');void box.offsetWidth;box.classList.add('punch')}});
- const bs=R.tv?srBestAll(o):srBest(o),pb=o.blocks.find(b=>b.brand==='p'),fl=pb&&pb.flow&&pb.flow.mod;
+ const bs=R.tv?srBestAll(o):srBest(o),pb=o.blocks.find(b=>b.brand==='p');
  /* v459: when the crowds are already up, the winner lands on top of them — the crowd table stays, nothing replays */
  const foot=document.getElementById('tw-foot');const banH=`${nw==='p'||nw==='ai'?`<div class="winban twban ${nw==='p'?'w':'l'}">${R.tv?esc(srNm(nw))+' wins the night!':nw==='p'?'You win the night!':esc(S.rival)+' takes the night'}</div>`:nw==='tie'?`<div class="winban twban t">Dead even</div>`:''}`,bestH=`${bs?`<div class="sr-motn"><span>Best of the night</span><b>${esc(bs.txt)}</b>${srStars(bs.stars)}</div>`:''}`,xtraH=`${(()=>{if(!o.ratings||!R.two||o.ratings.p==null||o.ratings.ai==null)return '';
    /* v462: the night is won on fans; the show ratings are shown for what they are, and they break a dead heat */
@@ -4351,7 +4290,7 @@ function skinOn(){return document.documentElement.classList.contains('lk-hy')}
 const HY_EMO=/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u;
 function hyTidy(root){if(!skinOn()||!root)return;root.querySelectorAll('.small,.atb>b,.hyps>summary>b,.card.warn,.card.warn>*:first-child').forEach(el=>{const n=el.firstChild;if(n&&n.nodeType===3&&HY_EMO.test(n.nodeValue))n.nodeValue=n.nodeValue.replace(HY_EMO,'')})}
 {hookStep('render','look: compact book, tidy panels',{before(){document.documentElement.classList.toggle('cmp',!!BOOK_CMP)},after(){try{hyTidy(document.getElementById('app'));hyBook(document.getElementById('app'))}catch(e){}}})}
-{const m0=openModal;openModal=function(){const o=m0.apply(this,arguments);try{hyTidy(document.getElementById('modal'))}catch(e){}return o}}
+{hookStep('openModal','index.html',{after(ctx,o){try{hyTidy(document.getElementById('modal'))}catch(e){}return o}})}
 </script>
 <script src="crises2.js"></script>
 <script src="challenges.js"></script>

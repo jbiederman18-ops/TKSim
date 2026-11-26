@@ -767,9 +767,9 @@ function endDrag(x,y){const t=hit(x,y);const d=DR;cleanup();SUP=Date.now();
 {const BL={};const blobOf=(id,src)=>{const e=BL[id];if(e&&e.s===src)return e.u;
   try{const c=src.indexOf(',');const meta=src.slice(5,c);if(!/;base64$/.test(meta))return src;const b=atob(src.slice(c+1));const a=new Uint8Array(b.length);for(let k=0;k<b.length;k++)a[k]=b.charCodeAt(k);
    const u=URL.createObjectURL(new Blob([a],{type:meta.split(';')[0]||'image/jpeg'}));if(e)setTimeout(()=>{try{URL.revokeObjectURL(e.u)}catch(_){}},8000);BL[id]={s:src,u};return u}catch(_){return src}};
- if(typeof portrait==='function'&&typeof IMG!=='undefined'){const p0=portrait;portrait=window.portrait=function(w){const h=p0.apply(this,arguments);
-  try{const src=w&&IMG[w.id];if(src&&typeof src==='string'&&src.startsWith('data:')&&h.indexOf(src)>=0)return h.replace(`src="${src}"`,`src="${blobOf(w.id,src)}" decoding="async"`)}catch(_){}return h}}}
-if(typeof go==='function'){const g0=go;go=window.go=function(t){if(t==='book'&&tab!=='book'){TC.open=false;TC.sel=null}return g0.apply(this,arguments)}}
+ if(typeof portrait==='function'&&typeof IMG!=='undefined'){hookStep('portrait','cards.js',{around(p0,...args){let [w]=args;const h=p0.apply(this,args);
+  try{const src=w&&IMG[w.id];if(src&&typeof src==='string'&&src.startsWith('data:')&&h.indexOf(src)>=0)return h.replace(`src="${src}"`,`src="${blobOf(w.id,src)}" decoding="async"`)}catch(_){}return h}})}}
+if(typeof go==='function'){hookStep('go','cards.js',{before(ctx,t){if(t==='book'&&tab!=='book'){TC.open=false;TC.sel=null}}})}
 function attnDown(){if(!S||S.phase!=='season'||typeof tab==='undefined'||tab!=='book')return;const m=document.querySelector('#app main');if(!m)return;const a=m.querySelector('.card.attn');if(!a)return;
  const anchor=m.querySelector('.prodstrip')||m.querySelector('.lvdock')||m.querySelector('.btn.live');if(anchor&&anchor.parentElement)anchor.parentElement.insertBefore(a,anchor)}
 /* Home (v280): tonight's headliners fanned out on the poster, and the hottest wrestlers as a row of cards */
@@ -804,16 +804,16 @@ function homeMenus(){if(!on()||!S||S.phase!=='season'||typeof tab==='undefined'|
 function showCard(g,big){const lg=g.k==='league';const wk=g.wk?(lg?`Wk ${Math.min(g.wk,SEASON)}/${SEASON}`:`Wk ${g.wk}`):'';
  const st=g.active?['now','Playing now']:g.turn==='mine'?['turn','Your turn']:g.turn==='wait'?['','Waiting']:g.at?['',whenTxt2(g.at)]:['',''];
  return `<span class="tcshow ${lg?'':'solo'} ${big?'cur':''}"><span class="sb">${lg?'League':'Solo'}<i>${esc(wk)}</i></span><span class="sg">${esc(tcIni(g.t))}</span><span class="sn">${esc(g.t)}</span><span class="sw">${esc(g.sub||'')}</span><span class="st ${st[0]}">${esc(st[1])}</span></span>`}
-if(typeof gameHero==='function'){const gh0=gameHero;gameHero=window.gameHero=function(g){if(!on())return gh0.apply(this,arguments);
+if(typeof gameHero==='function'){hookStep('gameHero','cards.js',{around(gh0,...args){let [g]=args;if(!on())return gh0.apply(this,args);
  const lab=g.turn==='mine'?"It's your turn":g.active?'Pick up where you left off':g.turn==='wait'?'Waiting on your friends':'Jump back in';const go=g.active?'closeModal()':gOpen(g);
  const stat=(v,l)=>v!=null&&v!==''?`<div><b>${v}</b><span>${l}</span></div>`:'';
  return `<div class="tchero"><button class="tcgo" onclick="${go}" aria-label="${esc(g.t)}">${showCard(g,true)}</button><div class="tchi"><span class="k">${esc(lab)}</span><b class="t">${esc(g.t)}</b>
  ${g.wk||g.fans?`<div class="tchs">${stat(g.wk?`${Math.min(g.wk,SEASON)}<small>/${SEASON}</small>`:'','Week')}${stat(g.fans?fmtFans(g.fans):'','Fans')}</div>`:''}
- <div class="tcha"><button class="btn" onclick="${go}">${g.turn==='mine'?'Take your turn':'Continue'}</button><button class="btn sec" onclick="gameMenu('${g.k}','${g.id}',${g.cur?1:0})" aria-label="More options">⋯</button></div></div></div>`}}
+ <div class="tcha"><button class="btn" onclick="${go}">${g.turn==='mine'?'Take your turn':'Continue'}</button><button class="btn sec" onclick="gameMenu('${g.k}','${g.id}',${g.cur?1:0})" aria-label="More options">⋯</button></div></div></div>`}})}
 hookStep('render','cards: card table and Home',{after(){try{attnDown()}catch(e){}try{decorate()}catch(e){console.error('cards',e)}try{homeDeco()}catch(e){console.error('cards home',e)}try{homeMenus()}catch(e){console.error('cards menus',e)}}});
 /* a new week or a new game starts a fresh table */
-if(typeof suggestFill==='function'){const sf=suggestFill;suggestFill=window.suggestFill=function(){TC.dr={};return sf.apply(this,arguments)}}
-if(typeof clearCard==='function'){const cc=clearCard;clearCard=window.clearCard=function(){TC.dr={};return cc.apply(this,arguments)}}
+if(typeof suggestFill==='function'){hookStep('suggestFill','cards.js',{before(ctx){TC.dr={};}})}
+if(typeof clearCard==='function'){hookStep('clearCard','cards.js',{before(ctx){TC.dr={};}})}
 /* the full editors hand the slot back to the table when they close */
 
 /* ---------------- the office line: a stack of cards ---------------- */
@@ -853,11 +853,11 @@ function watch(){const m=document.getElementById('modal');if(m)mo.observe(m,{chi
 watch();
 
 /* ---------------- party-night TV: face-down cards on each GM's table ---------------- */
-if(typeof tvWeek==='function'){const tw=tvWeek;tvWeek=window.tvWeek=function(){let h=tw.apply(this,arguments);if(!on())return h;let n=5;try{n=cardOf(curShow().ppv).length}catch(e){}
+if(typeof tvWeek==='function'){hookStep('tvWeek','cards.js',{around(tw,...args){let h=tw.apply(this,args);if(!on())return h;let n=5;try{n=cardOf(curShow().ppv).length}catch(e){}
  return h.replace(/(<div class="tv-gm ([^"]*)"[\s\S]*?<div class="tv-lock">[\s\S]*?<\/div>)/g,(all,blk,cls)=>{const lk=/\blk\b/.test(cls);
   /* v351: one face-down card per segment that GM actually booked (an empty optional slot isn't a card) */
   let m=n;try{const sd=(blk.match(/data-seat="([^"]+)"/)||[])[1];const c=sd&&S.card&&S.card[localKey(sd)];if(Array.isArray(c))m=c.filter(sl=>sl&&sl.d).length||n}catch(e){}
-  return blk+`<div class="tvpile ${lk?'lk':''}">${Array.from({length:lk?m:1},(_,k)=>`<i style="animation-delay:${k*90}ms"></i>`).join('')}</div>`})}}
+  return blk+`<div class="tvpile ${lk?'lk':''}">${Array.from({length:lk?m:1},(_,k)=>`<i style="animation-delay:${k*90}ms"></i>`).join('')}</div>`})}})}
 
 /* ---------------- styles ---------------- */
 const css=document.createElement('style');css.textContent=`

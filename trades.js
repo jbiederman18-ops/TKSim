@@ -82,13 +82,13 @@ hookStep('endWeek','trades: expire offers, rival offer',{after(){try{S.trades=(S
 function offerRow(t){const giveN=t.give.map(id=>S.w[id]?esc(S.w[id].name):'?').join(' & ')||'cash',getN=t.get.map(id=>S.w[id]?esc(S.w[id].name):'?').join(' & ')||'cash';
  const cash=t.cash?` · ${money(Math.abs(t.cash))} ${t.cash>0?'to you':'from you'}`:'';
  return `<div class="brow"><b>${esc(nameOf(loc(t.from)))}</b> offers <b>${giveN}</b> for your <b>${getN}</b>${cash}<div class="row" style="gap:6px;margin-top:6px"><button class="mini" onclick="tradeAnswer('${t.id}',1)">✅ Accept</button><button class="mini" onclick="tradeAnswer('${t.id}',0)">Decline</button></div></div>`}
-if(typeof briefItems==='function'){const b0=briefItems;window.briefItems=briefItems=function(){const sec=b0.apply(this,arguments);try{const l=(S.trades||[]).filter(t=>t.to===me());const out=(S.trades||[]).filter(t=>t.from===me());
+if(typeof briefItems==='function'){hookStep('briefItems','trades.js',{after(ctx,sec){try{const l=(S.trades||[]).filter(t=>t.to===me());const out=(S.trades||[]).filter(t=>t.from===me());
  if(l.length)sec.unshift({i:'🔁',t:`Trade offers · ${l.length}`,u:1,rows:l.map(offerRow)});
- if(out.length)sec.push({i:'🔁',t:'Your trade offers',rows:out.map(t=>`<div class="brow">Waiting on <b>${esc(nameOf(loc(t.to)))}</b>: ${t.give.map(id=>S.w[id]?esc(S.w[id].name):'?').join(' & ')||'cash'} for ${t.get.map(id=>S.w[id]?esc(S.w[id].name):'?').join(' & ')||'cash'} <button class="mini" onclick="tradeWithdraw('${t.id}')">Withdraw</button></div>`)})}catch(e){console.warn(e)}return sec}}
+ if(out.length)sec.push({i:'🔁',t:'Your trade offers',rows:out.map(t=>`<div class="brow">Waiting on <b>${esc(nameOf(loc(t.to)))}</b>: ${t.give.map(id=>S.w[id]?esc(S.w[id].name):'?').join(' & ')||'cash'} for ${t.get.map(id=>S.w[id]?esc(S.w[id].name):'?').join(' & ')||'cash'} <button class="mini" onclick="tradeWithdraw('${t.id}')">Withdraw</button></div>`)})}catch(e){console.warn(e)}return sec}})}
 
 /* ---------------- entry points ---------------- */
-if(typeof officeView==='function'){const o0=officeView;officeView=function(){const out=o0.apply(this,arguments);const n=(S.trades||[]).filter(t=>t.to===me()).length;
+if(typeof officeView==='function'){hookStep('officeView','trades.js',{around(o0,...args){const out=o0.apply(this,args);const n=(S.trades||[]).filter(t=>t.to===me()).length;
  const b=`<button class="card otool" onclick="openTrade()"><span class="oti">🔁</span><span class="ott"><b>Trades</b><span>Up to two wrestlers each way, plus cash · champions can't move${n?` · <b class="gold">${n} offer${n>1?'s':''} waiting</b>`:''}</span></span><span class="otc">›</span></button>`;
- const i=out.indexOf('<button class="card otool"');return i<0?out+b:out.slice(0,i)+b+out.slice(i)}}
+ const i=out.indexOf('<button class="card otool"');return i<0?out+b:out.slice(0,i)+b+out.slice(i)}})}
 
 })();
