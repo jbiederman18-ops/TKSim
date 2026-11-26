@@ -1520,7 +1520,7 @@ html.lk-hy select{background-size:8px 8px;background-position:calc(100% - 20px) 
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v503';
+const APP_VERSION='v504';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -3086,7 +3086,7 @@ function settlePromises(out){duePromises().forEach(pr=>{const A=S.w[pr.a],B=S.w[
   const kept=S.card.p.some(sl=>sl.k==='match'&&sl.d&&validMatch(sl.d)&&inMatch(sl.d,pr.a,pr.b)&&!sl.d.sides.flat().some(id=>S.w[id].inj));
   if(kept){if(pr.kind==='callout'){bumpHeat(pr.a,pr.b,6,out.notes,'promise kept')}deliverFans('p','promise',A,out.notes);out.notes.push(`✅ Promise kept: ${A.name} vs ${B.name} happened as ${what}.`)}
   else if(A.inj||B.inj||A.own!=='p'||B.own!=='p'){out.notes.push(`📋 ${A.name} vs ${B.name} was called off — ${A.inj||B.inj?'injury':'roster change'}. Fans understand.`)}
-  else{const fl=pr.kind==='contract'?20000:pr.ppv?12000:8000;if(typeof fbHit==='function')fbHit('p',[A,B],-fl);else S.fans.p=Math.max(50000,S.fans.p-fl);out.fans.p-=fl;[A,B].forEach(w=>{w.mor=clamp(w.mor-(pr.kind==='contract'?12:6),0,100);w.pop=clamp(w.pop-(pr.kind==='contract'?3:1.5),1,100)});ripple(A,'p');
+  else{const fl=pr.kind==='contract'?20000:pr.ppv?12000:8000;if(typeof fbHit==='function')fbHit('p',[A,B],-fl);else S.fans.p=Math.max(50000,S.fans.p-fl);[A,B].forEach(w=>{w.mor=clamp(w.mor-(pr.kind==='contract'?12:6),0,100);w.pop=clamp(w.pop-(pr.kind==='contract'?3:1.5),1,100)});ripple(A,'p');
    const n=`💔 Broken promise: fans were ${what} ${A.name} vs ${B.name} and didn't get it (−${fmtFans(fl)} fans, morale down).`;out.notes.push(n);news(n)}});
  S.promises=(S.promises||[]).filter(x=>x.week>S.week)}
 function showNames(){return (S.online&&S.online.show)||{p:'Dynamite',ai:'Collision'}}
@@ -3894,6 +3894,10 @@ function airPair(){
  const out={title:show.ppv?show.name:grp?'League night':`${showNames().p}${bye?'':' vs '+showNames().ai}`,week:S.week,ppv:show.ppv,blocks:[],notes:[],fans:{},ratings:{}};
  const adj=b=>b==='ai'&&!ON()?aiq('ai').adj:0;
  const vals={};order.forEach(b=>vals[b]=[]);
+ /* v504: story fans — off: moved outside the fan engine's before/after (added to the night below); on: already inside it */
+ const stOff={},stIn={},stAll={};if(typeof fbStoryStart==='function')fbStoryStart();
+ const stTake=inB=>{if(typeof fbStoryTake!=='function')return;fbStoryTake().forEach(x=>{const to=x.b===inB?stIn:stOff;const m=to[x.b]=to[x.b]||{};for(const g in x.g)m[g]=(m[g]||0)+x.g[g];(stAll[x.b]=stAll[x.b]||[]).push(Object.values(x.g).reduce((a,v)=>a+v,0))})};
+ const sumG=m=>Object.values(m||{}).reduce((a,v)=>a+v,0);
  /* run fn from brand b's own seat (online), so each GM's card airs exactly as it would for them */
  const fromSeat=(b,fn)=>b==='p'||!ON()?fn():b==='ai'?asOther(fn):asPair(canonKey(b),canonKey('p'),fn);
  /* each GM's card is aired from their own side, so promises, proxy wars and promo payoffs work for both people online */
@@ -3948,11 +3952,17 @@ function airPair(){
  order.forEach(b=>{const r=rt[b];const o=b==='p'?'ai':'p';let flat=(debF[b]||0)+(extra[b]||0);
   if(typeof venueFans==='function'){const c=out.cash[b];if(!show.ppv&&c&&c.ven&&c.ven.empty)flat-=VEN_EMPTY_FANS}
   const bon=Object.entries(infs[b]&&infs[b].bx||{});if(extra[b])bon.push(['Dream match bonus',extra[b]]);if(flat<(debF[b]||0)+(extra[b]||0))bon.push(['Empty seats in the building',flat-(debF[b]||0)-(extra[b]||0)]);
-  const before=S.fans[b];fbSync(b);const fr=fbApply(b,infs[b]?infs[b].fs:[],show,{allin:ctx.allin,newch:infs[b]&&infs[b].newch,flat});if(fr.hit)bon.push(['Story payoffs and promises',fr.hit]);fr.bonus=bon;
-  if(typeof venueFans==='function'){const c=out.cash[b];if(!show.ppv&&c&&c.ven&&!c.ven.empty){const V=venOf(b);const g=S.fans[b]-before;if(g>0&&V.fans){S.fans[b]+=Math.round(g*V.fans);fbSync(b);fr.bonus.push([`${V.n} bonus`,Math.round(g*V.fans)]);fr.after=Object.assign({},S.fb[b])}}}
+  stTake();const before=S.fans[b];fbSync(b);const fr=fbApply(b,infs[b]?infs[b].fs:[],show,{allin:ctx.allin,newch:infs[b]&&infs[b].newch,flat});stTake(b);fr.after=Object.assign({},S.fb[b]);fr.bonus=bon;
+  if(typeof venueFans==='function'){const c=out.cash[b];if(!show.ppv&&c&&c.ven&&!c.ven.empty){const V=venOf(b);const g=S.fans[b]-before-sumG(stIn[b]);if(g>0&&V.fans){S.fans[b]+=Math.round(g*V.fans);fbSync(b);fr.bonus.push([`${V.n} bonus`,Math.round(g*V.fans)]);fr.after=Object.assign({},S.fb[b])}}}
   out.fb[b]=fr;out.fans[b]=S.fans[b]-before;out.ratings[b]=r;try{fgAfterShow(infs[b]?infs[b].fs:[],b==='p'||ON()?out.notes:null)}catch(e){console.warn('fg',e)}});
  /* v400: fans switch shows — each group drifts toward the show that served it better tonight (fanbase.js); this replaced the flat head-to-head and main event war bonuses */
  if(!bye&&typeof fbDefect==='function')try{fbDefect(order.filter(b=>infs[b]),out)}catch(e){console.warn('defect',e)}
+ /* v504: promises settle before the night is scored */
+ settlePromises(out);
+ if(ON()&&!bye)order.filter(b=>b!=='p').forEach(b=>{const t={notes:[],fans:{p:0,ai:0}};fromSeat(b,()=>settlePromises(t));out.fans[b]+=t.fans.p;out.notes.push(...t.notes)});
+ stTake();if(typeof fbStoryStop==='function')fbStoryStop();
+ order.forEach(b=>{const r=out.fb[b];if(!r)return;const off=stOff[b];if(off){for(const g in off)r.after[g]=(r.after[g]||0)+off[g];out.fans[b]=(out.fans[b]||0)+sumG(off)}
+  const l=stAll[b]||[],up=l.filter(v=>v>0).reduce((a,v)=>a+v,0),dn=l.filter(v=>v<0).reduce((a,v)=>a+v,0);if(up)r.bonus.push(['Story payoffs and kept promises',up]);if(dn)r.bonus.push(['Broken promises',dn])});
  /* v462: tonight's fans, segment by segment, for the quarter-hour reveal (fanbase.js fbSplit) */
  order.forEach(b=>{const r=out.fb[b],bl=out.blocks.find(x=>x.brand===b);if(!r||!bl||typeof fbSplit!=='function')return;try{const sp=fbSplit(r,bl.segs.length);if(sp){bl.segs.forEach((sg,i)=>{sg.fd=sp.segs[i].t;sg.fi=sp.segs[i].ic});bl.fn=sp.night;bl.bell=sp.bell;bl.conv=sp.conv}}catch(e){console.warn('split',e)}});
  /* v462: the night goes to the show that gained the most fans tonight (the show rating breaks a tie); placings follow it too */
@@ -3963,8 +3973,6 @@ function airPair(){
  order.forEach(b=>showRevenue(b,out.cash[b],rt[b],show,ctx,out));
  order.forEach(b=>{if(infs[b])mandCheck(b,infs[b],rt[b],show,out.hourWin,out.notes)});
  order.forEach(b=>{if(infs[b])goalCheck(b,infs[b],rt[b],show,out.notes)});
- settlePromises(out);
- if(ON()&&!bye)order.filter(b=>b!=='p').forEach(b=>{const t={notes:[],fans:{p:0,ai:0}};fromSeat(b,()=>settlePromises(t));out.fans[b]+=t.fans.p;out.notes.push(...t.notes)});
  {const h={s:S.season,w:S.week,show:show.name};order.forEach(b=>h[b]=+rt[b].toFixed(2));S.history.push(h)}
  return out}
 function leave(w,msg,notes){news(msg);notes.push(msg);w.own=null;w.con=0;delete w.sal;w.mor=60;S.training=S.training.filter(t=>t.id!==w.id);if(S.fa)S.fa[w.id]=AW()+RI(2,4)}
@@ -5263,7 +5271,7 @@ const HOWTO=`<p><b>📱 On a phone:</b> Go live stays pinned above the tabs on B
 <p><b>Network mandates:</b> after each PPV the TV network asks for something specific by the next one: a 4★ main event, two women's matches on one show, a new champion, an arc paid off, a turn, a feud taken to 45 heat, and so on. Story mandates come up most and pay the most. Deliver for a big cash and fan bonus; miss it and you lose ${fmtFans(MAND_MISS)} fans. Check the Home or Book screen for your current one.</p>
 <p><b>🎯 Weekly goals &amp; 📣 crowd chants:</b> each week the Book screen gives you one small goal (hit it for a little cash and 3K fans — no penalty for missing it; a live ✅/🤞/⏳ line tells you if the card you've booked is on track), and the crowd starts chanting for someone on your roster — a banner on Home and the Book screen shows the chant, with a button to book them. Book them in a match or promo that week and their segment gets +½★, they gain 2 popularity and you get 5K fans.</p>
 <p><b>Head to head:</b> in solo play the rival's card stays a surprise until the show airs. On TV, whoever's main event rates higher wins the main event war. Big free agents take sealed offers, so the rival can outbid you (see Offers &amp; contracts).</p>
-<p><b>The overnights:</b> the show that gains more fans tonight wins the night (the better show rating breaks a dead heat), and a win pays the ratings bonus. The reveal opens on the overnights chart, with both shows' running totals across the top, and plays segment by segment underneath it: your segment lands with its cards, stars and the crowds it moved (▲ or ▼) while the chart dims, then the chart lights up and your line moves by the fans that segment gained or lost; then the same for the rival's. The main event is the overrun. Each segment's point is only what that segment did; <b>after the bell</b>, both lines take one last step for what happened beyond the segments. Each show's plate is a receipt of that step: every line shows its fans (the casual weekly drop-off, a crowd that only got a taste or had nothing on the card, bonuses such as a delivered crowd chant, and which crowds switched shows), and the lines add up to the step. Tap <b>more</b> for the smaller lines. Casuals who convert to another crowd are listed underneath; they stay fans of that show. Then you see how every crowd moved on your show, and the winner of the night lands on top of it. Tap either fan total above the chart to see that booker's crowds, with the reasons behind them. In a head-to-head league week, the two fan totals on the results screen switch the same way.</p>
+<p><b>The overnights:</b> the show that gains more fans tonight wins the night (the better show rating breaks a dead heat), and a win pays the ratings bonus. The reveal opens on the overnights chart, with both shows' running totals across the top, and plays segment by segment underneath it: your segment lands with its cards, stars and the crowds it moved (▲ or ▼) while the chart dims, then the chart lights up and your line moves by the fans that segment gained or lost; then the same for the rival's. The main event is the overrun. Each segment's point is only what that segment did; <b>after the bell</b>, both lines take one last step for what happened beyond the segments. Each show's plate is a receipt of that step: every line shows its fans (the casual weekly drop-off, a crowd that only got a taste or had nothing on the card, bonuses such as a delivered crowd chant, and which crowds switched shows), and the lines add up to the step. Story fans count toward the night for both shows: arc payoffs and kept promises add to it, and broken promises take away. Tap <b>more</b> for the smaller lines. Casuals who convert to another crowd are listed underneath; they stay fans of that show. Then you see how every crowd moved on your show, and the winner of the night lands on top of it. Tap either fan total above the chart to see that booker's crowds, with the reasons behind them. In a head-to-head league week, the two fan totals on the results screen switch the same way.</p>
 <p><b>✨ Suggest the rest</b> on the Book screen fills any empty slots and keeps everything you've already booked, promised or entered in a tournament. It books the best matches it can from the wrestlers' own traits — popularity, in-ring skill, crowd matchups and traits, face vs heel, no recent rematches — rated the way the show rates them, including how hot a feud is right now, as plain singles matches with clean finishes, plus a Backstage Vignette from your best talker for any open promo. It books on ability alone: it won't rest anyone who's worn down or steer around a miserable wrestler — stamina and morale are yours to manage. It ignores your checklist entirely: promises, contract clauses, title defenses, the weekly goal, the crowd's chant and building feuds and paying them off are all yours to handle, and the optional bonus promo stays empty. <b>Clear card</b> wipes everything else.</p>
 <p><b>🆚 Your rival plays for fans too</b> (solo, on Normal and Hard): it comes back to the same rivalries and pays them off on PPVs, and goes after the bonuses you can. <b>Arcs:</b> up to two at once, with the same price, build, deadline and fan reward as yours; letting one fall apart costs it. <b>PPV promises:</b> it promises wrestlers a PPV spot (one at a time on Normal, two on Hard); keeping it brings fans, breaking it costs them. <b>Weekly goals and crowd chants:</b> it gets its own, worth what yours are, and goes after them some weeks on Normal and most weeks on Hard. Show results report its story payoffs, promises and weekly goals. On Normal, in your first season, its arcs, promises, goals and chants start in week 7; it runs one rivalry and arc at a time until week 15, then up to two. An Easy rival does none of this.</p>
 <p><b>Difficulty:</b> Hard rivals book like pros — they rest stars before PPVs, order their card for the ratings, protect new champions and pay off feuds cleanly. Easy rivals book sloppily.</p>

@@ -612,7 +612,17 @@ function fbDefect(order,out){if(order.length<2||!out.fb)return;const mv={};order
  if(won.length)out.notes.push(`🔀 Switched over to you tonight: ${won.map(g=>`${fmtFans(mv.p[g])} ${fbN(g)} from ${who(g)}`).join(', ')}.`);
  if(lost.length)out.notes.push(`🔀 Switched away tonight: ${lost.map(g=>`${fmtFans(-mv.p[g])} ${fbN(g)} to ${who(g)}`).join(', ')}.`)}
 /* fans from (or lost by) a story beat go to the crowds of the wrestlers in it — a kept Moxley promise grows the Bloodhounds */
-function fbHit(b,ws,n){if(!S.fans||S.fans[b]==null)return;fbSync(b);const f=S.fb[b];const gs=[];
+/* v504: every story fan counts toward the night. While a show is airing, fbStory notes what each story move did to each
+   crowd (by league seat, so it lands on the right booker however the view is swapped); airPair adds it to that night. */
+let FBL=null;
+function fbStoryStart(){FBL=[]}
+function fbStoryTake(){if(!FBL)return [];const l=FBL.map(x=>({b:typeof localKey==='function'?localKey(x.k):x.k,g:x.g}));FBL=[];return l}
+function fbStoryStop(){FBL=null}
+function fbStory(fn){if(!FBL||!S||!S.fans)return fn();const ks=Object.keys(S.fans);const snap=()=>ks.map(k=>{const f=fbSync(k);return f?Object.assign({},f):null});
+ const a=snap();fn();const z=snap();ks.forEach((k,i)=>{if(!a[i]||!z[i])return;const g={};let any=false;FB_G.forEach(x=>{g[x]=z[i][x]-a[i][x];if(g[x])any=true});if(any)FBL.push({k:typeof canonKey==='function'?canonKey(k):k,g})})}
+Object.assign(window,{fbStory,fbStoryStart,fbStoryTake,fbStoryStop});
+function fbHit(b,ws,n){return fbStory(()=>fbHitRaw(b,ws,n))}
+function fbHitRaw(b,ws,n){if(!S.fans||S.fans[b]==null)return;fbSync(b);const f=S.fb[b];const gs=[];
  ws.filter(Boolean).forEach(w=>{const g=fgOf(w).filter(x=>FB_HC.includes(x));(g.length?g:['cas']).forEach(x=>gs.push(x))});if(!gs.length)gs.push('cas');
  const per=n/gs.length;gs.forEach(g=>{f[g]=Math.max(0,f[g]+Math.round(per))});let T=fbSum(b);if(T<50000){f.cas+=50000-T;T=50000}S.fans[b]=T}
 Object.assign(window,{fbDefect,fbHit});
