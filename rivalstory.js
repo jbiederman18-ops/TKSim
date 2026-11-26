@@ -26,7 +26,7 @@ const both=(ids,p)=>ids.includes(p.a)&&ids.includes(p.b);
 const lead=p=>S.w[p.a].pop<=S.w[p.b].pop?S.w[p.a]:S.w[p.b];
 /* start: pay the same price you would for building that wrestler */
 window.rvArcStart=function(p){const c=cfg();if(!c||!c.arcs||p.arc||S.phase!=='season')return;const cooling=(S.rvEnds||[]).filter(w=>AW()-w<c.rest).length;if(live().length+cooling>=c.arcs)return;const w=lead(p);
- const cost=Math.max(5,Math.round(pCost()*3*aPopF(w.pop)/5)*5);if((S.money.ai||0)<cost)return;S.money.ai-=cost;p.arc=1;p.st=[];p.end=AW()+RV_NEED+ARC_SLACK};
+ const cost=Math.max(5,Math.round(pCost()*3*aPopF(w.pop)/5)*5);if((S.money.ai||0)-cost<(typeof bgReserve==='function'?bgReserve('ai'):0))return;S.money.ai-=cost;p.arc=1;p.st=[];p.end=AW()+RV_NEED+ARC_SLACK};
 /* the same star bonus yours get: a little for each build step, a bigger one on the payoff */
 function bonus(kind,ids,ppv){let b=0;for(const p of live()){if(built(p)){if(kind==='match'&&both(ids,p)&&AW()>(p.ready||0)){const q=avg(p.st);let x=ARC_PAY0+clamp((q-3)*ARC_PAYQ,0,ARC_PAYMAX);if(ppv)x*=ARC_PAY_PPV;return {st:Math.round(x*100)/100,pay:p}}}else if(p.st.length&&has(ids,p))b=Math.max(b,ARC_BUILD*p.st.length)}return {st:b,pay:null}}
 const HEAT=new WeakMap();
@@ -73,7 +73,7 @@ function chase(card,show){const c=cfg();if(!c)return;weekTick();
  else if(g.k==='tag'&&!ms.some(s=>s.d.sides[0].length>1)){const [a,b]=m.sides.flat();const mate=i=>{const x=l.find(w=>w.g===S.w[i].g&&w.id!==a&&w.id!==b&&!used.has(w.id));if(x)used.add(x.id);return x};const used=new Set();const x=mate(a),y=mate(b);if(x&&y)redo(m,[[a,x.id],[b,y.id]],'tag')}
  else if(g.k==='rookie'&&!ms.some(s=>s.d.sides.flat().some(i=>S.w[i].rookie))){const r=l.find(w=>w.rookie);if(r){const keep=m.sides.flat().find(i=>S.w[i].g===r.g)||m.sides[0][0];redo(m,[[r.id],[keep]])}}
  else if(g.k==='title'&&!ms.some(s=>s.d.title)){const u=onCard(card);for(const t of Object.values(S.titles)){const h=t.holders[0];if(t.kind!=='singles'||!h||!S.w[h]||S.w[h].own!=='ai'||S.w[h].inj||u.has(h))continue;const o=l.find(w=>w.g===t.g&&w.id!==h&&!titlesOf(w.id).some(x=>x.kind==='singles'));if(o){redo(m,[[h],[o.id]]);m.title=t.id;break}}}
- else if(g.k==='stip'&&!ms.some(s=>s.d.stip&&s.d.stip!=='std')){const k=['nodq','street','ladder','sub','tables'].find(k=>stipOk(k,m.type,!!show.ppv)&&stipPrice(k,'ai')*2<=(S.money.ai||0));if(k)m.stip=k}}
+ else if(g.k==='stip'&&!ms.some(s=>s.d.stip&&s.d.stip!=='std')){const k=['nodq','street','ladder','sub','tables'].find(k=>stipOk(k,m.type,!!show.ppv)&&stipPrice(k,'ai')*2<=(S.money.ai||0)&&(typeof bgLeft!=='function'||stipPrice(k,'ai')<=bgLeft('ai',card,{noProd:true})));if(k)m.stip=k}}
 const ab=autoBook;autoBook=window.autoBook=function(brand,show){const card=ab.apply(this,arguments);if(brand==='ai'&&show&&S.phase==='season'){try{chase(card,show)}catch(e){console.warn('rival goals',e)}}return card};
 const gc=goalCheck;goalCheck=window.goalCheck=function(b){const g=S.goal&&S.goal[b],was=g&&g.done;if(b==='ai'&&g&&cfg()&&!tried(g,cfg().goal))return;const r=gc.apply(this,arguments);if(b==='ai'&&cfg()&&g&&!was&&g.done){fbSync('ai');note(`🎯 ${S.rival} hit its weekly goal: ${GOALS[g.k].n} (+${fmtFans(g.fans)} fans).`)}return r};
 const ap=airPair;airPair=window.airPair=function(){let out;S.rvNotes=[];window.__rvAir=1;try{out=ap.apply(this,arguments)}finally{window.__rvAir=0}if(out&&out.notes&&S.rvNotes.length)out.notes.push(...S.rvNotes);S.rvNotes=[];return out};

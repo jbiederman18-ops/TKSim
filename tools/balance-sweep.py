@@ -147,6 +147,15 @@ v431 (Groundswell, Breaking Free, The Corporate Offer, Absolute Power, Earn the 
   and cast conditions). Normal 20 x 2: default + arcs 45/25%, no arcs 25/15%, engaged + arcs 95/70%, engaged no arcs 85/65%. 0 errors.
 v432 (every arc has a storyline; Mouthpiece and Champion's Voice dropped; storyline payoffs and live choices for Last Chase and
   Invasion). Normal 20 x 2: default + arcs 75/40%, no arcs 40/20%, engaged + arcs 95/75%, engaged no arcs 85/60%. 0 errors.
+v501 (budget: stipulations, production, building and office choices need the money in the bank after this week's payroll gap
+  (bgBills: payroll beyond the TV deal + the brand's own running-average TV takings, bgEarn); Blood & Guts, MITB and arc-needed
+  stipulations always run, the network fronts the shortfall and takes it back from the TV deal (ADV_CUT .35); B&G c 150 -> 75;
+  the offline rival books B&G every year, saves 4 weeks for it, keeps RIVAL_CUSHION .35 x payroll, signs/re-signs against bgCap
+  and lets its least valuable wrestler go when over (aiMakeRoom, RIVAL_MIN 22)). The default bot now books Blood & Guts too
+  (opt.bng false: never) and only picks office choices it can pay for. Normal, 32 games x 2 seasons vs v498: weeks in the red
+  you 5.4/1.3 -> 1.6/0.1, rival 9/9.2 -> 2.1/3.3; seasons won 84/62% -> 78/62%, fans and show stars about the same. Hard and
+  Easy (16 games) seasons won unchanged. Rows: stips/show, stip $K/wk, B&G price/bank at B&G, B&G you/rival, min bank, weeks red,
+  max advance, rival roster/payroll.
 """
 import argparse, asyncio, json, os, socket, statistics as st, subprocess, sys, tempfile, time
 
@@ -216,6 +225,9 @@ def table(results):
                          **({('show gain ' + k): m([e['fbd'].get(k, 0) / 1000 for e in E if e.get('fbd')]) for k in ('p.cas', 'p.tech', 'p.blood', 'p.flip', 'p.chaos', 'ai.cas', 'ai.tech', 'ai.blood', 'ai.flip', 'ai.chaos')} if any(e.get('fbd') for e in E) else {}),
                          **({'arcs started': m([e['arcs']['started'] for e in E]), 'arcs paid': m([e['arcs']['paid'] for e in E]), 'arcs great': m([e['arcs']['great'] for e in E]), 'arcs failed': m([e['arcs']['failed'] for e in E])} if any(e.get('arcs') for e in E) else {}),
                          **({'arc wrestler pop': m([e['arcs'].get('pop', 0) for e in E]), 'arc spend $K': m([e['arcs'].get('cost', 0) for e in E]), 'midcard → 75+': m([e['rise']['up70'] for e in E if e.get('rise')]), 'new 85+ stars': m([e['rise']['star'] for e in E if e.get('rise')]), 'pop gain under 75': m([e['rise']['gain'] for e in E if e.get('rise')])} if any(e.get('arcs') for e in E) else {}),
+                         'stips/show you': m([s.get('stipP', 0) / s['weeks'] for s in S]), 'stip $K/wk you': m([s.get('stipPc', 0) / s['weeks'] for s in S]), 'stip $K/wk rival': m([s.get('stipAIc', 0) / s['weeks'] for s in S]),
+                         'B&G price': m([s.get('bngPrice', 0) for s in S if s.get('bngPrice')]), 'bank at B&G': m([s.get('bankBng', 0) for s in S if s.get('bngPrice')]), 'B&G you': m([s.get('bngPc', 0) for s in S]), 'B&G rival': m([s.get('bngAI', 0) for s in S]), 'min bank you': m([s.get('minBank', 0) for s in S]), 'min bank rival': m([s.get('minBankAI', 0) for s in S]),
+                         'rival roster': m([s['aiW'][-1][4] for s in S if s.get('aiW')]), 'rival payroll': m([s['aiW'][-1][2] for s in S if s.get('aiW')]), 'weeks red you': m([s.get('redWk', 0) for s in S]), 'weeks red rival': m([s.get('redWkAI', 0) for s in S]), 'max advance you': m([s.get('adv', 0) for s in S]), 'max advance rival': m([s.get('advAI', 0) for s in S]),
                          'buzz you': m([e['buzz']['p'] for e in E if e.get('buzz')]), 'buzz rival': m([e['buzz']['ai'] for e in E if e.get('buzz')]),
                          'errors': errs})
     if not rows: print('no complete seasons'); return

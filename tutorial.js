@@ -23,7 +23,7 @@
      Appending is how stops drift into patch notes.
    • tools/check-tutorial.py fails on history/design phrasing (TUT_BANNED). If it flags a line, rewrite it, don't
      dodge the pattern. */
-const TUT_REV=94;
+const TUT_REV=95;
 const TUT_KEY='tksim_tut';
 const TUT_WORDS=190;  /* longest a stop may be (checked by tools/check-tutorial.py) */
 const TUT_MISS=[];
@@ -117,8 +117,8 @@ const TUT_STEPS=[
  b:()=>`Free agents stay on the market for a few weeks. Big names (55+ popularity) want an offer, money plus promises, and ${tvRival()} can bid too, sealed. Undrafted wrestlers you sign in season 1 arrive with a chip on their shoulder: happier, sharper and gaining popularity for their first ${tv('PTW_WK',()=>PTW_WK,4)} weeks.<br><br>Under <b>Scouting</b>, sign prospects to your <b>🏟️ ROH</b> roster, which books itself. When one's ready for a call-up, they come to your office.`},
 {id:'t.titles',track:'tip',opt:true,since:67,sel:'main .card.tpic',sys:['titles','title shots','feuds','heat'],t:'The title picture',
  b:()=>`Every title shot you owe shows up here, with when it's due and how hot things are with the champion. Earning a shot starts the rivalry (🔥${tv('TP_SEED',()=>TP_SEED,15)}). Build it past the gold line (🔥${tv('TP_READY',()=>TP_READY,35)}) before the night: <b>🎤 Build it</b> books them face to face.`},
-{id:'t.money',track:'tip',opt:true,since:88,sel:()=>tutCard(/finances/i),sys:['money','production','wages','stipulations','venues'],t:'The money',
- b:()=>`<b>Coming in:</b> your TV deal (with a bonus in season 1) and ads grow with your casuals; tickets, merch and PPV buys grow with your other four crowds. A big PPV audience brings the network's <b>viewership bonus</b>.<br><br><b>Going out:</b> payroll every week, plus production, stipulations and your building on the nights you use them.<br><br>Stay out of the red: when you can't pay, morale slips. Once your crowds outgrow your room, unlock a bigger building here and book it on the Book screen; it sells more tickets if you fill it.`},
+{id:'t.money',track:'tip',opt:true,since:95,sel:()=>tutCard(/finances/i),sys:['money','production','wages','stipulations','venues'],t:'The money',
+ b:()=>`<b>Coming in:</b> your TV deal (with a bonus in season 1) and ads grow with your casuals; tickets, merch and PPV buys grow with your other four crowds. A big PPV audience brings the network's <b>viewership bonus</b>.<br><br><b>Your budget:</b> stipulations, production and your building come out of the bank, after this week's payroll. What you can't afford is greyed out, so save up for big nights. Blood & Guts, Money in the Bank and an arc's payoff always go ahead: the network fronts what you're short and takes it back from the TV deal.<br><br>Miss payroll and morale slips.`},
 {id:'t.editor',track:'tip',since:88,sel:'#modal .det',sys:['ratings','chemistry','risk','stipulations'],t:'Match details',
  b:()=>`A match is rated on four things, each shown as pips:<br><br><b>Talent</b>: how good and how popular the workers are.<br><b>Chemistry</b>: whether their crowds click, plus traits and history together. Tap <b>?</b> to see which crowds mesh.<br><b>Story</b>: feud heat, a title on the line, a promise kept, a promo with both sides earlier tonight. Usually the biggest swing.<br><b>Extras</b>: a stipulation that suits them, the finish, a big-show crowd.<br><br>A <b>stipulation</b> lifts the weaker wrestler most, so give the match type to the one who needs carrying. Every wrestler also secretly shines in one match type (🎯); you find out the first time they work it.`},
 {id:'t.results',track:'tip',since:1,opt:true,sel:'#modal .whyd',sys:['ratings'],t:'Why that rating?',

@@ -641,10 +641,10 @@ function fbAiTune(b,card,show){if(!card||!S.fb||!S.fb[b])return card;const T=FB_
  for(let n=0;n<T[1];n++){if(Math.random()>T[0])continue;
   const fed={};ms.forEach(sl=>{const e=fbExpo(fbSeg(sl.d,3.5,false));for(const g in e)fed[g]=(fed[g]||0)+e[g]});
   const g=FB_HC.filter(g=>(fed[g]||0)<1).sort((x,y)=>score(y)-score(x))[0];if(!g)break;
-  const opts=Object.keys(FB_STIP).filter(k=>FB_STIP[k]===g);const cash=S.money[b]||0;let best=null;
+  const opts=Object.keys(FB_STIP).filter(k=>FB_STIP[k]===g);const cash=typeof bgLeft==='function'?bgLeft(b,card,{noProd:true}):S.money[b]||0;let best=null;
   ms.forEach(sl=>{const m=sl.d;if(m.stip&&m.stip!=='std')return;const ws=m.sides.flat().map(id=>S.w[id]).filter(Boolean);if(!ws.length)return;
    /* v410: the rival doesn't repeat last show's stipulations (they'd only pull half) */const last=(S.fbls&&S.fbls[b])||[];
-   opts.forEach(k=>{if(!stipOk(k,m.type,!!show.ppv)||STIPS[k].once||stipPrice(k,b)*4>cash||last.includes(k))return;const bon=ws.reduce((a,w)=>a+stipBon(w,k,false),0)/ws.length;if(bon<-.25)return;
+   opts.forEach(k=>{if(!stipOk(k,m.type,!!show.ppv)||STIPS[k].once||stipPrice(k,b)*4>cash||stipPrice(k,b)>cash||last.includes(k))return;const bon=ws.reduce((a,w)=>a+stipBon(w,k,false),0)/ws.length;if(bon<-.25)return;
     const v=bon+ws.filter(w=>fgOf(w).includes(g)).length/ws.length+Math.random()*.3;if(!best||v>best.v)best={v,m,k}})});
   if(!best)break;best.m.stip=best.k}
  return card}

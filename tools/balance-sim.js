@@ -124,6 +124,7 @@ window.SIM = async function (opt) {
   if (S.draft) delete S.draft.capB;
   const wlog = []; let signed = 0, resigned = 0, faSpend = 0;
 
+  const C0 = o => { try { const c = (S.last || o).cash.ai; return [c.tix + c.merch + c.ad + (c.gate || 0), c.stip, c.prod, c.bill || 0].map(Math.round) } catch (e) { return null } };
   const seasons = [];
   let cur = null;
   const startSeason = () => { cur = { hr0: window.hrN || 0, hrb0: window.hrNb || 0, arc0: [S.arcDone || 0, S.arcGreatN || 0, S.arcFailN || 0], season: S.season, weeks: 0, rp: [], rai: [], wins: 0, injP: 0, injAI: 0, promoStars: [], matchStars: [], fans0: { p: S.fans.p, ai: S.fans.ai }, pop0: Object.fromEntries(owned('p').map(w => [w.id, w.pop])), arcPop: [], arcCost: 0, crises: 0, errs: 0, titleChanges: 0, checklist: 0, cl: {}, rested: 0 } };
@@ -135,7 +136,7 @@ window.SIM = async function (opt) {
         cur.end = snapshot(); seasons.push(cur); nextSeason(); closeModal(); startSeason(); continue;
       }
       // the office line
-      if (S.crisis) { cur.crises++; try { const C = CRISES[S.crisis.k]; if (C) C.ch[Math.floor(Math.random() * C.ch.length)].fx(crisisCtx()) } catch (e) { errs.push('crisis ' + e.message) } S.crisis = null }
+      if (S.crisis) { cur.crises++; try { const C = CRISES[S.crisis.k]; if (C) { const x = crisisCtx(); /* v499: only what the bank can pay for */ const l = typeof bgOptCost === 'function' ? C.ch.filter(o => { const c = bgOptCost(o, x); return !c || c <= S.money.p }) : C.ch; const L = l.length ? l : C.ch; L[Math.floor(Math.random() * L.length)].fx(x) } } catch (e) { errs.push('crisis ' + e.message) } S.crisis = null }
       answerPitch();
       // v356: the network exec's visit — the viewership bonus is collected at the office after each PPV
       if (S.view && S.view.p && S.view.p.due && S.view.p.amt > 0) { S.money.p += S.view.p.amt; S.view.p = { amt: 0, wks: 0 } }
@@ -179,6 +180,10 @@ window.SIM = async function (opt) {
       if (typeof aiCash === 'function') aiCash('p', S.card.p, curShow());
       if (opt.spend) { S.prod = S.prod || {}; const m = S.money.p / econCap(); S.prod.p = curShow().ppv ? (m > 5 ? 'max' : m > 2 ? 'plus' : 'std') : (m > 6 ? 'max' : m > 3.2 ? 'plus' : 'std') }
       const sh = curShow();
+      /* v499: Blood & Guts night: the attentive bot puts its trios/8-man war in the cage (opt.bng false: never) */
+      if (opt.checklist && opt.bng !== false && typeof BNG_WEEK !== 'undefined' && S.week === BNG_WEEK && !S.card.p.some(sl => sl.d && sl.d.stip === 'bng')) { const sl = S.card.p.find(sl => sl.k === 'match' && sl.d && (sl.d.type === 'trios' || sl.d.type === 'eight') && !sl.d.title); if (sl) sl.d.stip = 'bng'; else { const on = new Set(); S.card.p.forEach(x => { if (x.d && x.k === 'match') x.d.sides.flat().forEach(id => on.add(id)) }); const ms = S.card.p.filter(x => x.k === 'match' && x.d && !x.d.title && !x.d.sp && !x.d.tour && x.d.type !== 'squash'); const tgt = ms[0];
+          if (tgt) { tgt.d.sides.flat().forEach(id => on.delete(id)); const pool = owned('p').filter(w => !w.inj && !on.has(w.id) && (typeof sta !== 'function' || sta(w) >= 60)).sort((a, b) => b.pop - a.pop).slice(0, 6); if (pool.length === 6) tgt.d = { type: 'trios', stip: 'bng', sides: [pool.filter((_, i) => i % 2 === 0).map(w => w.id), pool.filter((_, i) => i % 2 === 1).map(w => w.id)], winner: 0, title: '' } } } }
+      { const cnt = b => ((S.card[b]) || []).filter(sl => sl && sl.k === 'match' && sl.d && sl.d.stip && sl.d.stip !== 'std').length; cur.stipP = (cur.stipP || 0) + cnt('p'); if (S.week === (typeof BNG_WEEK !== 'undefined' ? BNG_WEEK : -1)) cur.bngP = ((S.card.p || []).some(sl => sl.d && sl.d.stip === 'bng') ? 1 : 0); cur.minBank = Math.min(cur.minBank == null ? 1e9 : cur.minBank, S.money.p); cur.adv0 = cur.adv0 == null ? ((S.adv && S.adv.p) || 0) : cur.adv0 }
       // play the show: promos by the rival's rules; highlight reels decide which matches get calls (v260+)
       const c = S.card.p;
       c.forEach(sl => { if (sl.d && sl.k === 'promo') { const p = sl.d; delete p.res; p.played = false; if (S.w[p.a] && !S.w[p.a].inj && (!p.b || S.w[p.b] && !S.w[p.b].inj)) runAutoPromo(p, 'p'); else sl.d = null } else if (sl.d && sl.k === 'match') delete sl.d.ev });
@@ -187,12 +192,16 @@ window.SIM = async function (opt) {
         const ms = c.filter(sl => sl.d && sl.k === 'match'); ms.forEach((sl, j) => { const m = sl.d, main = j === ms.length - 1; if (!validMatch(m)) return;
           if (main && typeof msOn === 'function' && msOn(m)) return msAuto(m, 'p', true); const ev = matchEvent(m, 'p', sh.ppv || main, main ? .65 : 0); if (ev) runEvAI(ev, m) }) }
       const before = Object.fromEntries(Object.values(S.titles).map(t => [t.id, t.holders.join('|')]));
-      const out = airShow();
+      const w0 = S.week, bankPre = S.money.p, aiPre = S.money.ai, aiEst = weekEst('ai'), aiPay = payroll('ai'); const out = airShow(); cur.aiW = cur.aiW || []; cur.aiW.push([w0, Math.round(aiEst), aiPay, Math.round(S.money.ai - aiPre), owned('ai').length, Math.round(tvSigned('ai')), C0(out), S.fin && S.fin.ai, (typeof F==='function'&&F('ai')&&F('ai').r)?Object.keys(F('ai').r).length:null]);
       const o = S.last || out;
       Object.values(S.titles).forEach(t => { if (before[t.id] && t.holders.join('|') !== before[t.id]) cur.titleChanges++ });
       if (o && o.fb) { cur.fbd = cur.fbd || {}; for (const b of ['p', 'ai']) { const r = o.fb[b]; if (!r || !r.before) continue; for (const g in r.after) { const k = b + '.' + g; cur.fbd[k] = (cur.fbd[k] || 0) + r.after[g] - r.before[g] } } }
       if (o && o.ratings) { if (o.ratings.p != null) cur.rp.push(o.ratings.p); if (o.ratings.ai != null) cur.rai.push(o.ratings.ai); if (o.hourWin === 'p') cur.wins++ }
       if (o && o.blocks) { const PN = new Set(Object.values(PT).map(x => x.n)); o.blocks.filter(b => b.brand === 'p').forEach(b => b.segs.forEach(s => (PN.has(s.sub) ? cur.promoStars : cur.matchStars).push(s.stars))) }
+      { const C = o && o.cash || {}; cur.stipPc = (cur.stipPc || 0) + ((C.p && C.p.stip) || 0); cur.stipAIc = (cur.stipAIc || 0) + ((C.ai && C.ai.stip) || 0);
+        if (w0 === (typeof BNG_WEEK !== 'undefined' ? BNG_WEEK : -1)) { cur.bngPrice = stipPrice('bng', 'p'); cur.bankBng = bankPre; cur.bngAI = C.ai && C.ai.stip >= stipPrice('bng', 'ai') * .8 ? 1 : 0; cur.bngPc = C.p && C.p.stip >= stipPrice('bng', 'p') * .8 ? 1 : 0 }
+        if (S.debt && S.debt.p > 0) { cur.redWk = (cur.redWk || 0) + 1; cur.redLog = cur.redLog || []; if (cur.redLog.length < 30) cur.redLog.push({ w: w0, m: Math.round(S.money.p), pre: Math.round(bankPre), net: C.p ? C.p.net : null, stip: C.p ? C.p.stip : null, prod: C.p ? C.p.prod : null, fin: S.fin && S.fin.p, adv: S.adv && S.adv.p || 0 }) } if (S.debt && S.debt.ai > 0) { cur.redWkAI = (cur.redWkAI || 0) + 1; cur.redLogAI = cur.redLogAI || []; if (cur.redLogAI.length < 30) cur.redLogAI.push({ w: w0, m: Math.round(S.money.ai), net: C.ai ? C.ai.net : null, stip: C.ai ? C.ai.stip : null, prod: C.ai ? C.ai.prod : null, fin: S.fin && S.fin.ai, n: owned('ai').length }) }
+        cur.adv = Math.max(cur.adv || 0, (S.adv && S.adv.p) || 0); cur.advAI = Math.max(cur.advAI || 0, (S.adv && S.adv.ai) || 0); cur.minBankAI = Math.min(cur.minBankAI == null ? 1e9 : cur.minBankAI, S.money.ai) }
       cur.injP += owned('p').filter(w => w.inj > 0).length; cur.injAI += owned('ai').filter(w => w.inj > 0).length;
       cur.weeks++;
       if (S.season === 1 && wlog.length < (opt.logWeeks || 0)) { const fa = Object.values(S.w).filter(w => !w.own && onMarket(w)).sort((a, b) => b.pop - a.pop)[0];

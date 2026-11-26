@@ -264,8 +264,9 @@ function extras(i,kind){const sl=card()[i];const m=cur(i);const out=[];const ppv
  /* v323: titles have their own tab (kind 't'); the Stipulation tab is only stipulations */
  if(kind==='t')return titleTiles(d);
  const stips=Object.entries(STIPS).filter(([k,s])=>stipOk(k,d.type,ppv)&&!bngLock(s,d)).map(([k,s])=>{const f=stipFits(s,d,ppv);const pr=stipPrice(k,'p');
-  const fitN=k!=='std'&&f.spec.length;return {x:`s:${k}`,k:pr?`Stipulation · ${money(pr)}`:'Stipulation',n:s.n,d:fitN?`Suits ${shortNames(f.spec).replace(/&amp;/g,'&')}.`:f.tough.length&&k!=='std'?`Tough for ${shortNames(f.tough).replace(/&amp;/g,'&')}.`:s.d.split('.')[0]+'.',c:typeof fbStipTag==='function'?fbStipTag(k):'',fit:!!fitN,on:stipKey(d)===k,o:fitN?2:k==='std'?1:f.tough.length?-1:0}});
- stips.sort((a,b)=>(b.on-a.on)||(b.o-a.o));out.push(...stips);
+  const fitN=k!=='std'&&f.spec.length;const poor=typeof bgCanStip==='function'&&stipKey(d)!==k&&!bgCanStip('p',d,k);let adv=0;if(pr&&typeof bgCommit==='function'&&bgCommit(Object.assign({},d,{stip:k}),'p')){const lf=bgLeft('p',null,{skip:d});if(pr>lf)adv=pr-Math.max(0,lf)}
+  return {x:`s:${k}`,dis:poor,k:pr?`Stipulation · ${money(pr)}${adv?' · 🏦 Network advance':''}`:'Stipulation',n:s.n,d:poor?`Not enough in the bank (${money(Math.max(0,bgLeft('p',null,{skip:d})))} left tonight).`:adv?`You're ${money(adv)} short. The network fronts up to that (less if tonight's takings cover some) and takes it back out of your TV deal.`:fitN?`Suits ${shortNames(f.spec).replace(/&amp;/g,'&')}.`:f.tough.length&&k!=='std'?`Tough for ${shortNames(f.tough).replace(/&amp;/g,'&')}.`:s.d.split('.')[0]+'.',c:typeof fbStipTag==='function'?fbStipTag(k):'',fit:!!fitN,on:stipKey(d)===k,o:fitN?2:k==='std'?1:f.tough.length?-1:0}});
+ stips.sort((a,b)=>(b.on-a.on)||(a.dis-b.dis)||(b.o-a.o));out.push(...stips);
 
  return out}
 /* v323: the Title tab — non-title first, then each belt that can go on the line here. A belt that pays off a title shot
@@ -344,7 +345,7 @@ function applyX(i,x){if(locked())return;const sl=card()[i];const [k,v]=[x.slice(
   delete d.ev;save();buzz();const sb=document.getElementById('tcsb'),st=sb?sb.scrollTop:0;render();const nb=document.getElementById('tcsb');if(nb)nb.scrollTop=st;return}
  if(sl.k==='promo'){const m=clone(cur(i));m.type=v;commit(i,m);buzz();render();return}
  const d=sl.d;if(!d)return;
- if(k==='s'){d.stip=v;const st=STIPS[v];const f=stipFits(st,d);0}
+ if(k==='s'){if(typeof bgCanStip==='function'&&stipKey(d)!==v&&!bgCanStip('p',d,v))return toast(`Not enough in the bank for ${STIPS[v]?STIPS[v].n:'that'} tonight.`);d.stip=v}
  if(k==='t'){d.title=d.title===v?'':v;if(d.title)0}
  if(k==='n')d.pin=v;
  delete d.ev;save();buzz();render()}
@@ -370,7 +371,7 @@ function xoHtml(i){const sl=card()[i];const d=sl.d;const A=d&&W_(d.a),B=d&&W_(d.
 function tcPipLine(d,sh){try{if(!d||typeof mdOf!=='function'||typeof segH!=='function'||!validMatch(d))return '';
  if(d.type==='squash'||d.type==='open'||d.tour||d.nc||d.sides.length<2||d.sides.some(s=>!s.length))return '';
  const x=mdOf(d,sh);if(!x||x.sq||!x.p)return '';const st=stipKey(d),S0=STIPS[st];
- let cost='';if(st!=='std'&&S0){const bits=[];const pr=stipPrice(st,'p');if(pr>0)bits.push(money(pr));if((S0.f||0)>=10)bits.push('Very tiring');else if((S0.f||0)>=4)bits.push('Tiring');if((S0.inj||1)>=1.25)bits.push('Injury risk');if(bits.length)cost=`<span class="tcpc">${esc(bits.join(' · '))}</span>`}
+ let cost='';if(st!=='std'&&S0){const bits=[];const pr=stipPrice(st,'p');if(pr>0)bits.push(money(pr));if(pr>0&&typeof bgCommit==='function'&&bgCommit(d,'p')){const a=bgAdvEst('p');if(a>0)bits.push(`🏦 Network fronts up to ${money(a)}`)}if((S0.f||0)>=10)bits.push('Very tiring');else if((S0.f||0)>=4)bits.push('Tiring');if((S0.inj||1)>=1.25)bits.push('Injury risk');if(bits.length)cost=`<span class="tcpc">${esc(bits.join(' · '))}</span>`}
  return `<div class="tcpl" aria-label="How the match reads"><span>Talent${segH(x.p.talent)}</span><span>Chem${segH(x.p.chem)}</span><span>Story${segH(x.p.story)}</span><span>Extras${segH(x.p.extras)}</span>${cost}</div>`}catch(e){return ''}}
 function slotHtml(i){const c=card(),sl=c[i];if(xoV(sl))return xoHtml(i);let act=i===TC.act&&!locked();const m=cur(i);const promo=sl.k==='promo';
  const ml=promo?null:(()=>{try{return mLab(c,i)}catch(e){return {}}})();const main=ml&&ml.main,opt=!!sl.opt;
@@ -472,7 +473,7 @@ function dockHtml(){const i=TC.act;const sl=card()[i];if(!sl||!TC.open){TC.shown
   ${pl.length>=2?`<div class="tcwhy">${d.type==='rumble'?'Eliminated last (gets a bump)':d.type==='mitb'?'Comes closest (takes the loss)':'Takes the pin'}</div>${pl.map(id=>{const [c,t]=pinRub(d,id);return entC(id,'n:'+id,{tab:id===pn?'Takes it':t.replace(/ for the winner$/,''),tabc:id===pn?'must':c==='good'?'hot':'',cls:(id===pn?'pickd ':'')+(TC.dealt?'deal':'')})}).join('')}`:''}</div>`}
  else if(TC.mode==='f'&&!promo&&sl.d){body=finExtras(sl.d)+`<div class="tcgx lo">${finTiles(sl.d).map(x=>`<div class="tx ${x.on?'on':''} ${x.dis?'dis':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"${x.dis?' aria-disabled="true"':''}><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span>${x.c||''}</div>`).join('')}</div>`}
  else if(TC.mode==='r'&&!promo&&sl.d)body=riHtml(i);
- else if(TC.mode==='x'||TC.mode==='t'){const xs=extras(i,TC.mode);body=xs.length?`<div class="tcgx">${xs.map(x=>`<div class="tx ${x.fit?'fit':''} ${x.on?'on':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span>${x.c||''}</div>`).join('')}</div>`:`<div class="tcempty">${promo?'Pick who’s on the mic first.':TC.mode==='t'&&sl.d?noTitleWhy(sl.d):'Fill both sides first.'}</div>`}
+ else if(TC.mode==='x'||TC.mode==='t'){const xs=extras(i,TC.mode);body=xs.length?`<div class="tcgx">${xs.map(x=>`<div class="tx ${x.fit?'fit':''} ${x.on?'on':''} ${x.dis?'dis':''}" data-tcx="${esc(x.x)}" tabindex="0" role="button"${x.dis?' aria-disabled="true"':''}><span class="txk">${esc(x.k)}</span><b class="txn">${esc(x.n)}</b><span class="txd">${esc(x.d)}</span>${x.c||''}</div>`).join('')}</div>`:`<div class="tcempty">${promo?'Pick who’s on the mic first.':TC.mode==='t'&&sl.d?noTitleWhy(sl.d):'Fill both sides first.'}</div>`}
  else if(!tg&&!TC.rep&&m.type==='squash')body=`<div class="tcempty">${esc(sideName(m.sides[0]))} squashes ${esc(sideName(m.sides[1]))}. Tap someone on the card to swap them, or:</div><div class="tcsf"><button class="btn sec" data-tcx="l:1">🧑‍🔧 ${m.loc?'Different local talent':'Use local enhancement talent'}</button></div>`;
  else if(!tg&&!TC.rep&&m.type==='open'){const h=m.open&&m.open.hope&&W_(m.open.hope);body=`<div class="tcempty">🎤 ${esc(sideName(m.sides[0]))} throws the door open — someone answers live.${h?` The crowd is hoping for <b>${esc(h.name)}</b>: give them that (or someone bigger) and the place erupts.`:''}</div>`}
  else if(!tg&&!TC.rep)body=`<div class="tcempty">Card's full — pick a bigger match or tap someone to swap.</div>`;
