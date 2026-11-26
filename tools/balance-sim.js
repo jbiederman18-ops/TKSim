@@ -65,7 +65,7 @@ window.SIM = async function (opt) {
       else if (t.goal === 'title' && t.title && S.titles[t.title]) { const T = S.titles[t.title]; if (T.kind === 'singles' && T.holders.length === 1 && ok(T.holders[0])) { const i = slotFor(false); if (i >= 0) put(i, 'singles', [[T.holders[0]], [t.a]], { title: T.id }) } }
       else if (t.goal === 'team' && B && ok(t.b)) { const opp = pool(A.g, [t.a, t.b]).slice(0, 2); const i = slotFor(false); if (i >= 0 && opp.length === 2) put(i, 'tag', [[t.a, t.b], opp.map(w => w.id)]) } }));
     /* 3½ · v426: each running arc's next step (or its payoff), the way the checklist's Book it does it */
-    step('arcs', () => { if (typeof arcFill !== 'function') return; (S.arcs || []).forEach(a => { if (a.done || !W(a.a) || W(a.a).own !== 'p') return; if (a.stage === 'pay' && AW() < (a.payFrom || 0)) return;
+    step('arcs', () => { if (typeof arcAutoHold === 'function' && opt.hold !== false) arcAutoHold(); if (typeof arcFill !== 'function') return; (S.arcs || []).forEach(a => { if (a.done || !W(a.a) || W(a.a).own !== 'p') return; if (a.stage === 'pay' && AW() < (a.payFrom || 0)) return;
       if (onCard(a.a)) return; const i = arcFill(a, c); if (i >= 0) { const sl = c[i]; if (sl.k === 'match') sl.d.sides.flat().forEach(id => used.add(id)); else { used.add(sl.d.a); if (sl.d.b) used.add(sl.d.b) } n++ } }) });
     /* 4 · titles: crown your vacant belts (every new game starts with them vacant), then the most overdue defense (up to 3 on a PPV) */
     step('defenses', () => { const mine = t => !t.br || t.br === 'p';

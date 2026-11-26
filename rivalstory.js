@@ -25,8 +25,21 @@ const has=(ids,p)=>ids.includes(p.a)||ids.includes(p.b);
 const both=(ids,p)=>ids.includes(p.a)&&ids.includes(p.b);
 const lead=p=>S.w[p.a].pop<=S.w[p.b].pop?S.w[p.a]:S.w[p.b];
 /* start: pay the same price you would for building that wrestler */
-window.rvArcStart=function(p){const c=cfg();if(!c||!c.arcs||p.arc||S.phase!=='season')return;const cooling=(S.rvEnds||[]).filter(w=>AW()-w<c.rest).length;if(live().length+cooling>=c.arcs)return;const w=lead(p);
- const cost=Math.max(5,Math.round(pCost()*3*aPopF(w.pop)/5)*5);if((S.money.ai||0)-cost<(typeof bgReserve==='function'?bgReserve('ai'):0))return;S.money.ai-=cost;p.arc=1;p.st=[];p.end=AW()+RV_NEED+ARC_SLACK};
+window.rvArcStart=function(p){const c=cfg();if(!c||!c.arcs||p.arc||S.phase!=='season')return;const cooling=(S.rvEnds||[]).filter(w=>AW()-w<c.rest).length;if(live().length+cooling+heldReady().length>=c.arcs||(S.rvHeld||[]).some(h=>h.a===p.a||h.b===p.a||h.a===p.b||h.b===p.b))return;const w=lead(p);
+ const cost=Math.max(5,Math.round(pCost()*3*aPopF(w.pop)/5)*5);if((S.money.ai||0)-cost<(typeof bgReserve==='function'?bgReserve('ai'):0))return;S.money.ai-=cost;p.cost=cost;p.arc=1;p.st=[];p.end=AW()+RV_NEED+ARC_SLACK};
+/* v507: like you, the rival holds a story when one of its two is unavailable (it always chooses to). It frees the slot,
+   keeps the build, and comes back to the next open slot with the weeks it had left (at least one a stop plus the payoff).
+   Lose one of them for good and the unfinished share of the price comes back. */
+const out=id=>{const w=S.w[id];return !!(w&&w.inj>0&&!(w.angle!=null&&AW()<w.angle+2))};
+const gone=p=>[p.a,p.b].some(i=>!S.w[i]||S.w[i].own!=='ai'||S.w[i].retd);
+function heldReady(){return (S.rvHeld||[]).filter(p=>!gone(p)&&!out(p.a)&&!out(p.b))}
+const share=p=>Math.max(0,Math.round((p.cost||0)*(RV_NEED-Math.min(p.st.length,RV_NEED)+1)/(RV_NEED+1)));
+window.rvHoldWeek=function(){const c=cfg();if(!c||!c.arcs||S.phase!=='season')return;S.rvHeld=S.rvHeld||[];
+ const all=(S.aiProg||[]).filter(p=>p.arc&&!p.paid);
+ for(const p of all.filter(p=>gone(p)||out(p.a)||out(p.b))){S.aiProg=S.aiProg.filter(x=>x!==p);if(gone(p))S.money.ai+=share(p);else{p.left=Math.max(p.end-AW()+1,RV_NEED-Math.min(p.st.length,RV_NEED)+1);S.rvHeld.push(p)}}
+ S.rvHeld=S.rvHeld.filter(p=>{if(!gone(p))return true;S.money.ai+=share(p);return false});
+ for(const p of heldReady()){if(live().length>=c.arcs)break;S.rvHeld=S.rvHeld.filter(x=>x!==p);p.end=AW()+p.left-1;p.w=AW();delete p.left;
+  S.aiProg=[p].concat((S.aiProg||[]).filter(x=>![x.a,x.b].some(i=>i===p.a||i===p.b)))}};
 /* the same star bonus yours get: a little for each build step, a bigger one on the payoff */
 function bonus(kind,ids,ppv){let b=0;for(const p of live()){if(built(p)){if(kind==='match'&&both(ids,p)&&AW()>(p.ready||0)){const q=avg(p.st);let x=ARC_PAY0+clamp((q-3)*ARC_PAYQ,0,ARC_PAYMAX);if(ppv)x*=ARC_PAY_PPV;return {st:Math.round(x*100)/100,pay:p}}}else if(p.st.length&&has(ids,p))b=Math.max(b,ARC_BUILD*p.st.length)}return {st:b,pay:null}}
 const HEAT=new WeakMap();

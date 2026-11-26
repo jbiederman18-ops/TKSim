@@ -41,7 +41,10 @@ const aLast=w=>w.name.split(' ').slice(-1)[0];
 const aStar=w=>(w.pop||0)>=ARC_STAR;
 function arcList(){return (S.arcs=Array.isArray(S.arcs)?S.arcs:[])}
 function arcOf(id){return arcList().find(a=>a.a===id)}
-function arcIn(id){return arcList().some(a=>a.a===id||a.b===id||a.c===id)}
+function arcIn(id){return arcList().concat(arcHeld()).some(a=>a.a===id||a.b===id||a.c===id)}
+/* v507: arcs on hold sit in their own list, so nothing that runs, scores or books arcs sees them */
+function arcHeld(){return (S.arcHeld=Array.isArray(S.arcHeld)?S.arcHeld:[])}
+function arcHeldOf(id){return arcHeld().find(a=>a.a===id)}
 function aTeams(id){return (S.teams||[]).filter(t=>t.m.includes(id))}
 function aMates(id){const s=new Set();aTeams(id).forEach(t=>t.m.forEach(x=>{if(x!==id)s.add(x)}));if(typeof fgKnown==='function'&&aW(id))fgKnown(aW(id)).forEach(o=>s.add(o.id));return [...s].filter(aMine)}
 function aRoster(ex){ex=ex||[];return ownList('p').filter(w=>!w.inj&&!ex.includes(w.id)&&!w.retd)}
@@ -833,7 +836,7 @@ if(typeof chemParts==='function'){const _cp=chemParts;chemParts=function(x,y){co
 /* ---- retirement: gone from the roster for good, never back on the market ---- */
 function arcRetire(w,notes,msg){if(!w)return;const was=w.own;w.retd=AW();if(typeof leave==='function')leave(w,`🪦 ${msg}`,notes||[]);else{w.own=null;news(msg)}
  Object.values(S.titles||{}).forEach(t=>{if(t.holders.includes(w.id)){t.holders=[];news(`🏆 The ${t.n} title is vacant — ${w.name} has retired.`)}});
- (S.teams||[]).forEach(t=>t.m=t.m.filter(x=>x!==w.id));S.teams=(S.teams||[]).filter(t=>t.m.length>=2);if(S.fa)delete S.fa[w.id];if(was)arcList().filter(a=>a.b===w.id||a.c===w.id).forEach(a=>a.gone=1)}
+ (S.teams||[]).forEach(t=>t.m=t.m.filter(x=>x!==w.id));S.teams=(S.teams||[]).filter(t=>t.m.length>=2);if(S.fa)delete S.fa[w.id];if(was)arcList().concat(arcHeld()).filter(a=>a.b===w.id||a.c===w.id).forEach(a=>a.gone=1)}
 if(typeof onMarket==='function'){const _om=onMarket;onMarket=function(w){return !!w&&!w.retd&&_om(w)};window.onMarket=onMarket}
 if(typeof inPool==='function'){const _ip=inPool;inPool=function(w){return !w.retd&&_ip(w)}}
 /* a second crowd won through a Crossover */
@@ -857,7 +860,7 @@ function arcBoard(){return {}}
 const ARC_MANY={townhero:1};
 const arcRanW=(k,id)=>(((S.arcUsedW||{})[S.season]||{})[id]||[]).includes(k);
 function arcRan(k){return !ARC_MANY[k]&&((S.arcUsed||{})[S.season]||[]).includes(k)}
-const arcRunningK=k=>!ARC_MANY[k]&&arcList().some(a=>a.k===k&&!a.done&&aMine(a.a));
+const arcRunningK=k=>!ARC_MANY[k]&&arcList().concat(arcHeld()).some(a=>a.k===k&&!a.done&&aMine(a.a));
 /* story size: small arcs early and right after the big shows, big ones on the road to the season's climaxes */
 const ARC_SIZE={heelturn:'s',faceturn:'s',voice:'s',mentor:'s',team:'s',under:'s',trial:'s',school:'s',mouth:'s',ironman:'s',comeback:'s',reunion:'s',hometown:'s',redemption:'s',
  gauntlet:'m',betrayal:'m',breakup:'m',stakes:'m',cult:'m',cross:'m',proveit:'m',tap:'m',streak:'m',techshow:'m',shoot:'m',faction:'m',join:'m',rebrand:'m',transform:'m',flyer:'m',hardcore:'m',fightchamp:'m',champvoice:'m',torch:'m',
@@ -944,8 +947,9 @@ const aNeedsPPV=D=>{const t=String(D&&D.payoff||'');return /PPV/.test(t)&&!/main
 function aPPVEnd(D,end,st){st=st||S;if(!aNeedsPPV(D))return end;const wkOf=e=>st.week+e-(awBase(st)+st.week);
  if(/crossover/i.test(D.payoff))return wkOf(end)<FD_WEEK?end+FD_WEEK-wkOf(end):end;
  for(let e=end;e<end+SEASON;e++)if(PPVS[((wkOf(e)-1)%SEASON+SEASON)%SEASON+1])return e;return end}
-function arcCanStart(id){const A=aW(id);if(!A||A.own!=='p'||A.retd)return 'Not on your roster';if(S.phase!=='season')return 'Arcs start once the season is under way';if(arcOf(id))return `${A.name} is already in an arc`;
- if(arcList().filter(a=>aMine(a.a)).length>=ARC_SLOTS)return `You have ${ARC_SLOTS} arcs running. Finish one first`;return ''}
+function arcCanStart(id){const A=aW(id);if(!A||A.own!=='p'||A.retd)return 'Not on your roster';if(S.phase!=='season')return 'Arcs start once the season is under way';if(arcOf(id))return `${A.name} is already in an arc`;if(arcHeldOf(id))return `${A.name}'s arc is on hold`;
+ const run=arcList().filter(a=>aMine(a.a)).length;if(run>=ARC_SLOTS)return `You have ${ARC_SLOTS} arcs running. Finish one first`;
+ if(run+arcReadyList().length>=ARC_SLOTS)return 'A held arc is ready for the open slot. Resume it or drop it first';return ''}
 window.arcCanStart=arcCanStart;
 /* v461: {X} = whoever beat them at the start of this road (a.foe); {G1}-{G3} = the wrestlers cast as the three ghosts (a.gh) */
 function aXFill(t,o){o=o||{};const nm=id=>id&&aW(id)?aW(id).name:'';return String(t==null?'':t).replace(/\{X\}/g,nm(o.foe)||'the wrestler who beat {A:them}').replace(/\{G([123])\}/g,(m,i)=>nm((o.gh||[])[i-1])||'a mystery ghost')}
@@ -1030,11 +1034,101 @@ function arcFinish(a,s,stars,notes){const D=aD(a);const A=aW(a.a);const q=a.st.r
  news(`📖 ${A.name}'s ${D.n} paid off${a.q==='great'?' in a big way':''}.`)}
 function arcFail(a,notes){S.arcFailN=(S.arcFailN||0)+1;{const A0=aW(a.a);if(A0){A0.arcEnd=AW();A0.arcLast=(A0.arcLast||[]).concat([a.k]).slice(-4)}}S.arcFailK=S.arcFailK||{};const fk=a.k+':'+a.stage+':'+a.have;S.arcFailK[fk]=(S.arcFailK[fk]||0)+1;const A=aW(a.a);if(A&&A.own==='p'){mor(A,-(a.star?ARC_FAIL+2:ARC_FAIL));if(a.b&&aW(a.b)&&aW(a.b).own==='p')mor(aW(a.b),-4)}a.done=1;const t=`📖❌ ${arcLine(a,'fail')} (${aD(a).n})`;news(t);(notes||[]).push(t);S.arcNews=(S.arcNews||[]).concat([{w:AW(),t}]).slice(-8)}
 /* the deadline, and arcs whose people are gone: checked when a show is about to air */
-function arcTick(){if(!S||!Array.isArray(S.arcs))return;S.arcs=S.arcs.filter(a=>{if(a.done)return false;const A=aW(a.a);if(!A||A.own!=='p')return false;
-  if(a.gone||[a.b,a.c].some(id=>id&&(!aW(id)||aW(id).own!=='p'))){a.done=1;news(`📖 ${A.name}'s ${aD(a).n} arc ends — someone in it is gone.`);return false}
+function arcTick(){if(!S||!Array.isArray(S.arcs))return;S.arcs=S.arcs.filter(a=>{if(a.done)return false;const A=aW(a.a);const why=arcGoneWhy(a);
+  if(why){a.done=1;arcRefundPay(a,why);return false}
   a.end=aPPVEnd(aD(a),a.end);
   if(AW()>a.end){arcFail(a,[]);return false}return true})}
 window.arcTick=arcTick;
+
+/* ===================== v507: HOLDING AN ARC =====================
+   When someone in a running arc is unavailable (injured, suspended, retraining, away; a time-off angle the story itself
+   wrote doesn't count) you can hold the story or drop it. A held arc keeps its stops and build ratings, gives up its slot
+   and its feud stops cooling. Once everyone's back it has first claim on an open slot, with the weeks it had left when the
+   absence began (at least one a stop plus the payoff, stretched to a PPV if the payoff needs one). With a slot open it
+   waits ARC_HOLD_WAIT weeks, then ends. Dropping it then, or losing someone for good, pays back the unfinished share. */
+const ARC_HOLD_WAIT=4;
+/* an arc's own angle (the Comeback injury, the stretcher job) is two weeks off TV that its deadline already allows for */
+const aPlanned=w=>w.angle!=null&&AW()<w.angle+2;
+function aAway(w){return !!(w&&w.inj>0&&!aPlanned(w))}
+/* everyone the arc needs: the lead, the cast, a roster foe the road still names, and a champion's tag or trios partners */
+function aNeeds(a){const D=aD(a);const ids=[a.a,a.b,a.c];
+ if(a.foe&&aMine(a.foe)&&/\{X\}/.test([D.payoff].concat(D.builds?D.builds.slice(a.have):[D.build]).join(' ')))ids.push(a.foe);
+ const t=a.t2&&S.titles[a.t2];if(a.k==='fightchamp'&&t&&t.holders.includes(a.a))ids.push(...t.holders);
+ return [...new Set(ids.filter(Boolean))]}
+function arcOutList(a){return aNeeds(a).map(aW).filter(aAway)}
+/* gone for good: the lead or a cast member is off the roster, or the belt the story is about isn't theirs any more while it waits */
+function arcGoneWhy(a){const A=aW(a.a);if(!A||A.own!=='p'||A.retd)return 'its lead is gone';if(a.gone||[a.b,a.c].some(id=>id&&(!aW(id)||aW(id).own!=='p')))return 'someone in it is gone';return ''}
+const aBeltLost=a=>!!(a.t2&&!(S.titles[a.t2]&&S.titles[a.t2].holders.includes(a.a)));
+/* the unfinished share of the price: each stop and the payoff count the same */
+function arcRefund(a){return Math.max(0,Math.round((a.cost||0)*(a.need-Math.min(a.have,a.need)+1)/(a.need+1)))}
+function aTitleOf(a){const A=aW(a.a);return `${A?A.name+"'s ":''}${aD(a).n}`}
+function arcPutNews(t,notes){news(t);if(notes)notes.push(t);S.arcNews=(S.arcNews||[]).concat([{w:AW(),t}]).slice(-8)}
+function arcRefundPay(a,why,notes){const r=arcRefund(a);S.money.p+=r;arcPutNews(`📖 ${aTitleOf(a)} arc ends: ${why}. ${money(r)} comes back to you.`,notes)}
+/* the weeks left when the absence began are what a resumed arc gets back */
+function arcMarkBlocked(a){if(arcOutList(a).length){if(!a.blk)a.blk={w:AW(),left:a.end-AW()+1};return true}delete a.blk;return false}
+function arcBlocked(a){return !!(a&&!a.done&&aMine(a.a)&&AW()<=a.end&&arcOutList(a).length&&!arcGoneWhy(a))}
+function arcReadyList(){return arcHeld().filter(a=>!arcGoneWhy(a)&&!arcOutList(a).length&&!aBeltLost(a))}
+const aRunN=()=>arcList().filter(a=>aMine(a.a)&&!a.done).length;
+function arcHold(a){if(!arcBlocked(a)||aBeltLost(a))return false;arcMarkBlocked(a);
+ a.held={at:AW(),left:Math.max(a.blk.left,a.need-Math.min(a.have,a.need)+1),wait:0};delete a.blk;S.arcs=arcList().filter(x=>x!==a);arcHeld().push(a);
+ arcPutNews(`⏸️ ${aTitleOf(a)} arc is on hold.`);return true}
+function arcResume(a){if(!arcReadyList().includes(a)||aRunN()>=ARC_SLOTS)return false;
+ a.end=aPPVEnd(aD(a),AW()+a.held.left-1);a.payFrom=Math.min(a.payFrom||0,AW());delete a.held;delete a.blk;S.arcHeld=arcHeld().filter(x=>x!==a);arcList().push(a);
+ arcPutNews(`▶️ ${aTitleOf(a)} arc picks up where it left off, with ${a.end-AW()+1} week${a.end===AW()?'':'s'} to go.`);return true}
+/* ends an arc that's held or can't go on: no one is let down, and the unfinished share comes back */
+function arcCancel(a){a.done=1;S.arcs=arcList().filter(x=>x!==a);S.arcHeld=arcHeld().filter(x=>x!==a);const A=aW(a.a);if(A){A.arcEnd=AW();A.arcLast=(A.arcLast||[]).concat([a.k]).slice(-4)}arcRefundPay(a,'you dropped it')}
+/* each new week: note new absences, end held arcs that can't come back, and count down the ones waiting on you */
+function arcHoldWeek(notes){arcList().forEach(a=>{if(!a.done&&aMine(a.a))arcMarkBlocked(a)});
+ arcHeld().slice().forEach(a=>{let why=arcGoneWhy(a);if(!why&&aBeltLost(a)&&!arcOutList(a).length)why='the title the story was about is gone';
+  if(!why&&arcReadyList().includes(a)){if(a.held.ready==null)a.held.ready=AW();else if(a.held.openW!=null&&a.held.openW===AW()-1)a.held.wait++;
+   if(aRunN()<ARC_SLOTS)a.held.openW=AW();if(a.held.wait>=ARC_HOLD_WAIT)why='it waited too long to pick back up'}
+  if(why){a.done=1;S.arcHeld=arcHeld().filter(x=>x!==a);arcRefundPay(a,why,notes)}})}
+const aOutTxt=w=>`${w.name} is ${w.rein?'retraining':w.susp?(w.away?'away':'suspended'):'injured'}: out ${w.inj} more week${w.inj===1?'':'s'}`;
+const aWaitLeft=a=>ARC_HOLD_WAIT-(a.held.wait||0);
+function aHeldTxt(a){const out=arcOutList(a);if(out.length)return out.map(aOutTxt).join(' · ');
+ return aRunN()<ARC_SLOTS?`Everyone's back. Resume within ${aWaitLeft(a)} week${aWaitLeft(a)===1?'':'s'}.`:'Everyone\'s back. It takes the next open slot.'}
+const aHoldNote=a=>`Keeps your finished stops. Frees the slot, and its feud won't cool. When everyone's back it gets the next open slot, with ${Math.max((a.blk?a.blk.left:a.end-AW()+1),a.need-Math.min(a.have,a.need)+1)} weeks to finish${aNeedsPPV(aD(a))?' (more if needed to reach a PPV)':''}.`;
+function aChoice(key,fn,t,d){return `<button class="choice" onclick="${fn}"><span class="key"><span>${key}</span></span><div>${t}</div><div class="muted tiny">${esc(d)}</div></button>`}
+const aDropNote=a=>`${money(arcRefund(a))} back for the unfinished part. No one is let down. This arc can't run again this season.`;
+/* the choice, as the office visit shows it and as the arc's own screen does */
+function arcHoldChoices(a,office){const hold=!aBeltLost(a);const k=['A','B','C'];let i=0;
+ return (hold?aChoice(k[i++],`arcHoldPick('${a.a}','hold')`,'⏸️ "Hold the story"',aHoldNote(a)):'')
+  +aChoice(k[i++],`arcHoldPick('${a.a}','drop')`,`✖️ "Drop it" · +${esc(money(arcRefund(a)))}`,aDropNote(a))
+  +(office&&hold?aChoice(k[i++],`arcHoldPick('${a.a}','keep')`,'▶️ "Keep it running"',`The deadline stays: ${Math.max(0,a.end-AW()+1)} week${a.end-AW()===0?'':'s'} left. You can still hold it from the arc while they're out.`):'')}
+function arcBackChoices(a){const open=aRunN()<ARC_SLOTS;
+ return (open?aChoice('A',`arcHoldPick('${a.a}','resume')`,'▶️ "Pick the story back up"',`${a.held.left} week${a.held.left===1?'':'s'} to finish${aNeedsPPV(aD(a))?', more if needed to reach a PPV':''}.`):'')
+  +aChoice(open?'B':'A',`arcHoldPick('${a.a}','drop')`,`✖️ "Drop it" · +${esc(money(arcRefund(a)))}`,aDropNote(a))}
+function aCards(a){return `<div class="duo ibx-pics">${[a.a,a.b].filter(id=>id&&aW(id)).map(id=>face(aW(id))).join('')}</div>`}
+function arcHeldScreen(a,back){const D=aD(a);const ready=arcReadyList().includes(a);
+ return `${aKick(D,a.k,a.v,`${esc(aW(a.a).name)} · ⏸️ On hold`)}<div class="ahd">${esc(arcHead(a)||D.d)}</div>${arcTrack(a.need,a.have,a.stage)}
+ <div class="aleft">${esc(aHeldTxt(a))}</div>${ready?arcBackChoices(a):aChoice('A',`arcHoldPick('${a.a}','drop')`,`✖️ "Drop it" · +${esc(money(arcRefund(a)))}`,aDropNote(a))}${back}`}
+window.arcHoldPick=function(id,k){if(typeof mpLocked==='function'&&mpLocked())return;const a=arcHeldOf(id)||arcOf(id);if(!a)return closeModal();
+ if(k==='hold'){if(!arcHold(a))return}
+ else if(k==='resume'){if(!arcResume(a))return toast('No open arc slot yet.')}
+ else if(k==='drop'){if(!arcHeldOf(id)&&!arcBlocked(a))return;arcCancel(a)}
+ else if(k==='keep'){arcMarkBlocked(a);if(a.blk)a.blk.keep=1}
+ else if(k==='wait'){if(a.held)a.held.later=AW()}
+ save();try{render()}catch(e){}
+ const msg={hold:'The story waits for them.',resume:'The story is back on.',drop:'The story is over, and the unfinished part of the price is back in the bank.',keep:'The deadline stands.',wait:'It stays on hold for now.'}[k];
+ openModal(`<div class="h mhd">📖 ${esc(aD(a).n)}</div>${aCards(a)}<div class="outcome ok">${esc(msg)}</div><button class="btn" onclick="closeModal()">Done</button>`)};
+/* the office line: a new absence to decide on, or a held arc ready to come back to an open slot */
+window.arcDeskList=function(){if(!S||S.phase!=='season')return [];const out=arcList().filter(a=>arcBlocked(a)&&!(a.blk&&a.blk.keep)).map(a=>({k:'ahold',id:a.a}));
+ if(aRunN()<ARC_SLOTS)arcReadyList().filter(a=>a.held.later!==AW()).forEach(a=>out.push({k:'aback',id:a.a}));return out};
+window.arcDeskOpen=function(k,id){if(k==='ahold'){const a=arcOf(id);if(!a||!arcBlocked(a))return closeModal();arcMarkBlocked(a);
+  return openModal(`<div class="h mhd mt">⏸️ A story on the shelf</div>${aCards(a)}<div class="scene brief ibx"><div class="brow"><b>${esc(aTitleOf(a))}</b><br><span class="muted tiny">${esc(arcOutList(a).map(aOutTxt).join(' · '))}. ${a.have} of ${a.need} stops done.${aBeltLost(a)?' The title this story is about is gone.':''}</span></div></div>${arcHoldChoices(a,1)}`)}
+ const a=arcHeldOf(id);if(!a)return closeModal();
+ openModal(`<div class="h mhd mt">▶️ Ready to pick back up</div>${aCards(a)}<div class="scene brief ibx"><div class="brow"><b>${esc(aTitleOf(a))}</b><br><span class="muted tiny">Everyone's back. ${a.have} of ${a.need} stops done. Resume within ${aWaitLeft(a)} week${aWaitLeft(a)===1?'':'s'}.</span></div></div>${arcBackChoices(a)}${aChoice('C',`arcHoldPick('${a.a}','wait')`,'⏳ "Not yet"','The open slot stays reserved for it.')}`)};
+window.arcHeldRows=function(){return arcHeld().filter(a=>aMine(a.a)).map(a=>`<div class="astrip"><div class="arun" onclick="arcOpen('${a.a}')">${aKick(aD(a),a.k,a.v,`${esc(aW(a.a).name)} · ⏸️ On hold`)}${arcTrack(a.need,a.have,a.stage)}<div class="anx"><span>${esc(aHeldTxt(a))}</span></div></div></div>`).join('')};
+window.arcHolding={hold:arcHold,blocked:arcBlocked,ready:arcReadyList,week:arcHoldWeek,refund:arcRefund};
+/* for the sweep bot: hold what's blocked, resume what's ready */
+window.arcAutoHold=function(){let h=0,r=0;arcList().slice().forEach(a=>{if(arcBlocked(a)&&arcHold(a))h++});arcReadyList().forEach(a=>{if(arcResume(a))r++});return {h,r}};
+/* a held story's feud doesn't cool or go stale while it waits (the rival's held stories too, rivalstory.js) */
+if(typeof endWeek==='function'){const _ew=endWeek;endWeek=window.endWeek=function(notes){const keep={};
+  try{const add=l=>(l||[]).forEach(a=>[a.b,a.foe].forEach(o=>{if(!a.a||!o)return;const k=key(a.a,o);if(S.heat[k]>0&&!keep[k]){const f=S.fs&&S.fs[k];keep[k]={h:S.heat[k],f:!!f};if(f&&f.start!=null)f.start++}}));
+   bothSides(()=>add(S.arcHeld));add(S.rvHeld)}catch(e){console.warn('arc hold heat',e)}
+  const r=_ew.apply(this,arguments);
+  try{for(const k in keep)if(S.heat[k]==null||S.heat[k]<keep[k].h){S.heat[k]=keep[k].h}
+   bothSides(()=>arcHoldWeek(Array.isArray(notes)?notes:null));if(typeof rvHoldWeek==='function')rvHoldWeek()}catch(e){console.warn('arc hold',e)}return r}}
 /* the arc rules the offline rival's arcs share (rivalstory.js) */
 window.ARC_RULES={aPopF,aRiseF,aEase,ARC_SLACK,ARC_PAY0,ARC_PAYQ,ARC_PAYMAX,ARC_PAY_PPV,ARC_BUILD,ARC_STORYP,ARC_STORYH,ARC_GREAT,ARC_FBQ0,ARC_FBQLO,ARC_FANS,ARC_RISEF,ARC_RISEPOP,ARC_FAIL};
 if(typeof airPair==='function'){const _ap=airPair;airPair=function(){let th={};try{if(typeof bothSides==='function')bothSides(arcTick);else arcTick();S.injSeen=S.injSeen||{};ownList('p').forEach(w=>{if(w.inj)S.injSeen[w.id]=AW()});th.__ppv=!!(curShow()&&curShow().ppv);th.__w=AW();if(S.arcS0s!==S.season){S.arcS0s=S.season;S.arcS0=AW()}Object.values(S.titles||{}).forEach(t=>{th[t.id]=t.holders.join('|')})}catch(e){console.warn('arcs',e)}
@@ -1186,29 +1280,31 @@ window.arcEvHtml=function(e){const A=aW(e.a);let tr='<div class="atrk">';for(let
  return `<div class="twarc${e.pay?' pay':''}"><div class="twak">${e.i||'📖'} ${esc(A?A.name:'')} · ${esc(e.n)}${e.pay?'':` · step ${e.have} of ${e.need}`}</div>${e.head?`<div class="twah">${esc(e.head)}</div>`:''}${tr}<div class="twaw">${e.lab?`<b>${esc(e.lab)}.</b> `:''}${esc(e.what||'')}${e.gain?` <span class="twag">${esc(e.gain)}</span>`:e.next==='pay'?' <span class="twag">The payoff is next.</span>':''}</div></div>`};
 /* v454: running arcs on Home and the Book screen — each arc's stops, next step and deadline at a glance */
 window.arcStrip=function(where){try{if(!S||S.phase!=='season'||(typeof TV!=='undefined'&&TV))return '';const l=arcList().filter(a=>aMine(a.a)&&!a.done);
- const open=ARC_SLOTS-l.length;if(!l.length&&where==='book')return '';
+ const open=ARC_SLOTS-l.length;const held=arcHeldRows();if(!l.length&&!held&&where==='book')return '';
  const due=a=>{const wk=(S.week||1)+(a.end-AW());return `Due by week ${wk}`};
  const rows=l.slice().sort((x,y)=>x.end-y.end).map(a=>`<div class="astrip">${arcRowHtml(a,1)}<div class="asdue ${a.end-AW()<1?'bad':''}">${due(a)}</div></div>`).join('');
- return `<div class="card arcstrip"><div class="row sb"><div class="h small" style="margin:0">📖 Your arcs</div><a href="#" class="tiny" style="color:var(--gold2)" onclick="go('arcs');return false">${open>0?`${open} open slot${open>1?'s':''} ›`:'Arcs ›'}</a></div>${rows||`<div class="muted tiny" style="margin-top:6px">No arcs running. Start one on the Arcs tab to build a wrestler up.</div>`}</div>`}catch(e){console.warn('arc strip',e);return ''}};
+ return `<div class="card arcstrip"><div class="row sb"><div class="h small" style="margin:0">📖 Your arcs</div><a href="#" class="tiny" style="color:var(--gold2)" onclick="go('arcs');return false">${open>0?`${open} open slot${open>1?'s':''} ›`:'Arcs ›'}</a></div>${rows+held||`<div class="muted tiny" style="margin-top:6px">No arcs running. Start one on the Arcs tab to build a wrestler up.</div>`}</div>`}catch(e){console.warn('arc strip',e);return ''}};
 /* the profile's Arcs row */
 window.arcProfile=function(w){if(!w||w.own!=='p')return '';const a=arcOf(w.id);
  const fk=arcFitKnown(w)?arcFitOf(w):null;const fitRow=fk&&ARCS[fk]?`<div class="pf-row"><span class="pf-l">✨ Made for</span><span class="pf-v">${ARCS[fk].i} ${esc(ARCS[fk].n)}</span></div>`:'';
+ const hd=arcHeldOf(w.id);if(hd)return fitRow+`<div class="pf-row pf-arc tap"><span class="pf-l">📖 Arc</span><div class="pf-s">${arcHeldRows().split('<div class="astrip">').filter(x=>x.includes(`arcOpen('${w.id}')`)).map(x=>'<div class="astrip">'+x).join('')}</div></div>`;
  if(a)return fitRow+`<div class="pf-row pf-arc tap"><span class="pf-l">📖 Arc</span><div class="pf-s">${arcRowHtml(a,1)}</div></div>`;
- const part=arcList().find(x=>x.b===w.id||x.c===w.id);if(part)return `<div class="pf-row"><span class="pf-l">📖 Arc</span><span class="pf-v">In ${esc(aW(part.a).name)}'s ${esc(aD(part).n)}</span></div>`;
+ const part=arcList().concat(arcHeld()).find(x=>x.b===w.id||x.c===w.id);if(part)return `<div class="pf-row"><span class="pf-l">📖 Arc</span><span class="pf-v">In ${esc(aW(part.a).name)}'s ${esc(aD(part).n)}</span></div>`;
  const why=arcCanStart(w.id);const n=why?0:arcOffer(w.id).length;const rb=w.rbDue?`<div class="pf-row"><span class="pf-l">🎭 New character</span><span class="pf-v"><button class="pf-tg" onclick="arcRebrand('${w.id}')">Name it</button></span></div>`:'';
  return rb+fitRow+`<div class="pf-row"><span class="pf-l">📖 Arcs</span><span class="pf-v">${why?`<small>${esc(why)}</small>`:n?`<button class="pf-tg" onclick="arcOpen('${w.id}')">${n} arc${n>1?'s':''}</button>`:`<small>No story fits ${aPr(w,'them')} right now</small>`}</span></div>`};
 window.arcRebrand=function(id){const w=aW(id);if(!w||!w.rbDue)return;if(typeof rbAsk==='function'&&rbAsk(w,{i:'🎭',head:`${w.name}'s new character`,verb:'🎭 Debut it',where:'A brand new character.',go:()=>{delete w.rbDue},ok:()=>true}))return;delete w.rbDue;save();render()};
 
 /* a wrestler's arcs, or their running arc */
 function arcOpen(id){const A=aW(id);if(!A)return;const a=arcOf(id);
+ const hd=arcHeldOf(id);if(hd)return openModal(arcHeldScreen(hd,`<button class="btn sec" onclick="${tab==='arcs'?'closeModal()':`showW('${id}')`}">Back</button>`));
  if(a){const D=aD(a);const pl=arcPlan(a);const can=pl&&S.card&&S.card.p&&S.phase==='season';const sl=arcStoryOf(a);
   return openModal(`${aKick(D,a.k,a.v,`${esc(A.name)} · ${ARC_LANES[a.star?'star':D.lane]}`)}<div class="ahd">${esc(arcHead(a)||D.d)}</div>${arcHead(a)?`<p class="muted adsc">${esc(arcWords(a,D.d))}</p>`:''}
   ${arcTrack(a.need,a.have,a.stage)}
   <div class="asec">The road</div>${arcRoad(D,a,a.need,a.have,a.stage,aPayTxt(D,a,sl))}
   <div class="asec">The reward</div>${arcReward(D,A,a)}
   <div class="aleft ${a.end-AW()<1?'bad':''}">${arcLeft(a).replace(/<[^>]+>/g,'')} · miss it and ${esc(A.name)} is let down</div>
-  ${can?`<button class="btn" onclick="arcBook('${id}')">Book ${a.stage==='pay'?'the payoff':`stop ${a.have+1}`} tonight</button>`:''}
-  <button class="btn ghost" onclick="arcDrop('${id}')">Drop the arc</button><button class="btn sec" onclick="${tab==='arcs'?'closeModal()':`showW('${id}')`}">Back</button>`)}
+  ${arcBlocked(a)?`<div class="aleft bad">${esc(arcOutList(a).map(aOutTxt).join(' · '))}</div>${arcHoldChoices(a)}`:`${can?`<button class="btn" onclick="arcBook('${id}')">Book ${a.stage==='pay'?'the payoff':`stop ${a.have+1}`} tonight</button>`:''}
+  <button class="btn ghost" onclick="arcDrop('${id}')">Drop the arc</button>`}<button class="btn sec" onclick="${tab==='arcs'?'closeModal()':`showW('${id}')`}">Back</button>`)}
  const why=arcCanStart(id);const full=aFull();if(why&&!full){toast(why);return}
  const o=arcOffer(id);const rd=S.arcTok>0?`<button class="btn ghost" onclick="arcRedeal('${id}')">🔀 Reshuffle ${aPr(A,'their')} arcs (${S.arcTok} left)</button>`:'';
  const back=`<button class="btn sec" onclick="${tab==='arcs'?'closeModal()':`showW('${id}')`}">Not now</button>`;
@@ -1241,7 +1337,7 @@ window.arcsView=function(){const l=arcList().filter(a=>aMine(a.a)&&!a.done);cons
  const head=typeof pageHead==='function'?pageHead('Storylines','Arcs',`<b>${l.length}/${ARC_SLOTS}</b><small>Running</small>`,{sub:`Stories lean ${ph.b>=2?'big and season-defining':ph.s>=2.5?'small, fresh starts':'mid-sized'} right now: ${esc(ph.t)}`}):'';
  if(S.phase!=='season')return head+`<div class="card"><div class="muted">Arcs start once the season is under way.</div></div>`;
  const open=ARC_SLOTS-l.length;
- const busy=id=>arcList().some(a=>!a.done&&(a.a===id||a.b===id||a.c===id));
+ const busy=id=>arcList().concat(arcHeld()).some(a=>!a.done&&(a.a===id||a.b===id||a.c===id));
  const ready=ownList('p').filter(w=>!w.retd&&!busy(w.id)&&(!arcCanStart(w.id)||aFull())).map(w=>({w,o:arcOffer(w.id)})).filter(x=>x.o.length).sort((x,y)=>y.w.pop-x.w.pop);
  const v=ARC_TABV==='pot'?'pot':'act';
  const seg=`<div class="aseg"><button class="${v==='act'?'on':''}" onclick="arcTabV('act')">Active <b>${l.length}/${ARC_SLOTS}</b></button><button class="${v==='pot'?'on':''}" onclick="arcTabV('pot')">Potential <b>${ready.length}</b></button></div>`;
@@ -1249,6 +1345,7 @@ window.arcsView=function(){const l=arcList().filter(a=>aMine(a.a)&&!a.done);cons
  let body;
  if(v==='act'){
   body=`<div class="card arcsrun">${l.map(arcActHtml).join('')}${open>0?Array(open).fill(`<button class="aslot" onclick="arcTabV('pot')">Open slot · <b>pick a potential arc</b></button>`).join(''):''}</div>`
+   +(arcHeld().length?`<div class="card arcstrip"><div class="h small" style="margin:0">⏸️ On hold</div>${arcHeldRows()}</div>`:'')
    +(news_.length?`<div class="card">${news_.map(n=>`<div class="muted tiny">${esc(n.t)}</div>`).join('')}</div>`:'');
  }else{
   const ks=Object.keys(ARCS);const used=ks.filter(k=>arcRan(k)&&!arcRunningK(k)),gate=ks.filter(k=>!arcOpenK(k));
@@ -1429,7 +1526,7 @@ if(typeof attnItems==='function'){const _ai=attnItems;attnItems=function(){const
    chip:i=>{const d=c[i]&&c[i].d;if(!d)return null;const ws=c[i].k==='match'?d.sides.flat():[d.a,d.b];return ws.includes(a.a)?['ok',pay?`${D.n}: the payoff`:`${D.n}: step ${a.have+1}`]:null}})})}catch(e){console.warn('arc checklist',e)}return out};window.attnItems=attnItems}
 
 /* ---- old saves: the Performance Center closes; nobody's mid-arc ---- */
-function arcMigrate(st){if(!st)return;if(!Array.isArray(st.arcs))st.arcs=[];if(Array.isArray(st.training)&&st.training.length)st.training=[];
+function arcMigrate(st){if(!st)return;if(!Array.isArray(st.arcHeld))st.arcHeld=[];if(!Array.isArray(st.arcs))st.arcs=[];if(Array.isArray(st.training)&&st.training.length)st.training=[];
  if(st.week)st.arcs.forEach(a=>{if(a.done)return;try{a.end=aPPVEnd(aD(a),a.end,st)}catch(e){console.warn('arc deadline',e)}})}
 window.arcMigrate=arcMigrate;
 /* ---- looks ---- */
@@ -1438,7 +1535,7 @@ window.arcMigrate=arcMigrate;
 .arcbig{font-size:26px;letter-spacing:6px;margin:6px 0 10px}.arcbd{margin-top:8px}.arcbd summary{cursor:pointer;color:var(--gold);font-weight:600}.arcbh{margin:8px 0 2px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.5)}.arcb{display:flex;justify-content:space-between;gap:8px;padding:3px 0;font-size:14px}.arcb small{color:rgba(255,255,255,.55);text-align:right}#modal .choice.arcch{display:block}.pf-arc .pf-s{width:100%}.arcst{font-style:italic;color:var(--gold);margin:2px 0 6px}.arccastl{display:flex;flex-wrap:wrap;gap:6px}.arccast{display:flex;flex-direction:column;align-items:flex-start;padding:8px 10px;min-width:44%;flex:1 1 44%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);color:inherit;text-align:left}.arccast small{opacity:.65;font-size:12px}.arccast.on{border-color:var(--gold);background:rgba(255,200,0,.12)}`;document.head.appendChild(st)}
 /* v440: Roster's 📖 Arcs sort, the wrestler-first way in: who has stories ready, and a tap opens them */
 window.rosterArcN=function(w){if(!w||w.own!=='p'||w.retd||arcIn(w.id))return arcOf(w.id)?-1:-2;return arcCanStart(w.id)&&!aFull()?0:arcOffer(w.id).length};
-window.rosterArcTxt=function(w){const a=arcOf(w.id);if(a)return `📖 In ${aD(a).n}`;if(arcIn(w.id))return '📖 In a story';const n=rosterArcN(w);return n>0?`📖 ${n} arc${n>1?'s':''} ready`:'No arc fits yet'};
+window.rosterArcTxt=function(w){if(arcHeldOf(w.id))return '⏸️ Arc on hold';const a=arcOf(w.id);if(a)return `📖 In ${aD(a).n}`;if(arcIn(w.id))return '📖 In a story';const n=rosterArcN(w);return n>0?`📖 ${n} arc${n>1?'s':''} ready`:'No arc fits yet'};
 /* v441: a few-word hook per storyline, for the Potential rows and the pitches (the full headline shows once a row is open) */
 const ARC_HOOK={cult:'Starting a cult',bastard:'Secret love child',fraud:'Fallen hero',father:'Finding father',toxic:'Toxic ex',
  'redemption/shoot':'Trial and rehab',home:'Burned-down home',absorb:'Aura absorbed',dream:'All a dream',shadow:'The shadow realm',mountain:'Wise old man',
