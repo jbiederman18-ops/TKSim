@@ -577,15 +577,16 @@ function fbCalc(b,segs,show,o){o=o||{};const f=fbSync(b);const X0=S.fbx[b],H=S.f
   segs.forEach(s=>cs2(s,(s.st-X.cas)*(s.me?1.6:1)/cw*FB_CAVK*k));
   const hm=segs.filter(s=>s.k==='match').sort((x,y)=>(y.h||0)-(x.h||0)).slice(0,FB_STORYW.length);let sr=0;const sv=hm.map((s,i)=>{const v=Math.max(0,(s.h||0)-FB_STORY0)/FB_STORYH*FB_STORYW[i];sr+=v;return v});
   const sk=sr>0?Math.min(FB_STORYCAP,sr)/sr*(show&&show.ppv?1.5:1):0;hm.forEach((s,i)=>{if(sv[i])cs2(s,sv[i]*sk)})}
+ res.nc=o.newch&&segs.length?.6*(up>0?ppvK:1):0;
  res.pct.cas=-FB_DRIFT+up+(segs.length?story:0);res.avg.cas=cw?cav:null;res.E.cas=1;
  const cv=fbCasVerdict({segs,up,story,tp,draws,tl,spec,q:(cav-X.cas)*FB_CAVK});
  res.vd.cas=cv.vd;res.wy.cas=res.why.cas=cv.why;res.nx.cas=cv.nx;res.mt.cas=cv.mt;
  return res}
 /* apply a show's result: returns what each group did, for the results screen */
 function fbApply(b,segs,show,o){const r=fbCalc(b,segs,show,o);const f=S.fb[b],X=S.fbx[b],H=S.fbh[b];const before=Object.assign({},f);
- const grow=1;/* gains come from the pool and casuals tune out in proportion, so growth levels off by itself (no fanGrowF) */let conv=0;const out={before,after:{},pct:r.pct,why:r.why,wy:r.wy,vd:r.vd,nx:r.nx,mt:r.mt,conv:0,flat:0,sc:r.sc,E:r.E};
+ const grow=1;/* gains come from the pool and casuals tune out in proportion, so growth levels off by itself (no fanGrowF) */let conv=0;const out={before,after:{},pct:r.pct,why:r.why,wy:r.wy,vd:r.vd,nx:r.nx,mt:r.mt,conv:0,flat:0,sc:r.sc,E:r.E,nc:r.nc,arcStory:r.arcStory};
  FB_G.forEach(g=>{const p=r.pct[g];let d=p>0?FB_POOL*FB_SHARE[g]*p/100*(g==='cas'?FB_GKC:FB_GKH)*grow:f[g]*p/100;f[g]=Math.max(0,f[g]+Math.round(d))});
- FB_HC.forEach(g=>{const c=Math.min(r.conv[g],f.cas*.05);if(c>0){f[g]+=Math.round(c);f.cas-=Math.round(c);conv+=Math.round(c)}});
+ out.cv={};FB_HC.forEach(g=>{const c=Math.min(r.conv[g],f.cas*.05);if(c>0){out.cv[g]=Math.round(c);f[g]+=Math.round(c);f.cas-=Math.round(c);conv+=Math.round(c)}});
  /* everything else that moves fans on the night (head-to-head, main event war, debuts, chants, 5★ overflow) reaches casuals */
  const flat=Math.round(o.flat||0);if(flat){if(flat>0)f.cas+=Math.round(flat*(flat>0?grow:1));else f.cas=Math.max(0,f.cas+flat)}
  FB_HC.forEach(g=>{H[g]=[r.E[g]].concat(H[g]||[]).slice(0,3);if(r.avg[g]!=null)X[g]+=FB_XK*(r.avg[g]-X[g])});if(r.avg.cas!=null)X.cas+=FB_XKC*(r.avg.cas-X.cas);
@@ -677,23 +678,40 @@ function fbRiTag(k){return fbTag('chaos',FB_THIRST.chaos)+(k==='cost'?fbTag('tec
    (casuals tuning out, a crowd left without a match, fans switching shows) are spread evenly, and the shares always add up
    to the crowd's real total. Returns [{t: fans, g: {crowd: fans}, ic: [[crowd, ±1]…]}] in the card's segment order. */
 const FB_IC_MIN=150,FB_IC_REL=.3;  /* a plate shows a crowd once that segment moved it by 150+ fans and by 30%+ of the night's biggest single move */
+const FB_WHO={cas:'Casuals',tech:'Technical fans',blood:'Bloodhounds',flip:'Flippy fans',chaos:'Chaos fiends'};
 function fbSplit(r,n){if(!r||!r.before||!r.after||!n)return null;const sc=r.sc&&r.sc.length===n?r.sc:null;const night={};
  const out=Array.from({length:n},()=>({t:0,g:{},ic:[]}));const sig=Array.from({length:n},()=>({}));
+ const bell=[],add=(t,v)=>{if(v)bell.push([t,v])},cvt=r.cv||{},sw=r.sw||{};const cvAll=FB_HC.reduce((a,g)=>a+(cvt[g]||0),0);
+ const bonus=r.bonus||[];const bonusT=bonus.reduce((a,x)=>a+x[1],0);let other=0;const hungry=[];
  FB_G.forEach(g=>{const D=Math.round((r.after[g]||0)-(r.before[g]||0));const cv=p=>p>0?FB_POOL*FB_SHARE[g]*p/100*(g==='cas'?FB_GKC:FB_GKH):(r.before[g]||0)*p/100;
-  /* v465: a segment keeps only what it did itself; the night-wide rest (tuning out, a crowd left hungry, switchers) is its own beat */
-  let u=Array(n).fill(0);if(sc)u=sc.map((x,i)=>{sig[i][g]=cv(x[g]||0);return Math.round(sig[i][g])});
-  if(!sc){const res=D/n;let acc=0;u=u.map((x,i)=>{const v=i===n-1?D-acc:Math.round(res);acc+=v;return v})}
-  u.forEach((v,i)=>{out[i].g[g]=v;out[i].t+=v});night[g]=D-u.reduce((a,x)=>a+x,0)});
+  /* v465: a segment keeps only what it did itself; the night-wide rest is its own beat */
+  let u=Array(n).fill(0),base=0;
+  if(sc){const raw=sc.map((x,i)=>{sig[i][g]=cv(x[g]||0);return sig[i][g]});const sum=sc.reduce((a,x)=>a+(x[g]||0),0);
+   /* v503: gains and losses convert at different rates, so segments pulling both ways don't add up on their own — the
+      difference is shared across the segments, leaving only real night-wide causes for the bell */
+   const mag=raw.reduce((a,v)=>a+Math.abs(v),0),gap=cv(sum)-raw.reduce((a,v)=>a+v,0);u=raw.map(v=>Math.round(mag?v+gap*Math.abs(v)/mag:v));base=cv(sum)}
+  else{const res=D/n;let acc=0;u=u.map((x,i)=>{const v=i===n-1?D-acc:Math.round(res);acc+=v;return v})}
+  u.forEach((v,i)=>{out[i].g[g]=v;out[i].t+=v});night[g]=D-u.reduce((a,x)=>a+x,0);
+  if(!sc)return;
+  /* what moved the crowd beyond its segments: the casual drop-off (and a new champion), or going short of a full serving */
+  const p=r.pct&&r.pct[g]||0,own=Math.round(cv(p)-base);let used=own+(g==='cas'?bonusT-cvAll:(cvt[g]||0))+(sw[g]||0);
+  if(g==='cas'){const champ=r.nc?Math.round(cv(p)-cv(p-r.nc)):0;const nc=r.nc||0,arc=r.arcStory?Math.round(cv(p-nc)-cv(p-nc-r.arcStory)):0;add('New champion buzz',champ);add('Casuals following the arcs',arc);add('Casual weekly drop-off',own-champ-arc)}
+  else if(own)hungry.push([g,own,r.E&&r.E[g]>.001]);
+  other+=night[g]-used});
+ hungry.forEach(([g,v,taste])=>add(taste?`${FB_WHO[g]} only got a taste`:`Nothing on the card for ${FB_WHO[g]}`,v));
+ bonus.forEach(([t,v])=>add(t,v));
+ /* fans who switched shows, by direction, naming the crowds ({them} is filled in with the other booker at the reveal) */
+ [1,-1].forEach(d=>{const l=FB_G.filter(g=>(sw[g]||0)*d>0).sort((a,b)=>(sw[b]-sw[a])*d);if(!l.length)return;
+  add(`${fbList(l.map(g=>FB_WHO[g]))} ${d>0?'came over from':'left for'} {them}`,l.reduce((a,g)=>a+sw[g],0))});
+ /* rounding and the floor on total fans: folded into the biggest line unless it's big enough to name */
+ const tot=FB_G.reduce((a,g)=>a+night[g],0);const left=tot-bell.reduce((a,x)=>a+x[1],0);
+ if(Math.abs(left)>=100||!bell.length)add('Other fan changes',left);else if(left){bell.slice().sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]))[0][1]+=left}
+ bell.sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
  const top=Math.max(0,...sig.flatMap(x=>Object.values(x).map(Math.abs))),cut=Math.max(FB_IC_MIN,top*FB_IC_REL);
  out.forEach((o,i)=>{o.ic=FB_G.map(g=>[g,sig[i][g]||0]).filter(x=>Math.abs(x[1])>=cut).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,3).map(x=>[x[0],x[1]>0?1:-1])});
- /* after the bell: why the night moved beyond its segments, biggest first (no numbers — the chart has the total) */
- const sw=r.sw||{},E=r.E||{},why=[];let swT=0,rest=0;FB_G.forEach(g=>swT+=sw[g]||0);
- if(Math.abs(swT)>=FB_IC_MIN)why.push([swT>0?'Fans switched over from the other show':'Fans switched to the other show',swT]);else rest+=swT;
- FB_G.forEach(g=>{const own=(night[g]||0)-(sw[g]||0);if(Math.abs(own)<FB_IC_MIN){rest+=own;return}
-  if(g==='cas')why.push([own<0?'Casuals tuned out':'Casuals stuck around',own]);
-  else if(own<0&&E[g]!=null&&E[g]<1)why.push([`${FG_N[g]} had nothing of their own`,own]);else rest+=own});
- if(Math.abs(rest)>=FB_IC_MIN)why.push(['Everything else',rest]);why.sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
- return {segs:out,night:FB_G.reduce((a,g)=>a+(night[g]||0),0),why:why.map(x=>[x[0],x[1]>0?1:-1])}}
+ /* conversions move fans between your own crowds, so they sit beside the receipt rather than in it */
+ return {segs:out,night:tot,bell,conv:FB_HC.filter(g=>(cvt[g]||0)>=100).map(g=>[g,cvt[g]])}}
+const fbList=l=>l.length<2?l.join(''):l.slice(0,-1).join(', ')+' and '+l[l.length-1];
 function fbNight(r){return r&&r.before&&r.after?FB_G.reduce((a,g)=>a+Math.round((r.after[g]||0)-(r.before[g]||0)),0):null}
 window.fbSplit=fbSplit;window.fbNight=fbNight;
 /* one line on why a crowd moved */

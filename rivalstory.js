@@ -77,5 +77,5 @@ function chase(card,show){const c=cfg();if(!c)return;weekTick();
 const ab=autoBook;autoBook=window.autoBook=function(brand,show){const card=ab.apply(this,arguments);if(brand==='ai'&&show&&S.phase==='season'){try{chase(card,show)}catch(e){console.warn('rival goals',e)}}return card};
 const gc=goalCheck;goalCheck=window.goalCheck=function(b){const g=S.goal&&S.goal[b],was=g&&g.done;if(b==='ai'&&g&&cfg()&&!tried(g,cfg().goal))return;const r=gc.apply(this,arguments);if(b==='ai'&&cfg()&&g&&!was&&g.done){fbSync('ai');note(`🎯 ${S.rival} hit its weekly goal: ${GOALS[g.k].n} (+${fmtFans(g.fans)} fans).`)}return r};
 const ap=airPair;airPair=window.airPair=function(){let out;S.rvNotes=[];window.__rvAir=1;try{out=ap.apply(this,arguments)}finally{window.__rvAir=0}if(out&&out.notes&&S.rvNotes.length)out.notes.push(...S.rvNotes);S.rvNotes=[];return out};
-const fa=fbApply;fbApply=window.fbApply=function(b,segs,show,o){const r=fa.apply(this,arguments);if(b==='ai'&&cfg()){try{settle(segs,!!(show&&show.ppv))}catch(e){console.warn('rival story',e)}}return r};
+const fa=fbApply;fbApply=window.fbApply=function(b,segs,show,o){const r=fa.apply(this,arguments);if(b==='ai'&&cfg()){const f0=S.fans.ai;try{settle(segs,!!(show&&show.ppv))}catch(e){console.warn('rival story',e)}if(r)r.hit=S.fans.ai-f0}return r};
 })();

@@ -12,7 +12,7 @@ function qhFd(o,it){if(!it)return 0;const s=it.s;if(s.fd!=null)return s.fd;const
  const tot=o.fans&&o.fans[b.brand]!=null?o.fans[b.brand]:0;return Math.round(tot/n)}
 function qhFmt(v){v=Math.round(v||0);if(Math.abs(v)<100)return '+0';return (v>=0?'+':'−')+(typeof fbK==='function'?fbK(Math.abs(v)):fmtFans(Math.abs(v)))}
 /* the chart's columns: one per head-to-head round (crossover rounds stay off the chart) */
-/* v465: after the bell — the night-wide part of each show's fans (block.fn, reasons block.fr) gets its own last column */
+/* v465: after the bell — the night-wide part of each show's fans (block.fn, its receipt block.bell) gets its own last column */
 function qhBn(o,br){const b=o.blocks.find(x=>x.brand===br);return b&&b.fn!=null?b.fn:null}
 function qhHasBell(o){return ['p','ai'].some(br=>qhBn(o,br)!=null)}
 function qhInit(R){const cols=R.rounds.filter(r=>!r.x);const bell=qhHasBell(R.o);R.qh={cols,bell,n:cols.length+(bell?1:0),pts:{p:[{c:0,v:0}],ai:[{c:0,v:0}]},sum:{p:0,ai:0},lab:{},ic:{p:{},ai:{}},lim:2000,shown:null,k:0,fresh:{}};}
@@ -75,9 +75,24 @@ function qhTotal(o,br){const b=o.blocks.find(x=>x.brand===br);return b?b.segs.re
 /* the bell: both lines take their night-wide step together. Safe to call twice. */
 function qhBell(inst){const R=SRV;if(!R||!R.qh||!R.qh.bell||R.qh.rung)return false;R.qh.rung=true;const c=R.qh.n,was=R.inst;if(inst)R.inst=true;
  ['p','ai'].forEach(br=>{const d=qhBn(R.o,br)||0;R.qh.sum[br]+=d;R.qh.pts[br].push({c,v:R.qh.sum[br],d});R.qh.fresh[br]=true;R.qh.lab[br]=c});qhDraw();R.inst=was;return true}
-/* the bell's plate: what moved each show's fans beyond its segments */
-function qhBellHtml(br,who){const b=SRV.o.blocks.find(x=>x.brand===br);const l=(b&&b.fr)||[];
- return `<div class="twh ${br} dn nt qhbell"><div class="twhd"><span class="twl">${esc(who)} · After the bell</span></div>${l.length?l.slice(0,3).map(([t,v])=>`<div class="qhwhy"><b class="${v>0?'good':'bad'}">${v>0?'▲':'▼'}</b>${esc(t)}</div>`).join(''):'<div class="qhwhy muted">Nothing else moved</div>'}</div>`}
+/* the bell's plate (v503): a receipt of what moved each show's fans beyond its segments. Every line has its size and the
+   lines add up to the total. Biggest first; the small ones sit behind a "more" row (one combined line on the TV, which can't be tapped). */
+const QH_ROWS=4,QH_TV_ROWS=6;
+/* tenths of a K, rounded so the printed lines add up to the printed total */
+function qhTenths(vals){const x=vals.map(v=>v/100),f=x.map(Math.floor);let need=Math.round(x.reduce((a,v)=>a+v,0))-f.reduce((a,v)=>a+v,0);
+ x.map((v,i)=>[v-f[i],i]).sort((a,b)=>b[0]-a[0]).forEach(([,i])=>{if(need>0){f[i]++;need--}});return f}
+function qhAmt(t){return t?(t>0?'+':'−')+(Math.abs(t)/10).toFixed(1)+'K':'0'}
+function qhBellHtml(br,who){const o=SRV.o,b=o.blocks.find(x=>x.brand===br);
+ const head=`<div class="twh ${br} dn nt qhbell"><div class="twhd"><span class="twl">${esc(who)}</span></div>`;
+ if(!b||!b.bell)return head+'<div class="qhwhy muted">Nothing else moved</div></div>';
+ const them=o.blocks.filter(x=>x.brand!=='x').length>2?'other shows':srNm(br==='p'?'ai':'p');
+ const t=qhTenths(b.bell.map(x=>x[1]));const rows=b.bell.map(([l],i)=>[l.replace('{them}',them),t[i]]).filter(x=>x[1]);
+ const sum=t.reduce((a,v)=>a+v,0),tv=!!SRV.tv,max=tv?QH_TV_ROWS:QH_ROWS,cut=rows.length>max?max-1:rows.length;
+ const row=([l,v])=>`<div class="qhwhy"><span>${esc(l)}</span><b class="${v>0?'good':'bad'}">${qhAmt(v)}</b></div>`;
+ const rest=rows.slice(cut),rs=rest.reduce((a,x)=>a+x[1],0);
+ const more=!rest.length?'':tv?row([`${rest.length} smaller changes`,rs]):`<details class="qhmore"><summary class="qhwhy"><span>${rest.length} more</span><b class="${rs>0?'good':rs<0?'bad':''}">${qhAmt(rs)}</b></summary>${rest.map(row).join('')}</details>`;
+ const cv=b.conv&&b.conv.length?`<div class="qhcv">Casuals converted, none lost: ${b.conv.map(([g,v])=>`${fbK(v)} to ${esc(FG_N[g])}`).join(', ')}</div>`:'';
+ return head+(rows.length?rows.slice(0,cut).map(row).join('')+more+`<div class="qhwhy qhsum"><span>After the bell</span><b class="${sum>0?'good':sum<0?'bad':''}">${qhAmt(sum)}</b></div>`:'<div class="qhwhy muted">Nothing else moved</div>')+cv+'</div>'}
 /* v472: fold the chart for the crowds table; instant on Skip and with reduced motion */
 function qhFold(inst){const R=SRV;if(!R||!R.qh||R.qh.k>=1)return;const Q=R.qh,el=document.getElementById('qh-chart');if(Q.raf){cancelAnimationFrame(Q.raf);Q.raf=0}Q.shown=qhLim();
  const draw=()=>{if(el)el.innerHTML=qhSvg()+`<div class="qhics">${qhIcons()}</div>`};
@@ -87,7 +102,13 @@ function qhFold(inst){const R=SRV;if(!R||!R.qh||R.qh.k>=1)return;const Q=R.qh,el
 Object.assign(window,{qhFold,qhBell,qhBellHtml,qhHtml,qhPush,qhHold,qhDraw,qhPlateIcons,qhNight,qhFmt,qhFd,qhTotal});
 (function(){const c=document.createElement('style');c.textContent=`
 .qhwrap{margin:8px 0 2px}
-.qhwhy{display:flex;gap:8px;align-items:baseline;font-size:14px;line-height:1.35;margin:3px 0}.qhwhy b{font-size:12px;width:12px}
+.qhwhy{display:flex;gap:10px;align-items:baseline;justify-content:space-between;font-size:14px;line-height:1.3;margin:3px 0;text-align:left}.qhwhy span{min-width:0}.qhwhy b{white-space:nowrap;font:900 italic 16px/1 'BC',sans-serif}
+.qhsum{border-top:1px solid var(--line);padding-top:5px;margin-top:5px;font-weight:700}.qhsum b{font-size:19px}
+.qhmore summary{list-style:none;cursor:pointer;color:var(--mut);min-height:28px;margin:0;align-items:center;-webkit-tap-highlight-color:transparent}.qhmore summary::-webkit-details-marker{display:none}
+.qhmore summary span::after{content:' ▾'}.qhmore[open] summary span::after{content:' ▴'}.qhmore[open] summary b{visibility:hidden}
+.twh.qhbell .qhwhy{font-size:13px;margin:1px 0}.twh.qhbell .qhwhy b{font-size:15px}.twh.qhbell .qhsum b{font-size:17px}.twh.qhbell .qhsum{padding-top:4px;margin-top:2px}
+body:not(.tv) .srv.qh .twh.qhbell{gap:1px;padding-top:6px;padding-bottom:6px}
+.qhcv{font-size:12px;line-height:1.3;color:var(--mut);margin-top:3px;text-align:left}
 .qhleg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 6px}
 .qht{display:flex;align-items:baseline;gap:7px;min-width:0;padding:6px 10px;background:#141417;box-shadow:inset 3px 0 0 var(--gold),inset 0 0 0 1px var(--line)}
 .qht.ai{flex-direction:row-reverse;box-shadow:inset -3px 0 0 var(--heel),inset 0 0 0 1px var(--line)}
