@@ -125,7 +125,7 @@ window.agentAnswer=function(id,k){if(typeof mpLocked==='function'&&mpLocked())re
  if(k==='sign'){save();resign(id);return}
  if(k==='go'){const a=AW();if(!S.conAck||S.conAck.wk!==a)S.conAck={wk:a,ids:[]};if(!S.conAck.ids.includes(id))S.conAck.ids.push(id)}
  save();try{render()}catch(e){}const left=inboxList().length;
- openModal(`<div class="h mhd">✍️ ${esc(w.name)}</div><div class="duo" style="align-items:center">${face(w)}</div><div class="outcome">${esc(k==='go'?`The agent nods. After tonight, ${w.name} is a free agent — anyone can bid, you included.`:`"Next week, then. Don't make us wait longer than that."`)}</div>
+ openModal(`<div class="h mhd">✍️ ${esc(w.name)}</div>${picRow(w.id)}<div class="outcome">${esc(k==='go'?`The agent nods. After tonight, ${w.name} is a free agent — anyone can bid, you included.`:`"Next week, then. Don't make us wait longer than that."`)}</div>
  <button class="btn" onclick="closeModal()">${ON_?(left?`Call in the next one (${left} waiting) ▸`:'Line\'s clear — back to work ▸'):'Back to work'}</button>`)};
 /* ---- v356: the network's executive. Your viewership bonus (tvBonus: the network's share of your audience growing past
    what the TV deal was signed for) builds up every week, and the week after each PPV the network's executive comes to the
@@ -167,8 +167,8 @@ function openFg(){const f=fgVisit();if(!f)return closeModal();const {v,F,A}=f;co
  <button class="choice" onclick="fgPick(1)"><span class="key"><span>B</span></span><div>🤷 "It's business"</div><div class="muted tiny">Free. ${esc(F.name)} won't forget it.</div></button>`
  :`<button class="choice" onclick="fgPick(0)"><span class="key"><span>A</span></span><div>🍽️ "Dinner's on me, bring ${esc(firstName(A))}" · −${esc(money(15))}</div><div class="muted tiny">A little more goodwill for both.</div></button>
  <button class="choice" onclick="fgPick(1)"><span class="key"><span>B</span></span><div>🙂 "Glad to hear it"</div><div class="muted tiny">Free.</div></button>`}`)}
-window.fgPick=function(i){if(typeof mpLocked==='function'&&mpLocked())return;const t=fgAnswer(i);if(!t)return closeModal();try{render()}catch(e){}const left=inboxList().length;
- openModal(`<div class="h mhd">🤝 Backstage</div><div class="outcome ok">${esc(t)}</div>
+window.fgPick=function(i){if(typeof mpLocked==='function'&&mpLocked())return;const f0=fgVisit();const pics=f0?picRow(f0.F.id,f0.A.id):'';const t=fgAnswer(i);if(!t)return closeModal();try{render()}catch(e){}const left=inboxList().length;
+ openModal(`<div class="h mhd">🤝 Backstage</div>${pics}<div class="outcome ok">${esc(t)}</div>
  <button class="btn" onclick="closeModal()">${ON_?(left?`Call in the next one (${left} waiting) ▸`:'Line\'s clear — back to work ▸'):'Back to work'}</button>`)};
 /* ---- v364: a friendship ends, and they come tell you. If you knew they were friends, you offer condolences; if you
    didn't, well: "Wait, you were friends?" */
@@ -177,8 +177,8 @@ function openFgd(){const f=fgDrift();if(!f)return closeModal();const {v,A,Y}=f,y
   :pickL([`Me and ${y} don't really hang out anymore. Nothing happened. We just… drifted.`,`Weird thing to say to your boss, but ${y} and I aren't friends anymore. Felt like you should know.`,`${y} and I used to be tight. Not anymore. I'm finding my own people.`],seed);
  openModal(`<div class="h mhd mt">💔 ${esc(A.name)} is looking ${v.hot?'heated':'wistful'}</div><div class="scene brief ibx">${voiceH(A.id,line)}</div>
  <button class="choice" onclick="fgdPick()"><span class="key"><span>A</span></span><div>${v.known?`😔 "I'm sorry to hear that. I know you two were close."`:`🤨 "Wait, you were friends?"`}</div></button>`)}
-window.fgdPick=function(){if(typeof mpLocked==='function'&&mpLocked())return;const t=fgDriftAnswer();if(!t)return closeModal();try{render()}catch(e){}const left=inboxList().length;
- openModal(`<div class="h mhd">💔 Backstage</div><div class="outcome ok">${esc(t)}</div>
+window.fgdPick=function(){if(typeof mpLocked==='function'&&mpLocked())return;const f0=fgDrift();const pics=f0?picRow(f0.A.id,f0.Y.id):'';const t=fgDriftAnswer();if(!t)return closeModal();try{render()}catch(e){}const left=inboxList().length;
+ openModal(`<div class="h mhd">💔 Backstage</div>${pics}<div class="outcome ok">${esc(t)}</div>
  <button class="btn" onclick="closeModal()">${ON_?(left?`Call in the next one (${left} waiting) ▸`:'Line\'s clear — back to work ▸'):'Back to work'}</button>`)};
 /* ---- v322: requests. The briefing has wrestlers asking for things in their own words — a title shot they're owed, a
    contract clause, a win they were promised for doing the job, a feud that needs its ending — but they only ever said it
@@ -237,7 +237,7 @@ window.askAnswer=function(id,yes){if(typeof mpLocked==='function'&&mpLocked())re
  else{const cut=w.mor>=75?1:w.mor<40?5:3;mor(w,-cut);txt=a.due?`✋ ${w.name} storms out (−${cut} morale). Tonight was the deadline — skipping it still counts against the deal.`:`✋ ${w.name} nods and heads out — not thrilled (−${cut} morale). They'll ask again in a few weeks.`}
  save();try{render()}catch(e){}
  const left=inboxList().length;
- openModal(`<div class="h mhd">${askKind(id).i} ${esc(a.h)}</div><div class="duo" style="align-items:center">${face(w)}</div><div class="outcome ${yes?'ok':''}">${esc(txt)}</div>
+ openModal(`<div class="h mhd">${askKind(id).i} ${esc(a.h)}</div>${picRow(w.id)}<div class="outcome ${yes?'ok':''}">${esc(txt)}</div>
  <button class="btn" onclick="closeModal()">${ON_?(left?`Call in the next one (${left} waiting) ▸`:'Line\'s clear — back to work ▸'):'Back to work'}</button>`)};
 /* when the show goes live: did you keep your word? The card is read just before it airs (askSnap), and settled once
    the show has actually started (a go-live that stops at a checklist or a gate settles nothing) */
@@ -278,7 +278,12 @@ function describe(x){const nm=id=>S.w[id]?S.w[id].name:'';
  if(x.k==='ask'){const K=askKind(x.a.id)||{};return {k:'ask',kick:`${K.i||'🗣️'} ${K.n||'A request'}`,head:x.a.h,w:x.a.who,q:x.a.line}}
  if(x.k==='pitch'){const p=S.pitch,P=PITCHES[p.k],c=pCtx(p);return {k:'pitch',kick:P.cat,head:P.head(c),w:p.a,w2:p.b||null}}
  if(x.k==='net')return {k:'net',kick:'📺 The network, at your door',head:'A check for the viewership',w:null,tease:1};
- if(x.k==='crisis'){const c=S.crisis,C=CRISES[c.k];return {k:'crisis',kick:`${C.i} ${C.good?'Opportunity':'Front office'}`,head:C.t,w:c.a,narr:1}}
+ if(x.k==='crisis'){const c=S.crisis,C=CRISES[c.k];return {k:'crisis',kick:`${C.i} ${C.good?'Opportunity':'Front office'}`,head:C.t,w:c.a,pic2:c.b||null,narr:1}}
+ /* v499: friends and new traits get their cards too (these three used to fall through and fail, leaving no picture).
+    pic2 is the second card on this screen only: the party TV never learns who's friends with whom. */
+ if(x.k==='fg'){const f=fgVisit();return {k:'fg',kick:'🤝 About a friend',head:`${f.F.name} is looking ${f.v.d<0?'upset':'grateful'}`,w:f.F.id,pic2:f.A.id,tease:1}}
+ if(x.k==='fgd'){const f=fgDrift();return {k:'fgd',kick:'💔 A friendship ends',head:`${f.A.name} is looking ${f.v.hot?'heated':'wistful'}`,w:f.A.id,pic2:f.Y.id,tease:1}}
+ if(x.k==='tr'){const w=trVisit();return {k:'tr',kick:'✨ A new trait',head:`${w.name} is looking ambitious`,w:w.id,q:trLine(w)}}
  const [ic,kn]=KIND[x.k]||[x.s.i,x.s.t];const v=voiceFor(x.k,x.row);const who=v&&S.w[v[0]]?v[0]:null;
  const ids=[...new Set((x.row.match(/'[^'\s<>]{1,80}'/g)||[]).flatMap(t=>t.slice(1,-1).split(/[|,]/)).filter(id=>S.w[id]))];
  if(TEASE[x.k]){const id=who||ids[0]||null;const n=id?nm(id):'';
@@ -286,6 +291,10 @@ function describe(x){const nm=id=>S.w[id]?S.w[id].name:'';
   return {k:x.k,kick:`${ic} ${kn}`,head,w:x.k==='trade'||x.k==='tape'?null:id,tease:1}}
  const id=who||ids[0]||null;return {k:x.k,kick:`${ic} ${kn}`,head:x.k==='cd'?`${nm(id)} is at the door`:x.k==='oc'?`${nm(id)} wants a contract`:kn,w:id,q:v?v[1]:''}}
 window.inboxCur=()=>ON_?CUR:null;
+/* v499: big pictures on the screen that follows a decision */
+const picRow=(...ids)=>`<div class="duo ibx-pics">${ids.map(id=>S.w[id]?face(S.w[id]):'').join('')}</div>`;
+window.picRow=picRow;
+(function(){const c=document.createElement('style');c.textContent=`.duo.ibx-pics{justify-content:center;gap:10px}html .duo.ibx-pics .fav,html.lk-hy .duo.ibx-pics .fav,html.tcards.lk-hy .duo.ibx-pics .fav{width:96px;height:132px;flex:none;overflow:hidden}.duo.ibx-pics .fav img,.duo.ibx-pics .fav svg{width:100%;height:100%;object-fit:cover;object-position:50% 18%}`;document.head.appendChild(c)})();
 window.openInbox=openInbox;
 /* once the last one is answered, the briefing */
 /* v237: Home re-draws as the line clears, so its strip never shows people who've already been answered */

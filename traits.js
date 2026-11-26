@@ -174,9 +174,9 @@ window.openTr=openTr;
 function trAnswer(i){const w=trVisit();if(!w)return null;const t=trOptions(w,w.tr.length+1)[i];if(!t)return null;trAdd(w,t);mor(w,4);
  news(`✨ ${w.name} adds ${TRAITS[t].i} ${TRAITS[t].n}.`);return `${w.name} comes back with a new edge: ${TRAITS[t].i} ${TRAITS[t].n}.`}
 window.trAnswer=trAnswer;
-window.trPick=function(i){if(typeof mpLocked==='function'&&mpLocked())return;const t=trAnswer(i);if(!t)return closeModal();try{save()}catch(e){}try{render()}catch(e){}
+window.trPick=function(i){if(typeof mpLocked==='function'&&mpLocked())return;const w0=trVisit();const pics=w0&&window.picRow?picRow(w0.id):'';const t=trAnswer(i);if(!t)return closeModal();try{save()}catch(e){}try{render()}catch(e){}
  const left=typeof inboxList==='function'?inboxList().length:0;const on=typeof inboxCur==='function'&&inboxCur();
- openModal(`<div class="h mhd">✨ New edge</div><div class="outcome ok">${esc(t)}</div>
+ openModal(`<div class="h mhd">✨ New edge</div>${pics}<div class="outcome ok">${esc(t)}</div>
  <button class="btn" onclick="closeModal()">${on?(left?`Call in the next one (${left} waiting) ▸`:'Line\'s clear — back to work ▸'):'Back to work'}</button>`)};
 
 /* ---- a coach opens the next slot early ---- */

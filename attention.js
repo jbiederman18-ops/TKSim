@@ -307,7 +307,7 @@ const newH=on=>on?'<span class="rdn">New</span>':'';
    locker room, the market, what's coming — is the "This week" panel on Home. Nothing in it is a decision: names open
    the wrestler, and the only way out of it is a link to the Book screen. Rows that changed since last week carry NEW;
    the panel shows the first few and folds the rest (the choice sticks). */
-const WK_SHOW=6;
+const WK_SHOW=8;
 const nmA=w=>`<a href="#" onclick="showW('${w.id}');return false" class="${nmC(w)}">${esc(w.name)}</a>`;
 const strip=h=>String(h).replace(/<button[\s\S]*?<\/button>/g,'').replace(/<div class="brow[^"]*"[^>]*>/g,'').replace(/<\/div>\s*$/,'').replace(/closeModal\(\);/g,'');
 function wkRows(secs){const l=attnItems();
@@ -336,6 +336,13 @@ function wkRows(secs){const l=attnItems();
  /* whatever's left of the office's own sections once the line has taken the decisions (followed prospects and the like) */
  secs.filter(x=>['🕵️','⏳','📝','📼','🤝','👀','📣'].includes(x.i)||x.i==='🚑'&&/^Medical/.test(x.t||'')).forEach(x=>(x.rows||[]).forEach((r,j)=>{const t=strip(r);if(t.replace(/<[^>]+>/g,'').trim())add('Front office',x.i+j,x.i,t)}));
  return out}
+/* v499: the crowd's chant gets its own banner on Home and Book, not a line in a dropdown */
+window.chantHero=function(where){if(!S||S.phase!=='season'||typeof mpLockedQuiet==='function'&&mpLockedQuiet())return '';
+ if(typeof weekTick==='function'&&(!S.chant||!S.chant.p||S.chant.p.w!==AW()))weekTick();
+ const ch=S.chant&&S.chant.p;const w=ch&&S.w[ch.id];if(!w||ch.w!==AW()||ch.hit||w.own!=='p'||w.inj)return '';
+ const on=onCardW(w.id);const b=where==='book'&&!on?bookBtn(w.id,'Book them'):null;
+ const act=on?'<span class="chon">✓ On tonight\'s card</span>':where==='home'?`<button class="chbtn" onclick="go('book')">Book ${esc(L(w))} ›</button>`:b?`<button class="chbtn" onclick="${b[1]}">${esc(b[0])}</button>`:'';
+ return `<div class="card chanth ${on?'got':''}"><div class="chk">📣 The crowd is chanting</div><div class="chq">${esc(ch.t)}</div><div class="chr"><span class="chf" onclick="showW('${w.id}')">${face(w)}</span><span class="cht"><b>${esc(w.name)}</b><small>On the card: +${CHANT_ST>=.5?'½':'¼'}★, popularity and fans</small>${act}</span></div></div>`};
 window.wkTradeX=function(id){openModal(`<div class="h mhd">🔁 Withdraw this trade offer?</div><p class="muted">No answer yet — pulling it back costs nothing.</p><button class="btn" onclick="tradeWithdraw('${id}');closeModal();render()">Withdraw it</button><button class="btn sec" onclick="closeModal()">Keep it on the table</button>`)};
 window.wkFold=function(){S.wkOpen=!S.wkOpen;save();render()};
 window.weekPanel=function(){if(!S||S.phase!=='season'||typeof mpLockedQuiet==='function'&&mpLockedQuiet())return '';let rows=[],l=[];
@@ -346,14 +353,14 @@ window.weekPanel=function(){if(!S||S.phase!=='season'||typeof mpLockedQuiet==='f
  const base=S.wkBase.sig;S.wkSig=S.wkSig||{};rows.forEach(r=>{S.wkSig[r.k]=r.sig});
  rows.forEach(r=>{r.nw=!S.wkBase.first&&base[r.k]!==r.sig});
  /* new rows first within each group, groups in a fixed order */
- const G=['Since last week','Backstage','Front office'];rows.sort((a,b)=>G.indexOf(a.grp)-G.indexOf(b.grp)||(b.nw-a.nw));
+ const G=['Backstage','Since last week','Front office'];rows.sort((a,b)=>G.indexOf(a.grp)-G.indexOf(b.grp)||(b.nw-a.nw));
  const must=l.filter(x=>x.g===A_MUST&&x.s&&x.s[0]==='b').length,ch=l.filter(x=>x.g===A_CH&&x.s&&x.s[0]!=='ok').length;
  const np=nextPPV();let cal=[];{const c=secs.find(x=>x.i==='🗓️');if(c)cal=c.rows.map(strip).filter(r=>!/injured|suspended/.test(r))}
  {const b=l.find(x=>x.id==='bng');if(b&&/weeks?$/.test(b.h)||b&&/next week/.test(b.h))cal.unshift(`🩸 <b>${esc(b.h)}</b> — build a faction war with real heat`)}
  const open=!!S.wkOpen,shown=open?rows:rows.slice(0,WK_SHOW),more=rows.length-shown.length,nNew=rows.filter(r=>r.nw).length;
  let g0='';const body=shown.map(r=>{const h=r.grp!==g0?`<div class="wkg">${esc(r.grp)}</div>`:'';g0=r.grp;return `${h}<div class="wkr"><span class="wki">${r.ic}</span><span>${r.html}${r.nw?newH(1):''}</span></div>`}).join('');
  const tonight=must||ch?`<a href="#" class="wkt ${must?'bad':''}" onclick="go('book');return false"><span>${must?`<b>${must}</b> to handle before you go live`:''}${must&&ch?' · ':''}${ch?`<b>${ch}</b> chance${ch===1?'':'s'} tonight`:''}</span><span>On the Book screen ›</span></a>`:'';
- return `<div class="card wkp" id="wkp"><div class="row sb"><div class="h small" style="margin:0">📰 This week${nNew?` <span class="rdn">${nNew} new</span>`:''}</div><span class="muted tiny">Week ${S.week}${np?` · ${np.in?`${np.in} wk${np.in===1?'':'s'} to ${esc(np.n)}`:`${esc(np.n)} is this week`}`:''}</span></div>
+ return `<div class="card wkp" id="wkp"><div class="row sb"><div class="h wkh" style="margin:0">📰 Backstage this week${nNew?` <span class="rdn">${nNew} new</span>`:''}</div><span class="muted tiny">Week ${S.week}${np?` · ${np.in?`${np.in} wk${np.in===1?'':'s'} to ${esc(np.n)}`:`${esc(np.n)} is this week`}`:''}</span></div>
  ${tonight}${body||'<div class="muted" style="margin-top:6px">All quiet backstage.</div>'}${more>0||open&&rows.length>WK_SHOW?`<button class="wkm" onclick="wkFold()">${open?'Show less ▴':`${more} more ▾`}</button>`:''}${cal.length?`<div class="wkc">${cal.map(r=>`<span>${r}</span>`).join('')}</div>`:''}</div>`};
 (function(){const c=document.createElement('style');c.textContent=`.wkp .wkg{margin:12px 0 2px;font:800 11px 'BC',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--gold2)}
 .wkp .wkr{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line);font-size:14px;line-height:1.35}.wkp .wkg+.wkr{border-top:0}
@@ -362,6 +369,15 @@ window.weekPanel=function(){if(!S||S.phase!=='season'||typeof mpLockedQuiet==='f
 .wkp .wkt{display:flex;justify-content:space-between;gap:8px;margin:10px 0 2px;padding:9px 11px;border:1px solid var(--line);border-left:3px solid var(--gold);color:var(--text);text-decoration:none;font-size:13.5px}
 .wkp .wkt.bad{border-left-color:#ff6b61}.wkp .wkt span:last-child{color:var(--gold2);font-weight:700;white-space:nowrap}
 .wkp .wkm{display:block;width:100%;margin-top:6px;padding:8px;background:none;border:1px solid var(--line);color:var(--mut);font:700 12px 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.wkp .wkh{font-size:19px;color:var(--gold2)}
+.chanth{border-left:4px solid var(--gold);background:linear-gradient(100deg,rgba(242,193,78,.16),rgba(242,193,78,.03) 70%),var(--card,#17181d)}
+.chanth .chk{font:800 12px 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--gold2)}
+.chanth .chq{font:900 italic 30px/1.05 'BC',sans-serif;text-transform:uppercase;margin:4px 0 10px;overflow-wrap:anywhere}
+.chanth .chr{display:flex;gap:12px;align-items:center}
+.chanth .chf{flex:none;cursor:pointer}html .chanth .chf .fav,html.lk-hy .chanth .chf .fav,html.tcards.lk-hy .chanth .chf .fav{display:block;width:60px;height:80px;overflow:hidden}.chanth .chf .fav img,.chanth .chf .fav svg{width:100%;height:100%;object-fit:cover;object-position:50% 18%}
+.chanth .cht{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0}.chanth .cht b{font-size:16px}.chanth .cht small{color:var(--mut);font-size:12.5px}
+.chanth .chbtn{margin-top:4px;min-height:36px;padding:6px 14px;border:0;background:var(--gold);color:#16120a;font:900 italic 15px 'BC',sans-serif;text-transform:uppercase;cursor:pointer}
+.chanth .chon{margin-top:4px;color:var(--good);font-weight:700;font-size:13.5px}
 .wkonly{display:none}.wkp .wkonly{display:inline}
 .wkp .wkc{display:flex;flex-direction:column;gap:3px;margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font-size:12.5px;color:var(--mut)}`;document.head.appendChild(c)})();
 })();

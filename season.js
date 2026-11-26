@@ -8,14 +8,14 @@
 const TOURS={
  /* v168: the Continental Classic ends at Full Gear (a save that was already in its closing weeks when the calendar changed finishes that year's on the old schedule) */
  c2:{n:'Continental Classic',i:'♾️',g:'M',title:'cont',get rr(){return ccLate()?[37,38,39]:[33,34,35]},get final(){return ccLate()?40:36},
-  get d(){return `Round robin for the Continental title. Four of your best men wrestle three weeks of block matches (3 points a win, Continental Crown rules: no run-ins), and the top two meet at ${PPVS[this.final]}.`}},
+  get d(){return `${typeof S!=='undefined'&&S&&S.titles&&!S.titles.cont?'A round robin.':'Round robin for the Continental title.'} Four of your best men wrestle three weeks of block matches (3 points a win, Continental Crown rules: no run-ins), and the top two meet at ${PPVS[this.final]}.`}},
  /* v168: the Owen Hart Cups end at Double or Nothing */
  ohc:{n:'Owen Hart Cup',i:'🏆',g:'M',prize:'world',semi:13,final:16,
   d:"Knockout bracket for four of your best men. The winner earns a world title shot at All In against your own show's champion."},
  ohcw:{n:"Women's Owen Hart Cup",i:'🏆',g:'F',prize:'wworld',semi:14,final:16,
   d:"Knockout bracket for four of your best women. The winner earns a Women's World title shot at All In against your own show's champion."}};
 /* v197: belts never leave their show, so a tournament's world-title prize is the winner's own show's best world title of the division */
-function tourPz(b,k){const D=TOURS[k];if(!D||!D.prize)return null;const pz=S.titles[D.prize];if(!pz||!pz.br||pz.br===b)return pz||null;
+function tourPz(b,k){const D=TOURS[k];if(!D||!D.prize)return null;const pz=S.titles[D.prize];if(pz&&(!pz.br||pz.br===b))return pz;
  return (typeof WORLD_T!=='undefined'&&WORLD_T[D.g]||[]).map(id=>S.titles[id]).filter(x=>x&&x.br===b).sort((x,y)=>y.prestige-x.prestige)[0]||null}
 function ccLate(){return typeof S!=='undefined'&&!!S&&S.ccLate===S.season}
 const RR4=[[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]]];
@@ -26,13 +26,13 @@ const tourFirst=D=>D.rr?D.rr[0]:D.semi;
 function tourEnt(b,k){const t=tourState(b,k);const D=TOURS[k];if(t.ent&&(t.lock||!t.pick))return t.ent;
  const pool=ownList(b).filter(w=>w.g===D.g&&!w.inj).sort((x,y)=>(y.pop+y.ring)-(x.pop+x.ring));
  if(t.pick&&t.ent){const out=[],gone=[];t.ent.forEach(id=>{const w=S.w[id];if(w&&w.own===b&&!w.inj&&w.g===D.g)out.push(id);else gone.push(id)});
-  const pz=D.prize&&S.titles[D.prize];const champ=pz&&pz.holders[0];pool.forEach(w=>{if(out.length<4&&!out.includes(w.id)&&w.id!==champ)out.push(w.id)});
+  const pz=tourPz(b,k);const champ=pz&&pz.holders[0];pool.forEach(w=>{if(out.length<4&&!out.includes(w.id)&&w.id!==champ)out.push(w.id)});
   t.lock=1;if(out.length<4){t.ent=[];return t.ent}t.ent=out;
   if(gone.length&&(b==='p'||ON()))news(`${D.i} ${gone.map(id=>S.w[id]?S.w[id].name:'An entrant').join(' and ')} can't compete — ${out.slice(4-gone.length).map(id=>S.w[id].name).join(' and ')} take${gone.length>1?'':'s'} the spot in the ${D.n}.`);
   return t.ent}
  t.lock=1;const ent=[];
  const tt=D.title&&S.titles[D.title];const th=tt&&tt.holders[0]&&S.w[tt.holders[0]];if(th&&th.own===b&&!th.inj&&th.g===D.g)ent.push(th.id);
- const pz=D.prize&&S.titles[D.prize];const champ=pz&&pz.holders[0];
+ const pz=tourPz(b,k);const champ=pz&&pz.holders[0];
  pool.forEach(w=>{if(ent.length<4&&!ent.includes(w.id)&&w.id!==champ)ent.push(w.id)});
  t.ent=ent.length===4?ent:[];if(t.ent.length&&(b==='p'||ON())){const n=`${D.i} The ${D.n} field is set: ${ent.map(id=>S.w[id].name).join(', ')}.`;news(n)}
  return t.ent}
@@ -125,7 +125,7 @@ const MANDS={
  women2:{n:"Book two women's matches on the same show",i:'💃',ok:b=>ownList(b).filter(w=>w.g==='F'&&!w.inj).length>=4},
  newchamp:{n:'Crown a new champion',i:'👑',ok:()=>true},
  debut:{n:'Debut a new signing',i:'✨',ok:b=>(S.money[b]||0)>300},
- tagdef:{n:'Successfully defend a tag or trios title',i:'🤝',ok:b=>Object.values(S.titles).some(t=>t.kind!=='singles'&&t.holders.length&&S.w[t.holders[0]]&&S.w[t.holders[0]].own===b)},
+ tagdef:{n:'Successfully defend a tag title',i:'🤝',ok:b=>Object.values(S.titles).some(t=>t.kind!=='singles'&&t.holders.length&&S.w[t.holders[0]]&&S.w[t.holders[0]].own===b)},
  rookie:{n:'Give a developing prospect a 3★ match',i:'🌱',ok:b=>ownList(b).some(w=>w.rookie&&!w.inj)},
  nosell:{n:"No Sell Out options (sponsors, price hikes, merch blitzes) until the PPV",i:'🙅',ok:()=>true,end:1},
  win2:{n:'Win the ratings war two weeks in a row',i:'📈',ok:()=>!ON()||nSeats()===2||(typeof allIn==='function'&&allIn())},
@@ -249,7 +249,7 @@ function mandLive(md){const P=cardProj();const sh=P.sh;if(!P.booked&&md.k!=='nos
   case 'women2':return P.women>=2?LV('y',`${P.women} women's matches booked`):LV('n',`${P.women} of 2 women's matches booked`);
   case 'newchamp':return P.newch?LV('y','A new champion gets crowned'):LV('n','No title change booked');
   case 'debut':return P.deb?LV('y','A new signing debuts'):LV('n','No new signing on the card');
-  case 'tagdef':return P.tagdef?LV('y','Your tag champs retain'):LV('n','No tag/trios title defense booked');
+  case 'tagdef':return P.tagdef?LV('y','Your tag champs retain'):LV('n','No tag title defense booked');
   case 'rookie':return P.rk>=2?LV('y','Your prospect looks ready to deliver'):P.rk>=1?LV('m','Your prospect is on the edge'):LV('n',P.rk?"Your prospect's match doesn't look ready":'No prospect booked');
   case 'nosell':return sellOf('p',sh).length?LV('n',"You've sold out this week — it'll count against you"):LV('y','No sell-outs — keep it that way');
   case 'win2':return sh.ppv?LV('x','No ratings war on PPV weeks'):LV('m',`Streak ${md.st||0}/2${P.show?` · your show: ${tellWord(P.show.mid)}`:''} — it comes down to the rival`);

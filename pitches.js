@@ -29,7 +29,15 @@ function pRaiseOK(w){return mkt(w)>=sal(w)*1.15&&w.pop>=60&&payroll('p')+pRaiseA
 function pRaise(w){const inc=pRaiseAmt(w);if(payroll('p')+inc>econCap())return 0;w.sal=sal(w)+inc;return inc}
 /* a real tag team (both on your roster, healthy, no trial) and a tag belt they could chase */
 function pTagShots(r){const l=[];S.teams.forEach(tm=>{if(tm.type!=='team'||tm.trialOf||tm.m.length!==2)return;const [a,b]=tm.m.map(id=>S.w[id]);if(!a||!b||!r.includes(a)||!r.includes(b)||a.pop<50)return;
-  Object.values(S.titles).forEach(t=>{if(t.kind!=='tag'||(t.g&&a.g&&t.g!==a.g))return;if(t.holders.length&&(t.holders.some(h=>!S.w[h]||S.w[h].own!=='p'||h===a.id||h===b.id||S.w[h].inj)))return;const lo=a.mor<=b.mor?[a,b]:[b,a];l.push({a:lo[0].id,b:lo[1].id,title:t.id})})});return l}
+  Object.values(S.titles).forEach(t=>{if(!pShotOK(t,a,b))return;if(t.holders.length&&(t.holders.some(h=>!S.w[h]||S.w[h].own!=='p'||h===a.id||h===b.id||S.w[h].inj)))return;const lo=a.mor<=b.mor?[a,b]:[b,a];l.push({a:lo[0].id,b:lo[1].id,title:t.id})})});return l}
+/* v499: can A (with partner B) ask for this belt? Right kind, their division, on their own show */
+function pShotOK(t,A,B){return !!(t&&A&&(B?t.kind==='tag':t.kind==='singles')&&[A,B].every(w=>!w||!t.g||!w.g||w.g===t.g)&&(!t.br||!A.own||t.br===A.own))}
+/* a request already waiting (or promised) in a save for a belt they can't win is dropped, at no cost */
+function pitchLegal(st){if(!st||!st.titles||!st.w)return;const T=st.titles;const bad=x=>{if(!x||!x.title||(x.k!=='shot'&&x.k!=='tagshot'))return false;const t=T[x.title],A=st.w[x.a],B=x.b&&st.w[x.b];
+  return !!A&&!pShotOK(t,A,B||null)};
+ const one=p=>{if(!p)return;if(bad(p.pitch))p.pitch=null;if(Array.isArray(p.trials))p.trials=p.trials.filter(x=>!bad(x));
+  if(p.ctd)for(const tid in p.ctd){const c=p.ctd[tid],t=T[tid],w=c&&st.w[c.a];if(t&&w&&t.g&&w.g&&t.g!==w.g)delete p.ctd[tid]}};
+ one(st);if(st.priv)Object.values(st.priv).forEach(one)}
 function pNextPPV(){return PPVS[S.week]?{w:S.week,n:PPVS[S.week]}:nextPPVAfter(S.week)}
 /* someone in the midcard who wants a match with a bigger star on your roster (not a partner, not already feuding) */
 function pDreams(r){const l=[];r.forEach(a=>{if(a.pop<40||a.pop>72)return;r.forEach(b=>{if(a===b||a.g!==b.g||b.pop<75||b.pop<a.pop+12||inTeam(a.id,b.id)||heatOf(a.id,b.id)>=15)return;l.push({a:a.id,b:b.id})})});return l}
@@ -152,7 +160,7 @@ const PITCHES={
   fail:t=>{const A=pOwn(t.a);mor(A,t.big?-15:-10);return t.big?`🧩 You promised ${A.name} a main event and didn't deliver. They won't forget it.`:`🧩 ${A.name} is still waiting for that bigger role.`},
   no:3},
  shot:{cat:'🏆 Title shot',w:r=>2+Math.min(3,r.filter(w=>w.pop>=62&&w.mor<55).length),
-  pick:r=>{const l=[];r.forEach(w=>{if(w.pop<62||isChamp(w.id))return;Object.values(S.titles).forEach(t=>{if(t.kind!=='singles')return;if(t.holders.length){const h=S.w[t.holders[0]];if(!h||h.own!=='p'||h===w||h.inj)return}l.push({a:w.id,title:t.id})})});return l.length?wpick(l,c=>pWant(S.w[c.a])):null},
+  pick:r=>{const l=[];r.forEach(w=>{if(w.pop<62||isChamp(w.id))return;Object.values(S.titles).forEach(t=>{if(!pShotOK(t,w))return;if(t.holders.length){const h=S.w[t.holders[0]];if(!h||h.own!=='p'||h===w||h.inj)return}l.push({a:w.id,title:t.id})})});return l.length?wpick(l,c=>pWant(S.w[c.a])):null},
   text:x=>{const t=S.titles[x.title],n=t.n;const v=!t.holders.length;const low=x.A.mor<45;return v?[`"The ${n} title is sitting there empty. Put me in the hunt for it."`,low?`"I'm tired of watching other people chase that vacant ${n} title. Let me chase it."`:`"Somebody has to be the face of the ${n} title. Why not me?"`]:[`"I've beaten everyone you've put in front of me. I want a shot at the ${n} title."`,low?`"I'm done waiting my turn. Give me the ${n} title shot or tell me where I stand."`:`"The ${n} title should be around my waist. Give me one shot."`]},
   head:x=>`${x.A.name} wants a shot at the ${S.titles[x.title]?S.titles[x.title].n:''} title`,
   try:{d:x=>`"Win a match in the next ${PITCH_LEN} weeks and you're next in line." They'll feel it's earned — and they become the #1 contender, with a rivalry to build.`,start:x=>({goal:'wins',need:1,txt:'a win',title:x.title})},
@@ -226,7 +234,7 @@ function pitchChoose(k){if(typeof mpLocked==='function'&&mpLocked())return;const
   if(P.go.start){const sp=P.go.start(x);const t=pitchStart(p,sp);mor(x.A,10);txt=`${PCH.go.i} Promise made: ${t.txt}. ${x.A.name} is fired up — don't let them down.`}else txt=`${PCH.go.i} ${P.go.fx(x)}`}
  else{const cut=pMorCut(x.A,P.no*3);mor(x.A,-cut);txt=`${PCH.no.i} You tell ${x.A.name} not right now. They understand — mostly (−${cut} morale).`}
  S.pitch=null;S.pitchNews=(S.pitchNews||[]).concat([{w:AW(),t:txt}]).slice(-12);save();render();
- openModal(`<div class="h mhd">📨 ${esc(P.head(x))}</div><div class="duo" style="align-items:center">${face(x.A)}${x.B?face(x.B):''}</div><div class="outcome ok">${esc(txt)}</div><button class="btn" onclick="openBrief()">Back to work</button>`)}
+ openModal(`<div class="h mhd">📨 ${esc(P.head(x))}</div>${window.picRow?picRow(p.a,p.b):''}<div class="outcome ok">${esc(txt)}</div><button class="btn" onclick="openBrief()">Back to work</button>`)}
 function openPitch(){const p=S.pitch;if(!p||!PITCHES[p.k])return;const P=PITCHES[p.k],x=pCtx(p);if(!x.A||x.A.own!=='p'||(p.b&&!x.B)){S.pitch=null;save();return}
  const said=P.text(x);const line=said[(p.v!=null?p.v:(p.v=RI(0,said.length-1)))%said.length];
  openModal(`<div class="muted"><span class="live-tag" style="background:var(--gold);color:#111">PITCH</span>${esc(P.cat)} · expires after this week</div><div class="h mhd mt">${esc(P.head(x))}</div><div class="duo" style="align-items:center">${face(x.A)}${x.B?face(x.B):''}</div><p class="scene">${p.k==='wacky'?line:esc(line)}</p>

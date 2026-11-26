@@ -650,7 +650,7 @@ ARC_STORY.mentor.push({id:'violence',head:'{A}, a sweet, lovable babyface, learn
 (ARC_STORY.voice=ARC_STORY.voice||[]).push({id:'stutter',head:'{A} overcomes a stutter to become the King of Speech',txt:{}});
 ARC_STORY.join.push({id:'cultjoin',head:'{A} joins a cult: {F}',txt:{}});
 /* v432: Josh's third round — every arc now tells a story */
-const aTagTitle=(a)=>Object.values(S.titles||{}).find(t=>t.kind!=='singles'&&t.holders.length===2&&t.holders.every(id=>aMine(id)&&!aW(id).inj)&&!t.holders.includes(a.a)&&!t.holders.includes(a.b));
+const aTagTitle=(a)=>Object.values(S.titles||{}).find(t=>t.kind!=='singles'&&t.holders.length===2&&(!t.g||!aW(a.a)||t.g===aW(a.a).g)&&t.holders.every(id=>aMine(id)&&!aW(id).inj)&&!t.holders.includes(a.a)&&!t.holders.includes(a.b));
 Object.assign(ARC_STORY,{
  team:[{id:'twins',head:'{A} discovers {B} is {A:their} fraternal twin, separated at birth. They come together and lock it in with a tag title win',
   payPlan:a=>{const t=aTagTitle(a);return t?[{kind:'match',type:'tag',vs2:[[a.a,a.b],t.holders.slice()],title:t.id,win:0}]:null},txt:{}}],

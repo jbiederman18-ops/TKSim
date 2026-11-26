@@ -821,7 +821,7 @@ function lineDeck(){if(!on())return;const m=document.querySelector('#modal .sbod
  const box=document.querySelector('#modal .sheet')||m;box.classList.add('tcline');let n=0;try{n=inboxList().length}catch(e){}if(n>1)box.classList.add(n>2?'tcb2':'tcb1');
  /* whoever is at the door becomes their card, on top of the stack */
  let cu=null;try{cu=typeof inboxCur==='function'?inboxCur():null}catch(e){}
- const ids=[cu&&cu.w,cu&&cu.w2].filter(id=>id&&W_(id));
+ const ids=[cu&&cu.w,cu&&(cu.w2||cu.pic2)].filter(id=>id&&W_(id));
  if(ids.length){const hd=document.createElement('div');hd.className='tclh';
   hd.innerHTML=`<div class="tclc">${ids.map(id=>tcCard(W_(id),{cls:'tcsm',noWear:true})).join('')}</div><div class="tclt"><span class="tclk">${esc((cu.kick||'').replace(/^[^A-Za-z]+/,''))}</span><b>${esc(cu.head||'')}</b></div>`;
   const k=m.querySelector('.ibx-k');const q=m.querySelector('.ibx-q');(q||k).after(hd);
@@ -966,7 +966,7 @@ body.tcdragging{user-select:none;-webkit-user-select:none}.tcs,.tcdock{-webkit-u
 /* the office line */
 #modal .tcline{position:relative;transition:transform .3s cubic-bezier(.2,.9,.3,1.1),opacity .25s;touch-action:pan-y}
 #modal .sheet.tcb1{box-shadow:0 -7px 0 -3px #23242a,0 -1px 0 0 var(--gold3)}#modal .sheet.tcb2{box-shadow:0 -7px 0 -3px #23242a,0 -13px 0 -6px #1a1b20,0 -1px 0 0 var(--gold3)}
-#modal .tclh{display:flex;gap:12px;align-items:flex-end;margin:6px 0 12px}#modal .tclc{display:flex;gap:6px;flex:none}#modal .tclc .tkc{--w:92px;cursor:default}
+#modal .tclh{display:flex;gap:12px;align-items:flex-end;margin:6px 0 12px}#modal .tclc{display:flex;gap:6px;flex:none}#modal .tclc .tkc{--w:100px;cursor:default}#modal .tclc .tkc:only-child{--w:116px}
 #modal .tclt{min-width:0;display:flex;flex-direction:column;gap:4px;padding-bottom:4px}#modal .tclk{font:800 italic 12px/1.1 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}#modal .tclt b{font:900 italic 21px/1.02 'BC',sans-serif;text-transform:uppercase;text-wrap:balance}
 #modal .tcdown{cursor:pointer}#modal .tcdown .tcback{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:#0c0c0e url(card-bg.jpg) center/cover;box-shadow:inset 0 0 0 2px var(--gold3);clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));font:900 italic 30px/1 'BC',sans-serif;color:var(--gold);transition:transform .35s,opacity .35s}#modal .tcdown .tcback small{font:700 11px/1 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}#modal .tcdown.up .tcback{transform:perspective(500px) rotateY(90deg);opacity:0}
 #modal .tcq .tcqn{font-size:12px;color:var(--mut);margin-left:16px}
