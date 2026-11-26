@@ -194,7 +194,7 @@ function farmWeek(notes){if(!S.farm)return;const a=AW();
    if(w.con<=0&&!w.exc){delete f.r[w.id];if(f.feat===w.id)f.feat=null;if(mine){const n=`📝 ${w.name}'s ROH deal ran out and they left.`;news(n);notes.push(n)}}
    else if(w.con===4&&mine)notes.push(`✍️ ${w.name}'s ROH deal ends in 4 weeks — call them up or extend it from the ROH screen.`)})}}
 window.farmExtend=function(id){const w=F('p').r[id];if(!w)return;const c=fsal(w)*4;if(S.money.p<c)return toast('Not enough money.');S.money.p-=c;w.con=(w.con||0)+26;w.fsal=fsal(w);save();render();toast(`${w.name} extended 26 weeks.`)};
-if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){const out=e0.apply(this,arguments);try{farmWeek(notes||[])}catch(e){console.warn('farm',e)}return out}}
+hookStep('endWeek','farm: weekly',{after(ctx,r,notes){try{farmWeek(notes||[])}catch(e){console.warn('farm',e)}}});
 
 /* ---------------- views ---------------- */
 function regionChips(){return `<div class="chips">${Object.entries(REG).map(([k,r])=>`<button class="chip ${SREG===k?'on':''}" onclick="SREG_SET('${k}')">${r.i} ${r.n} · ${board(k).length}</button>`).join('')}</div>`}

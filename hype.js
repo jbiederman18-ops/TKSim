@@ -31,7 +31,7 @@ function build(notes){const sh=curShow();const P=np();if(!P)return;const wk=S.we
   if(P.w===wk+1&&r!=null){if(r>=3.5)addL(h,10,'Strong go-home show');else if(r<2.75)addL(h,-8,'Flat go-home show')}});}
 /* reset after the PPV: the next build starts fresh */
 function reset(){const P=np();brands().forEach(b=>{const h=HY(b);if(h.paid&&(!P||h.paid<S.week)){S.hype[b]={v:START,log:[]}}})}
-if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){try{build(notes||[])}catch(e){console.warn('hype',e)}const out=e0.apply(this,arguments);try{reset()}catch(e){}return out}}
+hookStep('endWeek','hype: PPV build-up',{before(ctx,notes){try{build(notes||[])}catch(e){console.warn('hype',e)}},after(){try{reset()}catch(e){}}});
 /* hype moves the gate on PPV night */
 if(typeof tixRev==='function'){const t0=tixRev;tixRev=function(b,ppv){const v=t0.apply(this,arguments);if(!ppv||!S||!S.hype)return v;return Math.round(v*(.85+hype(b)*.003))}}
 

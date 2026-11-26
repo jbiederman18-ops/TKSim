@@ -96,4 +96,4 @@ if(typeof flowCard==='function'){const f0=flowCard;flowCard=function(sh){let h=f
   if(vl)h=h?h.replace(/<\/div>\s*$/,vl+'</div>'):`<div class="card flowc venpull">${vl}</div>`}}catch(e){console.warn('venue',e)}return h}}
 window.venOf=venOf;window.venueRent=venueRent;window.venueNight=venueNight;window.venueFans=venueFans;window.venueWeek=venueWeek;window.venueBuy=venueBuy;window.venuePick=venuePick;window.venOwns=venOwns;window.crowdPull=crowdPull;window.venWant=venWant;window.venAsker=venAsker;
 /* after the week's bills (this week's building fee included), set up next week */
-if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){const r=e0.apply(this,arguments);try{venueWeek(notes)}catch(e){console.warn('venue week',e)}return r}}
+hookStep('endWeek','venues: weekly',{after(ctx,r,notes){try{venueWeek(notes)}catch(e){console.warn('venue week',e)}}});

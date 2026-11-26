@@ -20,6 +20,5 @@ function ptwLift(ws){return Math.min(2,ws.filter(ptwOn).length)*PTW_K}
 window.ptwLift=ptwLift;window.ptwSync=ptwSync;window.ptwOn=ptwOn;
 /* catch new signings before the show airs, and again at the end of the week */
 if(typeof airShow==='function'){const a0=airShow;airShow=function(){try{ptwSync()}catch(e){console.warn('ptw',e)}return a0.apply(this,arguments)}}
-if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){try{ptwSync(notes);const wk=AW();
-  Object.values(S.w).forEach(w=>{if(!w.ptw)return;if(wk>w.ptw.until||!w.own){delete w.ptw;return}if(w.last===S.week&&!w.inj)w.pop=clamp(w.pop+PTW_POP,1,100)})}catch(e){console.warn('ptw',e)}
- return e0.apply(this,arguments)}}
+hookStep('endWeek','prove them wrong',{before(ctx,notes){try{ptwSync(notes);const wk=AW();
+  Object.values(S.w).forEach(w=>{if(!w.ptw)return;if(wk>w.ptw.until||!w.own){delete w.ptw;return}if(w.last===S.week&&!w.inj)w.pop=clamp(w.pop+PTW_POP,1,100)})}catch(e){console.warn('ptw',e)}}});

@@ -2,7 +2,7 @@ name: Check the tutorial
 on:
   push:
     branches: [main]
-    paths: ['index.html', '*.js', '*.css', 'tools/check-tutorial.py']
+    paths: ['index.html', '*.js', '*.css', '*.png', '*.jpg', 'tools/check-tutorial.py', 'tools/check-boot.py']
   workflow_dispatch:
 permissions:
   contents: read
@@ -14,4 +14,5 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
       - run: pip install playwright && python -m playwright install --with-deps chromium
+      - run: python tools/check-boot.py
       - run: python tools/check-tutorial.py

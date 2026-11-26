@@ -48,9 +48,9 @@ window.oppSeg=function(b,p,st,notes){if(b!=='p'||!S.opps)return;oppOpen().forEac
  o.done=1;if(txt){const t=`${C.i} ${C.t}: ${txt}`;notes.push(t);news(t)}})};
 
 /* after the show: anything owed and not on it fizzles */
-if(typeof airPair==='function'){const _ap=airPair;airPair=function(){const wk=AW();const r=_ap.apply(this,arguments);try{oppList().forEach(o=>{if(o.done||o.due>wk)return;o.done=1;const A=S.w[o.a];if(!A||A.own!=='p')return;
+hookStep('airPair','opportunities: missed ones let wrestlers down',{before(ctx){ctx.wk=AW()},after(ctx,r){const wk=ctx.wk;try{oppList().forEach(o=>{if(o.done||o.due>wk)return;o.done=1;const A=S.w[o.a];if(!A||A.own!=='p')return;
   const C=CRISES[o.k];mor(A,-OPP_LETDOWN);if(o.b&&S.w[o.b]&&S.w[o.b].own==='p')mor(S.w[o.b],-OPP_LETDOWN);news(`${C?C.i+' '+C.t+': ':''}${oppNames(o)} never made it on the show. The moment passed, and ${o.b?'they were':esc(A.name)+' was'} let down.`)});
-  S.opps=oppList().filter(o=>!o.done||AW()-o.due<2)}catch(e){console.warn('opp sweep',e)}return r};window.airPair=airPair}
+  S.opps=oppList().filter(o=>!o.done||AW()-o.due<2)}catch(e){console.warn('opp sweep',e)}}});
 
 /* on the checklist, up top: it's owed tonight */
 if(typeof attnItems==='function'){const _ai=attnItems;attnItems=function(){const out=_ai.apply(this,arguments);try{if(!S||S.phase!=='season')return out;const c=(S.card&&S.card.p)||[];

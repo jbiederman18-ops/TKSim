@@ -286,7 +286,7 @@ function draftCols(m){m.classList.toggle('dkdraft',!!(S&&S.phase==='draft'))}
 
 function layout(){if(!desk())return;const m=mainEl();if(m){try{bookPanes(m)}catch(e){console.warn('dk book',e)}try{rosterTable(m)}catch(e){console.warn('dk roster',e)}try{draftCols(m)}catch(e){}}
  try{goBtn()}catch(e){}try{tips()}catch(e){}}
-if(typeof render==='function'){const r1=render;render=window.render=function(){const out=r1.apply(this,arguments);layout();return out}}
+hookStep('render','desktop layout',{after(){layout()}});
 let lq=0;const mo3=new MutationObserver(()=>{if(!lq)lq=requestAnimationFrame(()=>{lq=0;layout()})});
 function watch3(){layout();['app','modal'].forEach(id=>{const n=document.getElementById(id);if(n)mo3.observe(n,{childList:true,subtree:true})})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',watch3);else watch3();

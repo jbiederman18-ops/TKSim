@@ -78,25 +78,24 @@ if(typeof aiProd==='function'){const p0=aiProd;aiProd=window.aiProd=function(b,s
 
 /* ---- the show: a last check before the bell, then the network covers whatever a commitment left the bank short ---- */
 function bgCommitCost(b){return ((S.card&&S.card[b])||[]).filter(sl=>bgMatch(sl)&&bgCommit(sl.d,b)).reduce((a,sl)=>a+bgPrice(sl.d,b),0)}
-if(typeof airPair==='function'){const ap=airPair;airPair=window.airPair=function(){const pre={};const bl=typeof brands==='function'?brands():['p','ai'];S.bgcc={};
- try{bl.forEach(b=>{if(!S.card||!S.card[b]||!S.money||S.money[b]==null)return;const dr=bgTrim(b,S.card[b],{noRent:true});if(dr.length)pre[b]=dr;const c=bgCommitCost(b);if(c)S.bgcc[b]=c})}catch(e){console.warn('budget show',e)}
- const out=ap.apply(this,arguments);
+hookStep('airPair','budget: trim what the bank can\'t cover',{before(ctx){const pre=ctx.pre={};const bl=ctx.bl=typeof brands==='function'?brands():['p','ai'];S.bgcc={};
+ try{bl.forEach(b=>{if(!S.card||!S.card[b]||!S.money||S.money[b]==null)return;const dr=bgTrim(b,S.card[b],{noRent:true});if(dr.length)pre[b]=dr;const c=bgCommitCost(b);if(c)S.bgcc[b]=c})}catch(e){console.warn('budget show',e)}},
+ after(ctx,out){const pre=ctx.pre,bl=ctx.bl;
  try{if(out&&out.cash&&!out.ppv)bl.forEach(b=>{const c=out.cash[b];if(!c||c.tix==null)return;const g=(c.tix||0)+(c.merch||0)+(c.ad||0);S.bgG=S.bgG||{};S.bgG[b]=S.bgG[b]==null?g:Math.round(S.bgG[b]*.75+g*.25)})}catch(e){}
- try{bl.forEach(b=>{if(pre[b]&&bgHum(b)&&out&&out.notes)out.notes.push(`${typeof ON==='function'&&ON()?nameOf(b)+': ':''}💸 Not enough in the bank for everything on the card: ${pre[b].join(', ')} ${pre[b].length>1?'were':'was'} dropped before the show.`)})}catch(e){}
- return out}}
+ try{bl.forEach(b=>{if(pre[b]&&bgHum(b)&&out&&out.notes)out.notes.push(`${typeof ON==='function'&&ON()?nameOf(b)+': ':''}💸 Not enough in the bank for everything on the card: ${pre[b].join(', ')} ${pre[b].length>1?'were':'was'} dropped before the show.`)})}catch(e){}}});
 
 /* ---- paying the network back, out of the TV deal, never into the red ---- */
 /* the week's bills, the way endWeek settles them, to see whether a commitment would leave the bank short */
 function bgWeekNet(b){try{return tvSigned(b)-payroll(b)-opsCost(b)-(typeof medBill==='function'?medBill(b):0)-bgRent(b)}catch(e){return 0}}
-if(typeof endWeek==='function'){const e0=endWeek;endWeek=window.endWeek=function(notes){const adv={};
+hookStep('endWeek','budget: network advances',{before(ctx){const adv=ctx.adv={};
  try{const cc=S.bgcc||{};Object.keys(cc).forEach(b=>{if(!S.money||S.money[b]==null)return;const end=(S.money[b]||0)+bgWeekNet(b);const short=Math.min(cc[b],Math.max(0,-end));
-  if(short>0){S.money[b]+=short;S.adv=S.adv||{};S.adv[b]=(S.adv[b]||0)+short;adv[b]=short}});delete S.bgcc}catch(e){console.warn('advance',e)}
- const r=e0.apply(this,arguments);
+  if(short>0){S.money[b]+=short;S.adv=S.adv||{};S.adv[b]=(S.adv[b]||0)+short;adv[b]=short}});delete S.bgcc}catch(e){console.warn('advance',e)}},
+ after(ctx,r,notes){const adv=ctx.adv;
  try{if(!(typeof ON==='function'&&ON())&&S.phase==='season'&&S.money&&S.money.ai!=null)aiMakeRoom(null,[],1)}catch(e){console.warn('rival payroll',e)}
  try{Object.keys(adv).forEach(b=>{if(bgHum(b)&&Array.isArray(notes))notes.push(`${typeof ON==='function'&&ON()?nameOf(b)+': ':''}🏦 The network fronted ${money(adv[b])} for this week's big match. It comes back out of the TV deal over the next few weeks.`)});
   if(S.adv)Object.keys(S.adv).forEach(b=>{if(adv[b])return;const owe=S.adv[b]||0;if(owe<=0){delete S.adv[b];return}const tv=typeof tvSigned==='function'?tvSigned(b):0;
   const pay=Math.max(0,Math.min(owe,Math.round(tv*ADV_CUT),Math.floor(S.money[b]||0)));S.money[b]-=pay;S.adv[b]=owe-pay;if(S.adv[b]<=0)delete S.adv[b];
-  if(pay&&bgHum(b)&&Array.isArray(notes))notes.push(`🏦 ${typeof ON==='function'&&ON()?nameOf(b)+' paid':'You paid'} the network back ${money(pay)}${S.adv[b]?` (${money(S.adv[b])} to go)`:' — all square'}.`)})}catch(e){console.warn('advance',e)}return r}}
+  if(pay&&bgHum(b)&&Array.isArray(notes))notes.push(`🏦 ${typeof ON==='function'&&ON()?nameOf(b)+' paid':'You paid'} the network back ${money(pay)}${S.adv[b]?` (${money(S.adv[b])} to go)`:' — all square'}.`)})}catch(e){console.warn('advance',e)}}});
 
 /* ---- the Office: what's owed to the network ---- */
 if(typeof finCard==='function'){const f0=finCard;finCard=window.finCard=function(){let h=f0.apply(this,arguments);try{const o=S.adv&&S.adv.p,a=bgAdvEst('p');let x='';

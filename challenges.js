@@ -93,10 +93,9 @@ function tick(notes){const c=C();if(!c||c.st!=='on'||ON())return;const sc=CH(c.i
   if(S.week>sc.by)decide('lost',`The deadline (week ${sc.by}) passed.`,notes)}catch(e){console.warn('challenge',e)}}
 
 if(typeof finishDraft==='function'){const f0=finishDraft;finishDraft=function(){const out=f0.apply(this,arguments);const c=C();if(c&&c.st==='on'&&!c.drafted){c.drafted=1;const sc=CH(c.id);if(sc&&sc.afterDraft)sc.afterDraft()}return out}}
-if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){const out=e0.apply(this,arguments);tick(notes||[]);return out}}
-if(typeof airPair==='function'){const a0=airPair;airPair=function(){const out=a0.apply(this,arguments);const c=C();
- if(c&&c.st==='on'&&c.id==='streak'&&S.week<=ALLIN_WEEK&&out&&out.hourWin){c.run=out.hourWin==='p'?(c.run||0)+1:0;c.best=Math.max(c.best||0,c.run)}
- return out}}
+hookStep('endWeek','challenges: progress',{after(ctx,r,notes){tick(notes||[])}});
+hookStep('airPair','challenges: streak',{after(ctx,out){const c=C();
+ if(c&&c.st==='on'&&c.id==='streak'&&S.week<=ALLIN_WEEK&&out&&out.hourWin){c.run=out.hourWin==='p'?(c.run||0)+1:0;c.best=Math.max(c.best||0,c.run)}}});
 if(typeof applyMatch==='function'){const m0=applyMatch;applyMatch=function(m,res){const out=m0.apply(this,arguments);const c=C();
  try{if(c&&c.st==='on'&&c.id==='five'&&!ON()&&res&&res.stars>=5&&m.sides.flat().every(id=>S.w[id]&&S.w[id].own==='p'))c.fives=(c.fives||0)+1}catch(e){}
  return out}}

@@ -176,7 +176,7 @@ if(typeof window.farmCard==='function'){const f0=window.farmCard;window.farmCard
 
 /* ---------------- hottest on the roster (weekly briefing) ---------------- */
 /* tracks each of your wrestlers' popularity over the last 4 weeks; "hot" = win streak + momentum + recent popularity gains */
-if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(){const out=e0.apply(this,arguments);try{brands().forEach(b=>ownList(b).forEach(w=>{w.ph4=(w.ph4||[]).concat([Math.round(w.pop*10)/10]).slice(-5)}))}catch(e){}return out}}
+hookStep('endWeek','fx: popularity history for the hot list',{after(){try{brands().forEach(b=>ownList(b).forEach(w=>{w.ph4=(w.ph4||[]).concat([Math.round(w.pop*10)/10]).slice(-5)}))}catch(e){}}});
 function heatScore(w){const ph=w.ph4||[];const gain=ph.length>1?w.pop-ph[0]:0;return {s:Math.max(0,w.strk||0)*2+Math.max(0,w.mom||0)*1.5+Math.max(0,gain)*1.2+(w.lme!=null&&AW()-w.lme<=1?1.5:0),gain}}
 function hotList(){return ownList('p').filter(w=>!w.inj).map(w=>Object.assign({w},heatScore(w))).filter(x=>x.s>=4).sort((a,b)=>b.s-a.s).slice(0,5)}
 window.hotList=hotList;
@@ -198,7 +198,7 @@ function navFx(){const n=document.querySelector('nav.tabs');if(!n)return;const o
  i.style.top=on.offsetTop+'px';i.style.height=on.offsetHeight+'px';i.style.width=W+'px';
  if(NAVL&&NAVL.l!==L&&!RM()){i.style.transition='none';i.style.transform=`translateX(${NAVL.l}px)`;void i.offsetWidth;i.style.transition=''}
  i.style.transform=`translateX(${L}px)`;NAVL={l:L,w:W}}
-if(typeof render==='function'){const r0=render;render=function(){const d=DIR;DIR=null;const out=r0.apply(this,arguments);try{const m=document.querySelector('main');if(m&&d&&!RM()){m.classList.remove('enter');m.classList.add(d)}navFx();numbers()}catch(e){}return out}}
+hookStep('render','fx: screen transitions and numbers',{before(ctx){ctx.d=DIR;DIR=null},after(ctx){const d=ctx.d;try{const m=document.querySelector('main');if(m&&d&&!RM()){m.classList.remove('enter');m.classList.add(d)}navFx();numbers()}catch(e){}}});
 
 /* ---------------- 8. ROH identity ---------------- */
 if(typeof window.farmView==='function'){const v0=window.farmView;window.farmView=function(){return `<div class="roh-x">${v0.apply(this,arguments)}</div>`}}

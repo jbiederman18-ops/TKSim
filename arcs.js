@@ -49,7 +49,6 @@ function aTeams(id){return (S.teams||[]).filter(t=>t.m.includes(id))}
 function aMates(id){const s=new Set();aTeams(id).forEach(t=>t.m.forEach(x=>{if(x!==id)s.add(x)}));if(typeof fgKnown==='function'&&aW(id))fgKnown(aW(id)).forEach(o=>s.add(o.id));return [...s].filter(aMine)}
 function aRoster(ex){ex=ex||[];return ownList('p').filter(w=>!w.inj&&!ex.includes(w.id)&&!w.retd)}
 function aBest(l,f){let b=null,bv=-1e9;l.forEach(w=>{const v=f(w);if(v>bv){bv=v;b=w}});return b}
-const aChem=(a,b)=>{try{return chemOpp(a,b)}catch(e){return 0}};
 const aMate=(a,b)=>(S.chem&&S.chem[key(a.id,b.id)])||0;
 /* the popularity of whoever this story builds: the successor in Passing the Torch / the Title, else the wrestler */
 const ARC_BUILDS_B={torch:1,passtitle:1};
@@ -429,6 +428,9 @@ const ARCS={
 };
 /* ---- v436: arcs from Josh's fourth round of storylines. Each lays out its own stops (stops: name n, text b, test s, plan p, min);
    aStopArc turns them into the arc's build steps. ---- */
+/* an arc built from a list of stops (shared by the arc packs below) */
+function aStopArc(D){const st=D.stops;const at=a=>st[Math.min((a&&a.have)||0,st.length-1)];D.need=st.length;D.builds=st.map(x=>x.b);D.mins=st.map(x=>x.min!=null?x.min:x.s&&x.s.vig?ARC_VIGMIN:ARC_MIN);D.build=st[0].b;
+  if(!D.tell)D.tell=st.map(x=>x.n||'');D.step=(s,a)=>at(a).s(s,a);D.plan=(a,stg)=>stg==='build'?(at(a).p?at(a).p(a):null):D.pplan(a)}
 {const vig=(s,a)=>s.kind==='promo'&&s.type==='vignette'&&s.a===a.a;vig.vig=1;const pVig=a=>[{kind:'promo',type:'vignette',a:a.a}];
  const tog=(s,a)=>sTog(s,a.a,a.b);const pTog=(t,bFirst)=>a=>[{kind:'promo',type:t,a:bFirst?a.b:a.a,b:bFirst?a.a:a.b}];
  const withB=(s,a)=>s.kind==='match'&&s.ids.includes(a.a)&&s.ids.includes(a.b);
@@ -504,8 +506,6 @@ const ARCS={
    if(a.choice==='ruse'){bumpHeat(a.a,a.b,a.q==='great'?70:50,[],`${A.name}'s kindness was a ruse`);mor(B,-8);(typeof fgFriends==='function'?fgFriends(B):[]).filter(o=>o.id!==a.a).forEach(o=>mor(o,-3));n.push(`🐍 It was all a ruse. ${A.name} turns on ${B.name}, and the people ${B.name} loves aren't so sure about ${aPr(B,'them')} anymore.`)}
    else{turnTo(A,'f');peace(a.a,a.b,'Became friends');chemUp([a.a,a.b],a.q==='great'?3:2);mor(B,6);n.push(`🤗 It was real. ${A.name} is a face now, and ${B.name} finally believes it.`)}},
   win:(a,w,q)=>({mic:1,pop:q==='great'?3:1.5})}});
- function aStopArc(D){const st=D.stops;const at=a=>st[Math.min((a&&a.have)||0,st.length-1)];D.need=st.length;D.builds=st.map(x=>x.b);D.mins=st.map(x=>x.min!=null?x.min:x.s&&x.s.vig?ARC_VIGMIN:ARC_MIN);D.build=st[0].b;
-  if(!D.tell)D.tell=st.map(x=>x.n||'');D.step=(s,a)=>at(a).s(s,a);D.plan=(a,stg)=>stg==='build'?(at(a).p?at(a).p(a):null):D.pplan(a)}
  ['number','wedding','faith','haircut','goodwill'].forEach(k=>aStopArc(ARCS[k]))}
 for(const k in ARCS)ARCS[k].k=k;window.ARCS=ARCS;window.ARC_STAR=ARC_STAR;window.ARC_SLOTS=ARC_SLOTS;window.ARC_MIN=ARC_MIN;
 /* ---- variants: the big story arcs come in 2–3 versions, and each new game deals one (same name and reward, a different road) ---- */
@@ -855,7 +855,6 @@ function arcGateOk(k){const g=ARC_GATE[k];if(!g)return true;if(g==='s2')return S
 function arcOpenK(k){return arcGateOk(k)}
 window.arcOpenK=arcOpenK;
 function arcLockTxt(k){return ARC_GATE_TXT[ARC_GATE[k]]||''}
-function arcBoard(){return {}}
 /* v452: arcs anyone who qualifies can run, each wrestler once a season (Pride of the Town: every wrestler can claim a hometown) */
 const ARC_MANY={townhero:1};
 const arcRanW=(k,id)=>(((S.arcUsedW||{})[S.season]||{})[id]||[]).includes(k);
@@ -1123,16 +1122,16 @@ window.arcHolding={hold:arcHold,blocked:arcBlocked,ready:arcReadyList,week:arcHo
 /* for the sweep bot: hold what's blocked, resume what's ready */
 window.arcAutoHold=function(){let h=0,r=0;arcList().slice().forEach(a=>{if(arcBlocked(a)&&arcHold(a))h++});arcReadyList().forEach(a=>{if(arcResume(a))r++});return {h,r}};
 /* a held story's feud doesn't cool or go stale while it waits (the rival's held stories too, rivalstory.js) */
-if(typeof endWeek==='function'){const _ew=endWeek;endWeek=window.endWeek=function(notes){const keep={};
+hookStep('endWeek','arcs: held stories keep their heat',{before(ctx){const keep=ctx.keep={};
   try{const add=l=>(l||[]).forEach(a=>[a.b,a.foe].forEach(o=>{if(!a.a||!o)return;const k=key(a.a,o);if(S.heat[k]>0&&!keep[k]){const f=S.fs&&S.fs[k];keep[k]={h:S.heat[k],f:!!f};if(f&&f.start!=null)f.start++}}));
-   bothSides(()=>add(S.arcHeld));add(S.rvHeld)}catch(e){console.warn('arc hold heat',e)}
-  const r=_ew.apply(this,arguments);
+   bothSides(()=>add(S.arcHeld));add(S.rvHeld)}catch(e){console.warn('arc hold heat',e)}},
+ after(ctx,r,notes){const keep=ctx.keep;
   try{for(const k in keep)if(S.heat[k]==null||S.heat[k]<keep[k].h){S.heat[k]=keep[k].h}
-   bothSides(()=>arcHoldWeek(Array.isArray(notes)?notes:null));if(typeof rvHoldWeek==='function')rvHoldWeek()}catch(e){console.warn('arc hold',e)}return r}}
+   bothSides(()=>arcHoldWeek(Array.isArray(notes)?notes:null));if(typeof rvHoldWeek==='function')rvHoldWeek()}catch(e){console.warn('arc hold',e)}}});
 /* the arc rules the offline rival's arcs share (rivalstory.js) */
 window.ARC_RULES={aPopF,aRiseF,aEase,ARC_SLACK,ARC_PAY0,ARC_PAYQ,ARC_PAYMAX,ARC_PAY_PPV,ARC_BUILD,ARC_STORYP,ARC_STORYH,ARC_GREAT,ARC_FBQ0,ARC_FBQLO,ARC_FANS,ARC_RISEF,ARC_RISEPOP,ARC_FAIL};
-if(typeof airPair==='function'){const _ap=airPair;airPair=function(){let th={};try{if(typeof bothSides==='function')bothSides(arcTick);else arcTick();S.injSeen=S.injSeen||{};ownList('p').forEach(w=>{if(w.inj)S.injSeen[w.id]=AW()});th.__ppv=!!(curShow()&&curShow().ppv);th.__w=AW();if(S.arcS0s!==S.season){S.arcS0s=S.season;S.arcS0=AW()}Object.values(S.titles||{}).forEach(t=>{th[t.id]=t.holders.join('|')})}catch(e){console.warn('arcs',e)}
- const r=_ap.apply(this,arguments);try{Object.values(S.titles||{}).forEach(t=>{if(th[t.id]!=null&&t.holders.length&&t.holders.join('|')!==th[t.id]&&t.holders.every(aMine)){S.arcM=S.arcM||{};S.arcM.newch=AW()}});if(th.__ppv)S.arcPPV=(S.arcPPV||0)+1;arcGroundswell(th.__w,r&&r.notes);arcUnlockTick(r&&r.notes);arcTokTick(r&&r.notes)}catch(e){console.warn('arcs',e)}return r}}
+hookStep('airPair','arcs: tick, groundswell, unlocks',{before(ctx){const th=ctx.th={};try{if(typeof bothSides==='function')bothSides(arcTick);else arcTick();S.injSeen=S.injSeen||{};ownList('p').forEach(w=>{if(w.inj)S.injSeen[w.id]=AW()});th.__ppv=!!(curShow()&&curShow().ppv);th.__w=AW();if(S.arcS0s!==S.season){S.arcS0s=S.season;S.arcS0=AW()}Object.values(S.titles||{}).forEach(t=>{th[t.id]=t.holders.join('|')})}catch(e){console.warn('arcs',e)}},
+ after(ctx,r){const th=ctx.th;try{Object.values(S.titles||{}).forEach(t=>{if(th[t.id]!=null&&t.holders.length&&t.holders.join('|')!==th[t.id]&&t.holders.every(aMine)){S.arcM=S.arcM||{};S.arcM.newch=AW()}});if(th.__ppv)S.arcPPV=(S.arcPPV||0)+1;arcGroundswell(th.__w,r&&r.notes);arcUnlockTick(r&&r.notes);arcTokTick(r&&r.notes)}catch(e){console.warn('arcs',e)}}});
 
 /* Groundswell: a week they're kept off the show (or squashed) is a step; the crowd's anger costs a few fans each time */
 const ARC_GS_COST=4000;
@@ -1236,7 +1235,6 @@ window.arcFill=arcFillAll;
 window.arcBook=function(id){if(typeof mpLocked==='function'&&mpLocked())return;const a=arcOf(id);if(!a)return;const i=arcFillAll(a,S.card.p);if(i<0)return toast('No open slot fits it — clear a slot, or book it yourself from the steps.');try{closeModal()}catch(e){}save();render();toast(`📖 Booked: ${aD(a).n} for ${aW(id).name}. Change anything you like.`)};
 
 /* ---- the progress display ---- */
-function arcDots(a){const D=aD(a);let h='';for(let i=0;i<a.need;i++)h+=`<i class="ad ${i<a.have?'on':''}">${i<a.have?'●':'○'}</i>`;return h+`<i class="ad pay ${a.stage==='pay'?'on':''}">★</i>`}
 function arcNow(a){const D=aD(a);const o=a;if(a.stage==='pay')return AW()<(a.payFrom||0)?'Payoff next week':`Payoff: ${arcWords(o,D.payoff)}`;
  const lab=D.tell&&D.tell[Math.min(a.have,D.tell.length-1)];const bt=aBuildAt(D,a.have),mn=aMinAt(D,a.have)-aEase(aW(a.a));return `${lab?lab+' · ':''}Next: ${arcWords(o,bt)}${!/★/.test(bt)?` (${mn}★+)`:''}`}
 function arcLeft(a){const l=a.end-AW()+1;return l<=1?'<b class="bad">Last week</b>':`${l} weeks left`}
@@ -1663,8 +1661,6 @@ for(const k in ARC_STORY)(ARC_STORY[k]||[]).forEach(x=>{const g=ARC_GEN[k+'/'+x.
   pay:(s,a)=>s.kind==='match'&&s.ids.includes(a.a)&&s.stip===a.stip,pplan:a=>[{kind:'match',type:'singles',side:[a.a],n:1,stip:a.stip}],
   win:(a,w,q)=>{const t=arcChatTrait(a,w);if(t){trAdd(w,t);return {pop:q==='great'?3:1.5,trait:t}}
    return {ring:.6,mic:.6,pop:q==='great'?3:1.5}}}});
- function aStopArc(D){const st=D.stops;const at=a=>st[Math.min((a&&a.have)||0,st.length-1)];D.need=st.length;D.builds=st.map(x=>x.b);D.mins=st.map(x=>x.min!=null?x.min:x.s&&x.s.vig?ARC_VIGMIN:ARC_MIN);D.build=st[0].b;
-  if(!D.tell)D.tell=st.map(x=>x.n||'');D.step=(s,a)=>at(a).s(s,a);D.plan=(a,stg)=>stg==='build'?(at(a).p?at(a).p(a):null):D.pplan(a)}
  ['townhero','war','likeness','pain','oil','peace','twitch'].forEach(k=>aStopArc(ARCS[k]));
  /* Off the Grid: a stop only counts the week they stay out of matches and have no rivals; a match while building costs them that week's stop */
  {const st=ARCS.peace.step;ARCS.peace.step=(s,a)=>a.brk!==AW()&&!rivals(aW(a.a)).length&&st(s,a)}

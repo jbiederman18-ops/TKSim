@@ -152,7 +152,7 @@ window.trMigrate=trMigrate;
 /* after every show: anyone not on your roster who has an open slot picks one (offline only; in a league each GM picks for their own) */
 function trAuto(){if(!S||!S.w)return;Object.values(S.w).forEach(w=>{if(w.own==='p'||!trOpen(w))return;if(ON()&&w.own)return;const t=trAiPick(w);if(t)trAdd(w,t)})}
 window.trAuto=trAuto;
-if(typeof airPair==='function'){const _ap=airPair;airPair=function(){const r=_ap.apply(this,arguments);try{trAuto()}catch(e){console.warn('traits',e)}try{trHoldTick()}catch(e){console.warn('traits hold',e)}return r}}
+hookStep('airPair','traits: unlocks and holds',{after(){try{trAuto()}catch(e){console.warn('traits',e)}try{trHoldTick()}catch(e){console.warn('traits hold',e)}}});
 
 /* ---- the office door: a slot opened on your roster ---- */
 function trVisit(){if(!S||!S.w)return null;const l=ownList('p').filter(trOpen).sort((a,b)=>b.pop-a.pop);return l[0]||null}

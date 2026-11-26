@@ -113,7 +113,7 @@ function fgChurn(b){if(!fgHum(b)||!S.fg||!S.fgm||!S.fgm[b])return;const wk=AW();
  r.forEach(w=>{const x=S.fgf[w.id];if(!x||wk<x.back)return;const open=Object.entries(groups).filter(([g,m])=>g!==x.old&&m.length<FG_SIZE&&!m.includes(w));
   delete S.fgf[w.id];if(!open.length)return;const ws=open.map(([g,m])=>fgFit(w,m));let t=Math.random()*ws.reduce((a,v)=>a+v,0);let g=open[open.length-1][0];
   for(let i=0;i<open.length;i++){t-=ws[i];if(t<=0){g=open[i][0];break}}S.fg[w.id]=g;groups[g].push(w)})}
-if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(){fgSyncAll();try{brands().forEach(fgChurn)}catch(e){console.warn('friends churn',e)}if(S.fgv)Object.keys(S.fgv).forEach(b=>{const v=S.fgv[b];if(v&&(v.w<AW()-FG_WAIT||!S.w[v.f]||S.w[v.f].own!==b)){if(S.w[v.a]&&S.w[v.f])fgReveal(S.w[v.a],S.w[v.f],'');delete S.fgv[b]}});if(S.fgd)Object.keys(S.fgd).forEach(b=>{const v=S.fgd[b];if(v&&(v.w<AW()-FG_WAIT||!S.w[v.a]||S.w[v.a].own!==b))fgDriftNews(b)});return e0.apply(this,arguments)}}
+hookStep('endWeek','friends: churn and visits',{before(){fgSyncAll();try{brands().forEach(fgChurn)}catch(e){console.warn('friends churn',e)}if(S.fgv)Object.keys(S.fgv).forEach(b=>{const v=S.fgv[b];if(v&&(v.w<AW()-FG_WAIT||!S.w[v.f]||S.w[v.f].own!==b)){if(S.w[v.a]&&S.w[v.f])fgReveal(S.w[v.a],S.w[v.f],'');delete S.fgv[b]}});if(S.fgd)Object.keys(S.fgd).forEach(b=>{const v=S.fgd[b];if(v&&(v.w<AW()-FG_WAIT||!S.w[v.a]||S.w[v.a].own!==b))fgDriftNews(b)})}});
 /* the office visit (inbox.js shows it): a top star, about a friend */
 function fgVisit(){const v=S.fgv&&S.fgv.p;if(!v)return null;const F=S.w[v.f],A=S.w[v.a];if(!F||!A||F.own!=='p')return null;return {v,F,A}}
 function fgCost(F,A){return Math.max(15,Math.round((sal(F)+sal(A))*1.5))}

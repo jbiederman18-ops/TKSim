@@ -1,45 +1,62 @@
 # TKSim — notes for Claude
 
 - Push updates straight to `main` (no pull requests).
-- Every release: bump `VERSION` in `sw.js` and `APP_VERSION` in `index.html` to match (e.g. `aegm-v131` / `v131`), and add any new file to `FILES` in `sw.js`.
+- Every release: bump `VERSION` in `sw.js` and `APP_VERSION` in `index.html` to match (e.g. `aegm-v131` / `v131`), and add any new file to `FILES` in `sw.js`. `python3 tools/check-boot.py` checks both (GitHub runs it on every push).
+- Never commit screenshots or mockups to the repo root — check-boot fails on any root image nothing uses.
 
 ## Read the code cheaply (important — this repo is big)
-`index.html` is ~1MB (~250k tokens). Never read it whole.
-- Fonts live in `fonts/` (moved out of index.html in v290) — never inline them again.
+`index.html` is ~700KB (~170k tokens). Never read it whole.
+- Fonts live in `fonts/` (v290), all CSS in `style.css` and the promo scenes / promo twists / match moments (SCENES, TWISTS, MEV) in `promos.js` (v509) — never inline them back into index.html.
 - Find code with Grep first (function name, a UI string, or a section marker below), then Read only that line range (`offset`/`limit`, ~50–150 lines).
 - Section markers look like `/* ===================== NAME`. Grep `/\* =====` to get current line numbers — the ranges below drift as code changes.
 - Most newer systems live in their own `.js` file. Check the file table before touching `index.html`.
-- `README.md` (76KB) is player-facing docs. Don't read it for context; Grep for the paragraph you need to update.
+- `README.md` (~150KB) is player-facing docs. Don't read it for context; Grep for the paragraph you need to update.
 - Skip entirely: `firebase-sdk.js` (bundled SDK), `vendor/`, `tools/icon*.svg`, `photos/`, `sfx/`, root `.png` files.
-- Big content files (`scenarios*.js`, `retorts.js`, `gimmicks.js`, PROMOS in index.html) are mostly written lines. Grep for the specific scene or key; don't read them to learn the engine.
+- Big content files (`promos.js`, `scenarios*.js`, `retorts.js`, `gimmicks.js`, `reelcontent.js`, `wrestlervoice.js`) are mostly written lines. Grep for the specific scene or key; don't read them to learn the engine.
 
-## index.html map (line numbers approximate, as of v291 — grep the section markers for current ones)
+## index.html map (line numbers approximate, as of v509 — grep the section markers for current ones)
+The CSS is in `style.css`: the live look is the **v222 Pay-per-view** block (`html.lk-hy …`, near the end) plus card styles. Earlier blocks (Balanced, Classic Dynamite, Calmer pass, v212 Hybrid) are older layers that still partly apply; rules nothing uses were stripped in v291 and v509, so what's left is load-bearing. Party-night TV CSS is the "Party night: the TV screen" block.
 | Lines | Section | What's there |
 |---|---|---|
-| 16–1495 | `<style>` | All CSS. The live look is the **v222 Pay-per-view** block (~1089+) plus card styles. Earlier blocks (Balanced, Classic Dynamite, Calmer pass, v212 Hybrid) are older layers that still partly apply — rules with no visible effect were stripped in v291, so what's left is load-bearing. Party-night TV CSS ~420–651. |
-| 1517 | DATA | Roster, titles, PPVs, constants, economy costs (~1584) |
-| 1988 | PROMOS | Promo types and hand-written outcome lines (163KB — grep only) |
-| 2417 | SITUATIONAL MATCH EVENTS | In-match moments, real backstage heat |
-| 2482 | PRODUCER CALLS | |
-| 2519 | HELPERS | |
-| 2530 | ONLINE LEAGUES (2–4 GMs) | League rules/data; Photo Studio ~2649; revenue ~2745; sell-outs ~2765; feud engine ~2798; feud history ~2834 |
-| 2901 | SETUP | New game, draft salary cap ~2924 |
-| 2949 | SCOUTING | Prospects |
-| 2989 | SHOWS | Show rating; stamina ~3067 |
-| 3125 | RUN-INS | |
-| 3233 | 5★ OVERFLOW | |
-| 3257 | FINISHES | |
-| 3398 | PROMO ENGINE | Promo rating logic |
-| 3584 | AI BOOKER | Rival bot + Suggest the rest |
-| 3675 | AIRING | Running a show; free-agent market ~3750 |
-| 3811 | FRONT OFFICE CRISES | Between-show events (more in `crises2.js`) |
-| 3924 | PERSISTENCE | Save/load |
-| 3938 | UI | Main screens/render |
-| 4221 | QUICK BOOKING | Drag & drop for the running order |
-| 4367 | SHOW STRUCTURE | Book screen, match editor, dropdowns (~4679), feud detail (~4558). 211KB — biggest JS section |
-| 5202 | ONLINE LEAGUE: turns, sync, invites | |
-| 5383–5905 | CLOUD SAVE, YOUR GAMES, BACKUPS, CLOUD SYNC | Save safety — be careful here |
-| 5906–5938 | `<script>` tags | Load order of the external files |
+| 22–37 | `<script>` tags | External files loaded *before* the main script (party, scenarios, season, wwe, deals, promos.js…) |
+| 39 | DATA | Roster, titles, PPVs, constants, economy costs |
+| 536 | PROMOS | Promo types (PT), promoFit, voice lines; the scenes themselves are in promos.js |
+| 669 | SITUATIONAL MATCH EVENTS | In-match moment logic (the moments are MEV in promos.js) |
+| 735 | PRODUCER CALLS | |
+| 772 | HELPERS | incl. `hookStep` / `HOOKS` (see below) |
+| 800 | ONLINE LEAGUES (2–4 GMs) | League rules/data, Photo Studio, revenue, sell-outs, feud engine, feud history |
+| 1183 | SETUP | New game, draft salary cap |
+| 1237 | SCOUTING | Prospects |
+| 1273 | SHOWS | Show rating, stamina |
+| 1440 | RUN-INS | |
+| 1600 | 5★ OVERFLOW | |
+| 1636 | FINISHES | |
+| 1783 | PROMO ENGINE | Promo rating logic |
+| 1990 | AI BOOKER | Rival bot + Suggest the rest |
+| 2106 | AIRING | `airPair` (running a show), `endWeek`, free-agent market |
+| 2291 | FRONT OFFICE CRISES | Between-show events (more in `crises2.js`) |
+| 2403 | PERSISTENCE | Save/load, `SAVE_FMT` |
+| 2420 | UI | Main screens, `render` |
+| 2703 | QUICK BOOKING | Drag & drop for the running order |
+| 2835 | SHOW STRUCTURE | Book screen, dropdowns, feud detail, the reveal. Biggest JS section |
+| 3580 | ONLINE LEAGUE: turns, sync, invites | |
+| 3753–4350 | CLOUD SAVE, YOUR GAMES, BACKUPS, CLOUD SYNC | Save safety — be careful here |
+| 4356–4406 | `<script>` tags | Load order of the external files loaded after the main script |
+
+## Adding a step to endWeek, airPair or render: use hookStep
+Other files add their weekly/show/render steps with `hookStep(name, label, {before(ctx,...args){}, after(ctx,result,...args){}})`
+(or `{around(next,...args){…}}` when the step has to wrap the call, e.g. try/finally). Steps nest in script load order, exactly
+like hand-written wrappers: the file loaded last runs its `before` first and its `after` last; `ctx` carries values from a
+step's `before` to its own `after`. `HOOKS.endWeek` in the console lists every step, innermost first. Don't hand-wrap
+`endWeek`, `airPair` or `render` any more (`const e0=endWeek;endWeek=function…`) — check-boot counts their steps.
+Other functions are still hand-wrapped in places (applyMatch, go, finishDraft, autoBook, openModal, briefItems…); convert a
+function's wrappers to hookStep all at once, and prove it with tools/check-same.py.
+
+## Proving a refactor changes nothing
+For cleanup that shouldn't change play (moving code, hookStep conversions, removing dead code), run
+`python3 tools/check-same.py <older-commit>`: it plays the same seeded games (~30 weeks, five seeds and difficulties) in both
+builds and compares the final save byte for byte. It must say "Same game ✓". The balance sweep only shows "within noise",
+so it can't prove a refactor is safe; use it for real gameplay changes.
 
 ## External files
 | File | System |
@@ -58,7 +75,7 @@
 | `promoshow.js` | Promo showdown (Ace Attorney style) |
 | `exchange.js`, `retorts.js` | Back-and-forth promos, mic drops |
 | `matchshow.js` | Main-event match showdown |
-| `reel.js` | Highlight reels + live crowd |
+| `reel.js`, `reelcontent.js` | Highlight reels and their arc payoff scripts — switched off (`HR_ON=false`, v496) while the dialogue is rewritten; `tools/check-reels.cjs` still tests them |
 | `crowd.js` | Read the Crowd, Crowd Hijack |
 | `faceoff.js` | Face-off cards in showdowns |
 | `backstage.js` | Backstage confrontations, locker room whispers |
@@ -79,6 +96,22 @@
 | `desk.js` | Desktop layout, mouse and keyboard at 1100px+ (v374–v375) |
 | `phone.js` | Phone conventions under 1100px, never on the TV (v377): Go live pinned above the tabs on Book, swipe-down to close sheets, back button closes sheets / goes back a tab, bigger touch areas, minimum card text sizes |
 | `draftcall.js` | "The pick is in" banner for every other GM's draft pick (v412), fed by `S.draft.ids` from `draftPick`; waits while the opening, the draft tour or any sheet is up (`draftHold` in tutorial.js), and steps aside when a sheet opens |
+| `style.css` | All the game's CSS (v509) |
+| `promos.js` | Promo scenes (SCENES), promo twists (TWISTS) and in-match moments (MEV) — plain data, loaded before the main script (v509) |
+| `traits.js` | Traits and fan-group matchups (v425) |
+| `arcs.js` | Wrestler arcs: board, stops, payoffs, held stories (v426+) |
+| `rivalstory.js` | The offline rival's arcs and promises (v492) |
+| `xrfeed.js` | X Redditino's timeline after the reveal (v505) |
+| `quarters.js` | Quarter-hour ratings — the reveal's scoreboard (v462) |
+| `ppvtheme.js` | Each PPV's own reveal stage (v506) |
+| `budget.js` | The budget: only buy what's in the bank, network advances (v501) |
+| `profile.js` | The wrestler profile sheet (v422) |
+| `friends.js` | Backstage friend groups (v361) |
+| `venues.js` | TV buildings / venue ladder (v364, v424) |
+| `prove.js` | "Prove them wrong" for undrafted signings (v365) |
+| `opps.js` | Opportunities booked on TV from the office door (v454) |
+| `draftcrowd.js` | Crowd tallies and crowd-aware picks in the draft (v443) |
+| `wrestlervoice.js` | Original promo lines for roster wrestlers |
 
 ## Keep the tutorial current (required for every gameplay change)
 The Rookie GM orientation lives in `tutorial.js`. When you change, add or remove a game system:

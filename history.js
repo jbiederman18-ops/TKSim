@@ -34,7 +34,7 @@ if(typeof applyMatch==='function'){const a0=applyMatch;applyMatch=function(m,res
   linSync('',ctx&&ctx.name||'')}catch(e){console.warn('history',e)}
  return out}}
 /* titles also change outside matches: vacated after the week, after injuries, releases or retirements */
-if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(){const out=e0.apply(this,arguments);try{linSync('Vacated')}catch(e){}return out}}
+hookStep('endWeek','history: title lineage',{after(){try{linSync('Vacated')}catch(e){}}});
 if(typeof crisisChoose==='function'){const c0=crisisChoose;crisisChoose=function(){const out=c0.apply(this,arguments);try{linSync('Vacated')}catch(e){}return out}}
 if(typeof finishDraft==='function'){const f0=finishDraft;finishDraft=function(){const out=f0.apply(this,arguments);try{linSync('Vacated after the draft')}catch(e){}return out}}
 /* remember names of wrestlers who leave the world, so old reigns and records still read right */
@@ -90,5 +90,5 @@ window.careerHtml=careerHtml;
 /* v201: the Titles screen has its own History book chip */
 /* v201: the history book is on the Titles screen (and a chip in the Office tools) */
 /* seed current champions once (crowned before v157) */
-if(typeof render==='function'){const r0=render;render=function(){try{if(S&&S.w&&S.titles&&!S.linSeed&&(S.phase==='season'||S.phase==='over')){S.linSeed=1;linSync('')}}catch(e){}return r0.apply(this,arguments)}}
+hookStep('render','history: seed title lineage',{before(){try{if(S&&S.w&&S.titles&&!S.linSeed&&(S.phase==='season'||S.phase==='over')){S.linSeed=1;linSync('')}}catch(e){}}});
 })();

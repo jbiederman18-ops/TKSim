@@ -32,7 +32,6 @@ const TUT_MISS=[];
 function tv(k,f,fb){try{const v=f();if(v===undefined||v===null||(typeof v==='number'&&!isFinite(v)))throw 0;return v}catch(e){if(!TUT_MISS.includes(k))TUT_MISS.push(k);return fb}}
 const tvMoney=n=>tv('money',()=>money(n),'$'+Math.round(n/1000)+'K');
 const tvCap=()=>tv('draft cap',()=>S.draft.cap,0);
-const tvPPVs=()=>tv('PPVS',()=>Object.values(PPVS),[]);
 const tvRival=()=>tv('rival name',()=>ON()?'the other GMs':esc(S.rival),'the rival');
 
 /* ---------- look (theme tokens, so every Look restyles it) ---------- */
@@ -333,9 +332,9 @@ function tutMenuCard(){if(!S)return '';const dr=S.phase==='draft',on=tutTipsOn()
 
 /* ---------- hooks into the game ---------- */
 (function(){
- if(typeof render==='function'){const r0=render;render=function(){const out=r0.apply(this,arguments);
+ hookStep('render','tutorial: keep the spotlight placed',{after(){
   if(TUT){const st=TUT.steps[TUT.i];setTimeout(()=>{if(TUT&&TUT.steps[TUT.i]===st)tutPlace(tutFind(st))},40)}
-  else setTimeout(()=>{try{tutAuto()}catch(e){}},420);return out}}
+  else setTimeout(()=>{try{tutAuto()}catch(e){}},420)}});
  if(typeof closeModal==='function'){const c0=closeModal;closeModal=window.closeModal=function(){const out=c0.apply(this,arguments);try{xrIntroEnd()}catch(e){}return out}}
  if(typeof segDetails==='function'){const d0=segDetails;segDetails=window.segDetails=function(){const out=d0.apply(this,arguments);try{tutTip('t.editor')}catch(e){}return out}}
  if(typeof showResults==='function'){const s0=showResults;showResults=function(rv){const out=s0.apply(this,arguments);/* the solo reveal shows this tip itself once it finishes */if(rv!==true)try{tutTip('t.results')}catch(e){}return out}}

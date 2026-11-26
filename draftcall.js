@@ -80,4 +80,4 @@ function dcPause(){if(!DC_CUR)return;const x=DC_CUR;dcHide();DC_Q.unshift(x);cle
 (function(){if(typeof openModal!=='function')return;const o0=openModal;openModal=window.openModal=function(){const out=o0.apply(this,arguments);try{dcPause()}catch(e){}return out}})();
 
 /* after every render (that's when picks — solo, synced or queued — reach the screen) */
-(function(){if(typeof render!=='function')return;const r0=render;render=function(){const out=r0.apply(this,arguments);try{dcScan()}catch(e){console.error(e)}return out}})();
+(function(){if(typeof render!=='function')return;hookStep('render','draft pick banner',{after(){try{dcScan()}catch(e){console.error(e)}}})})();

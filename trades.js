@@ -78,7 +78,7 @@ window.tradeAnswer=function(id,yes){if(typeof mpLocked==='function'&&mpLocked())
  S.trades.splice(i,1);save();refresh()};
 window.tradeWithdraw=function(id){S.trades=(S.trades||[]).filter(t=>t.id!==id);save();refresh()};
 function refresh(){closeModal();render()}
-if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(){const out=e0.apply(this,arguments);try{S.trades=(S.trades||[]).filter(t=>AW()-t.at<=(ON()?3:1));rivalOffer()}catch(e){console.warn('trades',e)}return out}}
+hookStep('endWeek','trades: expire offers, rival offer',{after(){try{S.trades=(S.trades||[]).filter(t=>AW()-t.at<=(ON()?3:1));rivalOffer()}catch(e){console.warn('trades',e)}}});
 function offerRow(t){const giveN=t.give.map(id=>S.w[id]?esc(S.w[id].name):'?').join(' & ')||'cash',getN=t.get.map(id=>S.w[id]?esc(S.w[id].name):'?').join(' & ')||'cash';
  const cash=t.cash?` · ${money(Math.abs(t.cash))} ${t.cash>0?'to you':'from you'}`:'';
  return `<div class="brow"><b>${esc(nameOf(loc(t.from)))}</b> offers <b>${giveN}</b> for your <b>${getN}</b>${cash}<div class="row" style="gap:6px;margin-top:6px"><button class="mini" onclick="tradeAnswer('${t.id}',1)">✅ Accept</button><button class="mini" onclick="tradeAnswer('${t.id}',0)">Decline</button></div></div>`}

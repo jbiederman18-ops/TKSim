@@ -137,7 +137,7 @@ const _st=slotTags;slotTags=function(m,ppv){try{wsRoll(m)}catch(e){console.warn(
   const ids=m.sides.flat().filter(Boolean);const tr=[];for(let i=0;i<ids.length;i++)for(let j=i+1;j<ids.length;j++){const u=truceOf(ids[i],ids[j]);if(u!=null)tr.push(`${last(S.w[ids[i]].name)} & ${last(S.w[ids[j]].name)}`)}
   if(tr.length)add+=`<span class="tg bad">🤝 Truce: ${esc(tr.join(', '))} — booking them breaks it</span>`}catch(e){console.warn(e)}
  if(!add)return h;return h?h.replace(/<\/div>$/,add+'</div>'):`<div class="tags">${add}</div>`};
-const _ew=endWeek;endWeek=function(notes){try{truceCheck(notes||[])}catch(e){console.warn(e)}return _ew.apply(this,arguments)};
+hookStep('endWeek','backstage: truces',{before(ctx,notes){try{truceCheck(notes||[])}catch(e){console.warn(e)}}});
 
 (function(){const c=document.createElement('style');c.textContent=`html .tg.wsp,html.lk-hy .tg.wsp{background:#e8c35a!important;color:#1b1406!important;cursor:pointer}.tg.good[onclick]{cursor:pointer}`;document.head.appendChild(c)})();
 Object.assign(window,{wsOpen,wsAnswer,wsMatch,cfPair,truceOf,WS_SPOTS:WS});

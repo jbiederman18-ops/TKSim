@@ -314,7 +314,7 @@ let AUTO_T=0;
 function autoLine(){if(ON_||AUTO_T||!allowed())return;if(typeof tab==='undefined'||(tab!=='home'&&tab!=='book'))return;
  if(typeof TUT!=='undefined'&&TUT||typeof TUT_OFFER!=='undefined'&&TUT_OFFER)return;if(typeof ME!=='undefined'&&ME||typeof PS!=='undefined'&&PS||typeof LQ!=='undefined'&&LQ)return;
  AUTO_T=setTimeout(()=>{AUTO_T=0;const m=document.getElementById('modal');if(ON_||!m||!m.classList.contains('hidden')||!allowed())return;if(typeof TUT!=='undefined'&&TUT||typeof TUT_OFFER!=='undefined'&&TUT_OFFER)return;if(inboxList().length)openInbox()},450)}
-if(typeof render==='function'){const r0=render;render=window.render=function(){const out=r0.apply(this,arguments);try{autoLine()}catch(e){}return out}}
+hookStep('render','office line: auto-open',{after(){try{autoLine()}catch(e){}}});
 if(typeof _ob==='function')window.openBrief=openBrief=function(){if(allowed()&&inboxList().length){openInbox();return}if(ON_){ON_=false;N0=0}return _ob.apply(this,arguments)};
 const _cm=window.closeModal;
 window.closeModal=closeModal=function(){const r=_cm.apply(this,arguments);

@@ -9,8 +9,8 @@ from playwright.async_api import async_playwright
 from PIL import Image
 D=os.path.dirname(os.path.abspath(__file__))+'/'
 ROOT=D+'../'
-# the game's own condensed font (BC), lifted from index.html so the icon matches the in-game type
-html=open(ROOT+'index.html',encoding='utf8').read()
+# the game's own condensed font (BC), lifted from style.css so the icon matches the in-game type
+html=open(ROOT+'style.css',encoding='utf8').read()
 fonts='\n'.join(re.findall(r"@font-face\{font-family:'BC'[^}]*\}",html))
 
 INK,GOLD,GOLD3,FACE,HEEL='#09090a','#f2c14e','#a8842e','#5aa8ec','#ef5b52'

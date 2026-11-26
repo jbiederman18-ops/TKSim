@@ -89,6 +89,6 @@ function chase(card,show){const c=cfg();if(!c)return;weekTick();
  else if(g.k==='stip'&&!ms.some(s=>s.d.stip&&s.d.stip!=='std')){const k=['nodq','street','ladder','sub','tables'].find(k=>stipOk(k,m.type,!!show.ppv)&&stipPrice(k,'ai')*2<=(S.money.ai||0)&&(typeof bgLeft!=='function'||stipPrice(k,'ai')<=bgLeft('ai',card,{noProd:true})));if(k)m.stip=k}}
 const ab=autoBook;autoBook=window.autoBook=function(brand,show){const card=ab.apply(this,arguments);if(brand==='ai'&&show&&S.phase==='season'){try{chase(card,show)}catch(e){console.warn('rival goals',e)}}return card};
 const gc=goalCheck;goalCheck=window.goalCheck=function(b){const g=S.goal&&S.goal[b],was=g&&g.done;if(b==='ai'&&g&&cfg()&&!tried(g,cfg().goal))return;const r=gc.apply(this,arguments);if(b==='ai'&&cfg()&&g&&!was&&g.done){fbSync('ai');note(`🎯 ${S.rival} hit its weekly goal: ${GOALS[g.k].n} (+${fmtFans(g.fans)} fans).`)}return r};
-const ap=airPair;airPair=window.airPair=function(){let out;S.rvNotes=[];window.__rvAir=1;try{out=ap.apply(this,arguments)}finally{window.__rvAir=0}if(out&&out.notes&&S.rvNotes.length)out.notes.push(...S.rvNotes);S.rvNotes=[];return out};
+hookStep('airPair','rival story notes',{around(next){let out;S.rvNotes=[];window.__rvAir=1;try{out=next()}finally{window.__rvAir=0}if(out&&out.notes&&S.rvNotes.length)out.notes.push(...S.rvNotes);S.rvNotes=[];return out}});
 const fa=fbApply;fbApply=window.fbApply=function(b,segs,show,o){const r=fa.apply(this,arguments);if(b==='ai'&&cfg()){try{settle(segs,!!(show&&show.ppv))}catch(e){console.warn('rival story',e)}}return r};
 })();

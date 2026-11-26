@@ -776,22 +776,6 @@ const FB_HANDLE={cas:['@JustHereForTheBelts','@MyDadWatchesThis','@CasualTuesday
  blood:['@CrimsonMaskMike','@BarbedWireBetty','@BladeJobBrandon'],flip:['@SpotMonkeyKai','@ShootingStarSam','@450Splashley'],chaos:['@RunInRhonda','@NoDQNate','@SwerveSzn']};
 const FB_WANT={cas:'bigger stars and title matches',tech:'a straight-up technical match — two technicians, clean finish, no run-ins',blood:'a street fight, a cage, something with blood in it',flip:'high-flyers, a ladder match or a multi-person spotfest',chaos:'run-ins, a No DQ brawl, a Chaos wrestler with a live mic'};
 function fbPick(a,k){let h=0;const s=String(k)+'|'+AW();for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return a[Math.abs(h)%a.length]}
-function fbPosts(r){const ch=g=>r.after[g]-r.before[g];const vd=g=>fbVd(r,g);
- /* v500: the posts agree with the verdicts — praise only from a happy crowd, complaints only from one that wasn't */
- const best=FB_G.filter(g=>vd(g)[1]==='good'&&r.pct[g]>0).sort((a,b)=>r.pct[b]-r.pct[a])[0],worst=FB_G.filter(g=>vd(g)[1]!=='good'&&r.pct[g]<0).sort((a,b)=>r.pct[a]-r.pct[b])[0];
- const tot=FB_G.reduce((a,g)=>a+ch(g),0);
- const open=tot>=15000?fbPick(['Boss, the mentions are on fire tonight.','Phones are lighting up. In the good way.','Trending. Top five. I screenshotted it.'],tot):tot>=0?fbPick(['Mixed bag online tonight, but we held the room.','Solid night. Some of them want more, though.','Decent buzz. A couple of groups are restless.'],tot):fbPick(['Not a great night in the replies, boss.','I’ve muted three hashtags. You should know why.','We lost people tonight. Here’s who.'],tot);
- const posts=[];const post=(g,k,l)=>posts.push({g,h:fbPick(FB_HANDLE[g],g+k),t:fbPick(l,g+k)});
- if(best){const m=r.mt&&r.mt[best];post(best,true,m?[`${m}. THIS is why I watch.`,`${m}. Give me that every week.`,`Still thinking about ${m}.`]:['THIS is why I watch.','Give me that every week.','Best night in a while.'])}
- if(worst){const v=vd(worst)[0],m=r.mt&&r.mt[worst];
-  post(worst,false,worst==='cas'?['Flipped over to the game halfway through tbh.','Changed the channel. Maybe next week.','Wake me up when there’s something to see.']:
-   v==='Ignored'?['Anything for us tonight? No? Okay.','Another show, nothing for us.','Starting to think they forgot we exist.']:
-   v==='Wanted more'?['A taste is nice. We came for a meal.','So close. Give us a little more.','Liked what we got. Wasn’t enough.']:
-   [m?`Expected way more from ${m}.`:'That was not it.','We deserve better than that.','Not what we signed up for.'])}
- const lostG=FB_G.slice().sort((a,b)=>((r.sw||{})[a]||0)-((r.sw||{})[b]||0))[0];const lostN=-((r.sw||{})[lostG]||0);
- if(lostN>=1000)posts.push({g:lostG,h:fbPick(FB_HANDLE[lostG],lostG+'sw'),t:fbPick([`Switched over to the other show halfway through. They actually gave us something.`,`Sorry, the other channel had what we wanted tonight.`,`Watched the other show. Not even sorry.`],lostG)});
- const hungry=FB_HC.filter(g=>r.pct[g]<-1&&['Ignored','Wanted more'].includes(vd(g)[0])).sort((a,b)=>r.pct[a]-r.pct[b])[0];
- return {open,posts,ask:hungry?`The ${fbN(hungry)} keep asking for ${FB_WANT[hungry]}.`:''}}
 const fbK=n=>Math.abs(n)<10000?(Math.abs(n)<100?'0':(n/1000).toFixed(1).replace(/\.0$/,'')+'K'):fmtFans(n);
 function fbResultsCard(o){const r=o&&o.fb&&o.fb.p;if(!r||!r.before)return '';const tb=FB_G.reduce((a,g)=>a+r.before[g],0),ta=FB_G.reduce((a,g)=>a+r.after[g],0);
  const rows=FB_G.map(g=>{const d=r.after[g]-r.before[g];const sw=r.sw&&r.sw[g]||0;const why=(r.vd&&r.vd[g]?r.vd[g]+': ':'')+(r.why[g]||'')+(Math.abs(sw)>=500?` · ${fmtFans(Math.abs(sw))} ${sw>0?'switched over from':'switched to'} the other show`:'');return `<div class="fbr"><span class="fgw">${fgLbl(g)}</span><span class="fbn">${fmtFans(r.before[g])} → <b>${fmtFans(r.after[g])}</b> <b class="${d>=0?'good':'bad'}">${d>=0?'▲':'▼'}${fbK(Math.abs(d))}</b></span><small>${esc(why)}</small></div>`}).join('');
@@ -824,7 +808,7 @@ function fgReinBrief(){if(!S||S.phase!=='season')return [];const ask=Object.valu
  return ask.map(w=>{const cur=fgOf(w)[0];const opts=FB_G.filter(g=>g!==cur);
   return {i:'🎭',t:`${w.name} wants a reinvention`,u:false,rows:[`<div class="brow">${esc(w.name)} <span class="fgw">${fgLbl(cur)}</span><br><span class="muted tiny">${w.mor<FB_REIN_MOR?'Miserable':'Off TV for weeks'}. Pick a new crowd and they're gone ${FB_REIN_OUT} weeks relearning how to work, or tell them to stay the course.</span><div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px">${opts.map(g=>`<button class="mini" onclick="fgReinvent('${w.id}','${g}')">${fbN(g)}</button>`).join('')}<button class="mini ghost" onclick="fgReinvent('${w.id}','no')">Stay the course</button></div></div>`]}})}
 if(typeof briefItems==='function'){const b0=briefItems;briefItems=window.briefItems=function(){const s=b0.apply(this,arguments);try{return fgReinBrief().concat(s)}catch(e){console.warn('rein',e);return s}}}
-if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){try{fgWeek(notes)}catch(e){console.warn('fg week',e)}return e0.apply(this,arguments)}}
+hookStep('endWeek','fan groups: weekly',{before(ctx,notes){try{fgWeek(notes)}catch(e){console.warn('fg week',e)}}});
 (function(){const c=document.createElement('style');c.textContent=`
 .srcr2 .srwyr,.srcr .srwy{grid-column:1/-1}.srcr2 .srwyr .srwy,.srcr .srwy{font-size:13px;line-height:1.3;color:#c9c4bc;margin-top:2px}
 .srcrowd .srcr2{align-items:center;row-gap:0;padding:4px 0}.srcrowd .srcr2 .fgw{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:0 8px}.srcrowd.srone{margin-top:2px;padding-top:6px}.srcrowd .srcr2 .fgw b{margin:0;font-size:16px}.srcrowd .srcr2 .fgw b.good,.srcrowd .srcr b.good{color:var(--good)}.srcrowd .srcr2 .fgw b.bad,.srcrowd .srcr b.bad{color:var(--bad)}

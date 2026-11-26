@@ -58,8 +58,8 @@ window.injAct=function(id,k){if(typeof mpLocked==='function'&&mpLocked())return;
 function medWeek(notes){ownList('p').concat(ON()?[]:ownList('ai')).forEach(w=>{
  if(w.rush&&AW()>=w.rush){if(w.dur0!=null)w.dur=w.dur0;delete w.dur0;delete w.rush;if(w.own==='p')notes.push(`💪 ${w.name}'s body has fully healed from being rushed back.`)}
  if(w.surg&&w.inj===0){delete w.surg;w.dur=Math.min(95,durOf(w)+5);w.fat=0;w.mor=clamp(w.mor+6,0,100);const n=`🏥 ${w.name} is back from surgery — fully healed and tougher than before (+5 durability).`;news(n);if(w.own==='p')notes.push(n)}})}
-if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){const out=e0.apply(this,arguments);notes=notes||[];
- try{bothSides(()=>{tampTick(notes);medWeek(notes);injScan()})}catch(e){console.warn('front office',e)}return out}}
+hookStep('endWeek','front office: tampering, medical, injuries',{after(ctx,r,notes){notes=notes||[];
+ try{bothSides(()=>{tampTick(notes);medWeek(notes);injScan()})}catch(e){console.warn('front office',e)}}});
 /* scan right after a show too, so the decision is waiting on the results screen's way home */
 if(typeof airShow==='function'){const a0=airShow;airShow=function(){const out=a0.apply(this,arguments);try{injScan()}catch(e){}return out}}
 

@@ -50,7 +50,7 @@ function weekMorale(){const wk=AW();
   try{if(EGO_K){const stars=ownList(b).filter(w=>!w.inj&&w.pop>=EGO_POP);const over=Math.max(0,stars.length-EGO_ROOM),crowd=EGO_X?EGO_BASE+over*EGO_X:stars.length/EGO_ROOM;
    stars.forEach(w=>{const champ=typeof isChamp==='function'&&isChamp(w.id);if(champ||w.feat===wk){w.ego=0;return}w.ego=(w.ego||0)+1;
     if(w.ego>=EGO_AFTER){const d=-Math.round(EGO_K*crowd*10)/10;if(d)mlog(w,d,(EGO_X?over>0:crowd>1)?'Lost in a crowded locker room':'Wants the spotlight')}})}}catch(e){console.warn('egos',e)}})}
-if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){try{weekMorale()}catch(e){console.warn('morale',e)}return e0.apply(this,arguments)}}
+hookStep('endWeek','morale: weekly',{before(){try{weekMorale()}catch(e){console.warn('morale',e)}}});
 
 /* ---------------- wins, losses and main events ---------------- */
 if(typeof applyMatch==='function'){const a0=applyMatch;applyMatch=function(m,res,ctx){const before={};const ids=(m&&m.sides?m.sides.flat():[]).filter(id=>S.w[id]);ids.forEach(id=>before[id]=S.w[id].mor);
@@ -128,9 +128,8 @@ if(typeof applyMatch==='function'){const a0=applyMatch;applyMatch=function(m,res
    const ok=x.k==='big'?(ctx&&ctx.pos==='me')||!!sh.ppv:m.sides.some((s,i)=>i!==m.winner&&s.includes(x.b));
    if(!ok)return true;kept(w,`got ${ccOweLabel(x)}, as you promised`,notes||[]);return false})}}catch(e){console.warn('cc owe',e)}
  return out}}
-if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){try{if(S.ccOwe&&S.ccOwe.length){const n=notes||[];
-  S.ccOwe=S.ccOwe.filter(x=>{const w=S.w[x.a];if(!w||!w.own)return false;if(AW()<x.by)return true;breach(w,w.own,`the ${x.k==='big'?'big win':ccOweLabel(x).replace(/^a /,'')} you promised for doing the job never came`,n);return false})}}catch(e){console.warn('cc owe',e)}
- return e0.apply(this,arguments)}}
+hookStep('endWeek','morale: owed creative-control wins',{before(ctx,notes){try{if(S.ccOwe&&S.ccOwe.length){const n=notes||[];
+  S.ccOwe=S.ccOwe.filter(x=>{const w=S.w[x.a];if(!w||!w.own)return false;if(AW()<x.by)return true;breach(w,w.own,`the ${x.k==='big'?'big win':ccOweLabel(x).replace(/^a /,'')} you promised for doing the job never came`,n);return false})}}catch(e){console.warn('cc owe',e)}}});
 
 /* v354: storylines that pay off — anything a wrestler was owed and got on tonight's show brings fans in (deliverFans, index.html) */
 if(typeof applyMatch==='function'){const a0=applyMatch;applyMatch=function(m,res,ctx,notes){let due=[];

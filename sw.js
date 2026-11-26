@@ -1,13 +1,15 @@
 // Tony Khan Simulator — offline support. Bump VERSION whenever you upload a new index.html (and APP_VERSION in index.html to match — that's the label shown in the game).
-const VERSION = 'aegm-v508';
+const VERSION = 'aegm-v509';
 
-const FILES = ['./', './index.html', './fanbase.js', './xrfeed.js', './traits.js', './arcs.js', './rivalstory.js', './desk.js', './phone.js', './draftcall.js', './draftcrowd.js', './opps.js', './quarters.js', './ppvtheme.js', './budget.js', './profile.js', './fonts/bc-600.woff2', './fonts/bc-700.woff2', './fonts/bc-800i.woff2', './fonts/bc-900i.woff2', './fonts/barlow-500.woff2', './fonts/barlow-600.woff2', './fonts/barlow-700.woff2', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './icon-maskable-512.png',
+const FILES = ['./', './index.html', './style.css', './promos.js', './fanbase.js', './xrfeed.js', './traits.js', './arcs.js', './rivalstory.js', './desk.js', './phone.js', './draftcall.js', './draftcrowd.js', './opps.js', './quarters.js', './ppvtheme.js', './budget.js', './profile.js', './fonts/bc-600.woff2', './fonts/bc-700.woff2', './fonts/bc-800i.woff2', './fonts/bc-900i.woff2', './fonts/barlow-500.woff2', './fonts/barlow-600.woff2', './fonts/barlow-700.woff2', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './icon-maskable-512.png',
   './online.js', './firebase-sdk.js', './firebase-config.js',
   './party.js', './scenarios.js', './scenarios2.js', './scenarios3.js', './gimmicks.js', './season.js', './pitches.js', './openchal.js', './deals.js', './vendor/qrcode.js',
   './crises2.js', './tutorial.js', './challenges.js', './farm.js', './rohleague.js', './morale.js', './friends.js', './venues.js', './prove.js', './wrestlervoice.js', './retorts.js', './exchange.js', './promoshow.js', './crowd.js', './matchshow.js', './backstage.js', './frontoffice.js', './titlepic.js', './attention.js', './teamsug.js', './history.js', './trades.js', './hype.js', './fx.js', './belts.js', './wwe.js', './inbox.js', './squash.js', './calendar.js', './cut.js', './sfx.js', './feed.js', './solotv.js', './reelcontent.js', './reel.js', './afterdark.js', './faceoff.js', './cards.js', './rebrand.js', './sfx/cheer.mp3', './sfx/boo.mp3', './sfx/applause.mp3', './card-bg.jpg'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)));
+  // cache:'reload' skips the browser's own HTTP cache (GitHub Pages keeps files ~10 minutes), so a new version never
+  // gets stored with a leftover copy of an older index.html or script inside it.
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))));
   self.skipWaiting();
 });
 
@@ -47,7 +49,7 @@ self.addEventListener('fetch', e => {
   const nav = e.request.mode === 'navigate';
   const key = nav ? './index.html' : e.request;
   const cacheP = caches.open(VERSION);
-  const network = cacheP.then(cache => fetch(e.request).then(res => {
+  const network = cacheP.then(cache => fetch(new Request(e.request, { cache: 'no-cache' })).then(res => {
     if (res.ok && res.type === 'basic') return cache.put(key, res.clone()).then(() => res, () => res);
     return res;
   }));

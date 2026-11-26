@@ -57,7 +57,7 @@ function rohWeek(notes){if(S.phase!=='season')return;const R=L();const a=AW();if
  R.res=[{w:a,l:res}].concat((R.res||[]).filter(x=>a-x.w<3)).slice(0,3);
  res.forEach(r=>{if(!r.title||!(r.crown||r.newc))return;const n=`🏟️ NEW ${TT[r.title].n.toUpperCase()} CHAMPION: ${r.wn}${r.crown?' is crowned':''} on ROH TV.`;R.news=(R.news||[]).concat([{w:a,t:n}]).slice(-8);
   const b=owner(r.win);if(b&&(b==='p'||ON())){news(n);notes.push(n)}})}
-if(typeof endWeek==='function'){const e0=endWeek;endWeek=function(notes){const out=e0.apply(this,arguments);try{rohWeek(notes||[])}catch(e){console.warn('roh league',e)}try{bothSides(()=>tapeTick(notes||[]))}catch(e){console.warn('tapes',e)}return out}}
+hookStep('endWeek','ROH league and prospect tapes',{after(ctx,r,notes){try{rohWeek(notes||[])}catch(e){console.warn('roh league',e)}try{bothSides(()=>tapeTick(notes||[]))}catch(e){console.warn('tapes',e)}}});
 
 /* ---------------- call-ups cash in the buzz; leaving ROH vacates titles ---------------- */
 if(typeof callUp==='function'){const c0=callUp;window.callUp=callUp=function(id){const w=F('p').r[id];const buzz=w?w.buzz||0:0;const tk=titleOf(id);const out=c0.apply(this,arguments);

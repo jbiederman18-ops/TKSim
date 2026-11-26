@@ -83,7 +83,7 @@ function hjTry(p,ctx,ai){if(!p||!ctx||!ctx.A||!S)return null;const brand=ctx.bra
 /* ---------- hooks ---------- */
 const _gl=goLive;goLive=function(){if(!LIVE)CRWD.p=0;return _gl.apply(this,arguments)};
 /* the rival's show (and the next week's live show) start with a fresh crowd */
-const _ap=airPair;airPair=function(){CRWD.ai=0;CRWD.p=0;return _ap.apply(this,arguments)};
+hookStep('airPair','crowd: reset hijacks',{before(){CRWD.ai=0;CRWD.p=0}});
 const _pt=pickTwist;pickTwist=function(p,ctx,ai){let h=null;try{h=hjTry(p,ctx,ai)}catch(e){console.warn(e)}return h||_pt(p,ctx,ai)};
 const _me=matchEvent;matchEvent=function(m,brand,big,rate){const g=_me(m,brand,big,rate);if(g&&!g.sit)try{rcTry(g,m,brand,big)}catch(e){console.warn(e)}return g};
 const _er=evRoll;evRoll=function(c,r,m){const out=_er(c,r,m);const C=r&&r.CROWD;

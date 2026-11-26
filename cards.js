@@ -49,7 +49,6 @@ function roV(sl){return !!sl&&sl.k==='match'&&!!sl.d&&Array.isArray(sl.d.sides)&
 const tourV=sl=>roV(sl)&&!!sl.d.tour;
 const xoV=sl=>!!sl&&sl.k==='xo';
 const shown=sl=>tableOk(sl)||roV(sl)||xoV(sl);
-const fieldV=sl=>roV(sl)&&!sl.d.tour;
 const editOk=sl=>!!sl&&(tableOk(sl)||roV(sl)||xoV(sl));
 const spG=sl=>sl&&sl.k==='match'&&sl.d&&sl.d.sp&&SPK[sl.d.sp]?SPK[sl.d.sp].g:null;
 function tableOk(sl){if(!sl)return false;if(sl.k==='promo')return true;if(sl.k!=='match')return false;return !sl.d||plain(sl.d)}
@@ -811,7 +810,7 @@ if(typeof gameHero==='function'){const gh0=gameHero;gameHero=window.gameHero=fun
  return `<div class="tchero"><button class="tcgo" onclick="${go}" aria-label="${esc(g.t)}">${showCard(g,true)}</button><div class="tchi"><span class="k">${esc(lab)}</span><b class="t">${esc(g.t)}</b>
  ${g.wk||g.fans?`<div class="tchs">${stat(g.wk?`${Math.min(g.wk,SEASON)}<small>/${SEASON}</small>`:'','Week')}${stat(g.fans?fmtFans(g.fans):'','Fans')}</div>`:''}
  <div class="tcha"><button class="btn" onclick="${go}">${g.turn==='mine'?'Take your turn':'Continue'}</button><button class="btn sec" onclick="gameMenu('${g.k}','${g.id}',${g.cur?1:0})" aria-label="More options">⋯</button></div></div></div>`}}
-const r0=render;render=window.render=function(){const o=r0.apply(this,arguments);try{attnDown()}catch(e){}try{decorate()}catch(e){console.error('cards',e)}try{homeDeco()}catch(e){console.error('cards home',e)}try{homeMenus()}catch(e){console.error('cards menus',e)}return o};
+hookStep('render','cards: card table and Home',{after(){try{attnDown()}catch(e){}try{decorate()}catch(e){console.error('cards',e)}try{homeDeco()}catch(e){console.error('cards home',e)}try{homeMenus()}catch(e){console.error('cards menus',e)}}});
 /* a new week or a new game starts a fresh table */
 if(typeof suggestFill==='function'){const sf=suggestFill;suggestFill=window.suggestFill=function(){TC.dr={};return sf.apply(this,arguments)}}
 if(typeof clearCard==='function'){const cc=clearCard;clearCard=window.clearCard=function(){TC.dr={};return cc.apply(this,arguments)}}
