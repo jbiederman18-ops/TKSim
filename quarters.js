@@ -1,7 +1,7 @@
 /* ===================== v462: QUARTER-HOUR RATINGS (the reveal's scoreboard) =====================
    The two-show reveal (index.html srStage) used to be a tug of war on star ratings. The night is won on fans now, so the
    reveal draws the overnights instead: each show's line of fans gained tonight, one segment at a time. A segment's
-   plate lands (cards, stars, the crowds it moved), then that show's line draws to its point with the segment's number
+   plate lands (cards, stars, crowd expectations), then that show's line draws to its point with the segment's number
    next to it. The main event is the overrun at the right edge.
    Each segment's fans come from airing (fbSplit in fanbase.js, stored as seg.fd / seg.fi on the block's segments) and add
    up to the show's real fan change tonight, which is also what decides the night. Old saves without them share the
@@ -21,7 +21,7 @@ function qhRdOf(it){return SRV.rounds.find(r=>r.p===it||r.ai===it)}
 /* a half landed: that show's line moves one column */
 function qhPush(it){const R=SRV;if(!R||!R.qh||!R.two||!it)return;const br=it.b.brand;if(br!=='p'&&br!=='ai')return;const rd=qhRdOf(it);if(!rd)return;
  const c=qhCol(rd),d=qhFd(R.o,it);R.qh.sum[br]+=d;R.qh.pts[br].push({c,v:R.qh.sum[br],d});R.qh.fresh[br]=true;R.qh.lab[br]=c;
- R.qh.ic[br][c]=it.s.fw?[]:it.s.fi||[];qhDraw()}
+ R.qh.ic[br][c]=it.s.fm?[]:it.s.fi||[];qhDraw()}
 /* a round where one show had nothing in that slot: its line holds flat through the column */
 function qhHold(rd){const R=SRV;if(!R||!R.qh||!R.two)return;const c=qhCol(rd);['p','ai'].forEach(br=>{if(rd[br])return;const P=R.qh.pts[br];if(P[P.length-1].c>=c)return;P.push({c,v:R.qh.sum[br],d:null})});qhDraw()}
 function qhX(c){const n=SRV.qh.n||1;return QH_L+(QH_R-QH_L)*c/n}
@@ -75,10 +75,23 @@ function qhTotal(o,br){const b=o.blocks.find(x=>x.brand===br);return b?b.segs.re
 /* the bell: both lines take their night-wide step together. Safe to call twice. */
 function qhBell(inst){const R=SRV;if(!R||!R.qh||!R.qh.bell||R.qh.rung)return false;R.qh.rung=true;const c=R.qh.n,was=R.inst;if(inst)R.inst=true;
  ['p','ai'].forEach(br=>{const d=qhBn(R.o,br)||0;R.qh.sum[br]+=d;R.qh.pts[br].push({c,v:R.qh.sum[br],d});R.qh.fresh[br]=true;R.qh.lab[br]=c});qhDraw();R.inst=was;return true}
-/* v508: under a segment's cards, the crowds it moved and why (fbReasons) — one line each, shown once its stars are in */
-function qhWhyHtml(s){const l=s&&s.fw;if(!l||!l.length||typeof fgIc!=='function')return '';
- return `<div class="twwhy">${l.map(([g,v,k])=>`<div class="twwr fg-${g}">${fgIc(g)}<span><i>${FG_N[g]}</i><b>${FB_BECAUSE[k]||''}</b></span><em class="${v>0?'good':'bad'}" role="img" aria-label="${v>0?'gained fans':'lost fans'}">${v>0?'▲':'▼'}</em></div>`).join('')}</div>`}
-window.qhWhyHtml=qhWhyHtml;
+/* v513: under a segment's cards, its stars against what each crowd has come to expect, on one 1–5★ scale: the fill is the
+   stars, the line is that crowd's bar. Green clears it (FB_FED of grace, as scored), red falls short. ⚠ marks a run-in or
+   screwy finish that cost Technical fans whatever the stars were */
+function qhMeterHtml(s){const l=s&&s.fm;if(!l||!l.length||typeof fgIc!=='function')return '';
+ const at=v=>Math.round(clamp((v-1)/4,0,1)*1000)/10;
+ return `<div class="twmx"><div class="twmh">Crowd expectations</div><div class="twms">${l.map(([g,x,pen])=>{const ok=s.stars>=x-FB_FED;
+  return `<div class="twm fg-${g}" role="img" aria-label="${FG_N[g]}: ${ok?'expectation met':'below expectation'}${pen?', but a run-in or finish upset them':''}">${fgIc(g)}<span class="twmt"><i class="${ok?'good':'bad'}" style="width:${at(s.stars)}%"></i><u style="left:${at(x)}%"></u></span>${pen?'<b>⚠︎</b>':''}</div>`}).join('')}</div></div>`}
+window.qhMeterHtml=qhMeterHtml;
+/* v513: once the night is decided, its own screen when a crowd's bar reaches a new milestone (fbMiles): each line slides
+   from the last milestone to the new one, leaving a dashed mark behind. Same 1–5★ scale as the meters */
+function qhRisen(o){const m=o&&o.fb&&o.fb.p&&o.fb.p.mile;return m&&typeof fgIc==='function'?FB_HC.filter(g=>m[g]):[]}
+function qhRiseHtml(o){const m=o.fb.p.mile;const at=v=>Math.round(clamp((v-1)/4,0,1)*1000)/10;
+ return `<div class="qhrise"><div class="h mhd">Crowd expectations</div><div class="qhrsub">A new milestone: they expect more now</div>${qhRisen(o).map((g,i)=>{const a=at(m[g][0]),z=at(m[g][1]);
+  return `<div class="qhr fg-${g}" style="--a:${a}%;--z:${z}%;--w:${Math.round((z-a)*10)/10}%;--d:${(.7+i*.5).toFixed(1)}s"><div class="qhrn">${fgIc(g)}<span>${FG_N[g]}</span><b>${m[g][1].toFixed(2)}★</b></div><div class="twmt" role="img" aria-label="${FG_N[g]} now expect ${m[g][1]} stars"><s></s><em></em><u></u></div></div>`}).join('')}</div>`}
+/* the way out of the reveal: the expectations screen first when a line moved, then the same two buttons */
+function qhRiseShow(){const o=SRV&&SRV.o;if(!o||!qhRisen(o).length)return;openModal(qhRiseHtml(o)+srBtnsHtml())}
+window.qhRisen=qhRisen;window.qhRiseShow=qhRiseShow;
 /* the bell's plate (v503): a receipt of what moved each show's fans beyond its segments. Every line has its size and the
    lines add up to the total. Biggest first; the small ones sit behind a "more" row (one combined line on the TV, which can't be tapped). */
 const QH_ROWS=4,QH_TV_ROWS=6;
@@ -156,16 +169,27 @@ body:not(.tv) .srv.qh .twh{gap:5px;padding-top:8px;padding-bottom:8px}
 .qhn{font:900 italic 12px 'BC',sans-serif}.qhn.p{fill:var(--gold)}.qhn.ai{fill:var(--heel)}
 .qhn.nw{opacity:0;animation:qhIn .3s ease-out .75s forwards}
 @keyframes qhIn{to{opacity:1}}
-.twwhy{display:flex;flex-direction:column;gap:3px;text-align:left;opacity:0;transform:translateY(4px);transition:opacity .3s,transform .3s}.twh.nt .twwhy{opacity:1;transform:none}
-.twwr{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#1e1e22}
-.twwr .fgi{width:22px;height:22px;margin:0}
-.twwr span{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
-.twwr span i{font:700 11px/1 'BC',sans-serif;font-style:normal;letter-spacing:.1em;text-transform:uppercase}
-.twwr span b{font:800 italic 19px/1 'BC',sans-serif;text-transform:uppercase;color:var(--text)}
-.twwr em{font-style:normal;font-size:17px}.twwr em.good{color:var(--good)}.twwr em.bad{color:var(--bad)}
-.twh.mini .twwhy{display:none}
-body.tv .twwhy{flex-direction:row}body.tv .twwr{flex:1 1 0;min-width:0;gap:5px;padding:4px 6px}
-body.tv .twwr .fgi{width:18px;height:18px}body.tv .twwr span i{font-size:11px}body.tv .twwr span b{font-size:17px;line-height:1.05}body.tv .twwr em{font-size:13px}
+.twmx{text-align:left;opacity:0;transform:translateY(4px);transition:opacity .3s,transform .3s}.twh.nt .twmx{opacity:1;transform:none}
+.twmh{font:700 11px/1 'BC',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin:2px 0 4px}
+.twms{display:flex;flex-direction:column;background:#1e1e22;padding:2px 8px}
+.twm{display:flex;align-items:center;gap:8px;height:22px}
+.twm .fgi{width:15px;height:15px;margin:0;flex:none}
+.twmt{position:relative;flex:1;height:7px;background:#34343a}
+.twmt i{position:absolute;left:0;top:0;bottom:0}.twmt i.good{background:var(--good)}.twmt i.bad{background:var(--bad)}
+.twmt u{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1.5px;background:var(--text)}
+.twm b{font-size:13px;line-height:1;color:var(--gold)}
+.twh.mini .twmx{display:none}
+.qhrise{padding:4px 0 14px}.qhrsub{text-align:center;color:var(--mut);font-size:13.5px;margin-bottom:14px}
+.qhr{background:#1e1e22;padding:10px 12px 14px;margin-bottom:6px}
+.qhrn{display:flex;align-items:center;gap:7px;font:700 12px/1 'BC',sans-serif;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px}.qhrn .fgi{width:16px;height:16px;margin:0}.qhrn b{margin-left:auto;font:800 italic 17px/1 'BC',sans-serif;letter-spacing:0;color:var(--gold);opacity:0;animation:qhIn .4s ease-out calc(var(--d) + 1.2s) forwards}
+.qhr .twmt{height:9px}
+.qhr .twmt u{left:var(--a);top:-6px;bottom:-6px;width:4px;margin-left:-2px;animation:qhrLine 1.4s cubic-bezier(.45,0,.2,1) var(--d) forwards}
+.qhr .twmt em{position:absolute;left:var(--a);top:0;bottom:0;width:0;background:var(--gold);animation:qhrFill 1.4s cubic-bezier(.45,0,.2,1) var(--d) forwards}
+.qhr .twmt s{position:absolute;left:var(--a);top:-6px;bottom:-6px;border-left:2px dashed var(--mut);margin-left:-1px}
+@keyframes qhrLine{to{left:var(--z)}}
+@keyframes qhrFill{to{width:var(--w)}}
+@media (prefers-reduced-motion:reduce){.qhr .twmt u{left:var(--z);animation:none}.qhr .twmt em{width:var(--w);animation:none}.qhrn b{opacity:1;animation:none}}
+body.tv .twms{flex-direction:row;gap:10px}body.tv .twm{flex:1 1 0;min-width:0;gap:5px}
 .qhics{position:absolute;left:0;right:0;bottom:3px;height:16px}
 .qhic{position:absolute;top:0;transform:translateX(-50%);display:flex;gap:1px;white-space:nowrap}
 .qhic i,.twfi i{display:inline-flex;align-items:center;font-style:normal}
