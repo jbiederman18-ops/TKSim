@@ -463,33 +463,33 @@ chaos:{
  swinM:["left {OT} for {M}. chaos over here. good",
   "came over from {OT} for {M}. worth it"]}};
 const XR_SAY={
- big:["Boss, the mentions are on fire. In the good way. I checked twice.","We’re trending. Top five. I screenshotted it and sent it to my mom.",
-  "My phone’s been buzzing for an hour. I put it on a pillow. It buzzed off the pillow.","Boss. BOSS. People are clipping everything. Even the commercial breaks.",
-  "This is the good kind of chaos online. Enjoy it. It never lasts."],
- good:["Good night, boss. Mostly hearts. A couple of grumps. The grumps are always there.","Solid. The replies are friendly. Suspiciously friendly. I’m keeping an eye on it.",
-  "We had a good one. Nobody’s tagging us in anything mean, which online is basically a parade.","Nice night. A few of the crowds want more, but the vibes are up."],
- mixed:["Mixed bag online tonight, but we held the room.","Solid. Some of them want more, though. Some of them always want more. That’s the job.",
-  "It’s a split timeline. Half of them are thrilled, the other half are writing essays.","Decent buzz. A couple of crowds are restless. I’ll pass along the notes."],
- bad:["Not a great night in the replies, boss. I’ve muted four hashtags.","We lost people tonight. I have names. I have handles. I have screenshots.",
-  "So. The ratio is not in our favor. I’ll explain what a ratio is later.","I drafted a statement. I deleted the statement. Let’s just do better next week."],
- awful:["Boss, I need you to sit down. Okay, now stay sitting down.","The timeline is on fire and not in the fun way. I’ve unplugged my router to cope.",
-  "Someone made a meme about us. It’s good. That’s the worst part. It’s really good."],
- rbig:["{TH}’s mentions are hot, boss. I hate it. I’m still reading them, I’m a professional.","Credit where it’s due: {TH}’s timeline is happy. Don’t tell them I said that.",
-  "{TH} had a good night. Their replies are all fire emojis. Ugh.","Their crowd is purring. I’ve never wanted to unfollow something so badly."],
- rmixed:["{TH}’s mentions are lukewarm. Half their crowds want more.","{TH}’s timeline is a mixed bag. Some of their hardcore fans are restless. Restless fans wander.",
-  "Middle-of-the-road night for {TH}. I’ve read their replies. There are opportunities.","{TH}’s fans are posting, but nobody’s screaming. That’s a soft spot."],
- rbad:["{TH} is getting cooked online. I made popcorn.","{TH}’s replies are brutal, boss. I’ve been refreshing for twenty minutes. For research.",
-  "{TH}’s fans are miserable. Miserable fans go looking for a new show. Hint hint.","Their timeline is a funeral. I sent flowers. Not really. But I thought about it."]};
-const XR_ADD={ppv:["Pay-per-view crowds don’t whisper.","Big show, big timeline.","Everything’s louder on a pay-per-view."],
- lost:["And some of them watched {OT} instead. They’re telling everyone.","Also, a few of them flipped to {OT}. Loudly."],
- won:["Bonus: some of {OT}’s fans wandered over. Be nice to them.","And a few of {OT}’s fans came over. They’re already posting."]};
-/* his "Next week" note: a lead-in in his voice, then the crowd's tip (r.nx) */
-const XR_LEAD={tech:["The tech crowd sent a list. Single-spaced.","Technical fans asked me to pass this along. They used footnotes.","From the headlock people:"],
- blood:["Bloodhounds, mostly in caps:","The Bloodhounds have a request. It’s written in something red. I’m choosing to believe it’s ketchup.","From the blood crowd:"],
- flip:["The Flippy kids sent notes. One of them is a GIF.","Flippy fans, direct quote, minus the screaming:","From the high-flyer crowd:"],
- chaos:["Chaos fiends left me a voicemail. It was mostly yelling. The parts that weren’t:","The chaos crowd wants this, and also for you to “let it rip,” whatever that means:","From the run-in people:"],
- cas:["Casuals, in their own words, translated by me:","The casual crowd’s note, cleaned up:","From the people who watch with one eye:"]};
-const XR_OFF=["I’m just the messenger.","Your call, boss.","","",""];
+ big:["Boss, we’re trending. Top five in the country.","Mentions are through the roof. Clips are doing big numbers everywhere.",
+  "Best night online we’ve had. Sentiment’s almost all positive.","Every clip we posted is past a million views. People want more of this.",
+  "The timeline’s ours tonight. Even the people who usually dunk on us are posting clips."],
+ good:["Good night online, boss. Mostly positive, a few complaints.","Replies are solid. Engagement’s up on last week.",
+  "Clips are moving and nobody’s dunking on us. That’s a win.","Good night. A couple of crowds want more, but the overall read is positive."],
+ mixed:["Mixed timeline tonight. We held the room, barely.","Some love, some complaints. Normal week.",
+  "Split reaction. Half the replies are hyped, half are quote-tweet essays.","Decent buzz. A couple of crowds are restless. Here’s what they’re saying."],
+ bad:["Rough night in the replies, boss.","We lost people tonight, and they’re telling everyone why.",
+  "We’re getting ratioed on our own posts.","Sentiment’s negative across the board. Here’s the damage."],
+ awful:["Boss, it’s bad. Worst reaction we’ve had.","The timeline’s turned on us. We’re the punchline tonight.",
+  "There’s already a meme about tonight. It’s everywhere."],
+ rbig:["{TH} had a big night online. Their clips are everywhere.","Credit where it’s due: {TH}’s timeline is happy tonight.",
+  "{TH} is trending. Their crowd is all in.","{TH}’s replies are all positive. We need to answer that."],
+ rmixed:["{TH}’s mentions are lukewarm. Half their crowds want more.","{TH}’s timeline is a mixed bag. Some of their hardcore fans are restless, and restless fans wander.",
+  "Middling night for {TH}. There’s an opening there.","{TH}’s fans are posting, but nobody’s excited. That’s a soft spot."],
+ rbad:["{TH} is getting cooked online.","{TH}’s replies are brutal tonight.",
+  "{TH}’s fans are miserable, and miserable fans go looking for a new show.","{TH}’s timeline is a mess. Their own fans are dunking on them."]};
+const XR_ADD={ppv:["Pay-per-view numbers are always louder.","Big show, big timeline.","Everything’s louder on a pay-per-view."],
+ lost:["And some of them watched {OT} instead. They’re posting about it.","A chunk of them flipped to {OT}, and they’re saying so."],
+ won:["We also picked up some of {OT}’s fans tonight. They’re already posting.","A few of {OT}’s fans came over. They’re posting about it."]};
+/* his "Next week" note: a lead-in in his voice, then the crowd’s tip (r.nx) */
+const XR_LEAD={tech:["The technical fans are loud about this one:","From the workrate crowd:","The tech crowd’s main complaint:"],
+ blood:["The Bloodhounds, cleaned up:","From the blood crowd:","The Bloodhounds want one thing:"],
+ flip:["The Flippy fans keep saying the same thing:","From the high-flyer crowd:","Flippy fans’ main ask:"],
+ chaos:["The chaos crowd is asking for this:","From the run-in crowd:","Chaos fiends’ main ask:"],
+ cas:["The casuals keep saying the same thing:","From the casual crowd:","Casuals’ main ask:"]};
+const XR_OFF=["Your call, boss.","","","",""];
 const XR_SEEN_MAX=160;
 function xrRand(l){return l[Math.floor(Math.random()*l.length)]}
 function xrStars(s){const f=Math.floor(s+1e-9),r=s-f;return f+(r>=.74?'¾':r>=.49?'½':r>=.24?'¼':'')}

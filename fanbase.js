@@ -672,7 +672,7 @@ function fbLegend(){return `<div class="fbleg">${FB_G.map(g=>`<span>${fgLbl(g)}<
 function fbTvCard(){const L=S&&S.last;if(!L||!L.fb)return '';const ks=Object.keys(L.fb).filter(k=>L.fb[k]&&L.fb[k].before);if(!ks.length)return '';
  const rows=ks.sort((a,b)=>S.fans[b]-S.fans[a]).map(k=>{const r=L.fb[k];return `<div class="tv-row fbtv"><b>${esc(nameOf(k))}</b><span>${FB_G.map(g=>{const d=r.after[g]-r.before[g];return Math.abs(d)<500?'':`<span class="fbd">${fgLbl(g)} <b class="${d>0?'good':'bad'}">${d>0?'▲':'▼'}${fbK(Math.abs(d))}</b></span>`}).join('')}</span></div>`}).join('');
  let best=null,worst=null;ks.forEach(k=>FB_G.forEach(g=>{const d=L.fb[k].after[g]-L.fb[k].before[g];if(!best||d>best.d)best={k,g,d};if(!worst||d<worst.d)worst={k,g,d}}));
- const post=(x,good)=>x&&Math.abs(x.d)>=1000?`<div class="xrp"><span class="fgw">${fgLbl(x.g)}</span> <b>${esc(fbPick(FB_HANDLE[x.g],x.k+x.g))}</b><div>${esc(good?`${nameOf(x.k)} gets us. Best show on TV tonight.`:`${nameOf(x.k)} forgot we exist. Changing the channel.`)}</div></div>`:'';
+ const post=(x,good)=>x&&Math.abs(x.d)>=1000?`<div class="xrp"><span class="fgw">${fgLbl(x.g)}</span> <b>${esc(fbPick(FB_HANDLE[x.g],x.k+x.g))}</b><div>${esc(good?`${nameOf(x.k)} was the best show on tv tonight. not close`:`nothing for us on ${nameOf(x.k)} again. changed the channel`)}</div></div>`:'';
  return `<div class="card xred"><div class="xrh"><b>Last week's crowds</b><span>X Redditino · Head of PR</span></div>${rows}${post(best,true)}${post(worst,false)}</div>`}
 Object.assign(window,{fbBar,fbLegend,fbTvCard});
 /* ---- v404: the Crowd read is gone from the Book screen (watching it became the game). Instead the crowds' night closes the
@@ -750,8 +750,8 @@ function fbCrowdOne(o,br,instant,who){const r=o&&o.fb&&o.fb[br];if(!r||!r.before
  return `<div class="srcrowd srone${instant?'':' in'}" data-br="${br}"><div class="srcr2 hd"><span class="srch">How they took ${who?esc(who)+'’s':'your'} show</span></div>${rows}<div class="srcr2 tot"${at(n*FB_REV.row)}><span>All fans</span><b class="srv2 ${t>=0?'good':'bad'}"${at(FB_REV.p0+n*FB_REV.cell)}>${t>=0?'+':'−'}${fbK(Math.abs(t))}</b></div>${typeof xrFeedHtml==='function'?xrFeedHtml(o,br,!who,at(FB_REV_MS-250),who):who?'':fbNextHtml(r,at(FB_REV_MS-250))}</div>`}
 window.fbCrowdOne=fbCrowdOne;window.FB_REV_MS=FB_REV_MS;
 /* ---- after the show: The fans, then X Redditino (Head of PR) ---- */
-const FB_HANDLE={cas:['@JustHereForTheBelts','@MyDadWatchesThis','@CasualTuesdayKev'],tech:['@ChainWrestlingCarl','@HeadlockHistorian','@SnapSuplexSue'],
- blood:['@CrimsonMaskMike','@BarbedWireBetty','@BladeJobBrandon'],flip:['@SpotMonkeyKai','@ShootingStarSam','@450Splashley'],chaos:['@RunInRhonda','@NoDQNate','@SwerveSzn']};
+const FB_HANDLE={cas:['@MainEventOnly','@MondayNightMike','@BigNamesOrBust'],tech:['@StarRatingStan','@SellTheLeg','@CagematchReviewer'],
+ blood:['@GusherGang','@hardway_or_nothing','@deathmatchonly'],flip:['@DiveTrain','@SpotfestSZN','@clipitall'],chaos:['@CrashTV1999','@RussoWasRight','@runin_enjoyer']};
 const FB_WANT={cas:'bigger stars and title matches',tech:'a straight-up technical match — two technicians, clean finish, no run-ins',blood:'a street fight, a cage, something with blood in it',flip:'high-flyers, a ladder match or a multi-person spotfest',chaos:'run-ins, a No DQ brawl, a Chaos wrestler with a live mic'};
 function fbPick(a,k){let h=0;const s=String(k)+'|'+AW();for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return a[Math.abs(h)%a.length]}
 const fbK=n=>Math.abs(n)<10000?(Math.abs(n)<100?'0':(n/1000).toFixed(1).replace(/\.0$/,'')+'K'):fmtFans(n);
