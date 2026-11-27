@@ -23,7 +23,7 @@
      Appending is how stops drift into patch notes.
    • tools/check-tutorial.py fails on history/design phrasing (TUT_BANNED). If it flags a line, rewrite it, don't
      dodge the pattern. */
-const TUT_REV=98;
+const TUT_REV=100;
 const TUT_KEY='tksim_tut';
 const TUT_WORDS=190;  /* longest a stop may be (checked by tools/check-tutorial.py) */
 const TUT_MISS=[];
@@ -116,8 +116,8 @@ const TUT_STEPS=[
  b:()=>`Every match drains stamina, and a wrestler who works this week barely recovers. A week off, or a week of only promos, refills it. A wrestler labeled <b>Tired</b> will perform a bit worse in matches, and <b>Exhausted</b> wrestlers are at higher risk of injury, so varying who you book is essential.<br><br>A wrestler's <b>Durability</b>, on their profile in your Roster, affects how quickly they lose stamina: some bodies hold up better than others.`},
 {id:'t.stars',track:'tip',opt:true,since:84,sel:()=>{const g=document.querySelector('main .cgrid, main .tcrg');return g&&g.firstElementChild},sys:['popularity','the rub','development'],t:'Making new stars',
  b:()=>`Your top names make the next ones. Beating someone more popular gives a wrestler <b>the rub</b> (an upset even more), and teaming with a star rubs off too.<br><br>Popularity climbs slower past 80 and 90, and stars at ${tv('UPKEEP_AT',()=>UPKEEP_AT,85)}+ slip in weeks they aren't featured. At ${tv('UPKEEP_TOP',()=>UPKEEP_TOP,90)}+ only a main event, a PPV win or a ${tv('UPKEEP_TOP_ST',()=>UPKEEP_TOP_ST,4)}★ match keeps them there. In-ring and Mic grow with good matches and promos, and fastest through <b>arcs</b> on the Arcs tab. Arcs cost less for less popular wrestlers and lift them further, and a superstar in the payoff gives the rub. Anyone can become a megastar, but some learn faster than others. For current top stars (${tv('ARC_STAR',()=>ARC_STAR,85)}+ popularity), arcs grant a bigger payoff, popularity and heat, but can't give them the same boost a rising star gets, so choose your arcs accordingly.`},
-{id:'t.traits',track:'tip',opt:true,since:98,sel:()=>{const g=document.querySelector('main .cgrid, main .tcrg');return g&&g.firstElementChild},sys:['traits','chemistry','stipulations'],t:'Traits',
- b:()=>`<b>Traits</b> are special strengths, shown as round badges on each card. They affect who a wrestler has chemistry with and which stipulations suit them, and some have extra perks: a Showstopper shines in the main event, and a Workhorse tires less.<br><br>Everyone starts with one. Staying over earns more: a second once they hold ${tv('TR_TIERS',()=>TR_TIERS[0],70)} popularity for ${tv('TR_HOLD',()=>TR_HOLD,4)} shows, a third once they hold ${tv('TR_TIERS',()=>TR_TIERS[1],85)}. You pick from three, so you choose who they reach: their own crowd, another one, or an all-rounder skill. A trait from another crowd can help smooth a clashing matchup.`},
+{id:'t.traits',track:'tip',opt:true,since:100,sel:()=>tutTraitsSec(),sys:['traits','chemistry','stipulations'],t:'Traits',
+ b:()=>`<b>Traits</b> are special strengths, listed here on each wrestler's page. They affect who a wrestler has chemistry with and which stipulations suit them, and some have extra perks: a Showstopper shines in the main event, and a Workhorse tires less.<br><br>Everyone starts with one. Staying over earns more: a second once they hold ${tv('TR_TIERS',()=>TR_TIERS[0],70)} popularity for ${tv('TR_HOLD',()=>TR_HOLD,4)} shows, a third once they hold ${tv('TR_TIERS',()=>TR_TIERS[1],85)}. You pick from three, so you choose who they reach: their own crowd, another one, or an all-rounder skill. A trait from another crowd can help smooth a clashing matchup.`},
 {id:'t.morale',track:'tip',opt:true,since:66,sel:'main .card.phead',sys:['morale','contracts','promises','grievances','pitches','friends'],t:'Keep them happy',
  b:()=>`TV time, wins, main events and kept promises lift morale; sitting at home, clean losses, exhaustion and low pay drag it down. Below ${tv('MOR_SLUMP',()=>MOR_SLUMP,50)} they phone it in; above ${tv('MOR_FIRE',()=>MOR_FIRE,75)} they go the extra mile. Tap anyone to see their <b>Mood</b> and why.<br><br><b>Backstage friends:</b> your locker room is full of dynamic relationships, and many wrestlers join your roster with close connections. Friends share in some of each other's accomplishments, and can get frustrated over how a friend is treated. Breaking promises or neglecting your talent ripples through the locker room, so treat your stars the best you can.`},
 {id:'t.fa',track:'tip',opt:true,since:65,sel:()=>document.querySelector('main .cgrid')||tutCard(/on the market/i),sys:['free agency','offers','prospects','ROH','farm'],t:'Free agents & prospects',
@@ -235,7 +235,7 @@ function tutAuto(){/* v238: a draft-tour offer left unanswered (say, on auto-dra
  /* tips for a screen fire the first time you visit it */
  if(tab==='titles')return tutTip('t.titles');
  if(tab==='office')return tutTip('t.money');
- if(tab==='roster'&&typeof rf!=='undefined'){if(rf==='fa')return tutTip('t.fa');if(rf==='mine'){const seen=st.seen||{};return tutTip(!seen['t.stars']?'t.stars':!seen['t.traits']?'t.traits':'t.morale')}}
+ if(tab==='roster'&&typeof rf!=='undefined'){if(rf==='fa')return tutTip('t.fa');if(rf==='mine'){const seen=st.seen||{};return tutTip(!seen['t.stars']?'t.stars':'t.morale')}}
  /* the rest come up when they matter, at most one a week so they don't pile up */
  if(st.tipW===AW())return;const seen=st.seen||{};const want=[];
  if(tab==='home'&&S.week>=2)want.push('t.wwe');
@@ -330,6 +330,9 @@ window.draftHold=draftHold;
 
 /* v350: a tip counts as seen only if it was seen after its text last changed (its `since`), so a reworded tip comes up again once */
 function tipSeen(seen,id){const v=seen[id];if(!v)return false;const s=TUT_STEPS.find(x=>x.id===id);return !(typeof v==='number'&&s&&s.since>v)}
+/* v532: the Traits section of an open wrestler page (profile.js), where the traits tip points */
+function tutTraitsSec(){const m=document.getElementById('modal');if(!m||m.classList.contains('hidden'))return null;
+ return [...m.querySelectorAll('.pf-sec')].find(x=>{const h=x.querySelector('.pf-h');return h&&/^\s*Traits\b/.test(h.textContent)})||null}
 /* a one-time coach tip, shown the first time it applies */
 function tutTip(id,force){if(TUT||TUT_OFFER||(typeof TV!=='undefined'&&TV))return;if(!force&&!tutTipsOn())return;const st=tutStore(),seen=st.seen||{};if(!force&&tipSeen(seen,id))return;
  const step=TUT_STEPS.find(s=>s.id===id);if(!step)return;
@@ -361,6 +364,8 @@ function tutMenuCard(){if(!S)return '';const dr=S.phase==='draft',on=tutTipsOn()
   else setTimeout(()=>{try{tutAuto()}catch(e){}},420)}});
  if(typeof closeModal==='function'){hookStep('closeModal','tutorial.js',{after(ctx,out){try{xrIntroEnd()}catch(e){}return out}})}
  if(typeof segDetails==='function'){hookStep('segDetails','tutorial.js',{after(ctx,out){try{tutTip('t.editor')}catch(e){}return out}})}
+ /* v532: the traits tip comes up the first time you open a wrestler's page (showW loads after this file, so watch openModal) */
+ if(typeof openModal==='function'){hookStep('openModal','tutorial: traits tip on a wrestler page',{after(ctx,out){try{if(tutTraitsSec())tutTip('t.traits')}catch(e){}return out}})}
  if(typeof showResults==='function'){hookStep('showResults','tutorial.js',{after(ctx,out,rv){/* the solo reveal shows this tip itself once it finishes */if(rv!==true)try{tutTip('t.results')}catch(e){}return out}})}
  let raf=0;const re=()=>{if(!TUT||raf)return;raf=requestAnimationFrame(()=>{raf=0;if(TUT)tutPlace(tutFind(TUT.steps[TUT.i]))})};
  addEventListener('resize',re);addEventListener('scroll',re,true);

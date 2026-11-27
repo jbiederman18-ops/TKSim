@@ -143,7 +143,7 @@ async def main(shots):
                 visited.append('t.ppv'); await shot('t.ppv'); await pg.evaluate('tutNext()')
             # v186: coach tips that used to be tour stops — each must find its target on its screen
             for tid, prep in [('t.wwe', "go('home')"), ('t.card', "go('book')"), ('t.flow', "go('book')"), ('t.stam', "go('book')"),
-                              ('t.stars', "rf='mine';go('roster')"), ('t.traits', "rf='mine';go('roster')"), ('t.morale', "rf='mine';go('roster')"), ('t.fa', "rf='fa';go('roster')"),
+                              ('t.stars', "rf='mine';go('roster')"), ('t.traits', "rf='mine';go('roster');showW(ownList('p')[0].id)"), ('t.morale', "rf='mine';go('roster')"), ('t.fa', "rf='fa';go('roster')"),
                               ('t.titles', "go('titles')"), ('t.money', "go('office')")]:
                 await pg.evaluate(prep); await pg.wait_for_timeout(500)
                 if await pg.evaluate('!!TUT'): await pg.evaluate('tutNext()'); await pg.wait_for_timeout(200)
@@ -152,6 +152,15 @@ async def main(shots):
                     problems.append(f'{tid}: coach tip could not find its target')
                 else:
                     visited.append(tid); await shot(tid); await pg.evaluate('tutNext()')
+            await pg.evaluate('closeModal()'); await pg.wait_for_timeout(200)
+            # v532: the traits tip comes up on its own the first time a wrestler's page opens
+            await pg.evaluate("(()=>{const st=tutStore(),seen=st.seen||{};delete seen['t.traits'];tutPut({seen,tips:true})})()")
+            await pg.evaluate("showW(ownList('p')[0].id)"); await pg.wait_for_timeout(900)
+            if await pg.evaluate("!(TUT&&TUT.steps[0].id==='t.traits')"):
+                problems.append("t.traits: coach tip did not come up on its own when a wrestler's page opened")
+            else:
+                await pg.evaluate('tutNext()')
+            await pg.evaluate('closeModal()'); await pg.wait_for_timeout(200)
             await pg.evaluate("rf='mine';go('book')"); await pg.wait_for_timeout(400)
             wk = await pg.evaluate('AW()')
             await pg.evaluate('goLive()'); await pg.wait_for_timeout(300)
