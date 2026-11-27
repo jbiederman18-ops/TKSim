@@ -848,7 +848,7 @@ if(typeof trAdd==='function'){hookStep('trAdd','arcs.js',{around(_ta,...args){le
 /* ---- what's on offer for someone: one Mic, one In-ring, one trait/popularity arc (superstars: three story arcs) ---- */
 /* ---- v430: hands. Each wrestler holds three arcs dealt from who they are: their crowd, face or heel, superstar or not,
    weighted by the size of story the calendar calls for. The story doesn't have to exist first — starting an arc creates it.
-   Each arc still runs once a season across the roster. A few arcs need a bigger stage. Milestones earn redeals. ---- */
+   Each arc still runs once a season across the roster. A few arcs need a bigger stage. ---- */
 const ARC_GATE={hometown:'good',dream:'good',farewell:'arena',lastchase:'arena',retire:'s2'};
 const ARC_GATE_TXT={good:'Needs the Good Building',arena:'Needs the Actual Arena',s2:'Season 2 and later'};
 function arcGateOk(k){const g=ARC_GATE[k];if(!g)return true;if(g==='s2')return S.season>=2;try{return typeof venOwns==='function'&&!!venOwns('p',g)}catch(e){return false}}
@@ -927,15 +927,6 @@ function arcHand(id){const A=aW(id);if(!A||A.own!=='p')return [];S.arcHand=S.arc
  let cards=h.k.map(k=>arcCard(A,k)).filter(Boolean);if(!cards.length&&h.k.length){arcDeal(A);h=S.arcHand[id];cards=h.k.map(k=>arcCard(A,k)).filter(Boolean)}return cards}
 function arcOffer(id){return arcHand(id)}
 window.arcOffer=arcOffer;
-/* milestones earn redeals: the first great payoff, a blood feud, a new champion, a new team or faction, and a turn paying off — once each a season */
-const ARC_TOK_MS={great:'your first great payoff of the season',f75:'a blood feud',newch:'a new champion',team:'a new team or faction',turn:'a turn paying off'};
-function arcTokTick(notes){S.arcTokM=S.arcTokM||{};const got=S.arcTokM[S.season]=S.arcTokM[S.season]||[];const give=k=>{if(got.includes(k))return;got.push(k);S.arcTok=(S.arcTok||0)+1;const t=`🔀 Reshuffle earned for ${ARC_TOK_MS[k]}: use it to reshuffle any wrestler's arcs.`;news(t);if(notes)notes.push(t)};
- const L=(S.arcLog||[]).filter(x=>x.s===S.season);if(L.some(x=>x.q==='great'))give('great');if(L.some(x=>x.k==='heelturn'||x.k==='faceturn'))give('turn');
- if(aHeatMax()>=75)give('f75');if(S.arcM&&S.arcM.newch&&S.arcM.newch>=(S.arcS0||0))give('newch');
- const nt=(S.teams||[]).filter(t=>t.m.filter(aMine).length>=2).length;if(S.arcTeamN!=null&&nt>S.arcTeamN)give('team');S.arcTeamN=nt}
-const aHeatMax=()=>{let m=0;for(const k in (S.heat||{})){if(S.heat[k]<=m)continue;if(k.split('|').every(aMine))m=S.heat[k]}return m};
-window.arcRedeal=function(id){if(typeof mpLocked==='function'&&mpLocked())return;if(!(S.arcTok>0))return toast('No reshuffles left. Earn them with milestones.');const A=aW(id);if(!A)return;S.arcTok--;arcDeal(A);save();render();arcOpen(id)};
-/* stage gates opening get announced */
 function arcUnlockTick(notes){S.arcSeen=S.arcSeen||[];const now=Object.keys(ARC_GATE).filter(arcOpenK);const nw=now.filter(k=>!S.arcSeen.includes(k));
  if(nw.length&&S.arcSeen.length+Object.keys(ARC_GATE).length>0&&S.arcSeenInit){const t=`📖 Bigger stories open up: ${nw.map(k=>ARCS[k].i+' '+ARCS[k].n).join(', ')} can now be assigned.`;news(t);if(notes)notes.push(t)}S.arcSeen=now;S.arcSeenInit=1}
 window.arcUnlockTick=arcUnlockTick;
@@ -1130,8 +1121,8 @@ hookStep('endWeek','arcs: held stories keep their heat',{before(ctx){const keep=
    bothSides(()=>arcHoldWeek(Array.isArray(notes)?notes:null));if(typeof rvHoldWeek==='function')rvHoldWeek()}catch(e){console.warn('arc hold',e)}}});
 /* the arc rules the offline rival's arcs share (rivalstory.js) */
 window.ARC_RULES={aPopF,aRiseF,aEase,ARC_SLACK,ARC_PAY0,ARC_PAYQ,ARC_PAYMAX,ARC_PAY_PPV,ARC_BUILD,ARC_STORYP,ARC_STORYH,ARC_GREAT,ARC_FBQ0,ARC_FBQLO,ARC_FANS,ARC_RISEF,ARC_RISEPOP,ARC_FAIL};
-hookStep('airPair','arcs: tick, groundswell, unlocks',{before(ctx){const th=ctx.th={};try{if(typeof bothSides==='function')bothSides(arcTick);else arcTick();S.injSeen=S.injSeen||{};ownList('p').forEach(w=>{if(w.inj)S.injSeen[w.id]=AW()});th.__ppv=!!(curShow()&&curShow().ppv);th.__w=AW();if(S.arcS0s!==S.season){S.arcS0s=S.season;S.arcS0=AW()}Object.values(S.titles||{}).forEach(t=>{th[t.id]=t.holders.join('|')})}catch(e){console.warn('arcs',e)}},
- after(ctx,r){const th=ctx.th;try{Object.values(S.titles||{}).forEach(t=>{if(th[t.id]!=null&&t.holders.length&&t.holders.join('|')!==th[t.id]&&t.holders.every(aMine)){S.arcM=S.arcM||{};S.arcM.newch=AW()}});if(th.__ppv)S.arcPPV=(S.arcPPV||0)+1;arcGroundswell(th.__w,r&&r.notes);arcUnlockTick(r&&r.notes);arcTokTick(r&&r.notes)}catch(e){console.warn('arcs',e)}}});
+hookStep('airPair','arcs: tick, groundswell, unlocks',{before(ctx){const th=ctx.th={};try{if(typeof bothSides==='function')bothSides(arcTick);else arcTick();S.injSeen=S.injSeen||{};ownList('p').forEach(w=>{if(w.inj)S.injSeen[w.id]=AW()});th.__ppv=!!(curShow()&&curShow().ppv);th.__w=AW();}catch(e){console.warn('arcs',e)}},
+ after(ctx,r){const th=ctx.th;try{if(th.__ppv)S.arcPPV=(S.arcPPV||0)+1;arcGroundswell(th.__w,r&&r.notes);arcUnlockTick(r&&r.notes)}catch(e){console.warn('arcs',e)}}});
 
 /* Groundswell: a week they're kept off the show (or squashed) is a step; the crowd's anger costs a few fans each time */
 const ARC_GS_COST=4000;
@@ -1310,10 +1301,10 @@ function arcOpen(id){const A=aW(id);if(!A)return;const a=arcOf(id);
   ${arcBlocked(a)?`<div class="aleft bad">${esc(arcOutList(a).map(aOutTxt).join(' · '))}</div>${arcHoldChoices(a)}`:`${can?`<button class="btn" onclick="arcBook('${id}')">Book ${a.stage==='pay'?'the payoff':`stop ${a.have+1}`} tonight</button>`:''}
   <button class="btn ghost" onclick="arcDrop('${id}')">Drop the arc</button>`}<button class="btn sec" onclick="${tab==='arcs'?'closeModal()':`showW('${id}')`}">Back</button>`)}
  const why=arcCanStart(id);const full=aFull();if(why&&!full){toast(why);return}
- const o=arcOffer(id);const rd=S.arcTok>0?`<button class="btn ghost" onclick="arcRedeal('${id}')">🔀 Reshuffle ${aPr(A,'their')} arcs (${S.arcTok} left)</button>`:'';
+ const o=arcOffer(id);const rd='';
  const back=`<button class="btn sec" onclick="${tab==='arcs'?'closeModal()':`showW('${id}')`}">Not now</button>`;
- if(!o.length)return openModal(`<div class="h mhd">📖 ${esc(A.name)}</div><p class="muted">No story fits ${esc(A.name)} right now. Arcs reshuffle after the next PPV.</p>${rd}${back}`);
- openModal(`<div class="h mhd">📖 ${esc(A.name)}'s arcs</div><p class="muted adsc">${aStar(A)?'Superstar stories: a bigger payoff, popularity and heat.':`Stories that fit who ${aPr(A,'they')} is.`} Assign one, book every stop, land the payoff. Arcs reshuffle after the next PPV.</p>
+ if(!o.length)return openModal(`<div class="h mhd">📖 ${esc(A.name)}</div><p class="muted">No story fits ${esc(A.name)} right now. New arcs come after the next PPV.</p>${rd}${back}`);
+ openModal(`<div class="h mhd">📖 ${esc(A.name)}'s arcs</div><p class="muted adsc">${aStar(A)?'Superstar stories: a bigger payoff, popularity and heat.':`Stories that fit who ${aPr(A,'they')} is.`} Assign one, book every stop, land the payoff. New arcs come after the next PPV.</p>
  ${o.map(x=>{const D=aDK(x.k,null,arcStoryPick(x.k,id,null,x.b));const c=aCost(x.k,id,x);const n=aStopN(D,id,x);const fit=arcFitKnown(A)&&arcFitOf(A)===x.k;
   return `<button class="arct" onclick="arcCast('${id}','${x.k}')">${aKick(D,x.k,null,`${ARC_LANES[aStar(A)?'star':D.lane]} · ${money(c)}`)}<div class="ahd sm">${esc(aHeadOf(id,x.k,x))}</div>${arcTrack(n,0,'build')}<div class="anx"><span>${n} stop${n>1?'s':''}, then the payoff${fit?' · <b class="gold">✨ Made for this</b>':''}</span><b>›</b></div></button>`}).join('')}
  ${rd}${back}`)}
@@ -1355,8 +1346,8 @@ window.arcsView=function(){const l=arcList().filter(a=>aMine(a.a)&&!a.done);cons
   const ks=Object.keys(ARCS);const used=ks.filter(k=>arcRan(k)&&!arcRunningK(k)),gate=ks.filter(k=>!arcOpenK(k));
   const li=(k,t)=>`<div class="arcb"><span>${ARCS[k].i} ${esc(ARCS[k].n)}</span>${t?`<small>${esc(t)}</small>`:''}</div>`;
   const more=used.length||gate.length?`<div class="card"><details class="arcbd"><summary>${used.length} run this season · ${gate.length} waiting on a bigger stage</summary>${used.length?`<div class="arcbh">Run this season · back next season</div>${used.map(k=>li(k,'')).join('')}`:''}${gate.length?`<div class="arcbh">Waiting on a bigger stage</div>${gate.map(k=>li(k,arcLockTxt(k))).join('')}`:''}</details></div>`:'';
-  body=(ready.length?`<div class="card">${arcRecHtml(ready)}</div>`:'')+`<div class="card arcsav">${S.arcTok>0?`<div class="muted tiny" style="margin-bottom:6px">🔀 ${S.arcTok} reshuffle${S.arcTok>1?'s':''} to spend</div>`:''}
-  ${ready.length?arcPotGroups(ready):'<div class="muted">No story fits anyone right now. Arcs reshuffle after the next PPV.</div>'}</div>`+more;
+  body=(ready.length?`<div class="card">${arcRecHtml(ready)}</div>`:'')+`<div class="card arcsav">
+  ${ready.length?arcPotGroups(ready):'<div class="muted">No story fits anyone right now. New arcs come after the next PPV.</div>'}</div>`+more;
  }
  return head+seg+body};
 /* v435: Potential, by arc. Each arc once, with the wrestlers who could run it as small cards; tap it to see each one's story */
