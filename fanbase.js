@@ -691,15 +691,16 @@ function fbRiTag(k){return fbTag('chaos',FB_THIRST.chaos)+(k==='cost'?fbTag('tec
    switchers included) is shared out: every segment gets what it did for that crowd (fbCalc's sc), the night-wide pieces
    (casuals tuning out, a crowd left without a match, fans switching shows) are spread evenly, and the shares always add up
    to the crowd's real total. Returns [{t: fans, g: {crowd: fans}, ic: [[crowd, ±1]…]}] in the card's segment order. */
+const FB_IC_MIN=150,FB_IC_REL=.3;  /* a plate shows a crowd once that segment moved it by 150+ fans and by 30%+ of the night's biggest single move */
 const FB_WHO={cas:'Casuals',tech:'Technical fans',blood:'Bloodhounds',flip:'Flippy fans',chaos:'Chaos fiends'};
 function fbSplit(r,n){if(!r||!r.before||!r.after||!n)return null;const sc=r.sc&&r.sc.length===n?r.sc:null;const night={};
- const out=Array.from({length:n},()=>({t:0,g:{}}));
+ const out=Array.from({length:n},()=>({t:0,g:{},ic:[]}));const sig=Array.from({length:n},()=>({}));
  const bell=[],add=(t,v)=>{if(v)bell.push([t,v])},cvt=r.cv||{},sw=r.sw||{};const cvAll=FB_HC.reduce((a,g)=>a+(cvt[g]||0),0);
  const bonus=r.bonus||[];const bonusT=bonus.reduce((a,x)=>a+x[1],0);let other=0;const hungry=[];
  FB_G.forEach(g=>{const D=Math.round((r.after[g]||0)-(r.before[g]||0));const cv=p=>p>0?FB_POOL*FB_SHARE[g]*p/100*(g==='cas'?FB_GKC:FB_GKH):(r.before[g]||0)*p/100;
   /* v465: a segment keeps only what it did itself; the night-wide rest is its own beat */
   let u=Array(n).fill(0),base=0;
-  if(sc){const raw=sc.map(x=>cv(x[g]||0));const sum=sc.reduce((a,x)=>a+(x[g]||0),0);
+  if(sc){const raw=sc.map((x,i)=>{sig[i][g]=cv(x[g]||0);return sig[i][g]});const sum=sc.reduce((a,x)=>a+(x[g]||0),0);
    /* v503: gains and losses convert at different rates, so segments pulling both ways don't add up on their own — the
       difference is shared across the segments, leaving only real night-wide causes for the bell */
    const mag=raw.reduce((a,v)=>a+Math.abs(v),0),gap=cv(sum)-raw.reduce((a,v)=>a+v,0);u=raw.map(v=>Math.round(mag?v+gap*Math.abs(v)/mag:v));base=cv(sum)}
@@ -720,6 +721,8 @@ function fbSplit(r,n){if(!r||!r.before||!r.after||!n)return null;const sc=r.sc&&
  const tot=FB_G.reduce((a,g)=>a+night[g],0);const left=tot-bell.reduce((a,x)=>a+x[1],0);
  if(Math.abs(left)>=100||!bell.length)add('Other fan changes',left);else if(left){bell.slice().sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]))[0][1]+=left}
  bell.sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
+ const top=Math.max(0,...sig.flatMap(x=>Object.values(x).map(Math.abs))),cut=Math.max(FB_IC_MIN,top*FB_IC_REL);
+ out.forEach((o,i)=>{o.ic=FB_G.map(g=>[g,sig[i][g]||0]).filter(x=>Math.abs(x[1])>=cut).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,3).map(x=>[x[0],x[1]>0?1:-1])});
  /* conversions move fans between your own crowds, so they sit beside the receipt rather than in it */
  return {segs:out,night:tot,bell,conv:FB_HC.filter(g=>(cvt[g]||0)>=100).map(g=>[g,cvt[g]])}}
 const fbList=l=>l.length<2?l.join(''):l.slice(0,-1).join(', ')+' and '+l[l.length-1];

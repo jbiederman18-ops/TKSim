@@ -1,9 +1,9 @@
 /* ===================== v462: QUARTER-HOUR RATINGS (the reveal's scoreboard) =====================
    The two-show reveal (index.html srStage) used to be a tug of war on star ratings. The night is won on fans now, so the
    reveal draws the overnights instead: each show's line of fans gained tonight, one segment at a time. A segment's
-   plate lands (cards, stars), then that show's line draws to its point with the segment's number
+   plate lands (cards, stars, crowd symbols), then that show's line draws to its point with the segment's number
    next to it. The main event is the overrun at the right edge.
-   Each segment's fans come from airing (fbSplit in fanbase.js, stored as seg.fd on the block's segments) and add
+   Each segment's fans come from airing (fbSplit in fanbase.js, stored as seg.fd / seg.fi on the block's segments) and add
    up to the show's real fan change tonight, which is also what decides the night. Old saves without them share the
    night's fans out evenly. */
 const QH_W=320,QH_H=176,QH_L=36,QH_R=312,QH_T=12,QH_B=148;
@@ -15,13 +15,13 @@ function qhFmt(v){v=Math.round(v||0);if(Math.abs(v)<100)return '+0';return (v>=0
 /* v465: after the bell — the night-wide part of each show's fans (block.fn, its receipt block.bell) gets its own last column */
 function qhBn(o,br){const b=o.blocks.find(x=>x.brand===br);return b&&b.fn!=null?b.fn:null}
 function qhHasBell(o){return ['p','ai'].some(br=>qhBn(o,br)!=null)}
-function qhInit(R){const cols=R.rounds.filter(r=>!r.x);const bell=qhHasBell(R.o);R.qh={cols,bell,n:cols.length+(bell?1:0),pts:{p:[{c:0,v:0}],ai:[{c:0,v:0}]},sum:{p:0,ai:0},lab:{},lim:2000,shown:null,k:0,fresh:{}};}
+function qhInit(R){const cols=R.rounds.filter(r=>!r.x);const bell=qhHasBell(R.o);R.qh={cols,bell,n:cols.length+(bell?1:0),pts:{p:[{c:0,v:0}],ai:[{c:0,v:0}]},sum:{p:0,ai:0},lab:{},ic:{p:{},ai:{}},lim:2000,shown:null,k:0,fresh:{}};}
 function qhCol(rd){const R=SRV;return R&&R.qh?R.qh.cols.indexOf(rd)+1:0}
 function qhRdOf(it){return SRV.rounds.find(r=>r.p===it||r.ai===it)}
 /* a half landed: that show's line moves one column */
 function qhPush(it){const R=SRV;if(!R||!R.qh||!R.two||!it)return;const br=it.b.brand;if(br!=='p'&&br!=='ai')return;const rd=qhRdOf(it);if(!rd)return;
  const c=qhCol(rd),d=qhFd(R.o,it);R.qh.sum[br]+=d;R.qh.pts[br].push({c,v:R.qh.sum[br],d});R.qh.fresh[br]=true;R.qh.lab[br]=c;
- qhDraw()}
+ R.qh.ic[br][c]=it.s.fi||[];qhDraw()}
 /* a round where one show had nothing in that slot: its line holds flat through the column */
 function qhHold(rd){const R=SRV;if(!R||!R.qh||!R.two)return;const c=qhCol(rd);['p','ai'].forEach(br=>{if(rd[br])return;const P=R.qh.pts[br];if(P[P.length-1].c>=c)return;P.push({c,v:R.qh.sum[br],d:null})});qhDraw()}
 function qhX(c){const n=SRV.qh.n||1;return QH_L+(QH_R-QH_L)*c/n}
@@ -49,11 +49,13 @@ function qhSvg(){const Q=SRV.qh,QB=qhBot(),QHh=QH_H-(Q.k||0)*QH_FOLD,n=Q.cols.le
    out.push(`<text x="${end?x-7:x+7}" y="${y}" data-v="${q.v}" data-o="${(y-qhY(q.v,lim)).toFixed(2)}" class="qhn ${br}${Q.fresh[br]&&!SRV.inst?' nw':''}" text-anchor="${end?'end':'start'}">${qhFmt(q.d)}</text>`)});return out.join('')};
  return `<svg viewBox="0 0 ${QH_W} ${QHh}" class="qhsvg" role="img" aria-label="Fans gained tonight, segment by segment">${over}${grid}${xl}${line('ai')}${line('p')}${lab()}</svg>`}
 /* the crowds each segment moved, in a row under the chart — yours, unless the other booker's total is picked */
+function qhIcons(){const Q=SRV.qh;if(typeof fgIc!=='function')return '';const I=Q.ic[SRV.who||'p']||{};return Object.keys(I).map(c=>{const l=(I[c]||[]).slice(0,2);if(!l.length)return '';
+ return `<span class="qhic" style="left:${(qhX(+c)/QH_W*100).toFixed(2)}%">${l.map(([g,s])=>`<i class="fg-${g}">${fgIc(g)}<b>${s>0?'▲':'▼'}</b></i>`).join('')}</span>`}).join('')}
 /* v471: when the scale widens, the lines already drawn ease down to it instead of jumping */
 function qhDraw(){const el=document.getElementById('qh-chart');if(!el||!SRV||!SRV.qh)return;const Q=SRV.qh,tgt=qhLim();
  if(Q.raf){cancelAnimationFrame(Q.raf);Q.raf=0}
  if(Q.shown==null||SRV.inst||tgt<Q.shown||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))Q.shown=tgt;
- el.innerHTML=qhSvg();Q.fresh={};if(Q.shown<tgt)qhEase(el,Q.shown,tgt)}
+ el.innerHTML=qhSvg()+`<div class="qhics">${qhIcons()}</div>`;Q.fresh={};if(Q.shown<tgt)qhEase(el,Q.shown,tgt)}
 function qhEase(el,from,to){const Q=SRV.qh,t0=performance.now(),D=550;
  const step=now=>{const k=Math.min(1,(now-t0)/D),e=1-Math.pow(1-k,3),L=from+(to-from)*e;Q.shown=L;
   el.querySelectorAll('line[data-a]').forEach(l=>{l.setAttribute('y1',qhY(+l.dataset.a,L));l.setAttribute('y2',qhY(+l.dataset.b,L))});
@@ -63,6 +65,8 @@ function qhEase(el,from,to){const Q=SRV.qh,t0=performance.now(),D=550;
 /* v463: the chart is the scoreboard — it sits at the top of the stage, with each show's name and running total in its line's
    colour (ids srs-p / srs-ai, which srDone and srFinal update) */
 function qhHtml(R,G,Rv){qhInit(R);return `<div class="qhwrap"><div class="qhcap"><span>The overnights</span><em id="qh-sub">Fans gained tonight</em></div><div class="qhleg"><div class="qht p" id="srs-p"><span>${esc(G)}</span><b>+0</b><em>So far</em></div><div class="qht ai" id="srs-ai"><span>${esc(Rv)}</span><b>+0</b><em>So far</em></div></div><div class="qhchart" id="qh-chart">${qhSvg()}</div></div>`}
+/* the plate's crowds: which crowds this segment moved, no numbers */
+function qhPlateIcons(s){const l=s&&s.fi;if(!l||!l.length||typeof fgIc!=='function')return '';return `<span class="twfi">${l.map(([g,v])=>`<i class="fg-${g}" title="${FG_N[g]}">${fgIc(g)}<b>${v>0?'▲':'▼'}</b></i>`).join('')}</span>`}
 /* who won the night: the most fans gained tonight; the show rating breaks a tie */
 function qhNight(o){const sum=br=>{const b=o.blocks.find(x=>x.brand===br);if(!b)return null;if(b.segs.some(s=>s.fd!=null))return b.segs.reduce((a,s)=>a+(s.fd||0),0)+(b.fn||0);
   if(o.fb&&o.fb[br]&&typeof fbNight==='function')return fbNight(o.fb[br]);return o.fans&&o.fans[br]!=null?o.fans[br]:null};
@@ -91,11 +95,11 @@ function qhBellHtml(br,who){const o=SRV.o,b=o.blocks.find(x=>x.brand===br);
  return head+(rows.length?rows.slice(0,cut).map(row).join('')+more+`<div class="qhwhy qhsum"><span>After the bell</span><b class="${sum>0?'good':sum<0?'bad':''}">${qhAmt(sum)}</b></div>`:'<div class="qhwhy muted">Nothing else moved</div>')+cv+'</div>'}
 /* v472: fold the chart for the crowds table; instant on Skip and with reduced motion */
 function qhFold(inst){const R=SRV;if(!R||!R.qh||R.qh.k>=1)return;const Q=R.qh,el=document.getElementById('qh-chart');if(Q.raf){cancelAnimationFrame(Q.raf);Q.raf=0}Q.shown=qhLim();
- const draw=()=>{if(el)el.innerHTML=qhSvg()};
+ const draw=()=>{if(el)el.innerHTML=qhSvg()+`<div class="qhics">${qhIcons()}</div>`};
  if(inst||R.inst||!el||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)){Q.k=1;Q.fresh={};return draw()}
  const k0=Q.k,t0=performance.now(),D=450;Q.fresh={};
  const step=now=>{const t=Math.min(1,(now-t0)/D),e=1-Math.pow(1-t,3);Q.k=k0+(1-k0)*e;draw();Q.raf=t<1?requestAnimationFrame(step):0};Q.raf=requestAnimationFrame(step)}
-Object.assign(window,{qhFold,qhBell,qhBellHtml,qhHtml,qhPush,qhHold,qhDraw,qhNight,qhFmt,qhFd,qhTotal});
+Object.assign(window,{qhFold,qhBell,qhBellHtml,qhHtml,qhPush,qhHold,qhDraw,qhPlateIcons,qhNight,qhFmt,qhFd,qhTotal});
 (function(){const c=document.createElement('style');c.textContent=`
 .qhwrap{margin:8px 0 2px}
 .qhwhy{display:flex;gap:10px;align-items:baseline;justify-content:space-between;font-size:14px;line-height:1.3;margin:3px 0;text-align:left}.qhwhy span{min-width:0}.qhwhy b{white-space:nowrap;font:900 italic 16px/1 'BC',sans-serif}
@@ -132,7 +136,7 @@ body:not(.tv) .srv.qh .twh{gap:5px;padding-top:8px;padding-bottom:8px}
 .qhcap{display:flex;justify-content:space-between;align-items:baseline;padding:0 2px 2px}
 .qhcap span{font:900 italic 13px/1 'BC',sans-serif;text-transform:uppercase;letter-spacing:.04em;color:var(--text)}
 .qhcap em{font:700 10px 'BC',sans-serif;font-style:normal;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
-.qhchart{position:relative;background:#141417;box-shadow:inset 0 0 0 1px var(--line);padding:2px 0}
+.qhchart{position:relative;background:#141417;box-shadow:inset 0 0 0 1px var(--line);padding:2px 0}.qhchart:has(.qhic){padding-bottom:22px}
 .qhsvg{display:block;width:100%;height:auto;overflow:visible}
 .qhg{stroke:rgba(255,255,255,.06);stroke-width:1}.qhz{stroke:rgba(255,255,255,.22);stroke-width:1;stroke-dasharray:3 3}
 .qhax{fill:var(--mut);font:700 9px 'BC',sans-serif;letter-spacing:.04em}
@@ -148,6 +152,12 @@ body:not(.tv) .srv.qh .twh{gap:5px;padding-top:8px;padding-bottom:8px}
 .qhn{font:900 italic 12px 'BC',sans-serif}.qhn.p{fill:var(--gold)}.qhn.ai{fill:var(--heel)}
 .qhn.nw{opacity:0;animation:qhIn .3s ease-out .75s forwards}
 @keyframes qhIn{to{opacity:1}}
+.qhics{position:absolute;left:0;right:0;bottom:3px;height:16px}
+.qhic{position:absolute;top:0;transform:translateX(-50%);display:flex;gap:1px;white-space:nowrap}
+.qhic i,.twfi i{display:inline-flex;align-items:center;font-style:normal}
+.qhic .fgi{width:12px;height:12px;margin:0}.qhic b{font-size:8px;line-height:1}
+.twfi{display:inline-flex;gap:5px;margin-right:6px;opacity:0;transition:opacity .4s}.twh.nt .twfi{opacity:1}
+.twfi .fgi{width:15px;height:15px;margin:0}.twfi b{font-size:10px;margin-left:1px}
 .twhd .twsv{display:flex;align-items:center}
 .twh.mini{padding-top:7px;padding-bottom:7px}.twh.mini .twps,.twh.mini>.twt,.twh.mini .twnote,.twh.mini .twarc{display:none}
 .twsc em.qht{color:var(--mut)}
