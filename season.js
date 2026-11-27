@@ -201,14 +201,14 @@ function cardProj(){const sh=curShow();const c=(S.card&&S.card.p)||[];const ctx=
  const mids=[],his=[];
  c.forEach((sl,si)=>{if(!sl.d||fixedK(sl))return;
   if(sl.k==='match'){const m=sl.d;if(!validMatch(m))return;const ids=m.sides.flat();const ws=ids.map(id=>S.w[id]);if(ws.some(w=>w.inj))return;
-   const r=rateMatch(m,ctx);let bump=Math.min(1,ws.filter(w=>w.deb).reduce((a,w)=>a+debutStars(w,sh.ppv),0));if(ch&&!chUsed&&ids.includes(ch)){bump+=CHANT_ST;chUsed=true}
+   const r=rateMatch(m,ctx);const dws=typeof debutWsOf==='function'?debutWsOf(m).filter(Boolean):ws;let bump=Math.min(1,dws.filter(w=>w.deb).reduce((a,w)=>a+debutStars(w,sh.ppv),0));if(ch&&!chUsed&&ids.includes(ch)){bump+=CHANT_ST;chUsed=true}
    /* v350: a chair stashed under the ring comes out in that wrestler's next match (+¼★ live, see stashHit) — count it here too */
    {const sid=ids.find(id=>S.stash&&S.stash[id]!=null&&S.stash[id]<AW()&&AW()-S.stash[id]<=10&&!stUsed.has(id));if(sid){bump+=.25;stUsed.add(sid)}}
    const mid=clamp((r.lo+r.hi)/2+bump,.25,5),hi=clamp(r.hi+bump,.25,5);P.booked++;if(typeof fbSeg==='function')P.fs.push(fbSeg(m,mid,si===meSlot));P.nm++;mids.push(mid);his.push(hi);
    if(ws.some(w=>w.g==='F'))P.women++;if(m.title)P.title++;if(m.type==='tag'||m.type==='trios'||m.type==='tag8'||m.sides[0].length>1)P.tag++;if(stipKey(m)!=='std')P.stip++;
    P.loMid=Math.min(P.loMid,mid);P.loHi=Math.min(P.loHi,hi);if(si===meSlot)P.me={mid,hi,lo:clamp(r.lo+bump,.25,5)};
    if(ws.some(w=>w.rookie&&w.own==='p'))P.rk=Math.max(P.rk,tellLv(mid,3)==='y'?2:tellLv(mid,3)==='m'?1:0.5);
-   if(ws.some(w=>w.deb&&w.own==='p'))P.deb=true;
+   if(dws.some(w=>w.deb&&w.own==='p'))P.deb=true;
    const t=m.title&&S.titles[m.title];const win=(m.sides[m.winner]||[]).slice().sort().join('|');const f=finOf(m);
    if(t&&t.holders.length&&win){const held=t.holders.slice().sort().join('|');const wo=S.w[(m.sides[m.winner]||[])[0]];
     if(win!==held&&f!=='dq'&&f!=='co'&&wo&&wo.own==='p')P.newch=true;
@@ -539,7 +539,7 @@ function cdTick(notes){const c=S.cdown;if(!c)return;
 function cdOfferLive(){const c=S.cdown;if(!c||!c.done||AW()>c.done+1)return null;const X=S.w[c.x];if(!X||X.own){S.cdown=null;return null}return c}
 function cdSign(){if(typeof mpLocked==='function'&&mpLocked())return;const c=cdOfferLive();if(!c)return closeModal();const w=S.w[c.x];
  if(ownList('p').length>=30)return toast('Your roster is full (30).');if(S.money.p<c.cost)return toast('Not enough money.');
- S.money.p-=c.cost;w.sal=mkt(w);w.own='p';w.con=26;w.mor=88;w.fee=0;w.deb=AW();if(S.fa)delete S.fa[w.id];S.cdown=null;
+ S.money.p-=c.cost;w.sal=mkt(w);w.own='p';w.con=conTerm(w,'p',0);w.mor=88;w.fee=0;w.deb=AW();if(S.fa)delete S.fa[w.id];S.cdown=null;
  news(`✍️ ${S.gm} signed ${w.name} after their countdown debut.`);save();closeModal();render();toast(`${w.name} signed!`)}
 function cdPass(){S.cdown=null;save();render();if(typeof openBrief==='function')openBrief()}
 function cdBrief(){const c=cdOfferLive();if(!c)return [];const w=S.w[c.x],A=S.w[c.a];

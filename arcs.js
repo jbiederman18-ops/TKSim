@@ -1143,6 +1143,12 @@ function arcGroundswell(wk,notes){arcList().forEach(a=>{if(a.k!=='groundswell'||
 /* The live reel and the pre-segment sheet use the same decisions and result rules. */
 function arcChoiceOptions(a){return a&&(aD(a).choice||(arcStoryOf(a)||{}).choice)||[]}
 function arcDecisionItems(a){return arcChoiceOptions(a).map(o=>({key:o.k,label:arcWords(a,o.n),info:arcWords(a,o.d)}))}
+/* A decision button in the shared .choice layout: the option's leading emoji (or a letter) sits in the key column. */
+function arcDecisionBtn(onclick,label,info,i){
+ const m=/^(\p{Extended_Pictographic}[\u{FE0F}\u{200D}\p{Extended_Pictographic}]*)\s+/u.exec(label||'');
+ const key=m?m[1]:'ABCDEF'[i]||'•',text=m?label.slice(m[0].length):label;
+ return `<button class="choice" onclick="${onclick}"><span class="key"><span>${key}</span></span><div><b>${esc(text)}</b></div><div class="muted tiny">${esc(info)}</div></button>`}
+window.arcDecisionItems=arcDecisionItems;window.arcDecisionBtn=arcDecisionBtn;
 function arcApplyDecision(a,k,m){
  const o=arcChoiceOptions(a).find(o=>o.k===k);if(!o||a.choice)return;
  a.choice=k;if(!m)return;
@@ -1162,7 +1168,7 @@ if(typeof liveNext==='function'){hookStep('liveNext','arcs.js',{around(next,...a
     it.arcAsked=1;arcPendingDecision={it,a};
     const D=aD(a);
     return openModal(`<div class="h mhd">${D.i} ${esc(aW(a.a).name)}: the decision</div><p class="muted">It all comes down to tonight.</p>
-    ${arcDecisionItems(a).map(({key,label,info})=>`<button class="choice" onclick="arcChoose('${key}')"><div><b>${esc(label)}</b><div class="muted tiny">${esc(info)}</div></div></button>`).join('')}`,true);
+    ${arcDecisionItems(a).map(({key,label,info},i)=>arcDecisionBtn(`arcChoose('${key}')`,label,info,i)).join('')}`,true);
    }
   }
  }
@@ -1179,7 +1185,7 @@ if(typeof liveNext==='function'){hookStep('liveNext','arcs.js',{around(next,...a
    if(options.length){
     arcPendingFather={it,a};const name=esc(aW(a.a).name);
     return openModal(`<div class="h mhd">🧬 ${name}: the envelope</div><p class="muted">The title match is in the books. An envelope comes down to ringside with the name of ${name}'s true father. Who's in it?</p>
-    ${options.map(id=>`<button class="choice" onclick="arcFatherChoose('${id}')"><div><b>${esc(aW(id).name)}</b><div class="muted tiny">Reveal as the father</div></div></button>`).join('')}`,true);
+    ${options.map((id,i)=>arcDecisionBtn(`arcFatherChoose('${id}')`,aW(id).name,'Reveal as the father',i)).join('')}`,true);
    }
   }
  }

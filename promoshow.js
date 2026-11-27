@@ -161,7 +161,7 @@ function reelPromoMenu(){
  const {reel}=PS;
  if(PS.beat===1&&reel.decision){
   const choices=arcDecisionItems(reel.a).map(({label,info},i)=>
-   `<button class="choice" onclick="psChoose(${i})"><div><b>${esc(label)}</b><div class="muted tiny">${esc(info)}</div></div></button>`).join('');
+   arcDecisionBtn(`psChoose(${i})`,label,info,i)).join('');
   return '<div class="sdmenu">'+callBar('The decision','Make the last call of the reel')+choices+'</div>';
  }
  return menuHtml();

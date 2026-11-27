@@ -63,13 +63,41 @@ hookStep('endWeek','front office: tampering, medical, injuries',{after(ctx,r,not
 /* scan right after a show too, so the decision is waiting on the results screen's way home */
 if(typeof airShow==='function'){hookStep('airShow','frontoffice.js',{after(ctx,out){try{injScan()}catch(e){}return out}})}
 
+/* ---------------- what a wrestler is already lined up for ----------------
+   Everything already promised or under way for one of your wrestlers, so a decision about them (an injury, for now)
+   shows what it puts at risk. Each item: {i,t,aw} — aw is the absolute week it comes due (null if it isn't dated). */
+function wCommit(w){const out=[];if(!w||!S)return out;const id=w.id,nm=x=>x&&S.w[x]?S.w[x].name:'?',inW=wk=>AW()-S.week+wk;
+ const wkTxt=aw=>{const wk=aw-AW()+S.week;return PPVS[wk]?`${PPVS[wk]} (week ${wk})`:`week ${wk}`};
+ try{if(isChamp(w.id)){const t=Object.values(S.titles||{}).find(t=>t&&t.holders&&t.holders[0]===id);out.push({i:'🏆',t:`Holds the ${t?t.n+' title':'title'}`,aw:null})}}catch(e){}
+ try{for(const k in TOURS){const D=TOURS[k],t=S.tour&&S.tour.p&&S.tour.p[k];if(!t||t.s!==S.season||t.win||!(t.ent||[]).includes(id))continue;
+  const left=(D.rr?D.rr.filter(x=>x>=S.week).concat([D.final]):[D.semi,D.final].filter(x=>x>=S.week));if(!left.length)continue;
+  const ko=!D.rr&&t.res.some(r=>r.w&&r.w!==id&&(r.a===id||r.b===id||(r.ids||[]).includes(id)));if(ko)continue;
+  out.push({i:D.i,t:`In the ${D.n}${t.lock?'':' field you picked'} · ${left[0]>S.week?'starts':'runs'} ${left[0]===D.final?'':`week ${left[0]}–`}${PPVS[D.final]||'week '+D.final}`,aw:inW(left[0]),tour:1})}}catch(e){}
+ (S.promises||[]).forEach(pr=>{if((pr.a!==id&&pr.b!==id)||pr.week<S.week)return;const o=pr.a===id?pr.b:pr.a;const T=pr.title&&S.titles[pr.title];
+  out.push({i:'📜',t:`${pr.kind==='shot'?(pr.a===id?`Owed a ${T?T.n+' ':''}title shot vs`:'Defends against'):pr.kind==='contract'?'Signed to face':'Promised a match vs'} ${nm(o)} at ${pr.ppv||'week '+pr.week}`,aw:inW(pr.week)})});
+ try{const d=w.deal||{};(typeof dealActive==='function'?dealActive(w):[]).forEach(k=>{if(k==='cc')return;
+  out.push({i:'✍️',t:`Contract: ${dealTermTxt(w,k).replace(/^\S+\s/,'')}`,aw:k==='me'?d.me.by:k==='shot'?d.shot.by:null})})}catch(e){}
+ try{if(S.mitb&&S.mitb[id]){const left=SEASON-(AW()-S.mitb[id].aw);out.push({i:'💼',t:`Holds Money in the Bank · ${left} week${left===1?'':'s'} to cash in`,aw:null})}}catch(e){}
+ try{if(typeof arcList==='function')arcList().concat(arcHeld()).forEach(a=>{if(a.done||![a.a,a.b,a.c].includes(id))return;
+  out.push({i:'📖',t:`${a.a===id?'Running':'Part of'} ${esc(aTitleOf(a))} arc${arcHeld().includes(a)?' (on hold)':` · due by ${wkTxt(a.end)}`}`,aw:arcHeld().includes(a)?null:a.end})})}catch(e){}
+ (S.trials||[]).forEach(t=>{if(t.a!==id&&t.b!==id)return;const P=typeof PITCHES!=='undefined'&&PITCHES[t.k];if(!P)return;
+  out.push({i:'💡',t:`${P.cat.replace(/^\S+\s/,'')} pitch you said yes to · until ${wkTxt(t.end)}`,aw:t.end})});
+ try{const f=feudList('p').find(f=>(f.a.id===id||f.b.id===id)&&heatTier(f.h)>=0);if(f)out.push({i:'🔥',t:`${heatLbl(f.h).replace(/^\S+\s/,'')} with ${(f.a.id===id?f.b:f.a).name}`,aw:null})}catch(e){}
+ return out}
+window.wCommit=wCommit;
+/* the commitments an injury runs into: each dated one says which recovery gets them back in time */
+function injCommitHtml(w){const l=wCommit(w);if(!l.length)return '';
+ const back=n=>AW()+n,opts=[['heal',w.inj]].concat(rushWk(w.inj)<w.inj?[['rush',rushWk(w.inj)]]:[]);
+ return `<div class="tiny" style="margin-top:6px"><div class="muted">Already lined up</div>${l.map(x=>{let tag='';
+  if(x.aw!=null&&x.aw>=AW()){const miss=opts.filter(([k,n])=>x.aw<back(n));if(miss.length===opts.length)tag=` <span class="tg bad">${x.tour?'Forfeits':'Misses it'}</span>`;else if(miss.length)tag=` <span class="tg warnt">Only if rushed back</span>`}
+  return `<div>${x.i} ${x.t}${tag}</div>`}).join('')}</div>`}
 /* ---------------- briefing ---------------- */
 function brief(){const out=[];tampPrune();
  const inj=(S.injq||[]).map(q=>({q,w:mineW(q.id)})).filter(x=>x.w&&x.w.inj>0);
  if(inj.length)out.push({i:'🚑',t:`Medical decisions · ${inj.length}`,u:1,rows:inj.map(({w})=>{const c=surgCost();const long=w.inj>=5;
-  return `<div class="brow"><b>${esc(w.name)}</b> <span class="muted tiny">· out ${w.inj} week${w.inj===1?'':'s'}${isChamp(w.id)?' · champion':''}</span>
+  return `<div class="brow"><b>${esc(w.name)}</b> <span class="muted tiny">· out ${w.inj} week${w.inj===1?'':'s'}</span>
   <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="mini" onclick="injAct('${w.id}','rest')">🛌 Let it heal · ${w.inj} wk</button>${rushWk(w.inj)<w.inj?`<button class="mini" onclick="injAct('${w.id}','rush')">⏩ Rush back · ${rushWk(w.inj)} wk</button>`:''}${long?`<button class="mini" ${S.money.p<c?'disabled':''} onclick="injAct('${w.id}','surg')">🏥 Surgery · ${surgWk(w.inj)} wk · ${money(c)}</button>`:''}</div>
-  <div class="muted tiny" style="margin-top:4px">${rushWk(w.inj)<w.inj?`Rushing back leaves them fragile for ${RUSH_WK} weeks after they return (much higher re-injury risk).`:'A short one — they\'ll be back next week.'}${long?' Surgery takes longer but they come back tougher (+5 durability).':''}</div></div>`})});
+  ${injCommitHtml(w)}<div class="muted tiny" style="margin-top:4px">${rushWk(w.inj)<w.inj?`Rushing back leaves them fragile for ${RUSH_WK} weeks after they return (much higher re-injury risk).`:'A short one — they\'ll be back next week.'}${long?' Surgery takes longer but they come back tougher (+5 durability).':''}</div></div>`})});
  const T=S.tamp||{};const tl=Object.keys(T).map(id=>({t:T[id],w:mineW(id)})).filter(x=>x.w&&!x.t.calm);
  if(tl.length)out.push({i:'🕵️',t:`Tampering rumors · ${tl.length}`,u:tl.some(x=>!x.t.let),rows:tl.map(({t,w})=>`<div class="brow"><b>${esc(w.name)}</b> <span class="muted tiny">· morale ${Math.round(w.mor)} · deal ends ${conWhen(w)}</span><br><span class="tiny">${esc(who())} ${ON()?'is':'is reportedly'} offering about <b>${money(t.offer)}/wk</b> (they make ${money(sal(w))}). ${t.let?'<span class="muted">You\'ve decided to let them go.</span>':`If the deal runs out, ${ON()?'they\'ll hit free agency with offers waiting':`they sign with ${esc(S.rival)} on the spot`}.`}</span>
   ${t.let?'':`<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="mini" ${S.money.p<t.offer*4?'disabled':''} onclick="tampMatch('${w.id}')">✍️ Match & extend · ${money(t.offer*4)}</button><button class="mini" onclick="dealNegotiate('${w.id}')">Negotiate</button>${t.talked?'':`<button class="mini" onclick="tampTalk('${w.id}')">🤝 Sit down with them</button>`}<button class="mini" onclick="tampLet('${w.id}')">Let them go</button></div>`}</div>`)});

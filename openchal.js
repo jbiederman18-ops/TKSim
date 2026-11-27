@@ -51,7 +51,7 @@ function ocAfter(b,m,res,notes){if(!m.open||!m.open.who)return;const W=S.w[m.ope
 function ocOfferLive(){const o=S.ocOffer;if(!o||!S.w[o.id]||S.w[o.id].own||AW()>o.w+1){if(o)S.ocOffer=null;return null}return o}
 function ocSign(){if(typeof mpLocked==='function'&&mpLocked())return;const o=ocOfferLive();if(!o)return closeModal();const w=S.w[o.id];
  if(ownList('p').length>=30)return toast('Your roster is full (30).');if(S.money.p<o.cost)return toast('Not enough money.');
- S.money.p-=o.cost;w.sal=mkt(w);w.own='p';w.con=26;w.mor=85;w.fee=0;delete w.ocKeep;if(S.fa)delete S.fa[w.id];S.ocOffer=null;
+ S.money.p-=o.cost;w.sal=mkt(w);w.own='p';w.con=conTerm(w,'p',0);w.mor=85;w.fee=0;delete w.ocKeep;if(S.fa)delete S.fa[w.id];S.ocOffer=null;
  news(`✍️ ${S.gm} signed ${w.name} after their open challenge.`);save();closeModal();render();toast(`${w.name} signed!`)}
 function ocPass(){const o=S.ocOffer;if(o&&S.w[o.id]){const w=S.w[o.id];delete w.ocKeep}S.ocOffer=null;save();render();if(typeof openBrief==='function')openBrief()}
 function ocBrief(){const o=ocOfferLive();if(!o)return [];const w=S.w[o.id];
