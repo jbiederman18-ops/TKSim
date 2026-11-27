@@ -38,7 +38,7 @@
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v513';
+const APP_VERSION='v514';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -3279,7 +3279,10 @@ async function srPlay(from){const R=SRV,rd=R.rounds[R.i];if(!rd)return srFinal(f
   /* v508: a beat to read which crowds this segment moved, and why, before the line moves */
   if(h&&h.querySelector('.twmx'))await w(SR_T.why);
   /* v464: then the spotlight moves to the chart while this show's line draws */
+  const drew=!!it.qw;
   if(it.qw){srFocus('c');srChart(it);await w(main?SR_T.lineMain:SR_T.line)}
+  /* the first show of a new game stops here while the tutorial explains the screen (tutorial.js) */
+  if(br==='p'&&drew&&typeof tutReveal==='function'){const t=tutReveal();if(t){srFocus(null);await t;if(!srOn()||R.tok!==tok)throw 0}}
   if(k<seq.length-1)await w(SR_T.between)}
  R.ph=null;srLand(rd,true);if(main&&v){v.classList.remove('dim');srQuake(1);const win=document.querySelector('#tw-pair .twh.won');if(win){win.classList.remove('flash');void win.offsetWidth;win.classList.add('flash')}}
  if(R.i>=R.rounds.length-1){await w(main?SR_T.mainAfter:SR_T.after);
@@ -3288,7 +3291,7 @@ async function srPlay(from){const R=SRV,rd=R.rounds[R.i];if(!rd)return srFinal(f
   return srEnd()}
  await w(SR_T.after);R.busy=false;R.i++;srHint(srNextLabel())}
 /* tap: start the next round, or finish the one that's playing */
-function srAdvance(){if(!srOn()||SRV.done)return;const R=SRV;
+function srAdvance(){if(!srOn()||SRV.done||(typeof TUT!=='undefined'&&TUT&&TUT.track==='reveal'))return;const R=SRV;
  if(R.busy){R.tok++;const rd=R.rounds[R.i];
   /* v303: a tap during your half lands it and moves on to the rival's; a tap during theirs finishes the round */
   if(R.ph==='p'&&rd&&rd.p&&rd.ai){srSettleHalf(rd.p);if(!R.tv){const ph=srHalfEl(rd.p);if(ph)ph.classList.add('mini')}return srPlay('ai').catch(()=>{})}

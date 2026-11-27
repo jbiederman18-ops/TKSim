@@ -158,6 +158,29 @@ async def main(shots):
             await pg.evaluate('finishLive()'); await pg.wait_for_timeout(300)
             if await pg.evaluate('AW()') == wk:
                 problems.append('Go live did not air the week-1 show (something at the office door, or the card is not full?)')
+            # the first show's reveal pauses on your first segment for its own three stops
+            for _ in range(8):
+                await pg.evaluate("typeof SRV!=='undefined'&&SRV&&!SRV.done&&!SRV.busy&&!TUT&&srAdvance()")
+                try:
+                    await pg.wait_for_function("!!(TUT&&TUT.track==='reveal')", timeout=9000)
+                    break
+                except Exception:
+                    pass
+            if await pg.evaluate("!!(TUT&&TUT.track==='reveal')"):
+                for _ in range(3):
+                    await pg.wait_for_timeout(700)
+                    sid = await pg.evaluate("TUT&&TUT.steps[TUT.i].id")
+                    if not sid:
+                        break
+                    visited.append(sid); await shot(sid)
+                    await pg.evaluate('srAdvance()')  # the show holds still under a stop
+                    await pg.evaluate('tutNext()')
+                try:
+                    await pg.wait_for_function("!TUT&&SRV&&!SRV.busy&&SRV.i>0", timeout=15000)
+                except Exception:
+                    problems.append('the reveal did not carry on after the first-show stops')
+            else:
+                problems.append('the first-show reveal stops did not appear')
             await pg.evaluate("typeof srSkip==='function'&&srSkip()"); await pg.wait_for_timeout(300)
             await pg.evaluate("document.getElementById('srv')&&showResults()"); await pg.wait_for_timeout(900)
             if await pg.evaluate("!!(TUT&&TUT.steps[0].id==='t.results')"):
