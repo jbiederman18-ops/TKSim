@@ -1704,4 +1704,128 @@ Object.assign(ARC_CAST,{
  likeness:{b:{lab:'Whose likeness {A:they}\'s after',f:(A,w)=>!aTeams(A.id).some(t=>(t.type==='faction'||t.type==='trios')&&t.m.includes(w.id)),r:(A,w)=>w.pop}},
  oil:{b:{lab:'Who knows a thing or two about the Torah',f:(A,w)=>true,r:(A,w)=>aMate(A,w)*3+w.pop/5}}});
 ['townhero','war','likeness','pain','oil','peace','twitch'].forEach(k=>{ARCS[k].k=k});
+/* ---- v534: Josh's sixth round. Five new arcs bring their own roads; three storylines join the turns and Form a Tag Team ---- */
+{const ARC_FAN_POP=45,ARC_GOUT_FAT=8,ARC_HIT_P=[.35,.65],ARC_HIT_FANS=[14000,22000];
+ const vig=(s,a)=>s.kind==='promo'&&s.type==='vignette'&&s.a===a.a;vig.vig=1;const pVig=a=>[{kind:'promo',type:'vignette',a:a.a}];
+ const tog=(s,a)=>sTog(s,a.a,a.b);const pTog=(t,bFirst)=>a=>[{kind:'promo',type:t,a:bFirst?a.b:a.a,b:bFirst?a.a:a.b}];
+ const pTag=a=>[{kind:'match',type:'tag',side:[a.a,a.b],n:2}];
+ const chemUp=(m,v)=>{for(let i=0;i<m.length;i++)for(let j=i+1;j<m.length;j++){const k=key(m[i],m[j]);S.chem[k]=clamp((S.chem[k]||0)+v,-5,6)}};
+ const peace=(x,y,how)=>{const k=key(x,y);if(S.heat&&S.heat[k]>0&&typeof endFeud==='function')endFeud(k,how,'🤝')};
+ /* the singles belt someone holds alone; the world belt of a division on your show held by someone else on your roster */
+ const beltOf=id=>Object.values(S.titles||{}).find(t=>t.kind==='singles'&&t.holders.length===1&&t.holders[0]===id);
+ const isWorld=t=>!!t&&t.kind==='singles'&&(typeof titleSlot==='function'?titleSlot(t)==='world'+t.g:/world|wwe|whc|wwew/.test(t.id));
+ const worldFor=A=>Object.values(S.titles||{}).find(t=>isWorld(t)&&t.g===A.g&&t.holders.length===1&&aMine(t.holders[0])&&t.holders[0]!==A.id);
+ const holderVs=(a,extra)=>{const t=S.titles[a.t];if(!t||t.holders.length!==1||!aMine(t.holders[0])||aW(t.holders[0]).inj||t.holders[0]===a.a)return null;return [Object.assign({kind:'match',type:'singles',vs:[t.holders[0],a.a],title:t.id},extra||{})]};
+ Object.assign(ARCS,{
+ demo:{lane:'trait',i:'🎵',n:'The Demo',bstep:0,gets:'Popularity, and either {B} as a friend again or a song that might chart',
+  d:'{A} has a song demo, and {A:they}\'s sure everyone is out to steal it and make it number one before {A:they} can get it recorded. Week after week {A:they} worries the people closest to {A:them}, until {B} beats some sense back into {A:them}, or gets {A:them} into the studio.',
+  payoff:'A promo with {B}: the intervention. Sense gets beaten back into {A:them}, or {A:they} finally lays down the track',
+  pick:A=>({}),
+  stops:[{n:'The demo',b:'A Backstage Vignette: {A:they} plays a few seconds of the demo, then hides the tape',s:vig,p:pVig},
+   {n:'Thieves, all of them',b:'A promo with {B}: {A} accuses {B:them} of trying to steal the song',s:tog,p:pTog('callout')},
+   {n:'Trust no one',b:'A promo with anyone but {B}: {A:they} accuses them too',s:(s,a)=>s.kind==='promo'&&!!s.b&&s.ids.includes(a.a)&&!s.ids.includes(a.b),
+    p:a=>{const o=aBest(aRoster([a.a,a.b]),w=>w.pop+aMate(aW(a.a),w)*2);return o?[{kind:'promo',type:'callout',a:a.a,b:o.id}]:null}}],
+  pay:(s,a)=>tog(s,a),pplan:a=>[{kind:'promo',type:'interview',a:a.b,b:a.a}],
+  choice:[{k:'sense',n:'👊 Beat some sense into {A:them}',d:'{B} snaps {A} out of it the hard way. They\'re friends again: chemistry, and {A:their} head is clear.'},
+   {k:'studio',n:'🎙️ Get {A:them} in the studio',d:'{A:They} lays down the track. If it charts, casual fans explode. It might just be a mild hit.'}],
+  also:(a,s,n)=>{const A=aW(a.a),B=aW(a.b);if(!a.choice)a.choice=seeded((S.seed||'')+'|demo|'+a.id)()<.5?'sense':'studio';
+   if(a.choice==='sense'){peace(a.a,a.b,'Sense beaten back in');chemUp([a.a,a.b],2);mor(A,4);if(B&&B.own==='p')mor(B,3);n.push(`👊 ${B.name} knocks the paranoia right out of ${A.name}. Nobody was ever stealing the song. They hug it out.`)}
+   else{const gi=a.q==='great'?1:0;a.hit=seeded((S.seed||'')+'|hit|'+a.id)()<ARC_HIT_P[gi]?1:0;
+    if(a.hit){const f=ARC_HIT_FANS[gi];try{if(typeof fbHit==='function')fbHit('p',[],f);else S.fans.p+=f}catch(e){S.fans.p+=f}n.push(`📈 ${A.name}'s song charts! Casual fans can't stop humming it (+${fmtFans(f)} casual fans).`)}
+    else n.push(`🎵 ${A.name} lays down the track. It's a mild hit: a few spins, a nice write-up, and nobody stole it.`)}},
+  win:(a,w,q)=>a.choice==='sense'?{mic:.8,pop:q==='great'?2:1}:a.hit?{pop:q==='great'?6:4}:{pop:q==='great'?2:1.5}},
+ mouse:{lane:'mic',i:'🐭',n:'The Mouse Under the Hat',bstep:0,gets:'Mic, popularity and a feud with {B}',
+  d:'{A} becomes convinced {B} is being piloted by a lucha mouse hiding under {B:their} hat, and won\'t rest until {A:they} proves to the world that {B} isn\'t the one responsible for {B:their} own success.',
+  payoff:'A singles match against {B}: the hat comes off. You decide what\'s under it',
+  pick:A=>A.pop<ARC_STAR?{}:null,
+  stops:[{n:'Something under there',b:'A Backstage Vignette: {A:they} studies slow-motion footage of {B}\'s hat',s:vig,p:pVig},
+   {n:'The truth is out there',b:'A promo with {B}: {A} tells the world about the mouse. {B} has no idea what {A:they}\'s talking about',s:tog,p:pTog('callout')},
+   {n:'Grab the hat',b:'A Sneak Attack on {B}: {A:they} goes for the hat',s:(s,a)=>s.kind==='promo'&&s.type==='attack'&&tog(s,a),p:pTog('attack')}],
+  pay:(s,a)=>sSingles(s)&&sVs(s,a.a,a.b),pplan:a=>[{kind:'match',type:'singles',vs:[a.a,a.b]}],
+  choice:[{k:'mouse',n:'🐭 There\'s a mouse',d:'{A} wins. The hat comes off, and there\'s a tiny masked luchador mouse at the controls. {A:They} was right all along.',win:'a'},
+   {k:'hat',n:'🧢 It\'s just a hat',d:'{B} wins. Nothing under there but hair, and {A} swears {A:they} saw a tail. The feud gets worse.',win:'b'}],
+  also:(a,s,n)=>{const A=aW(a.a),B=aW(a.b);if(!a.choice)a.choice=s.win.includes(a.a)?'mouse':'hat';
+   if(a.choice==='mouse'){bumpHeat(a.a,a.b,a.q==='great'?35:25,[],'The mouse is real');if(B&&B.own==='p')mor(B,-4);n.push(`🐭 ${A.name} rips the hat off ${B.name}'s head, and there it is: a tiny luchador mouse in a tiny mask, holding tiny reins. The arena loses its mind.`)}
+   else{bumpHeat(a.a,a.b,a.q==='great'?60:45,[],'It was just a hat');n.push(`🧢 ${A.name} rips the hat off ${B.name}'s head. Nothing. Just hair. ${A.name} is screaming that ${aPr(A,'they')} saw a tail.`)}},
+  win:(a,w,q)=>({mic:1,pop:(q==='great'?2.5:1.5)+(a.choice==='mouse'?1:0)})},
+ fan:{lane:'ring',i:'🎟️',n:'Fan From the Crowd',bstep:0,gets:'A lot of In-ring and popularity, and a title shot',
+  d:'Nobody backstage will answer {B}\'s open challenge, so {B:they} picks {A} out of the crowd as a fan. {A:They} pulls off the shock win, and now has to learn to be a wrestler, quick, if {A:they} hopes to survive the title shot {A:they} earned.',
+  payoff:'A title match for {B}\'s belt: survive it',
+  pick:A=>(A.pop||0)<=ARC_FAN_POP?{}:null,
+  setup:(a,A)=>{const t=beltOf(a.b);if(t)a.t=t.id},
+  stops:[{n:'"Anyone?"',b:'A singles win over {B}: {B:they} issues an open challenge, nobody answers, and {A} hops the rail',s:(s,a)=>sSingles(s)&&sWon(s,a.a)&&sOpps(s,a.a).includes(a.b),p:a=>[{kind:'match',type:'singles',vs:[a.a,a.b],win:0}]},
+   {n:'Crash course',b:'A Backstage Vignette: {A:they} learns how to take a bump, and what a turnbuckle is',s:vig,p:pVig},
+   {n:'Learning on the job',b:'A match against anyone but {B} (either result)',s:(s,a)=>s.kind==='match'&&s.ids.includes(a.a)&&!s.ids.includes(a.b),p:a=>[{kind:'match',type:'singles',side:[a.a],n:1,oppF:w=>w.id!==a.b}]}],
+  pay:(s,a)=>s.kind==='match'&&!!a.t&&s.title===a.t&&s.ids.includes(a.a),pplan:a=>holderVs(a),
+  also:(a,s,n)=>{const A=aW(a.a);const t=S.titles[a.t];n.push(s.win.includes(a.a)?`🎟️ The fan is the ${t?t.n:'new'} champion! Somebody find ${aPr(A,'their')} ticket stub.`:`🎟️ ${A.name} doesn't win, but ${aPr(A,'they')} survives, and the whole building chants for the fan.`)},
+  win:(a,w,q)=>({ring:1.5,pop:q==='great'?4:2})},
+ deed:{lane:'trait',i:'🏠',n:'Co-Signed',bstep:0,gets:'Popularity, and the house (or a sore loser)',
+  d:'{A} goes to sell {A:their} house and finds out the co-signer on the loan was {B}, {A:their} old roommate. They wrestle for ownership of the home: the loser forfeits their financial stake in the sale.',
+  payoff:'A singles match against {B}: the winner takes the house',
+  pick:A=>({}),
+  stops:[{n:'For sale',b:'A Backstage Vignette: {A:they} plants the For Sale sign, and finds {B}\'s name on the paperwork',s:vig,p:pVig},
+   {n:'Old roommates',b:'A promo with {B}: {A} confronts {B:them} about the loan',s:tog,p:pTog('callout')},
+   {n:'The stake',b:'A Contract Signing with {B}: both stakes go on the line',s:(s,a)=>s.kind==='promo'&&s.type==='contract'&&tog(s,a),p:pTog('contract')}],
+  pay:(s,a)=>sSingles(s)&&sVs(s,a.a,a.b),pplan:a=>[{kind:'match',type:'singles',vs:[a.a,a.b],stip:'ladder'}],
+  also:(a,s,n)=>{const A=aW(a.a),B=aW(a.b);a.won=s.win.includes(a.a)?1:s.win.includes(a.b)?-1:0;bumpHeat(a.a,a.b,a.q==='great'?30:20,[],'The house');
+   if(a.won>0){mor(A,5);if(B&&B.own==='p')mor(B,-6);n.push(`🏠 ${A.name} wins the house. ${B.name} signs over ${aPr(B,'their')} stake in the sale and has to find somewhere else to live.`)}
+   else if(a.won<0){mor(A,-5);if(B&&B.own==='p')mor(B,5);n.push(`🏠 ${B.name} wins the house. ${A.name} forfeits ${aPr(A,'their')} stake in ${aPr(A,'their')} own home.`)}
+   else n.push(`🏠 No winner, no sale. ${A.name} and ${B.name} are roommates again, and neither of them is happy about it.`)},
+  win:(a,w,q)=>a.won>0?{pop:q==='great'?3:2}:{pop:q==='great'?1.5:1}},
+ gout:{lane:'ring',star:1,i:'🦶',n:'The Gout',bstep:0,gets:'In-ring, popularity and the world title',
+  d:'{A} must overcome gout in {A:their} quest to become world champion.',
+  payoff:'World championship: win the world title, gout and all',
+  pick:A=>{const t=worldFor(A);return t?{t:t.id}:null},
+  stops:[{n:'Ouch, my gout',b:'A match: {A:they} limps through it. Costs extra stamina',s:(s,a)=>s.kind==='match'&&s.ids.includes(a.a),p:a=>[{kind:'match',type:'singles',side:[a.a],n:1}]},
+   {n:'Ouch, ouch, gout',b:'A Backstage Vignette: no more shellfish, no more red meat, no more beer',s:vig,p:pVig},
+   {n:'Oooooooh the gout',b:'A 3★+ win, gout and all. Costs extra stamina',min:3,s:(s,a)=>sWon(s,a.a),p:a=>[{kind:'match',type:'singles',side:[a.a],n:1,win:0}]}],
+  pay:(s,a)=>s.kind==='match'&&s.title===a.t&&sWon(s,a.a),pplan:a=>holderVs(a,{win:1}),
+  also:(a,s,n)=>{const A=aW(a.a);n.push(`🦶👑 ${A.name} is world champion! ${aPr(A,'They')} holds the belt up with one hand and ${aPr(A,'their')} big toe with the other.`)},
+  win:(a,w,q)=>({ring:1,pop:q==='great'?3:2})}});
+ ['demo','mouse','fan','deed','gout'].forEach(k=>{aStopArc(ARCS[k]);ARCS[k].k=k});
+ /* the gout costs stamina on its match stops */
+ hookStep('arcPost','arcs.js',{around(_post,...args){const [ap]=args;const s=ap&&ap.seg;const was={};
+  try{arcList().forEach(a=>{if(a.k==='gout'&&!a.done)was[a.id]=a.have})}catch(e){}
+  const r=_post.apply(this,args);
+  try{if(s&&s.kind==='match')arcList().forEach(a=>{if(!(a.id in was)||a.have===was[a.id])return;const A=aW(a.a);if(A)A.fat=Math.min(90,(A.fat||0)+ARC_GOUT_FAT)})}catch(e){}
+  return r}});
+ /* storylines: each new arc's own, and three that join older arcs */
+ Object.assign(ARC_STORY,{
+  demo:[{id:'demo',hook:'Stolen song',head:'{A} is sure everyone is out to steal {A:their} song demo and make it number one before {A:they} can record it, and {B} is getting worried',gen:'{A} is sure everyone is out to steal {A:their} song demo and make it number one before {A:they} can record it, and {A:their} friends are getting worried',txt:{}}],
+  mouse:[{id:'mouse',hook:'Lucha mouse',head:'{A} is convinced {B} is being piloted by a lucha mouse under {B:their} hat, and won\'t rest until {A:they} proves it',gen:'{A} is convinced a rival is being piloted by a lucha mouse under the rival\'s hat, and won\'t rest until {A:they} proves it',txt:{}}],
+  fan:[{id:'rail',hook:'Hopped the rail',head:'Nobody backstage would answer {B}\'s challenge, so {A} was plucked out of the crowd as a fan. Now {A:they} has to learn to wrestle, quick, before the title shot {A:they} earned',gen:'Nobody backstage would answer a champion\'s challenge, so {A} was plucked out of the crowd as a fan. Now {A:they} has to learn to wrestle, quick, before the title shot {A:they} earned',txt:{}}],
+  deed:[{id:'deed',hook:'Co-signer',head:'Selling {A:their} house, {A} finds out the co-signer on the loan was {B}, {A:their} old roommate. They wrestle for the house',gen:'Selling {A:their} house, {A} finds out the co-signer on the loan was {A:their} old roommate. They wrestle for the house',txt:{}}],
+  gout:[{id:'gout',hook:'The gout',head:'{A} must overcome gout in {A:their} quest to become world champion',txt:{}}]});
+ const add=(k,x)=>(ARC_STORY[k]=ARC_STORY[k]||[]).push(x);
+ add('heelturn',{id:'glowbox',hook:'The glowing box',head:'{A} looks inside a glowing box and suddenly understands the meaning of life, but there are no words for it. The only one who knows, {A:they} slowly goes mad, until {A:they} turns on {B}',
+  gen:'{A} looks inside a glowing box and suddenly understands the meaning of life, but there are no words for it. The only one who knows, {A:they} slowly goes mad, until {A:they} turns on a friend',
+  road:{d:'Open the box, fail to explain it, push away the friend who can\'t understand, then turn on {B:them}.',stops:[
+   {n:'The box',b:'A Backstage Vignette: {A:they} looks inside a glowing box, and understands everything',s:vig,p:pVig},
+   {n:'No words',b:'A Sit-Down Interview: {A:they} tries to explain it, and can\'t',s:(s,a)=>s.kind==='promo'&&s.type==='interview'&&s.ids.includes(a.a),p:a=>[{kind:'promo',type:'interview',a:a.a}]},
+   {n:'You wouldn\'t understand',b:'On the same side as {B}, who just doesn\'t get it (a match, or a promo together)',s:(s,a)=>sSame(s,a.a,a.b)||tog(s,a),p:pTag}],
+   payoff:'Team with {B} again: {A} snaps and turns on {B:them}'},
+  after:(a,s,n)=>{n.push(`📦 "YOU'LL NEVER UNDERSTAND! NONE OF YOU WILL EVER UNDERSTAND!" ${aW(a.a).name} is the only one who knows, and it broke ${aPr(aW(a.a),'them')}.`)},txt:{}});
+ add('faceturn',{id:'ham',hook:'The ham',head:'{A} eats a slice of ham so delicious it reminds {A:them} how good life is. {A:They} can\'t be cruel anymore, and stands with {B}',
+  gen:'{A} eats a slice of ham so delicious it reminds {A:them} how good life is. {A:They} can\'t be cruel anymore, and stands with a face',
+  road:{d:'One bite of ham, a change of heart, a slice for {B}, then {A:they} stands with {B:them}.',stops:[
+   {n:'The ham',b:'A Backstage Vignette: {A:they} takes one bite of a slice of ham, and goes quiet',s:vig,p:pVig},
+   {n:'Life is good',b:'A Sit-Down Interview: {A:they} talks about the ham, then sunsets, then {A:their} mother',s:(s,a)=>s.kind==='promo'&&s.type==='interview'&&s.ids.includes(a.a),p:a=>[{kind:'promo',type:'interview',a:a.a}]},
+   {n:'A slice for you',b:'A promo with {B}: {A:they} offers {B:them} some ham',s:tog,p:pTog('interview')}]},
+  after:(a,s,n)=>{n.push(`🍖 ${aW(a.a).name} raises a slice of ham to the crowd. Life is good.`)},txt:{}});
+ add('team',{id:'stars',hook:'Written in the stars',head:'{A} discovers a never-before-seen constellation that clearly shows {A:them} winning tag team gold beside {B}. Now {A:they} has to convince {B} the universe has spoken',
+  gen:'{A} discovers a never-before-seen constellation that clearly shows {A:them} winning tag team gold beside a wrestler {A:they} swears {A:they} saw in the stars. Now {A:they} has to convince them the universe has spoken',
+  payPlan:a=>{const t=aTagTitle(a);return t?[{kind:'match',type:'tag',vs2:[[a.a,a.b],t.holders.slice()],title:t.id,win:0}]:null},
+  road:{d:'Find the constellation, convince {B}, then prove the stars right together.',stops:[
+   {n:'The constellation',b:'A Backstage Vignette: {A:they} finds the new constellation through a telescope',s:vig,p:pVig},
+   {n:'The universe has spoken',b:'A promo with {B}: {A:they} shows {B:them} the star chart. {B:They}\'s not convinced',s:tog,p:pTog('interview')},
+   {n:'Alignment',b:'A tag match together at 2¾★+',min:2.75,s:(s,a)=>sSame(s,a.a,a.b)&&s.sides.every(x=>x.length===2),p:pTag}],
+   payoff:'A tag team win together: the universe\'s ultimate destiny (a tag title win if there\'s one to chase)'},
+  after:(a,s,n)=>{n.push(s.title?`✨ It was written in the stars: ${aW(a.a).name} and ${aW(a.b).name} are tag team champions.`:`✨ The stars align: ${aW(a.a).name} and ${aW(a.b).name} are fulfilling the universe's ultimate destiny.`)},txt:{}});
+ Object.assign(ARC_SIZE,{demo:'m',mouse:'m',fan:'m',deed:'m',gout:'m'});
+ Object.assign(ARC_LEAN,{demo:'cas',mouse:'chaos',fan:'cas'});
+ Object.assign(ARC_CAST,{
+  demo:{b:{lab:'The friend who steps in',f:(A,w)=>true,r:(A,w)=>(aMates(A.id).includes(w.id)?100:0)+aMate(A,w)*3+w.pop/10}},
+  mouse:{b:{lab:'Who the mouse is piloting',f:(A,w)=>(w.pop||0)>=(A.pop||0)+5,r:(A,w)=>aHeat(A.id,w.id)*2+w.pop+(aGrpOf(w).includes('flip')?15:0)}},
+  fan:{b:{lab:'The champion who picks {A:them} out of the crowd',f:(A,w)=>{const t=beltOf(w.id);return !!t&&t.g===A.g&&(w.pop||0)>=(A.pop||0)+20},r:(A,w)=>w.pop}},
+  deed:{b:{lab:'The old roommate who co-signed',f:(A,w)=>true,r:(A,w)=>aHeat(A.id,w.id)*2+Math.abs(aMate(A,w))*3+w.pop/5}}})}
 })();

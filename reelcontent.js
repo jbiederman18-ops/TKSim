@@ -1279,3 +1279,55 @@ const BLOOD_BLOWOFF={
   breakdown:'The referee can’t get the bodies in the ring separated. The bell rings without a fall as the officials come in from both sides.'
  }
 };
+/* v534: Josh's sixth round (reels are off in the game; these keep every arc and storyline scripted for when they're back) */
+Object.assign(ARC_REEL,{
+ demo:{
+  t:'Tonight {B} sits {A} down to end the paranoia, one way or another.',
+  h:['{A} clutches the demo tape to {A:their} chest and won’t let {B} near it.',
+   ['Let {B} talk first','“Nobody wants your song. We want you back.” {A}’s grip loosens, just a little.','“Nobody wants your song.” {A} holds the tape tighter.'],
+   ['Play the demo for the crowd','{A} presses play. Three seconds of a pretty good hook. The crowd sings it back.','{A} presses play. The speakers crackle.']],
+  f:['{B} has had enough. It ends here: the hard way, or the studio.']},
+ mouse:{
+  t:'Tonight {A} wrestles {B}, and the hat is coming off.',
+  h:['{B} goes for {B:their} signature spot. {A} swears the hat twitched.',
+   ['Point at the hat','{A} stops wrestling to point at the hat. Half the crowd starts pointing too.','{A} points at the hat. Nobody sees it.'],
+   ['Go straight for the hat','{A} lunges for the brim. {B} ducks just in time, holding the hat down with both hands.','{A} lunges and grabs a handful of air.']],
+  f:['{A} has {B} down. The hat is right there.']},
+ fan:{
+  t:'Tonight the fan from the crowd gets a title shot against {B}.',
+  h:['{B} sends {A} into the ropes. {A} bounces off the way {A:they} learned last week.',
+   ['Hit the move from the crash course','{A} lands the one move {A:they} practiced all week. The crowd can’t believe it.','{A} tries the move. It mostly works.'],
+   ['Get the crowd behind the fan','{A} slaps the mat and looks out at the seat {A:they} came from. The crowd roars for one of their own.','{A} slaps the mat. A few people clap along.']],
+  f:['{A} is still standing. Nobody expected that, including {A}.',
+   ['Go for the title','{A} throws everything {A:they} has left at the champion.','{A} throws one more punch.'],
+   ['Survive one more minute','{A} grabs the ropes and refuses to stay down.','{A} grabs a rope and hangs on.']]},
+ deed:{
+  t:'Tonight {A} and {B} wrestle for the house. The loser gives up their stake in the sale.',
+  h:['The deed is up above the ring. Both of them look at it at the same time.',
+   ['Bring up the old apartment','“Remember who always paid the rent on time?” {B} can’t answer that.','“Remember who paid the rent?” {B} rolls {B:their} eyes.'],
+   ['Wave the For Sale sign','{A} grabs the sign from ringside and waves it at {B}. The crowd chants “SOLD!”','{A} waves the sign. It falls apart.']],
+  f:['The deed is within reach.',
+   ['Climb for it','{A} starts the climb with {B} right behind.','{A} starts climbing, slowly.'],
+   ['Finish the roommate','{A} goes for the finish on {B}.','{A} goes for the finish.']]},
+ gout:{
+  t:'Tonight {A} wrestles for the world title, gout and all.',
+  h:['{A} lands on the bad foot and lets out a sound the whole building hears.',
+   ['Sell the gout','“Oooooooh, the gout!” The crowd starts the chant with {A:them}.','“Oooooooh, the gout.” Nobody chants.'],
+   ['Wrestle through it','{A} stomps the bad foot down and keeps fighting. The crowd is on its feet.','{A} keeps going, limping.']],
+  f:['One more big move, on one good foot.',
+   ['Hit it on one leg','{A} hits it on {A:their} one good leg.','{A} hits it, wobbling.'],
+   ['Hold on for the pin','{A} hooks the leg and holds on with everything.','{A} hooks the leg.']]}});
+Object.assign(ARC_REEL_END,{
+ demo:{sense:'{B} decks {A} with one punch. {A} blinks. “Was I being… weird?” {B} helps {A:them} up. They hug in the middle of the ring.',
+  studio:'{B} hands {A} a set of headphones. Tomorrow, the studio. {A} holds the tape up to the crowd, then hands it to {B} for safekeeping.'},
+ mouse:{mouse:'{A} rips the hat off. There’s a tiny luchador mouse in a tiny mask, holding tiny reins. It waves. {A} wins, and the arena loses its mind.',
+  hat:'{A} rips the hat off. Nothing but hair. {B} rolls {A} up for three while {A} is still shaking the hat. “THERE WAS A TAIL! I SAW A TAIL!”'}});
+Object.assign(ARC_REEL_STORY,{
+ 'demo/demo':{r:'{A} has a song demo, and for weeks {A:they} has been sure everyone is out to steal it. {B} has been the most worried of all.'},
+ 'mouse/mouse':{r:'{A} is convinced {B} is being piloted by a lucha mouse under {B:their} hat. The footage, the accusations and the grab for the hat are behind them.'},
+ 'fan/rail':{r:'Nobody backstage would answer {B}’s open challenge, so {A} hopped the rail as a fan and won. Since then, a crash course and a lot of learning on the job.'},
+ 'deed/deed':{r:'{A} went to sell {A:their} house and found out the co-signer on the loan was {B}, {A:their} old roommate. The contract is signed.'},
+ 'gout/gout':{r:'Ouch, my gout. Ouch, ouch, gout. Oooooooh, the gout. {A} has fought through all of it on the way to the world title.'},
+ 'heelturn/glowbox':{r:'{A} looked inside a glowing box and understood the meaning of life. {A:They} has tried to explain it every week since, and {B} still doesn’t get it.'},
+ 'faceturn/ham':{r:'{A} ate a slice of ham so delicious it reminded {A:them} how good life is. {A:They} hasn’t been cruel since.'},
+ 'team/stars':{r:'{A} found a new constellation that clearly shows {A:them} and {B} winning tag team gold. {B} has slowly come around.'}});
