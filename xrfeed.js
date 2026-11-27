@@ -126,17 +126,39 @@ cas:{
   "every match was a regular match. i want the ones with extra words in the name",
   "nobody got put in anything. not a cage, not a box, nothing. what a waste of a ring",
   "where’s the gimmick. any gimmick. put a guy in a coffin. put a guy in a different coffin"],
- sw:["went over to {OT}. they had guys i know",
-  "{OT} had a belt match. sorry. i go where the belts go",
-  "my brother put on {OT} and i didn’t stop him. they had the famous guy. he’s still famous over there",
-  "flipped to {OT} at the commercial and they had a cage. i live there now",
-  "{OT} had somebody from a commercial so i went there. it’s that easy",
-  "lost the remote in the couch while {OT} was on. so i watch {OT} now. that’s fate"],
- swin:["came over from {OT}. my cousin said the good guys are here. my cousin is right once a year and this is the once",
-  "{OT} was boring so i flipped. is this the good one. it looks like the good one",
-  "left {OT} because i didn’t know anybody. i know more people here. hi",
-  "sat on the remote and ended up here instead of {OT}. i’m staying. i’m comfortable",
-  "{OT} had a commercial and i never went back. this is my channel now"]},
+ sw:["flipped to {OT}. it wasn’t great either but it was less not great",
+  "my remote slipped and landed on {OT}. it was a little better there. i stayed",
+  "{OT} was on the other channel and the other channel was slightly more fun. that’s math"],
+ swS:["went over to {OT}. they had guys i know",
+  "{OT} had more famous guys. i go where the famous guys are",
+  "my brother put on {OT} because they had the guy from the commercials. my brother was right. i hate when he’s right",
+  "{OT} had somebody i’ve seen on a t-shirt. that’s all it takes. that’s the whole secret"],
+ swT:["{OT} had a belt match. sorry. i go where the belts go",
+  "switched to {OT}. somebody over there was holding up a belt. i need to see belts held up",
+  "{OT} said “for the championship” and my thumb just went there on its own"],
+ swF:["{OT} had {OM} and those two HATE each other. i need people who hate each other",
+  "flipped to {OT} for {OM}. i don’t know what happened between them but i need to see it",
+  "my wife made us watch {OT} because of the drama in {OM}. now we’re both on a side"],
+ swX:["{OT} had a special kind of match with extra words in the name. i live there now",
+  "flipped to {OT} because they had one of the big gimmick matches. something big. i love big",
+  "{OT} put people in a big special match. i don’t know the rules. i don’t need to know the rules"],
+ swQ:["{OT} was just better tonight. i don’t know why. i’m not a scientist",
+  "flipped to {OT} and it was more fun. don’t ask me to explain. i can’t",
+  "{OT} had a better show. my dad said so and he only watched like 4 minutes"],
+ swin:["came over from {OT}. it was ok over there. this is more ok",
+  "flipped from {OT} during a commercial. stayed. this one’s a little better i think",
+  "left {OT}. not for any reason. ok one reason. this is better"],
+ swinS:["{OT} had nobody i’ve heard of so i came here. hi. who’s famous here",
+  "left {OT} at the third guy i didn’t know. you have guys i know. i think",
+  "my cousin said the famous ones are over here, not on {OT}. my cousin is right once a year and this is the once"],
+ swinQ:["{OT} was boring so i’m here now. is this the good one",
+  "left {OT} because it felt tired. like a show that needed a nap"],
+ swinF:["nobody on {OT} was mad at anybody. i came here for people who are mad",
+  "{OT} had no drama. i need drama. i came here. please be dramatic"],
+ swinT:["{OT} didn’t have a single belt on the line. i came here for belts",
+  "no title matches on {OT}. so i’m here. show me a belt"],
+ swinX:["{OT} was all regular matches. i came over for the ones with extra words",
+  "nobody on {OT} got put in a cage or anything. so here i am. put somebody in something"]},
 tech:{
  love:["A clean finish. No interference. No nonsense. I allowed myself one small nod of approval. Do not expect a second.",
   "Tonight’s card would hold up on a 1994 Japanese tour. I don’t say that lightly. I’ve never said it before.",
@@ -215,11 +237,16 @@ tech:{
   "They went home on a disqualification. I went to bed on a disappointment."],
  sw:["Watched {OT} instead. They had an actual wrestling match. Look it up. Learn.",
   "Spent the evening with {OT}. Their mat work was competent. I resent that deeply.",
-  "Switched to {OT} for the second hour. Do not make me admire them again.",
-  "{OT} had real chain wrestling tonight. I’m admitting it publicly. Let the record show I’m furious."],
- swin:["Arrived from {OT}. Their idea of technical wrestling is two people hugging and grunting.",
-  "Fled {OT} after the fourth superkick in a row. I’m told the wrestling lives here now.",
-  "Left {OT}. I can only watch so many dives before my soul files for divorce."]},
+  "Switched to {OT} for the second hour. Do not make me admire them again."],
+ swM:["{OT} had {OM}. Real wrestling. I’m admitting it publicly. Let the record show I’m furious.",
+  "Defected to {OT} for {OM}. Two people who understand leverage. You should try booking some.",
+  "{OM} on {OT} was the only literate thing on television tonight. I went where the literacy was."],
+ swin:["Arrived from {OT}. Their idea of technical wrestling tonight was two people hugging and grunting.",
+  "Left {OT}. Their mat work tonight was a rumor."],
+ swinI:["{OT} had zero technical wrestling tonight. Not a wristlock. I came here out of necessity.",
+  "Fled {OT}. Three hours without a single chain sequence. I’m told the wrestling lives here."],
+ swinM:["Came over from {OT} for {M}. A sound decision. I make many.",
+  "{OT} let me down, so I watched {M} here instead. Correct choice. As usual."]},
 blood:{
  love:["the ring crew needed a mop, a hose, a priest. what a night",
   "tonight’s canvas is my new lock screen, my home screen and my profile picture",
@@ -282,13 +309,18 @@ blood:{
   "they booked a ballet. a pretty ballet. nobody even bled at the ballet. i hate the ballet",
   "booking for bloodhounds tonight: nothing. booking for people who like handshakes: everything",
   "i put on a white shirt for the show. it’s still white. that’s how bad it was"],
- sw:["went to {OT}. somebody over there was bleeding. sorry. not sorry",
-  "{OT} had a fight. you had a handshake. figure it out",
-  "watched {OT}’s second half. their ring crew is going to need therapy. that’s the dream",
-  "{OT} had a cage. I go where the cage is. My only loyalty is to the cage."],
- swin:["came from {OT}. their idea of violence is a mean look and a disappointed sigh",
-  "left {OT} the second they started a dance-off. what is this, a bar mitzvah",
-  "{OT} doesn’t even own a chair. i’m here now. hit somebody. hard. with something"]},
+ sw:["went to {OT}. their ring crew needed a mop tonight. sorry. not sorry",
+  "{OT} actually hurt somebody tonight. you didn’t. figure it out",
+  "switched to {OT} for the second half. they remembered we exist"],
+ swM:["{OT} had {OM}. that’s where the violence was. so that’s where i was",
+  "flipped to {OT} for {OM}. somebody over there finally got hurt",
+  "{OM} on {OT} gave me more than this whole show. i’m loyal to the hurt"],
+ swin:["came from {OT}. their idea of violence tonight was a mean look and a sigh",
+  "left {OT}. their fight tonight was a hug with extra steps"],
+ swinI:["{OT} didn’t book a single violent thing tonight. not one. i’m here now. hit somebody",
+  "{OT} doesn’t own a chair apparently. i came here. use yours"],
+ swinM:["left {OT} for {M}. correct choice. i can still hear it",
+  "{OT} went soft so i came over for {M}. this is where the hurt lives"]},
 flip:{
  love:["^GRAVITY CALLED IN SICK TONIGHT AND NOBODY NOTICED",
   "slowed the big dive to 0.1x and added choir music. i cried. my roommate cried. the choir would’ve cried",
@@ -349,13 +381,18 @@ flip:{
   "if next week doesn’t have a dive i’m diving off my couch in protest. onto my roommate. he’s been warned",
   "my clip folder for tonight is EMPTY. there is NOTHING IN IT",
   "i brought binoculars to look UP. never had to look up once"],
- sw:["watched {OT} for the multi-person match. they let people JUMP over there",
+ sw:["switched to {OT} halfway through. at least somebody over there left their feet",
   "^{OT} HAD PEOPLE IN THE AIR. IS THAT SO HARD",
-  "switched to {OT} halfway through. at least someone over there left their feet",
-  "{OT} had a ladder match. i don’t make the rules. i follow the ladders"],
- swin:["came over from {OT}. heard you people leave the ground here. prove it",
-  "left {OT}. if i wanted to watch people lie on a mat i’d take a nap on one",
-  "{OT} was so grounded i fell asleep standing up. heard you fly here"]},
+  "watched {OT}. they let people JUMP over there"],
+ swM:["flipped to {OT} for {OM}. people left the ground. on purpose. imagine",
+  "^{OM} ON {OT}. THAT’S WHERE THE SKY WAS",
+  "{OT} had {OM}. i follow the flying. i don’t make the rules"],
+ swin:["came over from {OT}. they barely left the ground tonight. heard you fly here",
+  "left {OT}. if i wanted to watch people lie on a mat i’d take a nap on one"],
+ swinI:["{OT} was so grounded i fell asleep standing up. nobody flew. not once",
+  "{OT} had zero dives. ZERO. came here. please jump"],
+ swinM:["{OT} kept everyone on the mat so i came over for {M}. good call, me",
+  "^LEFT {OT} FOR {M}. NO REGRETS"]},
 chaos:{
  love:["I threw a chair in my own living room. My landlord came up to yell and now HE’S throwing chairs.",
   "the run-in had a run-in. the second run-in had a run-in. i need someone to run in on me while i lie down",
@@ -413,13 +450,18 @@ chaos:{
   "no brawls, no betrayals, no thrown microphones. filing a missing persons report for the chaos",
   "everybody came out, wrestled, and left. like a dentist appointment. a GOOD dentist appointment. disgusting",
   "had popcorn ready for a riot. ate it during a handshake"],
- sw:["switched to {OT}. someone over there got jumped after the bell. that’s MY content",
-  "{OT} had a run-in. you had a handshake. bye",
+ sw:["switched to {OT}. stuff actually went wrong over there. that’s MY content",
   "watched {OT}. their show felt like a fire alarm and i mean that as the highest compliment",
-  "went to {OT}. somebody got attacked in the parking lot. i go where the parking lot is"],
- swin:["fled {OT}. too many handshakes. smelled like a church picnic",
-  "came over from {OT} because nothing over there ever catches fire",
-  "{OT} was so calm i thought my tv was paused. hi. is the chaos here"]}};
+  "{OT} got messy. you stayed tidy. bye"],
+ swM:["{OT} had {OM}. that’s where the mess was. i go where the mess is",
+  "flipped to {OT} for {OM}. it was unhinged. i need unhinged",
+  "{OM} on {OT} had more chaos than this whole show. sorry. not sorry"],
+ swin:["fled {OT}. too polite over there tonight. smelled like a church picnic",
+  "came over from {OT} because nothing over there was catching fire"],
+ swinI:["{OT} was so calm i thought my tv was paused. nothing went wrong. NOTHING. hi",
+  "zero run-ins, zero brawls on {OT}. i came here. please ruin something"],
+ swinM:["left {OT} for {M}. it’s chaos over here. i’m home",
+  "{OT} behaved. so i came over for {M}. good choice. bad behavior"]}};
 /* his line up top: how the night went for you, or for the other booker on their tab */
 const XR_SAY={
  big:["Boss, the mentions are on fire. In the good way. I checked twice.","We’re trending. Top five. I screenshotted it and sent it to my mom.",
@@ -453,7 +495,7 @@ const XR_SEEN_MAX=160;
 function xrRand(l){return l[Math.floor(Math.random()*l.length)]}
 function xrStars(s){const f=Math.floor(s+1e-9),r=s-f;return f+(r>=.74?'¾':r>=.49?'½':r>=.24?'¼':'')}
 /* fill a template; null when a token can't be filled */
-function xrFill(t,c){let ok=true;const out=t.replace(/\{(A|B|M|ST|OT|SH|TH)\}/g,(m,k)=>{const v=c[k];if(v==null||v===''){ok=false;return ''}return v});return ok?out:null}
+function xrFill(t,c){let ok=true;const out=t.replace(/\{(A|B|M|ST|OT|OM|SH|TH)\}/g,(m,k)=>{const v=c[k];if(v==null||v===''){ok=false;return ''}return v});return ok?out:null}
 /* one post from a crowd's bank (or the first bank that can fill it), skipping recent ones */
 function xrPick(g,banks,c,used){S.xrSeen=S.xrSeen||[];const seen=S.xrSeen;
  for(const bk of banks){const l=(XR_POSTS[g]&&XR_POSTS[g][bk])||[];const fill=l.map((t,i)=>({id:g+'.'+bk+'.'+i,x:xrFill(t,c)})).filter(p=>p.x&&!used.has(p.id));if(!fill.length)continue;
@@ -461,6 +503,7 @@ function xrPick(g,banks,c,used){S.xrSeen=S.xrSeen||[];const seen=S.xrSeen;
   used.add(p.id);seen.push(p.id);if(seen.length>XR_SEEN_MAX)seen.splice(0,seen.length-XR_SEEN_MAX);
   let x=p.x;if(x[0]==='^')x=x.slice(1).toUpperCase();if(g==='cas')x=x.toLowerCase();return x}
  return null}
+function xrNm(k){return k&&typeof nameOf==='function'?nameOf(k):''}
 function xrNum(n){n=Math.max(1,Math.round(n));return n<1000?String(n):(n/1000).toFixed(n<10000?1:0).replace(/\.0$/,'')+'K'}
 /* the timeline for one booker's night. own: you (Next week note, your-show voice) or someone else's tab */
 function xrBuild(o,br,own){const r=o.fb[br];const ot=(()=>{const k=Object.keys(o.fb||{}).find(k=>k!==br);return k?(typeof nameOf==='function'?nameOf(k):''):''})();
@@ -480,8 +523,20 @@ function xrBuild(o,br,own){const r=o.fb[br];const ot=(()=>{const k=Object.keys(o
   else if(v==='Ignored')add(g,['ign'],w)});
  /* the loudest crowd gets a second post on a big night */
  const top=FB_G.slice().sort((a,b)=>Math.abs(d(b))-Math.abs(d(a)))[0];if(top&&Math.abs(d(top))>=5000){const v=fbVd(r,top)[1];const c=ctx(top),M=!!(c.A&&c.B);add(top,v==='good'?(top==='cas'?['love','stars']:M?['loveM','love']:['love']):top==='cas'?['hate']:fbVd(r,top)[0]==='Ignored'?['ign']:M?['hateM','hate','meh']:['hate','meh'],Math.abs(d(top))*.7)}
- /* fans who switched shows */
- const sw=r.sw||{};let lost=0,won=0;FB_G.forEach(g=>{const n=sw[g]||0;if(n<=-1000&&ot){add(g,['sw'],-n*1.5);lost++}else if(n>=1000&&ot){add(g,['swin'],n*1.2);won++}});
+ /* fans who switched shows. v517: each post names the show they actually went to or came from, and says only what that
+    show's own result for that crowd shows: the segment that fed them, why casuals took to it, or that it had nothing for them */
+ const sw=r.sw||{};let lost=0,won=0;const others=Object.keys(o.fb||{}).filter(k=>k!==br);
+ const otFor=(g,d)=>others.filter(k=>((o.fb[k].sw||{})[g]||0)*d>0).sort((a,b)=>((o.fb[b].sw||{})[g]-(o.fb[a].sw||{})[g])*d)[0]||others[0];
+ const casK=y=>/feud/i.test(y)?'F':/star power|favorite stars|kind of stars/i.test(y)?'S':/title/i.test(y)?'T':/match type/i.test(y)?'X':/better show|strong show|up to your usual/i.test(y)?'Q':'';
+ const casOut=y=>{const n=(y.match(/needed (.*)/)||[])[1]||'';return /up to your usual/.test(y)?'Q':/star power/.test(y)||/^bigger stars/.test(n)?'S':/^a hot feud/.test(n)?'F':/^a title/.test(n)?'T':/^a big match type/.test(n)?'X':''};
+ FB_G.forEach(g=>{const n=sw[g]||0;if(Math.abs(n)<1000||!others.length)return;const k=otFor(g,n<0?1:-1),r2=o.fb[k]||{};
+  const c=Object.assign(ctx(g),{OT:xrNm(k)||null,OM:r2.ms&&r2.ms[g]&&r2.mt&&r2.mt[g]||null});const vd2=r2.vd&&r2.vd[g],y2=(r2.wy&&r2.wy[g])||'';
+  let banks;
+  if(n<0){if(g==='cas'){const x=FB_VD[vd2]==='good'?casK(y2):'';banks=x?['sw'+x,'sw']:['sw']}else banks=c.OM?['swM','sw']:['sw']}
+  else{if(g==='cas'){const x=FB_VD[vd2]==='bad'?casOut(y2):'';banks=x?['swin'+x,'swin']:['swin']}else banks=vd2==='Ignored'?['swinI']:c.M?['swinM','swin']:['swin']}
+  const x=xrPick(g,banks,c,used);if(x){posts.push({g,h:handle(g),x,w:Math.abs(n)*(n<0?1.5:1.2)});n<0?lost++:won++}});
+ const otL=others.slice().sort((a,b)=>FB_G.reduce((s,g)=>s+((o.fb[b].sw||{})[g]||0)-((o.fb[a].sw||{})[g]||0),0))[0];
+ const otW=others.slice().sort((a,b)=>FB_G.reduce((s,g)=>s+((o.fb[a].sw||{})[g]||0)-((o.fb[b].sw||{})[g]||0),0))[0];
  posts.sort((a,b)=>b.w-a.w);/* the first three you see come from different crowds when they can */
  const first=[];posts.forEach(p=>{if(first.length<3&&!first.some(q=>q.g===p.g))first.push(p)});const list=first.concat(posts.filter(p=>!first.includes(p))).slice(0,7);
  /* likes and reposts follow how many fans moved */
@@ -489,7 +544,7 @@ function xrBuild(o,br,own){const r=o.fb[br];const ot=(()=>{const k=Object.keys(o
  const tot=FB_G.reduce((a,g)=>a+d(g),0);const c0={OT:ot||'the other show',TH:typeof nameOf==='function'?nameOf(br):'Their show'};
  const tier=own?(tot>=15000?'big':tot>=4000?'good':tot>=-2000?'mixed':tot>=-10000?'bad':'awful'):(tot>=8000?'rbig':tot>=0?'rmixed':'rbad');
  let say=xrFill(xrRand(XR_SAY[tier]),c0);
- if(own&&ot&&lost&&Math.random()<.7)say+=' '+xrFill(xrRand(XR_ADD.lost),c0);else if(own&&ot&&won&&Math.random()<.7)say+=' '+xrFill(xrRand(XR_ADD.won),c0);else if(o.ppv&&Math.random()<.5)say+=' '+xrRand(XR_ADD.ppv);
+ if(own&&ot&&lost&&Math.random()<.7)say+=' '+xrFill(xrRand(XR_ADD.lost),Object.assign({},c0,{OT:xrNm(otL)}));else if(own&&ot&&won&&Math.random()<.7)say+=' '+xrFill(xrRand(XR_ADD.won),Object.assign({},c0,{OT:xrNm(otW)}));else if(o.ppv&&Math.random()<.5)say+=' '+xrRand(XR_ADD.ppv);
  /* the Next week note: the crowd that lost you the most fans, never one that was happy (as the old Next time tip) */
  let note=null;if(own&&r.nx){const g=FB_G.filter(g=>d(g)<=-100&&r.nx[g]&&FB_VD[r.vd&&r.vd[g]]!=='good').sort((a,b)=>d(a)-d(b))[0];
   if(g)note={g,t:(xrRand(XR_LEAD[g])+' '+r.nx[g]+' '+xrRand(XR_OFF)).trim()}}
