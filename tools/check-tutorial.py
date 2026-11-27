@@ -143,7 +143,7 @@ async def main(shots):
                 visited.append('t.ppv'); await shot('t.ppv'); await pg.evaluate('tutNext()')
             # v186: coach tips that used to be tour stops — each must find its target on its screen
             for tid, prep in [('t.wwe', "go('home')"), ('t.card', "go('book')"), ('t.flow', "go('book')"), ('t.stam', "go('book')"),
-                              ('t.stars', "rf='mine';go('roster')"), ('t.morale', "rf='mine';go('roster')"), ('t.fa', "rf='fa';go('roster')"),
+                              ('t.stars', "rf='mine';go('roster')"), ('t.traits', "rf='mine';go('roster')"), ('t.morale', "rf='mine';go('roster')"), ('t.fa', "rf='fa';go('roster')"),
                               ('t.titles', "go('titles')"), ('t.money', "go('office')")]:
                 await pg.evaluate(prep); await pg.wait_for_timeout(500)
                 if await pg.evaluate('!!TUT'): await pg.evaluate('tutNext()'); await pg.wait_for_timeout(200)
