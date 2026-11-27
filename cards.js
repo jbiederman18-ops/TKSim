@@ -804,12 +804,7 @@ function homeMenus(){if(!on()||!S||S.phase!=='season'||typeof tab==='undefined'|
 function showCard(g,big){const lg=g.k==='league';const wk=g.wk?(lg?`Wk ${Math.min(g.wk,SEASON)}/${SEASON}`:`Wk ${g.wk}`):'';
  const st=g.active?['now','Playing now']:g.turn==='mine'?['turn','Your turn']:g.turn==='wait'?['','Waiting']:g.at?['',whenTxt2(g.at)]:['',''];
  return `<span class="tcshow ${lg?'':'solo'} ${big?'cur':''}"><span class="sb">${lg?'League':'Solo'}<i>${esc(wk)}</i></span><span class="sg">${esc(tcIni(g.t))}</span><span class="sn">${esc(g.t)}</span><span class="sw">${esc(g.sub||'')}</span><span class="st ${st[0]}">${esc(st[1])}</span></span>`}
-if(typeof gameHero==='function'){hookStep('gameHero','cards.js',{around(gh0,...args){let [g]=args;if(!on())return gh0.apply(this,args);
- const lab=g.turn==='mine'?"It's your turn":g.active?'Pick up where you left off':g.turn==='wait'?'Waiting on your friends':'Jump back in';const go=g.active?'closeModal()':gOpen(g);
- const stat=(v,l)=>v!=null&&v!==''?`<div><b>${v}</b><span>${l}</span></div>`:'';
- return `<div class="tchero"><button class="tcgo" onclick="${go}" aria-label="${esc(g.t)}">${showCard(g,true)}</button><div class="tchi"><span class="k">${esc(lab)}</span><b class="t">${esc(g.t)}</b>
- ${g.wk||g.fans?`<div class="tchs">${stat(g.wk?`${Math.min(g.wk,SEASON)}<small>/${SEASON}</small>`:'','Week')}${stat(g.fans?fmtFans(g.fans):'','Fans')}</div>`:''}
- <div class="tcha"><button class="btn" onclick="${go}">${g.turn==='mine'?'Take your turn':'Continue'}</button><button class="btn sec" onclick="gameMenu('${g.k}','${g.id}',${g.cur?1:0})" aria-label="More options">⋯</button></div></div></div>`}})}
+window.showCard=showCard;
 hookStep('render','cards: card table and Home',{after(){try{attnDown()}catch(e){}try{decorate()}catch(e){console.error('cards',e)}try{homeDeco()}catch(e){console.error('cards home',e)}try{homeMenus()}catch(e){console.error('cards menus',e)}}});
 /* a new week or a new game starts a fresh table */
 if(typeof suggestFill==='function'){hookStep('suggestFill','cards.js',{before(ctx){TC.dr={};}})}
@@ -1035,7 +1030,6 @@ html.tcards .wd-pic.tcwd{width:auto;aspect-ratio:auto;overflow:visible;clip-path
 /* menus as cards (v284): straight edges everywhere; containers are the table, things are cards */
 html.tcards.lk-hy{--cut:none;--slant:none;--sl:none;--band:none}
 /* v512: only cards (wrestlers, belts, saved games) get card corners — panels, buttons, chips, tiles and tabs are square */
-html.tcards.lk-hy .lbhero{border-radius:3px}
 html.tcards.lk-hy .hyb i{transform:none}html.tcards.lk-hy nav.tabs button.on:before{display:none}
 html.tcards.lk-hy .tile em,html.tcards.lk-hy .tile:after{display:none}
 .tcbk2{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none;width:var(--bw,66px);aspect-ratio:5/7;border-radius:3px;background:#0c0c0e url(card-bg.jpg) center/cover;box-shadow:inset 0 0 0 1.5px var(--gold3),0 6px 14px rgba(0,0,0,.5);font:900 italic calc(var(--bw,66px)*.36)/1 'BC',sans-serif;color:var(--gold)}
@@ -1060,11 +1054,22 @@ html.tcards .bstrip .bsn{display:flex;align-items:center}.tcstk{position:relativ
 .tcshow .sw{position:absolute;left:9px;right:8px;bottom:calc(var(--gw,120px)*.15);font:700 calc(var(--gw,120px)*.085)/1 'BC',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tcshow .st{position:absolute;left:0;right:0;bottom:0;height:calc(var(--gw,120px)*.13);display:flex;align-items:center;padding-left:9px;font:900 italic calc(var(--gw,120px)*.085)/1 'BC',sans-serif;letter-spacing:.08em;text-transform:uppercase;background:#1d1e23;color:var(--mut)}.tcshow .st.turn{background:linear-gradient(90deg,var(--gold3),var(--gold),var(--gold3));color:#140f02}.tcshow .st.now{background:#1d2a22;color:var(--good)}
 .tcgo{border:0;padding:0;background:none;cursor:pointer;display:block}.tcgo:active{transform:scale(.97)}
-html.tcards.lk-hy #games .lbtag{background:var(--red);color:#fff}html.tcards.lk-hy #games .lbtag.solo{background:#24252b;color:var(--gold)}.tcgame{position:relative;--gw:min(28vw,124px)}.tcgame .tcgm2{position:absolute;right:4px;top:calc(var(--gw)*.24);width:30px;height:26px;padding:0;border-radius:2px;background:rgba(0,0,0,.6);color:var(--text)}
 .tchero{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:end;margin-bottom:18px;--gw:min(44vw,176px)}
 .tchi{display:flex;flex-direction:column;gap:10px;min-width:0}.tchi .k{font:800 italic 12px/1 'BC',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}.tchi .t{font:900 italic 24px/1 'BC',sans-serif;text-transform:uppercase;text-wrap:balance;overflow-wrap:anywhere}
 .tchs{display:flex;gap:16px}.tchs div{display:flex;flex-direction:column;gap:3px}.tchs b{font:900 italic 24px/1 'BC',sans-serif;font-variant-numeric:tabular-nums}.tchs b small{font-size:14px;color:var(--mut)}.tchs span{font:700 11px/1 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
 .tcha{display:flex;gap:6px}.tcha .btn{margin:0;min-height:46px;font-size:17px}.tcha .btn.sec{width:50px;flex:none;padding:0}
+/* the games home screen: up next two-up, the library as a shelf of cards, new games as one row */
+.hmups{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 18px;margin:0 -18px 4px;padding:2px 18px 6px;scrollbar-width:none}.hmups::-webkit-scrollbar,.hmshelf::-webkit-scrollbar{display:none}
+.hmup{flex:none;display:flex;flex-direction:column;gap:8px;width:var(--gw);--gw:calc((min(100vw,560px) - 48px)/2);scroll-snap-align:start}.hmup .tcha .btn{font-size:15px;min-height:42px;padding:0 6px}.hmup .tcha .btn.sec{width:42px}
+.hmshelf{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x proximity;scroll-padding:0 18px;margin:0 -18px;padding:2px 18px 10px;scrollbar-width:none;--gw:112px}
+.hmsg{position:relative;flex:none;scroll-snap-align:start}.hmmore{position:absolute;right:4px;top:calc(var(--gw)*.23);width:32px;height:28px;padding:0;border:0;border-radius:2px;background:rgba(0,0,0,.6);color:var(--text);font-size:16px;cursor:pointer}
+.hmnews{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.hmnew{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;min-height:84px;padding:12px 4px 10px;border:0;background:#141417;box-shadow:inset 0 0 0 1px var(--line);color:var(--text);font:inherit;text-align:center;cursor:pointer}.hmnew:active{background:#1f2026}
+.hmnew span{font-size:24px;line-height:1}.hmnew b{font:800 italic 14px/1.05 'BC',sans-serif;letter-spacing:.03em;text-transform:uppercase;text-wrap:balance}
+.hmdev{display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;margin-top:22px;padding-top:12px;border-top:1px solid var(--line);font:700 11px/1 'BC',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.hmdev span{flex:1 0 auto}.hmdev button{border:0;background:none;padding:8px 0;color:var(--text);font:600 13px/1 'Barlow',sans-serif;letter-spacing:0;text-transform:none;cursor:pointer}
+.hmnone{display:flex;flex-direction:column;gap:4px;padding:18px;background:#141417;box-shadow:inset 0 0 0 1px var(--line)}.hmnone b{font:900 italic 24px/1 'BC',sans-serif;text-transform:uppercase}.hmnone span{color:var(--mut)}
+@media (min-width:1100px){.hmshelf,.hmups{flex-wrap:wrap;overflow:visible}.hmup{--gw:168px}}
 /* menu screens (v283): every panel is the same flat tile as the table, headed by a gold label */
 html.tcards.lk-hy .card:not(.showcard):not(.ttape),html.tcards.lk-hy .tile{background:#141417;border:0;box-shadow:inset 0 0 0 1px var(--line)}
 html.tcards.lk-hy .card.tcard,html.tcards.lk-hy .card.mine{box-shadow:inset 3px 0 0 var(--gold),inset 0 0 0 1px var(--line);border-top:0}

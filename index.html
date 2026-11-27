@@ -38,7 +38,7 @@
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v522';
+const APP_VERSION='v523';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -3821,27 +3821,36 @@ function gamesList(){const out=[];const cur=soloState();
  mpGames().forEach(g=>{let st=null;try{st=JSON.parse(LS.get('tksim_game_'+g.code)||'null')}catch(e){}
   const turn=st&&st.online?(simOn(st)?(st.phase==='over'||!(st.online.booked||{}).p?'mine':'wait'):st.online.turn==='p'?'mine':'wait'):'';out.push({k:'league',id:g.code,t:g.label||g.code,sub:`League ${g.code}${st?' · '+stageTxt(st):' · on another device'}`,turn,active:ON()&&!TV&&LMP&&LMP.code===g.code,fans:st&&st.fans&&st.fans.p,wk:st&&st.phase==='season'?st.week:null})});
  return out}
-/* v91: the games screen is a full-screen lobby — your most urgent game up top, the rest below, new games as tiles */
+/* the games screen is a home screen: what needs you as big show cards up top, every other game on a shelf of cards,
+   new games as one row of buttons, device backups as a quiet footer */
 function gOpen(g){return g.k==='league'?`mpOpen('${g.id}')`:g.cur?'openActiveSolo()':`openSolo('${g.id}')`}
-function gStatus(g){return g.active?'<span class="lbst on">● Playing now</span>':g.turn==='mine'?'<span class="lbst turn">Your turn</span>':g.turn==='wait'?'<span class="lbst">Waiting</span>':g.at?`<span class="lbst">${esc(whenTxt2(g.at))}</span>`:''}
-function gameRow(g){return `<div class="lbrow ${g.turn==='mine'?'turn':''}${g.active?' on':''}"><button class="lbmain" onclick="${g.active?'closeModal()':gOpen(g)}"><span class="lbtag ${g.k}">${g.k==='league'?'League':'Solo'}</span><span class="lbtx"><b>${esc(g.t)}</b><small>${esc(g.sub||'')}</small></span>${gStatus(g)}</button><button class="lbmore" onclick="gameMenu('${g.k}','${g.id}',${g.cur?1:0})" aria-label="More options">⋯</button></div>`}
-function gameHero(g){const lab=g.turn==='mine'?"It's your turn":g.active?'Pick up where you left off':g.turn==='wait'?'Waiting on your friends':'Jump back in';
- const stat=(v,l)=>v!=null&&v!==''?`<div class="lbhs"><b>${v}</b><small>${l}</small></div>`:'';
- return `<div class="lbhero ${g.turn==='mine'?'turn':''}"><div class="lbkick"><span class="lbtag ${g.k}">${g.k==='league'?'League':'Solo'}</span>${esc(lab)}</div>
- <div class="lbht">${esc(g.t)}</div><div class="lbsub">${esc(g.sub||'')}</div>
- ${g.wk||g.fans?`<div class="lbstats">${stat(g.wk?`${Math.min(g.wk,SEASON)}<i>/${SEASON}</i>`:'','Week')}${stat(g.fans?fmtFans(g.fans):'','Fans')}${g.at&&g.k==='solo'?stat(esc(whenTxt2(g.at)),'Last played'):''}</div>`:''}
- <div class="lbhb"><button class="btn" onclick="${g.active?'closeModal()':gOpen(g)}">${g.turn==='mine'?'▶ Take your turn':'▶ Continue'}</button><button class="lbmore big" onclick="gameMenu('${g.k}','${g.id}',${g.cur?1:0})" aria-label="More options">⋯</button></div></div>`}
+function gGo(g){return g.active?'closeModal()':gOpen(g)}
+function gMore(g,cls){return `<button class="${cls}" onclick="gameMenu('${g.k}','${g.id}',${g.cur?1:0})" aria-label="More options">⋯</button>`}
+function gAct(g){return g.turn==='mine'?'Take your turn':g.active?'Back to it':'Continue'}
+/* one game up next: its card beside the week, fans and the big button */
+function gameHero(g){const stat=(v,l)=>v!=null&&v!==''?`<div><b>${v}</b><span>${l}</span></div>`:'';
+ const lab=g.turn==='mine'?"It's your turn":g.active?'Playing now':g.turn==='wait'?'Waiting on your friends':'Last played '+whenTxt2(g.at);
+ return `<div class="tchero"><button class="tcgo" onclick="${gGo(g)}" aria-label="${esc(g.t)}">${showCard(g,true)}</button><div class="tchi"><span class="k">${esc(lab)}</span><b class="t">${esc(g.t)}</b>
+ ${g.wk||g.fans?`<div class="tchs">${stat(g.wk?`${Math.min(g.wk,SEASON)}<small>/${SEASON}</small>`:'','Week')}${stat(g.fans?fmtFans(g.fans):'','Fans')}</div>`:''}
+ <div class="tcha"><button class="btn" onclick="${gGo(g)}">${gAct(g)}</button>${gMore(g,'btn sec')}</div></div></div>`}
+/* two or more up next: side by side, each card over its own button */
+function gameUp(g){return `<div class="hmup"><button class="tcgo" onclick="${gGo(g)}" aria-label="${esc(g.t)}">${showCard(g,true)}</button><div class="tcha"><button class="btn" onclick="${gGo(g)}">${gAct(g)}</button>${gMore(g,'btn sec')}</div></div>`}
+function gameShelf(g){return `<div class="hmsg"><button class="tcgo" onclick="${gGo(g)}" aria-label="${esc(g.t)}">${showCard(g)}</button>${gMore(g,'hmmore')}</div>`}
 function openGames(){if(TV)return toast('This screen is showing a league — tap Exit TV to switch games.');const l=gamesList();
- const hero=l.find(g=>g.turn==='mine')||l.find(g=>g.active)||l.slice().sort((a,b)=>(b.at||0)-(a.at||0))[0];const rest=l.filter(g=>g!==hero);
- const tile=(i,t,d,on)=>`<button class="lbtile" onclick="${on}"><span class="lbti">${i}</span><b>${t}</b><small>${d}</small></button>`;
+ /* up next: every league waiting on your turn, then the game you're playing; with neither, the last one you played */
+ let up=l.filter(g=>g.turn==='mine').concat(l.filter(g=>g.active&&g.turn!=='mine'));
+ if(!up.length){const last=l.slice().sort((a,b)=>(b.at||0)-(a.at||0))[0];if(last)up=[last]}
+ const rest=l.filter(g=>!up.includes(g)).sort((a,b)=>(a.k==='league'?0:1)-(b.k==='league'?0:1)||(b.at||0)-(a.at||0));
+ const turns=up.filter(g=>g.turn==='mine').length;
+ const upHd=turns?`Your move${up.length>1?` <span>${turns===up.length?up.length:turns+' waiting on you'}</span>`:''}`:up[0]&&up[0].active?'Now playing':'Jump back in';
+ const nw=(i,t,on)=>`<button class="hmnew" onclick="${on}"><span>${i}</span><b>${t}</b></button>`;
  openModal(`<div id="games"><div class="lbtop"><div class="lbbrand">TKSim</div>${l.some(g=>g.active)?'<button class="lbx" onclick="closeModal()" aria-label="Close">✕</button>':''}</div>
  ${inApp()?'':`<div class="note">📱 You're in a browser tab. Games here don't share saves with the home-screen app — to get turn alerts there, tap <b>⋯ → Move</b> on a game.</div>`}
- ${hero?gameHero(hero):'<div class="lbhero"><div class="lbht">No games yet</div><div class="lbsub">Start one below.</div></div>'}
- ${rest.length?`<div class="lbsec">Your other games <span>${rest.length}</span></div><div class="lblist">${rest.map(gameRow).join('')}</div>`:''}
+ ${up.length?`<div class="lbsec">${upHd}</div>${up.length===1?gameHero(up[0]):`<div class="hmups">${up.map(gameUp).join('')}</div>`}`:'<div class="hmnone"><b>No games yet</b><span>Start one below.</span></div>'}
+ ${rest.length?`<div class="lbsec">Library <span>${rest.length}</span></div><div class="hmshelf">${rest.map(gameShelf).join('')}</div>`:''}
  <div class="lbsec">New game</div>
- <div class="lbtiles">${tile('🎮','Solo game','You vs the rival office','newSolo()')}${tile('🌐','Host a league','Play friends online','mpHostForm()')}${tile('🔗','Join a league','Got an invite code?','mpJoinForm()')}${tile('📲','Receive a game','Move one from another device','rcvForm()')}</div>
- <div class="lbsec">This device</div>
- <div class="lbtiles">${tile('💾','Back up all','Every game in one file','backupAll()')}${tile('♻️','Restore','From a backup file','restoreAll()')}</div></div>`)}
+ <div class="hmnews">${nw('🎮','Solo game','newSolo()')}${nw('🌐','Host a league','mpHostForm()')}${nw('🔗','Join a league','mpJoinForm()')}${nw('📲','Receive a game','rcvForm()')}</div>
+ <div class="hmdev"><span>This device</span><button onclick="backupAll()">💾 Back up all</button><button onclick="restoreAll()">♻️ Restore</button></div></div>`)}
 function gameMenu(k,id,cur){const g=gamesList().find(x=>x.k===k&&x.id===id);if(!g)return;
  openModal(`<div class="h mhd">${esc(g.t)}</div><p class="muted" style="margin-top:0">${esc(g.sub||'')}</p>
  <button class="btn" onclick="moveGame('${k}','${id}',${cur})">📲 Move to my app or another device</button>
