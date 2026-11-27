@@ -175,7 +175,11 @@ body:not(.tv) .srv.qh .twh{gap:5px;padding-top:8px;padding-bottom:8px}
 .twm{display:flex;align-items:center;gap:8px;height:22px}
 .twm .fgi{width:15px;height:15px;margin:0;flex:none}
 .twmt{position:relative;flex:1;height:7px;background:#34343a}
-.twmt i{position:absolute;left:0;top:0;bottom:0}.twmt i.good{background:var(--good)}.twmt i.bad{background:var(--bad)}
+.twmt i{position:absolute;left:0;top:0;bottom:0;transform:scaleX(0);transform-origin:left}
+/* v515: the bars fill once the plate's stars are in, done within the reveal's SR_T.why beat */
+.twh.nt .twmt i{animation:twmFill .8s cubic-bezier(.3,0,.2,1) .25s forwards}
+@keyframes twmFill{to{transform:none}}
+@media (prefers-reduced-motion:reduce){.twmt i,.twh.nt .twmt i{transform:none;animation:none}}.twmt i.good{background:var(--good)}.twmt i.bad{background:var(--bad)}
 .twmt u{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1.5px;background:var(--text)}
 .twm b{font-size:13px;line-height:1;color:var(--gold)}
 .twh.mini .twmx{display:none}
