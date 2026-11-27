@@ -39,9 +39,17 @@ function tourEnt(b,k){const t=tourState(b,k);const D=TOURS[k];if(t.ent&&(t.lock|
 const tourWon=(t,id)=>{const r=t.res.find(x=>x.id===id);return r?r.w:null};
 function c2Table(t){const pts={};t.ent.forEach(id=>pts[id]=0);t.res.filter(r=>r.lab==='Block').forEach(r=>{if(r.w)pts[r.w]=(pts[r.w]||0)+3});
  return t.ent.slice().sort((a,b)=>pts[b]-pts[a]||((t.res.find(r=>r.lab==='Block'&&[r.a,r.b].includes(a)&&[r.a,r.b].includes(b))||{}).w===a?-1:1)||(S.w[b]?S.w[b].pop:0)-(S.w[a]?S.w[a].pop:0)).map(id=>({id,p:pts[id]}))}
+/* v531: in a tournament's first week you name the field yourself — nothing is entered or booked for you until you do */
+function tourPending(k){const D=TOURS[k];if(!D||!S||S.phase!=='season'||S.week!==tourFirst(D))return false;const t=tourState('p',k);
+ if(t.pick||t.lock||t.res.length)return false;const pz=tourPz('p',k);const champ=pz&&pz.holders[0];
+ return ownList('p').filter(w=>w.g===D.g&&!w.inj&&w.id!==champ).length>=4}
+const tourPendingList=()=>Object.keys(TOURS).filter(tourPending);
+/* nobody there to ask (a show aired without the Book screen, as in the balance sweep): enter the four best and book them */
+function tourAutoPending(){tourPendingList().forEach(k=>{tourEnt('p',k);if(S.card&&S.card.p)tourReslot(k)})}
 /* the tournament matches a brand owes this week: [{id,lab,a,b}] */
 function tourPairs(b){const out=[];const wk=S.week;
  for(const k in TOURS){const D=TOURS[k];const due=(D.rr&&(D.rr.includes(wk)||D.final===wk))||(D.semi===wk||D.final===wk);if(!due)continue;
+  if(b==='p'&&tourPending(k))continue;
   const ent=tourEnt(b,k);if(ent.length!==4)continue;const t=tourState(b,k);const id=(lab,n)=>`${k}:${S.season}:${lab}:${n}`;
   if(D.rr&&D.rr.includes(wk)){RR4[D.rr.indexOf(wk)].forEach(([i,j],n)=>out.push({k,id:id('Block',wk*10+n),lab:'Block',a:ent[i],b:ent[j]}))}
   else if(D.rr&&wk===D.final){const tb=c2Table(t);out.push({k,id:id('Final',0),lab:'Final',a:tb[0].id,b:tb[1].id})}
@@ -71,9 +79,10 @@ function tourResult(b,m,notes){const x=Object.assign({},m.tour,{a:m.sides[0][0],
 /* anything still owed after the show (a match that couldn't happen) is settled by forfeit */
 function tourSweep(b,notes){tourPairs(b).forEach(x=>{const ok=[x.a,x.b].map(id=>S.w[id]).filter(w=>w&&w.own===b&&!w.inj);tourRecord(b,x,(ok.length?ok.sort((p,q)=>q.pop-p.pop)[0]:S.w[x.a]||S.w[x.b]).id,notes,'by forfeit')})}
 function tourCard(b){b=b||'p';const l=[];for(const k in TOURS){const D=TOURS[k];const first=tourFirst(D);if(S.week>D.final||S.week<first-3)continue;
-  const t=tourState(b,k);const ent=S.week>=first?tourEnt(b,k):t.ent;const can=b==='p'&&tourCanPick(k);
+  const t=tourState(b,k);const pend=b==='p'&&tourPending(k);const ent=pend?null:S.week>=first?tourEnt(b,k):t.ent;const can=b==='p'&&tourCanPick(k);
   const pickBtn=can?`<button class="btn sec" style="margin:8px 0 0" onclick="openTourPick('${k}')">${t.pick?'✏️ Change your field':'🎯 Pick your field'}</button>`:'';
-  let body='';if(!ent||!ent.length){body=`<div class="muted tiny">Starts week ${first}. Pick the four ${D.g==='M'?'men':'women'} you want in it${S.week<first?` before week ${first}`:''} — or your four best will be entered automatically.</div>`}
+  let body='';if(pend){body=`<div class="tiny warn">Starts tonight. Name your four ${D.g==='M'?'men':'women'} before the show.</div>`}
+  else if(!ent||!ent.length){body=`<div class="muted tiny">Starts week ${first}. Pick the four ${D.g==='M'?'men':'women'} you want in it${S.week<first?` before week ${first}`:''} — or your four best will be entered automatically.</div>`}
   else if(S.week<first){body=`<div class="tiny">${D.rr?'Your field':'Your bracket'} (starts week ${first}):${ent.map((id,i)=>`<div>${D.rr?'•':i+1+'.'} ${S.w[id]?esc(S.w[id].name):'?'}</div>`).join('')}${D.rr?'':`<div class="muted" style="margin-top:2px">Semi-finals: 1 vs 4 · 2 vs 3</div>`}</div>`}
   else if(D.rr){const tb=c2Table(t);body=`<div class="tiny">${tb.map((r,i)=>`<div class="row sb"><span>${i+1}. ${S.w[r.id]?esc(S.w[r.id].name):'?'}</span><b>${r.p} pts</b></div>`).join('')}</div>`}
   else{body=`<div class="tiny">${t.res.length?t.res.map(r=>`<div>${esc(r.lab==='Semi'?'Semi-final':r.lab)}: <b>${S.w[r.w]?esc(S.w[r.w].name):'?'}</b> def. ${S.w[r.w===r.a?r.b:r.a]?esc(S.w[r.w===r.a?r.b:r.a].name):'?'}</div>`).join(''):`Semi-finals: ${esc(S.w[ent[0]].name)} vs ${esc(S.w[ent[3]].name)} · ${esc(S.w[ent[1]].name)} vs ${esc(S.w[ent[2]].name)}`}</div>`}
@@ -325,7 +334,7 @@ function suggestCardEngaged(){const sh=curShow();const c=JSON.parse(JSON.stringi
   else if(sl.k==='xo'){const x=xoAuto('p',used,1)[0];if(x)sl.d=x}});
  /* put the strongest match last and a strong one first */
  return c}
-function suggestFill(){if(mpLocked())return;const before=S.card.p.filter(sl=>sl.d).length;S.card.p=suggestCard();const n=S.card.p.filter(sl=>sl.d).length-before;save();render();toast(n?`✨ Booked ${n} segment${n>1?'s':''} — the best matches on paper. Promises, title defenses, feuds and requests are up to you.`:'Nothing left to fill.')}
+function suggestFill(){if(mpLocked())return;if(tourPendingList().length)return openTourPick(tourPendingList()[0]);const before=S.card.p.filter(sl=>sl.d).length;S.card.p=suggestCard();const n=S.card.p.filter(sl=>sl.d).length-before;save();render();toast(n?`✨ Booked ${n} segment${n>1?'s':''} — the best matches on paper. Promises, title defenses, feuds and requests are up to you.`:'Nothing left to fill.')}
 function clearCard(){if(mpLocked())return;if(!confirm('Clear everything on this card except promised, tournament, Royal Rumble and Money in the Bank matches?'))return;
  S.card.p.forEach(sl=>{if(!sl.d)return;if(sl.k==='match'&&(sl.d.tour||sl.d.sp||promiseOf(sl.d)))return;sl.d=null});save();render()}
 
@@ -400,15 +409,36 @@ function tourCanPick(k){const D=TOURS[k];if(!D||!S||S.phase!=='season')return fa
 let TP=null;
 function openTourPick(k){if(mpLocked())return;if(!tourCanPick(k))return toast('That field is already set.');const t=tourState('p',k);
  TP={k,sel:(t.ent||[]).filter(id=>S.w[id]&&S.w[id].own==='p')};renderTourPick()}
-function renderTourPick(){const D=TOURS[TP.k];const ct=D.title&&S.titles[D.title];const pz=tourPz('p',TP.k);
+/* what a wrestler is already down for, so the field can be picked around your plans */
+function tpPlans(w){const out=[];
+ const on=((S.card&&S.card.p)||[]).map((sl,i)=>{if(!sl.d||sl.k!=='match'||sl.d.tour&&sl.d.tour.k===TP.k||!(sl.d.sides||[]).flat().includes(w.id))return '';return `On tonight's card: ${esc(vsLine(sl.d))}`}).filter(Boolean);
+ let l=[];try{const own=TOURS[TP.k];l=wCommit(w).filter(x=>x.i!=='🏆'&&!(x.tour&&x.t.includes('In the '+own.n+(tourState('p',TP.k).lock?' ·':' field'))))}catch(e){}
+ return on.concat(l.map(x=>`${x.i} ${x.t}`))}
+/* first-week matches for a field, in the order they're listed on the preview */
+function tpRound(k,ent){const D=TOURS[k];return (D.rr?RR4[0]:[[0,3],[1,2]]).map(([i,j],n)=>tourMatch({k,id:`${k}:${S.season}:${D.rr?'Block':'Semi'}:${D.rr?S.week*10+n:n}`,lab:D.rr?'Block':'Semi-final',a:ent[i],b:ent[j]}))}
+/* where those matches go on this week's card: open slots first, then your ordinary matches (earliest first, so the main event
+   goes last), and a promised match only when nothing else is left. Specials, other tournaments and promos stay put. */
+function tourSlots(k,n){const c=S.card.p;const rank=i=>{const d=c[i].d;if(!d||d.tour&&d.tour.k===k)return 0;if(d.tour||d.sp)return 9;return promiseOf(d)?2:1};
+ return c.map((sl,i)=>sl.k==='match'&&!sl.opt?i:-1).filter(i=>i>=0&&rank(i)<9).sort((a,b)=>rank(a)-rank(b)||(rank(a)===0?b-a:a-b)).slice(0,n)}
+function tpPreview(){const ms=tpRound(TP.k,TP.sel);const slots=tourSlots(TP.k,ms.length);const c=S.card.p;
+ const out=slots.map(i=>c[i].d).filter(d=>d&&!(d.tour&&d.tour.k===TP.k));
+ const kept=c.filter((sl,i)=>sl.k==='match'&&sl.d&&!slots.includes(i)&&!(sl.d.tour&&sl.d.tour.k===TP.k)).flatMap(sl=>(sl.d.sides||[]).flat());
+ const twice=TP.sel.filter(id=>kept.includes(id)&&ms.some(m=>m.sides.flat().includes(id))).map(id=>esc(S.w[id].name));
+ return `<div class="card"><div class="tiny muted">Tonight</div>${ms.map(m=>`<div class="tiny"><b>${esc(vsLine(m))}</b></div>`).join('')}${out.map(d=>{const pr=promiseOf(d);return `<div class="tiny ${pr?'bad':'warn'}" style="margin-top:6px">Takes the place of ${esc(vsLine(d))}${pr?` — a ${pr.kind==='contract'?'contracted':'promised'} match. Skipping it costs fans and morale.`:'.'}</div>`}).join('')}${twice.length?`<div class="tiny warn" style="margin-top:6px">Wrestling twice tonight: ${twice.join(', ')}.</div>`:''}</div>`}
+function renderTourPick(){const D=TOURS[TP.k];const now=S.week===tourFirst(D)&&!!(S.card&&S.card.p);const ct=D.title&&S.titles[D.title];const pz=tourPz('p',TP.k);
  const l=ownList('p').filter(w=>w.g===D.g).sort((a,b)=>(a.inj?1:0)-(b.inj?1:0)||(b.pop+b.ring)-(a.pop+a.ring));
  const row=w=>{const i=TP.sel.indexOf(w.id);const on=i>=0;const champ=ct&&ct.holders.includes(w.id);const isPz=pz&&pz.holders.includes(w.id);const dis=w.inj||isPz;
-  return `<button class="lr ${dis?'out':''}" style="width:100%;margin:4px 0;${on?'box-shadow:inset 0 0 0 2px var(--gold);background:rgba(232,190,90,.12)':''}" ${dis?'disabled':''} onclick="tpToggle('${w.id}')">${face(w)}<span class="lrn"><b class="${w.al==='f'?'face':'heel'}">${esc(w.name)}</b><span class="muted tiny">${fgWord(w)} · Pop ${Math.round(w.pop)} · Ring ${Math.round(w.ring)}${champ?` · 🏆 ${esc(ct.n)} champ`:''}${isPz?` · already ${esc(pz.n)} champ`:''}</span></span><span class="lrs">${w.inj?'OUT':on?`<b class="gold">${D.rr?'✓ IN':'#'+(i+1)}</b>`:''}</span></button>`};
+  return `<button class="lr ${dis?'out':''}" style="width:100%;margin:4px 0;${on?'box-shadow:inset 0 0 0 2px var(--gold);background:rgba(232,190,90,.12)':''}" ${dis?'disabled':''} onclick="tpToggle('${w.id}')">${face(w)}<span class="lrn"><b class="${w.al==='f'?'face':'heel'}">${esc(w.name)}</b><span class="muted tiny">${fgWord(w)} · Pop ${Math.round(w.pop)} · Ring ${Math.round(w.ring)}${champ?` · 🏆 ${esc(ct.n)} champ`:''}${isPz?` · already ${esc(pz.n)} champ`:''}</span>${tpPlans(w).map(x=>`<span class="tiny warn" style="display:block">${x}</span>`).join('')}</span><span class="lrs">${w.inj?'OUT':on?`<b class="gold">${D.rr?'✓ IN':'#'+(i+1)}</b>`:''}</span></button>`};
  const ready=TP.sel.length===4;
  openModal(`<div class="h mhd">${D.i} ${esc(D.n)}</div><p class="muted" style="margin-top:0">Pick four ${D.g==='M'?'men':'women'}. ${D.rr?'Everyone wrestles everyone once (3 points a win); the top two meet in the final.':'Tap them in seeding order: #1 meets #4 and #2 meets #3 in the semi-finals.'}${ct&&ct.holders.length&&S.w[ct.holders[0]].own==='p'?` Leave your ${esc(ct.n)} champion out and the final won't be for the title.`:''}</p>
  <div class="card"><div class="row sb"><b>${TP.sel.length} of 4 picked</b><button class="mini" onclick="tpAuto()">Auto-pick</button></div>${TP.sel.length?`<div class="tiny" style="margin-top:6px">${TP.sel.map((id,i)=>`${D.rr?'':(i+1)+'. '}${esc(S.w[id].name)}`).join(D.rr?' · ':' &nbsp; ')}</div>`:''}</div>
  <div>${l.map(row).join('')}</div>
- <button class="btn" ${ready?'':'disabled'} onclick="tpSave()">Lock in the field</button><button class="btn ghost" onclick="TP=null;closeModal();render()">Cancel</button>`)}
+ ${now&&ready?tpPreview():''}<button class="btn" ${ready?'':'disabled'} onclick="tpSave()">Lock in the field</button><button class="btn ghost" onclick="tpLater()">${tourPending(TP.k)?'Decide later':'Cancel'}</button>`)}
+/* "Decide later" keeps the prompt from reopening on its own this week; Book's checklist and Go live still bring it up */
+let TP_LATER={};
+const tpLaterKey=k=>`${S.seed||''}:${S.gm}:${S.season}:${S.week}:${k}`;
+function tpLater(){if(TP&&tourPending(TP.k))TP_LATER[tpLaterKey(TP.k)]=1;TP=null;closeModal();render()}
+function tourPrompt(){const k=tourPendingList().find(k=>!TP_LATER[tpLaterKey(k)]);if(!k)return false;openTourPick(k);return true}
 function tpToggle(id){const i=TP.sel.indexOf(id);if(i>=0)TP.sel.splice(i,1);else if(TP.sel.length<4)TP.sel.push(id);else return toast('Four is a full field — tap someone to take them out first.');renderTourPick()}
 function tpAuto(){const D=TOURS[TP.k];const pz=tourPz('p',TP.k);const champ=pz&&pz.holders[0];const ct=D.title&&S.titles[D.title];const sel=[];
  const th=ct&&ct.holders[0]&&S.w[ct.holders[0]];if(th&&th.own==='p'&&!th.inj&&th.g===D.g)sel.push(th.id);
@@ -416,14 +446,12 @@ function tpAuto(){const D=TOURS[TP.k];const pz=tourPz('p',TP.k);const champ=pz&&
 function tpSave(){if(!TP||TP.sel.length!==4)return;const k=TP.k,D=TOURS[k];const t=tourState('p',k);t.ent=TP.sel.slice();t.pick=1;t.lock=S.week>=tourFirst(D)?1:0;TP=null;
  const msg=[];if(S.week===tourFirst(D)&&S.card&&S.card.p)msg.push(...tourReslot(k));
  news(`${D.i} ${S.gm} set the ${D.n} field: ${t.ent.map(id=>S.w[id].name).join(', ')}.`);save();closeModal();render();toast(`${D.i} Field locked in.${msg.length?' '+msg.join(' '):''}`)}
-/* the first round is already on this week's card: swap in the new field's matches, freeing anyone they clash with */
-
-function tourReslot(k){const c=S.card.p;const msg=[];const free=[];c.forEach((sl,i)=>{if(sl.k==='match'&&sl.d&&sl.d.tour&&sl.d.tour.k===k){sl.d=null;free.push(i)}});
- const ms=tourPairs('p').filter(x=>x.k===k).map(tourMatch);const ids=new Set(ms.flatMap(m=>m.sides.flat()));
- c.forEach((sl,i)=>{if(!sl.d)return;const who=sl.k==='match'?sl.d.sides.flat():sl.k==='promo'?[sl.d.a,sl.d.b]:sl.k==='chal'?[sl.d.c]:sl.k==='xo'?[sl.d.a]:[];
-  if(sl.k==='match'&&sl.d.tour)return;if(who.some(id=>ids.has(id))){sl.d=null;msg.push(`Segment ${i+1} was cleared — someone in it is now in the tournament.`);if(sl.k==='match')free.push(i)}});
- const slots=free.concat(c.map((sl,i)=>sl.k==='match'&&!sl.d&&!free.includes(i)?i:-1).filter(i=>i>=0)).sort((a,b)=>b-a);
- ms.forEach(m=>{const i=slots.shift();if(i!=null)c[i].d=m});return msg}
+/* the first round goes onto this week's card (replacing the old field's matches if the field changed) */
+function tourReslot(k){const c=S.card.p;const ms=tourPairs('p').filter(x=>x.k===k).map(tourMatch);const slots=tourSlots(k,ms.length);const msg=[];
+ c.forEach(sl=>{if(sl.k==='match'&&sl.d&&sl.d.tour&&sl.d.tour.k===k)sl.d=null});
+ /* the earlier slots take the first matches, so the card reads in bracket order */
+ slots.sort((a,b)=>a-b);
+ slots.forEach((i,n)=>{const old=c[i].d;if(old)msg.push(`${vsLine(old)} came off the card.`);c[i].d=ms[n]});return msg}
 
 /* ===================== WEEKLY BRIEFING (v95) =====================
  briefItems() still gathers the week's sections (contracts, morale, backstage heat, stale feuds, the calendar, the

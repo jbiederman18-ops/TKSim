@@ -170,6 +170,7 @@ window.SIM = async function (opt) {
         if (fa && fa.pop >= 60 && S.money.p - signCost(fa) >= econCap() * 1.5) { faSpend += signCost(fa); S.money.p -= signCost(fa); fa.sal = mkt(fa); fa.own = 'p'; fa.con = 26; fa.mor = 80; fa.fee = 0; fa.deb = AW(); signed++ } }
       if (owned('p').length < 22) { const fa = Object.values(S.w).filter(w => !w.own && onMarket(w) && !dealNeedsOffer(w)).sort((a, b) => ovr(b) - ovr(a))[0]; if (fa && S.money.p > signCost(fa) * 3) { S.money.p -= signCost(fa); fa.sal = mkt(fa); fa.own = 'p'; fa.con = 26; fa.mor = 80; fa.fee = 0 } }
       // book: the checklist first, then the assistant
+      if (typeof tourAutoPending === 'function') tourAutoPending();
       if (opt.checklist) cur.checklist += bookChecklist();
       // stamina (v353: Suggest no longer protects tired wrestlers): the attentive bot sits anyone near injury risk out
       const rested = opt.checklist && !(opt.skip || []).includes('rest') && typeof FAT_RISK !== 'undefined' ? owned('p').filter(w => !w.inj && sta(w) < 100 - FAT_RISK) : [];

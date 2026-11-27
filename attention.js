@@ -98,6 +98,9 @@ function attnItems(){if(!S||S.phase!=='season')return [];
  if(typeof PITCHES!=='undefined'&&S.pitch&&PITCHES[S.pitch.k]&&S.w[S.pitch.a]&&S.w[S.pitch.a].own==='p'){const p=S.pitch,P=PITCHES[p.k];const x=pCtx(p);let q='';try{q=pickS(P.text(x),'pitch'+p.a)}catch(e){}
   add({id:'pitch',g:A_MUST,i:'📨',h:P.head(x),d:'A request. Answer it this week, or they take silence as a no.',s:['b','Unanswered'],a:['Answer','openPitch()',1],who:[p.a],where:'🚪 Your office door',say:[[p.a,(q||'').replace(/^"|"$/g,'')]],request:p.a,askT:'Asking: '+P.head(x).replace(S.w[p.a].name+' ','')})}
 
+ /* v531: a tournament starting tonight needs its field */
+ tourPendingList().forEach(k=>{const D=TOURS[k];add({id:'tourpick'+k,g:A_MUST,i:D.i,h:`${D.n} starts tonight: pick your field`,d:`Choose the four ${D.g==='M'?'men':'women'} who enter. Their first matches go on tonight's card.`,s:['b','Not picked'],a:['Pick the four',`openTourPick('${k}')`,1],gate:false,where:null})});
+
  /* promised and contracted matches due tonight */
  (typeof duePromises==='function'?duePromises():[]).forEach(pr=>{const A=S.w[pr.a],B=S.w[pr.b];if(!A||!B||A.own!=='p'||B.own!=='p')return;
   const ok=c.some(sl=>sl&&sl.k==='match'&&sl.d&&inMatch(sl.d,pr.a,pr.b));const inj=A.inj||B.inj;
