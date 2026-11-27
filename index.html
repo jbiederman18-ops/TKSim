@@ -38,7 +38,7 @@
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v523';
+const APP_VERSION='v524';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -3826,7 +3826,7 @@ function gamesList(){const out=[];const cur=soloState();
 function gOpen(g){return g.k==='league'?`mpOpen('${g.id}')`:g.cur?'openActiveSolo()':`openSolo('${g.id}')`}
 function gGo(g){return g.active?'closeModal()':gOpen(g)}
 function gMore(g,cls){return `<button class="${cls}" onclick="gameMenu('${g.k}','${g.id}',${g.cur?1:0})" aria-label="More options">⋯</button>`}
-function gAct(g){return g.turn==='mine'?'Take your turn':g.active?'Back to it':'Continue'}
+function gAct(g){return g.turn==='mine'?'Take your turn':g.active?'Play':'Continue'}
 /* one game up next: its card beside the week, fans and the big button */
 function gameHero(g){const stat=(v,l)=>v!=null&&v!==''?`<div><b>${v}</b><span>${l}</span></div>`:'';
  const lab=g.turn==='mine'?"It's your turn":g.active?'Playing now':g.turn==='wait'?'Waiting on your friends':'Last played '+whenTxt2(g.at);
