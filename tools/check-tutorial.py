@@ -213,6 +213,23 @@ async def main(shots):
                     problems.append(f"What's new: expected a replay of {want}, got {got}")
                 elif await expect_offer("what's-new"):
                     await walk("what's-new")
+            # every new game gets the first-week tour, even on a device that has already taken it
+            await pg.evaluate("TUT&&tutEnd(false);tutOfferClose();closeModal();tutPut({season:TUT_REV,tips:false});S.seed=S.seed+1;S.week=1;go('home')")
+            try:
+                # this stand-in new game reuses a later save, so office visitors may be waiting: put their sheet away
+                for _ in range(16):
+                    await pg.wait_for_timeout(600)
+                    if await pg.evaluate("!!(TUT&&TUT.track==='season'&&!TUT.ids)"):
+                        break
+                    await pg.evaluate("document.getElementById('modal').classList.add('hidden');render()")
+                await pg.wait_for_function("!!(TUT&&TUT.track==='season'&&!TUT.ids)", timeout=1000)
+                await pg.evaluate('tutEnd(false)'); await pg.wait_for_timeout(1400)
+                if await pg.evaluate("!!(TUT&&TUT.track==='season')"):
+                    problems.append('the first-week tour started again after it was skipped in the same game')
+                if await pg.evaluate('tutTipsOn()'):
+                    problems.append('finishing the first-week tour turned coach tips back on after the player turned them off')
+            except Exception:
+                problems.append('a second new game on the same device did not get the first-week tour')
             # a tip seen before its text last changed comes back once; seen after, it stays quiet
             if not await pg.evaluate("""(()=>{const s=TUT_STEPS.find(x=>x.track==='tip'&&x.since>1);if(!s)return true;
                     const o={};o[s.id]=s.since-1;const n={};n[s.id]=s.since;return !tipSeen(o,s.id)&&tipSeen(n,s.id)})()"""):

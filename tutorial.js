@@ -138,6 +138,9 @@ const TUT_STEPS=[
 function tutStore(){try{return JSON.parse(localStorage.getItem(TUT_KEY))||{}}catch(e){return {}}}
 function tutPut(o){try{localStorage.setItem(TUT_KEY,JSON.stringify(Object.assign(tutStore(),o)))}catch(e){}}
 function tutTipsOn(){return tutStore().tips===true}
+/* the games that have had their first-week tour */
+function tutWeekSeen(){const l=tutStore().wk;return Array.isArray(l)&&l.includes(S.seed)}
+function tutWeekMark(seed){const l=Array.isArray(tutStore().wk)?tutStore().wk:[];if(!l.includes(seed))tutPut({wk:l.slice(-29).concat(seed)})}
 
 /* ---------- the overlay ---------- */
 let TUT=null;   /* {steps,i,track,label} while a tour is running */
@@ -152,7 +155,7 @@ function tutStart(track,ids){if(!S||(typeof TV!=='undefined'&&TV))return;
  if(!phaseOk&&!ids)return toast(track==='draft'?'The draft tour runs during the draft.':'The tour starts once the draft is done.');
  let steps=TUT_STEPS.filter(s=>s.track===track);if(ids)steps=steps.filter(s=>ids.includes(s.id));if(!steps.length)return;
  tutOfferClose();if(typeof closeModal==='function'&&!document.getElementById('modal').classList.contains('hidden'))closeModal();
- TUT={steps,i:0,track,back:typeof tab!=='undefined'?tab:'home',rf:typeof rf!=='undefined'?rf:'mine'};document.body.classList.add('lock');
+ TUT={steps,i:0,track,seed:S.seed,back:typeof tab!=='undefined'?tab:'home',rf:typeof rf!=='undefined'?rf:'mine'};document.body.classList.add('lock');
  document.addEventListener('keydown',tutKey);tutShow(1)}
 
 function tutKey(e){if(!TUT&&!TUT_OFFER)return;if(e.key==='Escape')return TUT?tutEnd(false):tutOfferClose();if(!TUT)return;if(e.key==='ArrowRight'||e.key==='Enter'){e.preventDefault();tutNext()}if(e.key==='ArrowLeft'){e.preventDefault();tutPrev()}}
@@ -191,7 +194,7 @@ function tutPlace(el){const box=document.getElementById('tut');if(!box||!TUT)ret
 function tutEnd(done){if(!TUT)return;const T=TUT;TUT=null;tutHide();
  const st=T.steps[T.i];if(st&&st.after)try{st.after()}catch(e){}
  if(T.track==='reveal'){if(T.done)T.done();return}
- if(T.track!=='tip'){const o={};o[T.track]=TUT_REV;if(T.track==='season')o.tips=true;tutPut(o);document.body.classList.remove('lock');
+ if(T.track!=='tip'){const o={};o[T.track]=TUT_REV;if(T.track==='season'){if(tutStore().tips===undefined)o.tips=true;if(!T.ids)tutWeekMark(T.seed)}tutPut(o);document.body.classList.remove('lock');
   if(typeof rf!=='undefined')rf=T.rf;if(T.track==='season'&&typeof go==='function'&&S&&S.phase==='season')go(T.back==='menu'?'menu':'home')
   else if(typeof render==='function')render();
   if(!done&&T.track!=='tip')toast('Replay the tour any time from ⚙️ → Rookie orientation.')}}
@@ -220,8 +223,9 @@ function tutAuto(){/* v238: a draft-tour offer left unanswered (say, on auto-dra
  if(xrIntroDue())return xrIntro();
  if(S.phase==='draft'&&!(st.draft>0)&&S.draft&&!S.draft.supp&&!(typeof draftRoster==='function'&&draftRoster('p').length))return tutStart('draft');
  if(S.phase!=='season'||typeof tab==='undefined')return;
- /* brand-new games only: the first two weeks of the first year */
- if(st.season===undefined&&S.week<=2&&!(S.season>1)&&tab==='home')return tutStart('season');
+ /* every new game, once (remembered by the game's seed, so having taken it in another game doesn't count): the first two
+    weeks of the first year */
+ if(S.week<=2&&!(S.season>1)&&tab==='home'&&!tutWeekSeen())return tutStart('season');
  /* took the tour before: offer just the stops that changed since */
  if(st.season>0&&st.season<TUT_REV&&tab==='home'){const ids=TUT_STEPS.filter(s=>s.track==='season'&&s.since>st.season).map(s=>s.id);if(ids.length)return tutOffer('season',ids);tutPut({season:TUT_REV})}
  if(!tutTipsOn())return;
