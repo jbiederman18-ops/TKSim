@@ -1705,7 +1705,7 @@ Object.assign(ARC_CAST,{
  oil:{b:{lab:'Who knows a thing or two about the Torah',f:(A,w)=>true,r:(A,w)=>aMate(A,w)*3+w.pop/5}}});
 ['townhero','war','likeness','pain','oil','peace','twitch'].forEach(k=>{ARCS[k].k=k});
 /* ---- v534: Josh's sixth round. Five new arcs bring their own roads; three storylines join the turns and Form a Tag Team ---- */
-{const ARC_FAN_POP=45,ARC_GOUT_FAT=8,ARC_HIT_P=[.35,.65],ARC_HIT_FANS=[14000,22000];
+{const ARC_FAN_POP=45,ARC_HIT_P=[.35,.65],ARC_HIT_FANS=[14000,22000];
  const vig=(s,a)=>s.kind==='promo'&&s.type==='vignette'&&s.a===a.a;vig.vig=1;const pVig=a=>[{kind:'promo',type:'vignette',a:a.a}];
  const tog=(s,a)=>sTog(s,a.a,a.b);const pTog=(t,bFirst)=>a=>[{kind:'promo',type:t,a:bFirst?a.b:a.a,b:bFirst?a.a:a.b}];
  const pTag=a=>[{kind:'match',type:'tag',side:[a.a,a.b],n:2}];
@@ -1734,7 +1734,7 @@ Object.assign(ARC_CAST,{
     if(a.hit){const f=ARC_HIT_FANS[gi];try{if(typeof fbHit==='function')fbHit('p',[],f);else S.fans.p+=f}catch(e){S.fans.p+=f}n.push(`📈 ${A.name}'s song charts! Casual fans can't stop humming it (+${fmtFans(f)} casual fans).`)}
     else n.push(`🎵 ${A.name} lays down the track. It's a mild hit: a few spins, a nice write-up, and nobody stole it.`)}},
   win:(a,w,q)=>a.choice==='sense'?{mic:.8,pop:q==='great'?2:1}:a.hit?{pop:q==='great'?6:4}:{pop:q==='great'?2:1.5}},
- mouse:{lane:'mic',i:'🐭',n:'The Mouse Under the Hat',bstep:0,gets:'Mic, popularity and a feud with {B}',
+ mouse:{lane:'mic',i:'🐭',n:'A Rat that Can Wrestle?',bstep:0,gets:'Mic, popularity and a feud with {B}',
   d:'{A} becomes convinced {B} is being piloted by a lucha mouse hiding under {B:their} hat, and won\'t rest until {A:they} proves to the world that {B} isn\'t the one responsible for {B:their} own success.',
   payoff:'A singles match against {B}: the hat comes off. You decide what\'s under it',
   pick:A=>A.pop<ARC_STAR?{}:null,
@@ -1774,21 +1774,15 @@ Object.assign(ARC_CAST,{
   win:(a,w,q)=>a.won>0?{pop:q==='great'?3:2}:{pop:q==='great'?1.5:1}},
  gout:{lane:'ring',star:1,i:'🦶',n:'The Gout',bstep:0,gets:'In-ring, popularity and the world title',
   d:'{A} must overcome gout in {A:their} quest to become world champion.',
-  payoff:'World championship: win the world title, gout and all',
+  payoff:'World championship: win the world title and overcome gout',
   pick:A=>{const t=worldFor(A);return t?{t:t.id}:null},
-  stops:[{n:'Ouch, my gout',b:'A match: {A:they} limps through it. Costs extra stamina',s:(s,a)=>s.kind==='match'&&s.ids.includes(a.a),p:a=>[{kind:'match',type:'singles',side:[a.a],n:1}]},
-   {n:'Ouch, ouch, gout',b:'A Backstage Vignette: no more shellfish, no more red meat, no more beer',s:vig,p:pVig},
-   {n:'Oooooooh the gout',b:'A 3★+ win, gout and all. Costs extra stamina',min:3,s:(s,a)=>sWon(s,a.a),p:a=>[{kind:'match',type:'singles',side:[a.a],n:1,win:0}]}],
+  stops:[{n:'Ouch, my gout',b:'A Backstage Vignette: {A:they} says {A:their} gout hurts',s:vig,p:pVig},
+   {n:'Ouch, ouch, gout',b:'A Backstage Vignette: {A:their} gout still hurts',s:vig,p:pVig},
+   {n:'Oooooooh the gout',b:'A Backstage Vignette: oooooooh, the gout',s:vig,p:pVig}],
   pay:(s,a)=>s.kind==='match'&&s.title===a.t&&sWon(s,a.a),pplan:a=>holderVs(a,{win:1}),
-  also:(a,s,n)=>{const A=aW(a.a);n.push(`🦶👑 ${A.name} is world champion! ${aPr(A,'They')} holds the belt up with one hand and ${aPr(A,'their')} big toe with the other.`)},
+  also:(a,s,n)=>{const A=aW(a.a);n.push(`🦶👑 ${A.name} has overcome gout. ${aPr(A,'They')} is world champion.`)},
   win:(a,w,q)=>({ring:1,pop:q==='great'?3:2})}});
  ['demo','mouse','fan','deed','gout'].forEach(k=>{aStopArc(ARCS[k]);ARCS[k].k=k});
- /* the gout costs stamina on its match stops */
- hookStep('arcPost','arcs.js',{around(_post,...args){const [ap]=args;const s=ap&&ap.seg;const was={};
-  try{arcList().forEach(a=>{if(a.k==='gout'&&!a.done)was[a.id]=a.have})}catch(e){}
-  const r=_post.apply(this,args);
-  try{if(s&&s.kind==='match')arcList().forEach(a=>{if(!(a.id in was)||a.have===was[a.id])return;const A=aW(a.a);if(A)A.fat=Math.min(90,(A.fat||0)+ARC_GOUT_FAT)})}catch(e){}
-  return r}});
  /* storylines: each new arc's own, and three that join older arcs */
  Object.assign(ARC_STORY,{
   demo:[{id:'demo',hook:'Stolen song',head:'{A} is sure everyone is out to steal {A:their} song demo and make it number one before {A:they} can record it, and {B} is getting worried',gen:'{A} is sure everyone is out to steal {A:their} song demo and make it number one before {A:they} can record it, and {A:their} friends are getting worried',txt:{}}],
@@ -1803,8 +1797,8 @@ Object.assign(ARC_CAST,{
    {n:'The box',b:'A Backstage Vignette: {A:they} looks inside a glowing box, and understands everything',s:vig,p:pVig},
    {n:'No words',b:'A Sit-Down Interview: {A:they} tries to explain it, and can\'t',s:(s,a)=>s.kind==='promo'&&s.type==='interview'&&s.ids.includes(a.a),p:a=>[{kind:'promo',type:'interview',a:a.a}]},
    {n:'You wouldn\'t understand',b:'On the same side as {B}, who just doesn\'t get it (a match, or a promo together)',s:(s,a)=>sSame(s,a.a,a.b)||tog(s,a),p:pTag}],
-   payoff:'Team with {B} again: {A} snaps and turns on {B:them}'},
-  after:(a,s,n)=>{n.push(`📦 "YOU'LL NEVER UNDERSTAND! NONE OF YOU WILL EVER UNDERSTAND!" ${aW(a.a).name} is the only one who knows, and it broke ${aPr(aW(a.a),'them')}.`)},txt:{}});
+   payoff:'Team with {B} again: {A} turns on {B:them}, cold and calm'},
+  after:(a,s,n)=>{const A=aW(a.a),B=aW(a.b);n.push(`📦 ${A.name} stands over ${B.name} and speaks in a cold, flat monotone: "You are ill prepared to survive in the world I can create."`)},txt:{}});
  add('faceturn',{id:'ham',hook:'The ham',head:'{A} eats a slice of ham so delicious it reminds {A:them} how good life is. {A:They} can\'t be cruel anymore, and stands with {B}',
   gen:'{A} eats a slice of ham so delicious it reminds {A:them} how good life is. {A:They} can\'t be cruel anymore, and stands with a face',
   road:{d:'One bite of ham, a change of heart, a slice for {B}, then {A:they} stands with {B:them}.',stops:[
@@ -1814,13 +1808,16 @@ Object.assign(ARC_CAST,{
   after:(a,s,n)=>{n.push(`🍖 ${aW(a.a).name} raises a slice of ham to the crowd. Life is good.`)},txt:{}});
  add('team',{id:'stars',hook:'Written in the stars',head:'{A} discovers a never-before-seen constellation that clearly shows {A:them} winning tag team gold beside {B}. Now {A:they} has to convince {B} the universe has spoken',
   gen:'{A} discovers a never-before-seen constellation that clearly shows {A:them} winning tag team gold beside a wrestler {A:they} swears {A:they} saw in the stars. Now {A:they} has to convince them the universe has spoken',
-  payPlan:a=>{const t=aTagTitle(a);return t?[{kind:'match',type:'tag',vs2:[[a.a,a.b],t.holders.slice()],title:t.id,win:0}]:null},
-  road:{d:'Find the constellation, convince {B}, then prove the stars right together.',stops:[
+  need:(A,B)=>!!A&&(!B||B.g===A.g)&&Object.values(S.titles||{}).some(t=>t.kind==='tag'&&t.g===A.g&&(!t.br||t.br==='p')&&!t.holders.includes(A.id)&&!(B&&t.holders.includes(B.id))),
+  road:{d:'Find the constellation, convince {B}, win the tag titles together, then {B} sees it too.',stops:[
    {n:'The constellation',b:'A Backstage Vignette: {A:they} finds the new constellation through a telescope',s:vig,p:pVig},
    {n:'The universe has spoken',b:'A promo with {B}: {A:they} shows {B:them} the star chart. {B:They}\'s not convinced',s:tog,p:pTog('interview')},
-   {n:'Alignment',b:'A tag match together at 2¾★+',min:2.75,s:(s,a)=>sSame(s,a.a,a.b)&&s.sides.every(x=>x.length===2),p:pTag}],
-   payoff:'A tag team win together: the universe\'s ultimate destiny (a tag title win if there\'s one to chase)'},
-  after:(a,s,n)=>{n.push(s.title?`✨ It was written in the stars: ${aW(a.a).name} and ${aW(a.b).name} are tag team champions.`:`✨ The stars align: ${aW(a.a).name} and ${aW(a.b).name} are fulfilling the universe's ultimate destiny.`)},txt:{}});
+   {n:'Alignment',b:'A tag match together at 2¾★+',min:2.75,s:(s,a)=>sSame(s,a.a,a.b)&&s.sides.every(x=>x.length===2),p:pTag},
+   {n:'Destiny',b:'A tag title win together',s:(s,a)=>sSame(s,a.a,a.b)&&sWon(s,a.a)&&!!s.title&&!!S.titles[s.title]&&S.titles[s.title].kind==='tag',
+    p:a=>{const t=aTagTitle(a);if(t)return [{kind:'match',type:'tag',vs2:[[a.a,a.b],t.holders.slice()],title:t.id,win:0}];const v=Object.values(S.titles||{}).find(t=>t.kind==='tag'&&t.g===aW(a.a).g&&(!t.br||t.br==='p')&&!t.holders.length);return v?[{kind:'match',type:'tag',side:[a.a,a.b],n:2,title:v.id,win:0}]:null}}],
+   payoff:'A Backstage Vignette with {B}: title in hand, {B} looks up and sees the constellation for the first time',
+   pay:(s,a)=>s.kind==='promo'&&s.type==='vignette'&&tog(s,a),pplan:a=>[{kind:'promo',type:'vignette',a:a.b,b:a.a}]},
+  after:(a,s,n)=>{n.push(`✨ ${aW(a.b).name} looks up at the night sky with the title in hand, and sees the constellation for the first time.`)},txt:{}});
  Object.assign(ARC_SIZE,{demo:'m',mouse:'m',fan:'m',deed:'m',gout:'m'});
  Object.assign(ARC_LEAN,{demo:'cas',mouse:'chaos',fan:'cas'});
  Object.assign(ARC_CAST,{

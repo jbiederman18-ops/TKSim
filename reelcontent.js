@@ -1327,7 +1327,7 @@ Object.assign(ARC_REEL_STORY,{
  'mouse/mouse':{r:'{A} is convinced {B} is being piloted by a lucha mouse under {B:their} hat. The footage, the accusations and the grab for the hat are behind them.'},
  'fan/rail':{r:'Nobody backstage would answer {B}’s open challenge, so {A} hopped the rail as a fan and won. Since then, a crash course and a lot of learning on the job.'},
  'deed/deed':{r:'{A} went to sell {A:their} house and found out the co-signer on the loan was {B}, {A:their} old roommate. The contract is signed.'},
- 'gout/gout':{r:'Ouch, my gout. Ouch, ouch, gout. Oooooooh, the gout. {A} has fought through all of it on the way to the world title.'},
+ 'gout/gout':{r:'Ouch, my gout. Ouch, ouch, gout. Oooooooh, the gout. Tonight {A} wrestles for the world title.'},
  'heelturn/glowbox':{r:'{A} looked inside a glowing box and understood the meaning of life. {A:They} has tried to explain it every week since, and {B} still doesn’t get it.'},
  'faceturn/ham':{r:'{A} ate a slice of ham so delicious it reminded {A:them} how good life is. {A:They} hasn’t been cruel since.'},
- 'team/stars':{r:'{A} found a new constellation that clearly shows {A:them} and {B} winning tag team gold. {B} has slowly come around.'}});
+ 'team/stars':{r:'{A} found a new constellation that clearly showed {A:them} and {B} winning tag team gold. Now they have the titles.'}});
