@@ -102,8 +102,6 @@ const TUT_STEPS=[
 /* ---- the first show's reveal: it pauses on your first segment while these walk the screen (tutReveal) ---- */
 {id:'r.stars',track:'reveal',since:99,sel:'#tw-pair .twh.p .twhd',sys:['ratings','live'],t:'Star ratings',
  b:()=>`The stars show <b>how good the segment was</b>, up to 5★. Stronger wrestlers, good chemistry, a real story and the right extras all earn more.`},
-{id:'r.meters',track:'reveal',since:99,sel:'#tw-pair .twh.p .twmx',sys:['fan groups','fans','crowd read','live'],t:'Crowd expectations',
- b:()=>`Each symbol is a crowd. The <b>bar</b> is this segment’s stars; the <b>white line</b> is what they expect. Further right is harder to please.<br><br><span class="good">Green</span>: good enough for them. <span class="bad">Red</span>: it fell short. <b>⚠︎</b> means a run-in or screwy finish cost you Technical fans.<br><br>Better shows push lines right. Stars, titles and stories also move fans. Casuals judge your whole show, so they get no meter.`},
 {id:'r.chart',track:'reveal',since:99,sel:'#srv .qhwrap',sys:['shows','fans','rival','goal','live'],t:'The overnights',
  b:()=>`These lines track the <b>fans gained tonight</b>, yours against ${tvRival()}’s. After each segment, a line moves up for fans won or down for fans lost, and its label shows that segment’s change. The totals sit on top.<br><br><b>ME</b> is the main event and <b>🔔</b> covers what moves fans after the final bell. <b>Whoever gains more fans wins the night</b>, so a lower star rating can still win.`},
 
@@ -334,8 +332,7 @@ function tutTip(id,force){if(TUT||TUT_OFFER||(typeof TV!=='undefined'&&TV))retur
   const r=el.getBoundingClientRect();if(r.top<70||r.bottom>innerHeight-90)el.scrollIntoView({block:'center',behavior:'instant'});tutPaint(step,el)},380)}
 
 /* ---------- the first show's reveal ---------- */
-/* Once per new game (remembered by the game's seed), in the week 1 two-show reveal: when your first segment with crowd
-   meters has landed and its line has drawn. Returns a promise that settles when the player is done (the reveal waits on
+/* Once per new game (remembered by the game's seed), in the week 1 two-show reveal: when your first segment has landed and its line has drawn. Returns a promise that settles when the player is done (the reveal waits on
    it), or null when there's nothing to show. Never on the TV. */
 function tutReveal(){if(TUT||!S||(typeof TV!=='undefined'&&TV)||typeof SRV==='undefined'||!SRV||SRV.tv||!SRV.two)return null;
  const o=SRV.o;if(!o||o.week!==1||(S.season||1)!==1)return null;

@@ -158,7 +158,7 @@ async def main(shots):
             await pg.evaluate('finishLive()'); await pg.wait_for_timeout(300)
             if await pg.evaluate('AW()') == wk:
                 problems.append('Go live did not air the week-1 show (something at the office door, or the card is not full?)')
-            # the first show's reveal pauses on your first segment for its own three stops
+            # the first show's reveal pauses on your first segment for its own stops
             for _ in range(8):
                 await pg.evaluate("typeof SRV!=='undefined'&&SRV&&!SRV.done&&!SRV.busy&&!TUT&&srAdvance()")
                 try:
@@ -167,7 +167,7 @@ async def main(shots):
                 except Exception:
                     pass
             if await pg.evaluate("!!(TUT&&TUT.track==='reveal')"):
-                for _ in range(3):
+                for _ in range(2):
                     await pg.wait_for_timeout(700)
                     sid = await pg.evaluate("TUT&&TUT.steps[TUT.i].id")
                     if not sid:
