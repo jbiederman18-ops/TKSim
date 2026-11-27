@@ -38,7 +38,7 @@
 'use strict';
 /* ===================== DATA ===================== */
 const KEY='allelitegm_v1';
-const APP_VERSION='v532';
+const APP_VERSION='v533';
 /* v113: a rolling year — a PPV every 4 weeks. All In is the midyear supershow; the season (awards, offseason, fan-war
    winner) ends after the last PPV, then the calendar rolls into a new year.
    v168: the WWE update — the year alternates the biggest AEW and WWE PPVs, from the Royal Rumble to Survivor Series. */
@@ -153,7 +153,7 @@ function feudInit(st){if(!st)return;
    l.push({s:st.season,wk:st.week,w:now,ic:'📌',n:'History starts here — earlier segments weren\'t recorded',h:Math.round(st.heat[k])});st.fh[k]=l}}if(!st.fs){st.fs={};st.mh=st.mh||{};const now=(st.season-1)*OLD_SEASON+st.week;for(const k in st.heat)if(st.heat[k]>=20)st.fs[k]={start:now,paid:false,stale:false}}
  /* older saves kept paid-off feuds around at half heat — a payoff now ends them */
  if(!st.fe2){st.fe2=1;for(const k in st.fs)if(st.fs[k]&&st.fs[k].paid){delete st.fs[k];if(st.heat)delete st.heat[k]}}}
-function endFeud(k,how,ic){if(how)fhArchive(k,how,ic);else if(S.fh)delete S.fh[k];if(S.heat)delete S.heat[k];if(S.fs)delete S.fs[k]}
+function endFeud(k,how,ic){if(ic==='💥'&&S.aiProg)S.aiProg.forEach(p=>{if(!p.arc&&key(p.a,p.b)===k)p.paid=1});if(how)fhArchive(k,how,ic);else if(S.fh)delete S.fh[k];if(S.heat)delete S.heat[k];if(S.fs)delete S.fs[k]}
 function showMigrate(){if(S&&S.phase==='season'&&!S.fa){S.fa={};marketTick(undefined,true)}cardMigrate();if(!S||S.fullShow)return;S.fullShow=true;S.showIdx=0;if(S.phase==='season'&&S.card)S.card={p:emptyCard(curShow().ppv),ai:null}}
 /* in-ring corrections for Showmen who are elite workers (v61): applied once to existing saves, on top of any progress since */
 const RING_FIX={'jay-white':4,'adam-cole':4,'orange-cassidy':4,'mercedes-mone':2,'toni-storm':3,'christian-cage':2};
@@ -2004,12 +2004,17 @@ function applyPromo(p,notes){const r=p.res;const A=S.w[p.a];if(!A||!r)return;
    Never used by Suggest the rest or by online leagues. */
 const AI_STORY={easy:{n:0,tv:0,crowd:0},normal:{n:2,tv:.5,crowd:10},hard:{n:3,tv:.7,crowd:18}};
 const AIP_WEEKS=12,AIP_BUILD=2;
+/* v533: a pair whose program is over rests AIP_REST weeks: no new program, no TV filler match or feud promo (a hot feud can still meet on a PPV) */
+const AIP_REST=26;
+function aiResting(a,b){const w=S.aiRest&&S.aiRest[key(a,b)];return w!=null&&AW()-w<AIP_REST}
 function aiStory(brand){if(brand!=='ai'||ON())return null;const T=AI_STORY[S.diff||'normal']||AI_STORY.normal;return typeof rvRamp==='function'?rvRamp(T):T}
 function aiProgs(){const T=aiStory('ai');if(!T)return [];const ok=id=>S.w[id]&&S.w[id].own==='ai';
+ const was=S.aiProg||[];
  S.aiProg=(S.aiProg||[]).filter(p=>ok(p.a)&&ok(p.b)&&!p.paid&&(p.arc||AW()-p.w<=AIP_WEEKS)&&S.w[p.a].inj<=3&&S.w[p.b].inj<=3).slice(0,T.n);
- const busy=new Set(S.aiProg.flatMap(p=>[p.a,p.b]));
+ was.forEach(p=>{if(!S.aiProg.includes(p))(S.aiRest=S.aiRest||{})[key(p.a,p.b)]=AW()});
+ const busy=new Set(S.aiProg.flatMap(p=>[p.a,p.b]));const held=new Set((S.rvHeld||[]).map(p=>key(p.a,p.b)));
  const l=Object.values(S.w).filter(w=>w.own==='ai'&&!w.inj&&!busy.has(w.id)).sort((a,b)=>b.pop-a.pop).slice(0,16);
- while(S.aiProg.length<T.n){let bp=null,bv=-1e9;for(let i=0;i<l.length;i++)for(let j=i+1;j<l.length;j++){const a=l[i],b=l[j];if(a.g!==b.g||inTeam(a.id,b.id)||busy.has(a.id)||busy.has(b.id))continue;const v=(a.pop+b.pop)/2+chemOpp(a,b)*3+heatOf(a.id,b.id)+(a.al!==b.al?8:0)+R(0,8);if(v>bv){bv=v;bp=[a.id,b.id]}}
+ while(S.aiProg.length<T.n){let bp=null,bv=-1e9;for(let i=0;i<l.length;i++)for(let j=i+1;j<l.length;j++){const a=l[i],b=l[j];if(a.g!==b.g||inTeam(a.id,b.id)||busy.has(a.id)||busy.has(b.id)||aiResting(a.id,b.id)||held.has(key(a.id,b.id)))continue;const v=(a.pop+b.pop)/2+chemOpp(a,b)*3+heatOf(a.id,b.id)+(a.al!==b.al?8:0)+R(0,8);if(v>bv){bv=v;bp=[a.id,b.id]}}
   if(!bp)break;S.aiProg.push({a:bp[0],b:bp[1],w:AW()});bp.forEach(x=>busy.add(x))}
  if(typeof rvArcStart==='function')S.aiProg.forEach(rvArcStart);
  return S.aiProg}
@@ -2081,7 +2086,7 @@ function autoBook(brand,show,extUsed,opt){opt=opt||{};
   if(Math.random()<.3){const u=teamUnits(pool,2);const pair=[];for(const a of shuffle(u)){if(!pair.length)pair.push(a);else if(!a.some(id=>pair[0].includes(id))){pair.push(a);break}}
    if(pair.length===2&&!pair[0].some(a=>pair[1].some(b=>recentMeets(a,b).length))){mk('tag',pair);continue}}
   const top=pool.slice().sort((a,b)=>b.pop-a.pop).slice(0,14);let bp=null,bv=-1e9;
-  for(let i=0;i<top.length;i++)for(let j=i+1;j<top.length;j++){const a=top[i],b=top[j];if(inTeam(a.id,b.id))continue;const v=(a.g!==b.g?-12:0)+heatOf(a.id,b.id)*1.3*(isStale(a.id,b.id)?.3:1)+chemOpp(a,b)*1.5+(a.pop+b.pop)/2+R(0,15)+aiCrowdVal(brand,card,[a,b])+(brand==='ai'&&show.ppv&&(S.rvProm||[]).some(x=>x.due<=AW()&&(x.id===a.id||x.id===b.id))?400:0)-(Math.max(0,a.fat-FAT_OK)+Math.max(0,b.fat-FAT_OK))*.6-(show.ppv&&heatOf(a.id,b.id)>=45?0:metW(a.id,b.id)*60)-(show.ppv?0:(meW(a.id)+meW(b.id))*18);if(v>bv){bv=v;bp=[a,b]}}
+  for(let i=0;i<top.length;i++)for(let j=i+1;j<top.length;j++){const a=top[i],b=top[j];if(inTeam(a.id,b.id))continue;const v=(a.g!==b.g?-12:0)+heatOf(a.id,b.id)*1.3*(isStale(a.id,b.id)?.3:1)+chemOpp(a,b)*1.5+(a.pop+b.pop)/2+R(0,15)+aiCrowdVal(brand,card,[a,b])+(brand==='ai'&&show.ppv&&(S.rvProm||[]).some(x=>x.due<=AW()&&(x.id===a.id||x.id===b.id))?400:0)-(Math.max(0,a.fat-FAT_OK)+Math.max(0,b.fat-FAT_OK))*.6-(show.ppv&&heatOf(a.id,b.id)>=45?0:metW(a.id,b.id)*60+(brand==='ai'&&aiResting(a.id,b.id)?150:0))-(show.ppv?0:(meW(a.id)+meW(b.id))*18);if(v>bv){bv=v;bp=[a,b]}}
   if(!bp)break;mk('singles',[[bp[0].id],[bp[1].id]])}
  {let n=0;Object.entries(S.heat).filter(([k,h])=>h>=25).sort((a,b)=>b[1]-a[1]).forEach(([k])=>{if(n>=2)return;const [a,b]=k.split('|');const A=S.w[a],B=S.w[b];if(!A||!B||A.own!==brand||B.own!==brand)return;
   for(const [x,t] of [[b,a],[a,b]]){if(S.w[x].inj||S.w[x].al==='f'&&S.w[t].al==='f'||rest.has(x))continue;const sl=card.find(c=>c.d&&!c.d.ri&&!(c.d.tour&&c.d.tour.k==='c2')&&c.d.sides.flat().includes(t)&&!c.d.sides.flat().includes(x));if(!sl||Math.random()>q.ri)continue;
@@ -2094,11 +2099,13 @@ function autoBook(brand,show,extUsed,opt){opt=opt||{};
  const exP=new Set();
  const out=[];let mi=0;CARD_TV.forEach(k=>{if(k==='match'){if(ms[mi])out.push(ms[mi++])}else{const p=autoPromo(brand,exP);if(p){exP.add(p.a);if(p.b)exP.add(p.b)}const sl={k:'promo',d:p};if(k.endsWith('?'))sl.opt=true;out.push(sl)}});
  while(mi<ms.length)out.push(ms[mi++]);return out}
-function aiProgPromo(brand,ex){if(!aiStory(brand))return null;const l=aiProgs().filter(p=>!S.w[p.a].inj&&!S.w[p.b].inj&&!ex.has(p.a)&&!ex.has(p.b));if(!l.length)return null;
+/* v533: one story promo a card */
+function aiProgPromo(brand,ex){if(!aiStory(brand)||ex.story)return null;
+ const l=aiProgs().filter(p=>!S.w[p.a].inj&&!S.w[p.b].inj&&!ex.has(p.a)&&!ex.has(p.b));if(!l.length)return null;ex.story=1;
  const last=p=>Math.max(0,...promoHist(p.a,p.b).map(x=>x.w));const p=l.slice().sort((x,y)=>last(x)-last(y))[0];const [A,B]=[S.w[p.a],S.w[p.b]].sort((x,y)=>y.mic-x.mic);const lw=promoHist(A.id,B.id).filter(x=>x.w===AW()-1).map(x=>x.t);
  const soon=PPVS[S.week]||PPVS[S.week+1];const q={type:soon&&heatOf(A.id,B.id)>35?'contract':pick(['callout','attack','interview'].filter(t=>!lw.includes(t))),a:A.id,b:B.id};runAutoPromo(q,brand);return q}
 function autoPromo(brand,ex){ex=ex||new Set();const pp=aiProgPromo(brand,ex);if(pp)return pp;const r=Object.values(S.w).filter(w=>w.own===brand&&w.inj===0&&!ex.has(w.id));if(!r.length)return null;
- let bp=null,bv=0;for(const k in S.heat){const [a,b]=k.split('|');const A=S.w[a],B=S.w[b];if(A&&B&&A.own===brand&&B.own===brand&&!A.inj&&!B.inj&&!ex.has(a)&&!ex.has(b)&&S.heat[k]>bv){bv=S.heat[k];bp=[A,B]}}
+ let bp=null,bv=0;for(const k in S.heat){const [a,b]=k.split('|');const A=S.w[a],B=S.w[b];if(A&&B&&A.own===brand&&B.own===brand&&!A.inj&&!B.inj&&!ex.has(a)&&!ex.has(b)&&S.heat[k]>bv&&!(aiStory(brand)&&(aiResting(a,b)||(S.aiProg||[]).some(p=>key(p.a,p.b)===k)))){bv=S.heat[k];bp=[A,B]}}
  let p;
  if(bp&&Math.random()<.8){const [A,B]=bp.sort((x,y)=>y.mic-x.mic);const soon=PPVS[S.week]||PPVS[S.week+1];const lw=promoHist(A.id,B.id).filter(x=>x.w===AW()-1).map(x=>x.t);p={type:soon&&bv>35&&Math.random()<.5?'contract':pick(['callout','attack','interview','vignette'].filter(t=>!lw.includes(t))),a:A.id,b:B.id}}
  else{const top=r.sort((a,b)=>b.pop+b.mic-a.pop-a.mic)[RI(0,Math.min(3,r.length-1))];
