@@ -57,13 +57,14 @@ function voiceFor(k,row){
  return null}
 const KIND={callup:['📣','Ready for the call-up'],rein:['🎭','Wants a reinvention'],tamp:['🕵️','A word about another offer'],med:['🚑','The trainer, with an update'],trade:['🔁','The rival on the line'],cd:['⏳','The countdown debut, at your door'],oc:['📝','Your open challenger is back'],tape:['📼','A tape on your desk']};
 /* who's standing in line for each one */
-function whoOf(x){if(x.k==='ahold'||x.k==='aback')return x.id;if(x.k==='ask')return x.a.who;if(x.k==='agent')return x.w.id;if(x.k==='crisis')return S.crisis&&S.crisis.a;if(x.k==='pitch')return S.pitch&&S.pitch.a;if(x.k==='tape')return '📼';if(x.k==='net')return NET_WHO;if(x.k==='fg'){const f=fgVisit();return f?f.F.id:'?'}if(x.k==='fgd'){const f=fgDrift();return f?f.A.id:'?'}if(x.k==='tr'){const w=trVisit();return w?w.id:'?'}if(x.k==='trade')return '📞';const v=voiceFor(x.k,x.row);return v?v[0]:'?'}
+function whoOf(x){if(x.k==='ahold'||x.k==='aback')return x.id;if(x.k==='ask')return x.a.who;if(x.k==='agent')return x.w.id;if(x.k==='crisis')return S.crisis&&S.crisis.a;if(x.k==='pitch')return S.pitch&&S.pitch.a;if(x.k==='tape')return '📼';if(x.k==='net'||x.k==='mand')return NET_WHO;if(x.k==='fg'){const f=fgVisit();return f?f.F.id:'?'}if(x.k==='fgd'){const f=fgDrift();return f?f.A.id:'?'}if(x.k==='tr'){const w=trVisit();return w?w.id:'?'}if(x.k==='trade')return '📞';const v=voiceFor(x.k,x.row);return v?v[0]:'?'}
 /* ---- what's waiting ---- */
 function inboxList(){if(!allowed())return [];const out=[];
  if(S.crisis&&S.w[S.crisis.a]&&S.w[S.crisis.a].own==='p'&&typeof CRISES!=='undefined'&&CRISES[S.crisis.k])out.push({k:'crisis',open:()=>_oc()});
  if(S.pitch&&typeof PITCHES!=='undefined'&&PITCHES[S.pitch.k]&&S.w[S.pitch.a]&&S.w[S.pitch.a].own==='p')out.push({k:'pitch',open:()=>_op()});
  try{if(typeof arcDeskList==='function')arcDeskList().forEach(x=>out.push({k:x.k,id:x.id,open:()=>arcDeskOpen(x.k,x.id)}))}catch(e){console.warn('inbox arcs',e)}
  try{if(netDue())out.push({k:'net',open:openNet})}catch(e){console.warn('inbox net',e)}
+ try{if(mandDue())out.push({k:'mand',open:openMand})}catch(e){console.warn('inbox mandate',e)}
  try{if(typeof fgVisit==='function'&&fgVisit())out.push({k:'fg',open:()=>window.openFg()})}catch(e){console.warn('inbox friends',e)}
  try{if(typeof fgDrift==='function'&&fgDrift())out.push({k:'fgd',open:openFgd})}catch(e){console.warn('inbox drift',e)}
  try{if(typeof trVisit==='function'&&trVisit())out.push({k:'tr',open:openTr})}catch(e){console.warn('inbox traits',e)}
@@ -80,12 +81,12 @@ function inboxList(){if(!allowed())return [];const out=[];
 /* v369: the network exec and friends (a friend's visit, someone who fell out with their group) come right after the
    front-office business and before contract talks that can still wait, and they keep waiting outside until there's room. */
 const DESK_MAX=4;/* v370: 3 → 4, so the network and friends' visits make it in too */window.DESK_MAX=DESK_MAX;
-function dKey(x){if(x.k==='ahold'||x.k==='aback')return x.k+':'+x.id;if(x.k==='crisis'||x.k==='pitch'||x.k==='net'||x.k==='fg'||x.k==='fgd'||x.k==='tr')return x.k;if(x.k==='agent')return 'ag:'+x.w.id;if(x.k==='ask')return 'ask:'+x.a.id;
+function dKey(x){if(x.k==='ahold'||x.k==='aback')return x.k+':'+x.id;if(x.k==='crisis'||x.k==='pitch'||x.k==='net'||x.k==='mand'||x.k==='fg'||x.k==='fgd'||x.k==='tr')return x.k;if(x.k==='agent')return 'ag:'+x.w.id;if(x.k==='ask')return 'ask:'+x.a.id;
  const q=(x.row||'').match(/\('([^']+)'/);if(q)return x.k+':'+q[1];const b=(x.row||'').match(/<b>([^<]+)<\/b>/);return x.k+':'+(b?b[1]:(x.row||'').length)}
 /* v371: the network exec and friends' visits are information you can't get anywhere else, so they always get in too */
 /* v425: a trait slot that opened (one wrestler a week) always gets in */
-const dUrgent=x=>x.k==='ahold'||x.k==='aback'||x.k==='tr'||x.k==='crisis'||x.k==='pitch'||x.k==='med'||x.k==='net'||x.k==='fg'||x.k==='fgd'||(x.k==='agent'&&x.w.con<=1);
-const D_RANK=x=>x.k==='crisis'?0:x.k==='pitch'?1:x.k==='agent'&&x.w.con<=1?2:x.k==='med'?3:x.k==='ahold'?3.2:x.k==='aback'?3.4:x.k==='tamp'?4:x.k==='net'?4.2:x.k==='fgd'?4.4:x.k==='fg'?4.6:x.k==='tr'?4.8:x.k==='agent'?5:x.k==='ask'&&x.a.due?6:
+const dUrgent=x=>x.k==='ahold'||x.k==='aback'||x.k==='tr'||x.k==='crisis'||x.k==='pitch'||x.k==='med'||x.k==='net'||x.k==='mand'||x.k==='fg'||x.k==='fgd'||(x.k==='agent'&&x.w.con<=1);
+const D_RANK=x=>x.k==='crisis'?0:x.k==='pitch'?1:x.k==='agent'&&x.w.con<=1?2:x.k==='med'?3:x.k==='ahold'?3.2:x.k==='aback'?3.4:x.k==='tamp'?4:x.k==='net'?4.2:x.k==='mand'?4.3:x.k==='fgd'?4.4:x.k==='fg'?4.6:x.k==='tr'?4.8:x.k==='agent'?5:x.k==='ask'&&x.a.due?6:
  ({trade:7,cd:8,oc:8,ask:9,callup:10,tape:11})[x.k]||14;
 function lineup(out){const wk=AW();
  if(!S.deskWk||S.deskWk.w!==wk){const pick=out.map((x,i)=>({x,i})).sort((a,b)=>D_RANK(a.x)-D_RANK(b.x)||a.i-b.i).map(o=>o.x);const keys=[];
@@ -152,6 +153,27 @@ window.netTake=function(){if(typeof mpLocked==='function'&&mpLocked())return;con
  S.money.p+=amt;S.view.p={amt:0,wks:0};news(`📺 The network paid ${S.gm||'you'} a ${money(amt)} viewership bonus.`);save();try{render()}catch(e){}const left=inboxList().length;
  openModal(`<div class="h mhd">📺 +${esc(money(amt))}</div><div class="outcome ok">${esc(pickL(['The exec shakes your hand on the way out. "Same time after the next PPV, I hope."','"Don\'t spend it all on pyro." They\'re already on the phone before the door closes.','"Keep them watching." The door clicks shut.'],amt))}</div>
  <button class="btn" onclick="closeModal()">${ON_?(left?`Call in the next one (${left} waiting) ▸`:'Line\'s clear — back to work ▸'):'Back to work'}</button>`)};
+/* ---- v542: the same executive brings each new network mandate (season.js hands one out after each PPV) to the door, so it
+   isn't buried in the news and the checklist. One answer: your GM's reply, drawn from a shuffled bag so every line in
+   MAND_REPLIES comes up once before any repeats. The bag is saved with the game and carries across seasons. */
+const MAND_REPLIES=['Anything for you, my dear overlord','I would walk off a cliff if you asked me to','You always know what’s best, business king',
+ 'I’d follow you to the ends of the earth','Another brilliant idea from the most impressive businessman to have ever lived',
+ 'Of course, yes. Your wish is eternally my command, great business leader',
+ 'Truly, you are as extraordinary in intellect as anyone the business world has ever known','On it!'];
+function mandDue(){const md=S.mand&&S.mand.p;return !!(md&&!md.done&&!md.seen&&MANDS[md.k])}
+/* picked the first time the visit is on screen, then kept with the mandate so reopening it doesn't use up another line */
+function mandReply(md){if(MAND_REPLIES[md.reply])return MAND_REPLIES[md.reply];S.mandBag=S.mandBag||{};const B=S.mandBag.p=S.mandBag.p||{left:[]};
+ if(!B.left.length)B.left=MAND_REPLIES.map((x,i)=>i);
+ /* never the same line twice running, even as a fresh round starts */
+ const l=B.left.filter(i=>i!==B.last);const i=pick(l.length?l:B.left);B.left=B.left.filter(x=>x!==i);B.last=md.reply=i;save();return MAND_REPLIES[i]}
+function mandLine(md){return pickL([`The network has been talking, and we know exactly what your show needs next.`,
+ `I just came from a meeting upstairs. A long one. Here's what we want to see.`,
+ `We've got a request. I'm calling it a request because legal told me to.`,
+ `The people upstairs had an idea. I think you're going to love it. You'd better.`],md.k+md.due)}
+function openMand(){if(!mandDue())return closeModal();const md=S.mand.p,M=MANDS[md.k],left=md.due-S.week;
+ openModal(`<div class="h mhd mt">📺 New network mandate</div><div class="scene brief ibx">${voiceH(NET_WHO,mandLine(md))}<div class="brow"><div>${M.i} <b>${esc(M.n)}</b> by ${esc(md.ppv)}</div><div class="muted tiny" style="margin-top:6px">${left<=0?'Due tonight':`Week ${md.due} · ${left+1} shows, counting tonight's`}. Deliver: +${esc(money(md.cash))} and ${esc(fmtFans(md.fans))} fans. Miss it: −${esc(fmtFans(MAND_MISS))} fans.</div></div></div>
+ <button class="choice" onclick="mandAccept()"><span class="key"><span>A</span></span><div>🙇 "${esc(mandReply(md))}"</div></button>`)}
+window.mandAccept=function(){if(typeof mpLocked==='function'&&mpLocked())return;if(!mandDue())return closeModal();S.mand.p.seen=1;save();try{render()}catch(e){}closeModal()};
 /* ---- v361: a top star at the door about a friend (friends.js). Backstage friend groups are secret; this is one of the
    ways you find out. Angry about a broken promise: smooth it over with a bonus for the friend (most of the hit undone) or
    call it business (it lingers). Thankful for a kept promise or a title win: take them both to dinner, or just say thanks. */
@@ -280,6 +302,7 @@ function describe(x){const nm=id=>S.w[id]?S.w[id].name:'';
  if(x.k==='pitch'){const p=S.pitch,P=PITCHES[p.k],c=pCtx(p);return {k:'pitch',kick:P.cat,head:P.head(c),w:p.a,w2:p.b||null}}
  if(x.k==='ahold'||x.k==='aback')return {k:x.k,kick:'📖 A story',head:x.k==='ahold'?'A storyline is in question':'A storyline is ready to return',w:null,tease:1};
  if(x.k==='net')return {k:'net',kick:'📺 The network, at your door',head:'A check for the viewership',w:null,tease:1};
+ if(x.k==='mand')return {k:'mand',kick:'📺 The network, at your door',head:'A new network mandate',w:null,tease:1};
  if(x.k==='crisis'){const c=S.crisis,C=CRISES[c.k];return {k:'crisis',kick:`${C.i} ${C.good?'Opportunity':'Front office'}`,head:C.t,w:c.a,pic2:c.b||null,narr:1}}
  /* v499: friends and new traits get their cards too (these three used to fall through and fail, leaving no picture).
     pic2 is the second card on this screen only: the party TV never learns who's friends with whom. */

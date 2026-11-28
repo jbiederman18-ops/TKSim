@@ -129,6 +129,15 @@ async def main(shots):
             if set(await pg.evaluate("TUT_STEPS.filter(s=>s.page).map(s=>s.id)")) & set(visited):
                 problems.append('the first-week tour ran a tab walkthrough before that tab was opened')
 
+            # v542: week 1's network mandate is waiting at the office once the tour ends; answer it
+            try:
+                await pg.wait_for_selector("#modal:not(.hidden) button[onclick='mandAccept()']", timeout=5000)
+                await shot('office-mandate')
+                await pg.click("#modal button[onclick='mandAccept()']")
+                await pg.wait_for_timeout(600)
+            except Exception:
+                problems.append("week 1's network mandate did not come to the office after the first-week tour")
+
             # each tab's walkthrough starts the first time the tab is opened, stays on that tab, and plays once
             for page in await pg.evaluate('TUT_PAGES'):
                 await pg.wait_for_timeout(900)
