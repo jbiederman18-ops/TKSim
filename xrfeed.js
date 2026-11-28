@@ -562,7 +562,7 @@ Object.assign(window,{xrFeed,xrFeedHtml,XR_POSTS});
 .xrf{margin:10px 0 2px;background:#111114;box-shadow:inset 0 0 0 1px var(--line);position:relative;text-align:left}
 .xrf::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--red) 60%,transparent)}
 .xrfh{display:flex;align-items:center;gap:10px;padding:12px 12px 7px}
-.xrav{flex:none;width:44px;height:44px;background:#1d1d22 url(x-redditino.webp) 50% 3%/290% auto no-repeat;box-shadow:inset 0 0 0 1px var(--gold3)}
+.xrav{flex:none;width:40px;height:54px;border-radius:3px;background:url(x-redditino.webp) 53% 1%/290% auto no-repeat,#111 url(card-bg.jpg) center/cover;box-shadow:inset 0 0 0 1px #3a3b42,0 3px 8px rgba(0,0,0,.55)}
 .xrfh div{display:flex;flex-direction:column;min-width:0}
 .xrfh b{font:900 italic 17px/1.05 'BC',sans-serif;text-transform:uppercase;letter-spacing:.02em;color:var(--text)}
 .xrfh small{font:700 10.5px/1.3 'BC',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

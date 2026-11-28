@@ -293,8 +293,7 @@ function xrIntro(){if(XR_INTRO||typeof openModal!=='function')return;
 const xrRM=()=>!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 function xrBtn(){return `<span class="key"><span>A</span></span><div>✨ "Let's go make some magic."</div>`}
 function xrStage(){return `<div class="sd solo xr-sd" id="sd" onclick="xrIntroTap()"><div class="sdpan" id="sdpan"><div class="sdc ca xr-c">
- <div class="sdph xr-ph" id="xrPh"><img src="x-redditino.webp" alt="X Redditino"></div>
- <div class="sdpl"><b>X Redditino</b><span>Head of PR</span></div></div></div>
+ <div class="sdph tcin xr-ph" id="xrPh"><div class="tkc"><div class="tcf ph"><div class="tcp"><img src="x-redditino.webp" alt=""></div><div class="tcb"><b class="tcn">X Redditino</b><span class="tcc t">Head of PR</span></div></div></div></div></div></div>
  <div class="sdflash" id="sdflash"></div><div class="sdfx" id="sdfx"></div></div>`}
 function xrBox(){return `<div class="sdbox k-q" id="sdbox" onclick="xrIntroTap()"><div class="sdtab other">X Redditino</div><div class="sdsay" id="sdsay"></div><span class="sdnx" id="sdnx">▼</span></div>`}
 function xrLow(last){return last?`<button class="choice xr-go" id="xriGo" onclick="xrIntroTap()">${xrBtn()}</button>`:`<div class="sdhint" id="xriGo">Tap to continue</div>`}
@@ -334,8 +333,13 @@ function xrIntroEnd(){if(!XR_INTRO)return;XR_INTRO=false;const md=document.getEl
 window.xrIntroDone=function(){const X=XR_INTRO;if(X&&X.iv)clearInterval(X.iv);if(typeof closeModal==='function')closeModal();xrIntroEnd()};
 (function(){const c=document.createElement('style');c.textContent=`
 .xr-sd .sdpan{width:100%}
-.xr-ph{display:grid;place-items:center;background:radial-gradient(80% 60% at 50% 35%,#2a2214,#0c0c0e 75%)}
-.xr-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:50% 100%}
+html.tcards #modal .xr-w .sd.xr-sd{aspect-ratio:16/9}
+@media (max-width:620px){html.tcards #modal .xr-w .sd.xr-sd{aspect-ratio:4/3}}
+html.tcards #modal .xr-w .sd.solo .sdph.xr-ph{height:90%;bottom:5%}
+html.tcards #modal .xr-w .sdph.xr-ph>.tkc{--w:170px}
+@media (max-width:620px) and (max-height:720px){html.tcards #modal .xr-w .sd.xr-sd{aspect-ratio:16/9}html.tcards #modal .xr-w .sdph.xr-ph>.tkc{--w:118px}}
+html.tcards .xr-ph .tkc .tcf::before{background:var(--gold)}
+html.tcards .xr-ph .tkc .tcp{inset:3% 2% 0 6px}html.tcards .xr-ph .tkc .tcp img{object-fit:contain;object-position:50% 100%}
 .xr-w .sdbox{min-height:150px}
 .xr-go{margin-top:12px;animation:sdin .3s ease-out}`;document.head.appendChild(c)})();
 
