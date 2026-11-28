@@ -90,7 +90,8 @@ const D_RANK=x=>x.k==='crisis'?0:x.k==='pitch'?1:x.k==='agent'&&x.w.con<=1?2:x.k
  ({trade:7,cd:8,oc:8,ask:9,callup:10,tape:11})[x.k]||14;
 function lineup(out){const wk=AW();
  if(!S.deskWk||S.deskWk.w!==wk){const pick=out.map((x,i)=>({x,i})).sort((a,b)=>D_RANK(a.x)-D_RANK(b.x)||a.i-b.i).map(o=>o.x);const keys=[];
-  pick.forEach(x=>{if(dUrgent(x)||keys.length<DESK_MAX)keys.push(dKey(x))});S.deskWk={w:wk,keys}}
+  /* v545: the network's mandate comes on top of the DESK_MAX — it never takes anyone's seat */
+  let seats=0;pick.forEach(x=>{if(x.k==='mand')keys.push(dKey(x));else if(dUrgent(x)||seats<DESK_MAX){keys.push(dKey(x));seats++}});S.deskWk={w:wk,keys}}
  const K=new Set(S.deskWk.keys);
  /* something urgent that turns up mid-week still gets in */
  out.forEach(x=>{const k=dKey(x);if(!K.has(k)&&dUrgent(x)){S.deskWk.keys.push(k);K.add(k)}});

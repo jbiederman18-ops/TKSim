@@ -72,7 +72,7 @@ builds on a virtual clock, clicking through the game and comparing every element
 | `cards.js` | Card table: tap-to-pick booking sheet, wrestler cards (v273+). The only Book screen since v338 — it draws over `bookView`'s slots, so the classic slot markup is still the base |
 | `fanbase.js` | Fan groups (v397+) and the fan engine (v399): `FG_RAW` group per wrestler id, `fgOf`/`fgTag`; `S.fb[b]` groups (S.fans stays their sum via `fbSync`), `fbCalc`/`fbApply` per show (called from airPair), Crowd read (`fbCrowdCard`, replaces Show flow), The fans + X Redditino (`fbResultsCard`), undiscovered leans `S.fgx`, reinvention at the office door; v402 `fbAiTune` (offline rival swaps stipulations for its hungriest crowds, wraps autoBook) and `fbBar`/`fbTvCard` (standings bars, party TV crowds) |
 | `attention.js` | Needs your attention checklist + the This week news panel on Home (v324) |
-| `inbox.js` | The line outside your office (Monday decisions; max `DESK_MAX` a week since v341) |
+| `inbox.js` | The line outside your office (Monday decisions; max `DESK_MAX` a week since v341; the network mandate visit, v542, doesn't count against it since v545) |
 | `season.js` | Season systems, calendar flow |
 | `calendar.js` | Season calendar screen |
 | `wwe.js` | WWE roster, titles, PPVs, supplemental draft |
