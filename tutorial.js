@@ -195,7 +195,10 @@ function tutPlace(el){const box=document.getElementById('tut');if(!box||!TUT)ret
  let side=null;if(el&&W>=1100&&!(typeof TV!=='undefined'&&TV)){const r=el.getBoundingClientRect(),cw=Math.min(440,W-24)+32;if(W-r.right>=cw)side=Math.round(r.right+16);else if(r.left>=cw)side=Math.round(r.left-cw+16);
   /* a tall target leaves no room above or below either: hug the window edge with more space so less of it is covered */
   else if(r.height>H*.45)side=W-r.right>=r.left?Math.round(W-cw+16):16}
- card.classList.toggle('at-side',side!=null);card.style.left=side!=null?side+'px':''}
+ card.classList.toggle('at-side',side!=null);card.style.left=side!=null?side+'px':'';
+ /* pointing at a tab in the bottom bar: the card sits right above it */
+ const low=el&&el.closest('nav.tabs')&&el.getBoundingClientRect().top>H/2;if(low)card.classList.remove('at-top','at-side');
+ card.style.bottom=low?Math.round(H-el.getBoundingClientRect().top+16)+'px':''}
 
 function tutEnd(done){if(!TUT)return;const T=TUT;TUT=null;tutHide();
  const st=T.steps[T.i];if(st&&st.after)try{st.after()}catch(e){}
