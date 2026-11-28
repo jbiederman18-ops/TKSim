@@ -82,8 +82,14 @@ const TUT_STEPS=[
 /* ---- the first week: the essentials only — everything else is a coach tip the first time it comes up ---- */
 {id:'s.show',track:'season',since:93,tab:'home',sel:'main .card.showcard',sys:['shows','calendar','goal','fans','fan groups','rival'],t:'Your show',
  b:()=>`Each week you book ${tv('show name',()=>esc(curShow().mine),'your show')} while ${tvRival()} books ${ON()?'theirs':tv('rival show',()=>esc(curShow().theirs),'theirs')}. Whoever gains more fans tonight wins the night, and <b>the bigger audience wins the season</b>.<br><br>Grow it by giving each of your five crowds a real match of its own every week. A crowd you ignore drifts away.${tv('rival extras',()=>!ON()&&S.diff!=='easy'?' Your rival runs arcs and chases weekly goals and chants too, so claim your own.':'','')} PPVs swing the most. ${tv('next PPV',()=>{const n=nextPPV();return n?`Next up: <b>${esc(n.n)}</b> in ${n.in} week${n.in===1?'':'s'}.`:''},'')}`},
-{id:'s.tabs',track:'season',since:88,tab:'home',sel:'nav.tabs',sys:['tabs','navigation','roster','arcs','titles','office'],t:'Your tabs',
- b:()=>`<b>Home</b> is your week: the fan war, news and who's waiting outside your office. <b>Book</b> is where you build tonight's show. <b>Roster</b> has your wrestlers, free agents and prospects. <b>Arcs</b> is where you build your wrestlers' storylines. <b>Titles</b> shows your champions and the title shots you owe. <b>Office</b> has your money, your buildings and the season calendar.`},
+/* one stop per tab, so the gold box lights only the tab being described */
+...[['home','Home','Your week at a glance: the fan war, news and office visitors.',['tabs','navigation','office']],
+ ['book','Book',"Where you build tonight's show.",['tabs','navigation','booking']],
+ ['roster','Roster','Your wrestlers, free agents and prospects.',['tabs','navigation','roster']],
+ ['arcs','Arcs',"Storylines for your wrestlers.",['tabs','navigation','arcs']],
+ ['titles','Titles','Your champions and the title shots you owe.',['tabs','navigation','titles']],
+ ['office','Office','Your money, buildings and season calendar.',['tabs','navigation','money','venues','calendar']]]
+ .map(([k,n,txt,sys])=>({id:'s.tab.'+k,track:'season',since:88,tab:'home',sel:`nav.tabs button[onclick="go('${k}')"]`,sys,t:n+' tab',b:()=>txt})),
 {id:'s.attn',track:'season',since:80,tab:'book',sel:'main .card.attn',sys:['weekly goals','chants','promises','pitches','contracts','titles','morale','backstage heat','briefing','mandates','inbox','arcs'],t:'Needs your attention',
  b:()=>`Tonight's to-do list, checked off as you book. Anything on top has to be done before you go live: empty slots, a match you promised. Below it are chances for bonus fans, your arcs' next steps and warnings worth a look. An opportunity you said yes to at the office lands here as a promo to book. Tap an item's button to jump straight to the fix.<br><br>The network's <b>📺 mandate</b> sits here too. Deliver it by the PPV for a big cash and fan bonus; story mandates pay the most.<br><br>Wrestlers who need a decision line up <b>🚪 outside your office</b>. What you agree to there lands on this list. Keep your word and they deliver; break it and the locker room hears about it.`},
 {id:'s.suggest',track:'season',since:56,tab:'book',opt:true,sel:'main [onclick="suggestFill()"]',sys:['booking'],t:'Need a starting point?',
