@@ -293,7 +293,7 @@ function xrIntro(){if(XR_INTRO||typeof openModal!=='function')return;
 const xrRM=()=>!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 function xrBtn(){return `<span class="key"><span>A</span></span><div>✨ "Let's go make some magic."</div>`}
 function xrStage(){return `<div class="sd solo xr-sd" id="sd" onclick="xrIntroTap()"><div class="sdpan" id="sdpan"><div class="sdc ca xr-c">
- <div class="sdph xr-ph" id="xrPh"><div class="xr-mono"><b>XR</b><i>📱</i></div></div>
+ <div class="sdph xr-ph" id="xrPh"><img src="x-redditino.webp" alt="X Redditino"></div>
  <div class="sdpl"><b>X Redditino</b><span>Head of PR</span></div></div></div>
  <div class="sdflash" id="sdflash"></div><div class="sdfx" id="sdfx"></div></div>`}
 function xrBox(){return `<div class="sdbox k-q" id="sdbox" onclick="xrIntroTap()"><div class="sdtab other">X Redditino</div><div class="sdsay" id="sdsay"></div><span class="sdnx" id="sdnx">▼</span></div>`}
@@ -335,13 +335,9 @@ window.xrIntroDone=function(){const X=XR_INTRO;if(X&&X.iv)clearInterval(X.iv);if
 (function(){const c=document.createElement('style');c.textContent=`
 .xr-sd .sdpan{width:100%}
 .xr-ph{display:grid;place-items:center;background:radial-gradient(80% 60% at 50% 35%,#2a2214,#0c0c0e 75%)}
-.xr-mono{display:grid;justify-items:center;gap:6px}
-.xr-mono b{font:900 italic clamp(84px,26vw,140px)/.85 'BC','Barlow Condensed',sans-serif;letter-spacing:-.02em;background:linear-gradient(180deg,#fff6d6,var(--gold2) 40%,var(--gold) 70%,var(--gold3));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 rgba(0,0,0,.6))}
-.xr-mono i{font-style:normal;font-size:34px;animation:xrbuzz 1.1s ease-in-out infinite}
-@keyframes xrbuzz{0%,60%,100%{transform:none}65%{transform:rotate(-12deg)}72%{transform:rotate(10deg)}79%{transform:rotate(-8deg)}86%{transform:rotate(6deg)}}
+.xr-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:50% 100%}
 .xr-w .sdbox{min-height:150px}
-.xr-go{margin-top:12px;animation:sdin .3s ease-out}
-@media (prefers-reduced-motion:reduce){.xr-mono i{animation:none}}`;document.head.appendChild(c)})();
+.xr-go{margin-top:12px;animation:sdin .3s ease-out}`;document.head.appendChild(c)})();
 
 /* v418: the draft holds still — the rival stays off the clock and "The pick is in" waits — while the opening or the draft tour
    is up, while either is still due to start (the gap of a render or two before tutAuto opens them), and while any sheet is open.

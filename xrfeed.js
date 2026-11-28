@@ -554,7 +554,7 @@ function xrFeed(o,br,own){const r=o&&o.fb&&o.fb[br];if(!r||!r.before||!r.after)r
 function xrPostHtml(p){return `<div class="xrq" style="--fgc:${FG_C[p.g]}"><div class="xrqh">${fgIc(p.g)}<span class="xrqn">${esc(p.h)}</span><span class="xrqg">${esc(FG_N[p.g])}</span><em>${p.t||''}</em></div><div class="xrqt">${esc(p.x)}</div>${p.m?`<div class="xrqm"><span>♥ <b>${p.m[0]}</b></span><span>↻ <b>${p.m[1]}</b></span></div>`:''}</div>`}
 /* at: the fade-in attribute from the reveal (empty when shown instantly). own: your show (with the Next week note) */
 function xrFeedHtml(o,br,own,at,who){const F=xrFeed(o,br,own);if(!F)return '';const vis=F.posts.slice(0,3),rest=F.posts.slice(3);
- return `<div class="xrf"${at||''}><div class="xrfh"><span class="xrav">XR</span><div><b>X Redditino</b><small>Head of PR · ${own?'reading the timeline':'reading '+esc(who||'their')+'’s timeline'}</small></div></div>
+ return `<div class="xrf"${at||''}><div class="xrfh"><span class="xrav" aria-hidden="true"></span><div><b>X Redditino</b><small>Head of PR · ${own?'reading the timeline':'reading '+esc(who||'their')+'’s timeline'}</small></div></div>
  <div class="xrsay">“${esc(F.say)}”</div>${F.posts.length?`<div class="xrps">${vis.map(xrPostHtml).join('')}${rest.length?`<details class="xrmore"><summary>${rest.length} more post${rest.length>1?'s':''}</summary>${rest.map(xrPostHtml).join('')}</details>`:''}</div>`:''}
  ${F.note?`<div class="xrnote"><b>Next week · ${fgLbl(F.note.g)}</b><span>${esc(F.note.t)}</span></div>`:''}</div>`}
 Object.assign(window,{xrFeed,xrFeedHtml,XR_POSTS});
@@ -562,7 +562,7 @@ Object.assign(window,{xrFeed,xrFeedHtml,XR_POSTS});
 .xrf{margin:10px 0 2px;background:#111114;box-shadow:inset 0 0 0 1px var(--line);position:relative;text-align:left}
 .xrf::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--red) 60%,transparent)}
 .xrfh{display:flex;align-items:center;gap:10px;padding:12px 12px 7px}
-.xrav{flex:none;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:#1d1d22;box-shadow:inset 0 0 0 1px var(--gold3);color:var(--gold2);font:900 italic 16px/1 'BC',sans-serif}
+.xrav{flex:none;width:44px;height:44px;background:#1d1d22 url(x-redditino.webp) 50% 3%/290% auto no-repeat;box-shadow:inset 0 0 0 1px var(--gold3)}
 .xrfh div{display:flex;flex-direction:column;min-width:0}
 .xrfh b{font:900 italic 17px/1.05 'BC',sans-serif;text-transform:uppercase;letter-spacing:.02em;color:var(--text)}
 .xrfh small{font:700 10.5px/1.3 'BC',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
