@@ -79,7 +79,8 @@ const TUT_STEPS=[
 {id:'d.pick',track:'draft',since:86,sys:['draft'],sel:'main .card.ttape [onclick^="pDraft"]',t:'Make your pick',
  b:()=>`<b>Make the pick</b> drafts the best available wrestler. To take someone else, tap their card and draft them from their profile.<br><br>In a hurry? <b>Auto-pick</b> takes the best fit for the crowds you're short on, and <b>${tv('online',()=>ON()?'Auto-draft me':'Sim rest','Sim rest')}</b> finishes your draft.`},
 
-/* ---- the first week: the essentials only — everything else is a coach tip the first time it comes up ---- */
+/* ---- the first week: the essentials only — everything else is a coach tip the first time it comes up. v541: the first-week
+   tour is your show and a line per tab; a stop with a `page` waits for the first time that tab is opened in a game ---- */
 {id:'s.show',track:'season',since:93,tab:'home',sel:'main .card.showcard',sys:['shows','calendar','goal','fans','fan groups','rival'],t:'Your show',
  b:()=>`Each week you book ${tv('show name',()=>esc(curShow().mine),'your show')} while ${tvRival()} books ${ON()?'theirs':tv('rival show',()=>esc(curShow().theirs),'theirs')}. Whoever gains more fans tonight wins the night, and <b>the bigger audience wins the season</b>.<br><br>Grow it by giving each of your five crowds a real match of its own every week. A crowd you ignore drifts away.${tv('rival extras',()=>!ON()&&S.diff!=='easy'?' Your rival runs arcs and chases weekly goals and chants too, so claim your own.':'','')} PPVs swing the most. ${tv('next PPV',()=>{const n=nextPPV();return n?`Next up: <b>${esc(n.n)}</b> in ${n.in} week${n.in===1?'':'s'}.`:''},'')}`},
 /* one stop per tab, so the gold box lights only the tab being described */
@@ -89,20 +90,21 @@ const TUT_STEPS=[
  ["arcs","Arcs","Storylines for your wrestlers, both the ones running and the ones you can start.",["tabs", "navigation", "arcs"]],
  ["titles","Titles","Your champions, vacant belts, owed title shots and each title's last defense.",["tabs", "navigation", "titles"]],
  ["office","Office","The business side: finances, buildings, expiring contracts, trades and tag teams.",["tabs", "navigation", "money", "venues", "calendar"]]]
- .map(([k,n,txt,sys])=>({id:'s.tab.'+k,track:'season',since:88,tab:'home',sel:`nav.tabs button[onclick="go('${k}')"]`,sys,t:n+' tab',b:()=>txt})),
-{id:'s.attn',track:'season',since:80,tab:'book',sel:'main .card.attn',sys:['weekly goals','chants','promises','pitches','contracts','titles','morale','backstage heat','briefing','mandates','inbox','arcs'],t:'Needs your attention',
+ .map(([k,n,txt,sys])=>({id:'s.tab.'+k,track:'season',since:88,tab:'home',sel:`nav.tabs button[onclick="go('${k}')"]`,sys,t:n+' tab',
+  b:()=>k==='office'?txt+'<br><br>Open <b>Book</b>, <b>Arcs</b> or <b>Titles</b> for a closer look at each.':txt})),
+{id:'s.attn',track:'season',since:80,tab:'book',page:'book',sel:'main .card.attn',sys:['weekly goals','chants','promises','pitches','contracts','titles','morale','backstage heat','briefing','mandates','inbox','arcs'],t:'Needs your attention',
  b:()=>`Tonight's to-do list, checked off as you book. Anything on top has to be done before you go live: empty slots, a match you promised. Below it are chances for bonus fans, your arcs' next steps and warnings worth a look. An opportunity you said yes to at the office lands here as a promo to book. Tap an item's button to jump straight to the fix.<br><br>The network's <b>📺 mandate</b> sits here too. Deliver it by the PPV for a big cash and fan bonus; story mandates pay the most.<br><br>Wrestlers who need a decision line up <b>🚪 outside your office</b>. What you agree to there lands on this list. Keep your word and they deliver; break it and the locker room hears about it.`},
-{id:'s.suggest',track:'season',since:56,tab:'book',opt:true,sel:'main [onclick="suggestFill()"]',sys:['booking'],t:'Need a starting point?',
+{id:'s.suggest',track:'season',since:56,tab:'book',page:'book',opt:true,sel:'main [onclick="suggestFill()"]',sys:['booking'],t:'Need a starting point?',
  b:()=>`<b>Suggest the rest</b> fills your empty slots with the statistically best available match and leaves what you've booked alone. It doesn't keep promises, build feuds, feed your crowds, or watch stamina and morale, so check its picks before you go live.`},
-{id:'s.buzz',track:'season',since:90,tab:'book',sel:()=>document.querySelector('main .tcs.act')||document.querySelector('main .tcs')||document.querySelector('main .rord.pips .slot .mpip')||document.querySelector('main .slot .tellrow')||document.querySelector('main .slot:not(.done)'),sys:['ratings','chemistry','risk','card','card table'],t:'Book a match',
+{id:'s.buzz',track:'season',since:90,tab:'book',page:'book',sel:()=>document.querySelector('main .tcs.act')||document.querySelector('main .tcs')||document.querySelector('main .rord.pips .slot .mpip')||document.querySelector('main .slot .tellrow')||document.querySelector('main .slot:not(.done)'),sys:['ratings','chemistry','risk','card','card table'],t:'Book a match',
  b:()=>`<b>Tap an empty slot</b> to pick who's in the segment. The row along the top sets what kind of segment it is: Singles, Tag, a Triple threat; or for a promo, a Callout, a Backstage vignette. Tap the tab headers to add a stipulation, make it a title match (if available), change the finish or book a run-in, and <b>👑 Win</b> picks the winner.<br><br>A stipulation shows its price, tiredness and injury risk beside it. <b>Details</b> has the reasons.<br><br>Your <b>last match is the main event</b> and counts the most: put your biggest names and hottest feud there.`},
-{id:'s.feuds',track:'season',since:88,tab:'book',sel:()=>tutCard(/your feuds/i),sys:['feuds','heat','repetition','stories'],t:'Feuds make the matches',
+{id:'s.feuds',track:'season',since:88,tab:'book',page:'book',sel:()=>tutCard(/your feuds/i),sys:['feuds','heat','repetition','stories'],t:'Feuds make the matches',
  b:()=>`Put the same two people in matches and promos week after week and heat builds, fastest with face vs heel and a title on the line. However, fans quickly tire of seeing the same match several times in a row, so vary it up with tags and multi-person matches, promos, run-ins and more. A match with no story rates low; a rivalry makes its matches much better and hooks the casuals.<br><br>Once it's hot (35+), pay it off with a clean finish: at a PPV for the biggest swing, or on TV with <b>Make it the blow-off</b>.`},
-{id:'s.arcs',track:'season',since:96,tab:'arcs',sel:()=>document.querySelector('main .aseg')||document.querySelector('main .card'),sys:['arcs','stories','development','popularity'],t:'Arcs',
+{id:'s.arcs',track:'season',since:96,tab:'arcs',page:'arcs',sel:()=>document.querySelector('main .aseg')||document.querySelector('main .card'),sys:['arcs','stories','development','popularity'],t:'Arcs',
  b:()=>`An arc is a storyline you buy for one wrestler. Pick one under <b>Potential</b>: it lays out a few stops to book and a payoff, with a deadline. Book every stop, land the payoff in time, and the payoff rates higher and changes them: a turn, a new skill, a team, a jump in popularity. Miss the deadline and they're let down.<br><br>If someone an arc needs is unavailable, <b>hold the story</b> to keep your finished stops for their return, or drop it and get the unfinished part of the price back.<br><br>${tv('ARC_SLOTS',()=>ARC_SLOTS,2)} can run at once, and each arc runs once a season. Arcs do the most for wrestlers who aren't stars yet. Your running arcs, their next stop and their deadline sit on Home and the Book screen.`},
-{id:'s.tpic',track:'season',since:20,tab:'titles',sel:'main .card.belt',sys:['titles','prestige'],t:'Crown your champions',
+{id:'s.tpic',track:'season',since:20,tab:'titles',page:'titles',sel:'main .card.belt',sys:['titles','prestige'],t:'Crown your champions',
  b:()=>`Your titles start vacant, at most one world, midcard and tag title per division. <b>Put one on the line in any match</b> and the winner is your first champion.<br><br>Defenses build the champion and the belt's prestige; changing hands too fast drains it. Men's and women's titles stay in their division, so intergender matches are non-title.`},
-{id:'s.live',track:'season',since:98,tab:'book',sel:'main .btn.live',sys:['live','calls','production','fan groups'],t:'Go live',
+{id:'s.live',track:'season',since:98,tab:'book',page:'book',sel:'main .btn.live',sys:['live','calls','production','fan groups'],t:'Go live',
  b:()=>`Pick tonight's <b>🎆 production</b> above Go live. Bigger production lifts the whole show.<br><br>When an arc asks you to decide its ending, you choose right before the payoff.<br><br>At the end of the reveal, tap the rival’s fan total to scout their crowds.`},
 
 /* ---- the first show's reveal: it pauses on your first segment while these walk the screen (tutReveal) ---- */
@@ -147,6 +149,13 @@ function tutTipsOn(){return tutStore().tips===true}
 /* the games that have had their first-week tour */
 function tutWeekSeen(){const l=tutStore().wk;return Array.isArray(l)&&l.includes(S.seed)}
 function tutWeekMark(seed){const l=Array.isArray(tutStore().wk)?tutStore().wk:[];if(!l.includes(seed))tutPut({wk:l.slice(-29).concat(seed)})}
+/* v541: the tab walkthroughs each game still has coming, as [seed, [tabs]]. Finishing the first-week tour lines up all of
+   them; skipping it drops them. A game with no entry has none waiting. */
+const TUT_PAGES=[...new Set(TUT_STEPS.filter(s=>s.page).map(s=>s.page))];
+let TUT_QUIET=null;   /* the tab whose walkthrough just ran: its coach tips wait for the next visit */
+function tutPagesAll(){const l=tutStore().pg;return Array.isArray(l)?l:[]}
+function tutPagesLeft(seed){const e=tutPagesAll().find(x=>x[0]===seed);return e?e[1]:[]}
+function tutPagesPut(seed,left){tutPut({pg:tutPagesAll().filter(x=>x[0]!==seed).slice(-29).concat([[seed,left]])})}
 
 /* ---------- the overlay ---------- */
 let TUT=null;   /* {steps,i,track,label} while a tour is running */
@@ -156,12 +165,12 @@ function tutEl(){let e=document.getElementById('tut');if(!e){e=document.createEl
 function tutHide(){const e=document.getElementById('tut');if(e)e.remove();document.removeEventListener('keydown',tutKey)}
 function tutFind(st){try{if(!st.sel)return null;const e=typeof st.sel==='function'?st.sel():document.querySelector(st.sel);return e&&e.getClientRects().length?e:null}catch(e){return null}}
 
-function tutStart(track,ids){if(!S||(typeof TV!=='undefined'&&TV))return;
+function tutStart(track,ids,page){if(!S||(typeof TV!=='undefined'&&TV))return;
  const phaseOk=track==='draft'?S.phase==='draft':S.phase==='season'||S.phase==='over';
  if(!phaseOk&&!ids)return toast(track==='draft'?'The draft tour runs during the draft.':'The tour starts once the draft is done.');
- let steps=TUT_STEPS.filter(s=>s.track===track);if(ids)steps=steps.filter(s=>ids.includes(s.id));if(!steps.length)return;
+ let steps=TUT_STEPS.filter(s=>s.track===track&&(ids||s.page===page));if(ids)steps=steps.filter(s=>ids.includes(s.id));if(!steps.length)return;
  tutOfferClose();if(typeof closeModal==='function'&&!document.getElementById('modal').classList.contains('hidden'))closeModal();
- TUT={steps,i:0,track,seed:S.seed,back:typeof tab!=='undefined'?tab:'home',rf:typeof rf!=='undefined'?rf:'mine'};document.body.classList.add('lock');
+ TUT={steps,i:0,track,page,seed:S.seed,back:typeof tab!=='undefined'?tab:'home',rf:typeof rf!=='undefined'?rf:'mine'};document.body.classList.add('lock');
  document.addEventListener('keydown',tutKey);tutShow(1)}
 
 function tutKey(e){if(!TUT&&!TUT_OFFER)return;if(e.key==='Escape')return TUT?tutEnd(false):tutOfferClose();if(!TUT)return;if(e.key==='ArrowRight'||e.key==='Enter'){e.preventDefault();tutNext()}if(e.key==='ArrowLeft'){e.preventDefault();tutPrev()}}
@@ -179,9 +188,9 @@ function tutShow(dir){if(!TUT)return;const st=TUT.steps[TUT.i];
   tutPaint(st,el)},st.tab?260:30)}
 
 function tutPaint(st,el){if(!TUT)return;const box=tutEl(),hole=box.querySelector('.tut-hole'),card=box.querySelector('.tut-card');
- const n=TUT.steps.length,i=TUT.i,lab=TUT.track==='draft'?'Draft tour':TUT.track==='reveal'?'Your first show':TUT.track==='tip'?'Coach tip':TUT.ids?"What's new":'Your first week';
+ const n=TUT.steps.length,i=TUT.i,lab=TUT.track==='draft'?'Draft tour':TUT.track==='reveal'?'Your first show':TUT.track==='tip'?'Coach tip':TUT.page?`The ${TUT.page[0].toUpperCase()+TUT.page.slice(1)} tab`:TUT.ids?"What's new":'Your first week';
  card.innerHTML=`<div class="tut-k"><span>🎓 ${lab}</span>${n>1?`<span>${i+1} / ${n}</span>`:''}</div>${n>1?`<div class="tut-bar"><i style="width:${(i+1)/n*100}%"></i></div>`:''}<div class="tut-t">${typeof st.t==='function'?st.t():st.t}</div><div class="tut-b">${st.b()}</div>
- <div class="tut-row">${n>1?`<button class="tut-skip" onclick="tutEnd(false)">${i===n-1?'':'Skip tour'}</button>`:'<span></span>'}<span class="tut-nav">${i>0?'<button class="mini" onclick="tutPrev()">‹ Back</button>':''}<button class="tut-go" onclick="tutNext()">${i===n-1?(TUT.track==='tip'?'Got it':TUT.track==='reveal'?'Back to the show':'Let\'s go'):'Next ›'}</button></span></div>`;
+ <div class="tut-row">${n>1?`<button class="tut-skip" onclick="tutEnd(false)">${i===n-1?'':'Skip tour'}</button>`:'<span></span>'}<span class="tut-nav">${i>0?'<button class="mini" onclick="tutPrev()">‹ Back</button>':''}<button class="tut-go" onclick="tutNext()">${i===n-1?(TUT.track==='tip'||TUT.page?'Got it':TUT.track==='reveal'?'Back to the show':'Let\'s go'):'Next ›'}</button></span></div>`;
  box.dataset.id=st.id;tutPlace(el)}
 
 function tutPlace(el){const box=document.getElementById('tut');if(!box||!TUT)return;const hole=box.querySelector('.tut-hole'),card=box.querySelector('.tut-card');
@@ -203,6 +212,10 @@ function tutPlace(el){const box=document.getElementById('tut');if(!box||!TUT)ret
 function tutEnd(done){if(!TUT)return;const T=TUT;TUT=null;tutHide();
  const st=T.steps[T.i];if(st&&st.after)try{st.after()}catch(e){}
  if(T.track==='reveal'){if(T.done)T.done();return}
+ /* a tab walkthrough leaves you on that tab; skipping it only skips that tab's */
+ if(T.page){TUT_QUIET=T.page;tutPagesPut(T.seed,tutPagesLeft(T.seed).filter(p=>p!==T.page));document.body.classList.remove('lock');
+  if(typeof rf!=='undefined')rf=T.rf;if(typeof render==='function')render();return}
+ if(T.track==='season'&&!T.ids)tutPagesPut(T.seed,done?TUT_PAGES.slice():[]);
  if(T.track!=='tip'){const o={};o[T.track]=TUT_REV;if(T.track==='season'){if(tutStore().tips===undefined)o.tips=true;if(!T.ids)tutWeekMark(T.seed)}tutPut(o);document.body.classList.remove('lock');
   if(typeof rf!=='undefined')rf=T.rf;if(T.track==='season'&&typeof go==='function'&&S&&S.phase==='season')go(T.back==='menu'?'menu':'home')
   else if(typeof render==='function')render();
@@ -211,7 +224,7 @@ function tutEnd(done){if(!TUT)return;const T=TUT;TUT=null;tutHide();
 /* ---------- offering the tour ---------- */
 function tutOffer(track,ids){if(TUT||TUT_OFFER)return;TUT_OFFER={track,ids};const box=tutEl();box.classList.add('nohole','offer');box.querySelector('.tut-hole').style.display='none';
  const card=box.querySelector('.tut-card');card.classList.add('at-mid');
- const what=ids?`The tour has ${ids.length} new stop${ids.length>1?'s':''} since you took it — a quick look at what's changed.`:track==='draft'?'New to the job? A one-minute walk through the draft: the cap, what the numbers mean and who to look for.':"Your first week is here. Take two minutes to see how a show comes together and how you win the fan war.";
+ const what=ids?`The tour has ${ids.length} new stop${ids.length>1?'s':''} since you took it — a quick look at what's changed.`:track==='draft'?'New to the job? A one-minute walk through the draft: the cap, what the numbers mean and who to look for.':"Your first week is here. Take a minute to see how you win the fan war and what each tab is for.";
  card.innerHTML=`<div class="tut-k"><span>🎓 Rookie orientation</span></div><div class="tut-t">${ids?"What's new":track==='draft'?'Draft day':'Welcome to week 1'}</div><div class="tut-b">${what}</div>
  <div class="tut-row col"><button class="tut-go" onclick="tutAccept()">${ids?'Show me':'Show me around'}</button><button class="mini" onclick="tutDecline()">${ids?'Not now':'I know the ropes'}</button></div>`;
  document.addEventListener('keydown',tutKey)}
@@ -237,7 +250,10 @@ function tutAuto(){/* v238: a draft-tour offer left unanswered (say, on auto-dra
  if(S.week<=2&&!(S.season>1)&&tab==='home'&&!tutWeekSeen())return tutStart('season');
  /* took the tour before: offer just the stops that changed since */
  if(st.season>0&&st.season<TUT_REV&&tab==='home'){const ids=TUT_STEPS.filter(s=>s.track==='season'&&s.since>st.season).map(s=>s.id);if(ids.length)return tutOffer('season',ids);tutPut({season:TUT_REV})}
- if(!tutTipsOn())return;
+ /* each tab's walkthrough, the first time you open it in this game */
+ if(tutPagesLeft(S.seed).includes(tab))return tutStart('season',null,tab);
+ if(TUT_QUIET&&tab!==TUT_QUIET)TUT_QUIET=null;
+ if(TUT_QUIET||!tutTipsOn())return;
  /* v186: players who took the long tour already saw what the new coach tips teach */
  if(st.season>0&&st.season<18&&!st.mig18){const seen=st.seen||{};TUT_STEPS.filter(s=>s.track==='tip'&&s.since===18).forEach(s=>seen[s.id]=TUT_REV);tutPut({seen,mig18:true});return}
  if(tab==='book'&&tv('curShow',()=>curShow().ppv,false))return tutTip('t.ppv');
@@ -362,7 +378,7 @@ window.tutReveal=tutReveal;
 
 /* ---------- Game menu card ---------- */
 function tutMenuCard(){if(!S)return '';const dr=S.phase==='draft',on=tutTipsOn();
- return `<div class="card mt"><div class="h small">🎓 Rookie orientation</div><p class="muted" style="margin-top:0">${dr?'A quick walk through the draft — the cap, the numbers and who to look for.':'A guided tour of how a show comes together, how feuds and stars are built, and how you win the fan war.'}</p>
+ return `<div class="card mt"><div class="h small">🎓 Rookie orientation</div><p class="muted" style="margin-top:0">${dr?'A quick walk through the draft — the cap, the numbers and who to look for.':'How you win the fan war and what each tab is for. Book, Arcs and Titles then walk you through the first time you open them.'}</p>
  <button class="btn" onclick="tutStart('${dr?'draft':'season'}')">${dr?'Take the draft tour':'Take the tour'}</button>
  <div class="row sb mt"><span class="muted">Coach tips the first time something new comes up</span><button class="mini" onclick="tutPut({tips:${!on}${on?'':',seen:{}'}});render()">${on?'On':'Off'}</button></div></div>`}
 

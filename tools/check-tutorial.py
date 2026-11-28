@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Plays the whole Rookie GM orientation in a headless browser and fails if any stop is broken.
 
-Checks: the draft tour starts on its own and the first-week tour is offered to a new player, every stop finds what it points at,
+Checks: the draft tour and first-week tour start on their own for a new player, each tab's walkthrough starts on its first visit and plays once, every stop finds what it points at,
 every live number in the text still resolves (TUT_MISS is empty), each coach tip fires (the results tip after a real
 show), no stop is longer than TUT_WORDS, returning players get a "What's new" replay of the stops changed since their
 version, a reworded tip comes back once, and nothing throws.
@@ -126,6 +126,27 @@ async def main(shots):
                 await walk('first-week')
             except Exception:
                 problems.append('the first-week tour did not start on its own after the draft')
+            if set(await pg.evaluate("TUT_STEPS.filter(s=>s.page).map(s=>s.id)")) & set(visited):
+                problems.append('the first-week tour ran a tab walkthrough before that tab was opened')
+
+            # each tab's walkthrough starts the first time the tab is opened, stays on that tab, and plays once
+            for page in await pg.evaluate('TUT_PAGES'):
+                await pg.wait_for_timeout(900)
+                await pg.evaluate(f"closeModal();go('{page}')")
+                try:
+                    await pg.wait_for_function(f"!!(TUT&&TUT.page==='{page}')", timeout=4000)
+                    await walk(f'{page}-tab')
+                except Exception:
+                    problems.append(f'the {page} walkthrough did not start when the tab was first opened')
+                    continue
+                if await pg.evaluate('tab') != page:
+                    problems.append(f'finishing the {page} walkthrough left the {page} tab')
+                await pg.evaluate("go('home')"); await pg.wait_for_timeout(700)
+                await pg.evaluate("TUT&&tutEnd(false);closeModal()")
+                await pg.evaluate(f"go('{page}')"); await pg.wait_for_timeout(900)
+                if await pg.evaluate(f"!!(TUT&&TUT.page==='{page}')"):
+                    problems.append(f'the {page} walkthrough played twice in one game')
+                await pg.evaluate("TUT&&tutEnd(false);closeModal();go('home')")
 
             # coach tips: match details, the PPV card and the results
             await pg.evaluate("go('book')"); await pg.evaluate('suggestFill()'); await pg.wait_for_timeout(300)
@@ -233,6 +254,8 @@ async def main(shots):
                     await pg.evaluate("document.getElementById('modal').classList.add('hidden');render()")
                 await pg.wait_for_function("!!(TUT&&TUT.track==='season'&&!TUT.ids)", timeout=1000)
                 await pg.evaluate('tutEnd(false)'); await pg.wait_for_timeout(1400)
+                if await pg.evaluate('tutPagesLeft(S.seed).length'):
+                    problems.append('skipping the first-week tour left tab walkthroughs waiting')
                 if await pg.evaluate("!!(TUT&&TUT.track==='season')"):
                     problems.append('the first-week tour started again after it was skipped in the same game')
                 if await pg.evaluate('tutTipsOn()'):
